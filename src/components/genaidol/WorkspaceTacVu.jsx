@@ -1,10 +1,9 @@
-import React, { useState, useEffect } from 'react';
 import { 
   CheckSquare, MessageCircle, Plus, Gift, Clock, Megaphone, 
   Hand, ShoppingCart, Share, Sparkles, Mic, Heart, Play, HelpCircle, ChevronDown,
   Download, Upload, ShoppingBag, Trash2, Zap, Bot, Volume2, MessageSquare, FileText,
   BookOpen, Layers, Smile, Flame, Crown, Tag, FileUp, Sparkle, RefreshCw, CheckCircle2,
-  Video, Film, AlertCircle, Copy, Check, Edit3, Star
+  Video, Film, AlertCircle, Copy, Check, Edit3, Star, Users
 } from 'lucide-react';
 import { NEW_AI_PROMPT } from '../../utils/defaultAIPrompt';
 import { readUniversalFile } from '../../utils/universalDocumentParser';
@@ -12,6 +11,7 @@ import { polishAndOptimizeScript } from '../../utils/voiceSyncService';
 import WorkspaceKeywordPanel from './WorkspaceKeywordPanel';
 import EventVoiceTester from './EventVoiceTester';
 import UniversalMediaPicker, { SAMPLE_IDOL_VIDEOS } from './UniversalMediaPicker';
+import MultiAvatarStudioModal from './MultiAvatarStudioModal';
 
 const toast = {
   success: (message) => {
@@ -527,6 +527,7 @@ const getDefaultEventConfigs = () => {
 
 export default function WorkspaceTacVu() {
   const [selectedEventId, setSelectedEventId] = useState('script_broadcast');
+  const [showMultiAvatarModal, setShowMultiAvatarModal] = useState(false);
   
   // Khởi tạo và nạp bền vững vĩnh viễn dữ liệu người dùng đã cài đặt
   const [eventConfigs, setEventConfigs] = useState(() => {
@@ -2134,6 +2135,15 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                               <div className="flex items-center gap-2 flex-wrap">
                                 <button
                                   type="button"
+                                  onClick={() => setShowMultiAvatarModal(true)}
+                                  className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white border border-indigo-400 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-md hover:scale-105 active:scale-95 animate-pulse"
+                                  title="Mở Studio thiết lập 2, 3 hoặc 4 Avatar (Đa Nhân Vật) đối thoại tương tác trực tiếp"
+                                >
+                                  <Users size={13} className="text-yellow-300" />
+                                  <span>👥 Studio 2–4 Avatar</span>
+                                </button>
+                                <button
+                                  type="button"
                                   onClick={() => {
                                     const currentText = activeEditingTab.fixedScriptText !== undefined ? activeEditingTab.fixedScriptText : MASTER_SCRIPTS.cosmetics;
                                     const optimized = polishAndOptimizeScript(currentText);
@@ -2144,19 +2154,47 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                                   title="Tự động sắp xếp lại câu từ, lấy hơi, ngữ điệu cảm xúc và tăng sức hút chốt đơn"
                                 >
                                   <Sparkles size={13} className="text-amber-600" />
-                                  <span>Tối Ưu Kịch Bản Đỉnh Cao</span>
+                                  <span>Tối Ưu Kịch Bản</span>
                                 </button>
                                 <UniversalFileUploadButton 
                                   onLoaded={(text) => handleUpdateActiveScriptTab('fixedScriptText', text)}
-                                  label="Nạp File Kịch Bản (.docx, .pdf, .txt, .json, .xlsx)"
+                                  label="Nạp File Kịch Bản"
                                 />
                               </div>
                             </div>
+
+                            {/* MULTI-AVATAR SPEAKER TAG QUICK-INSERT BAR */}
+                            <div className="flex items-center gap-1.5 flex-wrap bg-slate-100/90 p-1.5 rounded-lg border border-slate-200">
+                              <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider pl-1 flex items-center gap-1">
+                                <Tag size={11} className="text-indigo-600" /> Chèn vai đọc:
+                              </span>
+                              {[
+                                { tag: '[Idol]: ', label: '+ [Idol]', color: 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200' },
+                                { tag: '[Trợ Lý]: ', label: '+ [Trợ Lý]', color: 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200' },
+                                { tag: '[BLV Game]: ', label: '+ [BLV Game]', color: 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200' },
+                                { tag: '[Khách Mời]: ', label: '+ [Khách Mời]', color: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200' },
+                              ].map((chip) => (
+                                <button
+                                  key={chip.tag}
+                                  type="button"
+                                  onClick={() => {
+                                    const currentText = activeEditingTab.fixedScriptText !== undefined ? activeEditingTab.fixedScriptText : MASTER_SCRIPTS.cosmetics;
+                                    const newText = currentText ? `${currentText.trimEnd()}\n${chip.tag}` : chip.tag;
+                                    handleUpdateActiveScriptTab('fixedScriptText', newText);
+                                    toast.success(`Đã thêm ${chip.label}`);
+                                  }}
+                                  className={`px-2 py-0.5 rounded-md border text-[11px] font-bold cursor-pointer transition-all active:scale-95 shadow-2xs ${chip.color}`}
+                                >
+                                  {chip.label}
+                                </button>
+                              ))}
+                            </div>
+
                             <div className="relative">
                               <textarea 
                                 value={activeEditingTab.fixedScriptText !== undefined ? activeEditingTab.fixedScriptText : MASTER_SCRIPTS.cosmetics} 
                                 onChange={(e) => handleUpdateActiveScriptTab('fixedScriptText', e.target.value)} 
-                                placeholder="Nhập hoặc dán chuỗi các câu thoại kịch bản bán hàng (mỗi dòng là một câu thoại). Idol sẽ đọc tuần tự từng câu theo đúng kịch bản..."
+                                placeholder="Nhập hoặc dán chuỗi các câu thoại kịch bản (ví dụ: [Idol]: Chào các tình yêu! \n[Trợ Lý]: Dạ đúng rồi chốt đơn liền nha!)..."
                                 className="w-full h-[240px] border border-gray-300 rounded-xl p-3.5 text-xs resize-y bg-white focus:outline-blue-500 font-sans leading-relaxed shadow-inner" 
                               />
                               <div className="absolute bottom-3 right-3 text-[11px] text-gray-500 bg-white/90 px-2 py-0.5 rounded-md border border-gray-200 font-bold shadow-2xs">
@@ -3311,6 +3349,12 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
             <input type="file" accept=".json" className="hidden" onChange={handleImportEvents} />
           </label>
         </div>
+
+        {/* Modal Cấu Hình Studio 2-4 Avatar (Đa Nhân Vật) */}
+        <MultiAvatarStudioModal 
+          isOpen={showMultiAvatarModal} 
+          onClose={() => setShowMultiAvatarModal(false)} 
+        />
 
       </div>
     </div>

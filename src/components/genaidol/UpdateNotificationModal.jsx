@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.7.8';
+export const APP_VERSION = '2.7.9';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🌐 Khắc Phục Triệt Để & Hiển Thị Hoàn Hảo Kho Giọng Quốc Tế',
-    description: 'Xử lý triệt để mã hóa Unicode cho cờ quốc gia (Mỹ, Anh, Pháp, Đức, Ý, Nhật, Hàn, Trung, Thái...), hiển thị tên gọi sắc nét và kết nối trực tiếp đến mô hình giọng đọc AI bản xứ cao cấp nhất.'
+    title: '👥 Multi-Avatar Live Studio (2–4 Nhân Vật Cùng Lúc)',
+    description: 'Hỗ trợ chạy đồng thời 2, 3 hoặc 4 nhân vật (Idol, Trợ Lý, BLV Game, Khách Mời) trên cùng 1 phiên livestream với video Idle và Talk (nhép miệng lip-sync) độc lập cho từng người.'
   },
   {
-    title: '🎙️ Sắp Xếp & Phân Tầng Kho Giọng Đọc Kịch Bản Siêu Gọn Gàng',
-    description: 'Menu chọn giọng trong phần Kịch Bản & Tác Vụ được phân nhóm thông minh theo Giới tính (Nam/Nữ), Độ tuổi (20-24t, 24-28t, 28-40t, 40-70t), Vùng miền và Quốc tế.'
+    title: '🎭 Kịch Bản Đối Thoại Tương Tác Tự Động Nhận Diện Thẻ Vai',
+    description: 'Hệ thống tự động phân tích thẻ kịch bản ([Idol]:, [Trợ Lý]:, [BLV Game]:, [Khách Mời]:), tự động chuyển video sang trạng thái Nói cho nhân vật đang phát biểu trong khi các nhân vật còn lại duy trì trạng thái Lắng nghe.'
   },
   {
-    title: '🔥 Master Female Ultra Emotive DNA 40 Giọng Độc Bản Đồng Bộ 100%',
-    description: 'Toàn bộ 40 giọng đọc nữ đỉnh cao sở hữu DNA biểu cảm, Onset Signature, Micro-pause và DSP phòng thu cao cấp độc quyền.'
+    title: '⚡ Đồng Bộ 0ms Thời Gian Thực Cho TikTok Live Studio & OBS',
+    description: 'Trực tiếp truyền tải mượt mà 60fps qua cửa sổ Overlay Capture hoặc Browser Source, không giật lag, hỗ trợ bảng giải thích và hướng dẫn trực quan tích hợp ngay trong Studio.'
   }
 ];
 

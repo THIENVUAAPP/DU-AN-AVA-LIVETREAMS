@@ -15,6 +15,7 @@ import {
   isVoiceFavorite,
   getFavoriteVoiceIds,
   getDualVoiceConfig,
+  getMultiAvatarConfig,
   polishAndOptimizeScript,
   formatTextForRegionalSpeech,
   prefetchTTSAudio
@@ -249,6 +250,11 @@ export default function EventVoiceTester({
     setIsPlaying(false);
     setCurrentSentenceIdx(0);
     currentSentenceIdxRef.current = 0;
+    try {
+      window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', {
+        detail: { isSpeaking: false }
+      }));
+    } catch (e) {}
   };
 
   const playSentenceAtIndex = (index, customVoice = null) => {
@@ -267,19 +273,69 @@ export default function EventVoiceTester({
 
     setCurrentSentenceIdx(index);
     currentSentenceIdxRef.current = index;
-    const sentenceText = sentences[index];
+    const rawSentenceText = sentences[index];
 
-    const curVoiceId = customVoice ? (customVoice.id || customVoice) : selectedVoiceRef.current;
-    let voiceObj = customVoice && typeof customVoice === 'object' ? customVoice : null;
-    if (!voiceObj) {
-      voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === curVoiceId) || 
-        (curVoiceId === 'idol' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'idol') :
-         curVoiceId === 'manager' || curVoiceId === 'assistant' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'manager') :
-         curVoiceId === 'game' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'game') :
-         ALL_SYSTEM_VOICES.find(v => v.id === 'free_vi_female')) || { id: 'free_vi_female', lang: 'vi-VN', provider: 'system', gender: 'Female' };
+    // 🎭 Kiểm tra thẻ nhân vật (Multi-Avatar Interactive Tags: [Idol]:, [Trợ Lý]:, [BLV Game]:, [Khách Mời]:...)
+    const multiConfig = getMultiAvatarConfig();
+    let matchedSpeakerAvatar = null;
+    let cleanSentenceText = rawSentenceText;
+
+    if (multiConfig && multiConfig.avatars) {
+      for (const av of multiConfig.avatars) {
+        if (!av.enabled) continue;
+        const tagClean = (av.tag || '').replace(/[\[\]]/g, '').trim().toLowerCase();
+        if (!tagClean) continue;
+        const regex = new RegExp(`^(\\[?${tagClean}\\]?|${tagClean})\\s*:\\s*(.*)$`, 'i');
+        const m = rawSentenceText.match(regex);
+        if (m) {
+          matchedSpeakerAvatar = av;
+          cleanSentenceText = m[2].trim();
+          break;
+        }
+      }
     }
 
-    // 🚀 LOOKAHEAD PIPELINE: Ngay khi câu hiện tại bắt đầu phát, tải trước & giải mã câu N+1 và N+2 vào RAM
+    // Nếu không khớp trực tiếp từ tag avatar tùy chỉnh, kiểm tra các tag phổ biến
+    if (!matchedSpeakerAvatar) {
+      if (/^(\[?idol\]?|idol)\s*:\s*(.*)$/i.test(rawSentenceText)) {
+        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'idol') || { id: 'idol', voiceId: 'free_vi_female', name: 'Idol Chính' };
+        cleanSentenceText = rawSentenceText.replace(/^(\[?idol\]?|idol)\s*:\s*/i, '').trim();
+      } else if (/^(\[?trợ lý\]?|\[?tro ly\]?|\[?troly\]?|trợ lý|tro ly)\s*:\s*(.*)$/i.test(rawSentenceText)) {
+        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'assistant') || { id: 'assistant', voiceId: 'free_vi_female_2', name: 'Trợ Lý' };
+        cleanSentenceText = rawSentenceText.replace(/^(\[?trợ lý\]?|\[?tro ly\]?|\[?troly\]?|trợ lý|tro ly)\s*:\s*/i, '').trim();
+      } else if (/^(\[?blv game\]?|\[?game\]?|\[?blv\]?|blv game|game)\s*:\s*(.*)$/i.test(rawSentenceText)) {
+        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'game_caster') || { id: 'game_caster', voiceId: 'free_vi_male', name: 'BLV Game PK' };
+        cleanSentenceText = rawSentenceText.replace(/^(\[?blv game\]?|\[?game\]?|\[?blv\]?|blv game|game)\s*:\s*/i, '').trim();
+      } else if (/^(\[?khách mời\]?|\[?khach moi\]?|\[?khach\]?|khách mời|khach moi)\s*:\s*(.*)$/i.test(rawSentenceText)) {
+        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'guest') || { id: 'guest', voiceId: 'free_vi_female_3', name: 'Khách Mời' };
+        cleanSentenceText = rawSentenceText.replace(/^(\[?khách mời\]?|\[?khach moi\]?|\[?khach\]?|khách mời|khach moi)\s*:\s*/i, '').trim();
+      }
+    }
+
+    const activeSpeakerId = matchedSpeakerAvatar ? matchedSpeakerAvatar.id : 'idol';
+    const activeVoiceId = matchedSpeakerAvatar 
+      ? (matchedSpeakerAvatar.voiceId || selectedVoiceRef.current) 
+      : (customVoice ? (customVoice.id || customVoice) : selectedVoiceRef.current);
+
+    let voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === activeVoiceId) || 
+      (activeVoiceId === 'idol' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'idol') :
+       activeVoiceId === 'manager' || activeVoiceId === 'assistant' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'manager') :
+       activeVoiceId === 'game' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'game') :
+       ALL_SYSTEM_VOICES.find(v => v.id === 'free_vi_female')) || { id: 'free_vi_female', lang: 'vi-VN', provider: 'system', gender: 'Female' };
+
+    // Bắn sự kiện chuyển đổi nhân vật phát biểu (Active Speaker) cho màn hình Live Overlay / Desktop OBS
+    try {
+      window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', {
+        detail: { 
+          avatarId: activeSpeakerId, 
+          speakerName: matchedSpeakerAvatar?.name || 'Idol', 
+          isSpeaking: true, 
+          speechText: cleanSentenceText 
+        }
+      }));
+    } catch (e) {}
+
+    // 🚀 LOOKAHEAD PIPELINE: Ngay khi câu hiện tại bắt đầu phát, nạp trước câu N+1 và N+2
     if (index + 1 < sentences.length) {
       prefetchTTSAudio(sentences[index + 1], voiceObj, { rate: speedRef.current });
     }
@@ -287,14 +343,17 @@ export default function EventVoiceTester({
       prefetchTTSAudio(sentences[index + 2], voiceObj, { rate: speedRef.current });
     }
 
+    const speakerRate = (matchedSpeakerAvatar?.rate ?? 1.0) * (speedRef.current || 1.0);
+    const speakerVolume = (matchedSpeakerAvatar?.volume ?? 1.0) * (volumeRef.current || 1.0);
+
     previewVoiceAudio(
       voiceObj,
-      sentenceText,
+      cleanSentenceText,
       {
         priority: true,
         isTest: true,
-        volume: volumeRef.current,
-        rate: speedRef.current,
+        volume: speakerVolume,
+        rate: speakerRate,
         onEnd: () => {
           if (!isPlayingRef.current) return;
           if (queueTimeoutRef.current) {
@@ -302,16 +361,23 @@ export default function EventVoiceTester({
             queueTimeoutRef.current = null;
           }
 
+          // Thông báo nhân vật đã nói xong câu hiện tại
+          try {
+            window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', {
+              detail: { avatarId: activeSpeakerId, isSpeaking: false }
+            }));
+          } catch (e) {}
+
           const pauseSec = pauseDurationRef.current !== undefined ? Number(pauseDurationRef.current) : 0.1;
           
           // Nếu chọn 0.0s (Liền mạch): Phát câu tiếp theo NGAY LẬP TỨC 0ms không qua bất kỳ timer delay nào!
           if (pauseSec <= 0.02) {
-            playSentenceAtIndex(index + 1, voiceObj);
+            playSentenceAtIndex(index + 1, null);
           } else {
             const pauseMs = Math.max(0, Math.round(pauseSec * 1000));
             queueTimeoutRef.current = setTimeout(() => {
               if (isPlayingRef.current) {
-                playSentenceAtIndex(index + 1, voiceObj);
+                playSentenceAtIndex(index + 1, null);
               }
             }, pauseMs);
           }

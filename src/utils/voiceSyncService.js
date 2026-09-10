@@ -6506,6 +6506,151 @@ export const DEFAULT_VOICE_CONFIG = {
   geminiApiKey: ''
 };
 
+// ==================== MULTI-AVATAR LIVE STUDIO CONFIG (2 - 4 NHÂN VẬT TƯƠNG TÁC) ====================
+export const DEFAULT_MULTI_AVATAR_CONFIG = {
+  activeCount: 2, // 2, 3, or 4
+  layout: 'split', // 'split' (Dual 2 nhân vật), 'trio' (3 nhân vật), 'grid' (4 nhân vật), 'pip' (Idol chính + Phụ góc)
+  avatars: [
+    {
+      id: 'avatar_1',
+      role: 'idol',
+      tag: 'Idol',
+      label: 'Nhân Vật 1 (Idol Chính)',
+      name: 'Ngọc Nhi',
+      voiceId: 'vn_nu_idol_live',
+      idleVideo: '',
+      talkVideo: '',
+      volume: 1.0,
+      rate: 1.0,
+      enabled: true
+    },
+    {
+      id: 'avatar_2',
+      role: 'assistant',
+      tag: 'Trợ Lý',
+      label: 'Nhân Vật 2 (Trợ Lý / Quản Lý)',
+      name: 'Quốc Cường',
+      voiceId: 'vn_nam_quanly_uyquyen',
+      idleVideo: '',
+      talkVideo: '',
+      volume: 1.0,
+      rate: 1.05,
+      enabled: true
+    },
+    {
+      id: 'avatar_3',
+      role: 'game',
+      tag: 'BLV Game',
+      label: 'Nhân Vật 3 (BLV Game PK / Hoạt Náo)',
+      name: 'Quang Huy',
+      voiceId: 'vn_nam_blv_bungno',
+      idleVideo: '',
+      talkVideo: '',
+      volume: 1.0,
+      rate: 1.1,
+      enabled: false
+    },
+    {
+      id: 'avatar_4',
+      role: 'guest',
+      tag: 'Khách Mời',
+      label: 'Nhân Vật 4 (Khách Mời / Chuyên Gia)',
+      name: 'Victoria',
+      voiceId: 'el_uk_female',
+      idleVideo: '',
+      talkVideo: '',
+      volume: 1.0,
+      rate: 1.0,
+      enabled: false
+    }
+  ]
+};
+
+export function getMultiAvatarConfig() {
+  if (typeof window === 'undefined') return DEFAULT_MULTI_AVATAR_CONFIG;
+  try {
+    const saved = localStorage.getItem('avalive_multi_avatar_config');
+    if (saved) {
+      const parsed = JSON.parse(saved);
+      return {
+        ...DEFAULT_MULTI_AVATAR_CONFIG,
+        ...parsed,
+        avatars: DEFAULT_MULTI_AVATAR_CONFIG.avatars.map((defaultAv, idx) => {
+          const matched = parsed.avatars?.find(a => a.id === defaultAv.id) || parsed.avatars?.[idx];
+          return matched ? { ...defaultAv, ...matched } : defaultAv;
+        })
+      };
+    }
+    return DEFAULT_MULTI_AVATAR_CONFIG;
+  } catch (e) {
+    return DEFAULT_MULTI_AVATAR_CONFIG;
+  }
+}
+
+export function saveMultiAvatarConfig(config) {
+  if (typeof window === 'undefined') return;
+  try {
+    localStorage.setItem('avalive_multi_avatar_config', JSON.stringify(config));
+    window.dispatchEvent(new CustomEvent('avalive_multi_avatar_changed', { detail: config }));
+  } catch (e) {
+    console.error('Failed to save multi avatar config:', e);
+  }
+}
+
+/**
+ * 🎯 Phân tích kịch bản đa nhân vật & ánh xạ từng câu thoại sang Avatar + Voice tương ứng
+ */
+export function parseMultiCharacterScript(text, config = null) {
+  if (!text || !text.trim()) return [];
+  const multiConfig = config || getMultiAvatarConfig();
+  const rawLines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+
+  return rawLines.map((line, idx) => {
+    let matchedAvatar = null;
+    let cleanText = line;
+
+    // Kiểm tra các tag [Idol]:, [Trợ Lý]:, [BLV Game]:, [Khách Mời]: hoặc Idol:, Trợ Lý:, etc.
+    const tagMatch = line.match(/^\[([^\]]+)\]\s*:\s*(.*)$/i) || line.match(/^([a-zA-Z0-9_\u00C0-\u1EF9\s]{2,20})\s*:\s*(.*)$/i);
+
+    if (tagMatch) {
+      const roleOrName = tagMatch[1].trim().toLowerCase();
+      cleanText = tagMatch[2].trim();
+
+      matchedAvatar = multiConfig.avatars.find(a => 
+        a.role.toLowerCase() === roleOrName ||
+        a.tag.toLowerCase() === roleOrName ||
+        a.name.toLowerCase() === roleOrName ||
+        (roleOrName.includes('idol') && a.role === 'idol') ||
+        ((roleOrName.includes('trợ lý') || roleOrName.includes('quản lý') || roleOrName.includes('assistant')) && a.role === 'assistant') ||
+        ((roleOrName.includes('game') || roleOrName.includes('blv') || roleOrName.includes('pk')) && a.role === 'game') ||
+        ((roleOrName.includes('khách') || roleOrName.includes('guest') || roleOrName.includes('host 2')) && a.role === 'guest')
+      );
+    }
+
+    if (!matchedAvatar) {
+      matchedAvatar = multiConfig.avatars[0];
+    }
+
+    const voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === matchedAvatar.voiceId) || { id: matchedAvatar.voiceId || 'free_vi_female', lang: 'vi-VN', gender: 'Female' };
+
+    return {
+      index: idx,
+      rawLine: line,
+      text: cleanText,
+      avatarId: matchedAvatar.id,
+      avatarName: matchedAvatar.name,
+      avatarRole: matchedAvatar.role,
+      avatarTag: matchedAvatar.tag,
+      voiceId: matchedAvatar.voiceId,
+      voiceObj,
+      idleVideo: matchedAvatar.idleVideo,
+      talkVideo: matchedAvatar.talkVideo,
+      volume: matchedAvatar.volume || 1.0,
+      rate: matchedAvatar.rate || 1.0
+    };
+  });
+}
+
 // ==================== FAVORITE VOICES STORAGE ====================
 export function getFavoriteVoiceIds() {
   if (typeof window === 'undefined') return [];
@@ -7804,6 +7949,10 @@ export default {
   clearGlobalSpeechQueue,
   getFavoriteVoiceIds,
   toggleFavoriteVoiceId,
-  isVoiceFavorite
+  isVoiceFavorite,
+  DEFAULT_MULTI_AVATAR_CONFIG,
+  getMultiAvatarConfig,
+  saveMultiAvatarConfig,
+  parseMultiCharacterScript
 };
 

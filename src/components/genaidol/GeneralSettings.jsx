@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen, Brain, Upload, Star, ShoppingBag, Sparkles, Award, Sliders, Flame } from 'lucide-react';
+import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen, Brain, Upload, Star, ShoppingBag, Sparkles, Award, Sliders, Flame, Users } from 'lucide-react';
 import { getLiveMediaByCategory } from '../../lib/liveKhoDB';
 import { 
   saveDualVoiceConfig, 
@@ -19,6 +19,7 @@ import {
 } from '../../utils/voiceSyncService';
 import { DEFAULT_SYSTEM_PROMPT } from '../../utils/defaultSystemPrompt';
 import UniversalMediaPicker from './UniversalMediaPicker';
+import MultiAvatarStudioModal from './MultiAvatarStudioModal';
 
 const MAIN_VOICES = [...ALL_SYSTEM_VOICES];
 const ASSISTANT_VOICES = [...ALL_SYSTEM_VOICES];
@@ -111,6 +112,7 @@ export const getVoiceAgeBadge = (v) => {
 
 export default function GeneralSettings({ onClose = () => {} }) {
   const [activeTab, setActiveTab] = useState('prompt');
+  const [showMultiAvatarModal, setShowMultiAvatarModal] = useState(false);
   const [idleVideoCount, setIdleVideoCount] = useState(0);
   const [previewingVoiceId, setPreviewingVoiceId] = useState(null);
   const [voiceSearchQuery, setVoiceSearchQuery] = useState('');
@@ -2144,6 +2146,15 @@ IDOL MỈM CƯỜI + GESTURE
         >
           <Settings2 size={16} className="text-gray-400" /> Cấu hình Nhanh
         </button>
+
+        <button 
+          type="button"
+          onClick={() => setShowMultiAvatarModal(true)}
+          className="flex items-center gap-1.5 px-3.5 py-1.5 my-auto mr-3 ml-auto bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-black text-xs rounded-xl shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 animate-pulse"
+        >
+          <Users size={14} className="text-yellow-300" />
+          <span>👥 STUDIO 2–4 AVATAR</span>
+        </button>
       </div>
 
       {/* CONTENT AREA */}
@@ -4007,6 +4018,12 @@ IDOL MỈM CƯỜI + GESTURE
         onChange={handleVoiceFileChange} 
         accept="audio/mp3, audio/wav, audio/m4a" 
         className="hidden" 
+      />
+
+      {/* Modal Cấu Hình Studio 2-4 Avatar (Đa Nhân Vật) */}
+      <MultiAvatarStudioModal 
+        isOpen={showMultiAvatarModal} 
+        onClose={() => setShowMultiAvatarModal(false)} 
       />
     </div>
   );
