@@ -246,20 +246,26 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     const handleInteractUnlock = () => {
       hasAutoplayStartedRef.current = true;
       const vid = overlayVideoRef.current;
+      const isMutedNow = isVideoAudioMuted || (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_audio_muted') === 'true' || localStorage.getItem('avalive_local_speaker_muted') === 'true'));
       if (vid) {
         if (vid.paused && localStorage.getItem('avalive_user_paused') !== 'true') {
           vid.play().catch(() => {});
         }
-        if (!isVideoAudioMuted) {
+        if (!isMutedNow) {
           try {
             vid.muted = false;
-            vid.volume = videoVolume;
+            vid.volume = videoVolume > 0 ? videoVolume : 1.0;
+          } catch (e) {}
+        } else {
+          try {
+            vid.muted = true;
+            vid.volume = 0;
           } catch (e) {}
         }
       }
       try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (AudioCtx && window.__avaLiveAudioContext?.state === 'suspended') {
+        if (AudioCtx && window.__avaLiveAudioContext?.state === 'suspended' && !isMutedNow) {
           window.__avaLiveAudioContext.resume().catch(() => {});
         }
       } catch (e) {}
@@ -1082,21 +1088,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             } else if (event.data.type === 'GLOBAL_STAGE_CHANGE') {
               if (event.data.stage) {
                 setMasterState(prev => ({ ...prev, stage: event.data.stage }));
-              }
-            } else if (event.data.type === 'GLOBAL_AUDIO_CHANGE') {
-              const v = overlayVideoRef.current;
-              if (typeof event.data.isMuted === 'boolean') {
-                setIsVideoAudioMuted(event.data.isMuted);
-                if (v) v.muted = event.data.isMuted;
-                bandoAudio.setLocalSpeakerMute(event.data.isMuted);
-                bandoAudio.setMuted(event.data.isMuted);
-              }
-              if (typeof event.data.volume === 'number') {
-                setVideoVolume(event.data.volume);
-                if (v && !event.data.isMuted) {
-                  try { v.volume = event.data.volume; } catch (e) {}
-                }
-                bandoAudio.setMasterVolume(event.data.volume);
               }
             } else if (event.data.type === 'GLOBAL_PLAYBACK_CHANGE') {
               if (event.data.source === 'overlay') return;
@@ -1949,7 +1940,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v2.9.9
+                v2.9.10
               </span>
             </div>
 

@@ -865,33 +865,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
   // 🛡️ BACKGROUND KEEP-ALIVE CHO PHẦN MỀM CHÍNH: CHỐNG ĐÓNG BĂNG/DỪNG VIDEO KHI CHUYỂN TAB HOẶC ẨN CỬA SỔ
   useEffect(() => {
-    let keepAliveCtx = null;
-    let osc = null;
-    let gain = null;
     let wakeLock = null;
     let bgWorker = null;
 
-    let isAudioKeepAliveActive = false;
-    const startAudioKeepAlive = () => {
-      if (isAudioKeepAliveActive && keepAliveCtx && keepAliveCtx.state === 'running' && wakeLock) return;
-      isAudioKeepAliveActive = true;
-      try {
-        const AudioCtx = window.AudioContext || window.webkitAudioContext;
-        if (AudioCtx && (!keepAliveCtx || keepAliveCtx.state === 'closed')) {
-          keepAliveCtx = new AudioCtx();
-          osc = keepAliveCtx.createOscillator();
-          gain = keepAliveCtx.createGain();
-          osc.frequency.value = 20;
-          gain.gain.value = 0.00001;
-          osc.connect(gain);
-          gain.connect(keepAliveCtx.destination);
-          osc.start();
-        }
-        if (keepAliveCtx && keepAliveCtx.state === 'suspended') {
-          keepAliveCtx.resume().catch(() => {});
-        }
-      } catch (e) {}
-
+    const requestWakeLock = () => {
       if ('wakeLock' in navigator && !wakeLock) {
         try {
           navigator.wakeLock.request('screen').then(s => { 
@@ -902,9 +879,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }
     };
 
-    startAudioKeepAlive();
-    window.addEventListener('click', startAudioKeepAlive, { passive: true, once: true });
-    window.addEventListener('pointerdown', startAudioKeepAlive, { passive: true, once: true });
+    requestWakeLock();
+    window.addEventListener('click', requestWakeLock, { passive: true, once: true });
+    window.addEventListener('pointerdown', requestWakeLock, { passive: true, once: true });
 
     try {
       const blob = new Blob([
@@ -931,12 +908,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         vid.play().catch(() => {});
       }
       if (document.visibilityState === 'visible') {
-        if (!wakeLock && 'wakeLock' in navigator) {
-          navigator.wakeLock.request('screen').then(s => { wakeLock = s; }).catch(() => {});
-        }
-        if (keepAliveCtx && keepAliveCtx.state === 'suspended') {
-          keepAliveCtx.resume().catch(() => {});
-        }
+        requestWakeLock();
       }
     };
 
@@ -948,19 +920,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       document.removeEventListener('visibilitychange', handleVisibility);
       window.removeEventListener('blur', handleVisibility);
       window.removeEventListener('focus', handleVisibility);
-      window.removeEventListener('click', startAudioKeepAlive);
-      window.removeEventListener('pointerdown', startAudioKeepAlive);
+      window.removeEventListener('click', requestWakeLock);
+      window.removeEventListener('pointerdown', requestWakeLock);
       if (bgWorker) {
         try { bgWorker.postMessage('stop'); bgWorker.terminate(); } catch (e) {}
-      }
-      if (osc) {
-        try { osc.stop(); osc.disconnect(); } catch (e) {}
-      }
-      if (gain) {
-        try { gain.disconnect(); } catch (e) {}
-      }
-      if (keepAliveCtx) {
-        try { keepAliveCtx.close(); } catch (e) {}
       }
       if (wakeLock) {
         try { wakeLock.release(); } catch (e) {}
@@ -3500,7 +3463,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                     type: 'MASTER_TIME_SYNC',
                     currentTime: curTime,
                     isPlaying: !e.currentTarget.paused,
-                    volume: liveVolume,
+                    isMuted: liveAudioMuted,
+                    isVideoAudioMuted: liveAudioMuted,
+                    volume: liveAudioMuted ? 0 : liveVolume,
                     source: 'desktop',
                     timestamp: now
                   });

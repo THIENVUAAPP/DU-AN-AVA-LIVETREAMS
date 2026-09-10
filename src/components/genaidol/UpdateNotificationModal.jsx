@@ -2,24 +2,24 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.9.9';
+export const APP_VERSION = '2.9.10';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🖥️ Khắc Phục Triệt Để Lỗi Màn Hình Đen Cửa Sổ Bắt Màn Hình (Window Capture)',
-    description: 'Tự động nạp và phát video/nhân vật AI ngay tức thì 0ms, đồng bộ chính xác 100% hình ảnh, khung hình, cử chỉ và thời gian thực giữa phần mềm máy tính và Window Capture OBS/TikTok Live Studio.'
+    title: '🔇 Khắc Phục Triệt Để Lỗi Âm Thanh Nhấp Nháy (Mute/Unmute Loop)',
+    description: 'Xử lý dứt điểm hiện tượng âm thanh chớp nháy nhấp nháy khi bấm Tắt tiếng. Quy tắc chuẩn: Tắt là im ru 100%, Mở là phát rõ ràng; đồng bộ tuyệt đối giữa phần mềm, Window Capture và luồng TikTok Live Studio.'
   },
   {
-    title: '🌐 Tự Động Kết Nối & Hiển Thị Trực Tiếp Link Đám Mây Cloudflare Tunnel 60 FPS',
-    description: 'Khắc phục hoàn toàn lỗi hiển thị đang kết nối, tự động nạp đường link Cloudflare Online HTTPS (/live-stream) siêu mượt 60 FPS, sao chép và dán vào TikTok Live Studio mở là phát ngay.'
+    title: '⚡ Tối Ưu Hóa Video Tải Lên Từ Máy Tính Chạy Siêu Mượt 60 FPS',
+    description: 'Khắc phục hoàn toàn lỗi đứng hình, chậm giật khi tải video máy tính vào ô nhân vật. Bộ đệm Fast-Stream và GPU Hardware Acceleration giúp video phát siêu mượt mà, siêu nét 1080p.'
   },
   {
-    title: '🔊 Đồng Bộ Khóa Chặt Lockstep 2 Chiều: Dừng Ở Đâu Phát Tiếp Ở Đó',
-    description: 'Khi phần mềm bấm Tạm dừng thì Window Capture dừng lại tại đúng vị trí khung hình; khi tiếp tục phát thì phát tiếp liền mạch từ vị trí đó, tuyệt đối không bị nhảy lại từ đầu (0:00).'
+    title: '🌐 Kết Nối Đám Mây Cloudflare Tunnel & Window Capture OBS Tức Thì 0ms',
+    description: 'Tự động cấp link Cloudflare Online HTTPS (/live-stream) 60 FPS không bị quay chờ; mở Window Capture là hiển thị ngay lập tức không bị giật lag, khóa chặt 1:1 khung hình và âm thanh.'
   },
   {
-    title: '📦 Trọn Bộ Gói Cài Standalone ZIP v2.9.9 Cho Windows & macOS',
+    title: '📦 Trọn Bộ Gói Cài Standalone ZIP v2.9.10 Cho Windows & macOS',
     description: 'Đồng bộ hóa phiên bản tải về độc lập (.zip); tích hợp sẵn Node Portable & Cloudflare Tunnel không cần cài đặt môi trường, mở 1-Click là dùng ngay.'
   },
   {

@@ -235,19 +235,9 @@ class BanDoAudioEngine {
       localStorage.setItem('avalive_local_speaker_muted', this.isLocalSpeakerMuted ? 'true' : 'false');
     } catch (e) {}
 
-    const isOverlayPage = typeof window !== 'undefined' && (
-      window.location.search.includes('overlay=') ||
-      window.location.pathname.includes('/overlay') ||
-      window.location.pathname.includes('/cleanlive')
-    );
-    if (isOverlayPage) {
-      this.isLocalSpeakerMuted = false;
-      return;
-    }
-
     this.ensureContext();
     if (this.masterGain && this.ctx) {
-      this.masterGain.gain.setValueAtTime(this.isLocalSpeakerMuted ? 0 : 0.95, this.ctx.currentTime);
+      this.masterGain.gain.setValueAtTime(this.isLocalSpeakerMuted ? 0 : (this.masterVolume || 0.95), this.ctx.currentTime);
     }
     if (this.customBgmAudio) {
       this.customBgmAudio.muted = this.isLocalSpeakerMuted;

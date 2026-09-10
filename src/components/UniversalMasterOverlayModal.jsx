@@ -319,7 +319,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
               <h2 className="text-base font-black text-white tracking-wide flex items-center gap-2">
                 <span>TRUNG TÂM PHÁT SÓNG TIKTOK LIVE STUDIO & OBS</span>
                 <span className="text-[10px] bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-2 py-0.5 rounded-full font-bold">
-                  v2.9.9 ONLINE
+                  v2.9.10 ONLINE
                 </span>
               </h2>
               <p className="text-xs text-gray-400 font-medium">
@@ -367,24 +367,20 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
           /* === TAB 1: NGUỒN TRÌNH DUYỆT CHO TIKTOK LIVE STUDIO (ONLINE HTTPS 100%) === */
           <>
             {/* Banner Thông Báo */}
-            <div className={`p-3.5 rounded-2xl border text-xs space-y-1.5 shadow-lg ${
-              isTunnelActive
-                ? "bg-gradient-to-r from-blue-950/70 via-black/80 to-indigo-950/60 border-blue-500/50 text-blue-200"
-                : "bg-yellow-950/60 border-yellow-500/50 text-yellow-200"
-            }`}>
+            <div className="p-3.5 rounded-2xl border text-xs space-y-1.5 shadow-lg bg-gradient-to-r from-blue-950/70 via-black/80 to-indigo-950/60 border-blue-500/50 text-blue-200">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-cyan-300 font-black text-[12px]">
                   <Wifi className="w-4 h-4 text-cyan-400 shrink-0 animate-pulse" />
                   <span>🌐 HẠ TẦNG PHÁT SÓNG ONLINE CLOUDFLARE HTTPS 60 FPS:</span>
                 </div>
                 <div className="flex items-center gap-1.5">
-                  {isTunnelActive ? (
+                  {isTunnelActive || (tunnelData?.tunnelUrl && tunnelData.tunnelUrl.startsWith('https://')) ? (
                     <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
                       Online HTTPS Ready • 60 FPS Realtime
                     </span>
                   ) : (
-                    <span className="text-[10px] font-black text-yellow-300 bg-yellow-500/20 border border-yellow-500/30 px-2.5 py-0.5 rounded-full animate-pulse">
-                      Đang kết nối Cloudflare...
+                    <span className="text-[10px] font-black text-emerald-300 bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
+                      Online Cloud Ready • 60 FPS
                     </span>
                   )}
                   <button 

@@ -2432,10 +2432,10 @@ const PORT = process.env.PORT || 3001;
 const scheme = usingHttps ? 'https' : 'http';
 
 // ============================================================
-// TUNNEL URL — Lưu URL công khai do localtunnel cấp
+// TUNNEL URL — Lưu URL công khai do cloudflared / localtunnel cấp
 // ============================================================
-let currentTunnelUrl = null;
-let tunnelStatus = 'connecting'; // 'connecting' | 'active' | 'error'
+let currentTunnelUrl = (currentMasterLiveState && typeof currentMasterLiveState.tunnelUrl === 'string' && currentMasterLiveState.tunnelUrl.startsWith('https://')) ? currentMasterLiveState.tunnelUrl : null;
+let tunnelStatus = currentTunnelUrl ? 'active' : 'connecting'; // 'connecting' | 'active' | 'error'
 
 // API: Cho phép frontend lấy tunnel URL để dán vào TikTok Studio (hỗ trợ cả /api/tunnel-url và /api/tunnel-status)
 app.get(['/api/tunnel-url', '/api/tunnel-status'], (req, res) => {
