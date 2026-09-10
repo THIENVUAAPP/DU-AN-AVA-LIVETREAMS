@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.8.3';
+export const APP_VERSION = '2.8.4';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '🖥️ Tối Ưu Bố Cục Sân Khấu Studio Rộng Rãi & Trọn Vẹn Tầm Mắt',
+    description: 'Nâng cấp khung phát Live Canvas hiển thị toàn bộ 100% không gian (9:16 TikTok Dọc & 16:9 OBS Ngang), loại bỏ cắt xén và cuộn trang khó nhìn.'
+  },
+  {
+    title: '🎛️ Bảng Điều Khiển Inspector 3-Subtabs Siêu Tinh Gọn',
+    description: 'Tổ chức cài đặt thành 3 tab chuyên biệt (Vị trí & Tư thế, Tách nền Chroma Key, Phông nền Studio 4K) giúp thao tác nhanh chóng, chuyên nghiệp và trực quan.'
+  },
+  {
     title: '🟢 Tách Nền / Xóa Phông Xanh Chroma Key Chuẩn 4K Láng Mịn',
-    description: 'Tích hợp bộ lọc Chroma Key cực sạch cho phép xóa phông xanh lá, xanh dương, nền đen, trắng hoặc màu tùy chọn, hòa quyện nhân vật vào không gian phòng live TikTok Studio.'
-  },
-  {
-    title: '🎨 Sân Khấu Kéo Thả Canva & 8 Tay Nắm Phóng To Thu Nhỏ Trực Quan',
-    description: 'Di chuyển linh hoạt cả trục X/Y, kéo 8 góc/cạnh để thay đổi kích thước, thanh công cụ 1-click phóng Full Màn Hình (100%), Căn Giữa và quản lý thứ tự lớp hiển thị (Z-Index).'
-  },
-  {
-    title: '🎬 Hỗ Trợ Đầy Đủ Cả Video Lẫn Hình Ảnh & Cắt Xén Tỷ Lệ Đa Dạng',
-    description: 'Tải lên linh hoạt mọi định dạng Video (MP4, WebM) và Hình Ảnh (PNG, JPG, WebP) cho từng nhân vật với các chế độ Cắt Xén (Cover, Contain, Fill) và Bo Góc Tròn.'
+    description: 'Tích hợp bộ lọc Chroma Key cực sạch cho phép xóa phông xanh lá, xanh dương, nền đen, trắng hoặc màu tùy chọn, hòa quyện nhân vật vào không gian phòng live.'
   }
 ];
 

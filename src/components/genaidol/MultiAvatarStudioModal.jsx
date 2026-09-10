@@ -87,6 +87,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
   const [config, setConfig] = useState(getMultiAvatarConfig());
   const [activeTab, setActiveTab] = useState('canvas'); // 'canvas', 'avatars', 'templates'
   const [selectedAvatarId, setSelectedAvatarId] = useState('avatar_1');
+  const [inspectorTab, setInspectorTab] = useState('transform'); // 'transform', 'chroma', 'background'
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [mediaPickerTarget, setMediaPickerTarget] = useState(null); // { avatarId, type: 'idle' | 'talk' }
   const [previewingVoiceId, setPreviewingVoiceId] = useState(null);
@@ -437,106 +438,66 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     <div className={`flex flex-col h-full ${isEmbedded ? 'bg-transparent text-gray-800' : 'bg-[#11131a] text-white'}`}>
       <SvgChromaFilters />
       
-      {/* 1. TOP HEADER & MAIN CONTROLS */}
-      <div className={`p-4 border-b flex flex-wrap items-center justify-between gap-3 shrink-0 ${isEmbedded ? 'bg-white border-gray-200 rounded-2xl shadow-xs mb-3' : 'bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 text-white'}`}>
-        <div className="flex items-center gap-3">
-          <div className={`w-10 h-10 rounded-xl flex items-center justify-center font-bold shadow-inner ${isEmbedded ? 'bg-indigo-50 text-indigo-600 border border-indigo-200' : 'bg-white/10 text-cyan-300 border border-white/20'}`}>
-            <Users size={22} />
-          </div>
-          <div>
-            <div className="flex items-center gap-2">
-              <h3 className="text-base font-black tracking-wide">STUDIO SÂN KHẤU ĐA NHÂN VẬT (2 – 4 AVATAR)</h3>
-              <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-400/40">
-                CANVA & TIKTOK STUDIO CANVAS
-              </span>
+      {/* 1. TOP HEADER & MAIN CONTROLS (TINH GỌN 1 HÀNG DUY NHẤT) */}
+      <div className={`p-3 border-b flex flex-wrap items-center justify-between gap-2.5 shrink-0 ${
+        isEmbedded 
+          ? 'bg-white dark:bg-[#161822] border-gray-200 dark:border-gray-800 rounded-2xl shadow-xs mb-3' 
+          : 'bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 text-white'
+      }`}>
+        {/* Số Lượng & Tỷ Lệ */}
+        <div className="flex items-center gap-3 flex-wrap">
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-black text-gray-500 uppercase">Nhân vật:</span>
+            <div className="flex items-center bg-slate-100 dark:bg-black/40 p-0.5 rounded-xl border border-gray-300 dark:border-gray-800 gap-0.5">
+              {[
+                { count: 2, label: '2 Người', icon: '👥' },
+                { count: 3, label: '3 Người', icon: '🎭' },
+                { count: 4, label: '4 Người', icon: '🌟' }
+              ].map(item => (
+                <button
+                  key={item.count}
+                  type="button"
+                  onClick={() => handleActiveCountChange(item.count)}
+                  className={`px-2 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 cursor-pointer ${
+                    config.activeCount === item.count
+                      ? 'bg-blue-600 text-white shadow-xs scale-102'
+                      : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                  }`}
+                >
+                  <span>{item.icon}</span>
+                  <span>{item.label}</span>
+                </button>
+              ))}
             </div>
-            <p className="text-xs text-gray-500 mt-0.5">
-              Kéo thả di chuyển, phóng to/thu nhỏ 8 góc, xóa phông nền xanh & đồng bộ khẩu hình 60fps.
-            </p>
           </div>
-        </div>
 
-        <div className="flex items-center gap-2 flex-wrap">
-          <button
-            type="button"
-            onClick={() => setShowHelpModal(true)}
-            className={`px-3 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1.5 transition-all cursor-pointer shadow-xs ${
-              isEmbedded 
-                ? 'bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300' 
-                : 'bg-white/10 hover:bg-white/20 text-yellow-300 border border-yellow-400/30'
-            }`}
-            title="Xem hướng dẫn chi tiết cách kết nối TikTok Live Studio / OBS"
-          >
-            <HelpCircle size={15} />
-            <span>(?) Hướng Dẫn Kéo Thả & OBS</span>
-          </button>
-          
-          <button
-            type="button"
-            onClick={handleSave}
-            className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-black text-xs shadow-md flex items-center gap-1.5 cursor-pointer active:scale-95"
-          >
-            {savedSuccess ? <Check size={14} /> : <Sparkles size={14} />}
-            <span>{savedSuccess ? 'Đã Lưu Thành Công!' : 'Lưu Sân Khấu'}</span>
-          </button>
-        </div>
-      </div>
-
-      {/* 2. SUB HEADER: TABS & QUICK PRESET LAYOUTS */}
-      <div className={`px-4 py-2.5 border-b flex flex-wrap items-center justify-between gap-3 shrink-0 ${isEmbedded ? 'bg-white border-gray-200 rounded-xl mb-3' : 'bg-[#161822] border-gray-800'}`}>
-        {/* Số Lượng Nhân Vật */}
-        <div className="flex items-center gap-2">
-          <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Số nhân vật:</span>
-          <div className="flex items-center bg-slate-100 dark:bg-black/40 p-1 rounded-xl border border-gray-300 dark:border-gray-800 gap-1">
-            {[
-              { count: 2, label: '2 Người', icon: '👥' },
-              { count: 3, label: '3 Người', icon: '🎭' },
-              { count: 4, label: '4 Người', icon: '🌟' }
-            ].map(item => (
+          <div className="flex items-center gap-1.5">
+            <span className="text-[11px] font-black text-gray-500 uppercase">Khung hình:</span>
+            <div className="flex items-center bg-slate-100 dark:bg-black/40 p-0.5 rounded-xl border border-gray-300 dark:border-gray-800 text-xs font-bold gap-0.5">
               <button
-                key={item.count}
                 type="button"
-                onClick={() => handleActiveCountChange(item.count)}
-                className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 cursor-pointer ${
-                  config.activeCount === item.count
-                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm scale-102'
-                    : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                }`}
+                onClick={() => setCanvasAspectRatio('9:16')}
+                className={`px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer ${canvasAspectRatio === '9:16' ? 'bg-blue-600 text-white shadow-xs' : 'text-gray-600 dark:text-gray-400'}`}
               >
-                <span>{item.icon}</span>
-                <span>{item.label}</span>
+                <Smartphone size={12} /> 9:16 (TikTok Dọc)
               </button>
-            ))}
-          </div>
-        </div>
-
-        {/* Tỷ Lệ Màn Hình Live */}
-        <div className="flex items-center gap-1.5">
-          <span className="text-xs font-bold text-gray-500 uppercase tracking-wider">Tỷ lệ:</span>
-          <div className="flex items-center bg-slate-100 dark:bg-black/40 p-0.5 rounded-lg border border-gray-300 dark:border-gray-800 text-xs font-bold">
-            <button
-              type="button"
-              onClick={() => setCanvasAspectRatio('9:16')}
-              className={`px-2 py-1 rounded flex items-center gap-1 cursor-pointer ${canvasAspectRatio === '9:16' ? 'bg-blue-600 text-white shadow-xs' : 'text-gray-600 dark:text-gray-400'}`}
-            >
-              <Smartphone size={12} /> 9:16 (TikTok Dọc)
-            </button>
-            <button
-              type="button"
-              onClick={() => setCanvasAspectRatio('16:9')}
-              className={`px-2 py-1 rounded flex items-center gap-1 cursor-pointer ${canvasAspectRatio === '16:9' ? 'bg-blue-600 text-white shadow-xs' : 'text-gray-600 dark:text-gray-400'}`}
-            >
-              <Monitor size={12} /> 16:9 (OBS Ngang)
-            </button>
+              <button
+                type="button"
+                onClick={() => setCanvasAspectRatio('16:9')}
+                className={`px-2 py-1 rounded-lg flex items-center gap-1 cursor-pointer ${canvasAspectRatio === '16:9' ? 'bg-blue-600 text-white shadow-xs' : 'text-gray-600 dark:text-gray-400'}`}
+              >
+                <Monitor size={12} /> 16:9 (OBS Ngang)
+              </button>
+            </div>
           </div>
         </div>
 
         {/* Tabs Điều Khiển */}
-        <div className="flex items-center gap-1.5">
+        <div className="flex items-center gap-1.5 bg-slate-100 dark:bg-black/40 p-0.5 rounded-xl border border-gray-300 dark:border-gray-800">
           <button
             type="button"
             onClick={() => setActiveTab('canvas')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'canvas' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-blue-600'
             }`}
           >
@@ -545,7 +506,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
           <button
             type="button"
             onClick={() => setActiveTab('avatars')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'avatars' ? 'bg-indigo-600 text-white shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-indigo-600'
             }`}
           >
@@ -554,27 +515,49 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
           <button
             type="button"
             onClick={() => setActiveTab('templates')}
-            className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+            className={`px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
               activeTab === 'templates' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-purple-600'
             }`}
           >
             <MessageSquare size={13} /> Kịch Bản Đối Thoại
           </button>
         </div>
+
+        {/* Nút Action Lưu & Trợ Giúp */}
+        <div className="flex items-center gap-2">
+          <button
+            type="button"
+            onClick={() => setShowHelpModal(true)}
+            className="px-2.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1 transition-all cursor-pointer bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-2xs"
+            title="Xem hướng dẫn chi tiết cách kết nối TikTok Live Studio / OBS"
+          >
+            <HelpCircle size={14} />
+            <span>(?) Hướng Dẫn</span>
+          </button>
+          
+          <button
+            type="button"
+            onClick={handleSave}
+            className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white font-black text-xs shadow-md flex items-center gap-1.5 cursor-pointer active:scale-95"
+          >
+            {savedSuccess ? <Check size={14} /> : <Sparkles size={14} />}
+            <span>{savedSuccess ? 'Đã Lưu!' : 'Lưu Sân Khấu'}</span>
+          </button>
+        </div>
       </div>
 
-      {/* 3. MAIN WORKSPACE CONTENT */}
-      <div className="flex-1 overflow-y-auto p-3">
+      {/* 2. MAIN WORKSPACE CONTENT */}
+      <div className="flex-1 overflow-y-auto">
         {activeTab === 'canvas' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-4 h-full min-h-[560px]">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3.5 items-start">
             
-            {/* CỘT TRÁI: VISUAL CANVAS TRỰC QUAN (7 CỘT) */}
-            <div className="lg:col-span-7 flex flex-col items-center justify-center p-3 rounded-2xl bg-[#090b10] border border-gray-800 shadow-inner relative select-none">
+            {/* CỘT TRÁI: KHUNG SÂN KHẤU LIVE CANVAS TRỰC QUAN (7 CỘT) - ƯU TIÊN TO LỚN, RÕ NÉT 100% */}
+            <div className="lg:col-span-7 flex flex-col items-center justify-start p-4 rounded-3xl bg-[#0a0c13] border border-gray-800 shadow-2xl relative select-none">
               
-              {/* TOP BAR TRONG CANVAS: PRESET NÚT BẤM NHANH */}
-              <div className="w-full flex items-center justify-between pb-2 mb-2 border-b border-gray-800/80 text-xs flex-wrap gap-2">
+              {/* TOP BAR TRONG CANVAS: BỐ CỤC MẪU 1-CLICK */}
+              <div className="w-full flex items-center justify-between pb-2.5 mb-2.5 border-b border-gray-800 text-xs flex-wrap gap-1.5">
                 <span className="font-bold text-gray-400 flex items-center gap-1.5">
-                  <Palette size={13} className="text-cyan-400" /> Bố Cục Sân Khấu:
+                  <Palette size={13} className="text-cyan-400" /> Bố Cục Sân Khấu Sẵn:
                 </span>
                 <div className="flex items-center gap-1 flex-wrap">
                   {Object.entries(STUDIO_STAGE_PRESETS).filter(([k]) => k !== 'custom_canvas').map(([key, preset]) => (
@@ -582,9 +565,9 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                       key={key}
                       type="button"
                       onClick={() => handleApplyPresetLayout(key)}
-                      className={`px-2 py-0.5 rounded text-[11px] font-bold transition-all cursor-pointer ${
+                      className={`px-2 py-1 rounded-lg text-[11px] font-black transition-all cursor-pointer ${
                         config.layoutMode === key
-                          ? 'bg-cyan-500 text-black shadow-xs font-black'
+                          ? 'bg-cyan-500 text-black shadow-xs font-black scale-102'
                           : 'bg-white/10 hover:bg-white/20 text-gray-300'
                       }`}
                     >
@@ -594,27 +577,27 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                 </div>
               </div>
 
-              {/* KHUNG CANVAS STREAMING SỐNG ĐỘNG */}
+              {/* KHUNG CANVAS STREAMING SỐNG ĐỘNG - TO RÕ RÀNG TRỌN VẸN */}
               <div 
                 ref={canvasRef}
-                className={`relative overflow-hidden rounded-2xl border-2 border-cyan-500/40 shadow-2xl transition-all duration-300 bg-cover bg-center`}
+                className={`relative overflow-hidden rounded-2xl border-2 border-cyan-500/50 shadow-[0_0_30px_rgba(6,182,212,0.25)] transition-all duration-300 bg-cover bg-center my-1`}
                 style={{
-                  width: canvasAspectRatio === '9:16' ? '320px' : '520px',
-                  height: canvasAspectRatio === '9:16' ? '568px' : '292px',
+                  width: canvasAspectRatio === '9:16' ? '330px' : '560px',
+                  height: canvasAspectRatio === '9:16' ? '586px' : '315px',
                   backgroundColor: config.backgroundColor || '#0a0c14',
                   backgroundImage: config.backgroundUrl ? `url(${config.backgroundUrl})` : 'none'
                 }}
               >
                 {/* GRID LINES HELPER */}
-                <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-10">
-                  <div className="border-r border-b border-white" />
-                  <div className="border-r border-b border-white" />
-                  <div className="border-b border-white" />
-                  <div className="border-r border-b border-white" />
-                  <div className="border-r border-b border-white" />
-                  <div className="border-b border-white" />
-                  <div className="border-r border-white" />
-                  <div className="border-r border-white" />
+                <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-15">
+                  <div className="border-r border-b border-white/40" />
+                  <div className="border-r border-b border-white/40" />
+                  <div className="border-b border-white/40" />
+                  <div className="border-r border-b border-white/40" />
+                  <div className="border-r border-b border-white/40" />
+                  <div className="border-b border-white/40" />
+                  <div className="border-r border-white/40" />
+                  <div className="border-r border-white/40" />
                   <div />
                 </div>
 
@@ -738,11 +721,11 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
               </div>
 
               {/* QUICK ACTION TOOLBAR DƯỚI CANVAS */}
-              <div className="flex items-center gap-1.5 mt-2.5 flex-wrap justify-center text-xs">
+              <div className="flex items-center gap-1.5 mt-2 flex-wrap justify-center text-xs">
                 <button
                   type="button"
                   onClick={() => handleFillScreen(selectedAvatar.id)}
-                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-cyan-300 font-bold flex items-center gap-1 cursor-pointer border border-cyan-500/30"
+                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-cyan-300 font-bold flex items-center gap-1 cursor-pointer border border-cyan-500/30 shadow-2xs"
                   title="Phóng to nhân vật chiếm 100% toàn bộ khung hình Live"
                 >
                   <Maximize2 size={12} /> Full Màn Hình (100%)
@@ -750,7 +733,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                 <button
                   type="button"
                   onClick={() => handleCenterAvatar(selectedAvatar.id)}
-                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-yellow-300 font-bold flex items-center gap-1 cursor-pointer border border-yellow-500/30"
+                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-yellow-300 font-bold flex items-center gap-1 cursor-pointer border border-yellow-500/30 shadow-2xs"
                   title="Căn giữa chính giữa màn hình"
                 >
                   <Scaling size={12} /> Căn Giữa Sân Khấu
@@ -758,7 +741,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                 <button
                   type="button"
                   onClick={() => handleBringToFront(selectedAvatar.id)}
-                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold flex items-center gap-1 cursor-pointer border border-white/20"
+                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold flex items-center gap-1 cursor-pointer border border-white/20 shadow-2xs"
                   title="Đưa lên trên cùng mọi nhân vật khác"
                 >
                   <ArrowUpToLine size={12} /> Lên Đầu
@@ -766,28 +749,28 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                 <button
                   type="button"
                   onClick={() => handleSendToBack(selectedAvatar.id)}
-                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold flex items-center gap-1 cursor-pointer border border-white/20"
+                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold flex items-center gap-1 cursor-pointer border border-white/20 shadow-2xs"
                   title="Đưa xuống dưới cùng"
                 >
                   <ArrowDownToLine size={12} /> Xuống Đáy
                 </button>
               </div>
 
-              <p className="text-[11px] text-gray-500 mt-1.5 font-mono">
+              <p className="text-[11px] text-gray-500 mt-1 font-mono">
                 💡 Kéo giữa để di chuyển (X, Y) • Kéo 8 góc/cạnh để phóng to thu nhỏ như Canva / TikTok Live
               </p>
             </div>
 
-            {/* CỘT PHẢI: BẢNG TINH CHỈNH VỊ TRÍ, TƯ THẾ, TÁCH NỀN & BACKGROUND (5 CỘT) */}
-            <div className="lg:col-span-5 space-y-3">
+            {/* CỘT PHẢI: BẢNG TINH CHỈNH TẬP TRUNG DẠNG TAB GỌN GÀNG (5 CỘT) */}
+            <div className="lg:col-span-5 space-y-2.5">
               
-              {/* CHỌN NHÂN VẬT ĐANG TINH CHỈNH */}
+              {/* 1. CHỌN NHÂN VẬT ĐANG TINH CHỈNH */}
               <div className={`p-3 rounded-2xl border ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
                 <div className="flex items-center justify-between mb-2">
-                  <span className="text-xs font-black uppercase text-gray-500 tracking-wider">
-                    Đang chọn chỉnh nhân vật:
+                  <span className="text-[11px] font-black uppercase text-gray-500 tracking-wider">
+                    Nhân vật đang chọn:
                   </span>
-                  <span className="text-xs font-bold text-cyan-500">
+                  <span className="text-xs font-black text-cyan-600 dark:text-cyan-400">
                     {selectedAvatar.name} ({selectedAvatar.role})
                   </span>
                 </div>
@@ -811,169 +794,192 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                 </div>
               </div>
 
-              {/* TÙY CHỈNH TỌA ĐỘ, KÍCH THƯỚC, TƯ THẾ & CẮT XÉN */}
-              <div className={`p-3.5 rounded-2xl border space-y-2.5 ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
-                <div className="flex items-center justify-between border-b pb-2 border-gray-200 dark:border-gray-800">
-                  <h4 className="text-xs font-black uppercase text-blue-600 flex items-center gap-1.5">
-                    <Sliders size={14} /> Tọa Độ, Kích Thước & Cắt Xén: {selectedAvatar.name}
-                  </h4>
-                  <span className="text-[11px] font-mono text-gray-500">[{selectedAvatar.tag}]</span>
-                </div>
-
-                {/* TƯ THẾ: ĐỨNG / NGỒI / NỬA NGƯỜI */}
-                <div className="space-y-1">
-                  <label className="text-xs font-bold text-gray-600 dark:text-gray-300 flex items-center justify-between">
-                    <span>Tư thế trên sân khấu:</span>
-                    <span className="text-cyan-500 font-bold">{selectedAvatar.transform?.pose === 'sit' ? '🪑 Ngồi Ghế / Bàn' : selectedAvatar.transform?.pose === 'half' ? '👤 Nửa Người' : '🧍 Đứng Thẳng'}</span>
-                  </label>
-                  <div className="grid grid-cols-3 gap-1.5">
-                    {[
-                      { pose: 'stand', label: '🧍 Đứng', desc: 'Đứng Livestream' },
-                      { pose: 'sit', label: '🪑 Ngồi', desc: 'Ngồi Ghế / Bàn' },
-                      { pose: 'half', label: '👤 Nửa Người', desc: 'Cận Cảnh' }
-                    ].map(p => (
-                      <button
-                        key={p.pose}
-                        type="button"
-                        onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'pose', p.pose)}
-                        className={`py-1.5 px-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
-                          selectedAvatar.transform?.pose === p.pose
-                            ? 'bg-blue-600 text-white border-blue-500 shadow-xs'
-                            : 'bg-slate-50 dark:bg-black/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800'
-                        }`}
-                      >
-                        <div>{p.label}</div>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-
-                {/* SLIDERS TỌA ĐỘ VÀ KÍCH THƯỚC */}
-                <div className="grid grid-cols-2 gap-2.5 text-xs">
-                  <div>
-                    <label className="text-[11px] font-bold text-gray-500 block mb-1">
-                      Kích Thước (Width): {selectedAvatar.transform?.width || 50}%
-                    </label>
-                    <input 
-                      type="range" 
-                      min="15" 
-                      max="100" 
-                      value={selectedAvatar.transform?.width || 50} 
-                      onChange={(e) => handleAvatarTransformChange(selectedAvatar.id, 'width', Number(e.target.value))}
-                      className="w-full accent-blue-600"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold text-gray-500 block mb-1">
-                      Chiều Cao (Height): {selectedAvatar.transform?.height || 50}%
-                    </label>
-                    <input 
-                      type="range" 
-                      min="15" 
-                      max="100" 
-                      value={selectedAvatar.transform?.height || 50} 
-                      onChange={(e) => handleAvatarTransformChange(selectedAvatar.id, 'height', Number(e.target.value))}
-                      className="w-full accent-blue-600"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold text-gray-500 block mb-1">
-                      Vị trí Ngang (X): {selectedAvatar.transform?.x || 0}%
-                    </label>
-                    <input 
-                      type="range" 
-                      min="0" 
-                      max="85" 
-                      value={selectedAvatar.transform?.x || 0} 
-                      onChange={(e) => handleAvatarTransformChange(selectedAvatar.id, 'x', Number(e.target.value))}
-                      className="w-full accent-blue-600"
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-[11px] font-bold text-gray-500 block mb-1">
-                      Vị trí Dọc (Y): {selectedAvatar.transform?.y || 0}%
-                    </label>
-                    <input 
-                      type="range" 
-                      min="0" 
-                      max="85" 
-                      value={selectedAvatar.transform?.y || 0} 
-                      onChange={(e) => handleAvatarTransformChange(selectedAvatar.id, 'y', Number(e.target.value))}
-                      className="w-full accent-blue-600"
-                    />
-                  </div>
-                </div>
-
-                {/* THỨ TỰ LỚP (Z-INDEX) & TỶ LỆ CẮT XÉN OBJECT FIT */}
-                <div className="flex items-center justify-between pt-1 border-t border-gray-100 dark:border-gray-800 text-xs flex-wrap gap-2">
-                  <div className="flex items-center gap-1.5">
-                    <span className="text-[11px] font-bold text-gray-500">Lớp:</span>
-                    <button
-                      type="button"
-                      onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'zIndex', (selectedAvatar.transform?.zIndex || 5) + 1)}
-                      className="px-2 py-0.5 rounded bg-slate-100 dark:bg-black/30 border border-gray-300 dark:border-gray-800 text-xs font-bold cursor-pointer"
-                      title="Lên 1 lớp"
-                    >
-                      <ArrowUp size={11} className="inline" /> Lên ({selectedAvatar.transform?.zIndex || 5})
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'zIndex', Math.max(1, (selectedAvatar.transform?.zIndex || 5) - 1))}
-                      className="px-2 py-0.5 rounded bg-slate-100 dark:bg-black/30 border border-gray-300 dark:border-gray-800 text-xs font-bold cursor-pointer"
-                      title="Xuống 1 lớp"
-                    >
-                      <ArrowDown size={11} className="inline" /> Xuống
-                    </button>
-                  </div>
-
-                  <div className="flex items-center gap-1">
-                    <button
-                      type="button"
-                      onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'objectFit', selectedAvatar.transform?.objectFit === 'contain' ? 'cover' : selectedAvatar.transform?.objectFit === 'fill' ? 'contain' : 'fill')}
-                      className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-600 text-xs font-bold border border-blue-200 dark:border-blue-800 cursor-pointer"
-                      title="Chuyển chế độ cắt xén (Cover, Contain, Fill)"
-                    >
-                      Fit: {selectedAvatar.transform?.objectFit || 'cover'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'borderRadius', selectedAvatar.transform?.borderRadius === 0 ? 16 : selectedAvatar.transform?.borderRadius === 16 ? 9999 : 0)}
-                      className="px-2 py-0.5 rounded bg-slate-100 dark:bg-black/30 text-gray-700 dark:text-gray-300 text-xs font-bold border border-gray-300 dark:border-gray-800 cursor-pointer"
-                      title="Bo góc viền (Vuông, Bo nhẹ, Tròn)"
-                    >
-                      Góc: {selectedAvatar.transform?.borderRadius === 9999 ? 'Tròn' : selectedAvatar.transform?.borderRadius === 0 ? 'Vuông' : 'Bo 16px'}
-                    </button>
-                  </div>
-                </div>
+              {/* 2. SUB-TAB INSPECTOR SELECTOR (GỌN GÀNG TRONG 1 KHUNG DUY NHẤT) */}
+              <div className="flex items-center gap-1 bg-slate-200/80 dark:bg-black/50 p-1 rounded-xl border border-gray-300 dark:border-gray-800">
+                {[
+                  { id: 'transform', label: '📐 Vị Trí & Tư Thế', color: 'text-blue-600' },
+                  { id: 'chroma', label: '🟢 Xóa Phông', color: 'text-emerald-600' },
+                  { id: 'background', label: '🖼️ Nền Studio', color: 'text-purple-600' }
+                ].map(tab => (
+                  <button
+                    key={tab.id}
+                    type="button"
+                    onClick={() => setInspectorTab(tab.id)}
+                    className={`flex-1 py-1.5 text-xs font-black rounded-lg transition-all text-center cursor-pointer ${
+                      inspectorTab === tab.id
+                        ? 'bg-white dark:bg-[#1f222e] text-blue-600 dark:text-cyan-300 shadow-xs border border-gray-200 dark:border-gray-700 scale-102'
+                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
+                    }`}
+                  >
+                    {tab.label}
+                  </button>
+                ))}
               </div>
 
-              {/* 🟢 TÁCH NỀN / XÓA PHÔNG NỀN (CHROMA KEY STUDIO) */}
-              <div className={`p-3.5 rounded-2xl border space-y-2.5 ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
-                <div className="flex items-center justify-between border-b pb-2 border-gray-200 dark:border-gray-800">
-                  <div className="flex items-center gap-1.5">
-                    <Wand2 size={14} className="text-emerald-500" />
-                    <h4 className="text-xs font-black uppercase text-emerald-600 dark:text-emerald-400">
-                      Xóa Phông Nền (Chroma Key): {selectedAvatar.name}
+              {/* 3. NỘI DUNG SUB-TAB TƯƠNG ỨNG */}
+              {inspectorTab === 'transform' && (
+                <div className={`p-3.5 rounded-2xl border space-y-2.5 animate-in fade-in duration-150 ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
+                  <div className="flex items-center justify-between border-b pb-2 border-gray-200 dark:border-gray-800">
+                    <h4 className="text-xs font-black uppercase text-blue-600 flex items-center gap-1.5">
+                      <Sliders size={14} /> Tọa Độ, Kích Thước & Cắt Xén
                     </h4>
+                    <span className="text-[11px] font-mono text-gray-500">[{selectedAvatar.tag}]</span>
                   </div>
-                  <label className="relative inline-flex items-center cursor-pointer">
-                    <input 
-                      type="checkbox" 
-                      checked={!!selectedAvatar.chromaKey?.enabled}
-                      onChange={(e) => handleAvatarChromaChange(selectedAvatar.id, 'enabled', e.target.checked)}
-                      className="sr-only peer"
-                    />
-                    <div className="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
-                  </label>
-                </div>
 
-                {selectedAvatar.chromaKey?.enabled && (
-                  <div className="space-y-2.5 text-xs animate-in fade-in duration-200">
+                  {/* TƯ THẾ: ĐỨNG / NGỒI / NỬA NGƯỜI */}
+                  <div className="space-y-1">
+                    <label className="text-xs font-bold text-gray-600 dark:text-gray-300 flex items-center justify-between">
+                      <span>Tư thế trên sân khấu:</span>
+                      <span className="text-cyan-500 font-bold">{selectedAvatar.transform?.pose === 'sit' ? '🪑 Ngồi Ghế / Bàn' : selectedAvatar.transform?.pose === 'half' ? '👤 Nửa Người' : '🧍 Đứng Thẳng'}</span>
+                    </label>
+                    <div className="grid grid-cols-3 gap-1.5">
+                      {[
+                        { pose: 'stand', label: '🧍 Đứng', desc: 'Đứng Livestream' },
+                        { pose: 'sit', label: '🪑 Ngồi', desc: 'Ngồi Ghế / Bàn' },
+                        { pose: 'half', label: '👤 Nửa Người', desc: 'Cận Cảnh' }
+                      ].map(p => (
+                        <button
+                          key={p.pose}
+                          type="button"
+                          onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'pose', p.pose)}
+                          className={`py-1.5 px-2 rounded-xl text-xs font-bold border transition-all cursor-pointer ${
+                            selectedAvatar.transform?.pose === p.pose
+                              ? 'bg-blue-600 text-white border-blue-500 shadow-xs'
+                              : 'bg-slate-50 dark:bg-black/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800'
+                          }`}
+                        >
+                          <div>{p.label}</div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+
+                  {/* SLIDERS TỌA ĐỘ VÀ KÍCH THƯỚC */}
+                  <div className="grid grid-cols-2 gap-2.5 text-xs">
+                    <div>
+                      <label className="text-[11px] font-bold text-gray-500 block mb-1">
+                        Kích Thước (Width): {selectedAvatar.transform?.width || 50}%
+                      </label>
+                      <input 
+                        type="range" 
+                        min="15" 
+                        max="100" 
+                        value={selectedAvatar.transform?.width || 50} 
+                        onChange={(e) => handleAvatarTransformChange(selectedAvatar.id, 'width', Number(e.target.value))}
+                        className="w-full accent-blue-600"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-gray-500 block mb-1">
+                        Chiều Cao (Height): {selectedAvatar.transform?.height || 50}%
+                      </label>
+                      <input 
+                        type="range" 
+                        min="15" 
+                        max="100" 
+                        value={selectedAvatar.transform?.height || 50} 
+                        onChange={(e) => handleAvatarTransformChange(selectedAvatar.id, 'height', Number(e.target.value))}
+                        className="w-full accent-blue-600"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-gray-500 block mb-1">
+                        Vị trí Ngang (X): {selectedAvatar.transform?.x || 0}%
+                      </label>
+                      <input 
+                        type="range" 
+                        min="0" 
+                        max="85" 
+                        value={selectedAvatar.transform?.x || 0} 
+                        onChange={(e) => handleAvatarTransformChange(selectedAvatar.id, 'x', Number(e.target.value))}
+                        className="w-full accent-blue-600"
+                      />
+                    </div>
+
+                    <div>
+                      <label className="text-[11px] font-bold text-gray-500 block mb-1">
+                        Vị trí Dọc (Y): {selectedAvatar.transform?.y || 0}%
+                      </label>
+                      <input 
+                        type="range" 
+                        min="0" 
+                        max="85" 
+                        value={selectedAvatar.transform?.y || 0} 
+                        onChange={(e) => handleAvatarTransformChange(selectedAvatar.id, 'y', Number(e.target.value))}
+                        className="w-full accent-blue-600"
+                      />
+                    </div>
+                  </div>
+
+                  {/* THỨ TỰ LỚP (Z-INDEX) & TỶ LỆ CẮT XÉN OBJECT FIT */}
+                  <div className="flex items-center justify-between pt-1 border-t border-gray-100 dark:border-gray-800 text-xs flex-wrap gap-2">
+                    <div className="flex items-center gap-1.5">
+                      <span className="text-[11px] font-bold text-gray-500">Lớp:</span>
+                      <button
+                        type="button"
+                        onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'zIndex', (selectedAvatar.transform?.zIndex || 5) + 1)}
+                        className="px-2 py-0.5 rounded bg-slate-100 dark:bg-black/30 border border-gray-300 dark:border-gray-800 text-xs font-bold cursor-pointer"
+                        title="Lên 1 lớp"
+                      >
+                        <ArrowUp size={11} className="inline" /> Lên ({selectedAvatar.transform?.zIndex || 5})
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'zIndex', Math.max(1, (selectedAvatar.transform?.zIndex || 5) - 1))}
+                        className="px-2 py-0.5 rounded bg-slate-100 dark:bg-black/30 border border-gray-300 dark:border-gray-800 text-xs font-bold cursor-pointer"
+                        title="Xuống 1 lớp"
+                      >
+                        <ArrowDown size={11} className="inline" /> Xuống
+                      </button>
+                    </div>
+
+                    <div className="flex items-center gap-1">
+                      <button
+                        type="button"
+                        onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'objectFit', selectedAvatar.transform?.objectFit === 'contain' ? 'cover' : selectedAvatar.transform?.objectFit === 'fill' ? 'contain' : 'fill')}
+                        className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-600 text-xs font-bold border border-blue-200 dark:border-blue-800 cursor-pointer"
+                        title="Chuyển chế độ cắt xén (Cover, Contain, Fill)"
+                      >
+                        Fit: {selectedAvatar.transform?.objectFit || 'cover'}
+                      </button>
+                      <button
+                        type="button"
+                        onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'borderRadius', selectedAvatar.transform?.borderRadius === 0 ? 16 : selectedAvatar.transform?.borderRadius === 16 ? 9999 : 0)}
+                        className="px-2 py-0.5 rounded bg-slate-100 dark:bg-black/30 text-gray-700 dark:text-gray-300 text-xs font-bold border border-gray-300 dark:border-gray-800 cursor-pointer"
+                        title="Bo góc viền (Vuông, Bo nhẹ, Tròn)"
+                      >
+                        Góc: {selectedAvatar.transform?.borderRadius === 9999 ? 'Tròn' : selectedAvatar.transform?.borderRadius === 0 ? 'Vuông' : 'Bo 16px'}
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              )}
+
+              {inspectorTab === 'chroma' && (
+                <div className={`p-3.5 rounded-2xl border space-y-2.5 animate-in fade-in duration-150 ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
+                  <div className="flex items-center justify-between border-b pb-2 border-gray-200 dark:border-gray-800">
+                    <div className="flex items-center gap-1.5">
+                      <Wand2 size={14} className="text-emerald-500" />
+                      <h4 className="text-xs font-black uppercase text-emerald-600 dark:text-emerald-400">
+                        Xóa Phông Nền (Chroma Key): {selectedAvatar.name}
+                      </h4>
+                    </div>
+                    <label className="relative inline-flex items-center cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={!!selectedAvatar.chromaKey?.enabled}
+                        onChange={(e) => handleAvatarChromaChange(selectedAvatar.id, 'enabled', e.target.checked)}
+                        className="sr-only peer"
+                      />
+                      <div className="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                    </label>
+                  </div>
+
+                  <div className="space-y-2.5 text-xs">
                     <div className="space-y-1">
-                      <label className="text-[11px] font-bold text-gray-500">Chọn Màu Nền Cần Xóa:</label>
+                      <label className="text-[11px] font-bold text-gray-500">Màu Nền Cần Tách Trong Suốt:</label>
                       <div className="grid grid-cols-4 gap-1.5">
                         {[
                           { mode: 'green', color: '#00ff00', label: '🟢 Xanh Lá' },
@@ -988,7 +994,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                               handleAvatarChromaChange(selectedAvatar.id, 'mode', c.mode);
                               handleAvatarChromaChange(selectedAvatar.id, 'color', c.color);
                             }}
-                            className={`py-1 px-1.5 rounded-lg font-bold text-[11px] border transition-all cursor-pointer text-center ${
+                            className={`py-1.5 px-1.5 rounded-lg font-bold text-[11px] border transition-all cursor-pointer text-center ${
                               selectedAvatar.chromaKey?.mode === c.mode || selectedAvatar.chromaKey?.color === c.color
                                 ? 'bg-emerald-600 text-white border-emerald-400 shadow-xs'
                                 : 'bg-slate-50 dark:bg-black/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800'
@@ -1031,39 +1037,40 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                       </div>
                     </div>
                   </div>
-                )}
-              </div>
-
-              {/* CHỌN PHÔNG NỀN PHÒNG LIVE (STUDIO BACKGROUND) */}
-              <div className={`p-3.5 rounded-2xl border space-y-2.5 ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
-                <div className="flex items-center justify-between border-b pb-2 border-gray-200 dark:border-gray-800">
-                  <h4 className="text-xs font-black uppercase text-purple-600 flex items-center gap-1.5">
-                    <Image size={14} /> Phông Nền Phòng Live (Studio Background)
-                  </h4>
-                  <label className="text-[11px] font-bold text-purple-600 hover:underline flex items-center gap-1 cursor-pointer">
-                    <Upload size={12} /> Tải Nền Riêng
-                    <input type="file" accept="image/*,video/*" onChange={handleCustomBackgroundUpload} className="hidden" />
-                  </label>
                 </div>
+              )}
 
-                <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
-                  {STUDIO_BACKGROUND_PRESETS.map(bg => (
-                    <button
-                      key={bg.id}
-                      type="button"
-                      onClick={() => handleSelectBackground(bg)}
-                      className={`p-2 rounded-xl text-xs font-bold border text-left flex items-center gap-2 transition-all cursor-pointer ${
-                        config.backgroundUrl === bg.url && config.backgroundColor === bg.color
-                          ? 'bg-purple-600 text-white border-purple-500 shadow-xs'
-                          : 'bg-slate-50 dark:bg-black/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800 hover:border-purple-300'
-                      }`}
-                    >
-                      <span className="text-base">{bg.preview}</span>
-                      <span className="truncate text-[11px]">{bg.name}</span>
-                    </button>
-                  ))}
+              {inspectorTab === 'background' && (
+                <div className={`p-3.5 rounded-2xl border space-y-2.5 animate-in fade-in duration-150 ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
+                  <div className="flex items-center justify-between border-b pb-2 border-gray-200 dark:border-gray-800">
+                    <h4 className="text-xs font-black uppercase text-purple-600 flex items-center gap-1.5">
+                      <Image size={14} /> Phông Nền Phòng Live Studio 4K
+                    </h4>
+                    <label className="text-[11px] font-bold text-purple-600 hover:underline flex items-center gap-1 cursor-pointer">
+                      <Upload size={12} /> Tải Nền Riêng
+                      <input type="file" accept="image/*,video/*" onChange={handleCustomBackgroundUpload} className="hidden" />
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-2 sm:grid-cols-3 gap-2">
+                    {STUDIO_BACKGROUND_PRESETS.map(bg => (
+                      <button
+                        key={bg.id}
+                        type="button"
+                        onClick={() => handleSelectBackground(bg)}
+                        className={`p-2 rounded-xl text-xs font-bold border text-left flex items-center gap-2 transition-all cursor-pointer ${
+                          config.backgroundUrl === bg.url && config.backgroundColor === bg.color
+                            ? 'bg-purple-600 text-white border-purple-500 shadow-xs scale-102'
+                            : 'bg-slate-50 dark:bg-black/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800 hover:border-purple-300'
+                        }`}
+                      >
+                        <span className="text-base">{bg.preview}</span>
+                        <span className="truncate text-[11px]">{bg.name}</span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </div>
+              )}
 
             </div>
 
