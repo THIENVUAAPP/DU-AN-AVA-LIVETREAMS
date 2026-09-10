@@ -2,25 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.5.8';
-export const RELEASE_DATE = '09/09/2026';
+export const APP_VERSION = '2.5.9';
+export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Chuyển Giọng Đọc Là Phát Ngay Lập Tức 0ms',
-    description: 'Bất cứ khi nào người dùng chọn hoặc chuyển sang bất kỳ giọng đọc nào trong danh sách, kịch bản sẽ tự động phát ngay lập tức (0.000s) với giọng mới mà không cần phải bấm thêm nút nào!'
+    title: '⚡ Chuyển Giọng Mở Phát Ngay Lập Tức (0.000s) & Xử Lý Đa Luồng Siêu Tốc',
+    description: 'Sửa triệt để lỗi nghẽn WebSocket TTS backend và tối ưu pipeline song song 6 luồng: Khi chuyển bất kỳ giọng đọc nào, âm thanh câu đầu tiên phát ra NGAY TỨC THÌ 0ms không phải chờ đợi.'
   },
   {
-    title: '👑 Nâng Cấp Toàn Diện Cao Độ & Âm Sắc 21 Giọng Nữ 4 Vùng Miền Độc Bản',
-    description: 'Tất cả các giọng đọc nữ đều sở hữu cao độ (Pitch), nhịp điệu (Rate) và màu âm DSP riêng biệt hoàn toàn (Hà Nội BTV, Huế ngọt ngào, Cần Thơ đằm thắm, Sài Gòn GenZ, VTuber nhí nhảnh...), tuyệt đối không trùng lặp và cảm xúc chân thật như người thật.'
+    title: '🎙️ Bảo Toàn 100% Âm Sắc Gốc Khi Tăng / Giảm Tốc Độ Đọc',
+    description: 'Tốc độ đọc (Rate) được xử lý trực tiếp bởi Neural Prosody Engine chuẩn phát thanh viên, giữ nguyên tuyệt đối chất giọng đặc trưng của từng nhân vật, không làm biến dạng cao độ hay vỡ tiếng.'
   },
   {
-    title: '🎙️ Chuyển Đổi Giọng Đọc Độc Lập & Không Bao Giờ Chồng Chéo',
-    description: 'Hủy bỏ và ngắt sạch hoàn toàn âm thanh cũ khi chuyển giọng hoặc đổi kịch bản, chống chồng chéo giọng đọc và kích hoạt ngay giọng mới chọn.'
-  },
-  {
-    title: '✨ Tinh Gọn Giao Diện Nghe Thử Kịch Bản',
-    description: 'Đã lược bỏ nút Tối Ưu Kịch Bản để thanh điều khiển nghe thử giọng đọc trở nên tinh gọn, trực quan và dễ thao tác nhất.'
+    title: '👑 Đồng Bộ 100% Giữa Trình Nghe Thử & Phát Livestream Thực Tế',
+    description: 'Tất cả hiệu ứng DSP, EQ vùng miền và tốc độ phát khi kiểm tra kịch bản đều đồng bộ đồng nhất hoàn toàn khi phiên livestream chính thức lên sóng.'
   }
 ];
 
