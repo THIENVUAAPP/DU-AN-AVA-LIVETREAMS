@@ -3016,7 +3016,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             ref={desktopVideoRef}
             src={lipSyncVideoUrl} 
             className="w-full h-full object-contain bg-black"
-            autoPlay={localStorage.getItem('avalive_user_paused') !== 'true' && isMasterLiveRunning} 
+            autoPlay={localStorage.getItem('avalive_user_paused') !== 'true'} 
             controls={false}
             muted={liveAudioMuted}
             onEnded={handleVideoEnded}
@@ -3056,7 +3056,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             ref={desktopVideoRef}
             src={activeVideoItem.mediaUrl} 
             className="w-full h-full object-contain bg-black"
-            autoPlay={localStorage.getItem('avalive_user_paused') !== 'true' && isMasterLiveRunning} 
+            autoPlay={localStorage.getItem('avalive_user_paused') !== 'true'} 
             loop={!isProcessingEvent}
             controls={false}
             muted={liveAudioMuted}
@@ -3094,7 +3094,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               src={selected.url} 
               className="w-full h-full object-contain bg-black transform-gpu cursor-pointer main-video-player"
               style={{ transform: 'translateZ(0)', willChange: 'transform' }}
-              autoPlay={localStorage.getItem('avalive_user_paused') !== 'true' && isMasterLiveRunning} 
+              autoPlay={localStorage.getItem('avalive_user_paused') !== 'true'} 
               loop 
               muted={liveAudioMuted} 
               controls={false}
@@ -3158,9 +3158,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   e.currentTarget.dataset.userPaused = 'true';
                   e.currentTarget.pause();
                   setIsVideoPlaying(false);
-                } else if (isMasterLiveRunning) {
+                } else {
                   e.currentTarget.dataset.userPaused = 'false';
-                  e.currentTarget.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+                  e.currentTarget.play().then(() => setIsVideoPlaying(true)).catch(() => {
+                    e.currentTarget.muted = true;
+                    e.currentTarget.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+                  });
                 }
               }} 
               onPlay={(e) => {

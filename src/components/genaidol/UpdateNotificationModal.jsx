@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.6.7';
+export const APP_VERSION = '2.6.8';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🎬 Khắc Phục Lỗi Video Nhân Vật / Nhép Miệng Tự Động Chạy 100%',
+    description: 'Xử lý triệt để tình trạng video nhân vật bị dừng khi chọn slot hoặc phát kịch bản. Tự động phát video lặp vô tận (Loop), kết nối trực tiếp bộ phân tích khẩu hình Avatar LipSync với Web Audio DSP.'
+  },
   {
     title: '🌸 Kho 15 Giọng Nữ 20-28t Độc Bản Siêu Viral (Đa Tông Sắc & Vùng Miền)',
     description: 'Nâng cấp toàn diện 15 chất giọng nữ tuổi 20-28 với tông giọng, ngữ điệu, âm sắc và DSP EQ hoàn toàn khác biệt: Ngọc Nhi, Anika Hoạt Ngôn TikTok, Quỳnh Lương Đanh Thép, Jessica Sang Chảnh ASMR, Viên Vibi Hài Hước, Út Mai Cần Thơ, Bé Ba Bến Tre, Lan Anh Xứ Huế, Ánh Tuyết Đà Nẵng, Hương Giang Xứ Nghệ, Thảo Tâm Song Ngữ...'
   },
   {
     title: '⚡ Kích Hoạt Đọc Kịch Bản Ngay Lập Tức Khi Bấm "PHÁT KỊCH BẢN"',
-    description: 'Tối ưu luồng xử lý âm thanh thời gian thực: Khi bấm nút phát kịch bản, AI Idol đọc ngay câu thoại đầu tiên không độ trễ, tự động nạp kịch bản chuẩn từ tab đang chọn và đồng bộ khẩu hình 60 FPS.'
-  },
-  {
-    title: '🌾 Bộ Lọc Phương Ngữ Bản Xứ Đậm Đà (Bắc - Trung - Nam - Tây)',
-    description: 'Tự động biến đổi từ ngữ cảm thán và nhịp điệu phát âm bản xứ theo từng tỉnh thành (Cần Thơ, Bến Tre, Huế, Đà Nẵng, Nghệ An, Hà Nội, Sài Gòn).'
+    description: 'Khi bấm nút phát kịch bản, AI Idol đọc ngay câu thoại đầu tiên không độ trễ, tự động nạp kịch bản chuẩn từ tab đang chọn và đồng bộ khẩu hình 60 FPS.'
   }
 ];
 

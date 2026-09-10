@@ -61,22 +61,53 @@ export class AvatarLipSyncEngine {
    * Kết nối Audio Element (TTS) vào luồng phân tích
    */
   connectAudioElement(audioElement) {
-    if (!this.isInitialized) return;
+    if (!this.isInitialized) this.init();
     try {
-      if (this.audioContext.state === 'suspended') {
-        this.audioContext.resume();
+      if (this.audioContext && this.audioContext.state === 'suspended') {
+        this.audioContext.resume().catch(() => {});
       }
       
       // Ngăn tạo nhiều source cho cùng 1 element
       if (audioElement._hasLipSyncSource) return;
       
-      this.sourceNode = this.audioContext.createMediaElementSource(audioElement);
-      this.sourceNode.connect(this.analyser);
-      this.analyser.connect(this.audioContext.destination);
-      
-      audioElement._hasLipSyncSource = true;
+      if (this.audioContext && this.analyser) {
+        this.sourceNode = this.audioContext.createMediaElementSource(audioElement);
+        this.sourceNode.connect(this.analyser);
+        this.analyser.connect(this.audioContext.destination);
+        audioElement._hasLipSyncSource = true;
+      }
     } catch (e) {
       console.warn('[AvatarLipSyncEngine] Lỗi kết nối Audio Element:', e);
+    }
+  }
+
+  /**
+   * Kết nối Web Audio Node (DSP Master Gain / AudioContext) trực tiếp vào luồng phân tích Lip-Sync
+   */
+  connectAudioNode(audioNode, audioContext = null) {
+    try {
+      if (!this.isInitialized || !this.audioContext) {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        this.audioContext = audioContext || (AudioCtx ? new AudioCtx() : null);
+        if (this.audioContext) {
+          this.analyser = this.audioContext.createAnalyser();
+          this.analyser.fftSize = 512;
+          this.analyser.smoothingTimeConstant = 0.2;
+          const bufferLength = this.analyser.frequencyBinCount;
+          this.dataArray = new Uint8Array(bufferLength);
+          this.isInitialized = true;
+        }
+      }
+      if (this.audioContext && this.audioContext.state === 'suspended') {
+        this.audioContext.resume().catch(() => {});
+      }
+      if (audioNode && this.analyser) {
+        try {
+          audioNode.connect(this.analyser);
+        } catch (connErr) {}
+      }
+    } catch (e) {
+      console.warn('[AvatarLipSyncEngine] Lỗi connectAudioNode:', e);
     }
   }
 
