@@ -70,7 +70,7 @@ export default function UniversalMediaPicker({
   inputId,
   badgeText = '',
   className = '',
-  accept = 'video/mp4,video/webm,video/quicktime,video/x-matroska,video/avi,video/*'
+  accept = 'video/*,image/*,video/mp4,video/webm,video/quicktime,image/png,image/jpeg,image/webp,image/gif'
 }) {
   const [showSamples, setShowSamples] = useState(false);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);

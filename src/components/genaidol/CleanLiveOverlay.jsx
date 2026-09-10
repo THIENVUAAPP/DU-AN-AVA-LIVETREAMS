@@ -8,7 +8,8 @@ import GameChienDau from './game/GameChienDau';
 import { supabase } from '../../lib/supabaseClient';
 import { loadAllAidolItems } from '../../utils/idbHelper';
 import { syncMasterLiveState, getMasterLiveState, sendVideoControl } from '../../lib/masterLiveSync';
-import { getMultiAvatarConfig } from '../../utils/voiceSyncService';
+import { getMultiAvatarConfig, isImageMedia, getChromaStyle } from '../../utils/voiceSyncService';
+import { SvgChromaFilters } from './MultiAvatarStudioModal';
 // Clean Live Overlay - Ultra HD OBS Window Capture
 import bandoAudio from './game/bandoAudioEngine';
 
@@ -2154,6 +2155,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     backgroundImage: multiAvatarConfig.backgroundUrl ? `url(${multiAvatarConfig.backgroundUrl})` : 'none'
                   }}
                 >
+                  <SvgChromaFilters />
                   {activeList.map((avatar, idx) => {
                     const transform = avatar.transform || { 
                       x: idx === 0 ? 5 : idx === 1 ? 50 : idx === 2 ? 25 : 65, 
@@ -2162,17 +2164,20 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                       height: 75, 
                       zIndex: 5, 
                       pose: 'stand', 
-                      objectFit: 'cover' 
+                      objectFit: 'cover',
+                      borderRadius: 16
                     };
                     const isSpeakingNow = isSpeakerActive && (activeSpeakerId === avatar.id || (!activeSpeakerId && avatar.id === 'idol'));
                     const vidSrc = (isSpeakingNow && avatar.talkVideo) 
                       ? avatar.talkVideo 
                       : (avatar.idleVideo || blobVideoUrl || activeMedia.url);
+                    const isImg = isImageMedia(vidSrc);
+                    const chromaStyle = getChromaStyle(avatar.chromaKey || multiAvatarConfig.chromaKey);
 
                     return (
                       <div 
                         key={avatar.id} 
-                        className={`absolute rounded-xl overflow-hidden transition-all duration-300 flex flex-col justify-between ${
+                        className={`absolute overflow-hidden transition-all duration-300 flex flex-col justify-between ${
                           isSpeakingNow ? 'ring-2 ring-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.6)] z-20 scale-102' : 'hover:ring-1 hover:ring-white/40'
                         }`}
                         style={{
@@ -2180,38 +2185,58 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                           top: `${transform.y}%`,
                           width: `${transform.width}%`,
                           height: `${transform.height}%`,
-                          zIndex: isSpeakingNow ? (transform.zIndex || 5) + 10 : (transform.zIndex || 5)
+                          zIndex: isSpeakingNow ? (transform.zIndex || 5) + 10 : (transform.zIndex || 5),
+                          borderRadius: `${transform.borderRadius ?? 16}px`
                         }}
                       >
-                        {vidSrc ? (
-                          <video
-                            key={`${avatar.id}_${isSpeakingNow ? 'talk' : 'idle'}_${vidSrc}`}
-                            src={vidSrc}
-                            autoPlay
-                            loop
-                            muted={isVideoAudioMuted}
-                            playsInline
-                            crossOrigin="anonymous"
-                            controls={false}
-                            preload="auto"
-                            disableRemotePlayback
-                            className="w-full h-full select-none pointer-events-none transform-gpu"
-                            style={{
-                              width: '100%',
-                              height: '100%',
-                              objectFit: transform.objectFit || 'cover',
-                              backgroundColor: 'transparent',
-                              transform: 'translate3d(0, 0, 0)',
-                              WebkitTransform: 'translate3d(0, 0, 0)',
-                              imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto'
-                            }}
-                          />
-                        ) : (
-                          <div className="w-full h-full bg-slate-900/80 flex flex-col items-center justify-center p-2 text-center text-white border border-white/10">
-                            <span className="text-xl mb-1">{transform.pose === 'sit' ? '🪑' : '🧍'}</span>
-                            <span className="text-[11px] font-black">{avatar.name}</span>
-                          </div>
-                        )}
+                        <div 
+                          className="w-full h-full overflow-hidden rounded-[inherit]"
+                          style={chromaStyle}
+                        >
+                          {vidSrc ? (
+                            isImg ? (
+                              <img
+                                src={vidSrc}
+                                alt={avatar.name}
+                                className="w-full h-full object-cover select-none pointer-events-none transform-gpu"
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: transform.objectFit || 'cover',
+                                  imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto'
+                                }}
+                              />
+                            ) : (
+                              <video
+                                key={`${avatar.id}_${isSpeakingNow ? 'talk' : 'idle'}_${vidSrc}`}
+                                src={vidSrc}
+                                autoPlay
+                                loop
+                                muted={isVideoAudioMuted}
+                                playsInline
+                                crossOrigin="anonymous"
+                                controls={false}
+                                preload="auto"
+                                disableRemotePlayback
+                                className="w-full h-full select-none pointer-events-none transform-gpu"
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: transform.objectFit || 'cover',
+                                  backgroundColor: 'transparent',
+                                  transform: 'translate3d(0, 0, 0)',
+                                  WebkitTransform: 'translate3d(0, 0, 0)',
+                                  imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto'
+                                }}
+                              />
+                            )
+                          ) : (
+                            <div className="w-full h-full bg-slate-900/80 flex flex-col items-center justify-center p-2 text-center text-white border border-white/10">
+                              <span className="text-xl mb-1">{transform.pose === 'sit' ? '🪑' : '🧍'}</span>
+                              <span className="text-[11px] font-black">{avatar.name}</span>
+                            </div>
+                          )}
+                        </div>
 
                         {/* Speaker Active Tag Pill */}
                         <div className="absolute bottom-1.5 left-1.5 z-20 flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/75 backdrop-blur-sm border border-white/10 text-[9px] font-black text-white shadow-sm pointer-events-none">

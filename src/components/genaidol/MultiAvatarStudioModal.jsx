@@ -2,7 +2,8 @@ import React, { useState, useEffect, useRef } from 'react';
 import { 
   Users, Sparkles, Video, Mic, Volume2, Gauge, HelpCircle, X, Check, Play, Square, 
   Upload, FolderOpen, Layers, ShieldCheck, Info, MessageSquare, Plus, RefreshCw, Eye, BookOpen,
-  Move, Maximize2, Palette, Sliders, Image, Monitor, Smartphone, ChevronRight, LayoutGrid, CheckCircle2
+  Move, Maximize2, Palette, Sliders, Image, Monitor, Smartphone, ChevronRight, LayoutGrid, CheckCircle2,
+  Crop, Wand2, ArrowUp, ArrowDown, ArrowUpToLine, ArrowDownToLine, Scaling, ZoomIn
 } from 'lucide-react';
 import { 
   ALL_SYSTEM_VOICES, 
@@ -12,9 +13,41 @@ import {
   STUDIO_BACKGROUND_PRESETS,
   STUDIO_STAGE_PRESETS,
   previewVoiceAudio,
-  stopVoiceAudio
+  stopVoiceAudio,
+  isImageMedia,
+  getChromaStyle
 } from '../../utils/voiceSyncService';
 import UniversalMediaPicker from './UniversalMediaPicker';
+
+export const SvgChromaFilters = () => (
+  <svg width="0" height="0" className="absolute pointer-events-none opacity-0" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>
+    <defs>
+      {/* 🟢 Tách Nền Xanh Lá 4K (Green Screen Keying Filter) */}
+      <filter id="avalive-chroma-green" colorInterpolationFilters="sRGB">
+        <feColorMatrix
+          type="matrix"
+          values="
+            1.05  0.00  0.00  0.00  0.00
+            0.00  1.00  0.00  0.00  0.00
+            0.00  0.00  1.05  0.00  0.00
+            1.80 -2.20  1.80  1.00  0.00"
+        />
+      </filter>
+
+      {/* 🔵 Tách Nền Xanh Dương 4K (Blue Screen Keying Filter) */}
+      <filter id="avalive-chroma-blue" colorInterpolationFilters="sRGB">
+        <feColorMatrix
+          type="matrix"
+          values="
+            1.05  0.00  0.00  0.00  0.00
+            0.00  1.05  0.00  0.00  0.00
+            0.00  0.00  1.00  0.00  0.00
+            1.80  1.80 -2.20  1.00  0.00"
+        />
+      </filter>
+    </defs>
+  </svg>
+);
 
 export const SCRIPT_TEMPLATES = [
   {
@@ -60,10 +93,10 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
   const [savedSuccess, setSavedSuccess] = useState(false);
   const [canvasAspectRatio, setCanvasAspectRatio] = useState('9:16'); // '9:16' | '16:9'
 
-  // Dragging state
-  const [draggingAvatarId, setDraggingAvatarId] = useState(null);
+  // Drag & Resize state (Canva / TikTok Live Studio Style)
+  const [dragOperation, setDragOperation] = useState(null); // { avatarId, mode: 'move' | 'nw' | 'ne' | 'se' | 'sw' | 'n' | 's' | 'w' | 'e' }
   const canvasRef = useRef(null);
-  const dragStartPosRef = useRef({ mouseX: 0, mouseY: 0, startX: 0, startY: 0 });
+  const dragStartPosRef = useRef({ mouseX: 0, mouseY: 0, startX: 0, startY: 0, startW: 50, startH: 50 });
 
   useEffect(() => {
     setConfig(getMultiAvatarConfig());
@@ -91,16 +124,16 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     saveMultiAvatarConfig(updated);
   };
 
-  const handleAvatarTransformChange = (avatarId, field, value) => {
+  const handleAvatarChromaChange = (avatarId, field, value) => {
     const updated = {
       ...config,
-      layoutMode: 'custom_canvas',
       avatars: config.avatars.map(av => {
         if (av.id === avatarId) {
+          const currentChroma = av.chromaKey || { enabled: false, color: '#00ff00', similarity: 0.45, smoothness: 0.15, spill: 0.15, mode: 'green' };
           return {
             ...av,
-            transform: {
-              ...(av.transform || { x: 0, y: 0, width: 50, height: 50, zIndex: 1, pose: 'stand', objectFit: 'cover' }),
+            chromaKey: {
+              ...currentChroma,
               [field]: value
             }
           };
@@ -110,6 +143,85 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     };
     setConfig(updated);
     saveMultiAvatarConfig(updated);
+  };
+
+  const handleAvatarTransformChange = (avatarId, field, value) => {
+    const updated = {
+      ...config,
+      layoutMode: 'custom_canvas',
+      avatars: config.avatars.map(av => {
+        if (av.id === avatarId) {
+          return {
+            ...av,
+            transform: {
+              ...(av.transform || { x: 0, y: 0, width: 50, height: 50, zIndex: 1, pose: 'stand', objectFit: 'cover', borderRadius: 16 }),
+              [field]: value
+            }
+          };
+        }
+        return av;
+      })
+    };
+    setConfig(updated);
+    saveMultiAvatarConfig(updated);
+  };
+
+  // Quick Action Toolbar Helpers
+  const handleFillScreen = (avatarId) => {
+    const updated = {
+      ...config,
+      layoutMode: 'custom_canvas',
+      avatars: config.avatars.map(av => {
+        if (av.id === avatarId) {
+          return {
+            ...av,
+            transform: {
+              ...(av.transform || {}),
+              x: 0,
+              y: 0,
+              width: 100,
+              height: 100
+            }
+          };
+        }
+        return av;
+      })
+    };
+    setConfig(updated);
+    saveMultiAvatarConfig(updated);
+  };
+
+  const handleCenterAvatar = (avatarId) => {
+    const av = config.avatars.find(a => a.id === avatarId);
+    const w = av?.transform?.width || 50;
+    const h = av?.transform?.height || 50;
+    const updated = {
+      ...config,
+      layoutMode: 'custom_canvas',
+      avatars: config.avatars.map(a => {
+        if (a.id === avatarId) {
+          return {
+            ...a,
+            transform: {
+              ...(a.transform || {}),
+              x: Math.max(0, Math.round((100 - w) / 2)),
+              y: Math.max(0, Math.round((100 - h) / 2))
+            }
+          };
+        }
+        return a;
+      })
+    };
+    setConfig(updated);
+    saveMultiAvatarConfig(updated);
+  };
+
+  const handleBringToFront = (avatarId) => {
+    handleAvatarTransformChange(avatarId, 'zIndex', 50);
+  };
+
+  const handleSendToBack = (avatarId) => {
+    handleAvatarTransformChange(avatarId, 'zIndex', 1);
   };
 
   const handleApplyPresetLayout = (presetKey) => {
@@ -186,46 +298,129 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     setMediaPickerTarget(null);
   };
 
-  // Drag and drop handlers on visual stage canvas
+  // Drag and drop / Resize handlers on visual stage canvas
   const handleMouseDownOnAvatar = (e, avatarId) => {
     e.preventDefault();
     e.stopPropagation();
     setSelectedAvatarId(avatarId);
-    setDraggingAvatarId(avatarId);
+    setDragOperation({ avatarId, mode: 'move' });
 
     const avatar = config.avatars.find(a => a.id === avatarId);
+    const tf = avatar?.transform || { x: 0, y: 0, width: 50, height: 50 };
     dragStartPosRef.current = {
       mouseX: e.clientX,
       mouseY: e.clientY,
-      startX: avatar?.transform?.x ?? 0,
-      startY: avatar?.transform?.y ?? 0
+      startX: tf.x ?? 0,
+      startY: tf.y ?? 0,
+      startW: tf.width ?? 50,
+      startH: tf.height ?? 50
+    };
+  };
+
+  const handleMouseDownOnHandle = (e, avatarId, mode) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setSelectedAvatarId(avatarId);
+    setDragOperation({ avatarId, mode });
+
+    const avatar = config.avatars.find(a => a.id === avatarId);
+    const tf = avatar?.transform || { x: 0, y: 0, width: 50, height: 50 };
+    dragStartPosRef.current = {
+      mouseX: e.clientX,
+      mouseY: e.clientY,
+      startX: tf.x ?? 0,
+      startY: tf.y ?? 0,
+      startW: tf.width ?? 50,
+      startH: tf.height ?? 50
     };
   };
 
   const handleMouseMove = (e) => {
-    if (!draggingAvatarId || !canvasRef.current) return;
+    if (!dragOperation || !canvasRef.current) return;
     const rect = canvasRef.current.getBoundingClientRect();
     if (rect.width <= 0 || rect.height <= 0) return;
 
     const deltaX = ((e.clientX - dragStartPosRef.current.mouseX) / rect.width) * 100;
     const deltaY = ((e.clientY - dragStartPosRef.current.mouseY) / rect.height) * 100;
+    const { avatarId, mode } = dragOperation;
+    const { startX, startY, startW, startH } = dragStartPosRef.current;
 
-    let newX = Math.round(dragStartPosRef.current.startX + deltaX);
-    let newY = Math.round(dragStartPosRef.current.startY + deltaY);
-
-    newX = Math.max(0, Math.min(85, newX));
-    newY = Math.max(0, Math.min(85, newY));
-
-    handleAvatarTransformChange(draggingAvatarId, 'x', newX);
-    handleAvatarTransformChange(draggingAvatarId, 'y', newY);
+    if (mode === 'move') {
+      let newX = Math.round(startX + deltaX);
+      let newY = Math.round(startY + deltaY);
+      newX = Math.max(0, Math.min(100 - (startW || 20), newX));
+      newY = Math.max(0, Math.min(100 - (startH || 20), newY));
+      handleAvatarTransformChange(avatarId, 'x', newX);
+      handleAvatarTransformChange(avatarId, 'y', newY);
+    } else if (mode === 'se') { // bottom-right
+      let newW = Math.round(startW + deltaX);
+      let newH = Math.round(startH + deltaY);
+      newW = Math.max(15, Math.min(100 - startX, newW));
+      newH = Math.max(15, Math.min(100 - startY, newH));
+      handleAvatarTransformChange(avatarId, 'width', newW);
+      handleAvatarTransformChange(avatarId, 'height', newH);
+    } else if (mode === 'sw') { // bottom-left
+      let newX = Math.round(startX + deltaX);
+      let newW = Math.round(startW - deltaX);
+      let newH = Math.round(startH + deltaY);
+      newX = Math.max(0, Math.min(startX + startW - 15, newX));
+      newW = Math.max(15, startW - (newX - startX));
+      newH = Math.max(15, Math.min(100 - startY, newH));
+      handleAvatarTransformChange(avatarId, 'x', newX);
+      handleAvatarTransformChange(avatarId, 'width', newW);
+      handleAvatarTransformChange(avatarId, 'height', newH);
+    } else if (mode === 'ne') { // top-right
+      let newY = Math.round(startY + deltaY);
+      let newW = Math.round(startW + deltaX);
+      let newH = Math.round(startH - deltaY);
+      newY = Math.max(0, Math.min(startY + startH - 15, newY));
+      newW = Math.max(15, Math.min(100 - startX, newW));
+      newH = Math.max(15, startH - (newY - startY));
+      handleAvatarTransformChange(avatarId, 'y', newY);
+      handleAvatarTransformChange(avatarId, 'width', newW);
+      handleAvatarTransformChange(avatarId, 'height', newH);
+    } else if (mode === 'nw') { // top-left
+      let newX = Math.round(startX + deltaX);
+      let newY = Math.round(startY + deltaY);
+      let newW = Math.round(startW - deltaX);
+      let newH = Math.round(startH - deltaY);
+      newX = Math.max(0, Math.min(startX + startW - 15, newX));
+      newY = Math.max(0, Math.min(startY + startH - 15, newY));
+      newW = Math.max(15, startW - (newX - startX));
+      newH = Math.max(15, startH - (newY - startY));
+      handleAvatarTransformChange(avatarId, 'x', newX);
+      handleAvatarTransformChange(avatarId, 'y', newY);
+      handleAvatarTransformChange(avatarId, 'width', newW);
+      handleAvatarTransformChange(avatarId, 'height', newH);
+    } else if (mode === 'e') {
+      let newW = Math.round(startW + deltaX);
+      newW = Math.max(15, Math.min(100 - startX, newW));
+      handleAvatarTransformChange(avatarId, 'width', newW);
+    } else if (mode === 'w') {
+      let newX = Math.round(startX + deltaX);
+      newX = Math.max(0, Math.min(startX + startW - 15, newX));
+      let newW = Math.max(15, startW - (newX - startX));
+      handleAvatarTransformChange(avatarId, 'x', newX);
+      handleAvatarTransformChange(avatarId, 'width', newW);
+    } else if (mode === 's') {
+      let newH = Math.round(startH + deltaY);
+      newH = Math.max(15, Math.min(100 - startY, newH));
+      handleAvatarTransformChange(avatarId, 'height', newH);
+    } else if (mode === 'n') {
+      let newY = Math.round(startY + deltaY);
+      newY = Math.max(0, Math.min(startY + startH - 15, newY));
+      let newH = Math.max(15, startH - (newY - startY));
+      handleAvatarTransformChange(avatarId, 'y', newY);
+      handleAvatarTransformChange(avatarId, 'height', newH);
+    }
   };
 
   const handleMouseUp = () => {
-    setDraggingAvatarId(null);
+    setDragOperation(null);
   };
 
   useEffect(() => {
-    if (draggingAvatarId) {
+    if (dragOperation) {
       window.addEventListener('mousemove', handleMouseMove);
       window.addEventListener('mouseup', handleMouseUp);
       return () => {
@@ -233,13 +428,14 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
         window.removeEventListener('mouseup', handleMouseUp);
       };
     }
-  }, [draggingAvatarId]);
+  }, [dragOperation]);
 
   const activeAvatars = (config.avatars || []).slice(0, config.activeCount);
   const selectedAvatar = config.avatars.find(a => a.id === selectedAvatarId) || config.avatars[0];
 
   return (
     <div className={`flex flex-col h-full ${isEmbedded ? 'bg-transparent text-gray-800' : 'bg-[#11131a] text-white'}`}>
+      <SvgChromaFilters />
       
       {/* 1. TOP HEADER & MAIN CONTROLS */}
       <div className={`p-4 border-b flex flex-wrap items-center justify-between gap-3 shrink-0 ${isEmbedded ? 'bg-white border-gray-200 rounded-2xl shadow-xs mb-3' : 'bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-800 text-white'}`}>
@@ -251,11 +447,11 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
             <div className="flex items-center gap-2">
               <h3 className="text-base font-black tracking-wide">STUDIO SÂN KHẤU ĐA NHÂN VẬT (2 – 4 AVATAR)</h3>
               <span className="px-2 py-0.5 rounded-full text-[10px] font-black bg-cyan-500/20 text-cyan-700 dark:text-cyan-300 border border-cyan-400/40">
-                DRAG & DROP SÂN KHẤU
+                CANVA & TIKTOK STUDIO CANVAS
               </span>
             </div>
             <p className="text-xs text-gray-500 mt-0.5">
-              Tự do kéo thả, sắp xếp vị trí đứng / ngồi, lồng ghép phông nền và chuyển đổi khẩu hình nói theo kịch bản.
+              Kéo thả di chuyển, phóng to/thu nhỏ 8 góc, xóa phông nền xanh & đồng bộ khẩu hình 60fps.
             </p>
           </div>
         </div>
@@ -376,9 +572,9 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
             <div className="lg:col-span-7 flex flex-col items-center justify-center p-3 rounded-2xl bg-[#090b10] border border-gray-800 shadow-inner relative select-none">
               
               {/* TOP BAR TRONG CANVAS: PRESET NÚT BẤM NHANH */}
-              <div className="w-full flex items-center justify-between pb-2 mb-2 border-b border-gray-800/80 text-xs">
+              <div className="w-full flex items-center justify-between pb-2 mb-2 border-b border-gray-800/80 text-xs flex-wrap gap-2">
                 <span className="font-bold text-gray-400 flex items-center gap-1.5">
-                  <Palette size={13} className="text-cyan-400" /> Bố Cục Sân Khấu Sẵn:
+                  <Palette size={13} className="text-cyan-400" /> Bố Cục Sân Khấu:
                 </span>
                 <div className="flex items-center gap-1 flex-wrap">
                   {Object.entries(STUDIO_STAGE_PRESETS).filter(([k]) => k !== 'custom_canvas').map(([key, preset]) => (
@@ -424,17 +620,20 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
 
                 {/* RENDER ACTIVE AVATARS ON CANVAS */}
                 {activeAvatars.map((avatar, idx) => {
-                  const transform = avatar.transform || { x: idx * 25, y: 10, width: 45, height: 75, zIndex: 5, pose: 'stand', objectFit: 'cover' };
+                  const transform = avatar.transform || { x: idx * 25, y: 10, width: 45, height: 75, zIndex: 5, pose: 'stand', objectFit: 'cover', borderRadius: 16 };
                   const isSelected = selectedAvatarId === avatar.id;
-                  const isDragging = draggingAvatarId === avatar.id;
+                  const isDragging = dragOperation?.avatarId === avatar.id;
+                  const mediaSrc = avatar.talkVideo || avatar.idleVideo;
+                  const isImg = isImageMedia(mediaSrc);
+                  const chromaStyle = getChromaStyle(avatar.chromaKey || config.chromaKey);
 
                   return (
                     <div
                       key={avatar.id}
                       onMouseDown={(e) => handleMouseDownOnAvatar(e, avatar.id)}
-                      className={`absolute rounded-xl overflow-hidden cursor-move transition-shadow duration-150 flex flex-col justify-between ${
+                      className={`absolute overflow-visible cursor-move transition-shadow duration-100 flex flex-col justify-between ${
                         isSelected 
-                          ? 'ring-2 ring-cyan-400 shadow-[0_0_20px_rgba(34,211,238,0.6)]' 
+                          ? 'ring-2 ring-cyan-400 shadow-[0_0_25px_rgba(34,211,238,0.7)]' 
                           : 'ring-1 ring-white/30 hover:ring-white/60'
                       }`}
                       style={{
@@ -442,54 +641,148 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                         top: `${transform.y}%`,
                         width: `${transform.width}%`,
                         height: `${transform.height}%`,
-                        zIndex: transform.zIndex || 5
+                        zIndex: transform.zIndex || 5,
+                        borderRadius: `${transform.borderRadius ?? 16}px`
                       }}
                     >
-                      {/* VIDEO HOẶC PLACEHOLDER AVATAR */}
-                      {avatar.idleVideo || avatar.talkVideo ? (
-                        <video
-                          src={avatar.talkVideo || avatar.idleVideo}
-                          autoPlay
-                          loop
-                          muted
-                          playsInline
-                          className="w-full h-full pointer-events-none"
-                          style={{ objectFit: transform.objectFit || 'cover' }}
-                        />
-                      ) : (
-                        <div className="w-full h-full bg-slate-900/90 flex flex-col items-center justify-center p-2 text-center text-white border border-white/10">
-                          <span className="text-2xl mb-1">{transform.pose === 'sit' ? '🪑' : '🧍'}</span>
-                          <span className="text-[11px] font-black">{avatar.name}</span>
-                          <span className="text-[9px] text-cyan-300 font-mono">[{avatar.tag}]</span>
-                        </div>
-                      )}
+                      {/* MEDIA CONTAINER WITH CHROMA KEY FILTER */}
+                      <div 
+                        className="w-full h-full overflow-hidden rounded-[inherit]"
+                        style={chromaStyle}
+                      >
+                        {mediaSrc ? (
+                          isImg ? (
+                            <img
+                              src={mediaSrc}
+                              alt={avatar.name}
+                              className="w-full h-full pointer-events-none"
+                              style={{ objectFit: transform.objectFit || 'cover' }}
+                            />
+                          ) : (
+                            <video
+                              src={mediaSrc}
+                              autoPlay
+                              loop
+                              muted
+                              playsInline
+                              className="w-full h-full pointer-events-none"
+                              style={{ objectFit: transform.objectFit || 'cover' }}
+                            />
+                          )
+                        ) : (
+                          <div className="w-full h-full bg-slate-900/90 flex flex-col items-center justify-center p-2 text-center text-white border border-white/10">
+                            <span className="text-2xl mb-1">{transform.pose === 'sit' ? '🪑' : '🧍'}</span>
+                            <span className="text-[11px] font-black">{avatar.name}</span>
+                            <span className="text-[9px] text-cyan-300 font-mono">[{avatar.tag}]</span>
+                          </div>
+                        )}
+                      </div>
 
-                      {/* BADGE TÊN & VAI TRÒ */}
-                      <div className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded bg-black/80 backdrop-blur-sm text-[10px] font-black text-white border border-white/20 flex items-center gap-1 pointer-events-none">
+                      {/* BADGE TÊN & VAI TRÒ & KÍCH THƯỚC */}
+                      <div className="absolute top-1.5 left-1.5 px-2 py-0.5 rounded bg-black/85 backdrop-blur-sm text-[10px] font-black text-white border border-white/20 flex items-center gap-1 pointer-events-none z-30 shadow-md">
                         <span className={`w-1.5 h-1.5 rounded-full ${isSelected ? 'bg-cyan-400 animate-ping' : 'bg-emerald-400'}`} />
                         <span>#{idx + 1} {avatar.name}</span>
-                        <span className="text-yellow-300 text-[9px]">({transform.pose === 'sit' ? 'Ngồi' : 'Đứng'})</span>
+                        {avatar.chromaKey?.enabled && (
+                          <span className="text-emerald-400 text-[9px] font-bold">🟢 Tách nền</span>
+                        )}
                       </div>
 
-                      {/* DRAG HANDLE INDICATOR */}
-                      <div className="absolute bottom-1 right-1 p-1 bg-black/60 rounded text-[9px] text-white/70 pointer-events-none">
-                        <Move size={10} />
-                      </div>
+                      {/* 8-POINT INTERACTIVE RESIZE HANDLES (CANVA / TIKTOK STUDIO) */}
+                      {isSelected && (
+                        <>
+                          {/* Live dimension tooltip */}
+                          <div className="absolute -top-7 left-1/2 -translate-x-1/2 px-2 py-0.5 rounded bg-cyan-500 text-black text-[10px] font-black shadow-lg pointer-events-none whitespace-nowrap z-50">
+                            W: {transform.width}% × H: {transform.height}% | Lớp #{transform.zIndex || 5}
+                          </div>
+
+                          {/* 4 Corners */}
+                          <div 
+                            onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'nw')}
+                            className="absolute -top-1.5 -left-1.5 w-3.5 h-3.5 bg-cyan-400 border-2 border-black rounded-sm cursor-nwse-resize z-40 hover:scale-125 transition-transform shadow-md" 
+                          />
+                          <div 
+                            onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'ne')}
+                            className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-cyan-400 border-2 border-black rounded-sm cursor-nesw-resize z-40 hover:scale-125 transition-transform shadow-md" 
+                          />
+                          <div 
+                            onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'sw')}
+                            className="absolute -bottom-1.5 -left-1.5 w-3.5 h-3.5 bg-cyan-400 border-2 border-black rounded-sm cursor-nesw-resize z-40 hover:scale-125 transition-transform shadow-md" 
+                          />
+                          <div 
+                            onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'se')}
+                            className="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-cyan-400 border-2 border-black rounded-sm cursor-nwse-resize z-40 hover:scale-125 transition-transform shadow-md" 
+                          />
+
+                          {/* 4 Edges */}
+                          <div 
+                            onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'n')}
+                            className="absolute -top-1 left-1/2 -translate-x-1/2 w-4 h-2 bg-cyan-300 border border-black rounded-xs cursor-ns-resize z-40 hover:scale-125" 
+                          />
+                          <div 
+                            onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 's')}
+                            className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-4 h-2 bg-cyan-300 border border-black rounded-xs cursor-ns-resize z-40 hover:scale-125" 
+                          />
+                          <div 
+                            onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'w')}
+                            className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-4 bg-cyan-300 border border-black rounded-xs cursor-ew-resize z-40 hover:scale-125" 
+                          />
+                          <div 
+                            onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'e')}
+                            className="absolute top-1/2 -right-1 -translate-y-1/2 w-2 h-4 bg-cyan-300 border border-black rounded-xs cursor-ew-resize z-40 hover:scale-125" 
+                          />
+                        </>
+                      )}
                     </div>
                   );
                 })}
               </div>
 
-              <p className="text-[11px] text-gray-500 mt-2 font-mono">
-                💡 Bấm và giữ chuột vào từng nhân vật để kéo thả vị trí (X, Y) trực tiếp trên sân khấu
+              {/* QUICK ACTION TOOLBAR DƯỚI CANVAS */}
+              <div className="flex items-center gap-1.5 mt-2.5 flex-wrap justify-center text-xs">
+                <button
+                  type="button"
+                  onClick={() => handleFillScreen(selectedAvatar.id)}
+                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-cyan-300 font-bold flex items-center gap-1 cursor-pointer border border-cyan-500/30"
+                  title="Phóng to nhân vật chiếm 100% toàn bộ khung hình Live"
+                >
+                  <Maximize2 size={12} /> Full Màn Hình (100%)
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleCenterAvatar(selectedAvatar.id)}
+                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-yellow-300 font-bold flex items-center gap-1 cursor-pointer border border-yellow-500/30"
+                  title="Căn giữa chính giữa màn hình"
+                >
+                  <Scaling size={12} /> Căn Giữa Sân Khấu
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleBringToFront(selectedAvatar.id)}
+                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold flex items-center gap-1 cursor-pointer border border-white/20"
+                  title="Đưa lên trên cùng mọi nhân vật khác"
+                >
+                  <ArrowUpToLine size={12} /> Lên Đầu
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleSendToBack(selectedAvatar.id)}
+                  className="px-2.5 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold flex items-center gap-1 cursor-pointer border border-white/20"
+                  title="Đưa xuống dưới cùng"
+                >
+                  <ArrowDownToLine size={12} /> Xuống Đáy
+                </button>
+              </div>
+
+              <p className="text-[11px] text-gray-500 mt-1.5 font-mono">
+                💡 Kéo giữa để di chuyển (X, Y) • Kéo 8 góc/cạnh để phóng to thu nhỏ như Canva / TikTok Live
               </p>
             </div>
 
-            {/* CỘT PHẢI: BẢNG TINH CHỈNH VỊ TRÍ, TƯ THẾ & BACKGROUND (5 CỘT) */}
-            <div className="lg:col-span-5 space-y-3.5">
+            {/* CỘT PHẢI: BẢNG TINH CHỈNH VỊ TRÍ, TƯ THẾ, TÁCH NỀN & BACKGROUND (5 CỘT) */}
+            <div className="lg:col-span-5 space-y-3">
               
               {/* CHỌN NHÂN VẬT ĐANG TINH CHỈNH */}
-              <div className={`p-3.5 rounded-2xl border ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
+              <div className={`p-3 rounded-2xl border ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
                 <div className="flex items-center justify-between mb-2">
                   <span className="text-xs font-black uppercase text-gray-500 tracking-wider">
                     Đang chọn chỉnh nhân vật:
@@ -518,11 +811,11 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                 </div>
               </div>
 
-              {/* TÙY CHỈNH TỌA ĐỘ, KÍCH THƯỚC, TƯ THẾ NHÂN VẬT ĐANG CHỌN */}
-              <div className={`p-4 rounded-2xl border space-y-3 ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
+              {/* TÙY CHỈNH TỌA ĐỘ, KÍCH THƯỚC, TƯ THẾ & CẮT XÉN */}
+              <div className={`p-3.5 rounded-2xl border space-y-2.5 ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
                 <div className="flex items-center justify-between border-b pb-2 border-gray-200 dark:border-gray-800">
                   <h4 className="text-xs font-black uppercase text-blue-600 flex items-center gap-1.5">
-                    <Sliders size={14} /> Tọa Độ & Kích Thước: {selectedAvatar.name}
+                    <Sliders size={14} /> Tọa Độ, Kích Thước & Cắt Xén: {selectedAvatar.name}
                   </h4>
                   <span className="text-[11px] font-mono text-gray-500">[{selectedAvatar.tag}]</span>
                 </div>
@@ -556,14 +849,14 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                 </div>
 
                 {/* SLIDERS TỌA ĐỘ VÀ KÍCH THƯỚC */}
-                <div className="grid grid-cols-2 gap-3 text-xs">
+                <div className="grid grid-cols-2 gap-2.5 text-xs">
                   <div>
                     <label className="text-[11px] font-bold text-gray-500 block mb-1">
                       Kích Thước (Width): {selectedAvatar.transform?.width || 50}%
                     </label>
                     <input 
                       type="range" 
-                      min="20" 
+                      min="15" 
                       max="100" 
                       value={selectedAvatar.transform?.width || 50} 
                       onChange={(e) => handleAvatarTransformChange(selectedAvatar.id, 'width', Number(e.target.value))}
@@ -577,7 +870,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                     </label>
                     <input 
                       type="range" 
-                      min="20" 
+                      min="15" 
                       max="100" 
                       value={selectedAvatar.transform?.height || 50} 
                       onChange={(e) => handleAvatarTransformChange(selectedAvatar.id, 'height', Number(e.target.value))}
@@ -614,40 +907,135 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                   </div>
                 </div>
 
-                {/* THỨ TỰ LỚP (Z-INDEX) & TỶ LỆ OBJECT FIT */}
-                <div className="flex items-center justify-between pt-1 border-t border-gray-100 dark:border-gray-800 text-xs">
-                  <div className="flex items-center gap-2">
-                    <span className="text-[11px] font-bold text-gray-500">Lớp hiển thị:</span>
+                {/* THỨ TỰ LỚP (Z-INDEX) & TỶ LỆ CẮT XÉN OBJECT FIT */}
+                <div className="flex items-center justify-between pt-1 border-t border-gray-100 dark:border-gray-800 text-xs flex-wrap gap-2">
+                  <div className="flex items-center gap-1.5">
+                    <span className="text-[11px] font-bold text-gray-500">Lớp:</span>
                     <button
                       type="button"
                       onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'zIndex', (selectedAvatar.transform?.zIndex || 5) + 1)}
                       className="px-2 py-0.5 rounded bg-slate-100 dark:bg-black/30 border border-gray-300 dark:border-gray-800 text-xs font-bold cursor-pointer"
-                      title="Đưa nhân vật lên phía trước"
+                      title="Lên 1 lớp"
                     >
-                      ⬆ Lên Trước ({selectedAvatar.transform?.zIndex || 5})
+                      <ArrowUp size={11} className="inline" /> Lên ({selectedAvatar.transform?.zIndex || 5})
                     </button>
                     <button
                       type="button"
                       onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'zIndex', Math.max(1, (selectedAvatar.transform?.zIndex || 5) - 1))}
                       className="px-2 py-0.5 rounded bg-slate-100 dark:bg-black/30 border border-gray-300 dark:border-gray-800 text-xs font-bold cursor-pointer"
-                      title="Đưa nhân vật ra phía sau"
+                      title="Xuống 1 lớp"
                     >
-                      ⬇ Xuống Sau
+                      <ArrowDown size={11} className="inline" /> Xuống
                     </button>
                   </div>
 
-                  <button
-                    type="button"
-                    onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'objectFit', selectedAvatar.transform?.objectFit === 'contain' ? 'cover' : 'contain')}
-                    className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-600 text-xs font-bold border border-blue-200 dark:border-blue-800 cursor-pointer"
-                  >
-                    Fit: {selectedAvatar.transform?.objectFit || 'cover'}
-                  </button>
+                  <div className="flex items-center gap-1">
+                    <button
+                      type="button"
+                      onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'objectFit', selectedAvatar.transform?.objectFit === 'contain' ? 'cover' : selectedAvatar.transform?.objectFit === 'fill' ? 'contain' : 'fill')}
+                      className="px-2 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-600 text-xs font-bold border border-blue-200 dark:border-blue-800 cursor-pointer"
+                      title="Chuyển chế độ cắt xén (Cover, Contain, Fill)"
+                    >
+                      Fit: {selectedAvatar.transform?.objectFit || 'cover'}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'borderRadius', selectedAvatar.transform?.borderRadius === 0 ? 16 : selectedAvatar.transform?.borderRadius === 16 ? 9999 : 0)}
+                      className="px-2 py-0.5 rounded bg-slate-100 dark:bg-black/30 text-gray-700 dark:text-gray-300 text-xs font-bold border border-gray-300 dark:border-gray-800 cursor-pointer"
+                      title="Bo góc viền (Vuông, Bo nhẹ, Tròn)"
+                    >
+                      Góc: {selectedAvatar.transform?.borderRadius === 9999 ? 'Tròn' : selectedAvatar.transform?.borderRadius === 0 ? 'Vuông' : 'Bo 16px'}
+                    </button>
+                  </div>
                 </div>
               </div>
 
+              {/* 🟢 TÁCH NỀN / XÓA PHÔNG NỀN (CHROMA KEY STUDIO) */}
+              <div className={`p-3.5 rounded-2xl border space-y-2.5 ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
+                <div className="flex items-center justify-between border-b pb-2 border-gray-200 dark:border-gray-800">
+                  <div className="flex items-center gap-1.5">
+                    <Wand2 size={14} className="text-emerald-500" />
+                    <h4 className="text-xs font-black uppercase text-emerald-600 dark:text-emerald-400">
+                      Xóa Phông Nền (Chroma Key): {selectedAvatar.name}
+                    </h4>
+                  </div>
+                  <label className="relative inline-flex items-center cursor-pointer">
+                    <input 
+                      type="checkbox" 
+                      checked={!!selectedAvatar.chromaKey?.enabled}
+                      onChange={(e) => handleAvatarChromaChange(selectedAvatar.id, 'enabled', e.target.checked)}
+                      className="sr-only peer"
+                    />
+                    <div className="w-9 h-5 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-emerald-500"></div>
+                  </label>
+                </div>
+
+                {selectedAvatar.chromaKey?.enabled && (
+                  <div className="space-y-2.5 text-xs animate-in fade-in duration-200">
+                    <div className="space-y-1">
+                      <label className="text-[11px] font-bold text-gray-500">Chọn Màu Nền Cần Xóa:</label>
+                      <div className="grid grid-cols-4 gap-1.5">
+                        {[
+                          { mode: 'green', color: '#00ff00', label: '🟢 Xanh Lá' },
+                          { mode: 'blue', color: '#0000ff', label: '🔵 Xanh Dương' },
+                          { mode: 'black', color: '#000000', label: '⚫ Nền Đen' },
+                          { mode: 'white', color: '#ffffff', label: '⚪ Nền Trắng' }
+                        ].map(c => (
+                          <button
+                            key={c.mode}
+                            type="button"
+                            onClick={() => {
+                              handleAvatarChromaChange(selectedAvatar.id, 'mode', c.mode);
+                              handleAvatarChromaChange(selectedAvatar.id, 'color', c.color);
+                            }}
+                            className={`py-1 px-1.5 rounded-lg font-bold text-[11px] border transition-all cursor-pointer text-center ${
+                              selectedAvatar.chromaKey?.mode === c.mode || selectedAvatar.chromaKey?.color === c.color
+                                ? 'bg-emerald-600 text-white border-emerald-400 shadow-xs'
+                                : 'bg-slate-50 dark:bg-black/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800'
+                            }`}
+                          >
+                            {c.label}
+                          </button>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-2 gap-2">
+                      <div>
+                        <label className="text-[11px] font-bold text-gray-500 block mb-1">
+                          Độ Nhạy Xóa: {Math.round((selectedAvatar.chromaKey?.similarity ?? 0.45) * 100)}%
+                        </label>
+                        <input 
+                          type="range" 
+                          min="0.1" 
+                          max="0.9" 
+                          step="0.05"
+                          value={selectedAvatar.chromaKey?.similarity ?? 0.45} 
+                          onChange={(e) => handleAvatarChromaChange(selectedAvatar.id, 'similarity', parseFloat(e.target.value))}
+                          className="w-full accent-emerald-500"
+                        />
+                      </div>
+                      <div>
+                        <label className="text-[11px] font-bold text-gray-500 block mb-1">
+                          Độ Mịn Viền: {Math.round((selectedAvatar.chromaKey?.smoothness ?? 0.15) * 100)}%
+                        </label>
+                        <input 
+                          type="range" 
+                          min="0.01" 
+                          max="0.4" 
+                          step="0.02"
+                          value={selectedAvatar.chromaKey?.smoothness ?? 0.15} 
+                          onChange={(e) => handleAvatarChromaChange(selectedAvatar.id, 'smoothness', parseFloat(e.target.value))}
+                          className="w-full accent-emerald-500"
+                        />
+                      </div>
+                    </div>
+                  </div>
+                )}
+              </div>
+
               {/* CHỌN PHÔNG NỀN PHÒNG LIVE (STUDIO BACKGROUND) */}
-              <div className={`p-4 rounded-2xl border space-y-2.5 ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
+              <div className={`p-3.5 rounded-2xl border space-y-2.5 ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
                 <div className="flex items-center justify-between border-b pb-2 border-gray-200 dark:border-gray-800">
                   <h4 className="text-xs font-black uppercase text-purple-600 flex items-center gap-1.5">
                     <Image size={14} /> Phông Nền Phòng Live (Studio Background)

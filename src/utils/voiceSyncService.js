@@ -6587,8 +6587,10 @@ export const DEFAULT_MULTI_AVATAR_CONFIG = {
   chromaKey: {
     enabled: false,
     color: '#00ff00',
-    similarity: 0.4,
-    smoothness: 0.1
+    similarity: 0.45,
+    smoothness: 0.15,
+    spill: 0.15,
+    mode: 'green' // 'green' | 'blue' | 'black' | 'white' | 'custom'
   },
   avatars: [
     {
@@ -6603,6 +6605,14 @@ export const DEFAULT_MULTI_AVATAR_CONFIG = {
       volume: 1.0,
       rate: 1.0,
       enabled: true,
+      chromaKey: {
+        enabled: false,
+        color: '#00ff00',
+        similarity: 0.45,
+        smoothness: 0.15,
+        spill: 0.15,
+        mode: 'green'
+      },
       transform: {
         x: 4,
         y: 8,
@@ -6610,7 +6620,8 @@ export const DEFAULT_MULTI_AVATAR_CONFIG = {
         height: 88,
         zIndex: 10,
         pose: 'stand', // 'stand' (Đứng), 'sit' (Ngồi), 'half' (Nửa người)
-        objectFit: 'cover'
+        objectFit: 'cover',
+        borderRadius: 16
       }
     },
     {
@@ -6625,6 +6636,14 @@ export const DEFAULT_MULTI_AVATAR_CONFIG = {
       volume: 1.0,
       rate: 1.05,
       enabled: true,
+      chromaKey: {
+        enabled: false,
+        color: '#00ff00',
+        similarity: 0.45,
+        smoothness: 0.15,
+        spill: 0.15,
+        mode: 'green'
+      },
       transform: {
         x: 48,
         y: 28,
@@ -6632,7 +6651,8 @@ export const DEFAULT_MULTI_AVATAR_CONFIG = {
         height: 68,
         zIndex: 5,
         pose: 'sit',
-        objectFit: 'cover'
+        objectFit: 'cover',
+        borderRadius: 16
       }
     },
     {
@@ -6647,6 +6667,14 @@ export const DEFAULT_MULTI_AVATAR_CONFIG = {
       volume: 1.0,
       rate: 1.1,
       enabled: false,
+      chromaKey: {
+        enabled: false,
+        color: '#00ff00',
+        similarity: 0.45,
+        smoothness: 0.15,
+        spill: 0.15,
+        mode: 'green'
+      },
       transform: {
         x: 22,
         y: 58,
@@ -6654,7 +6682,8 @@ export const DEFAULT_MULTI_AVATAR_CONFIG = {
         height: 40,
         zIndex: 12,
         pose: 'sit',
-        objectFit: 'cover'
+        objectFit: 'cover',
+        borderRadius: 16
       }
     },
     {
@@ -6669,6 +6698,14 @@ export const DEFAULT_MULTI_AVATAR_CONFIG = {
       volume: 1.0,
       rate: 1.0,
       enabled: false,
+      chromaKey: {
+        enabled: false,
+        color: '#00ff00',
+        similarity: 0.45,
+        smoothness: 0.15,
+        spill: 0.15,
+        mode: 'green'
+      },
       transform: {
         x: 68,
         y: 8,
@@ -6676,10 +6713,34 @@ export const DEFAULT_MULTI_AVATAR_CONFIG = {
         height: 45,
         zIndex: 2,
         pose: 'sit',
-        objectFit: 'cover'
+        objectFit: 'cover',
+        borderRadius: 16
       }
     }
   ]
+};
+
+export const isImageMedia = (url) => {
+  if (!url || typeof url !== 'string') return false;
+  return /\.(png|jpe?g|webp|gif|svg|avif)($|\?)/i.test(url) || url.startsWith('data:image/');
+};
+
+export const getChromaStyle = (chromaConfig) => {
+  if (!chromaConfig || !chromaConfig.enabled) return {};
+  const color = (chromaConfig.color || '#00ff00').toLowerCase();
+  if (color === '#000000' || chromaConfig.mode === 'black') {
+    return { mixBlendMode: 'screen' };
+  }
+  if (color === '#ffffff' || chromaConfig.mode === 'white') {
+    return { mixBlendMode: 'multiply' };
+  }
+  if (color.includes('00ff00') || chromaConfig.mode === 'green' || color === '#00ff00') {
+    return { filter: 'url(#avalive-chroma-green)' };
+  }
+  if (color.includes('0000ff') || chromaConfig.mode === 'blue' || color === '#0000ff') {
+    return { filter: 'url(#avalive-chroma-blue)' };
+  }
+  return { filter: 'url(#avalive-chroma-green)' };
 };
 
 export function getMultiAvatarConfig() {
@@ -6697,6 +6758,10 @@ export function getMultiAvatarConfig() {
           return {
             ...defaultAv,
             ...matched,
+            chromaKey: {
+              ...defaultAv.chromaKey,
+              ...(matched.chromaKey || {})
+            },
             transform: {
               ...defaultAv.transform,
               ...(matched.transform || {})

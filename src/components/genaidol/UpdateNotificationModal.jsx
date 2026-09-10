@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.8.2';
+export const APP_VERSION = '2.8.3';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '💡 Hướng Dẫn Trực Quan Video Nghỉ (Idle) & Video Khẩu Hình Nói (Talk)',
-    description: 'Bổ sung nút trợ giúp (?) chi tiết và chú thích trực tiếp giải thích rõ cơ chế hoán đổi video khẩu hình thời gian thực khi từng nhân vật đến lượt nói thoại trong kịch bản.'
+    title: '🟢 Tách Nền / Xóa Phông Xanh Chroma Key Chuẩn 4K Láng Mịn',
+    description: 'Tích hợp bộ lọc Chroma Key cực sạch cho phép xóa phông xanh lá, xanh dương, nền đen, trắng hoặc màu tùy chọn, hòa quyện nhân vật vào không gian phòng live TikTok Studio.'
   },
   {
-    title: '🎨 Sân Khấu Kéo Thả Trực Quan & Đặt Tư Thế Đứng / Ngồi',
-    description: 'Tự do di chuyển kéo thả vị trí (X, Y), thu phóng kích thước (W, H) và sắp xếp tư thế Đứng / Ngồi cho từng nhân vật (Idol, Trợ Lý, Khách Mời, BLV) trên cùng 1 sân khấu.'
+    title: '🎨 Sân Khấu Kéo Thả Canva & 8 Tay Nắm Phóng To Thu Nhỏ Trực Quan',
+    description: 'Di chuyển linh hoạt cả trục X/Y, kéo 8 góc/cạnh để thay đổi kích thước, thanh công cụ 1-click phóng Full Màn Hình (100%), Căn Giữa và quản lý thứ tự lớp hiển thị (Z-Index).'
   },
   {
-    title: '🎬 Tối Ưu Kết Nối TikTok Live Studio & OBS Studio',
-    description: 'Hướng dẫn đầy đủ các phương thức kết nối luồng phát Window Capture (60fps mượt mà) và Browser Source Overlay để buổi livestream nhiều nhân vật đạt hiệu quả chuyên nghiệp nhất.'
+    title: '🎬 Hỗ Trợ Đầy Đủ Cả Video Lẫn Hình Ảnh & Cắt Xén Tỷ Lệ Đa Dạng',
+    description: 'Tải lên linh hoạt mọi định dạng Video (MP4, WebM) và Hình Ảnh (PNG, JPG, WebP) cho từng nhân vật với các chế độ Cắt Xén (Cover, Contain, Fill) và Bo Góc Tròn.'
   }
 ];
 

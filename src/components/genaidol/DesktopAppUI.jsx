@@ -30,7 +30,8 @@ import bandoEngine from './game/bandoGameEngine';
 import bandoAudio from './game/bandoAudioEngine';
 import { mapVoiceEngine, battleVoiceEngine } from './game/gameVoiceEngine';
 import battleCommentary from './game/battleCommentaryEngine';
-import { clearGlobalSpeechQueue, getMultiAvatarConfig } from '../../utils/voiceSyncService';
+import { clearGlobalSpeechQueue, getMultiAvatarConfig, isImageMedia, getChromaStyle } from '../../utils/voiceSyncService';
+import { SvgChromaFilters } from './MultiAvatarStudioModal';
 import AutoCaptchaSolver from '../AutoCaptchaSolver';
 import AIVoiceModule from '../kol-live/AIVoiceModule';
 import AICharacterBeautyModal from './AICharacterBeautyModal';
@@ -3131,6 +3132,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             backgroundImage: multiAvatarConfig.backgroundUrl ? `url(${multiAvatarConfig.backgroundUrl})` : 'none'
           }}
         >
+          <SvgChromaFilters />
           {activeList.map((avatar, idx) => {
             const transform = avatar.transform || { 
               x: idx === 0 ? 5 : idx === 1 ? 50 : idx === 2 ? 25 : 65, 
@@ -3139,7 +3141,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               height: 75, 
               zIndex: 5, 
               pose: 'stand', 
-              objectFit: 'cover' 
+              objectFit: 'cover',
+              borderRadius: 16
             };
             const isSpeakingNow = isSpeakerActive && (activeSpeakerId === avatar.id || (!activeSpeakerId && avatar.id === 'idol'));
             const customMatch = (customCharacters && Array.isArray(customCharacters)) 
@@ -3149,11 +3152,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             const vidSrc = (isSpeakingNow && avatar.talkVideo) 
               ? avatar.talkVideo 
               : (avatar.idleVideo || fallbackUrl);
+            const isImg = isImageMedia(vidSrc);
+            const chromaStyle = getChromaStyle(avatar.chromaKey || multiAvatarConfig.chromaKey);
 
             return (
               <div 
                 key={avatar.id} 
-                className={`absolute rounded-xl overflow-hidden transition-all duration-300 flex flex-col justify-between ${
+                className={`absolute overflow-hidden transition-all duration-300 flex flex-col justify-between ${
                   isSpeakingNow ? 'ring-2 ring-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.6)] z-20 scale-102' : 'hover:ring-1 hover:ring-white/40'
                 }`}
                 style={{
@@ -3161,32 +3166,51 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   top: `${transform.y}%`,
                   width: `${transform.width}%`,
                   height: `${transform.height}%`,
-                  zIndex: isSpeakingNow ? (transform.zIndex || 5) + 10 : (transform.zIndex || 5)
+                  zIndex: isSpeakingNow ? (transform.zIndex || 5) + 10 : (transform.zIndex || 5),
+                  borderRadius: `${transform.borderRadius ?? 16}px`
                 }}
               >
-                {vidSrc ? (
-                  <video
-                    key={`${avatar.id}_${isSpeakingNow ? 'talk' : 'idle'}_${vidSrc}`}
-                    src={vidSrc}
-                    autoPlay
-                    loop
-                    muted={liveAudioMuted}
-                    playsInline
-                    controls={false}
-                    className="w-full h-full select-none pointer-events-none"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: transform.objectFit || 'cover',
-                      backgroundColor: 'transparent'
-                    }}
-                  />
-                ) : (
-                  <div className="w-full h-full bg-slate-900/80 flex flex-col items-center justify-center p-2 text-center text-white border border-white/10">
-                    <span className="text-xl mb-1">{transform.pose === 'sit' ? '🪑' : '🧍'}</span>
-                    <span className="text-[11px] font-black">{avatar.name}</span>
-                  </div>
-                )}
+                <div 
+                  className="w-full h-full overflow-hidden rounded-[inherit]"
+                  style={chromaStyle}
+                >
+                  {vidSrc ? (
+                    isImg ? (
+                      <img
+                        src={vidSrc}
+                        alt={avatar.name}
+                        className="w-full h-full object-cover select-none pointer-events-none"
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: transform.objectFit || 'cover'
+                        }}
+                      />
+                    ) : (
+                      <video
+                        key={`${avatar.id}_${isSpeakingNow ? 'talk' : 'idle'}_${vidSrc}`}
+                        src={vidSrc}
+                        autoPlay
+                        loop
+                        muted={liveAudioMuted}
+                        playsInline
+                        controls={false}
+                        className="w-full h-full select-none pointer-events-none"
+                        style={{
+                          width: '100%',
+                          height: '100%',
+                          objectFit: transform.objectFit || 'cover',
+                          backgroundColor: 'transparent'
+                        }}
+                      />
+                    )
+                  ) : (
+                    <div className="w-full h-full bg-slate-900/80 flex flex-col items-center justify-center p-2 text-center text-white border border-white/10">
+                      <span className="text-xl mb-1">{transform.pose === 'sit' ? '🪑' : '🧍'}</span>
+                      <span className="text-[11px] font-black">{avatar.name}</span>
+                    </div>
+                  )}
+                </div>
 
                 {/* Speaker Active Tag Pill */}
                 <div className="absolute bottom-1.5 left-1.5 z-20 flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/75 backdrop-blur-sm border border-white/10 text-[9px] font-black text-white shadow-sm pointer-events-none">
