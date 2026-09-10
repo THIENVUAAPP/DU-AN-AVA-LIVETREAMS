@@ -457,8 +457,8 @@ export default function EventVoiceTester({
         ))}
       </optgroup>
 
-      {/* 5. 21 GIỌNG NỮ VIỆT NAM CAO CẤP 4 VÙNG MIỀN */}
-      <optgroup label="👑 21 GIỌNG NỮ VIỆT NAM CAO CẤP (BẮC - TRUNG - NAM - TÂY)">
+      {/* 5. 25 GIỌNG NỮ VIỆT NAM CAO CẤP PHÂN 3 ĐỘ TUỔI */}
+      <optgroup label="👑 25 GIỌNG NỮ CAO CẤP (20-28t | 28-40t | 40-70t)">
         {VIETNAMESE_FEMALE_VOICES.map(v => (
           <option key={`fem_${v.id}`} value={v.id}>
             {isVoiceFavorite(v.id) ? '⭐ ' : '♀ '} {v.name.replace(/ 💎| 🇻🇳/g, '')}

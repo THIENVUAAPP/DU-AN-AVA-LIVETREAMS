@@ -2295,10 +2295,12 @@ IDOL MỈM CƯỜI + GESTURE
                           const isSelectedAsGame = settings.gameVoiceId === v.id;
                           const isPlaying = previewingVoiceId === v.id;
                           const isFav = favoriteVoiceIds.includes(v.id);
-                          const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
-
-                          const ageBadgeText = v.ageGroup === 'young' ? 'Trẻ 20-35t' : (v.ageGroup === 'middle' ? 'Trung Niên' : 'Lão Niên 55-70t');
-                          const ageBadgeColor = v.ageGroup === 'young' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (v.ageGroup === 'middle' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-amber-50 text-amber-700 border-amber-200');
+                          const ageBadgeText = (v.ageGroup === 'senior' || v.ageGroup === 'elder' || v.ageGroup === 'mature') 
+                            ? 'Trung Niên 40-70t' 
+                            : (v.ageGroup === 'middle' ? 'Trưởng Thành 28-40t' : 'Trẻ 20-28t');
+                          const ageBadgeColor = (v.ageGroup === 'senior' || v.ageGroup === 'elder' || v.ageGroup === 'mature') 
+                            ? 'bg-amber-50 text-amber-700 border-amber-200' 
+                            : (v.ageGroup === 'middle' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200');
 
                           return (
                             <tr 
@@ -2771,10 +2773,12 @@ IDOL MỈM CƯỜI + GESTURE
                         const isSelectedAsGame = settings.gameVoiceId === v.id;
                         const isPlaying = previewingVoiceId === v.id;
                         const isFav = favoriteVoiceIds.includes(v.id);
-                        const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
-
-                        const ageBadgeText = v.ageGroup === 'young' ? 'Trẻ 20-35t' : (v.ageGroup === 'middle' ? 'Trung Niên' : 'Lão Niên 55-70t');
-                        const ageBadgeColor = v.ageGroup === 'young' ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : (v.ageGroup === 'middle' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-amber-50 text-amber-700 border-amber-200');
+                        const ageBadgeText = (v.ageGroup === 'senior' || v.ageGroup === 'elder' || v.ageGroup === 'mature') 
+                          ? 'Trung Niên 40-70t' 
+                          : (v.ageGroup === 'middle' ? 'Trưởng Thành 28-40t' : 'Trẻ 20-28t');
+                        const ageBadgeColor = (v.ageGroup === 'senior' || v.ageGroup === 'elder' || v.ageGroup === 'mature') 
+                          ? 'bg-amber-50 text-amber-700 border-amber-200' 
+                          : (v.ageGroup === 'middle' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200');
 
                         return (
                           <tr 
@@ -3362,9 +3366,9 @@ IDOL MỈM CƯỜI + GESTURE
                       <span className="text-[11px] font-bold text-gray-500 px-1.5">Độ Tuổi:</span>
                       {[
                         { key: 'all', label: 'Tất cả' },
-                        { key: 'young', label: 'Trẻ 20-35t' },
-                        { key: 'middle', label: 'Trung Niên 40-54t' },
-                        { key: 'senior', label: 'Lão Niên 55-70t' }
+                        { key: 'young', label: 'Trẻ 20-28t' },
+                        { key: 'middle', label: 'Trưởng Thành 28-40t' },
+                        { key: 'senior', label: 'Trung Niên 40-70t' }
                       ].map(tab => (
                         <button
                           key={tab.key}
@@ -3491,8 +3495,12 @@ IDOL MỈM CƯỜI + GESTURE
                           const isFav = favoriteVoiceIds.includes(v.id);
                           const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
 
-                          const ageBadgeText = (v.ageGroup === 'senior' || v.ageGroup === 'elder') ? 'Lão Niên 55-70t' : ((v.ageGroup === 'middle' || v.ageGroup === 'mature') ? 'Trung Niên 40-54t' : 'Trẻ 20-35t');
-                          const ageBadgeColor = (v.ageGroup === 'senior' || v.ageGroup === 'elder') ? 'bg-amber-50 text-amber-700 border-amber-200' : ((v.ageGroup === 'middle' || v.ageGroup === 'mature') ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200');
+                          const ageBadgeText = (v.ageGroup === 'senior' || v.ageGroup === 'elder' || v.ageGroup === 'mature') 
+                            ? 'Trung Niên 40-70t' 
+                            : (v.ageGroup === 'middle' ? 'Trưởng Thành 28-40t' : 'Trẻ 20-28t');
+                          const ageBadgeColor = (v.ageGroup === 'senior' || v.ageGroup === 'elder' || v.ageGroup === 'mature') 
+                            ? 'bg-amber-50 text-amber-700 border-amber-200' 
+                            : (v.ageGroup === 'middle' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200');
 
                           return (
                             <tr 

@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.6.3';
+export const APP_VERSION = '2.6.4';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '✨ Gộp Nút Kịch Bản Thống Nhất: "PHÁT KỊCH BẢN"',
-    description: 'Thiết kế lại thanh điều khiển kịch bản trên giao diện chính thành 1 nút bấm thống nhất duy nhất "PHÁT KỊCH BẢN", tích hợp liền khối menu chuyển đổi tab kịch bản cực kỳ tinh tế, sang trọng và hiện đại.'
+    title: '👑 Nâng Cấp Toàn Diện Giọng Nữ AI Theo 3 Phân Khúc Độ Tuổi (20-28t | 28-40t | 40-70t)',
+    description: 'Tái thiết kế toàn bộ 25 giọng Nữ đỉnh cao, phân định rành mạch 3 độ tuổi: Nhóm Trẻ trung (20-28t: Gen Z, KOC viral, Idol Live sôi động), Nhóm Trưởng thành (28-40t: BTV Thời sự VTV, MC sự kiện, Nữ doanh nhân, Diễn giả truyền cảm hứng) và Nhóm Trung/Lão niên (40-70t: Đọc truyện đêm khuya, ASMR chữa lành, Bác sĩ tâm lý, Má Bảy miệt vườn, Ca dao cổ tích).'
   },
   {
-    title: '🎬 Tự Động Phát Video Có Sẵn Khớp Khung Hình Live (TikTok Live / OBS)',
-    description: 'Nâng cấp bộ điều phối Live Coordinator: Tự động nhận diện và phát ngay các video quay sẵn (video cảm ơn tặng quà, video chào khách mới, video phản ứng...) khi có sự kiện tương ứng và tự động trả về video nền sau khi kết thúc.'
+    title: '🎛️ Âm Sắc 100% Khác Biệt & Độc Bản Riêng Từng Vùng Miền',
+    description: 'Xóa bỏ hoàn toàn tình trạng các giọng bị trùng lặp hoặc na ná nhau. Mỗi giọng đọc sở hữu profile âm học DSP riêng biệt (Pitch, Rate, EQ 4 dải, Reverb không gian, Dynamic Compressor) chuẩn phương ngữ Bắc (Hà Nội thanh lịch), Trung (Huế dịu dàng, Đà Nẵng, Nghệ Tĩnh), Nam (Sài Gòn ngọt ngào, thời thượng) và Tây (Sông nước Cần Thơ, Bến Tre mộc mạc).'
   },
   {
-    title: '🔒 Bảo Tồn Bền Vững 100% Danh Sách Kịch Bản Đã Tạo',
-    description: 'Tất cả các tab kịch bản bán hàng người dùng đã tạo ra được lưu giữ vĩnh viễn trong Persistent Storage, không bao giờ bị mất khi tải lại trang.'
+    title: '▶️ Tối Ưu Hóa Kịch Bản & Khung Hình Live Đồng Bộ 100%',
+    description: 'Bảo toàn hoàn hảo hệ thống điều phối Live Coordinator, nút bấm kịch bản liền khối và tự động phát video khớp khung hình livestream trên mọi nền tảng.'
   }
 ];
 
