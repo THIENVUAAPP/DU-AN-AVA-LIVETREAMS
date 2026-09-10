@@ -453,9 +453,9 @@ export default function DesktopAppUI() {
     };
 
     const handleSpeakerChange = (e) => {
-      const { avatarId, isSpeaking } = e.detail || {};
+      const { avatarId, isSpeaking, role } = e.detail || {};
       if (isSpeaking) {
-        setActiveSpeakerId(avatarId || 'idol');
+        setActiveSpeakerId(avatarId || role || 'idol');
         setIsSpeakerActive(true);
       } else {
         setIsSpeakerActive(false);
@@ -464,9 +464,11 @@ export default function DesktopAppUI() {
 
     window.addEventListener('avalive_multi_avatar_changed', handleMultiAvatarChange);
     window.addEventListener('avalive_active_speaker_changed', handleSpeakerChange);
+    window.addEventListener('avalive_speaker_change', handleSpeakerChange);
     return () => {
       window.removeEventListener('avalive_multi_avatar_changed', handleMultiAvatarChange);
       window.removeEventListener('avalive_active_speaker_changed', handleSpeakerChange);
+      window.removeEventListener('avalive_speaker_change', handleSpeakerChange);
     };
   }, []);
 
@@ -3171,7 +3173,52 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               />
             </div>
           )}
-          <SvgChromaFilters />
+          {/* Extra Custom Image / Media Layers (Nhiều hình ảnh khác nhau trên sân khấu) */}
+          {(multiAvatarConfig.extraImageLayers || []).map(layer => {
+            const isImg = layer.type !== 'video' && (isImageMedia(layer.url) || !layer.type);
+            const chromaStyle = getChromaStyle(layer.chromaKey);
+            return (
+              <div
+                key={layer.id}
+                className="absolute overflow-hidden pointer-events-none"
+                style={{
+                  left: `${layer.x ?? 20}%`,
+                  top: `${layer.y ?? 20}%`,
+                  width: `${layer.width ?? 30}%`,
+                  height: `${layer.height ?? 30}%`,
+                  zIndex: layer.zIndex || 10,
+                  borderRadius: `${layer.borderRadius ?? 0}px`,
+                  ...chromaStyle
+                }}
+              >
+                {isImg ? (
+                  <img
+                    src={layer.url}
+                    alt={layer.name || 'Extra Layer'}
+                    className="w-full h-full bg-transparent select-none"
+                    style={{
+                      objectFit: layer.objectFit || 'contain',
+                      ...chromaStyle
+                    }}
+                  />
+                ) : (
+                  <video
+                    src={layer.url}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-full bg-transparent select-none"
+                    style={{
+                      objectFit: layer.objectFit || 'contain',
+                      ...chromaStyle
+                    }}
+                  />
+                )}
+              </div>
+            );
+          })}
+
           {activeList.map((avatar, idx) => {
             const transform = avatar.transform || { 
               x: idx === 0 ? 4 : idx === 1 ? 48 : idx === 2 ? 25 : 65, 
@@ -3183,7 +3230,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               objectFit: 'cover',
               borderRadius: 16
             };
-            const isSpeakingNow = isSpeakerActive && (activeSpeakerId === avatar.id || (!activeSpeakerId && avatar.id === 'idol'));
+            const isSpeakingNow = isSpeakerActive && (
+              activeSpeakerId === avatar.id || 
+              activeSpeakerId === avatar.role || 
+              (avatar.id === 'avatar_1' && (activeSpeakerId === 'idol' || !activeSpeakerId))
+            );
             const customMatch = (customCharacters && Array.isArray(customCharacters)) 
               ? customCharacters.find(c => c.id === selectedCharacter && (c.url || c.mediaUrl)) 
               : null;

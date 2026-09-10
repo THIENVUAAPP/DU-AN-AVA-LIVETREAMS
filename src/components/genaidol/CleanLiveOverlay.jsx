@@ -161,9 +161,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     };
 
     const handleSpeakerChange = (e) => {
-      const { avatarId, isSpeaking } = e.detail || {};
+      const { avatarId, isSpeaking, role } = e.detail || {};
       if (isSpeaking) {
-        setActiveSpeakerId(avatarId || 'idol');
+        setActiveSpeakerId(avatarId || role || 'idol');
         setIsSpeakerActive(true);
       } else {
         setIsSpeakerActive(false);
@@ -172,9 +172,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
     window.addEventListener('avalive_multi_avatar_changed', handleMultiAvatarChange);
     window.addEventListener('avalive_active_speaker_changed', handleSpeakerChange);
+    window.addEventListener('avalive_speaker_change', handleSpeakerChange);
     return () => {
       window.removeEventListener('avalive_multi_avatar_changed', handleMultiAvatarChange);
       window.removeEventListener('avalive_active_speaker_changed', handleSpeakerChange);
+      window.removeEventListener('avalive_speaker_change', handleSpeakerChange);
     };
   }, []);
 
@@ -2195,6 +2197,53 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     </div>
                   )}
                   <SvgChromaFilters />
+
+                  {/* Extra Custom Image / Media Layers (Hình ảnh, logo, banner tùy biến trong Studio) */}
+                  {(multiAvatarConfig.extraImageLayers || []).map(layer => {
+                    const isImg = layer.type !== 'video' && (isImageMedia(layer.url) || !layer.type);
+                    const chromaStyle = getChromaStyle(layer.chromaKey);
+                    return (
+                      <div
+                        key={layer.id}
+                        className="absolute overflow-hidden pointer-events-none"
+                        style={{
+                          left: `${layer.x ?? 20}%`,
+                          top: `${layer.y ?? 20}%`,
+                          width: `${layer.width ?? 30}%`,
+                          height: `${layer.height ?? 30}%`,
+                          zIndex: layer.zIndex || 10,
+                          borderRadius: `${layer.borderRadius ?? 0}px`,
+                          opacity: (layer.opacity !== undefined ? layer.opacity : 100) / 100,
+                          ...chromaStyle
+                        }}
+                      >
+                        {isImg ? (
+                          <img
+                            src={layer.url}
+                            alt={layer.name || 'Extra Layer'}
+                            className="w-full h-full bg-transparent select-none"
+                            style={{
+                              objectFit: layer.objectFit || 'contain',
+                              ...chromaStyle
+                            }}
+                          />
+                        ) : (
+                          <video
+                            src={layer.url}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="w-full h-full bg-transparent select-none"
+                            style={{
+                              objectFit: layer.objectFit || 'contain',
+                              ...chromaStyle
+                            }}
+                          />
+                        )}
+                      </div>
+                    );
+                  })}
                   {activeList.map((avatar, idx) => {
                     const transform = avatar.transform || { 
                       x: idx === 0 ? 4 : idx === 1 ? 48 : idx === 2 ? 25 : 65, 

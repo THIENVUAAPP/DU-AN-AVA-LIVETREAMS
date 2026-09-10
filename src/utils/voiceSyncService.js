@@ -6603,6 +6603,7 @@ export const DEFAULT_MULTI_AVATAR_CONFIG = {
     spill: 0.15,
     mode: 'green' // 'green' | 'blue' | 'black' | 'white' | 'custom'
   },
+  extraImageLayers: [],
   avatars: [
     {
       id: 'avatar_1',
@@ -6764,6 +6765,7 @@ export function getMultiAvatarConfig() {
         ...DEFAULT_MULTI_AVATAR_CONFIG,
         ...parsed,
         enabled: typeof parsed.enabled === 'boolean' ? parsed.enabled : false,
+        extraImageLayers: Array.isArray(parsed.extraImageLayers) ? parsed.extraImageLayers : [],
         backgroundTransform: {
           ...DEFAULT_MULTI_AVATAR_CONFIG.backgroundTransform,
           ...(parsed.backgroundTransform || {})

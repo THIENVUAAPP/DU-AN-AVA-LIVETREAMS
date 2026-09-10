@@ -2,21 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.9.1';
+export const APP_VERSION = '2.9.2';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🟢 Tách Nền Xanh Lá Siêu Sạch 4K Khử Triệt Để Ám Xanh (Spill Suppression)',
-    description: 'Nâng cấp bộ lọc đa tầng loại bỏ 100% ám xanh trên tóc, vai và viền người nhân vật, trong suốt sạch sẽ hòa trộn hoàn hảo vào phòng Studio.'
+    title: '📜 Sửa Triệt Để Lỗi Tab Kịch Bản Studio & Áp Dụng 1-Chạm Mượt Mà',
+    description: 'Khắc phục hoàn toàn lỗi mở kịch bản 2–4 nhân vật; nạp và áp dụng kịch bản đối thoại tức thì vào hệ thống phát Live không giật lag.'
   },
   {
-    title: '📜 Mở Rộng Tab Kịch Bản Full Chiều Cao & Nạp File Kịch Bản Mọi Định Dạng',
-    description: 'Giao diện kịch bản to rộng dài xuống dưới, tích hợp bộ đọc file (.TXT, .DOCX, .PDF, .MD, .JSON, .CSV) tự động nhận diện cấu trúc đối thoại theo từng nhân vật.'
+    title: '🖼️ Tải Lên & Quản Lý Nhiều Hình Ảnh Cùng Lúc / Kéo Thả Sắp Xếp Tự Do',
+    description: 'Cho phép tải lên cùng lúc hoặc nhiều lần không giới hạn hình ảnh, logo, banner; tùy chỉnh co giãn 8 góc cạnh, bo góc, độ mờ và tách nền phông xanh.'
   },
   {
-    title: '📺 Đồng Bộ Tức Thì 100% Sân Khấu Ra Màn Hình Phần Mềm & Clean Live OBS',
-    description: 'Toàn bộ hình ảnh, video và vị trí sắp xếp của 2–4 nhân vật hiển thị trực tiếp sắc nét trên khung phát chính và luồng phát livestream.'
+    title: '👄 Nâng Cấp Công Nghệ Nhép Miệng (Lip-Sync) AI Tự Động Khớp Voice Siêu Mượt',
+    description: 'Bộ thuật toán phân tích phổ âm thanh FFT & Formant F1/F2 thời gian thực (<20ms), mô phỏng khẩu hình, nhịp thở và chuyển động cơ thể chân thực chuẩn phong cách HeyGen/Remina không phụ thuộc API ngoài.'
+  },
+  {
+    title: '📺 Kết Nối Phát Trực Tiếp TikTok Live Studio & OBS Studio Siêu Nét 1080p',
+    description: 'Đồng bộ 100% hình ảnh, video, âm thanh và chuyển động ra Browser Source hoặc Window Capture, hiển thị trọn vẹn mọi lớp đồ họa trên sóng livestream.'
   }
 ];
 

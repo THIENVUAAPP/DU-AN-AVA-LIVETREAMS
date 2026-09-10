@@ -1,9 +1,10 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
   Users, Sparkles, Video, Mic, Volume2, Gauge, HelpCircle, X, Check, Play, Square, 
-  Upload, FolderOpen, Layers, ShieldCheck, Info, MessageSquare, Plus, RefreshCw, Eye, BookOpen,
+  Upload, FolderOpen, Layers, ShieldCheck, Info, MessageSquare, Plus, RefreshCw, Eye, EyeOff, BookOpen,
   Move, Maximize2, Palette, Sliders, Image as ImageIcon, Monitor, Smartphone, ChevronRight, LayoutGrid, CheckCircle2,
-  Crop, Wand2, ArrowUp, ArrowDown, ArrowUpToLine, ArrowDownToLine, Scaling, ZoomIn, FileVideo, UserCheck, RotateCcw
+  Crop, Wand2, ArrowUp, ArrowDown, ArrowUpToLine, ArrowDownToLine, Scaling, ZoomIn, FileVideo, UserCheck, RotateCcw,
+  Star, Copy, ExternalLink, Trash2, Share2, MonitorPlay
 } from 'lucide-react';
 import { 
   ALL_SYSTEM_VOICES, 
@@ -129,9 +130,9 @@ const toast = {
 
 export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = false, onClose = null }) {
   const [config, setConfig] = useState(() => getMultiAvatarConfig());
-  const [activeTab, setActiveTab] = useState('canvas'); // 'canvas', 'templates'
-  const [selectedAvatarId, setSelectedAvatarId] = useState('avatar_1'); // 'avatar_1' | 'avatar_2' | ... | 'studio_background'
-  const [inspectorTab, setInspectorTab] = useState('media_transform'); // 'media_transform', 'chroma', 'voice', 'background'
+  const [activeTab, setActiveTab] = useState('canvas'); // 'canvas', 'templates', 'broadcast'
+  const [selectedAvatarId, setSelectedAvatarId] = useState('avatar_1'); // 'avatar_1' | 'avatar_2' | ... | 'studio_background' | 'layer_...'
+  const [inspectorTab, setInspectorTab] = useState('media_transform'); // 'media_transform', 'chroma', 'voice', 'background', 'image_layer', 'broadcast'
   const [showHelpModal, setShowHelpModal] = useState(false);
   const [mediaPickerTarget, setMediaPickerTarget] = useState(null); // { avatarId, type: 'idle' | 'talk' }
   const [previewingVoiceId, setPreviewingVoiceId] = useState(null);
@@ -145,30 +146,6 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
   const canvasRef = useRef(null);
   const dragStartPosRef = useRef({ mouseX: 0, mouseY: 0, startX: 0, startY: 0, startW: 50, startH: 50, startScale: 100 });
 
-  const handleScriptFileUpload = (e, templateTarget = null) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
-
-    const reader = new FileReader();
-    reader.onload = (loadEvt) => {
-      const content = loadEvt.target?.result || '';
-      if (content) {
-        if (templateTarget) {
-          if (onApplyScriptTemplate) {
-            onApplyScriptTemplate(content, templateTarget.count || activeCount);
-          }
-          toast.success(`📁 Đã nạp file "${file.name}" và áp dụng kịch bản thành công!`);
-          if (onClose) onClose();
-        } else {
-          setCustomScriptText(content);
-          toast.success(`📁 Đã nạp file "${file.name}" vào trình soạn thảo kịch bản!`);
-        }
-      }
-    };
-    reader.readAsText(file);
-    e.target.value = '';
-  };
-
   useEffect(() => {
     const loaded = getMultiAvatarConfig();
     setConfig(loaded);
@@ -177,7 +154,11 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
   const safeAvatars = (config.avatars && config.avatars.length > 0) ? config.avatars : DEFAULT_MULTI_AVATAR_CONFIG.avatars;
   const activeCount = Math.min(4, Math.max(2, config.activeCount || 2));
   const activeAvatars = safeAvatars.slice(0, activeCount);
+  const extraImageLayers = Array.isArray(config.extraImageLayers) ? config.extraImageLayers : [];
+  
   const isBgSelected = selectedAvatarId === 'studio_background';
+  const isImageLayerSelected = typeof selectedAvatarId === 'string' && selectedAvatarId.startsWith('layer_');
+  const selectedImageLayer = extraImageLayers.find(l => l.id === selectedAvatarId);
   const selectedAvatar = safeAvatars.find(a => a.id === selectedAvatarId) || safeAvatars[0] || DEFAULT_MULTI_AVATAR_CONFIG.avatars[0];
   const bgTransform = config.backgroundTransform || DEFAULT_MULTI_AVATAR_CONFIG.backgroundTransform;
 
@@ -212,7 +193,6 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
       const updatedAvatars = currentAvatars.map(av => {
         if (av.id === avatarId) {
           const updated = { ...av, [field]: value };
-          // Tự động đồng bộ video nói <-> video lắng nghe nếu người dùng mới nạp 1 file
           if (field === 'talkVideo' && value && !av.idleVideo) {
             updated.idleVideo = value;
           } else if (field === 'idleVideo' && value && !av.talkVideo) {
@@ -287,7 +267,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     handleAvatarTransformBatch(avatarId, { [field]: value });
   };
 
-  // BACKGROUND TRANSFORM HANDLERS (Canh chỉnh, kéo thả, co giãn ảnh nền Studio)
+  // BACKGROUND TRANSFORM HANDLERS
   const handleBackgroundTransformBatch = (changes) => {
     setConfig(prev => {
       const currentBg = prev.backgroundTransform || DEFAULT_MULTI_AVATAR_CONFIG.backgroundTransform;
@@ -320,6 +300,145 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     });
   };
 
+  // =========================================================================
+  // 🖼️ EXTRA CUSTOM IMAGE LAYERS HANDLERS (Tải nhiều ảnh cùng lúc, sắp xếp, kéo thả)
+  // =========================================================================
+  const handleMultiImageUpload = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    const currentLayers = config.extraImageLayers || [];
+    let countAdded = 0;
+
+    files.forEach((file, index) => {
+      const isVid = file.type.startsWith('video/');
+      const layerId = `layer_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+      const cleanName = file.name.replace(/\.[^/.]+$/, "") || `Ảnh ${currentLayers.length + index + 1}`;
+
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (loadEvt) => {
+          const dataUrl = loadEvt.target?.result;
+          if (dataUrl) {
+            const newLayer = {
+              id: layerId,
+              name: cleanName,
+              type: 'image',
+              url: dataUrl,
+              x: Math.min(60, 15 + ((currentLayers.length + index) * 6) % 50),
+              y: Math.min(60, 15 + ((currentLayers.length + index) * 6) % 50),
+              width: 35,
+              height: 35,
+              scale: 100,
+              opacity: 100,
+              zIndex: 10 + currentLayers.length + index,
+              borderRadius: 8,
+              objectFit: 'contain',
+              chromaKey: { enabled: false, color: '#00ff00', mode: 'green' }
+            };
+            setConfig(prev => {
+              const updated = {
+                ...prev,
+                extraImageLayers: [...(prev.extraImageLayers || []), newLayer]
+              };
+              saveMultiAvatarConfig(updated);
+              return updated;
+            });
+            setSelectedAvatarId(layerId);
+            setInspectorTab('image_layer');
+          }
+        };
+        reader.readAsDataURL(file);
+        countAdded++;
+      } else if (isVid) {
+        const objUrl = URL.createObjectURL(file);
+        const newLayer = {
+          id: layerId,
+          name: cleanName,
+          type: 'video',
+          url: objUrl,
+          x: Math.min(60, 15 + ((currentLayers.length + index) * 6) % 50),
+          y: Math.min(60, 15 + ((currentLayers.length + index) * 6) % 50),
+          width: 35,
+          height: 35,
+          scale: 100,
+          opacity: 100,
+          zIndex: 10 + currentLayers.length + index,
+          borderRadius: 8,
+          objectFit: 'contain',
+          chromaKey: { enabled: false, color: '#00ff00', mode: 'green' }
+        };
+        setConfig(prev => {
+          const updated = {
+            ...prev,
+            extraImageLayers: [...(prev.extraImageLayers || []), newLayer]
+          };
+          saveMultiAvatarConfig(updated);
+          return updated;
+        });
+        setSelectedAvatarId(layerId);
+        setInspectorTab('image_layer');
+        countAdded++;
+      }
+    });
+
+    toast.success(`🖼️ Đã nạp thành công ${files.length} tệp hình ảnh vào Sân Khấu Studio!`);
+    e.target.value = '';
+  };
+
+  const handleUpdateImageLayer = (layerId, changes) => {
+    setConfig(prev => {
+      const currentLayers = prev.extraImageLayers || [];
+      const updated = {
+        ...prev,
+        extraImageLayers: currentLayers.map(l => l.id === layerId ? { ...l, ...changes } : l)
+      };
+      saveMultiAvatarConfig(updated);
+      return updated;
+    });
+  };
+
+  const handleDeleteImageLayer = (layerId) => {
+    setConfig(prev => {
+      const currentLayers = prev.extraImageLayers || [];
+      const updated = {
+        ...prev,
+        extraImageLayers: currentLayers.filter(l => l.id !== layerId)
+      };
+      saveMultiAvatarConfig(updated);
+      return updated;
+    });
+    if (selectedAvatarId === layerId) {
+      setSelectedAvatarId('avatar_1');
+      setInspectorTab('media_transform');
+    }
+    toast.info('🗑️ Đã xóa lớp ảnh!');
+  };
+
+  const handleDuplicateImageLayer = (layerId) => {
+    const target = extraImageLayers.find(l => l.id === layerId);
+    if (!target) return;
+    const newId = `layer_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    const clone = {
+      ...target,
+      id: newId,
+      name: `${target.name} (Bản sao)`,
+      x: Math.min(80, (target.x ?? 20) + 5),
+      y: Math.min(80, (target.y ?? 20) + 5),
+      zIndex: (target.zIndex || 10) + 1
+    };
+    setConfig(prev => {
+      const updated = {
+        ...prev,
+        extraImageLayers: [...(prev.extraImageLayers || []), clone]
+      };
+      saveMultiAvatarConfig(updated);
+      return updated;
+    });
+    setSelectedAvatarId(newId);
+    toast.success('📋 Đã nhân bản lớp ảnh!');
+  };
+
   const handleDirectAvatarFileUpload = (avatarId, field, e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -330,14 +449,14 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
         const dataUrl = loadEvt.target?.result;
         if (dataUrl) {
           handleAvatarChange(avatarId, field, dataUrl);
-          toast.success(`🖼️ Đã nạp ảnh thành công!`);
+          toast.success(`🖼️ Đã nạp ảnh nhân vật thành công!`);
         }
       };
       reader.readAsDataURL(file);
     } else {
       const objectUrl = URL.createObjectURL(file);
       handleAvatarChange(avatarId, field, objectUrl);
-      toast.success(`🎬 Đã nạp video thành công!`);
+      toast.success(`🎬 Đã nạp video nhân vật thành công!`);
     }
     e.target.value = '';
   };
@@ -378,29 +497,37 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
       half_body: { y: 16, height: 78, width: 58, pose: 'half' },
       close_up: { y: 6, height: 90, width: 75, pose: 'close_up' }
     };
-
     const targetPose = poseConfigs[poseType];
     if (!targetPose) return;
-
     handleAvatarTransformBatch(avatarId, targetPose);
   };
 
-  const handleFillScreen = (avatarId) => {
-    if (avatarId === 'studio_background') {
+  const handleFillScreen = (targetId) => {
+    if (targetId === 'studio_background') {
       handleBackgroundTransformBatch({ x: 0, y: 0, width: 100, height: 100, scale: 100, objectFit: 'cover' });
+    } else if (typeof targetId === 'string' && targetId.startsWith('layer_')) {
+      handleUpdateImageLayer(targetId, { x: 0, y: 0, width: 100, height: 100, scale: 100, objectFit: 'cover' });
     } else {
-      handleAvatarTransformBatch(avatarId, { x: 0, y: 0, width: 100, height: 100 });
+      handleAvatarTransformBatch(targetId, { x: 0, y: 0, width: 100, height: 100 });
     }
   };
 
-  const handleCenterAvatar = (avatarId) => {
-    if (avatarId === 'studio_background') {
+  const handleCenterAvatar = (targetId) => {
+    if (targetId === 'studio_background') {
       handleBackgroundTransformBatch({ x: 0, y: 0 });
+    } else if (typeof targetId === 'string' && targetId.startsWith('layer_')) {
+      const layer = extraImageLayers.find(l => l.id === targetId);
+      const w = layer?.width || 35;
+      const h = layer?.height || 35;
+      handleUpdateImageLayer(targetId, {
+        x: Math.max(0, Math.round((100 - w) / 2)),
+        y: Math.max(0, Math.round((100 - h) / 2))
+      });
     } else {
-      const av = safeAvatars.find(a => a.id === avatarId);
+      const av = safeAvatars.find(a => a.id === targetId);
       const w = av?.transform?.width || 50;
       const h = av?.transform?.height || 50;
-      handleAvatarTransformBatch(avatarId, {
+      handleAvatarTransformBatch(targetId, {
         x: Math.max(0, Math.round((100 - w) / 2)),
         y: Math.max(0, Math.round((100 - h) / 2))
       });
@@ -417,8 +544,21 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     saveMultiAvatarConfig(updated);
   };
 
-  const handleBringToFront = (avatarId) => handleAvatarTransformChange(avatarId, 'zIndex', 50);
-  const handleSendToBack = (avatarId) => handleAvatarTransformChange(avatarId, 'zIndex', 1);
+  const handleBringToFront = (targetId) => {
+    if (typeof targetId === 'string' && targetId.startsWith('layer_')) {
+      handleUpdateImageLayer(targetId, { zIndex: 50 });
+    } else {
+      handleAvatarTransformChange(targetId, 'zIndex', 50);
+    }
+  };
+
+  const handleSendToBack = (targetId) => {
+    if (typeof targetId === 'string' && targetId.startsWith('layer_')) {
+      handleUpdateImageLayer(targetId, { zIndex: 2 });
+    } else {
+      handleAvatarTransformChange(targetId, 'zIndex', 1);
+    }
+  };
 
   const handleApplyPresetLayout = (presetKey) => {
     const preset = STUDIO_STAGE_PRESETS[presetKey];
@@ -454,6 +594,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
             saveMultiAvatarConfig(updated);
             return updated;
           });
+          toast.success('🖼️ Đã nạp ảnh nền Studio thành công!');
         }
       };
       reader.readAsDataURL(file);
@@ -464,7 +605,9 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
         saveMultiAvatarConfig(updated);
         return updated;
       });
+      toast.success('🎬 Đã nạp video nền Studio thành công!');
     }
+    e.target.value = '';
   };
 
   const handleVoicePreview = (voiceId) => {
@@ -473,6 +616,100 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     if (!voiceObj) return;
     setPreviewingVoiceId(voiceId);
     previewVoiceAudio(voiceObj, voiceObj.sampleText || 'Xin chào cả nhà! Đây là giọng đọc mẫu của nhân vật.', { onEnd: () => setPreviewingVoiceId(null) });
+  };
+
+  // =========================================================================
+  // 📜 ÁP DỤNG KỊCH BẢN ĐA NHÂN VẬT VÀO TOÀN BỘ PHÒNG LIVE
+  // =========================================================================
+  const handleApplyScript = (scriptText, count = activeCount) => {
+    if (!scriptText || !scriptText.trim()) {
+      toast.error('Vui lòng nhập hoặc chọn kịch bản trước khi áp dụng!');
+      return;
+    }
+
+    const targetCount = count || activeCount;
+
+    // 1. Lưu vào persistent user tabs
+    try {
+      const persistentRaw = localStorage.getItem('aidol_user_script_tabs_persistent');
+      let pTabs = persistentRaw ? JSON.parse(persistentRaw) : [];
+      if (!Array.isArray(pTabs) || pTabs.length === 0) {
+        pTabs = [{ id: 'tab_default', name: 'Kịch Bản Bán Hàng', fixedScriptText: scriptText, active: true }];
+      } else {
+        const activeIdx = pTabs.findIndex(t => t.active);
+        if (activeIdx >= 0) {
+          pTabs[activeIdx].fixedScriptText = scriptText;
+        } else {
+          pTabs[0].fixedScriptText = scriptText;
+          pTabs[0].active = true;
+        }
+      }
+      localStorage.setItem('aidol_user_script_tabs_persistent', JSON.stringify(pTabs));
+    } catch (e) {}
+
+    // 2. Lưu vào aidol_event_configs
+    try {
+      const evRaw = localStorage.getItem('aidol_event_configs');
+      let evConf = evRaw ? JSON.parse(evRaw) : {};
+      if (!evConf.script_broadcast) evConf.script_broadcast = {};
+      evConf.script_broadcast.fixedScriptText = scriptText;
+      localStorage.setItem('aidol_event_configs', JSON.stringify(evConf));
+    } catch (e) {}
+
+    // 3. Lưu vào aidol_active_job
+    try {
+      const jobRaw = localStorage.getItem('aidol_active_job');
+      let jobObj = jobRaw ? JSON.parse(jobRaw) : {};
+      jobObj.scriptContent = scriptText;
+      localStorage.setItem('aidol_active_job', JSON.stringify(jobObj));
+    } catch (e) {}
+
+    // 4. Kích hoạt BẬT chế độ Studio 2-4 Avatar
+    const updatedConf = {
+      ...config,
+      enabled: true,
+      activeCount: Math.min(4, Math.max(2, targetCount))
+    };
+    setConfig(updatedConf);
+    saveMultiAvatarConfig(updatedConf);
+
+    // 5. Phát sự kiện toàn cục để AIAudioPlayer, WorkspaceTacVu, DesktopAppUI nhận ngay lập tức
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('aidol_script_updated', {
+        detail: {
+          fixedScriptText: scriptText,
+          scriptContent: scriptText,
+          count: targetCount
+        }
+      }));
+    }
+
+    if (onApplyScriptTemplate) {
+      onApplyScriptTemplate(scriptText, targetCount);
+    }
+
+    toast.success(`✨ Đã nạp kịch bản ${targetCount} nhân vật & kích hoạt phát Live thành công!`);
+    if (onClose) onClose();
+  };
+
+  const handleScriptFileUpload = (e, templateTarget = null) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = (loadEvt) => {
+      const content = loadEvt.target?.result || '';
+      if (content) {
+        if (templateTarget) {
+          handleApplyScript(content, templateTarget.count || activeCount);
+        } else {
+          setCustomScriptText(content);
+          toast.success(`📁 Đã nạp file "${file.name}" vào trình soạn thảo kịch bản!`);
+        }
+      }
+    };
+    reader.readAsText(file);
+    e.target.value = '';
   };
 
   const handleSaveAndApply = () => {
@@ -487,16 +724,6 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     }, 600);
   };
 
-  const handleSave = () => {
-    saveMultiAvatarConfig(config);
-    setSavedSuccess(true);
-    toast.success('💾 Đã lưu cấu hình Studio 2–4 Avatar!');
-    setTimeout(() => {
-      setSavedSuccess(false);
-      if (onClose) onClose();
-    }, 600);
-  };
-
   const handleSelectMedia = (mediaItem) => {
     if (!mediaPickerTarget) return;
     const { avatarId, type } = mediaPickerTarget;
@@ -505,16 +732,13 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     setMediaPickerTarget(null);
   };
 
-  // UNIFIED MOUSE DOWN HANDLER FOR LAYERS (BACKGROUND & AVATARS)
+  // UNIFIED MOUSE DOWN HANDLER FOR LAYERS (BACKGROUND, AVATARS, CUSTOM IMAGES)
   const handleMouseDownOnLayer = (e, targetId) => {
     e.preventDefault(); e.stopPropagation();
     setSelectedAvatarId(targetId);
+    
     if (targetId === 'studio_background') {
       setInspectorTab('background');
-    }
-    setDragOperation({ targetId, mode: 'move' });
-
-    if (targetId === 'studio_background') {
       const bg = config.backgroundTransform || DEFAULT_MULTI_AVATAR_CONFIG.backgroundTransform;
       dragStartPosRef.current = {
         mouseX: e.clientX,
@@ -525,7 +749,22 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
         startH: bg.height ?? 100,
         startScale: bg.scale ?? 100
       };
+    } else if (typeof targetId === 'string' && targetId.startsWith('layer_')) {
+      setInspectorTab('image_layer');
+      const layer = extraImageLayers.find(l => l.id === targetId);
+      dragStartPosRef.current = {
+        mouseX: e.clientX,
+        mouseY: e.clientY,
+        startX: layer?.x ?? 20,
+        startY: layer?.y ?? 20,
+        startW: layer?.width ?? 35,
+        startH: layer?.height ?? 35,
+        startScale: layer?.scale ?? 100
+      };
     } else {
+      if (inspectorTab === 'background' || inspectorTab === 'image_layer') {
+        setInspectorTab('media_transform');
+      }
       const avatar = safeAvatars.find(a => a.id === targetId);
       const tf = avatar?.transform || { x: 0, y: 0, width: 50, height: 50 };
       dragStartPosRef.current = {
@@ -538,18 +777,18 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
         startScale: 100
       };
     }
+
+    setDragOperation({ targetId, mode: 'move' });
   };
 
   // UNIFIED 8-POINT RESIZE HANDLE MOUSE DOWN HANDLER
   const handleMouseDownOnHandle = (e, targetId, mode) => {
     e.preventDefault(); e.stopPropagation();
     setSelectedAvatarId(targetId);
-    if (targetId === 'studio_background') {
-      setInspectorTab('background');
-    }
     setDragOperation({ targetId, mode });
 
     if (targetId === 'studio_background') {
+      setInspectorTab('background');
       const bg = config.backgroundTransform || DEFAULT_MULTI_AVATAR_CONFIG.backgroundTransform;
       dragStartPosRef.current = {
         mouseX: e.clientX,
@@ -559,6 +798,18 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
         startW: bg.width ?? 100,
         startH: bg.height ?? 100,
         startScale: bg.scale ?? 100
+      };
+    } else if (typeof targetId === 'string' && targetId.startsWith('layer_')) {
+      setInspectorTab('image_layer');
+      const layer = extraImageLayers.find(l => l.id === targetId);
+      dragStartPosRef.current = {
+        mouseX: e.clientX,
+        mouseY: e.clientY,
+        startX: layer?.x ?? 20,
+        startY: layer?.y ?? 20,
+        startW: layer?.width ?? 35,
+        startH: layer?.height ?? 35,
+        startScale: layer?.scale ?? 100
       };
     } else {
       const avatar = safeAvatars.find(a => a.id === targetId);
@@ -595,38 +846,38 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
         newY = Math.round(startY + deltaY);
         break;
       case 'se': // bottom-right
-        newW = Math.max(10, Math.round(startW + deltaX));
-        newH = Math.max(10, Math.round(startH + deltaY));
+        newW = Math.max(8, Math.round(startW + deltaX));
+        newH = Math.max(8, Math.round(startH + deltaY));
         break;
       case 's': // bottom-center
-        newH = Math.max(10, Math.round(startH + deltaY));
+        newH = Math.max(8, Math.round(startH + deltaY));
         break;
       case 'e': // right-center
-        newW = Math.max(10, Math.round(startW + deltaX));
+        newW = Math.max(8, Math.round(startW + deltaX));
         break;
       case 'sw': // bottom-left
         newX = Math.round(startX + deltaX);
-        newW = Math.max(10, Math.round(startW - deltaX));
-        newH = Math.max(10, Math.round(startH + deltaY));
+        newW = Math.max(8, Math.round(startW - deltaX));
+        newH = Math.max(8, Math.round(startH + deltaY));
         break;
       case 'w': // left-center
         newX = Math.round(startX + deltaX);
-        newW = Math.max(10, Math.round(startW - deltaX));
+        newW = Math.max(8, Math.round(startW - deltaX));
         break;
       case 'ne': // top-right
         newY = Math.round(startY + deltaY);
-        newW = Math.max(10, Math.round(startW + deltaX));
-        newH = Math.max(10, Math.round(startH - deltaY));
+        newW = Math.max(8, Math.round(startW + deltaX));
+        newH = Math.max(8, Math.round(startH - deltaY));
         break;
       case 'n': // top-center
         newY = Math.round(startY + deltaY);
-        newH = Math.max(10, Math.round(startH - deltaY));
+        newH = Math.max(8, Math.round(startH - deltaY));
         break;
       case 'nw': // top-left
         newX = Math.round(startX + deltaX);
         newY = Math.round(startY + deltaY);
-        newW = Math.max(10, Math.round(startW - deltaX));
-        newH = Math.max(10, Math.round(startH - deltaY));
+        newW = Math.max(8, Math.round(startW - deltaX));
+        newH = Math.max(8, Math.round(startH - deltaY));
         break;
       default:
         break;
@@ -634,6 +885,8 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
 
     if (targetId === 'studio_background') {
       handleBackgroundTransformBatch({ x: newX, y: newY, width: newW, height: newH });
+    } else if (typeof targetId === 'string' && targetId.startsWith('layer_')) {
+      handleUpdateImageLayer(targetId, { x: newX, y: newY, width: newW, height: newH });
     } else {
       handleAvatarTransformBatch(targetId, { x: newX, y: newY, width: newW, height: newH });
     }
@@ -652,7 +905,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     }
   }, [dragOperation]);
 
-  // KEYBOARD ARROW NUDGING (TikTok LIVE Studio style: Arrow keys move 1%, Shift+Arrow moves 5%)
+  // KEYBOARD ARROW NUDGING
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (!selectedAvatarId) return;
@@ -676,6 +929,14 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
           x: (bg.x ?? 0) + deltaX,
           y: (bg.y ?? 0) + deltaY
         });
+      } else if (typeof selectedAvatarId === 'string' && selectedAvatarId.startsWith('layer_')) {
+        const layer = extraImageLayers.find(l => l.id === selectedAvatarId);
+        if (layer) {
+          handleUpdateImageLayer(selectedAvatarId, {
+            x: (layer.x ?? 20) + deltaX,
+            y: (layer.y ?? 20) + deltaY
+          });
+        }
       } else {
         const av = safeAvatars.find(a => a.id === selectedAvatarId);
         if (!av) return;
@@ -689,7 +950,23 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
 
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [selectedAvatarId, config, safeAvatars]);
+  }, [selectedAvatarId, config, safeAvatars, extraImageLayers]);
+
+  const liveOverlayUrl = typeof window !== 'undefined' ? `${window.location.origin}/?overlay=studio` : 'http://localhost:5173/?overlay=studio';
+
+  const handleCopyOverlayLink = () => {
+    if (typeof navigator !== 'undefined' && navigator.clipboard) {
+      navigator.clipboard.writeText(liveOverlayUrl);
+      toast.success('📋 Đã sao chép Link Browser Source cho TikTok Live Studio & OBS!');
+    }
+  };
+
+  const handleOpenCleanWindow = () => {
+    if (typeof window !== 'undefined') {
+      window.open(liveOverlayUrl + '&window_capture=true', 'AvaLiveStudioClean', 'width=1080,height=1920,menubar=no,toolbar=no,location=no,status=no');
+      toast.success('🖥️ Đã mở Cửa sổ Livestream Sạch 1080p cho Window Capture!');
+    }
+  };
 
   return (
     <div className={`flex flex-col h-full ${isEmbedded ? 'bg-transparent text-gray-800' : 'bg-[#11131a] text-white'}`}>
@@ -778,7 +1055,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
           </div>
         </div>
 
-        {/* Chuyển Tabs Chính: Sân Khấu / Kịch Bản */}
+        {/* Chuyển Tabs Chính: Sân Khấu / Kịch Bản / Phát Live TikTok */}
         <div className="flex items-center gap-1 bg-slate-100 dark:bg-black/40 p-0.5 rounded-xl border border-gray-300 dark:border-gray-700">
           <button
             type="button"
@@ -787,7 +1064,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
               activeTab === 'canvas' ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-blue-600'
             }`}
           >
-            <Move size={13} /> Sân Khấu
+            <Move size={13} /> Sân Khấu & Ảnh
           </button>
           <button
             type="button"
@@ -796,20 +1073,45 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
               activeTab === 'templates' ? 'bg-purple-600 text-white shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-purple-600'
             }`}
           >
-            <MessageSquare size={13} /> Kịch Bản
+            <MessageSquare size={13} /> Kịch Bản ({SCRIPT_TEMPLATES.length})
+          </button>
+          <button
+            type="button"
+            onClick={() => setActiveTab('broadcast')}
+            className={`px-3 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+              activeTab === 'broadcast' ? 'bg-gradient-to-r from-red-600 to-pink-600 text-white shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:text-pink-400'
+            }`}
+          >
+            <MonitorPlay size={13} /> TikTok Live / OBS
           </button>
         </div>
 
-        {/* Nút Action Lưu, Trợ Giúp, Tải Nhiều File & NÚT ĐÓNG TO RÕ GÓC PHẢI */}
+        {/* Nút Action Lưu, Trợ Giúp, Tải Nhiều Ảnh & NÚT ĐÓNG TO RÕ GÓC PHẢI */}
         <div className="flex items-center gap-2 ml-auto">
-          {/* Nút Nạp Nhanh Nhiều File */}
+          {/* Nút Tải Lên Nhiều Hình Ảnh Cùng Lúc */}
+          <label 
+            className="px-2.5 py-1.5 rounded-xl text-xs font-black bg-cyan-600/30 hover:bg-cyan-600/50 text-cyan-200 border border-cyan-400/40 flex items-center gap-1.5 cursor-pointer shadow-xs transition-all hover:scale-102"
+            title="Tải lên cùng lúc nhiều hình ảnh, logo, banner để trang trí phòng Live"
+          >
+            <ImageIcon size={14} className="text-cyan-400" />
+            <span className="hidden sm:inline">+ Tải Nhiều Ảnh (Logo/Banner)</span>
+            <span className="sm:hidden">+ Thêm Ảnh</span>
+            <input 
+              type="file" 
+              multiple 
+              accept="image/*,video/*" 
+              onChange={handleMultiImageUpload} 
+              className="hidden" 
+            />
+          </label>
+
+          {/* Nút Nạp Nhanh Video 2-4 Avatar */}
           <label 
             className="px-2.5 py-1.5 rounded-xl text-xs font-black bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-400/40 flex items-center gap-1 cursor-pointer shadow-xs transition-all hover:scale-102"
-            title="Chọn đồng thời 2-4 ảnh hoặc video để tự động gán vào các nhân vật"
+            title="Chọn đồng thời 2-4 file video để tự động gán vào các nhân vật"
           >
             <Upload size={13} />
-            <span className="hidden sm:inline">Nạp 2–4 File Cùng Lúc</span>
-            <span className="sm:hidden">Nạp Nhiều</span>
+            <span className="hidden sm:inline">Nạp 2–4 Video</span>
             <input 
               type="file" 
               multiple 
@@ -851,29 +1153,10 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
         </div>
       </div>
 
-      {/* Thông báo trạng thái BẬT/TẮT */}
-      {!config.enabled && (
-        <div className={`mx-2 mb-2 p-2 rounded-xl text-xs flex items-center justify-between gap-2 ${
-          isEmbedded ? 'bg-amber-50 border border-amber-200 text-amber-900' : 'bg-amber-500/15 border border-amber-500/30 text-amber-300'
-        }`}>
-          <div className="flex items-center gap-2">
-            <Info size={15} className="text-amber-500 shrink-0" />
-            <span>Chế độ <strong>Studio 2–4 Avatar hiện đang TẮT</strong>. Phòng Live sẽ chạy <strong>1 Avatar đơn tiêu chuẩn</strong>.</span>
-          </div>
-          <button
-            type="button"
-            onClick={() => handleToggleEnabled(true)}
-            className="px-2.5 py-1 bg-emerald-600 hover:bg-emerald-500 text-white text-[11px] font-black rounded-lg shrink-0 cursor-pointer shadow-xs transition-transform hover:scale-105"
-          >
-            Bật Chế Độ 2–4 Avatar 🚀
-          </button>
-        </div>
-      )}
-
       {/* 2. MAIN WORKSPACE CONTENT */}
       <div className="flex-1 overflow-y-auto">
         {activeTab === 'canvas' ? (
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 p-1 items-start">
+          <div className="grid grid-cols-1 lg:grid-cols-12 gap-3 p-2 items-start">
             
             {/* CỘT TRÁI: SÂN KHẤU CANVAS TO RÕ NÉT VÀ NẰM TRỌN TRONG TẦM MẮT */}
             <div className="lg:col-span-7 flex flex-col items-center justify-start p-3 rounded-2xl bg-[#0a0c13] border border-gray-800 shadow-2xl relative select-none">
@@ -911,7 +1194,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                   </div>
                 </div>
 
-                {/* Dải nút Chọn Lớp (Background & Từng Avatar) */}
+                {/* Dải nút Chọn Lớp (Background, Avatars, Extra Image Layers) */}
                 <div className="flex items-center gap-1 p-1 bg-black/60 rounded-xl border border-white/10 overflow-x-auto">
                   <span className="text-[10px] font-black text-gray-400 uppercase shrink-0 px-1">Lớp:</span>
                   <button
@@ -923,13 +1206,14 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                         : 'bg-white/10 text-purple-300 hover:bg-white/20'
                     }`}
                   >
-                    <span>🖼️ Nền Studio {bgTransform.scale && bgTransform.scale !== 100 ? `(${bgTransform.scale}%)` : ''}</span>
+                    <span>🖼️ Nền Studio</span>
                   </button>
+
                   {activeAvatars.map((av, idx) => (
                     <button
                       key={av.id}
                       type="button"
-                      onClick={() => { setSelectedAvatarId(av.id); if (inspectorTab === 'background') setInspectorTab('media_transform'); }}
+                      onClick={() => { setSelectedAvatarId(av.id); if (inspectorTab === 'background' || inspectorTab === 'image_layer') setInspectorTab('media_transform'); }}
                       className={`px-2 py-0.5 rounded-lg text-[10px] font-black transition-all flex items-center gap-1 shrink-0 cursor-pointer ${
                         selectedAvatarId === av.id
                           ? 'bg-cyan-500 text-black shadow-xs scale-102 ring-1 ring-cyan-200'
@@ -939,21 +1223,36 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                       <span>#{idx + 1} {av.name}</span>
                     </button>
                   ))}
+
+                  {extraImageLayers.map((layer, idx) => (
+                    <button
+                      key={layer.id}
+                      type="button"
+                      onClick={() => { setSelectedAvatarId(layer.id); setInspectorTab('image_layer'); }}
+                      className={`px-2 py-0.5 rounded-lg text-[10px] font-black transition-all flex items-center gap-1 shrink-0 cursor-pointer ${
+                        selectedAvatarId === layer.id
+                          ? 'bg-amber-400 text-black shadow-xs scale-102 ring-1 ring-amber-200'
+                          : 'bg-amber-500/20 text-amber-300 hover:bg-amber-500/30'
+                      }`}
+                    >
+                      <span>🎨 {layer.name || `Ảnh ${idx + 1}`}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
 
               {/* KHUNG CANVAS LIVE - TỶ LỆ CHUẨN THIẾT KẾ VỪA VẶN VIEWPORT */}
               <div 
                 ref={canvasRef}
-                onClick={() => { if (!isBgSelected && !dragOperation) { setSelectedAvatarId('studio_background'); setInspectorTab('background'); } }}
+                onClick={() => { if (!isBgSelected && !isImageLayerSelected && !dragOperation) { setSelectedAvatarId('studio_background'); setInspectorTab('background'); } }}
                 className="relative overflow-hidden rounded-2xl border-2 border-cyan-500/60 shadow-[0_0_35px_rgba(6,182,212,0.3)] transition-all duration-200 bg-cover bg-center my-1"
                 style={{
-                  width: canvasAspectRatio === '9:16' ? '280px' : '490px',
-                  height: canvasAspectRatio === '9:16' ? '498px' : '276px',
+                  width: canvasAspectRatio === '9:16' ? '290px' : '510px',
+                  height: canvasAspectRatio === '9:16' ? '515px' : '288px',
                   backgroundColor: config.backgroundColor || '#0a0c14'
                 }}
               >
-                {/* 1. LAYER ẢNH NỀN STUDIO (CO GIÃN, KÉO THẢ, ZOOM, XOAY CHUYỂN SIÊU MƯỢT) */}
+                {/* 1. LAYER ẢNH NỀN STUDIO */}
                 <div
                   onMouseDown={(e) => handleMouseDownOnLayer(e, 'studio_background')}
                   className={`absolute transition-shadow duration-100 select-none ${
@@ -991,38 +1290,101 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                   {isBgSelected && (
                     <>
                       <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded bg-purple-500 text-white text-[9px] font-black shadow-lg pointer-events-none whitespace-nowrap z-50 flex items-center gap-1">
-                        <span>🖼️ Nền Studio: {bgTransform.width}% × {bgTransform.height}% ({bgTransform.scale || 100}%)</span>
+                        <span>🖼️ Nền Studio: {bgTransform.width}% × {bgTransform.height}%</span>
                       </div>
-
-                      {/* 4 Góc */}
-                      <div onMouseDown={(e) => handleMouseDownOnHandle(e, 'studio_background', 'nw')} className="absolute -top-1.5 -left-1.5 w-3.5 h-3.5 bg-purple-400 border border-black rounded-xs cursor-nwse-resize z-40 hover:scale-130 transition-transform" />
-                      <div onMouseDown={(e) => handleMouseDownOnHandle(e, 'studio_background', 'ne')} className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-purple-400 border border-black rounded-xs cursor-nesw-resize z-40 hover:scale-130 transition-transform" />
-                      <div onMouseDown={(e) => handleMouseDownOnHandle(e, 'studio_background', 'sw')} className="absolute -bottom-1.5 -left-1.5 w-3.5 h-3.5 bg-purple-400 border border-black rounded-xs cursor-nesw-resize z-40 hover:scale-130 transition-transform" />
-                      <div onMouseDown={(e) => handleMouseDownOnHandle(e, 'studio_background', 'se')} className="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-purple-400 border border-black rounded-xs cursor-nwse-resize z-40 hover:scale-130 transition-transform" />
-
-                      {/* 4 Cạnh */}
-                      <div onMouseDown={(e) => handleMouseDownOnHandle(e, 'studio_background', 'n')} className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-4 h-2.5 bg-purple-400 border border-black rounded-xs cursor-ns-resize z-40 hover:scale-130 transition-transform" />
-                      <div onMouseDown={(e) => handleMouseDownOnHandle(e, 'studio_background', 's')} className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-2.5 bg-purple-400 border border-black rounded-xs cursor-ns-resize z-40 hover:scale-130 transition-transform" />
-                      <div onMouseDown={(e) => handleMouseDownOnHandle(e, 'studio_background', 'w')} className="absolute top-1/2 -translate-y-1/2 -left-1.5 w-2.5 h-4 bg-purple-400 border border-black rounded-xs cursor-ew-resize z-40 hover:scale-130 transition-transform" />
-                      <div onMouseDown={(e) => handleMouseDownOnHandle(e, 'studio_background', 'e')} className="absolute top-1/2 -translate-y-1/2 -right-1.5 w-2.5 h-4 bg-purple-400 border border-black rounded-xs cursor-ew-resize z-40 hover:scale-130 transition-transform" />
+                      <div onMouseDown={(e) => handleMouseDownOnHandle(e, 'studio_background', 'nw')} className="absolute -top-1.5 -left-1.5 w-3.5 h-3.5 bg-purple-400 border border-black rounded-xs cursor-nwse-resize z-40 hover:scale-130" />
+                      <div onMouseDown={(e) => handleMouseDownOnHandle(e, 'studio_background', 'ne')} className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-purple-400 border border-black rounded-xs cursor-nesw-resize z-40 hover:scale-130" />
+                      <div onMouseDown={(e) => handleMouseDownOnHandle(e, 'studio_background', 'sw')} className="absolute -bottom-1.5 -left-1.5 w-3.5 h-3.5 bg-purple-400 border border-black rounded-xs cursor-nesw-resize z-40 hover:scale-130" />
+                      <div onMouseDown={(e) => handleMouseDownOnHandle(e, 'studio_background', 'se')} className="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-purple-400 border border-black rounded-xs cursor-nwse-resize z-40 hover:scale-130" />
+                      <div onMouseDown={(e) => handleMouseDownOnHandle(e, 'studio_background', 'n')} className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-4 h-2.5 bg-purple-400 border border-black rounded-xs cursor-ns-resize z-40 hover:scale-130" />
+                      <div onMouseDown={(e) => handleMouseDownOnHandle(e, 'studio_background', 's')} className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-2.5 bg-purple-400 border border-black rounded-xs cursor-ns-resize z-40 hover:scale-130" />
+                      <div onMouseDown={(e) => handleMouseDownOnHandle(e, 'studio_background', 'w')} className="absolute top-1/2 -translate-y-1/2 -left-1.5 w-2.5 h-4 bg-purple-400 border border-black rounded-xs cursor-ew-resize z-40 hover:scale-130" />
+                      <div onMouseDown={(e) => handleMouseDownOnHandle(e, 'studio_background', 'e')} className="absolute top-1/2 -translate-y-1/2 -right-1.5 w-2.5 h-4 bg-purple-400 border border-black rounded-xs cursor-ew-resize z-40 hover:scale-130" />
                     </>
                   )}
                 </div>
 
-                {/* GRID LINES HELPER */}
-                <div className="absolute inset-0 grid grid-cols-3 grid-rows-3 pointer-events-none opacity-20 z-2">
-                  <div className="border-r border-b border-white/40" />
-                  <div className="border-r border-b border-white/40" />
-                  <div className="border-b border-white/40" />
-                  <div className="border-r border-b border-white/40" />
-                  <div className="border-r border-b border-white/40" />
-                  <div className="border-b border-white/40" />
-                  <div className="border-r border-b border-white/40" />
-                  <div className="border-r border-b border-white/40" />
-                  <div />
-                </div>
+                {/* 2. RENDER TẤT CẢ CÁC LỚP ẢNH TÙY BIẾN (EXTRA IMAGE LAYERS - KÉO THẢ TÙY Ý) */}
+                {extraImageLayers.map((layer) => {
+                  const isSelected = selectedAvatarId === layer.id;
+                  const isImg = layer.type !== 'video' && (isImageMedia(layer.url) || !layer.type);
+                  const chromaStyle = getChromaStyle(layer.chromaKey);
 
-                {/* 2. RENDER TẤT CẢ AVATARS TRÊN SÂN KHẤU */}
+                  return (
+                    <div
+                      key={layer.id}
+                      onMouseDown={(e) => handleMouseDownOnLayer(e, layer.id)}
+                      className={`absolute overflow-visible cursor-move transition-shadow duration-100 flex flex-col justify-between ${
+                        isSelected 
+                          ? 'ring-2 ring-amber-400 shadow-[0_0_20px_rgba(251,191,36,0.8)] z-35' 
+                          : 'ring-1 ring-amber-400/40 hover:ring-amber-300 z-15'
+                      }`}
+                      style={{
+                        left: `${layer.x ?? 20}%`,
+                        top: `${layer.y ?? 20}%`,
+                        width: `${layer.width ?? 35}%`,
+                        height: `${layer.height ?? 35}%`,
+                        zIndex: isSelected ? 40 : (layer.zIndex || 10),
+                        borderRadius: `${layer.borderRadius ?? 8}px`,
+                        opacity: (layer.opacity !== undefined ? layer.opacity : 100) / 100
+                      }}
+                    >
+                      <div 
+                        className="w-full h-full overflow-hidden rounded-[inherit] relative bg-transparent"
+                        style={chromaStyle}
+                      >
+                        {isImg ? (
+                          <img
+                            src={layer.url}
+                            alt={layer.name || 'Image Layer'}
+                            className="w-full h-full pointer-events-none select-none bg-transparent"
+                            style={{ 
+                              objectFit: layer.objectFit || 'contain',
+                              ...chromaStyle
+                            }}
+                          />
+                        ) : (
+                          <video
+                            src={layer.url}
+                            autoPlay
+                            loop
+                            muted
+                            playsInline
+                            className="w-full h-full pointer-events-none select-none bg-transparent"
+                            style={{ 
+                              objectFit: layer.objectFit || 'contain',
+                              ...chromaStyle
+                            }}
+                          />
+                        )}
+                      </div>
+
+                      {/* BADGE TÊN ẢNH */}
+                      <div className="absolute top-1 left-1 px-1.5 py-0.5 rounded bg-black/85 backdrop-blur-sm text-[9px] font-black text-amber-300 border border-amber-400/30 flex items-center gap-1 pointer-events-none z-30 shadow-md">
+                        <span>🎨 {layer.name || 'Lớp Ảnh'}</span>
+                      </div>
+
+                      {/* 8-POINT RESIZE HANDLES CHO LỚP ẢNH */}
+                      {isSelected && (
+                        <>
+                          <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded bg-amber-400 text-black text-[9px] font-black shadow-lg pointer-events-none whitespace-nowrap z-50">
+                            W:{layer.width}% × H:{layer.height}%
+                          </div>
+                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, layer.id, 'nw')} className="absolute -top-1.5 -left-1.5 w-3.5 h-3.5 bg-amber-400 border border-black rounded-xs cursor-nwse-resize z-40 hover:scale-130" />
+                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, layer.id, 'ne')} className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-amber-400 border border-black rounded-xs cursor-nesw-resize z-40 hover:scale-130" />
+                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, layer.id, 'sw')} className="absolute -bottom-1.5 -left-1.5 w-3.5 h-3.5 bg-amber-400 border border-black rounded-xs cursor-nesw-resize z-40 hover:scale-130" />
+                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, layer.id, 'se')} className="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-amber-400 border border-black rounded-xs cursor-nwse-resize z-40 hover:scale-130" />
+                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, layer.id, 'n')} className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-4 h-2.5 bg-amber-400 border border-black rounded-xs cursor-ns-resize z-40 hover:scale-130" />
+                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, layer.id, 's')} className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-2.5 bg-amber-400 border border-black rounded-xs cursor-ns-resize z-40 hover:scale-130" />
+                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, layer.id, 'w')} className="absolute top-1/2 -translate-y-1/2 -left-1.5 w-2.5 h-4 bg-amber-400 border border-black rounded-xs cursor-ew-resize z-40 hover:scale-130" />
+                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, layer.id, 'e')} className="absolute top-1/2 -translate-y-1/2 -right-1.5 w-2.5 h-4 bg-amber-400 border border-black rounded-xs cursor-ew-resize z-40 hover:scale-130" />
+                        </>
+                      )}
+                    </div>
+                  );
+                })}
+
+                {/* 3. RENDER TẤT CẢ AVATARS TRÊN SÂN KHẤU */}
                 {activeAvatars.map((avatar, idx) => {
                   const transform = avatar.transform || { x: idx * 25, y: 10, width: 45, height: 75, zIndex: 5, pose: 'stand', objectFit: 'cover', borderRadius: 16 };
                   const isSelected = selectedAvatarId === avatar.id;
@@ -1107,7 +1469,6 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                             </div>
                           </>
                         ) : (
-                          /* RÕ RÀNG TRỰC QUAN KHI CHƯA GÁN MEDIA: DROPZONE TRỰC TIẾP */
                           <div className="w-full h-full bg-gradient-to-b from-slate-900/95 via-indigo-950/80 to-slate-900/95 flex flex-col items-center justify-center p-1.5 text-center text-white border-2 border-dashed border-cyan-400/50 rounded-[inherit]">
                             <span className="text-xl mb-0.5">
                               {transform.pose === 'sit' ? '🪑' : transform.pose === 'sit_desk' ? '🛋️' : '🧍'}
@@ -1150,18 +1511,14 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                           <div className="absolute -top-6 left-1/2 -translate-x-1/2 px-1.5 py-0.5 rounded bg-cyan-500 text-black text-[9px] font-black shadow-lg pointer-events-none whitespace-nowrap z-50">
                             W:{transform.width}% × H:{transform.height}%
                           </div>
-
-                          {/* 4 Góc */}
-                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'nw')} className="absolute -top-1.5 -left-1.5 w-3.5 h-3.5 bg-cyan-400 border border-black rounded-xs cursor-nwse-resize z-40 hover:scale-130 transition-transform" />
-                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'ne')} className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-cyan-400 border border-black rounded-xs cursor-nesw-resize z-40 hover:scale-130 transition-transform" />
-                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'sw')} className="absolute -bottom-1.5 -left-1.5 w-3.5 h-3.5 bg-cyan-400 border border-black rounded-xs cursor-nesw-resize z-40 hover:scale-130 transition-transform" />
-                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'se')} className="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-cyan-400 border border-black rounded-xs cursor-nwse-resize z-40 hover:scale-130 transition-transform" />
-
-                          {/* 4 Cạnh */}
-                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'n')} className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-4 h-2.5 bg-cyan-400 border border-black rounded-xs cursor-ns-resize z-40 hover:scale-130 transition-transform" />
-                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 's')} className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-2.5 bg-cyan-400 border border-black rounded-xs cursor-ns-resize z-40 hover:scale-130 transition-transform" />
-                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'w')} className="absolute top-1/2 -translate-y-1/2 -left-1.5 w-2.5 h-4 bg-cyan-400 border border-black rounded-xs cursor-ew-resize z-40 hover:scale-130 transition-transform" />
-                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'e')} className="absolute top-1/2 -translate-y-1/2 -right-1.5 w-2.5 h-4 bg-cyan-400 border border-black rounded-xs cursor-ew-resize z-40 hover:scale-130 transition-transform" />
+                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'nw')} className="absolute -top-1.5 -left-1.5 w-3.5 h-3.5 bg-cyan-400 border border-black rounded-xs cursor-nwse-resize z-40 hover:scale-130" />
+                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'ne')} className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-cyan-400 border border-black rounded-xs cursor-nesw-resize z-40 hover:scale-130" />
+                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'sw')} className="absolute -bottom-1.5 -left-1.5 w-3.5 h-3.5 bg-cyan-400 border border-black rounded-xs cursor-nesw-resize z-40 hover:scale-130" />
+                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'se')} className="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-cyan-400 border border-black rounded-xs cursor-nwse-resize z-40 hover:scale-130" />
+                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'n')} className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-4 h-2.5 bg-cyan-400 border border-black rounded-xs cursor-ns-resize z-40 hover:scale-130" />
+                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 's')} className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-4 h-2.5 bg-cyan-400 border border-black rounded-xs cursor-ns-resize z-40 hover:scale-130" />
+                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'w')} className="absolute top-1/2 -translate-y-1/2 -left-1.5 w-2.5 h-4 bg-cyan-400 border border-black rounded-xs cursor-ew-resize z-40 hover:scale-130" />
+                          <div onMouseDown={(e) => handleMouseDownOnHandle(e, avatar.id, 'e')} className="absolute top-1/2 -translate-y-1/2 -right-1.5 w-2.5 h-4 bg-cyan-400 border border-black rounded-xs cursor-ew-resize z-40 hover:scale-130" />
                         </>
                       )}
                     </div>
@@ -1189,17 +1546,41 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                     </button>
                     <button
                       type="button"
-                      onClick={() => handleBackgroundTransformChange('scale', 100)}
-                      className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-white font-bold flex items-center gap-1 cursor-pointer border border-white/20 text-[11px]"
-                    >
-                      <ZoomIn size={11} /> Zoom 100%
-                    </button>
-                    <button
-                      type="button"
                       onClick={handleResetBackground}
                       className="px-2 py-1 rounded-lg bg-white/10 hover:bg-white/20 text-gray-300 font-bold flex items-center gap-1 cursor-pointer border border-white/20 text-[11px]"
                     >
                       <RotateCcw size={11} /> Đặt Lại Nền
+                    </button>
+                  </>
+                ) : isImageLayerSelected ? (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => handleFillScreen(selectedAvatarId)}
+                      className="px-2 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold flex items-center gap-1 cursor-pointer border border-amber-500/40 text-[11px]"
+                    >
+                      <Maximize2 size={11} /> Full Ảnh
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleCenterAvatar(selectedAvatarId)}
+                      className="px-2 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 font-bold flex items-center gap-1 cursor-pointer border border-amber-500/40 text-[11px]"
+                    >
+                      <Scaling size={11} /> Căn Giữa
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDuplicateImageLayer(selectedAvatarId)}
+                      className="px-2 py-1 rounded-lg bg-cyan-500/20 hover:bg-cyan-500/30 text-cyan-300 font-bold flex items-center gap-1 cursor-pointer border border-cyan-500/40 text-[11px]"
+                    >
+                      <Copy size={11} /> Nhân Bản
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleDeleteImageLayer(selectedAvatarId)}
+                      className="px-2 py-1 rounded-lg bg-red-500/20 hover:bg-red-500/30 text-red-300 font-bold flex items-center gap-1 cursor-pointer border border-red-500/40 text-[11px]"
+                    >
+                      <Trash2 size={11} /> Xóa Ảnh
                     </button>
                   </>
                 ) : (
@@ -1237,14 +1618,14 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
               </div>
 
               <p className="text-[10px] text-gray-400 mt-1 font-mono text-center">
-                💡 Bấm chọn Nền hoặc Nhân vật để kéo thả (X, Y) • Kéo 8 góc/cạnh để co giãn • Phím mũi tên (↑↓←→) dịch chuyển 1%
+                💡 Kéo thả tự do bất kỳ hình ảnh/nhân vật nào • Co giãn 8 góc cạnh • Mũi tên (↑↓←→) dịch 1% • Shift+Mũi tên dịch 5%
               </p>
             </div>
 
-            {/* CỘT PHẢI: TOÀN BỘ CÀI ĐẶT ĐA NHÂN VẬT & NỀN STUDIO GỌN GÀNG TINH TẾ */}
+            {/* CỘT PHẢI: TOÀN BỘ CÀI ĐẶT ĐA NHÂN VẬT & LỚP ẢNH TINH CHỈNH */}
             <div className="lg:col-span-5 space-y-2">
               
-              {/* 1. CHỌN NHÂN VẬT HOẶC NỀN STUDIO ĐANG TINH CHỈNH */}
+              {/* 1. THANH CHỌN ĐỐI TƯỢNG */}
               <div className={`p-2.5 rounded-2xl border ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
                 <div className="flex items-center justify-between mb-1.5">
                   <span className="text-[10px] font-black uppercase text-gray-500">
@@ -1253,6 +1634,14 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                   <div className="flex items-center gap-1">
                     {isBgSelected ? (
                       <span className="font-black text-xs text-purple-600 dark:text-purple-400">🖼️ Ảnh Nền Studio 4K</span>
+                    ) : isImageLayerSelected ? (
+                      <input 
+                        type="text" 
+                        value={selectedImageLayer?.name || ''} 
+                        onChange={(e) => handleUpdateImageLayer(selectedAvatarId, { name: e.target.value })}
+                        className="font-black text-xs text-amber-500 dark:text-amber-400 bg-transparent border-b border-dashed border-amber-400 focus:outline-none px-1 text-right"
+                        title="Bấm để đổi tên lớp ảnh"
+                      />
                     ) : (
                       <>
                         <input 
@@ -1279,14 +1668,14 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                     }`}
                   >
                     <div className="text-[11px]">🖼️ Nền</div>
-                    <div className="truncate text-[9px]">{bgTransform.scale || 100}%</div>
+                    <div className="truncate text-[9px]">Studio</div>
                   </button>
 
                   {activeAvatars.map((av, idx) => (
                     <button
                       key={av.id}
                       type="button"
-                      onClick={() => { setSelectedAvatarId(av.id); if (inspectorTab === 'background') setInspectorTab('media_transform'); }}
+                      onClick={() => { setSelectedAvatarId(av.id); if (inspectorTab === 'background' || inspectorTab === 'image_layer') setInspectorTab('media_transform'); }}
                       className={`p-1.5 rounded-xl text-xs font-black transition-all text-center cursor-pointer border ${
                         selectedAvatarId === av.id
                           ? 'bg-cyan-500 text-black border-cyan-400 shadow-sm scale-102 font-black'
@@ -1303,33 +1692,250 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                 </div>
               </div>
 
-              {/* 2. KHU VỰC TẢI & GÁN MEDIA CHO NHÂN VẬT ĐANG CHỌN (NẾU CHỌN AVATAR) */}
-              {!isBgSelected && (
-                <div className={`p-2.5 rounded-2xl border ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'} space-y-2`}>
-                  <div className="flex items-center justify-between border-b pb-1 border-gray-200 dark:border-gray-800">
-                    <h4 className="text-[11px] font-black uppercase text-cyan-600 dark:text-cyan-400 flex items-center gap-1">
-                      <FileVideo size={13} /> Video / Hình Ảnh: {selectedAvatar.name}
+              {/* 2. THANH CHỌN TAB INSPECTOR */}
+              <div className="flex items-center gap-1 bg-slate-200 dark:bg-black/40 p-1 rounded-xl border border-gray-300 dark:border-gray-800 overflow-x-auto">
+                {!isBgSelected && !isImageLayerSelected && (
+                  <>
+                    <button
+                      type="button"
+                      onClick={() => setInspectorTab('media_transform')}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 shrink-0 cursor-pointer ${
+                        inspectorTab === 'media_transform' ? 'bg-cyan-500 text-black shadow-xs' : 'text-gray-600 dark:text-gray-400 hover:text-cyan-400'
+                      }`}
+                    >
+                      <Sliders size={12} /> Video & Vị Trí
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setInspectorTab('chroma')}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 shrink-0 cursor-pointer ${
+                        inspectorTab === 'chroma' ? 'bg-emerald-500 text-black shadow-xs' : 'text-gray-600 dark:text-gray-400 hover:text-emerald-400'
+                      }`}
+                    >
+                      <Wand2 size={12} /> Tách Phông Xanh
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => setInspectorTab('voice')}
+                      className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 shrink-0 cursor-pointer ${
+                        inspectorTab === 'voice' ? 'bg-indigo-500 text-white shadow-xs' : 'text-gray-600 dark:text-gray-400 hover:text-indigo-400'
+                      }`}
+                    >
+                      <Mic size={12} /> Giọng Đọc
+                    </button>
+                  </>
+                )}
+
+                <button
+                  type="button"
+                  onClick={() => setInspectorTab('image_layer')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 shrink-0 cursor-pointer ${
+                    inspectorTab === 'image_layer' ? 'bg-amber-400 text-black shadow-xs' : 'text-gray-600 dark:text-gray-400 hover:text-amber-400'
+                  }`}
+                >
+                  <ImageIcon size={12} /> Lớp Ảnh ({extraImageLayers.length})
+                </button>
+
+                <button
+                  type="button"
+                  onClick={() => setInspectorTab('background')}
+                  className={`px-2.5 py-1 rounded-lg text-xs font-black transition-all flex items-center gap-1 shrink-0 cursor-pointer ${
+                    inspectorTab === 'background' ? 'bg-purple-600 text-white shadow-xs' : 'text-gray-600 dark:text-gray-400 hover:text-purple-400'
+                  }`}
+                >
+                  <Palette size={12} /> Nền Studio
+                </button>
+              </div>
+
+              {/* 3. NỘI DUNG INSPECTOR: TAB LỚP ẢNH (QUẢN LÝ NHIỀU HÌNH ẢNH / BANNER / LOGO) */}
+              {inspectorTab === 'image_layer' && (
+                <div className={`p-3 rounded-2xl border space-y-3 ${isEmbedded ? 'bg-white border-amber-200' : 'bg-[#151722] border-amber-500/30'}`}>
+                  <div className="flex items-center justify-between">
+                    <h4 className="font-black text-xs text-amber-400 uppercase flex items-center gap-1">
+                      <ImageIcon size={14} /> Danh Sách Lớp Ảnh ({extraImageLayers.length})
                     </h4>
-                    <span className="text-[9px] font-mono text-gray-500">[{selectedAvatar.tag}]</span>
+                    <label className="px-2 py-1 rounded-lg bg-amber-500 hover:bg-amber-400 text-black text-[11px] font-black flex items-center gap-1 cursor-pointer shadow-xs">
+                      <Plus size={12} /> Thêm Ảnh Khác
+                      <input 
+                        type="file" 
+                        multiple 
+                        accept="image/*,video/*" 
+                        onChange={handleMultiImageUpload} 
+                        className="hidden" 
+                      />
+                    </label>
                   </div>
 
-                  {/* 2.1 VIDEO NÓI / KHẨU HÌNH */}
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-[10px]">
-                      <span className="font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1">
-                        <Sparkles size={11} className="text-amber-500" /> Video/Ảnh Nói (Khẩu Hình):
-                      </span>
-                      {selectedAvatar.talkVideo && (
-                        <span className="text-emerald-500 font-bold flex items-center gap-0.5">
-                          <CheckCircle2 size={10} /> Đã có file
-                        </span>
-                      )}
+                  {extraImageLayers.length === 0 ? (
+                    <div className="p-4 rounded-xl border border-dashed border-gray-700 text-center space-y-2">
+                      <p className="text-xs text-gray-400">Chưa có ảnh nào được thêm vào sân khấu.</p>
+                      <label className="inline-flex px-3 py-1.5 rounded-xl bg-amber-500 hover:bg-amber-400 text-black text-xs font-black items-center gap-1.5 cursor-pointer shadow-md">
+                        <Upload size={13} /> Tải Nhiều Ảnh Ngay
+                        <input 
+                          type="file" 
+                          multiple 
+                          accept="image/*,video/*" 
+                          onChange={handleMultiImageUpload} 
+                          className="hidden" 
+                        />
+                      </label>
                     </div>
+                  ) : (
+                    <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                      {extraImageLayers.map((layer, idx) => (
+                        <div 
+                          key={layer.id}
+                          onClick={() => setSelectedAvatarId(layer.id)}
+                          className={`p-2 rounded-xl border flex items-center justify-between gap-2 cursor-pointer transition-all ${
+                            selectedAvatarId === layer.id
+                              ? 'bg-amber-500/20 border-amber-400 shadow-xs'
+                              : 'bg-black/30 border-gray-800 hover:border-gray-700'
+                          }`}
+                        >
+                          <div className="flex items-center gap-2 overflow-hidden">
+                            <img 
+                              src={layer.url} 
+                              alt={layer.name} 
+                              className="w-9 h-9 rounded-lg object-contain bg-black/40 border border-white/10 shrink-0" 
+                            />
+                            <div className="overflow-hidden">
+                              <span className="font-bold text-xs text-white block truncate">{layer.name || `Ảnh ${idx + 1}`}</span>
+                              <span className="text-[10px] text-gray-400">X:{layer.x}% Y:{layer.y}% | {layer.width}×{layer.height}%</span>
+                            </div>
+                          </div>
 
-                    <div className="flex items-center gap-1">
-                      <label className="flex-1 px-2 py-1 rounded-xl text-[11px] font-bold bg-amber-500/10 hover:bg-amber-500/20 text-amber-700 dark:text-amber-300 border border-amber-500/30 flex items-center justify-center gap-1 cursor-pointer shadow-2xs">
-                        <Upload size={12} />
-                        <span className="truncate">Tải từ máy tính (MP4/PNG)</span>
+                          <div className="flex items-center gap-1 shrink-0">
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); handleDuplicateImageLayer(layer.id); }}
+                              className="p-1 rounded bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white text-[10px]"
+                              title="Nhân bản"
+                            >
+                              <Copy size={12} />
+                            </button>
+                            <button
+                              type="button"
+                              onClick={(e) => { e.stopPropagation(); handleDeleteImageLayer(layer.id); }}
+                              className="p-1 rounded bg-red-600/30 hover:bg-red-600 text-red-300 hover:text-white text-[10px]"
+                              title="Xóa"
+                            >
+                              <Trash2 size={12} />
+                            </button>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+
+                  {selectedImageLayer && (
+                    <div className="p-2.5 rounded-xl bg-black/40 border border-amber-400/30 space-y-2">
+                      <span className="text-[11px] font-black text-amber-300 block uppercase">
+                        ⚙️ Tùy Chỉnh: {selectedImageLayer.name}
+                      </span>
+
+                      <div className="grid grid-cols-2 gap-2 text-xs">
+                        <div>
+                          <label className="text-[10px] text-gray-400 block mb-0.5">Vị trí X ({selectedImageLayer.x ?? 20}%)</label>
+                          <input 
+                            type="range" 
+                            min="0" 
+                            max="100" 
+                            value={selectedImageLayer.x ?? 20} 
+                            onChange={(e) => handleUpdateImageLayer(selectedImageLayer.id, { x: Number(e.target.value) })}
+                            className="w-full accent-amber-400"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-gray-400 block mb-0.5">Vị trí Y ({selectedImageLayer.y ?? 20}%)</label>
+                          <input 
+                            type="range" 
+                            min="0" 
+                            max="100" 
+                            value={selectedImageLayer.y ?? 20} 
+                            onChange={(e) => handleUpdateImageLayer(selectedImageLayer.id, { y: Number(e.target.value) })}
+                            className="w-full accent-amber-400"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-gray-400 block mb-0.5">Chiều rộng ({selectedImageLayer.width ?? 35}%)</label>
+                          <input 
+                            type="range" 
+                            min="5" 
+                            max="100" 
+                            value={selectedImageLayer.width ?? 35} 
+                            onChange={(e) => handleUpdateImageLayer(selectedImageLayer.id, { width: Number(e.target.value) })}
+                            className="w-full accent-amber-400"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-gray-400 block mb-0.5">Chiều cao ({selectedImageLayer.height ?? 35}%)</label>
+                          <input 
+                            type="range" 
+                            min="5" 
+                            max="100" 
+                            value={selectedImageLayer.height ?? 35} 
+                            onChange={(e) => handleUpdateImageLayer(selectedImageLayer.id, { height: Number(e.target.value) })}
+                            className="w-full accent-amber-400"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-gray-400 block mb-0.5">Độ mờ / Opacity ({selectedImageLayer.opacity ?? 100}%)</label>
+                          <input 
+                            type="range" 
+                            min="10" 
+                            max="100" 
+                            value={selectedImageLayer.opacity ?? 100} 
+                            onChange={(e) => handleUpdateImageLayer(selectedImageLayer.id, { opacity: Number(e.target.value) })}
+                            className="w-full accent-amber-400"
+                          />
+                        </div>
+                        <div>
+                          <label className="text-[10px] text-gray-400 block mb-0.5">Bo góc ({selectedImageLayer.borderRadius ?? 8}px)</label>
+                          <input 
+                            type="range" 
+                            min="0" 
+                            max="50" 
+                            value={selectedImageLayer.borderRadius ?? 8} 
+                            onChange={(e) => handleUpdateImageLayer(selectedImageLayer.id, { borderRadius: Number(e.target.value) })}
+                            className="w-full accent-amber-400"
+                          />
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-2 pt-1 border-t border-gray-800">
+                        <label className="flex items-center gap-1.5 text-xs text-emerald-400 font-bold cursor-pointer">
+                          <input 
+                            type="checkbox" 
+                            checked={selectedImageLayer.chromaKey?.enabled || false}
+                            onChange={(e) => handleUpdateImageLayer(selectedImageLayer.id, {
+                              chromaKey: {
+                                ...(selectedImageLayer.chromaKey || { color: '#00ff00', mode: 'green' }),
+                                enabled: e.target.checked
+                              }
+                            })}
+                            className="rounded accent-emerald-500 cursor-pointer"
+                          />
+                          <span>Tách nền xanh lá (Chroma)</span>
+                        </label>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* 4. NỘI DUNG INSPECTOR: TAB VIDEO & VỊ TRÍ NHÂN VẬT */}
+              {inspectorTab === 'media_transform' && (
+                <div className={`p-3 rounded-2xl border space-y-3 ${isEmbedded ? 'bg-white border-gray-200' : 'bg-[#151722] border-gray-800'}`}>
+                  {/* Quản lý Media Video / Ảnh cho nhân vật */}
+                  <div className="space-y-2">
+                    <span className="text-[10px] font-black text-cyan-400 uppercase tracking-wider block">
+                      🎬 Tải Video / Ảnh Cho #{selectedAvatar.id.replace('avatar_', '')} ({selectedAvatar.name})
+                    </span>
+                    <div className="grid grid-cols-2 gap-2">
+                      <label className="p-2 rounded-xl bg-blue-600/20 hover:bg-blue-600/30 border border-blue-500/40 text-blue-300 flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors text-center">
+                        <Upload size={16} />
+                        <span className="text-[11px] font-black">Tải Từ Máy Tính</span>
+                        <span className="text-[9px] text-gray-400">MP4, WebM, PNG, JPG</span>
                         <input 
                           type="file" 
                           accept="video/*,image/*" 
@@ -1341,579 +1947,215 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                       <button
                         type="button"
                         onClick={() => setMediaPickerTarget({ avatarId: selectedAvatar.id, type: 'talk' })}
-                        className="px-2 py-1 rounded-xl text-[11px] font-bold bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-700 flex items-center gap-0.5 cursor-pointer"
-                        title="Chọn từ Thư Viện Media"
+                        className="p-2 rounded-xl bg-purple-600/20 hover:bg-purple-600/30 border border-purple-500/40 text-purple-300 flex flex-col items-center justify-center gap-1 cursor-pointer transition-colors text-center"
                       >
-                        <FolderOpen size={12} /> Thư Viện
+                        <FolderOpen size={16} />
+                        <span className="text-[11px] font-black">Thư Viện Mẫu Có Sẵn</span>
+                        <span className="text-[9px] text-gray-400">Chọn Avatar chuẩn HD</span>
                       </button>
-
-                      {selectedAvatar.talkVideo && (
-                        <button
-                          type="button"
-                          onClick={() => handleAvatarChange(selectedAvatar.id, 'talkVideo', '')}
-                          className="p-1 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 border border-red-200 dark:border-red-900 cursor-pointer"
-                          title="Xóa video khẩu hình"
-                        >
-                          <X size={12} />
-                        </button>
-                      )}
                     </div>
                   </div>
 
-                  {/* 2.2 VIDEO NGHỈ / LẮNG NGHE */}
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-[10px]">
-                      <span className="font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1">
-                        <Video size={11} className="text-blue-500" /> Video/Ảnh Nghỉ & Lắng Nghe:
-                      </span>
-                      {selectedAvatar.idleVideo && (
-                        <span className="text-emerald-500 font-bold flex items-center gap-0.5">
-                          <CheckCircle2 size={10} /> Đã có file
-                        </span>
-                      )}
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      <label className="flex-1 px-2 py-1 rounded-xl text-[11px] font-bold bg-blue-500/10 hover:bg-blue-500/20 text-blue-700 dark:text-blue-300 border border-blue-500/30 flex items-center justify-center gap-1 cursor-pointer shadow-2xs">
-                        <Upload size={12} />
-                        <span className="truncate">Tải từ máy tính (MP4/PNG)</span>
-                        <input 
-                          type="file" 
-                          accept="video/*,image/*" 
-                          onChange={(e) => handleDirectAvatarFileUpload(selectedAvatar.id, 'idleVideo', e)} 
-                          className="hidden" 
-                        />
-                      </label>
-
-                      <button
-                        type="button"
-                        onClick={() => setMediaPickerTarget({ avatarId: selectedAvatar.id, type: 'idle' })}
-                        className="px-2 py-1 rounded-xl text-[11px] font-bold bg-slate-100 dark:bg-white/10 hover:bg-slate-200 dark:hover:bg-white/20 text-gray-700 dark:text-gray-200 border border-gray-300 dark:border-gray-700 flex items-center gap-0.5 cursor-pointer"
-                        title="Chọn từ Thư Viện Media"
-                      >
-                        <FolderOpen size={12} /> Thư Viện
-                      </button>
-
-                      {selectedAvatar.idleVideo && (
-                        <button
-                          type="button"
-                          onClick={() => handleAvatarChange(selectedAvatar.id, 'idleVideo', '')}
-                          className="p-1 rounded-xl text-red-500 hover:bg-red-50 dark:hover:bg-red-950/40 border border-red-200 dark:border-red-900 cursor-pointer"
-                          title="Xóa video nghỉ"
-                        >
-                          <X size={12} />
-                        </button>
-                      )}
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* 3. SUB-TAB SELECTOR */}
-              <div className="flex items-center gap-1 bg-slate-200/80 dark:bg-black/50 p-0.5 rounded-xl border border-gray-300 dark:border-gray-800">
-                {[
-                  { id: 'media_transform', label: '📐 Vị Trí' },
-                  { id: 'chroma', label: '🟢 Tách Nền' },
-                  { id: 'voice', label: '🎙️ Giọng Đọc' },
-                  { id: 'background', label: '🖼️ Nền Studio' }
-                ].map(tab => (
-                  <button
-                    key={tab.id}
-                    type="button"
-                    onClick={() => setInspectorTab(tab.id)}
-                    className={`flex-1 py-1 text-[11px] font-black rounded-lg transition-all text-center cursor-pointer ${
-                      inspectorTab === tab.id
-                        ? 'bg-white dark:bg-[#1f222e] text-blue-600 dark:text-cyan-300 shadow-xs border border-gray-200 dark:border-gray-700 scale-102'
-                        : 'text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-white'
-                    }`}
-                  >
-                    {tab.label}
-                  </button>
-                ))}
-              </div>
-
-              {/* 4. SUB-TAB CONTENT */}
-              {inspectorTab === 'media_transform' && (
-                <div className={`p-3 rounded-2xl border space-y-2 animate-in fade-in duration-150 ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
-                  {/* 5 TƯ THẾ NHANH 1-CLICK */}
-                  <div className="space-y-1">
-                    <label className="text-[10px] font-bold text-gray-600 dark:text-gray-300 flex items-center justify-between">
-                      <span>Tư thế sân khấu 1-Click:</span>
-                      <span className="text-cyan-500 font-bold">
-                        {selectedAvatar.transform?.pose === 'sit' ? '🪑 Ngồi Ghế' : 
-                         selectedAvatar.transform?.pose === 'sit_desk' ? '🛋️ Ngồi Bàn' : 
-                         selectedAvatar.transform?.pose === 'half' ? '👤 Nửa Người' : 
-                         selectedAvatar.transform?.pose === 'close_up' ? '🔍 Cận Cảnh' : '🧍 Đứng'}
-                      </span>
-                    </label>
-                    <div className="grid grid-cols-5 gap-1">
+                  {/* Tư thế mẫu 1-Click */}
+                  <div className="space-y-1.5 pt-1 border-t border-gray-800">
+                    <span className="text-[10px] font-black text-gray-400 uppercase block">
+                      📐 Tư Thế Chuẩn Sân Khấu (1-Click):
+                    </span>
+                    <div className="grid grid-cols-5 gap-1 text-[10px]">
                       {[
-                        { type: 'stand', label: '🧍 Đứng' },
-                        { type: 'sit_chair', label: '🪑 Ghế' },
-                        { type: 'sit_table', label: '🛋️ Bàn' },
-                        { type: 'half_body', label: '👤 Nửa người' },
-                        { type: 'close_up', label: '🔍 Cận cảnh' }
+                        { id: 'stand', icon: '🧍', label: 'Đứng' },
+                        { id: 'sit_chair', icon: '🪑', label: 'Ghế' },
+                        { id: 'sit_table', icon: '🛋️', label: 'Bàn Live' },
+                        { id: 'half_body', icon: '👤', label: 'Nửa Thân' },
+                        { id: 'close_up', icon: '🔍', label: 'Cận Cảnh' }
                       ].map(p => (
                         <button
-                          key={p.type}
+                          key={p.id}
                           type="button"
-                          onClick={() => handleApplyPosePreset(selectedAvatar.id, p.type)}
-                          className={`py-1 px-0.5 rounded-xl text-[10px] font-bold border transition-all cursor-pointer text-center ${
-                            selectedAvatar.transform?.pose === p.type || (p.type === 'stand' && (!selectedAvatar.transform?.pose || selectedAvatar.transform?.pose === 'stand'))
-                              ? 'bg-blue-600 text-white border-blue-500 shadow-xs'
-                              : 'bg-slate-50 dark:bg-black/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800'
-                          }`}
+                          onClick={() => handleApplyPosePreset(selectedAvatar.id, p.id)}
+                          className="p-1.5 rounded-lg bg-white/5 hover:bg-white/15 text-gray-200 border border-white/10 flex flex-col items-center justify-center gap-0.5 cursor-pointer hover:border-cyan-400"
                         >
-                          <div>{p.label}</div>
+                          <span className="text-sm">{p.icon}</span>
+                          <span className="font-bold">{p.label}</span>
                         </button>
                       ))}
                     </div>
                   </div>
 
-                  {/* SLIDERS TỌA ĐỘ VÀ KÍCH THƯỚC */}
-                  <div className="grid grid-cols-2 gap-2 text-xs">
+                  {/* Thanh trượt điều chỉnh vị trí chi tiết */}
+                  <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-gray-800">
                     <div>
-                      <label className="text-[10px] font-bold text-gray-500 block mb-0.5">
-                        Rộng (Width): {selectedAvatar.transform?.width || 45}%
-                      </label>
-                      <input 
-                        type="range" 
-                        min="15" 
-                        max="100" 
-                        value={selectedAvatar.transform?.width || 45} 
-                        onChange={(e) => handleAvatarTransformChange(selectedAvatar.id, 'width', Number(e.target.value))}
-                        className="w-full accent-cyan-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 block mb-0.5">
-                        Cao (Height): {selectedAvatar.transform?.height || 75}%
-                      </label>
-                      <input 
-                        type="range" 
-                        min="15" 
-                        max="100" 
-                        value={selectedAvatar.transform?.height || 75} 
-                        onChange={(e) => handleAvatarTransformChange(selectedAvatar.id, 'height', Number(e.target.value))}
-                        className="w-full accent-cyan-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 block mb-0.5">
-                        Vị trí Ngang (X): {selectedAvatar.transform?.x || 0}%
-                      </label>
+                      <label className="text-[10px] text-gray-400 block mb-0.5">Vị trí X ({selectedAvatar.transform?.x ?? 0}%)</label>
                       <input 
                         type="range" 
                         min="0" 
-                        max="85" 
-                        value={selectedAvatar.transform?.x || 0} 
+                        max="100" 
+                        value={selectedAvatar.transform?.x ?? 0} 
                         onChange={(e) => handleAvatarTransformChange(selectedAvatar.id, 'x', Number(e.target.value))}
-                        className="w-full accent-blue-600"
+                        className="w-full accent-cyan-400"
                       />
                     </div>
-
                     <div>
-                      <label className="text-[10px] font-bold text-gray-500 block mb-0.5">
-                        Vị trí Dọc (Y): {selectedAvatar.transform?.y || 0}%
-                      </label>
+                      <label className="text-[10px] text-gray-400 block mb-0.5">Vị trí Y ({selectedAvatar.transform?.y ?? 0}%)</label>
                       <input 
                         type="range" 
                         min="0" 
-                        max="85" 
-                        value={selectedAvatar.transform?.y || 0} 
+                        max="100" 
+                        value={selectedAvatar.transform?.y ?? 0} 
                         onChange={(e) => handleAvatarTransformChange(selectedAvatar.id, 'y', Number(e.target.value))}
-                        className="w-full accent-blue-600"
+                        className="w-full accent-cyan-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-gray-400 block mb-0.5">Rộng ({selectedAvatar.transform?.width ?? 45}%)</label>
+                      <input 
+                        type="range" 
+                        min="10" 
+                        max="100" 
+                        value={selectedAvatar.transform?.width ?? 45} 
+                        onChange={(e) => handleAvatarTransformChange(selectedAvatar.id, 'width', Number(e.target.value))}
+                        className="w-full accent-cyan-400"
+                      />
+                    </div>
+                    <div>
+                      <label className="text-[10px] text-gray-400 block mb-0.5">Cao ({selectedAvatar.transform?.height ?? 75}%)</label>
+                      <input 
+                        type="range" 
+                        min="10" 
+                        max="100" 
+                        value={selectedAvatar.transform?.height ?? 75} 
+                        onChange={(e) => handleAvatarTransformChange(selectedAvatar.id, 'height', Number(e.target.value))}
+                        className="w-full accent-cyan-400"
                       />
                     </div>
                   </div>
-
-                  {/* LỚP & CẮT XÉN */}
-                  <div className="flex items-center justify-between pt-1 border-t border-gray-100 dark:border-gray-800 text-[11px] flex-wrap gap-1.5">
-                    <div className="flex items-center gap-1">
-                      <span className="font-bold text-gray-500">Lớp:</span>
-                      <button
-                        type="button"
-                        onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'zIndex', (selectedAvatar.transform?.zIndex || 5) + 1)}
-                        className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-black/30 border border-gray-300 dark:border-gray-800 text-[10px] font-bold cursor-pointer"
-                      >
-                        <ArrowUp size={10} className="inline" /> Lên ({selectedAvatar.transform?.zIndex || 5})
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'zIndex', Math.max(1, (selectedAvatar.transform?.zIndex || 5) - 1))}
-                        className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-black/30 border border-gray-300 dark:border-gray-800 text-[10px] font-bold cursor-pointer"
-                      >
-                        <ArrowDown size={10} className="inline" /> Xuống
-                      </button>
-                    </div>
-
-                    <div className="flex items-center gap-1">
-                      <button
-                        type="button"
-                        onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'objectFit', selectedAvatar.transform?.objectFit === 'contain' ? 'cover' : selectedAvatar.transform?.objectFit === 'fill' ? 'contain' : 'fill')}
-                        className="px-1.5 py-0.5 rounded bg-blue-50 dark:bg-blue-950/40 text-blue-600 text-[10px] font-bold border border-blue-200 dark:border-blue-800 cursor-pointer"
-                      >
-                        Fit: {selectedAvatar.transform?.objectFit || 'cover'}
-                      </button>
-                      <button
-                        type="button"
-                        onClick={() => handleAvatarTransformChange(selectedAvatar.id, 'borderRadius', selectedAvatar.transform?.borderRadius === 0 ? 16 : selectedAvatar.transform?.borderRadius === 16 ? 9999 : 0)}
-                        className="px-1.5 py-0.5 rounded bg-slate-100 dark:bg-black/30 text-gray-700 dark:text-gray-300 text-[10px] font-bold border border-gray-300 dark:border-gray-800 cursor-pointer"
-                      >
-                        Góc: {selectedAvatar.transform?.borderRadius === 9999 ? 'Tròn' : selectedAvatar.transform?.borderRadius === 0 ? 'Vuông' : 'Bo'}
-                      </button>
-                    </div>
-                  </div>
                 </div>
               )}
 
+              {/* 5. NỘI DUNG INSPECTOR: TAB TÁCH PHÔNG XANH (CHROMA KEY) */}
               {inspectorTab === 'chroma' && (
-                <div className={`p-3 rounded-2xl border space-y-2 animate-in fade-in duration-150 ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
-                  <div className="flex items-center justify-between border-b pb-2 border-gray-200 dark:border-gray-800">
-                    <div className="flex items-center gap-1">
-                      <Wand2 size={13} className="text-emerald-500" />
-                      <h4 className="text-[11px] font-black uppercase text-emerald-600 dark:text-emerald-400">
-                        Xóa Phông Nền (Chroma Key)
-                      </h4>
-                    </div>
-                    <button
-                      type="button"
-                      onClick={() => {
-                        const nextVal = !selectedAvatar.chromaKey?.enabled;
-                        handleAvatarChromaChange(selectedAvatar.id, 'enabled', nextVal);
-                        if (nextVal) {
-                          toast.success('🟢 Đã bật xóa phông nền!');
-                        } else {
-                          toast.info('⚪ Đã tắt xóa phông nền.');
-                        }
-                      }}
-                      className={`px-3 py-1 rounded-xl text-[11px] font-black transition-all flex items-center gap-1.5 cursor-pointer ${
-                        selectedAvatar.chromaKey?.enabled
-                          ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/30 ring-2 ring-emerald-300'
-                          : 'bg-slate-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-700'
-                      }`}
-                    >
-                      {selectedAvatar.chromaKey?.enabled ? (
-                        <>
-                          <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
-                          <span>Đang Bật Tách Nền</span>
-                        </>
-                      ) : (
-                        <>
-                          <span className="w-2 h-2 rounded-full bg-gray-400" />
-                          <span>Đang Tắt</span>
-                        </>
-                      )}
-                    </button>
-                  </div>
-
-                  <div className="space-y-2 text-xs">
-                    <div className="space-y-0.5">
-                      <label className="text-[10px] font-bold text-gray-500">Màu Nền Cần Tách (Bấm để Tách Ngay):</label>
-                      <div className="grid grid-cols-4 gap-1">
-                        {[
-                          { mode: 'green', color: '#00ff00', label: '🟢 Xanh Lá' },
-                          { mode: 'blue', color: '#0000ff', label: '🔵 Xanh Dương' },
-                          { mode: 'black', color: '#000000', label: '⚫ Nền Đen' },
-                          { mode: 'white', color: '#ffffff', label: '⚪ Nền Trắng' }
-                        ].map(c => (
-                          <button
-                            key={c.mode}
-                            type="button"
-                            onClick={() => {
-                              handleAvatarChromaBatch(selectedAvatar.id, {
-                                enabled: true,
-                                mode: c.mode,
-                                color: c.color
-                              });
-                              toast.success(`✨ Đã bật tách ${c.label}!`);
-                            }}
-                            className={`py-1.5 px-1 rounded-xl font-black text-[10px] border transition-all cursor-pointer text-center ${
-                              selectedAvatar.chromaKey?.enabled && (selectedAvatar.chromaKey?.mode === c.mode || selectedAvatar.chromaKey?.color === c.color)
-                                ? 'bg-emerald-600 text-white border-emerald-400 shadow-xs ring-1 ring-emerald-300 scale-102'
-                                : 'bg-slate-50 dark:bg-black/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800 hover:border-emerald-300'
-                            }`}
-                          >
-                            {c.label}
-                          </button>
-                        ))}
-                      </div>
-                    </div>
-
-                    <div className="grid grid-cols-2 gap-2">
-                      <div>
-                        <label className="text-[10px] font-bold text-gray-500 block mb-0.5">
-                          Độ Nhạy: {Math.round((selectedAvatar.chromaKey?.similarity ?? 0.45) * 100)}%
-                        </label>
-                        <input 
-                          type="range" 
-                          min="0.1" 
-                          max="0.9" 
-                          step="0.05" 
-                          value={selectedAvatar.chromaKey?.similarity ?? 0.45} 
-                          onChange={(e) => handleAvatarChromaChange(selectedAvatar.id, 'similarity', parseFloat(e.target.value))}
-                          className="w-full accent-emerald-500"
-                        />
-                      </div>
-                      <div>
-                        <label className="text-[10px] font-bold text-gray-500 block mb-0.5">
-                          Độ Mịn: {Math.round((selectedAvatar.chromaKey?.smoothness ?? 0.15) * 100)}%
-                        </label>
-                        <input 
-                          type="range" 
-                          min="0.01" 
-                          max="0.4" 
-                          step="0.02" 
-                          value={selectedAvatar.chromaKey?.smoothness ?? 0.15} 
-                          onChange={(e) => handleAvatarChromaChange(selectedAvatar.id, 'smoothness', parseFloat(e.target.value))}
-                          className="w-full accent-emerald-500"
-                        />
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {inspectorTab === 'voice' && (
-                <div className={`p-3 rounded-2xl border space-y-2 animate-in fade-in duration-150 ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
-                  <div className="flex items-center justify-between border-b pb-1.5 border-gray-200 dark:border-gray-800">
-                    <h4 className="text-[11px] font-black uppercase text-rose-600 flex items-center gap-1">
-                      <Mic size={13} /> Giọng Đọc AI: {selectedAvatar.name}
-                    </h4>
-                    <button
-                      type="button"
-                      onClick={() => handleVoicePreview(selectedAvatar.voiceId)}
-                      className="text-[11px] font-bold text-blue-600 hover:underline flex items-center gap-1 cursor-pointer"
-                    >
-                      {previewingVoiceId === selectedAvatar.voiceId ? <Square size={11} className="text-red-500" /> : <Play size={11} />}
-                      <span>{previewingVoiceId === selectedAvatar.voiceId ? 'Dừng' : 'Nghe Thử'}</span>
-                    </button>
-                  </div>
-
-                  <div className="space-y-1.5 text-xs">
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 block mb-0.5">Chọn Giọng:</label>
-                      <select
-                        value={selectedAvatar.voiceId}
-                        onChange={(e) => handleAvatarChange(selectedAvatar.id, 'voiceId', e.target.value)}
-                        className="w-full text-xs font-bold p-1.5 rounded-xl border border-gray-300 dark:border-gray-700 bg-white dark:bg-[#1f222e] text-gray-800 dark:text-white cursor-pointer shadow-inner"
-                      >
-                        {ALL_SYSTEM_VOICES.map(v => (
-                          <option key={v.id} value={v.id}>
-                            {v.name} ({v.gender === 'Female' ? 'Nữ' : 'Nam'} - {v.region || 'Việt Nam'})
-                          </option>
-                        ))}
-                      </select>
-                    </div>
-
-                    <div className="flex items-center justify-between pt-1">
-                      <label className="text-[10px] font-bold text-gray-500 flex items-center gap-1">
-                        <Gauge size={11} /> Tốc độ đọc:
-                      </label>
-                      <div className="flex items-center gap-1.5">
-                        <input 
-                          type="range" 
-                          min="0.8" 
-                          max="1.5" 
-                          step="0.05" 
-                          value={selectedAvatar.rate ?? 1.0}
-                          onChange={(e) => handleAvatarChange(selectedAvatar.id, 'rate', parseFloat(e.target.value))}
-                          className="w-20 accent-rose-600"
-                        />
-                        <span className="w-8 text-right font-mono font-bold text-[11px]">{(selectedAvatar.rate ?? 1.0).toFixed(2)}x</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              )}
-
-              {/* TAB NỀN STUDIO - FULL ĐIỀU CHỈNH CO GIÃN, VỊ TRÍ, ZOOM, BLUR, BRIGHTNESS */}
-              {inspectorTab === 'background' && (
-                <div className={`p-3 rounded-2xl border space-y-3 animate-in fade-in duration-150 ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
-                  <div className="flex items-center justify-between border-b pb-1.5 border-gray-200 dark:border-gray-800">
-                    <h4 className="text-[11px] font-black uppercase text-purple-600 flex items-center gap-1">
-                      <ImageIcon size={13} /> Canh Chỉnh & Co Giãn Ảnh Nền Studio
-                    </h4>
-                    <label className="text-[10px] font-bold text-purple-600 hover:underline flex items-center gap-0.5 cursor-pointer">
-                      <Upload size={11} /> Tải Nền Riêng
-                      <input type="file" accept="image/*,video/*" onChange={handleCustomBackgroundUpload} className="hidden" />
+                <div className={`p-3 rounded-2xl border space-y-3 ${isEmbedded ? 'bg-white border-emerald-200' : 'bg-[#151722] border-emerald-500/30'}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-black text-xs text-emerald-400 uppercase flex items-center gap-1">
+                      <Wand2 size={14} /> Tách Nền Siêu Sạch 4K
+                    </span>
+                    <label className="flex items-center gap-1.5 cursor-pointer">
+                      <input 
+                        type="checkbox" 
+                        checked={selectedAvatar.chromaKey?.enabled || false}
+                        onChange={(e) => handleAvatarChromaChange(selectedAvatar.id, 'enabled', e.target.checked)}
+                        className="rounded accent-emerald-500 w-4 h-4 cursor-pointer"
+                      />
+                      <span className="text-xs font-bold text-white">Kích Hoạt Tách Nền</span>
                     </label>
                   </div>
 
-                  {/* CÁC NÚT THAO TÁC NHANH CHO NỀN */}
-                  <div className="grid grid-cols-4 gap-1 text-[10px]">
-                    <button
-                      type="button"
-                      onClick={() => handleBackgroundTransformBatch({ x: 0, y: 0, width: 100, height: 100, scale: 100, objectFit: 'cover' })}
-                      className="py-1 px-1 rounded-lg bg-purple-50 dark:bg-purple-950/40 text-purple-700 dark:text-purple-300 border border-purple-300 dark:border-purple-800 font-bold hover:bg-purple-100 text-center cursor-pointer"
-                      title="Phủ kín màn hình"
-                    >
-                      📺 Full Màn
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleBackgroundTransformBatch({ x: 0, y: 0 })}
-                      className="py-1 px-1 rounded-lg bg-yellow-50 dark:bg-yellow-950/40 text-yellow-700 dark:text-yellow-300 border border-yellow-300 dark:border-yellow-800 font-bold hover:bg-yellow-100 text-center cursor-pointer"
-                      title="Căn giữa khung"
-                    >
-                      🎯 Căn Giữa
-                    </button>
-                    <button
-                      type="button"
-                      onClick={() => handleBackgroundTransformChange('objectFit', bgTransform.objectFit === 'contain' ? 'cover' : 'contain')}
-                      className="py-1 px-1 rounded-lg bg-blue-50 dark:bg-blue-950/40 text-blue-700 dark:text-blue-300 border border-blue-300 dark:border-blue-800 font-bold hover:bg-blue-100 text-center cursor-pointer"
-                    >
-                      Fit: {bgTransform.objectFit || 'cover'}
-                    </button>
-                    <button
-                      type="button"
-                      onClick={handleResetBackground}
-                      className="py-1 px-1 rounded-lg bg-slate-100 dark:bg-white/10 text-gray-700 dark:text-gray-300 border border-gray-300 dark:border-gray-700 font-bold hover:bg-slate-200 text-center cursor-pointer"
-                      title="Đặt lại các thông số nền"
-                    >
-                      🔄 Đặt Lại
-                    </button>
-                  </div>
-
-                  {/* THANH TRƯỢT ZOOM / SCALE % */}
-                  <div className="space-y-1">
-                    <div className="flex items-center justify-between text-[10px]">
-                      <span className="font-bold text-gray-700 dark:text-gray-300 flex items-center gap-1">
-                        <ZoomIn size={11} className="text-purple-500" /> Phóng To / Thu Nhỏ Nền (Zoom Scale):
-                      </span>
-                      <span className="font-mono font-bold text-purple-600 dark:text-purple-400">{bgTransform.scale ?? 100}%</span>
-                    </div>
-                    <input 
-                      type="range" 
-                      min="50" 
-                      max="300" 
-                      step="5"
-                      value={bgTransform.scale ?? 100}
-                      onChange={(e) => handleBackgroundTransformChange('scale', Number(e.target.value))}
-                      className="w-full accent-purple-600"
-                    />
-                  </div>
-
-                  {/* THANH TRƯỢT VỊ TRÍ X & Y */}
-                  <div className="grid grid-cols-2 gap-2 text-xs">
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 block mb-0.5">
-                        Dịch Ngang (X): {bgTransform.x ?? 0}%
-                      </label>
-                      <input 
-                        type="range" 
-                        min="-100" 
-                        max="100" 
-                        value={bgTransform.x ?? 0} 
-                        onChange={(e) => handleBackgroundTransformChange('x', Number(e.target.value))}
-                        className="w-full accent-purple-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 block mb-0.5">
-                        Dịch Dọc (Y): {bgTransform.y ?? 0}%
-                      </label>
-                      <input 
-                        type="range" 
-                        min="-100" 
-                        max="100" 
-                        value={bgTransform.y ?? 0} 
-                        onChange={(e) => handleBackgroundTransformChange('y', Number(e.target.value))}
-                        className="w-full accent-purple-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 block mb-0.5">
-                        Rộng (W): {bgTransform.width ?? 100}%
-                      </label>
-                      <input 
-                        type="range" 
-                        min="20" 
-                        max="300" 
-                        value={bgTransform.width ?? 100} 
-                        onChange={(e) => handleBackgroundTransformChange('width', Number(e.target.value))}
-                        className="w-full accent-purple-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 block mb-0.5">
-                        Cao (H): {bgTransform.height ?? 100}%
-                      </label>
-                      <input 
-                        type="range" 
-                        min="20" 
-                        max="300" 
-                        value={bgTransform.height ?? 100} 
-                        onChange={(e) => handleBackgroundTransformChange('height', Number(e.target.value))}
-                        className="w-full accent-purple-500"
-                      />
-                    </div>
-                  </div>
-
-                  {/* HIỆU ỨNG ĐỘ MỜ BLUR & ĐỘ SÁNG BRIGHTNESS */}
-                  <div className="grid grid-cols-2 gap-2 text-xs pt-1 border-t border-gray-100 dark:border-gray-800">
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 block mb-0.5">
-                        Độ Mờ Nền: {bgTransform.blur ?? 0}px
-                      </label>
-                      <input 
-                        type="range" 
-                        min="0" 
-                        max="20" 
-                        value={bgTransform.blur ?? 0} 
-                        onChange={(e) => handleBackgroundTransformChange('blur', Number(e.target.value))}
-                        className="w-full accent-purple-500"
-                      />
-                    </div>
-
-                    <div>
-                      <label className="text-[10px] font-bold text-gray-500 block mb-0.5">
-                        Độ Sáng Nền: {bgTransform.brightness ?? 100}%
-                      </label>
-                      <input 
-                        type="range" 
-                        min="50" 
-                        max="150" 
-                        value={bgTransform.brightness ?? 100} 
-                        onChange={(e) => handleBackgroundTransformChange('brightness', Number(e.target.value))}
-                        className="w-full accent-purple-500"
-                      />
-                    </div>
-                  </div>
-
-                  {/* BỘ SƯU TẬP MẪU NỀN 4K */}
-                  <div className="space-y-1 pt-1 border-t border-gray-100 dark:border-gray-800">
-                    <label className="text-[10px] font-bold text-gray-500 block">Chọn Mẫu Nền Sẵn Có:</label>
-                    <div className="grid grid-cols-2 sm:grid-cols-3 gap-1.5">
-                      {STUDIO_BACKGROUND_PRESETS.map(bg => (
+                  <div className="space-y-2">
+                    <span className="text-[10px] text-gray-400 block font-bold">Màu phông nền cần tách:</span>
+                    <div className="grid grid-cols-4 gap-1 text-[11px] font-black">
+                      {[
+                        { id: 'green', color: '#00ff00', label: 'Xanh Lá' },
+                        { id: 'blue', color: '#0000ff', label: 'Xanh Dương' },
+                        { id: 'black', color: '#000000', label: 'Nền Đen' },
+                        { id: 'white', color: '#ffffff', label: 'Nền Trắng' }
+                      ].map(m => (
                         <button
-                          key={bg.id}
+                          key={m.id}
                           type="button"
-                          onClick={() => handleSelectBackground(bg)}
-                          className={`p-1.5 rounded-xl text-xs font-bold border text-left flex items-center gap-1.5 transition-all cursor-pointer ${
-                            config.backgroundUrl === bg.url && config.backgroundColor === bg.color
-                              ? 'bg-purple-600 text-white border-purple-500 shadow-xs scale-102'
-                              : 'bg-slate-50 dark:bg-black/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800 hover:border-purple-300'
+                          onClick={() => handleAvatarChromaBatch(selectedAvatar.id, { mode: m.id, color: m.color, enabled: true })}
+                          className={`p-1.5 rounded-xl border flex items-center justify-center gap-1 cursor-pointer transition-all ${
+                            selectedAvatar.chromaKey?.mode === m.id
+                              ? 'bg-emerald-600 text-white border-emerald-400 shadow-sm font-black'
+                              : 'bg-black/40 text-gray-300 border-gray-800 hover:border-gray-600'
                           }`}
                         >
-                          <span className="text-sm">{bg.preview}</span>
-                          <span className="truncate text-[10px]">{bg.name}</span>
+                          <span className="w-2.5 h-2.5 rounded-full border border-black/40" style={{ backgroundColor: m.color }} />
+                          <span>{m.label}</span>
                         </button>
                       ))}
                     </div>
+                  </div>
+                </div>
+              )}
+
+              {/* 6. NỘI DUNG INSPECTOR: TAB GIỌNG NÓI */}
+              {inspectorTab === 'voice' && (
+                <div className={`p-3 rounded-2xl border space-y-3 ${isEmbedded ? 'bg-white border-indigo-200' : 'bg-[#151722] border-indigo-500/30'}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-black text-xs text-indigo-400 uppercase flex items-center gap-1">
+                      <Mic size={14} /> Giọng Đọc Cho #{selectedAvatar.id.replace('avatar_', '')} ({selectedAvatar.name})
+                    </span>
+                  </div>
+
+                  <div className="space-y-2 max-h-56 overflow-y-auto pr-1">
+                    {ALL_SYSTEM_VOICES.slice(0, 16).map(v => (
+                      <div 
+                        key={v.id}
+                        onClick={() => handleAvatarChange(selectedAvatar.id, 'voiceId', v.id)}
+                        className={`p-2 rounded-xl border flex items-center justify-between gap-2 cursor-pointer transition-all ${
+                          selectedAvatar.voiceId === v.id
+                            ? 'bg-indigo-600/30 border-indigo-400 text-white font-bold'
+                            : 'bg-black/30 border-gray-800 text-gray-300 hover:border-gray-700'
+                        }`}
+                      >
+                        <div className="overflow-hidden">
+                          <span className="text-xs block truncate">{v.name}</span>
+                          <span className="text-[10px] text-gray-400">{v.gender === 'Female' ? 'Nữ' : 'Nam'} • {v.style || 'Tự nhiên'}</span>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={(e) => { e.stopPropagation(); handleVoicePreview(v.id); }}
+                          className="px-2 py-1 rounded bg-indigo-500/20 hover:bg-indigo-500 text-indigo-300 hover:text-white text-[10px] font-black shrink-0"
+                        >
+                          {previewingVoiceId === v.id ? '⏹️ Dừng' : '▶️ Thử'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* 7. NỘI DUNG INSPECTOR: TAB NỀN STUDIO */}
+              {inspectorTab === 'background' && (
+                <div className={`p-3 rounded-2xl border space-y-3 ${isEmbedded ? 'bg-white border-purple-200' : 'bg-[#151722] border-purple-500/30'}`}>
+                  <div className="flex items-center justify-between">
+                    <span className="font-black text-xs text-purple-400 uppercase flex items-center gap-1">
+                      <Palette size={14} /> Tải Ảnh Nền Hoặc Chọn Mẫu 4K
+                    </span>
+                    <label className="px-2 py-1 rounded-lg bg-purple-600 hover:bg-purple-500 text-white text-[11px] font-black flex items-center gap-1 cursor-pointer shadow-xs">
+                      <Upload size={12} /> Tải Ảnh Nền Từ Máy
+                      <input 
+                        type="file" 
+                        accept="image/*,video/*" 
+                        onChange={handleCustomBackgroundUpload} 
+                        className="hidden" 
+                      />
+                    </label>
+                  </div>
+
+                  <div className="grid grid-cols-3 gap-1.5 max-h-48 overflow-y-auto pr-1">
+                    {STUDIO_BACKGROUND_PRESETS.map((preset, idx) => (
+                      <button
+                        key={idx}
+                        type="button"
+                        onClick={() => handleSelectBackground(preset)}
+                        className={`p-2 rounded-xl border flex flex-col items-center justify-center gap-1 cursor-pointer transition-all ${
+                          config.backgroundUrl === preset.url
+                            ? 'bg-purple-600/40 border-purple-400 text-white font-black scale-102'
+                            : 'bg-black/30 border-gray-800 text-gray-300 hover:border-gray-700'
+                        }`}
+                      >
+                        <span className="text-xl">{preset.preview}</span>
+                        <span className="text-[10px] truncate max-w-[80px]">{preset.name}</span>
+                      </button>
+                    ))}
                   </div>
                 </div>
               )}
 
             </div>
-
           </div>
-        ) : (
+        ) : activeTab === 'templates' ? (
           /* TAB 2: KỊCH BẢN ĐỐI THOẠI MẪU & TẢI TỆP TOÀN DIỆN */
           <div className="space-y-4 p-3 sm:p-4 max-w-7xl mx-auto">
             {/* 1. TOP CONTROLS & FILTER & NẠP FILE TỔNG HỢP */}
@@ -1962,7 +2204,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
               </div>
             </div>
 
-            {/* 2. KHUNG SOẠN THẢO & NHẬP KỊCH BẢN TÙY CHỈNH (EXPANDED FULL HEIGHT) */}
+            {/* 2. KHUNG SOẠN THẢO & NHẬP KỊCH BẢN TÙY CHỈNH */}
             <div className={`p-4 rounded-3xl border shadow-xl space-y-3 ${
               isEmbedded ? 'bg-white border-blue-200' : 'bg-[#141620] border-blue-500/30 text-white'
             }`}>
@@ -1976,7 +2218,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                 
                 <div className="flex items-center gap-1.5 flex-wrap">
                   <span className="text-[11px] font-bold text-gray-400">Thẻ nhân vật:</span>
-                  {activeAvatars.map((av, idx) => (
+                  {activeAvatars.map((av) => (
                     <button
                       key={av.id}
                       type="button"
@@ -2007,13 +2249,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                   </span>
                   <button
                     type="button"
-                    onClick={() => {
-                      if (onApplyScriptTemplate) {
-                        onApplyScriptTemplate(customScriptText, activeCount);
-                      }
-                      toast.success('🚀 Đã áp dụng kịch bản tùy chỉnh vào phòng Live!');
-                      if (onClose) onClose();
-                    }}
+                    onClick={() => handleApplyScript(customScriptText, activeCount)}
                     className="px-4 py-2 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-600 hover:from-emerald-600 hover:to-teal-700 text-white font-black text-xs shadow-md flex items-center gap-1.5 cursor-pointer hover:scale-102 transition-all"
                   >
                     <Check size={14} /> Áp Dụng Kịch Bản Này Vào Phòng Live Ngay
@@ -2022,7 +2258,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
               )}
             </div>
 
-            {/* 3. BỘ SƯU TẬP CÁC MẪU KỊCH BẢN ĐỐI THOẠI (TO RỘNG DÀI XUỐNG DƯỚI) */}
+            {/* 3. BỘ SƯU TẬP CÁC MẪU KỊCH BẢN ĐỐI THOẠI */}
             <div className="space-y-3">
               <div className="flex items-center justify-between">
                 <h3 className="text-xs font-black uppercase text-purple-400 flex items-center gap-1.5">
@@ -2064,13 +2300,11 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                           {tmpl.desc}
                         </p>
                         
-                        {/* Khung Script to rộng dài xuống dưới */}
                         <pre className="p-3.5 rounded-2xl bg-black/60 text-xs text-gray-200 font-mono whitespace-pre-wrap h-64 sm:h-72 overflow-y-auto border border-gray-700/60 shadow-inner">
                           {tmpl.script}
                         </pre>
                       </div>
 
-                      {/* Các nút hành động trên từng thẻ kịch bản */}
                       <div className="space-y-2 pt-2 border-t border-gray-800">
                         <div className="flex items-center gap-2">
                           <label className="flex-1 py-1.5 px-2 rounded-xl bg-purple-500/15 hover:bg-purple-500/25 text-purple-300 border border-purple-500/30 text-[11px] font-bold flex items-center justify-center gap-1 cursor-pointer transition-colors">
@@ -2093,19 +2327,13 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                             className="p-1.5 rounded-xl bg-gray-700/60 hover:bg-gray-700 text-gray-300 hover:text-white border border-gray-600 text-[11px] font-bold cursor-pointer"
                             title="Sao chép kịch bản"
                           >
-                            📋 Copy
+                            <Copy size={12} /> Copy
                           </button>
                         </div>
 
                         <button
                           type="button"
-                          onClick={() => {
-                            if (onApplyScriptTemplate) {
-                              onApplyScriptTemplate(tmpl.script, tmpl.count);
-                            }
-                            toast.success(`✨ Đã áp dụng "${tmpl.title}" vào phòng Live!`);
-                            if (onClose) onClose();
-                          }}
+                          onClick={() => handleApplyScript(tmpl.script, tmpl.count)}
                           className="w-full py-2.5 rounded-2xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white text-xs font-black shadow-lg flex items-center justify-center gap-1.5 cursor-pointer active:scale-95 transition-all"
                         >
                           <Sparkles size={14} /> Áp Dụng Kịch Bản Này Ngay 🚀
@@ -2113,6 +2341,79 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                       </div>
                     </div>
                   ))}
+              </div>
+            </div>
+          </div>
+        ) : (
+          /* TAB 3: KẾT NỐI TIKTOK LIVE STUDIO & OBS */
+          <div className="space-y-4 p-4 max-w-5xl mx-auto">
+            <div className="p-6 rounded-3xl bg-gradient-to-br from-indigo-950/60 via-[#131520] to-[#0c0d14] border border-cyan-500/40 shadow-2xl space-y-5">
+              <div className="flex items-center gap-3">
+                <div className="p-3 rounded-2xl bg-gradient-to-br from-cyan-500 to-blue-600 text-black shadow-lg">
+                  <MonitorPlay size={24} />
+                </div>
+                <div>
+                  <h3 className="text-base font-black text-white">
+                    Kết Nối TikTok Live Studio & OBS Studio
+                  </h3>
+                  <p className="text-xs text-gray-400">
+                    Phát sóng luồng video siêu nét 1080p chứa toàn bộ 2–4 nhân vật, ảnh nền, logo banner và âm thanh nhép môi đồng bộ.
+                  </p>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                {/* Cách 1: Browser Source Link */}
+                <div className="p-5 rounded-2xl bg-black/50 border border-cyan-500/30 space-y-3 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <span className="px-2 py-0.5 rounded-lg bg-cyan-500/20 text-cyan-300 text-[10px] font-black uppercase">
+                      Cách 1 (Khuyên Dùng)
+                    </span>
+                    <h4 className="font-bold text-sm text-white">Browser Source URL</h4>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      Dán link này vào nguồn <strong>Browser Source</strong> trong TikTok Live Studio hoặc OBS Studio (Kích thước: 1080×1920 cho live dọc hoặc 1920×1080 cho live ngang).
+                    </p>
+                    <div className="p-2.5 rounded-xl bg-black/80 border border-gray-700 text-xs font-mono text-cyan-300 truncate select-all">
+                      {liveOverlayUrl}
+                    </div>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleCopyOverlayLink}
+                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-cyan-500 to-blue-600 hover:from-cyan-400 hover:to-blue-500 text-black font-black text-xs shadow-md flex items-center justify-center gap-2 cursor-pointer transition-transform hover:scale-102"
+                  >
+                    <Copy size={14} /> Sao Chép Link Browser Source
+                  </button>
+                </div>
+
+                {/* Cách 2: Window Capture */}
+                <div className="p-5 rounded-2xl bg-black/50 border border-purple-500/30 space-y-3 flex flex-col justify-between">
+                  <div className="space-y-2">
+                    <span className="px-2 py-0.5 rounded-lg bg-purple-500/20 text-purple-300 text-[10px] font-black uppercase">
+                      Cách 2 (Quay Cửa Sổ)
+                    </span>
+                    <h4 className="font-bold text-sm text-white">Window Capture 1080p</h4>
+                    <p className="text-xs text-gray-400 leading-relaxed">
+                      Mở một cửa sổ phụ sạch 100% không nút bấm, sau đó trong TikTok Studio hoặc OBS chọn <strong>Quay Cửa Sổ (Window Capture)</strong> để quay cửa sổ này.
+                    </p>
+                  </div>
+
+                  <button
+                    type="button"
+                    onClick={handleOpenCleanWindow}
+                    className="w-full py-2.5 rounded-xl bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-500 hover:to-indigo-500 text-white font-black text-xs shadow-md flex items-center justify-center gap-2 cursor-pointer transition-transform hover:scale-102"
+                  >
+                    <ExternalLink size={14} /> Mở Cửa Sổ Sạch (Window Capture)
+                  </button>
+                </div>
+              </div>
+
+              <div className="p-3.5 rounded-2xl bg-blue-950/40 border border-blue-800/40 text-xs text-gray-300 leading-relaxed flex items-start gap-2">
+                <Info size={16} className="text-blue-400 shrink-0 mt-0.5" />
+                <span>
+                  💡 <strong>Ghi chú phát sóng:</strong> Khi bạn đã BẬT chế độ 2–4 Avatar và bắt đầu chạy kịch bản hoặc nhận sự kiện bình luận, tất cả chuyển động nhép miệng, highlight nhân vật và lớp hình ảnh sẽ tự động hiển thị mượt mà 60 FPS trên TikTok Live Studio.
+                </span>
               </div>
             </div>
           </div>
@@ -2142,14 +2443,14 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                 Bạn có thể tải trực tiếp file video (MP4, WebM) hoặc hình ảnh (PNG, JPG) từ máy tính cho từng nhân vật bằng cách bấm nút <strong>Tải từ máy tính</strong> hoặc bấm trực tiếp vào ô nhân vật trên Sân Khấu.
               </div>
 
+              <div className="p-2.5 rounded-xl bg-amber-950/40 border border-amber-800/50">
+                <strong className="text-amber-300 block mb-1">🖼️ Tải Nhiều Lớp Ảnh (Logo/Banner):</strong>
+                Bấm nút <strong>+ Tải Nhiều Ảnh</strong> ở thanh công cụ trên cùng để nạp cùng lúc hoặc nhiều lần bất kỳ ảnh nào bạn muốn. Bạn có thể kéo thả tự do, co giãn 8 góc cạnh và xếp lớp tùy thích.
+              </div>
+
               <div className="p-2.5 rounded-xl bg-emerald-950/40 border border-emerald-800/50">
                 <strong className="text-emerald-300 block mb-1">🟢 Tách Nền / Xóa Phông Xanh (Chroma Key):</strong>
                 Tự động lọc trong suốt phông xanh lá, xanh dương hoặc màu tùy ý để nhân vật hòa quyện hoàn hảo vào không gian phòng Live Studio.
-              </div>
-
-              <div className="p-2.5 rounded-xl bg-purple-950/40 border border-purple-800/50">
-                <strong className="text-purple-300 block mb-1">📐 Kéo Thả & Điều Chỉnh Tư Thế (Canva Style):</strong>
-                Kéo chuột ở giữa nhân vật để di chuyển vị trí (X, Y). Kéo 4 góc để thay đổi kích thước to nhỏ. Sử dụng 5 nút tư thế mẫu (Đứng, Ngồi ghế, Ngồi bàn, Nửa người, Cận cảnh) để định hình nhanh chóng.
               </div>
             </div>
 

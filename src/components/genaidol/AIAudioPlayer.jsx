@@ -1,10 +1,19 @@
 import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } from 'react';
 import { Play, Pause, FastForward, Mic, Volume2, Sparkles } from 'lucide-react';
-import { getDualVoiceConfig, previewVoiceAudio, stopVoiceAudio, prefetchTTSAudio } from '../../utils/voiceSyncService';
+import { 
+  getDualVoiceConfig, 
+  previewVoiceAudio, 
+  stopVoiceAudio, 
+  prefetchTTSAudio,
+  getMultiAvatarConfig,
+  parseMultiCharacterScript,
+  ALL_SYSTEM_VOICES
+} from '../../utils/voiceSyncService';
 
 /**
  * AIAudioPlayer - Quản lý hàng đợi phát âm thanh thông minh trong Livestream
  * - Tự động phát tuần tự kịch bản bán hàng (Fixed Script) từ câu đầu đến câu cuối xuyên suốt 100%.
+ * - Hỗ trợ phân vai đa nhân vật (Idol, Trợ lý, BLV Game, Khách mời) và chuyển đổi giọng đọc + nhép miệng tương ứng.
  * - Khi có sự kiện ưu tiên (Trả lời bình luận, Chào viewer mới, Cảm ơn quà tặng):
  *   Đọc dứt điểm hết câu thoại kịch bản hiện tại (không ngắt ngang giữa chừng),
  *   sau đó phát câu trả lời/chào hỏi ngay lập tức,
@@ -124,6 +133,30 @@ Chị nào mà da đang bị khô ráp, thâm sạm, không đều màu hoặc b
 Chỉ sau đúng 7 ngày sử dụng, làn da của các chị sẽ căng bóng, mịn màng và mướt như da em bé luôn ạ!
 Duy nhất trong phiên livestream ngày hôm nay, giảm sốc 50% chỉ còn 890.000đ tặng kèm kem dưỡng ẩm mini và freeship toàn quốc!
 Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày, bấm vào Giỏ Hàng góc trái săn ngay nhé!`;
+    }
+
+    const multiConf = getMultiAvatarConfig();
+    const hasRoleTags = /\[([^\]]+)\]\s*:/i.test(scriptRaw) || /^(Idol|Trợ Lý|Quản Lý|BLV|Game|Khách Mời|Host)\s*:/im.test(scriptRaw);
+
+    if (multiConf.enabled || hasRoleTags) {
+      const parsedMulti = parseMultiCharacterScript(scriptRaw, multiConf);
+      if (parsedMulti.length > 0) {
+        return parsedMulti.map((pItem, idx) => ({
+          id: `script_${idx}`,
+          type: 'script',
+          text: pItem.text,
+          rawLine: pItem.rawLine,
+          avatarId: pItem.avatarId,
+          avatarName: pItem.avatarName,
+          role: pItem.role,
+          voiceId: pItem.voiceId,
+          voiceObj: pItem.voiceObj,
+          volume: pItem.volume,
+          rate: pItem.rate,
+          voiceChannel: pItem.role || 'idol',
+          index: idx
+        }));
+      }
     }
 
     const rawSentences = scriptRaw
@@ -253,9 +286,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       
       const channel = item.voiceChannel || (item.type === 'script' ? 'idol' : item.type === 'comment' ? 'comment' : 'manager');
       const latestDualVoices = getDualVoiceConfig();
-      const activeVoice = channel === 'idol' 
-        ? (latestDualVoices.idolVoice || voiceConfig.idolVoice || { id: 'free_vi_female', lang: 'vi-VN', gender: 'Female' })
-        : (channel === 'comment' ? (latestDualVoices.commentVoice || voiceConfig.commentVoice || latestDualVoices.idolVoice) : (latestDualVoices.managerVoice || voiceConfig.managerVoice));
+      
+      let activeVoice = item.voiceObj;
+      if (!activeVoice) {
+        activeVoice = channel === 'idol' 
+          ? (latestDualVoices.idolVoice || voiceConfig.idolVoice || { id: 'free_vi_female', lang: 'vi-VN', gender: 'Female' })
+          : (channel === 'comment' ? (latestDualVoices.commentVoice || voiceConfig.commentVoice || latestDualVoices.idolVoice) : (latestDualVoices.managerVoice || voiceConfig.managerVoice));
+      }
       
       if (activeVoice?.enabled === false) {
         isBusyRef.current = false;
@@ -265,13 +302,34 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         return;
       }
 
+      // Thông báo cho toàn bộ hệ thống (DesktopAppUI, CleanLiveOverlay, OBS) nhân vật nào đang nói
+      const speakingAvatarId = item.avatarId || (channel === 'idol' ? 'avatar_1' : channel === 'manager' || channel === 'assistant' ? 'avatar_2' : channel === 'game' ? 'avatar_3' : 'avatar_1');
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('avalive_speaker_change', {
+          detail: {
+            avatarId: speakingAvatarId,
+            role: item.role || channel,
+            avatarName: item.avatarName,
+            isSpeaking: true
+          }
+        }));
+      }
+
+      if (onActionTriggered) {
+        onActionTriggered({ 
+          type: 'LIPSYNC_STARTED', 
+          avatarId: speakingAvatarId, 
+          role: item.role || channel 
+        });
+      }
+
       // Trừ token trải nghiệm AI
       const charLen = (item.text || '').length || 30;
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('avalive:deduct_token', {
           detail: {
             amount: charLen,
-            reason: `Voice AI (${channel === 'idol' ? 'Idol' : channel === 'comment' ? 'Bình Luận AI' : 'Quản Lý'}): "${(item.text || '').slice(0, 20)}..."`
+            reason: `Voice AI (${item.avatarName || (channel === 'idol' ? 'Idol' : channel === 'comment' ? 'Bình Luận AI' : 'Quản Lý')}): "${(item.text || '').slice(0, 20)}..."`
           }
         }));
       }
@@ -281,21 +339,30 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         const nextIdx = currentIndexRef.current + 1;
         if (queueRef.current && queueRef.current[nextIdx]) {
           const nextItem = queueRef.current[nextIdx];
-          const nextChannel = nextItem.voiceChannel || (nextItem.type === 'script' ? 'idol' : nextItem.type === 'comment' ? 'comment' : 'manager');
-          const nextVoice = nextChannel === 'idol' ? (latestDualVoices.idolVoice || voiceConfig.idolVoice || { id: 'free_vi_female', lang: 'vi-VN', gender: 'Female' }) : (nextChannel === 'comment' ? (latestDualVoices.commentVoice || voiceConfig.commentVoice) : (latestDualVoices.managerVoice || voiceConfig.managerVoice));
-          prefetchTTSAudio(nextItem.text, nextVoice);
+          const nextVoice = nextItem.voiceObj || (nextItem.voiceChannel === 'idol' ? (latestDualVoices.idolVoice || voiceConfig.idolVoice) : (latestDualVoices.managerVoice || voiceConfig.managerVoice));
+          if (nextVoice) prefetchTTSAudio(nextItem.text, nextVoice);
         }
       } else if (priorityQueueRef.current.length > 0) {
         const nextPri = priorityQueueRef.current[0];
-        const nextPriChannel = nextPri.voiceChannel || (nextPri.type === 'script' ? 'idol' : nextPri.type === 'comment' ? 'comment' : 'manager');
-        const nextPriVoice = nextPriChannel === 'idol' ? (latestDualVoices.idolVoice || voiceConfig.idolVoice || { id: 'free_vi_female', lang: 'vi-VN', gender: 'Female' }) : (nextPriChannel === 'comment' ? (latestDualVoices.commentVoice || voiceConfig.commentVoice) : (latestDualVoices.managerVoice || voiceConfig.managerVoice));
-        prefetchTTSAudio(nextPri.text, nextPriVoice);
+        const nextPriVoice = nextPri.voiceObj || (nextPri.voiceChannel === 'idol' ? (latestDualVoices.idolVoice || voiceConfig.idolVoice) : (latestDualVoices.managerVoice || voiceConfig.managerVoice));
+        if (nextPriVoice) prefetchTTSAudio(nextPri.text, nextPriVoice);
       }
 
       await previewVoiceAudio(activeVoice, item.text, {
         priority: true,
         isTest: false,
+        volume: item.volume !== undefined ? item.volume : activeVoice?.volume,
+        rate: item.rate !== undefined ? item.rate : activeVoice?.rate,
         onEnd: () => {
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('avalive_speaker_change', {
+              detail: {
+                avatarId: null,
+                role: null,
+                isSpeaking: false
+              }
+            }));
+          }
           if (onActionTriggered) onActionTriggered({ type: 'LIPSYNC_ENDED' });
           isBusyRef.current = false;
           
@@ -322,6 +389,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       });
     } catch (err) {
       console.error('Audio play error:', err);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('avalive_speaker_change', {
+          detail: { avatarId: null, role: null, isSpeaking: false }
+        }));
+      }
       isBusyRef.current = false;
       if (isPlayingRef.current && isScriptItem) {
         setCurrentIndex(prev => prev + 1);
