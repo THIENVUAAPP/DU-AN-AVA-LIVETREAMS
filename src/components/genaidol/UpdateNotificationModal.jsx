@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.7.1';
+export const APP_VERSION = '2.7.2';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Khắc Phục Triệt Để Lỗi Màn Hình Đen & Video Nhép Miệng Tải Lên',
-    description: 'Nâng cấp toàn diện cơ chế nhận diện định dạng Video (Blob URL, Data URL, MP4/WebM/MOV/MKV), phát tức thì không bị lỗi màn hình đen. Video nhép miệng và nhân vật AI hoạt động mượt mà 60 FPS.'
+    title: '🌸 Nạp Đủ Bộ 40 Giọng Nữ Master Voice DNA Tiếng Việt Mới Nhất [NEW]',
+    description: 'Tích hợp chuẩn 5 tầng Voice DNA (Region, Persona, Style, Emotion, Acoustic) vào mục Giọng Hot Trend. Gồm 20 giọng chuyên chốt đơn bán hàng đỉnh cao (Core Sales 50%) và 20 giọng đa dụng (CEO, Doanh nhân, Quảng cáo, Kể chuyện, TVC, Podcast, MC).'
   },
   {
-    title: '📐 Tối Ưu Bố Cục Thanh Tiêu Đề & Nút Chức Năng Không Bị Nhảy Hàng',
-    description: 'Tự động rút gọn tên video dài (Profile), khóa cố định thanh điều khiển trên cùng (BẬT TẤT CẢ, Live AI Idol, Game Chiến Đấu...) trên 1 hàng duy nhất, chống tràn và không bị vỡ giao diện.'
+    title: '⚡ Cơ Chế Tự Động Phục Hồi Video (Zero-Black-Screen Guardian)',
+    description: 'Tự động tạo mới và tái sinh Blob URL từ dữ liệu gốc IDB khi mở ứng dụng hoặc đổi ô nhân vật, loại bỏ hoàn toàn lỗi màn hình đen cho video nhép miệng và video tải lên.'
   },
   {
-    title: '🎙️ Khớp Khẩu Hình Lip-Sync Chuẩn Từng Câu Thoại Kịch Bản',
-    description: 'Kết nối trực tiếp Voice AI với bộ phân tích khẩu hình, cử động môi mượt mà tự nhiên, đọc kịch bản tuần tự và lặp vô tận liền mạch.'
+    title: '📐 Khóa Cố Định Giao Diện & Rút Gọn Tên Thông Minh',
+    description: 'Tự động rút gọn tên video dài, đảm bảo thanh điều khiển trên cùng và thanh công cụ phụ luôn hiển thị thẳng hàng, chống tràn và không vỡ layout.'
   }
 ];
 

@@ -1120,6 +1120,19 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       });
       setCustomCharacters(loadedChars);
 
+      if (selectedCharacter && loadedChars.some(item => item.id === selectedCharacter)) {
+        const activeChar = loadedChars.find(item => item.id === selectedCharacter);
+        if (activeChar && activeChar.url) {
+          setUserLockedMediaUrl(activeChar.url);
+          if (desktopVideoRef.current && desktopVideoRef.current.src !== activeChar.url) {
+            desktopVideoRef.current.src = activeChar.url;
+            desktopVideoRef.current.currentTime = 0;
+            desktopVideoRef.current.dataset.userPaused = 'false';
+            desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+          }
+        }
+      }
+
       // Tự động nâng cấp fileData lên máy chủ để lấy link HTTP vĩnh viễn (chống đen màn hình trên OBS / TikTok Live Studio)
       filtered.forEach(async (c) => {
         if (c.fileData && (!c.mediaUrl || c.mediaUrl.startsWith('blob:'))) {
@@ -3110,6 +3123,36 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               disablePictureInPicture
               playsInline 
               onClick={toggleDesktopVideoPlayback}
+              onError={(e) => {
+                console.warn('Desktop video playback error, recovering from IDB/fileData...', e);
+                const charMatch = (customCharacters && Array.isArray(customCharacters)) 
+                  ? customCharacters.find(c => c.id === selectedCharacter) 
+                  : null;
+                if (charMatch && charMatch.fileData) {
+                  try {
+                    const freshUrl = URL.createObjectURL(charMatch.fileData);
+                    e.currentTarget.src = freshUrl;
+                    e.currentTarget.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+                    setUserLockedMediaUrl(freshUrl);
+                    setCustomCharacters(prev => prev.map(c => c.id === charMatch.id ? { ...c, url: freshUrl } : c));
+                  } catch (err) {}
+                } else if (selectedCharacter && selectedCharacter.startsWith('custom_')) {
+                  loadAllCharactersFromIDB().then(chars => {
+                    const found = chars.find(c => c.id === selectedCharacter);
+                    if (found && found.fileData) {
+                      try {
+                        const freshUrl = URL.createObjectURL(found.fileData);
+                        if (desktopVideoRef.current) {
+                          desktopVideoRef.current.src = freshUrl;
+                          desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+                        }
+                        setUserLockedMediaUrl(freshUrl);
+                        setCustomCharacters(prev => prev.map(c => c.id === found.id ? { ...c, url: freshUrl } : c));
+                      } catch (err) {}
+                    }
+                  }).catch(() => {});
+                }
+              }}
               onTimeUpdate={(e) => {
                 const curTime = e.currentTarget.currentTime;
                 if (curTime > 0) {
@@ -4147,7 +4190,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   <div
                     key={charItem.id || index}
                     onClick={() => {
-                      const charUrl = charItem.url || charItem.mediaUrl;
+                      let charUrl = charItem.url || charItem.mediaUrl;
+                      if ((!charUrl || charUrl.startsWith('blob:')) && charItem.fileData) {
+                        try {
+                          charUrl = URL.createObjectURL(charItem.fileData);
+                          charItem.url = charUrl;
+                          setCustomCharacters(prev => prev.map(c => c.id === charItem.id ? { ...c, url: charUrl } : c));
+                        } catch(e) {}
+                      }
                       if (!charUrl) {
                         fileInputRef.current?.click();
                         return;
@@ -4161,7 +4211,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                         if (typeof cleanUrl === 'string' && cleanUrl.includes('/uploads/')) {
                           cleanUrl = cleanUrl.substring(cleanUrl.indexOf('/uploads/'));
                         }
-                        const isVid = charItem.type === 'video' || (typeof cleanUrl === 'string' && (cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.mov')));
+                        const isVid = charItem.type === 'video' || (charItem.fileData?.type?.startsWith('video/')) || (typeof cleanUrl === 'string' && (cleanUrl.startsWith('blob:') || cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.mov') || cleanUrl.includes('/uploads/') || cleanUrl.includes('/api/stream')));
                         setUserLockedMediaUrl(cleanUrl);
                         try { localStorage.setItem('avalive_user_locked_media', cleanUrl); } catch (e) {}
 

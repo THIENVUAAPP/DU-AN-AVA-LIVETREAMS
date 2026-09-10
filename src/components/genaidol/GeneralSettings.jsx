@@ -2205,11 +2205,12 @@ IDOL MỈM CƯỜI + GESTURE
                     <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-gray-200">
                       <span className="text-[11px] font-bold text-gray-500 px-1.5">Phong Cách:</span>
                       {[
-                        { key: 'all', label: 'Tất cả (20)' },
-                        { key: 'social', label: 'Creator & Social' },
-                        { key: 'sales', label: 'Bán Hàng & Chốt Deal' },
-                        { key: 'story', label: 'Story & Cinema' },
-                        { key: 'news', label: 'Bản Tin & CSKH' }
+                        { key: 'all', label: `Tất cả (${VIETNAMESE_HOTTREND_VOICES.length})` },
+                        { key: 'sales', label: '🛒 Bán Hàng & Chốt Deal (20)' },
+                        { key: 'social', label: '🔥 Creator & TikTok Viral' },
+                        { key: 'business', label: '💼 Doanh Nhân & Chuyên Gia' },
+                        { key: 'story', label: '🎬 Kể Chuyện & Cảm Xúc' },
+                        { key: 'news', label: '🎙️ MC, Bản Tin & CSKH' }
                       ].map(tab => (
                         <button
                           key={tab.key}
@@ -2231,8 +2232,8 @@ IDOL MỈM CƯỜI + GESTURE
                       <span className="text-[11px] font-bold text-gray-500 px-1.5">Giới Tính:</span>
                       {[
                         { key: 'all', label: 'Tất cả' },
-                        { key: 'Male', label: '👨 Nam (10)' },
-                        { key: 'Female', label: '👩 Nữ (10)' }
+                        { key: 'Female', label: `👩 Nữ (${VIETNAMESE_HOTTREND_VOICES.filter(v => v.gender === 'Female' || v.gender === 'Nữ').length})` },
+                        { key: 'Male', label: `👨 Nam (${VIETNAMESE_HOTTREND_VOICES.filter(v => v.gender === 'Male' || v.gender === 'Nam').length})` }
                       ].map(tab => (
                         <button
                           key={tab.key}
@@ -2270,14 +2271,16 @@ IDOL MỈM CƯỜI + GESTURE
                       {VIETNAMESE_HOTTREND_VOICES
                         .filter(v => {
                           if (hotTrendGender !== 'all' && v.gender !== hotTrendGender) return false;
-                          if (hotTrendCategory === 'social') {
-                            if (!v.id.includes('brian') && !v.id.includes('liam') && !v.id.includes('jessica') && !v.id.includes('kenh') && !v.id.includes('anika')) return false;
-                          } else if (hotTrendCategory === 'sales') {
-                            if (!v.id.includes('adam') && !v.id.includes('sales') && !v.id.includes('tungdang') && !v.id.includes('beauty')) return false;
+                          if (hotTrendCategory === 'sales') {
+                            if (!v.id.includes('sales') && !v.id.includes('closer') && !v.id.includes('fomo') && !v.id.includes('adam') && !v.id.includes('tungdang') && !v.category?.includes('Bán Hàng')) return false;
+                          } else if (hotTrendCategory === 'social') {
+                            if (!v.id.includes('viral') && !v.id.includes('tiktok') && !v.id.includes('brian') && !v.id.includes('liam') && !v.id.includes('jessica') && !v.id.includes('cute') && !v.id.includes('young') && !v.id.includes('comedy') && !v.id.includes('friendly') && !v.category?.includes('Viral') && !v.category?.includes('Creator')) return false;
+                          } else if (hotTrendCategory === 'business') {
+                            if (!v.id.includes('ceo') && !v.id.includes('founder') && !v.id.includes('ad_') && !v.id.includes('expert') && !v.id.includes('motivation') && !v.category?.includes('Doanh Nhân') && !v.category?.includes('Chuyên Gia') && !v.category?.includes('Authority')) return false;
                           } else if (hotTrendCategory === 'story') {
-                            if (!v.id.includes('matilda') && !v.id.includes('trieuduong') && !v.id.includes('storytelling') && !v.id.includes('cinematic') && !v.id.includes('villain')) return false;
+                            if (!v.id.includes('story') && !v.id.includes('cinema') && !v.id.includes('podcast') && !v.id.includes('emotional') && !v.id.includes('empathy') && !v.id.includes('matilda') && !v.id.includes('trieuduong') && !v.category?.includes('Kể Chuyện') && !v.category?.includes('Cảm Xúc')) return false;
                           } else if (hotTrendCategory === 'news') {
-                            if (!v.id.includes('sarah') && !v.id.includes('trungcaha') && !v.id.includes('huyen') && !v.id.includes('news') && !v.id.includes('tech')) return false;
+                            if (!v.id.includes('news') && !v.id.includes('documentary') && !v.id.includes('mc') && !v.id.includes('educator') && !v.id.includes('customer_care') && !v.id.includes('sarah') && !v.id.includes('trungcaha') && !v.id.includes('huyen') && !v.category?.includes('Bản Tin') && !v.category?.includes('MC')) return false;
                           }
                           if (hotTrendSearchQuery.trim()) {
                             const q = hotTrendSearchQuery.toLowerCase();

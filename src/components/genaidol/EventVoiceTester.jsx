@@ -439,8 +439,8 @@ export default function EventVoiceTester({
         )}
       </optgroup>
 
-      {/* 3. BỘ 20 GIỌNG HOT TREND TRIỆU VIEW */}
-      <optgroup label="🔥 BỘ 20 GIỌNG HOT TREND TRIỆU VIEW">
+      {/* 3. BỘ GIỌNG HOT TREND & 40 MASTER VOICE DNA TRIỆU VIEW */}
+      <optgroup label="🔥 BỘ GIỌNG HOT TREND & 40 MASTER VOICE DNA (NEW)">
         {VIETNAMESE_HOTTREND_VOICES.map(v => (
           <option key={`hot_${v.id}`} value={v.id}>
             {isVoiceFavorite(v.id) ? '⭐ ' : '🔥 '} {v.name.replace(/ 💎| 🇻🇳/g, '')}
