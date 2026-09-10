@@ -3074,15 +3074,19 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
         return (
           <div className={gridClass}>
-            {activeList.map((avatar) => {
+            {activeList.map((avatar, idx) => {
               const isSpeakingNow = isSpeakerActive && (activeSpeakerId === avatar.id || (!activeSpeakerId && avatar.id === 'idol'));
               const customMatch = (customCharacters && Array.isArray(customCharacters)) 
                 ? customCharacters.find(c => c.id === selectedCharacter && (c.url || c.mediaUrl)) 
                 : null;
               const fallbackUrl = customMatch?.url || userLockedMediaUrl || '';
-              const vidSrc = (isSpeakingNow && avatar.talkVideo) 
-                ? avatar.talkVideo 
-                : (avatar.idleVideo || fallbackUrl);
+              
+              const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || '';
+              const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || '';
+              const vidSrc = isSpeakingNow 
+                ? (talkSrc || idleSrc || (idx === 0 ? fallbackUrl : '')) 
+                : (idleSrc || talkSrc || (idx === 0 ? fallbackUrl : ''));
+              const isImg = isImageMedia(vidSrc);
 
               return (
                 <div 
@@ -3092,16 +3096,24 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   }`}
                 >
                   {vidSrc ? (
-                    <video
-                      key={`${avatar.id}_${isSpeakingNow ? 'talk' : 'idle'}_${vidSrc}`}
-                      src={vidSrc}
-                      autoPlay
-                      loop
-                      muted={liveAudioMuted}
-                      playsInline
-                      controls={false}
-                      className="w-full h-full object-cover bg-black"
-                    />
+                    isImg ? (
+                      <img 
+                        src={vidSrc}
+                        alt={avatar.name}
+                        className="w-full h-full object-cover select-none pointer-events-none"
+                      />
+                    ) : (
+                      <video
+                        key={`${avatar.id}_${isSpeakingNow ? 'talk' : 'idle'}_${vidSrc}`}
+                        src={vidSrc}
+                        autoPlay
+                        loop
+                        muted={liveAudioMuted}
+                        playsInline
+                        controls={false}
+                        className="w-full h-full object-cover bg-black select-none pointer-events-none"
+                      />
+                    )
                   ) : (
                     <div className="text-center p-3 text-white/70 text-xs">
                       <span className="text-lg block mb-1">🎭</span>
@@ -3135,8 +3147,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           <SvgChromaFilters />
           {activeList.map((avatar, idx) => {
             const transform = avatar.transform || { 
-              x: idx === 0 ? 5 : idx === 1 ? 50 : idx === 2 ? 25 : 65, 
-              y: idx === 0 ? 10 : idx === 1 ? 30 : idx === 2 ? 60 : 10, 
+              x: idx === 0 ? 4 : idx === 1 ? 48 : idx === 2 ? 25 : 65, 
+              y: idx === 0 ? 8 : idx === 1 ? 28 : idx === 2 ? 60 : 10, 
               width: 48, 
               height: 75, 
               zIndex: 5, 
@@ -3149,9 +3161,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               ? customCharacters.find(c => c.id === selectedCharacter && (c.url || c.mediaUrl)) 
               : null;
             const fallbackUrl = customMatch?.url || userLockedMediaUrl || '';
-            const vidSrc = (isSpeakingNow && avatar.talkVideo) 
-              ? avatar.talkVideo 
-              : (avatar.idleVideo || fallbackUrl);
+            
+            const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || '';
+            const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || '';
+            const vidSrc = isSpeakingNow 
+              ? (talkSrc || idleSrc || (idx === 0 ? fallbackUrl : '')) 
+              : (idleSrc || talkSrc || (idx === 0 ? fallbackUrl : ''));
             const isImg = isImageMedia(vidSrc);
             const chromaStyle = getChromaStyle(avatar.chromaKey || multiAvatarConfig.chromaKey);
 
@@ -3159,13 +3174,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               <div 
                 key={avatar.id} 
                 className={`absolute overflow-hidden transition-all duration-300 flex flex-col justify-between ${
-                  isSpeakingNow ? 'ring-2 ring-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.6)] z-20 scale-102' : 'hover:ring-1 hover:ring-white/40'
+                  isSpeakingNow ? 'ring-2 ring-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.6)] z-20 scale-102' : ''
                 }`}
                 style={{
-                  left: `${transform.x}%`,
-                  top: `${transform.y}%`,
-                  width: `${transform.width}%`,
-                  height: `${transform.height}%`,
+                  left: `${transform.x ?? (idx === 0 ? 4 : idx === 1 ? 48 : 25)}%`,
+                  top: `${transform.y ?? (idx === 0 ? 8 : idx === 1 ? 28 : 50)}%`,
+                  width: `${transform.width ?? 48}%`,
+                  height: `${transform.height ?? 75}%`,
                   zIndex: isSpeakingNow ? (transform.zIndex || 5) + 10 : (transform.zIndex || 5),
                   borderRadius: `${transform.borderRadius ?? 16}px`
                 }}
@@ -3179,7 +3194,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       <img
                         src={vidSrc}
                         alt={avatar.name}
-                        className="w-full h-full object-cover select-none pointer-events-none"
+                        className="w-full h-full select-none pointer-events-none"
                         style={{
                           width: '100%',
                           height: '100%',
@@ -3206,7 +3221,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                     )
                   ) : (
                     <div className="w-full h-full bg-slate-900/80 flex flex-col items-center justify-center p-2 text-center text-white border border-white/10">
-                      <span className="text-xl mb-1">{transform.pose === 'sit' ? '🪑' : '🧍'}</span>
+                      <span className="text-xl mb-1">{transform.pose === 'sit' ? '🪑' : transform.pose === 'sit_desk' ? '🛋️' : '🧍'}</span>
                       <span className="text-[11px] font-black">{avatar.name}</span>
                     </div>
                   )}

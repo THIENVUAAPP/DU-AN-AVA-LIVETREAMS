@@ -123,61 +123,99 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
   };
 
   const handleAvatarChange = (avatarId, field, value) => {
-    const updated = {
-      ...config,
-      avatars: safeAvatars.map(av => av.id === avatarId ? { ...av, [field]: value } : av)
-    };
-    setConfig(updated);
-    saveMultiAvatarConfig(updated);
+    setConfig(prev => {
+      const currentAvatars = prev.avatars || DEFAULT_MULTI_AVATAR_CONFIG.avatars;
+      const updatedAvatars = currentAvatars.map(av => {
+        if (av.id === avatarId) {
+          const updated = { ...av, [field]: value };
+          // Tự động đồng bộ video nói <-> video lắng nghe nếu người dùng mới nạp 1 file
+          if (field === 'talkVideo' && value && !av.idleVideo) {
+            updated.idleVideo = value;
+          } else if (field === 'idleVideo' && value && !av.talkVideo) {
+            updated.talkVideo = value;
+          }
+          return updated;
+        }
+        return av;
+      });
+      const updatedConfig = {
+        ...prev,
+        avatars: updatedAvatars
+      };
+      saveMultiAvatarConfig(updatedConfig);
+      return updatedConfig;
+    });
   };
 
   const handleAvatarChromaChange = (avatarId, field, value) => {
-    const updated = {
-      ...config,
-      avatars: safeAvatars.map(av => {
-        if (av.id === avatarId) {
-          const currentChroma = av.chromaKey || { enabled: false, color: '#00ff00', similarity: 0.45, smoothness: 0.15, spill: 0.15, mode: 'green' };
-          return {
-            ...av,
-            chromaKey: {
-              ...currentChroma,
-              [field]: value
-            }
-          };
-        }
-        return av;
-      })
-    };
-    setConfig(updated);
-    saveMultiAvatarConfig(updated);
+    setConfig(prev => {
+      const currentAvatars = prev.avatars || DEFAULT_MULTI_AVATAR_CONFIG.avatars;
+      const updated = {
+        ...prev,
+        avatars: currentAvatars.map(av => {
+          if (av.id === avatarId) {
+            const currentChroma = av.chromaKey || { enabled: false, color: '#00ff00', similarity: 0.45, smoothness: 0.15, spill: 0.15, mode: 'green' };
+            return {
+              ...av,
+              chromaKey: {
+                ...currentChroma,
+                [field]: value
+              }
+            };
+          }
+          return av;
+        })
+      };
+      saveMultiAvatarConfig(updated);
+      return updated;
+    });
+  };
+
+  const handleAvatarTransformBatch = (avatarId, changes) => {
+    setConfig(prev => {
+      const currentAvatars = prev.avatars || DEFAULT_MULTI_AVATAR_CONFIG.avatars;
+      const updated = {
+        ...prev,
+        layoutMode: 'custom_canvas',
+        avatars: currentAvatars.map(av => {
+          if (av.id === avatarId) {
+            return {
+              ...av,
+              transform: {
+                ...(av.transform || { x: 10, y: 10, width: 45, height: 75, zIndex: 1, pose: 'stand', objectFit: 'cover', borderRadius: 16 }),
+                ...changes
+              }
+            };
+          }
+          return av;
+        })
+      };
+      saveMultiAvatarConfig(updated);
+      return updated;
+    });
   };
 
   const handleAvatarTransformChange = (avatarId, field, value) => {
-    const updated = {
-      ...config,
-      layoutMode: 'custom_canvas',
-      avatars: safeAvatars.map(av => {
-        if (av.id === avatarId) {
-          return {
-            ...av,
-            transform: {
-              ...(av.transform || { x: 10, y: 10, width: 45, height: 75, zIndex: 1, pose: 'stand', objectFit: 'cover', borderRadius: 16 }),
-              [field]: value
-            }
-          };
-        }
-        return av;
-      })
-    };
-    setConfig(updated);
-    saveMultiAvatarConfig(updated);
+    handleAvatarTransformBatch(avatarId, { [field]: value });
   };
 
   const handleDirectAvatarFileUpload = (avatarId, field, e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const objectUrl = URL.createObjectURL(file);
-    handleAvatarChange(avatarId, field, objectUrl);
+
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (loadEvt) => {
+        const dataUrl = loadEvt.target?.result;
+        if (dataUrl) {
+          handleAvatarChange(avatarId, field, dataUrl);
+        }
+      };
+      reader.readAsDataURL(file);
+    } else {
+      const objectUrl = URL.createObjectURL(file);
+      handleAvatarChange(avatarId, field, objectUrl);
+    }
   };
 
   const handleApplyPosePreset = (avatarId, poseType) => {
@@ -192,39 +230,21 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     const targetPose = poseConfigs[poseType];
     if (!targetPose) return;
 
-    const updated = {
-      ...config,
-      layoutMode: 'custom_canvas',
-      avatars: safeAvatars.map(av => {
-        if (av.id === avatarId) {
-          return {
-            ...av,
-            transform: {
-              ...(av.transform || {}),
-              ...targetPose
-            }
-          };
-        }
-        return av;
-      })
-    };
-    setConfig(updated);
-    saveMultiAvatarConfig(updated);
+    handleAvatarTransformBatch(avatarId, targetPose);
   };
 
   const handleFillScreen = (avatarId) => {
-    handleAvatarTransformChange(avatarId, 'x', 0);
-    handleAvatarTransformChange(avatarId, 'y', 0);
-    handleAvatarTransformChange(avatarId, 'width', 100);
-    handleAvatarTransformChange(avatarId, 'height', 100);
+    handleAvatarTransformBatch(avatarId, { x: 0, y: 0, width: 100, height: 100 });
   };
 
   const handleCenterAvatar = (avatarId) => {
     const av = safeAvatars.find(a => a.id === avatarId);
     const w = av?.transform?.width || 50;
     const h = av?.transform?.height || 50;
-    handleAvatarTransformChange(avatarId, 'x', Math.max(0, Math.round((100 - w) / 2)));
-    handleAvatarTransformChange(avatarId, 'y', Math.max(0, Math.round((100 - h) / 2)));
+    handleAvatarTransformBatch(avatarId, {
+      x: Math.max(0, Math.round((100 - w) / 2)),
+      y: Math.max(0, Math.round((100 - h) / 2))
+    });
   };
 
   const handleResetLayout = () => {
@@ -264,10 +284,27 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
   const handleCustomBackgroundUpload = (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
-    const objectUrl = URL.createObjectURL(file);
-    const updated = { ...config, backgroundUrl: objectUrl };
-    setConfig(updated);
-    saveMultiAvatarConfig(updated);
+    if (file.type.startsWith('image/')) {
+      const reader = new FileReader();
+      reader.onload = (loadEvt) => {
+        const dataUrl = loadEvt.target?.result;
+        if (dataUrl) {
+          setConfig(prev => {
+            const updated = { ...prev, backgroundUrl: dataUrl };
+            saveMultiAvatarConfig(updated);
+            return updated;
+          });
+        }
+      };
+      reader.readAsDataURL(file);
+    } else {
+      const objectUrl = URL.createObjectURL(file);
+      setConfig(prev => {
+        const updated = { ...prev, backgroundUrl: objectUrl };
+        saveMultiAvatarConfig(updated);
+        return updated;
+      });
+    }
   };
 
   const handleVoicePreview = (voiceId) => {
@@ -323,11 +360,13 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     const { startX, startY, startW, startH } = dragStartPosRef.current;
 
     if (mode === 'move') {
-      handleAvatarTransformChange(avatarId, 'x', Math.max(0, Math.min(100 - startW, Math.round(startX + deltaX))));
-      handleAvatarTransformChange(avatarId, 'y', Math.max(0, Math.min(100 - startH, Math.round(startY + deltaY))));
+      const newX = Math.max(0, Math.min(100 - startW, Math.round(startX + deltaX)));
+      const newY = Math.max(0, Math.min(100 - startH, Math.round(startY + deltaY)));
+      handleAvatarTransformBatch(avatarId, { x: newX, y: newY });
     } else if (mode === 'se') {
-      handleAvatarTransformChange(avatarId, 'width', Math.max(15, Math.min(100 - startX, Math.round(startW + deltaX))));
-      handleAvatarTransformChange(avatarId, 'height', Math.max(15, Math.min(100 - startY, Math.round(startH + deltaY))));
+      const newW = Math.max(15, Math.min(100 - startX, Math.round(startW + deltaX)));
+      const newH = Math.max(15, Math.min(100 - startY, Math.round(startH + deltaY)));
+      handleAvatarTransformBatch(avatarId, { width: newW, height: newH });
     }
   };
 

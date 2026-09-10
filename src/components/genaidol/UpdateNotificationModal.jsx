@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.8.6';
+export const APP_VERSION = '2.8.7';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🖥️ Sân Khấu Studio Đa Avatar Vừa Vặn Toàn Diện Khung Nhìn (Viewport-Fitted Stage)',
-    description: 'Tối ưu toàn bộ tỷ lệ sân khấu 9:16 & 16:9 luôn hiển thị trọn vẹn 100% không bị che khuất hay cuộn trang, giúp dễ dàng quan sát và thao tác sắp xếp.'
+    title: '⚡ Đồng Bộ Trực Tiếp Toàn Bộ Video & Vị Trí Sân Khấu Studio Lên Màn Hình Live Chính',
+    description: 'Mọi video nói/lắng nghe, hình ảnh nhân vật, vị trí x/y, kích thước và tỷ lệ đã cấu hình trong Studio 2-4 Avatar được đồng bộ tức thì 100% ra màn hình Live chính.'
   },
   {
-    title: '🎬 Hiển Thị Trực Quan Tất Cả Avatar & Tải Video Trực Tiếp Từ Máy Tính',
-    description: 'Mọi ô nhân vật đều hiển thị khung viền Neon, nhãn tên, ảnh/video preview rõ ràng kèm nút tải file video/ảnh trực tiếp từ máy tính cả trên sân khấu lẫn bảng điều khiển.'
+    title: '🎬 Tự Động Phản Chiếu Video Nói & Video Lắng Nghe Thông Minh',
+    description: 'Khi nạp 1 video/ảnh bất kỳ cho nhân vật, hệ thống tự động gán cho cả trạng thái nói và nghỉ, không bị fallback nhầm sang nhân vật mặc định.'
   },
   {
-    title: '🪑 Bộ 5 Tư Thế Chuẩn Sân Khấu & Tách Nền / Giọng Đọc / Nền Studio Tinh Gọn',
-    description: 'Chuyển đổi 1-click tư thế Đứng, Ghế, Bàn Sofa, Nửa Người, Cận Cảnh cùng thanh điều chỉnh chuyên sâu gọn gàng, tiện lợi.'
+    title: '🎯 Kéo Thả & Phóng To Thu Nhỏ Tọa Độ Nguyên Tử (Atomic Transform)',
+    description: 'Sửa triệt để hiện tượng trôi tọa độ khi kéo thả trên Canvas, cập nhật đồng thời cả X/Y và Width/Height mượt mà.'
   }
 ];
 
