@@ -293,7 +293,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }
 
       await previewVoiceAudio(activeVoice, item.text, {
-        priority: item.type === 'dynamic',
+        priority: true,
         isTest: false,
         onEnd: () => {
           if (onActionTriggered) onActionTriggered({ type: 'LIPSYNC_ENDED' });

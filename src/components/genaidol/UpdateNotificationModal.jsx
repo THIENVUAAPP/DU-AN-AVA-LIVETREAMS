@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.6.6';
+export const APP_VERSION = '2.6.7';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🔥 Sửa Lỗi Truy Cập Tab Giọng Hot Trend (20) & Bán Hàng (30)',
-    description: 'Khắc phục triệt để lỗi khi bấm vào tab Giọng Hot Trend và Giọng Bán Hàng & Dịch Vụ trong Cài Đặt Chung. Giao diện hiển thị mượt mà, hỗ trợ nghe thử và gán nhanh vào Idol/Trợ lý/Game PK.'
+    title: '🌸 Kho 15 Giọng Nữ 20-28t Độc Bản Siêu Viral (Đa Tông Sắc & Vùng Miền)',
+    description: 'Nâng cấp toàn diện 15 chất giọng nữ tuổi 20-28 với tông giọng, ngữ điệu, âm sắc và DSP EQ hoàn toàn khác biệt: Ngọc Nhi, Anika Hoạt Ngôn TikTok, Quỳnh Lương Đanh Thép, Jessica Sang Chảnh ASMR, Viên Vibi Hài Hước, Út Mai Cần Thơ, Bé Ba Bến Tre, Lan Anh Xứ Huế, Ánh Tuyết Đà Nẵng, Hương Giang Xứ Nghệ, Thảo Tâm Song Ngữ...'
   },
   {
-    title: '▶️ Cụm "PHÁT KỊCH BẢN" Đặt Ngay Cạnh Nút "BẬT TẤT CẢ"',
-    description: 'Bố trí lại nút bấm thống nhất "PHÁT KỊCH BẢN" kèm dropdown chọn kịch bản trực tiếp lên thanh điều khiển trên cùng, nằm liền kề nút "BẬT TẤT CẢ" giúp thao tác livestream cực kỳ thuận tiện.'
+    title: '⚡ Kích Hoạt Đọc Kịch Bản Ngay Lập Tức Khi Bấm "PHÁT KỊCH BẢN"',
+    description: 'Tối ưu luồng xử lý âm thanh thời gian thực: Khi bấm nút phát kịch bản, AI Idol đọc ngay câu thoại đầu tiên không độ trễ, tự động nạp kịch bản chuẩn từ tab đang chọn và đồng bộ khẩu hình 60 FPS.'
   },
   {
-    title: '⚡ Kích Hoạt Đọc Ngay Lập Tức Kịch Bản Đã Cài Đặt Sẵn',
-    description: 'Khi bấm "PHÁT KỊCH BẢN", AI Idol lập tức đọc tuần tự từng câu thoại trong file kịch bản của tab đang chọn, đồng bộ khẩu hình 60 FPS chuẩn xác.'
+    title: '🌾 Bộ Lọc Phương Ngữ Bản Xứ Đậm Đà (Bắc - Trung - Nam - Tây)',
+    description: 'Tự động biến đổi từ ngữ cảm thán và nhịp điệu phát âm bản xứ theo từng tỉnh thành (Cần Thơ, Bến Tre, Huế, Đà Nẵng, Nghệ An, Hà Nội, Sài Gòn).'
   }
 ];
 

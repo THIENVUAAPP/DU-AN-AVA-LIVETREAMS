@@ -514,7 +514,37 @@ export default function DesktopAppUI() {
     
     if (next) {
       const chosen = scriptTabsList.find(t => t.active) || scriptTabsList[0];
-      const scriptText = chosen?.fixedScriptText || '';
+      let scriptText = chosen?.fixedScriptText || '';
+      
+      if (!scriptText || !scriptText.trim()) {
+        try {
+          const pTabs = JSON.parse(localStorage.getItem('aidol_user_script_tabs_persistent') || '[]');
+          const activePTab = pTabs.find(t => t.id === chosen?.id) || pTabs.find(t => t.active) || pTabs[0];
+          if (activePTab?.fixedScriptText && activePTab.fixedScriptText.trim()) {
+            scriptText = activePTab.fixedScriptText;
+          }
+        } catch (e) {}
+      }
+
+      if (!scriptText || !scriptText.trim()) {
+        try {
+          const evConf = JSON.parse(localStorage.getItem('aidol_event_configs') || '{}');
+          if (evConf.script_broadcast?.fixedScriptText) {
+            scriptText = evConf.script_broadcast.fixedScriptText;
+          }
+        } catch (e) {}
+      }
+
+      if (!scriptText || !scriptText.trim()) {
+        scriptText = `Chào mừng tất cả các tình yêu đã có mặt trong phiên livestream đặc biệt ngày hôm nay của shop em nha!
+Các chị đẹp ơi, ai đang lướt qua phiên live thì cho em xin một nút thả tim và một lượt chia sẻ để nhận quà mở bát đầu live nào!
+Hôm nay shop em mang đến cho cả nhà một siêu phẩm cực kỳ đỉnh cao và độc quyền duy nhất trên sóng livestream!
+Đó chính là Bộ Đôi Tinh Chất Serum Tế Bào Gốc Phục Hồi Da Trẻ Hóa và Nước Hoa Cao Cấp lưu hương suốt 12 giờ đồng hồ!
+Chị nào mà da đang bị khô ráp, thâm sạm, không đều màu thì nhất định không được bỏ qua phiên live này nhé!
+Chỉ sau đúng 7 ngày sử dụng, làn da của các chị sẽ căng bóng, mịn màng và mướt như da em bé luôn ạ!
+Duy nhất trong phiên live hôm nay, giảm sốc 50% tặng kèm kem dưỡng ẩm mini và miễn phí giao hàng toàn quốc!
+Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày, bấm vào Giỏ Hàng góc trái săn ngay nhé!`;
+      }
       
       if (audioPlayerRef.current) {
         audioPlayerRef.current.startScript(scriptText);
@@ -543,26 +573,38 @@ export default function DesktopAppUI() {
     const chosen = updated.find(t => t.id === tabId);
     if (!chosen) return;
     setScriptTabsList(updated);
+    
+    let scriptText = chosen.fixedScriptText || '';
+    if (!scriptText || !scriptText.trim()) {
+      try {
+        const pTabs = JSON.parse(localStorage.getItem('aidol_user_script_tabs_persistent') || '[]');
+        const targetPTab = pTabs.find(t => t.id === tabId);
+        if (targetPTab?.fixedScriptText && targetPTab.fixedScriptText.trim()) {
+          scriptText = targetPTab.fixedScriptText;
+        }
+      } catch (e) {}
+    }
+    
     try {
       localStorage.setItem('aidol_user_script_tabs_persistent', JSON.stringify(updated));
       const evConf = JSON.parse(localStorage.getItem('aidol_event_configs') || '{}');
       if (evConf.script_broadcast) {
         evConf.script_broadcast.scriptTabs = updated;
         evConf.script_broadcast.activeScriptTabId = tabId;
-        evConf.script_broadcast.fixedScriptText = chosen.fixedScriptText;
+        evConf.script_broadcast.fixedScriptText = scriptText;
         localStorage.setItem('aidol_event_configs', JSON.stringify(evConf));
         localStorage.setItem('aidol_event_configs_backup', JSON.stringify(evConf));
       }
     } catch (e) {}
     
     window.dispatchEvent(new CustomEvent('aidol_script_updated', {
-      detail: { activeScriptTabId: tabId, scriptTabs: updated, fixedScriptText: chosen.fixedScriptText, activeTab: chosen }
+      detail: { activeScriptTabId: tabId, scriptTabs: updated, fixedScriptText: scriptText, activeTab: chosen }
     }));
 
     if (isScriptLiveRunning && audioPlayerRef.current) {
-      audioPlayerRef.current.startScript(chosen.fixedScriptText);
+      audioPlayerRef.current.startScript(scriptText);
     }
-    const count = (chosen.fixedScriptText || '').split(/\r?\n/).filter(Boolean).length;
+    const count = (scriptText || '').split(/\r?\n/).filter(Boolean).length;
     showToast(`🎯 Đã chuyển sang kịch bản "${chosen.name}" (${count} câu thoại)!`, 'success');
   };
 
