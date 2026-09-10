@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.6.2';
+export const APP_VERSION = '2.6.3';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🎯 Click Chọn Tab Nào Là Tab Đó Phát Live Ngay Lập Tức & Nổi Bật',
-    description: 'Người dùng click vào bất kỳ tab kịch bản nào thì tab đó lập tức được kích hoạt làm kịch bản phát sóng chính khi Live (badge ĐANG PHÁT LIVE sáng rực), không bị cố định mặc định và chuyển đổi mượt mà 0ms.'
+    title: '✨ Gộp Nút Kịch Bản Thống Nhất: "PHÁT KỊCH BẢN"',
+    description: 'Thiết kế lại thanh điều khiển kịch bản trên giao diện chính thành 1 nút bấm thống nhất duy nhất "PHÁT KỊCH BẢN", tích hợp liền khối menu chuyển đổi tab kịch bản cực kỳ tinh tế, sang trọng và hiện đại.'
+  },
+  {
+    title: '🎬 Tự Động Phát Video Có Sẵn Khớp Khung Hình Live (TikTok Live / OBS)',
+    description: 'Nâng cấp bộ điều phối Live Coordinator: Tự động nhận diện và phát ngay các video quay sẵn (video cảm ơn tặng quà, video chào khách mới, video phản ứng...) khi có sự kiện tương ứng và tự động trả về video nền sau khi kết thúc.'
   },
   {
     title: '🔒 Bảo Tồn Bền Vững 100% Danh Sách Kịch Bản Đã Tạo',
-    description: 'Cơ chế Persistent Storage độc lập: Tất cả các tab kịch bản bán hàng người dùng đã tạo ra được bảo vệ nguyên vẹn vĩnh viễn, không bao giờ bị xóa khi reload trang hoặc chạy lại code (chỉ xóa khi người dùng bấm nút thùng rác).'
-  },
-  {
-    title: '▶️ Bảng Điều Khiển Phát Live Bán Hàng Trực Tiếp Ngoài Giao Diện & Chạy Nền',
-    description: 'Bổ sung thanh điều khiển phát kịch bản bán hàng trực tiếp trên giao diện chính (DesktopAppUI): Bật/Tắt phát live, chọn nhanh kịch bản, chạy nền (background loop) liên tục đồng bộ cử động khẩu hình miệng (Lip-Sync) và âm thanh.'
+    description: 'Tất cả các tab kịch bản bán hàng người dùng đã tạo ra được lưu giữ vĩnh viễn trong Persistent Storage, không bao giờ bị mất khi tải lại trang.'
   }
 ];
 

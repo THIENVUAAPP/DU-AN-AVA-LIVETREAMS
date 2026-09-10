@@ -4218,41 +4218,37 @@ export default function DesktopAppUI() {
         {/* Right Side: Toggles & Stream Window */}
         <div className="flex items-center gap-1.5 shrink-0 flex-wrap">
           
-          {/* 📜 BẢNG ĐIỀU KHIỂN KỊCH BẢN PHÁT LIVE BÁN HÀNG NGOÀI GIAO DIỆN CHÍNH */}
-          <div className="flex items-center gap-1 p-0.5 rounded-xl border bg-gradient-to-r from-blue-900/40 via-indigo-900/40 to-purple-900/40 border-blue-500/30 shadow-inner">
-            {/* Nút BẬT / TẮT Phát Kịch Bản Live */}
+          {/* 📜 NÚT GỘP DUY NHẤT: PHÁT KỊCH BẢN LIVE */}
+          <div className="relative inline-flex items-center rounded-xl shadow-md border overflow-hidden transition-all bg-gradient-to-r from-blue-900/60 to-indigo-900/60 border-blue-500/40">
+            {/* Nút BẬT / TẮT Phát Kịch Bản */}
             <button
               type="button"
               onClick={handleToggleScriptLive}
-              className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black transition-all border shadow-md active:scale-95 cursor-pointer ${
+              className={`flex items-center gap-1.5 px-3.5 py-1.5 text-xs font-black transition-all cursor-pointer active:scale-95 ${
                 isScriptLiveRunning
-                  ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 text-white border-emerald-300 ring-2 ring-emerald-400 shadow-emerald-500/50 animate-pulse'
-                  : (isDarkMode ? 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/20' : 'bg-white hover:bg-gray-100 text-gray-800 border-gray-300')
+                  ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 text-white shadow-emerald-500/40 animate-pulse'
+                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white'
               }`}
-              title={isScriptLiveRunning ? "Kịch bản bán hàng đang phát sóng trực tiếp — Bấm để Dừng" : "Bấm để Bật phát sóng kịch bản bán hàng trực tiếp"}
+              title={isScriptLiveRunning ? "Kịch bản đang phát trực tiếp — Bấm để Dừng" : "Bấm để Bắt đầu phát sóng kịch bản bán hàng"}
             >
-              <Play size={13} fill={isScriptLiveRunning ? "currentColor" : "none"} className={isScriptLiveRunning ? "text-yellow-300 animate-spin" : "text-blue-400"} />
-              <span>{isScriptLiveRunning ? '🟢 ĐANG PHÁT KỊCH BẢN' : '▶️ PHÁT KỊCH BẢN LIVE'}</span>
+              <Play size={13} fill={isScriptLiveRunning ? "currentColor" : "none"} className={isScriptLiveRunning ? "text-yellow-300 animate-spin" : "text-white"} />
+              <span>{isScriptLiveRunning ? '🟢 ĐANG PHÁT KỊCH BẢN' : '▶️ PHÁT KỊCH BẢN'}</span>
               {isScriptLiveRunning && (
-                <span className="w-1.5 h-1.5 rounded-full bg-yellow-300 animate-ping"></span>
+                <span className="w-1.5 h-1.5 rounded-full bg-yellow-300 animate-ping ml-0.5"></span>
               )}
             </button>
 
-            {/* Dropdown Chọn Nhanh Tab Kịch Bản Phát Live */}
+            {/* Dropdown Chọn Tab Kịch Bản Liền Khối */}
             {scriptTabsList && scriptTabsList.length > 0 && (
               <select
                 value={scriptTabsList.find(t => t.active)?.id || scriptTabsList[0]?.id}
                 onChange={(e) => handleQuickSelectScriptTab(e.target.value)}
-                className={`text-[11px] font-bold rounded-lg px-2 py-1 border transition-all cursor-pointer outline-none ${
-                  isDarkMode 
-                    ? 'bg-[#181924] text-blue-300 border-blue-500/40 hover:border-blue-400' 
-                    : 'bg-white text-blue-900 border-blue-300 hover:border-blue-500'
-                }`}
+                className="text-[11px] font-bold px-2.5 py-1.5 border-l border-white/20 bg-black/40 text-blue-200 hover:bg-black/60 cursor-pointer outline-none transition-all"
                 title="Chọn kịch bản bạn muốn AI phát sóng trực tiếp"
               >
                 {scriptTabsList.map((tab, idx) => (
-                  <option key={tab.id} value={tab.id} className={isDarkMode ? 'bg-[#181924] text-white' : 'bg-white text-gray-900'}>
-                    {tab.active ? '⭐ [ĐANG LIVE] ' : '📜 '} {tab.name || `Kịch bản ${idx + 1}`}
+                  <option key={tab.id} value={tab.id} className="bg-slate-900 text-white">
+                    {tab.active ? '⭐ ' : '📜 '}{tab.name || `Kịch bản ${idx + 1}`}
                   </option>
                 ))}
               </select>

@@ -406,7 +406,41 @@ function fillTemplate(template, vars = {}) {
         }
       }
 
-      // 9. PHÁT GIỌNG NÓI VOICE AI & LIP-SYNC KHI CÓ CÂU TRẢ LỜI
+      // 9. TỰ ĐỘNG TÌM & PHÁT VIDEO CÓ SẴN TRONG KHO MEDIA (PRE-RECORDED VIDEO EVENT)
+      let matchedEventVideo = null;
+      if (Array.isArray(liveMedia) && liveMedia.length > 0) {
+        const evKey = type === 'GIFT' ? 'gift' : 
+                      type === 'VIEWER_JOIN' ? 'welcome' : 
+                      type === 'COMMENT' ? 'comment' : 
+                      type === 'LIKE' ? 'thanks_heart' : 
+                      type === 'FOLLOW' ? 'follow' : 
+                      type === 'PURCHASE' ? 'checkout' : '';
+        const evConf = evKey ? (configs[evKey] || {}) : {};
+        const targetCategory = evConf.videoCategory || (evKey === 'welcome' ? 'join' : evKey);
+        const targetFolder = evConf.videoFolder || '';
+
+        // Ưu tiên 1: Khớp folder người dùng chỉ định
+        if (targetFolder) {
+          matchedEventVideo = liveMedia.find(m => m.type === 'video' && (m.folder === targetFolder || m.name?.toLowerCase().includes(targetFolder.toLowerCase())));
+        }
+        // Ưu tiên 2: Khớp danh mục video (category)
+        if (!matchedEventVideo && targetCategory) {
+          matchedEventVideo = liveMedia.find(m => m.type === 'video' && (m.category === targetCategory || m.name?.toLowerCase().includes(targetCategory.toLowerCase())));
+        }
+        // Ưu tiên 3: Video reaction chung
+        if (!matchedEventVideo && (shouldAction === 'gift_reaction' || type === 'GIFT')) {
+          matchedEventVideo = liveMedia.find(m => m.type === 'video' && (m.category === 'reaction' || m.category === 'gift'));
+        }
+      }
+
+      if (matchedEventVideo) {
+        if (!previousVideoItem && activeVideoItem && activeVideoItem.id !== matchedEventVideo.id) {
+          setPreviousVideoItem(activeVideoItem);
+        }
+        setActiveVideoItem(matchedEventVideo);
+      }
+
+      // 10. PHÁT GIỌNG NÓI VOICE AI & LIP-SYNC KHI CÓ CÂU TRẢ LỜI
       if (replyText && replyText.trim()) {
         setViewerHistory(prev => [
           ...prev, 
@@ -422,8 +456,8 @@ function fillTemplate(template, vars = {}) {
         onVoiceReply({
           text: replyText,
           action: shouldAction,
-          baseVideoItem: activeVideoItem,
-          preRecordedCat: shouldAction === 'gift_reaction' ? 'reaction' : null
+          baseVideoItem: matchedEventVideo || activeVideoItem,
+          preRecordedCat: matchedEventVideo ? matchedEventVideo.category : (shouldAction === 'gift_reaction' ? 'reaction' : null)
         });
       } else {
         // Không có cấu hình kịch bản phản hồi -> Bỏ qua và kết thúc sự kiện
