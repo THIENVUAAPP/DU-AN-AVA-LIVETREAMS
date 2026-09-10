@@ -1729,6 +1729,9 @@ IDOL MỈM CƯỜI + GESTURE
         if (!parsed.backgroundContext || parsed.backgroundContext.length < 500 || !parsed.backgroundContext.includes('MODULE: AI AUTO REPLY COMMENT')) {
           delete parsed.backgroundContext;
         }
+        if (parsed.customVoices) {
+          parsed.customVoices = parsed.customVoices.filter(v => v && v.name && !v.name.includes('Giọng cá nhân') && (v.file || v.url || v.audioUrl || v.sampleText));
+        }
         setSettings(prev => ({ ...prev, ...parsed }));
       } catch (e) {
         console.error("Failed to parse settings", e);
@@ -1938,8 +1941,9 @@ IDOL MỈM CƯỜI + GESTURE
   };
 
   const renderFilterButtons = (currentFilter, onFilterChange) => {
+    const validCustomCount = (settings.customVoices || []).filter(v => v && v.name && !v.name.includes('Giọng cá nhân') && (v.file || v.url || v.audioUrl || v.sampleText)).length;
     const filters = [
-      { id: 'all', label: `🌟 Tất Cả (${ALL_SYSTEM_VOICES.length + (settings.customVoices?.length || 0)} Giọng)` },
+      { id: 'all', label: `🌟 Tất Cả (${ALL_SYSTEM_VOICES.length + validCustomCount} Giọng)` },
       { id: 'favorites', label: `⭐ Yêu Thích (${favoriteVoiceIds.length})` },
       { id: 'dialect_bac', label: '🏛️ Miền Bắc (Hà Nội, BTV)' },
       { id: 'dialect_trung', label: '🌊 Miền Trung (Huế, ĐN)' },
@@ -2120,7 +2124,7 @@ IDOL MỈM CƯỜI + GESTURE
           onClick={() => setActiveTab('ava-voice')}
           className={`flex items-center gap-2 px-4 py-3 font-bold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'ava-voice' ? 'border-blue-600 text-blue-600 bg-blue-50/60 shadow-xs' : 'border-transparent text-gray-700 hover:text-blue-600 hover:bg-blue-50/30'}`}
         >
-          <Sparkles size={16} className="text-blue-600" /> GIỌNG AVA LIVE ({ALL_SYSTEM_VOICES.length + (settings.customVoices?.length || 0)})
+          <Sparkles size={16} className="text-blue-600" /> GIỌNG AVA LIVE ({ALL_SYSTEM_VOICES.length + (settings.customVoices || []).filter(v => v && v.name && !v.name.includes('Giọng cá nhân') && (v.file || v.url || v.audioUrl || v.sampleText)).length})
         </button>
         <button 
           onClick={() => setActiveTab('hottrend-voice')}
@@ -3368,7 +3372,7 @@ IDOL MỈM CƯỜI + GESTURE
                     <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-gray-200 overflow-x-auto">
                       <span className="text-[11px] font-bold text-gray-500 px-1.5">Bộ Sưu Tập:</span>
                       {[
-                        { key: 'all', label: `Tất cả (${ALL_SYSTEM_VOICES.length + (settings.customVoices?.length || 0)})` },
+                        { key: 'all', label: `Tất cả (${ALL_SYSTEM_VOICES.length + (settings.customVoices || []).filter(v => v && v.name && !v.name.includes('Giọng cá nhân') && (v.file || v.url || v.audioUrl || v.sampleText)).length})` },
                         { key: 'vi_pro', label: `🇻🇳 Việt Nam Pro (${ALL_SYSTEM_VOICES.filter(v => (v.region === 'vi' || v.id === 'free_vi_female' || v.id?.startsWith('vn_') || v.id === 'el_adam') && !v.id?.startsWith('hottrend_') && !v.id?.startsWith('vn_sales_') && !v.category?.includes('Bán Hàng') && !v.category?.includes('Chốt Đơn') && v.styleCategory !== 'banhang').length})` },
                         { key: 'hottrend', label: `🔥 Hot Trend (${VIETNAMESE_HOTTREND_VOICES.length})` },
                         { key: 'sales', label: `🛍️ Bán Hàng (${VIETNAMESE_SALES_VOICES.length})` },
@@ -3509,7 +3513,7 @@ IDOL MỈM CƯỜI + GESTURE
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
-                      {[...settings.customVoices, ...ALL_SYSTEM_VOICES]
+                      {[...(settings.customVoices || []).filter(v => v && v.name && !v.name.includes('Giọng cá nhân') && (v.file || v.url || v.audioUrl || v.sampleText)), ...ALL_SYSTEM_VOICES]
                         .filter(v => {
                           const isFav = favoriteVoiceIds.includes(v.id);
                           const isVn = v.region === 'vi' || v.id === 'free_vi_female' || v.id?.startsWith('vn_') || v.id === 'el_adam';
