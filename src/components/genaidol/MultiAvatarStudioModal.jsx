@@ -750,9 +750,19 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
 
                     {/* VIDEO LẮNG NGHE (IDLE) */}
                     <div className="space-y-1.5 pt-1">
-                      <label className="text-xs font-bold text-gray-600 dark:text-gray-300 flex items-center gap-1">
-                        <Video size={13} className="text-blue-500" /> Video Lắng Nghe (Idle Video):
-                      </label>
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-gray-600 dark:text-gray-300 flex items-center gap-1">
+                          <Video size={13} className="text-blue-500" /> Video Lắng Nghe (Idle Video):
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setShowHelpModal(true)}
+                          className="text-[11px] text-blue-500 hover:text-blue-400 font-bold flex items-center gap-0.5 cursor-pointer"
+                          title="Xem giải thích chi tiết về Video Lắng Nghe"
+                        >
+                          <HelpCircle size={12} /> Là gì?
+                        </button>
+                      </div>
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
@@ -773,13 +783,26 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                           </button>
                         )}
                       </div>
+                      <p className="text-[10px] text-gray-400 leading-tight">
+                        Chạy lặp tự nhiên (thở nhẹ, chớp mắt) khi nhân vật đang <strong>nghỉ hoặc lắng nghe</strong> người khác nói.
+                      </p>
                     </div>
 
                     {/* VIDEO NÓI / KHẨU HÌNH (TALK) */}
                     <div className="space-y-1.5 pt-1">
-                      <label className="text-xs font-bold text-gray-600 dark:text-gray-300 flex items-center gap-1">
-                        <Sparkles size={13} className="text-amber-500" /> Video Khẩu Hình Nói (Talk Video):
-                      </label>
+                      <div className="flex items-center justify-between">
+                        <label className="text-xs font-bold text-gray-600 dark:text-gray-300 flex items-center gap-1">
+                          <Sparkles size={13} className="text-amber-500" /> Video Khẩu Hình Nói (Talk Video):
+                        </label>
+                        <button
+                          type="button"
+                          onClick={() => setShowHelpModal(true)}
+                          className="text-[11px] text-amber-500 hover:text-amber-400 font-bold flex items-center gap-0.5 cursor-pointer"
+                          title="Xem giải thích chi tiết về Video Khẩu Hình Nói"
+                        >
+                          <HelpCircle size={12} /> Là gì?
+                        </button>
+                      </div>
                       <div className="flex items-center gap-2">
                         <button
                           type="button"
@@ -800,6 +823,9 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                           </button>
                         )}
                       </div>
+                      <p className="text-[10px] text-gray-400 leading-tight">
+                        Tự động kích hoạt nhép miệng khi đến lượt nhân vật này <strong>nói thoại trong kịch bản</strong>.
+                      </p>
                     </div>
                   </div>
 
@@ -884,7 +910,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                 <div className="w-8 h-8 rounded-xl bg-yellow-500/20 text-yellow-300 flex items-center justify-center font-black">
                   ?
                 </div>
-                <h3 className="text-base font-black text-white">Hướng Dẫn Sắp Xếp Sân Khấu & Phát Live OBS / TikTok Studio</h3>
+                <h3 className="text-base font-black text-white">Hướng Dẫn Sử Dụng Video Nghỉ (Idle), Video Nói (Talk) & Phát Live TikTok Studio</h3>
               </div>
               <button 
                 type="button"
@@ -895,20 +921,33 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
               </button>
             </div>
 
-            <div className="space-y-4 text-xs text-gray-300 leading-relaxed max-h-[60vh] overflow-y-auto pr-2">
-              <div className="bg-white/5 p-3.5 rounded-xl border border-white/10 space-y-1.5">
-                <h4 className="font-bold text-cyan-300 text-sm">1. 🎨 Kéo thả & Thay đổi vị trí nhân vật (Đứng / Ngồi)</h4>
-                <p>• Trong tab <strong>Sân Khấu Kéo Thả</strong>: Bạn có thể bấm giữ chuột vào bất kỳ nhân vật nào để di chuyển đến vị trí mong muốn (Đứng giữa, Ngồi bên cạnh bàn, Ngồi ghế sofa...).<br/>• Chỉnh thanh trượt <strong>Kích thước (Width, Height)</strong> và <strong>Tư thế (Đứng / Ngồi)</strong> để nhân vật hiển thị tự nhiên và cân đối nhất trên sân khấu.</p>
+            <div className="space-y-4 text-xs text-gray-300 leading-relaxed max-h-[65vh] overflow-y-auto pr-2">
+              <div className="bg-blue-950/40 p-3.5 rounded-xl border border-blue-500/30 space-y-1.5">
+                <h4 className="font-bold text-blue-300 text-sm flex items-center gap-1.5">
+                  <Video size={15} /> 1. Video Lắng Nghe (Idle Video) là gì và khi nào sử dụng?
+                </h4>
+                <p>• <strong>Bản chất:</strong> Là video nhân vật ở trạng thái tự nhiên (thở nhẹ, chớp mắt, mỉm cười, cử động thân người) nhưng <strong>KHÔNG mở miệng nói</strong>.<br/>• <strong>Khi nào phát:</strong> Video này tự động chạy lặp vô tận (loop) khi nhân vật đang <strong>nghỉ</strong>, hoặc đang <strong>chú ý lắng nghe nhân vật khác nói</strong> trong buổi livestream.<br/>• <strong>Tác dụng:</strong> Giúp các nhân vật luôn sống động 100% như người thật trên màn hình livestream, không bao giờ bị đứng hình hay đơ cứng.</p>
               </div>
 
-              <div className="bg-white/5 p-3.5 rounded-xl border border-white/10 space-y-1.5">
-                <h4 className="font-bold text-yellow-300 text-sm">2. 🖼️ Lồng ghép phông nền phòng live (Studio Background)</h4>
-                <p>• Chọn các phông nền 4K chất lượng cao có sẵn (Phòng Studio Neon, Showroom Bán Hàng, Sân Khấu Talkshow, Đấu Trường PK) hoặc tải ảnh/video phông nền tùy ý từ máy tính.<br/>• Các nhân vật sẽ được đặt nổi bật trên nền phòng live đã chọn.</p>
+              <div className="bg-amber-950/40 p-3.5 rounded-xl border border-amber-500/30 space-y-1.5">
+                <h4 className="font-bold text-amber-300 text-sm flex items-center gap-1.5">
+                  <Sparkles size={15} /> 2. Video Khẩu Hình Nói (Talk Video) là gì và khi nào sử dụng?
+                </h4>
+                <p>• <strong>Bản chất:</strong> Là video nhân vật đang cử động khẩu hình miệng nhép theo giọng nói.<br/>• <strong>Khi nào phát:</strong> Hệ thống tự động kích hoạt video này <strong>chỉ khi kịch bản livestream đến lượt nhân vật này nói thoại</strong> (theo tag kịch bản ví dụ <code className="text-amber-300 font-mono">[Idol]: ...</code> hay <code className="text-amber-300 font-mono">[Trợ Lý]: ...</code>).<br/>• <strong>Tự động hóa hoàn toàn:</strong> Khi đọc xong câu thoại, hệ thống sẽ <strong>tự động chuyển mượt mà về lại Video Lắng Nghe (Idle)</strong> mà bạn không cần bấm chuyển video thủ công.</p>
               </div>
 
-              <div className="bg-white/5 p-3.5 rounded-xl border border-white/10 space-y-1.5">
-                <h4 className="font-bold text-emerald-300 text-sm">3. 📺 Đưa lên TikTok Live Studio & OBS (Window Capture / Browser Source)</h4>
-                <p>• <strong>Window Capture (Khuyên dùng):</strong> Bắt cửa sổ phần mềm AvaLive để đạt 60fps mượt mà nhất. Khung sân khấu kéo thả sẽ hiển thị 100% chính xác từng vị trí nhân vật.<br/>• <strong>Browser Source (Đường Link):</strong> Dán link Overlay <code className="text-cyan-300">http://localhost:5173/?overlay=live</code> vào nguồn Trình duyệt. Luồng phát tự động đồng bộ thời gian thực.</p>
+              <div className="bg-purple-950/40 p-3.5 rounded-xl border border-purple-500/30 space-y-1.5">
+                <h4 className="font-bold text-purple-300 text-sm flex items-center gap-1.5">
+                  <LayoutGrid size={15} /> 3. Video hiển thị ở đâu trên màn hình?
+                </h4>
+                <p>• <strong>Sân Khấu Kéo Thả:</strong> Bạn vào tab <em>"Sân Khấu Kéo Thả"</em> để kéo nhân vật đặt vào bất kỳ vị trí nào trên màn hình (đứng bên trái/phải, ngồi cạnh bàn, ngồi ghế sofa, phóng to/thu nhỏ).<br/>• <strong>Màn Hình Live Clean Overlay:</strong> Cả 2–4 nhân vật sẽ cùng xuất hiện trên màn hình nền Studio theo đúng tọa độ và tỷ lệ bạn đã sắp xếp.</p>
+              </div>
+
+              <div className="bg-emerald-950/40 p-3.5 rounded-xl border border-emerald-500/30 space-y-1.5">
+                <h4 className="font-bold text-emerald-300 text-sm flex items-center gap-1.5">
+                  <Monitor size={15} /> 4. Cách đưa lên TikTok Live Studio / OBS hiệu quả nhất
+                </h4>
+                <p>• <strong>Cách 1 - Window Capture (Khuyên dùng - Chuẩn 60fps):</strong> Trong TikTok Live Studio hoặc OBS, thêm nguồn <em>Quay Cửa Sổ (Window Capture)</em> và chọn cửa sổ ứng dụng AvaLive. Mọi chuyển động đan xen đối thoại của các nhân vật sẽ hiển thị mượt mà không độ trễ.<br/>• <strong>Cách 2 - Browser Source (Đường Link Overlay):</strong> Thêm nguồn <em>Trình duyệt (Browser)</em> với đường dẫn <code className="text-cyan-300 font-mono">http://localhost:5173/?overlay=live</code> ở kích thước 1080x1920 (cho TikTok Live dọc) hoặc 1920x1080 (cho livestream ngang).</p>
               </div>
             </div>
 

@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.8.1';
+export const APP_VERSION = '2.8.2';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🎨 Sân Khấu Kéo Thả Trực Quan (Visual Freeform Stage Canvas)',
+    title: '💡 Hướng Dẫn Trực Quan Video Nghỉ (Idle) & Video Khẩu Hình Nói (Talk)',
+    description: 'Bổ sung nút trợ giúp (?) chi tiết và chú thích trực tiếp giải thích rõ cơ chế hoán đổi video khẩu hình thời gian thực khi từng nhân vật đến lượt nói thoại trong kịch bản.'
+  },
+  {
+    title: '🎨 Sân Khấu Kéo Thả Trực Quan & Đặt Tư Thế Đứng / Ngồi',
     description: 'Tự do di chuyển kéo thả vị trí (X, Y), thu phóng kích thước (W, H) và sắp xếp tư thế Đứng / Ngồi cho từng nhân vật (Idol, Trợ Lý, Khách Mời, BLV) trên cùng 1 sân khấu.'
   },
   {
-    title: '🖼️ Lồng Ghép Phông Nền Phòng Live & Bố Cục Sân Khấu Mẫu',
-    description: 'Tích hợp kho phông nền Studio 4K (Phòng Live Neon, Showroom Bán Hàng, Talkshow, Đấu Trường PK, Phông Xanh Chroma Key) cùng các mẫu bố cục 1-click chuyên nghiệp.'
-  },
-  {
-    title: '🎬 Đồng Bộ Hoàn Hảo Ra Luồng TikTok Live Studio & OBS',
-    description: 'Hiển thị chính xác từng vị trí tọa độ và lớp hiển thị trên luồng phát 60fps mượt mà, hỗ trợ cả Window Capture và Browser Source link với cơ chế chuyển khẩu hình nhép miệng thời gian thực 0ms.'
+    title: '🎬 Tối Ưu Kết Nối TikTok Live Studio & OBS Studio',
+    description: 'Hướng dẫn đầy đủ các phương thức kết nối luồng phát Window Capture (60fps mượt mà) và Browser Source Overlay để buổi livestream nhiều nhân vật đạt hiệu quả chuyên nghiệp nhất.'
   }
 ];
 
