@@ -1544,10 +1544,24 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     let candidateUrl = masterState.mediaUrl || null;
     let isVideo = masterState.isVideo !== false;
 
-    // 1. Ưu tiên số 1: Trực tiếp từ masterState.mediaUrl (được Dashboard bắn sang thời gian thực)
-    if (masterState.mediaUrl) {
+    // 0. Ưu tiên số 1: Trực tiếp từ masterState.mediaUrl (được Dashboard bắn sang thời gian thực)
+    if (masterState.mediaUrl && typeof masterState.mediaUrl === 'string' && !masterState.mediaUrl.startsWith('blob:')) {
       candidateUrl = masterState.mediaUrl;
-    } else if (masterState.selectedCharacter && localDbItems.length > 0) {
+    }
+
+    // 0.5. Ưu tiên tham số URL ?v=... truyền khi mở Cửa sổ Window Capture hoặc Link Live
+    if (!candidateUrl && typeof window !== 'undefined') {
+      try {
+        const urlParams = new URLSearchParams(window.location.search);
+        const directV = urlParams.get('v');
+        if (directV && typeof directV === 'string' && directV !== 'null' && directV !== 'undefined' && directV.trim() !== '') {
+          candidateUrl = decodeURIComponent(directV);
+        }
+      } catch (e) {}
+    }
+
+    // 1. Kiểm tra trong localDbItems (IndexedDB)
+    if (!candidateUrl && masterState.selectedCharacter && localDbItems.length > 0) {
       const match = localDbItems.find(i => i.id === masterState.selectedCharacter);
       if (match && (match.mediaUrl || match.url)) {
         candidateUrl = match.mediaUrl || match.url;
@@ -1563,6 +1577,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           const customFound = customList.find(c => c.id === masterState.selectedCharacter);
           if (customFound && (customFound.url || customFound.mediaUrl)) {
             candidateUrl = customFound.url || customFound.mediaUrl;
+          } else if (customList.length > 0) {
+            const firstValid = customList.find(c => (c.url && !c.url.startsWith('blob:')) || (c.mediaUrl && !c.mediaUrl.startsWith('blob:')));
+            if (firstValid) candidateUrl = firstValid.url || firstValid.mediaUrl;
           }
         }
       } catch (e) {}
@@ -1572,10 +1589,34 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     if (!candidateUrl) {
       try {
         const locked = localStorage.getItem('avalive_user_locked_media');
-        if (locked && typeof locked === 'string') {
+        if (locked && typeof locked === 'string' && locked !== 'null' && locked !== 'undefined' && locked.trim() !== '') {
           candidateUrl = locked;
         }
       } catch (e) {}
+    }
+
+    // 2.6. Kiểm tra state lưu trữ từ phiên trước
+    if (!candidateUrl) {
+      try {
+        const saved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
+        if (saved.mediaUrl && typeof saved.mediaUrl === 'string' && !saved.mediaUrl.startsWith('blob:')) {
+          candidateUrl = saved.mediaUrl;
+        }
+      } catch (e) {}
+    }
+
+    // 2.7. Nếu vẫn chưa có nhưng có item trong IndexedDB -> Khôi phục item đầu tiên
+    if (!candidateUrl && localDbItems.length > 0) {
+      const firstValidItem = localDbItems.find(i => i.mediaUrl || i.url || i.fileBlob);
+      if (firstValidItem) {
+        if (firstValidItem.fileBlob) {
+          try {
+            candidateUrl = URL.createObjectURL(firstValidItem.fileBlob);
+          } catch (e) {}
+        } else {
+          candidateUrl = firstValidItem.mediaUrl || firstValidItem.url;
+        }
+      }
     }
 
     // 3. Khôi phục Blob URL từ IndexedDB nếu là video tùy chỉnh, và dùng Cache để không tạo URL mới liên tục
@@ -1592,8 +1633,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           } catch (e) {}
         } else if (match && (match.mediaUrl || match.url) && !match.mediaUrl?.startsWith('blob:')) {
           candidateUrl = match.mediaUrl || match.url;
-        } else {
-          candidateUrl = null;
         }
       }
     }
@@ -1920,7 +1959,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v2.9.5
+                v2.9.6
               </span>
             </div>
 
@@ -2386,7 +2425,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                         p.then(() => {
                           setIsPlayingState(true);
                           hasAutoplayStartedRef.current = true;
-                        }).catch(() => {});
+                        }).catch(() => {
+                          v.muted = true;
+                          v.play().then(() => {
+                            setIsPlayingState(true);
+                            hasAutoplayStartedRef.current = true;
+                          }).catch(() => {});
+                        });
                       }
                     }
                   }}
@@ -2419,7 +2464,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                         p.then(() => {
                           setIsPlayingState(true);
                           hasAutoplayStartedRef.current = true;
-                        }).catch(() => {});
+                        }).catch(() => {
+                          v.muted = true;
+                          v.play().then(() => {
+                            setIsPlayingState(true);
+                            hasAutoplayStartedRef.current = true;
+                          }).catch(() => {});
+                        });
                       }
                     } else {
                       v.dataset.userPaused = 'true';

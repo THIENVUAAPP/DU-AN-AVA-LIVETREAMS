@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.9.5';
+export const APP_VERSION = '2.9.6';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🖥️ Khôi Phục Hoàn Hảo Cửa Sổ Bắt Màn Hình (Window Capture) OBS & TikTok Live Studio',
+    description: 'Tối ưu độ phân giải gốc 1080p sắc nét 1:1, tự động nạp video và phát tức thì 0ms, không giật lag, không đứng hình, chia sẻ mượt mà lên TikTok Live.'
+  },
   {
     title: '🌐 Khôi Phục Đường Link Phát Live Online HTTPS Cho TikTok Live Studio & OBS',
     description: 'Tuyệt đối loại bỏ các đường link localhost/127.0.0.1 bị TikTok Live Studio chặn. Khôi phục luồng phát Online Cloudflare HTTPS mượt mà 60 FPS, mở là phát video tức thì không giật lag.'
