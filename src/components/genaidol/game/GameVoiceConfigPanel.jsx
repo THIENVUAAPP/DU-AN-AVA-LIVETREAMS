@@ -1072,14 +1072,14 @@ export default function GameVoiceConfigPanel({
               <div className="space-y-2 bg-black/30 p-2.5 rounded-xl border border-amber-500/20">
                 <div className="flex items-center gap-1.5 flex-wrap">
                   {[
-                    { id: 'all', label: '🌟 Tất Cả (61)' },
+                    { id: 'all', label: `🌟 Tất Cả (${ALL_SYSTEM_VOICES.filter(v => v.region === 'vi' || v.lang?.startsWith('vi')).length})` },
                     { id: 'dialect_bac', label: '🏛️ Miền Bắc' },
                     { id: 'dialect_trung', label: '🌊 Miền Trung' },
                     { id: 'dialect_nam', label: '🌴 Miền Nam' },
                     { id: 'dialect_tay', label: '🌾 Miền Tây' },
-                    { id: 'sales', label: '🛍️ Bán Hàng (20)' },
-                    { id: 'female', label: '👩 Nữ (21)' },
-                    { id: 'male', label: '👨 Nam (20)' },
+                    { id: 'sales', label: '🛍️ Bán Hàng' },
+                    { id: 'female', label: '👩 Nữ' },
+                    { id: 'male', label: '👨 Nam' },
                     { id: 'young', label: '✨ Trẻ Gen Z' },
                     { id: 'mc_btv', label: '🎙️ MC / BTV' },
                     { id: 'blv_game', label: '🔥 BLV Game' },

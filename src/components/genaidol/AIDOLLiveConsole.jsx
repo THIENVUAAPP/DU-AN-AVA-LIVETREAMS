@@ -1094,10 +1094,10 @@ export default function AIDOLLiveConsole() {
                         <div className="space-y-2 bg-black/30 p-2.5 rounded-xl border border-amber-500/20">
                           <div className="flex items-center gap-1.5 flex-wrap">
                             {[
-                              { id: 'all', label: '🌟 Tất Cả (61)' },
-                              { id: 'sales', label: '🛍️ Bán Hàng & Dịch Vụ (20)' },
-                              { id: 'female', label: '👩 Giọng Nữ (21)' },
-                              { id: 'male', label: '👨 Giọng Nam (20)' },
+                              { id: 'all', label: `🌟 Tất Cả (${ALL_SYSTEM_VOICES.filter(v => v.region === 'vi' || v.lang?.startsWith('vi')).length})` },
+                              { id: 'sales', label: '🛍️ Bán Hàng & Dịch Vụ' },
+                              { id: 'female', label: '👩 Giọng Nữ' },
+                              { id: 'male', label: '👨 Giọng Nam' },
                               { id: 'young', label: '✨ Giọng Trẻ Gen Z' },
                               { id: 'mc_btv', label: '🎙️ MC & Biên Tập Viên' },
                               { id: 'banhang', label: '🛍️ Bán Hàng & Chốt Đơn' },

@@ -6,6 +6,8 @@ import {
   ALL_SYSTEM_VOICES, 
   VIETNAMESE_HOTTREND_VOICES,
   VIETNAMESE_SALES_VOICES,
+  VIETNAMESE_FEMALE_VOICES,
+  VIETNAMESE_MALE_VOICES,
   ELEVENLABS_VOICES, 
   previewVoiceAudio, 
   updateActiveVoiceAudio, 
@@ -1852,15 +1854,15 @@ IDOL MỈM CƯỜI + GESTURE
 
   const renderFilterButtons = (currentFilter, onFilterChange) => {
     const filters = [
-      { id: 'all', label: '🌟 Tất Cả (89 Giọng)' },
+      { id: 'all', label: `🌟 Tất Cả (${ALL_SYSTEM_VOICES.length + (settings.customVoices?.length || 0)} Giọng)` },
       { id: 'favorites', label: `⭐ Yêu Thích (${favoriteVoiceIds.length})` },
       { id: 'dialect_bac', label: '🏛️ Miền Bắc (Hà Nội, BTV)' },
       { id: 'dialect_trung', label: '🌊 Miền Trung (Huế, ĐN)' },
       { id: 'dialect_nam', label: '🌴 Miền Nam (Sài Gòn)' },
       { id: 'dialect_tay', label: '🌾 Miền Tây (Sông Nước)' },
-      { id: 'sales', label: '🛍️ Bán Hàng & Dịch Vụ (20)' },
-      { id: 'vn_female', label: '👩 Nữ Việt Nam (21)' },
-      { id: 'vn_male', label: '👨 Nam Việt Nam (20)' },
+      { id: 'sales', label: `🛍️ Bán Hàng & Dịch Vụ (${VIETNAMESE_SALES_VOICES.length})` },
+      { id: 'vn_female', label: `👩 Nữ Việt Nam (${VIETNAMESE_FEMALE_VOICES.length})` },
+      { id: 'vn_male', label: `👨 Nam Việt Nam (${VIETNAMESE_MALE_VOICES.length})` },
       { id: 'vn_young', label: '✨ Giọng Trẻ Gen Z' },
       { id: 'vn_mc', label: '🎙️ MC & BTV VTV' },
       { id: 'vn_game', label: '🔥 BLV Game & PK' },
@@ -2033,19 +2035,19 @@ IDOL MỈM CƯỜI + GESTURE
           onClick={() => setActiveTab('ava-voice')}
           className={`flex items-center gap-2 px-4 py-3 font-bold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'ava-voice' ? 'border-blue-600 text-blue-600 bg-blue-50/60 shadow-xs' : 'border-transparent text-gray-700 hover:text-blue-600 hover:bg-blue-50/30'}`}
         >
-          <Sparkles size={16} className="text-blue-600" /> GIỌNG AVA LIVE
+          <Sparkles size={16} className="text-blue-600" /> GIỌNG AVA LIVE ({ALL_SYSTEM_VOICES.length + (settings.customVoices?.length || 0)})
         </button>
         <button 
           onClick={() => setActiveTab('hottrend-voice')}
           className={`flex items-center gap-2 px-4 py-3 font-bold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'hottrend-voice' ? 'border-orange-500 text-orange-600 bg-orange-50/60 shadow-xs' : 'border-transparent text-orange-700 hover:text-orange-600 hover:bg-orange-50/30'}`}
         >
-          <Flame size={16} className="text-orange-500" /> GIỌNG HOT TREND (20)
+          <Flame size={16} className="text-orange-500" /> GIỌNG HOT TREND ({VIETNAMESE_HOTTREND_VOICES.length})
         </button>
         <button 
           onClick={() => setActiveTab('sales-voice')}
           className={`flex items-center gap-2 px-4 py-3 font-bold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'sales-voice' ? 'border-rose-600 text-rose-600 bg-rose-50/50' : 'border-transparent text-rose-700 hover:text-rose-600 hover:bg-rose-50/30'}`}
         >
-          <ShoppingBag size={16} className="text-rose-600" /> GIỌNG BÁN HÀNG & DỊCH VỤ (30)
+          <ShoppingBag size={16} className="text-rose-600" /> GIỌNG BÁN HÀNG & DỊCH VỤ ({VIETNAMESE_SALES_VOICES.length})
         </button>
         <button 
           onClick={() => setActiveTab('quick-config')}
@@ -2146,24 +2148,24 @@ IDOL MỈM CƯỜI + GESTURE
                 </div>
                 <div className="relative z-10 space-y-2">
                   <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                    <Flame size={14} className="text-yellow-300" /> BỘ SƯU TẬP 20 GIỌNG AI TIẾNG VIỆT HOT TREND SIÊU CAO CẤP
+                    <Flame size={14} className="text-yellow-300" /> BỘ SƯU TẬP {VIETNAMESE_HOTTREND_VOICES.length} GIỌNG AI TIẾNG VIỆT HOT TREND SIÊU CAO CẤP
                   </div>
                   <h2 className="text-xl sm:text-2xl font-black">
-                    Bộ 20 Giọng Hot Trend Triệu View: TikTok, Shorts, Livestream, YouTube & Cinema
+                    Bộ {VIETNAMESE_HOTTREND_VOICES.length} Giọng Hot Trend Triệu View: TikTok, Shorts, Livestream, YouTube & Cinema
                   </h2>
                   <p className="text-xs sm:text-sm text-orange-100 max-w-3xl leading-relaxed">
-                    Tập hợp đầy đủ 20 chất giọng siêu nổi tiếng hàng đầu mạng xã hội: <span className="font-bold underline">Adam, Brian, Liam, Jessica, Matilda, Sarah, Triệu Dương, Trung Caha, Tùng Đặng, Anika Hoạt Ngôn, Storytelling Cảm Xúc, Villain Cinema</span>. Tự động xử lý Formant và âm vang DSP phòng thu. Bấm <span className="underline font-bold">⭐ Ngôi sao</span> để lưu yêu thích!
+                    Tập hợp đầy đủ {VIETNAMESE_HOTTREND_VOICES.length} chất giọng siêu nổi tiếng hàng đầu mạng xã hội: <span className="font-bold underline">40 Master Voice Performance DNA v2.0, Adam, Brian, Liam, Jessica, Matilda, Sarah, Triệu Dương, Trung Caha, Tùng Đặng, Anika Hoạt Ngôn</span>. Tự động xử lý Formant và âm vang DSP phòng thu. Bấm <span className="underline font-bold">⭐ Ngôi sao</span> để lưu yêu thích!
                   </p>
                 </div>
               </div>
 
-              {/* Danh Sách 20 Giọng Hot Trend */}
+              {/* Danh Sách Giọng Hot Trend */}
               <div className="bg-white border border-gray-300 rounded-xl shadow-sm overflow-hidden p-4 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200">
                   <div className="flex items-center gap-2">
                     <Flame size={20} className="text-orange-600" />
                     <div>
-                      <h3 className="font-bold text-gray-800 text-sm">Kho 20 Giọng Hot Trend Mạng Xã Hội</h3>
+                      <h3 className="font-bold text-gray-800 text-sm">Kho {VIETNAMESE_HOTTREND_VOICES.length} Giọng Hot Trend Mạng Xã Hội</h3>
                       <p className="text-xs text-gray-500">Bấm nút để gán ngay làm Giọng Idol Live, Giọng Trợ Lý hoặc Giọng Game PK</p>
                     </div>
                   </div>
@@ -2206,7 +2208,7 @@ IDOL MỈM CƯỜI + GESTURE
                       <span className="text-[11px] font-bold text-gray-500 px-1.5">Phong Cách:</span>
                       {[
                         { key: 'all', label: `Tất cả (${VIETNAMESE_HOTTREND_VOICES.length})` },
-                        { key: 'sales', label: '🛒 Bán Hàng & Chốt Deal (20)' },
+                        { key: 'sales', label: `🛒 Bán Hàng & Chốt Deal (${VIETNAMESE_HOTTREND_VOICES.filter(v => v.styleCategory === 'banhang' || v.id?.startsWith('vn_f_sales_')).length})` },
                         { key: 'social', label: '🔥 Creator & TikTok Viral' },
                         { key: 'business', label: '💼 Doanh Nhân & Chuyên Gia' },
                         { key: 'story', label: '🎬 Kể Chuyện & Cảm Xúc' },
@@ -2459,7 +2461,7 @@ IDOL MỈM CƯỜI + GESTURE
                           <span className="text-[10px] bg-orange-600 text-white font-bold px-2 py-0.5 rounded-full uppercase tracking-wider">Live Realtime</span>
                         </h4>
                         <p className="text-xs text-gray-600">
-                          Tinh chỉnh linh hoạt nhịp điệu và âm sắc giọng đọc, áp dụng trực tiếp cho toàn bộ 20 giọng Hot Trend.
+                          Tinh chỉnh linh hoạt nhịp điệu và âm sắc giọng đọc, áp dụng trực tiếp cho toàn bộ {VIETNAMESE_HOTTREND_VOICES.length} giọng Hot Trend.
                         </p>
                       </div>
                     </div>
@@ -2611,24 +2613,24 @@ IDOL MỈM CƯỜI + GESTURE
                 </div>
                 <div className="relative z-10 space-y-2">
                   <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
-                    <Sparkles size={14} className="text-yellow-300" /> BỘ SƯU TẬP 30 GIỌNG ĐỌC BÁN HÀNG & CHỐT ĐƠN ĐA VÙNG MIỀN, ĐA ĐỘ TUỔI
+                    <Sparkles size={14} className="text-yellow-300" /> BỘ SƯU TẬP {VIETNAMESE_SALES_VOICES.length} GIỌNG ĐỌC BÁN HÀNG & CHỐT ĐƠN ĐA VÙNG MIỀN, ĐA ĐỘ TUỔI
                   </div>
                   <h2 className="text-xl sm:text-2xl font-black">
-                    Nâng Tầm Livestream Bán Hàng Với 30 Giọng Đọc Đa Dạng: 4 Vùng Miền & 3 Độ Tuổi (20 - 70 Tuổi)
+                    Nâng Tầm Livestream Bán Hàng Với {VIETNAMESE_SALES_VOICES.length} Giọng Đọc Đa Dạng: 4 Vùng Miền & 3 Độ Tuổi (20 - 70 Tuổi)
                   </h2>
                   <p className="text-xs sm:text-sm text-rose-100 max-w-3xl leading-relaxed">
-                    30 chất giọng chuyên sâu phân hóa rõ nét theo <span className="font-bold underline">4 Vùng Miền</span> (Miền Nam, Miền Bắc, Miền Trung, Miền Tây) và <span className="font-bold underline">3 Tầng Độ Tuổi</span> (Trẻ 20-35t, Trung Niên 40-54t, Lão Niên 55-70t) với đầy đủ Nam/Nữ chuẩn chất âm thanh từng ngành hàng: Mỹ phẩm, Thời trang, Công nghệ, BĐS, Dược phẩm Y khoa, Trà cổ thụ, Nông sản & Thảo mộc lão niên. Bấm <span className="underline font-bold">⭐ Ngôi sao</span> để lưu yêu thích!
+                    {VIETNAMESE_SALES_VOICES.length} chất giọng chuyên sâu phân hóa rõ nét theo <span className="font-bold underline">4 Vùng Miền</span> (Miền Nam, Miền Bắc, Miền Trung, Miền Tây) và <span className="font-bold underline">3 Tầng Độ Tuổi</span> (Trẻ 20-35t, Trung Niên 40-54t, Lão Niên 55-70t) với đầy đủ Nam/Nữ chuẩn chất âm thanh từng ngành hàng: Mỹ phẩm, Thời trang, Công nghệ, BĐS, Dược phẩm Y khoa, Trà cổ thụ, Nông sản & Thảo mộc lão niên. Bấm <span className="underline font-bold">⭐ Ngôi sao</span> để lưu yêu thích!
                   </p>
                 </div>
               </div>
 
-              {/* Danh Sách 30 Giọng Bán Hàng Chuyên Biệt */}
+              {/* Danh Sách Giọng Bán Hàng Chuyên Biệt */}
               <div className="bg-white border border-gray-300 rounded-xl shadow-sm overflow-hidden p-4 space-y-4">
                 <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 pb-3 border-b border-gray-200">
                   <div className="flex items-center gap-2">
                     <ShoppingBag size={20} className="text-rose-600" />
                     <div>
-                      <h3 className="font-bold text-gray-800 text-sm">Kho 30 Giọng Bán Hàng & Chốt Đơn Đa Ngành, Đa Độ Tuổi</h3>
+                      <h3 className="font-bold text-gray-800 text-sm">Kho {VIETNAMESE_SALES_VOICES.length} Giọng Bán Hàng & Chốt Đơn Đa Ngành, Đa Độ Tuổi</h3>
                       <p className="text-xs text-gray-500">Bấm nút để gán ngay làm Giọng Idol, Giọng Trợ Lý hoặc Giọng Game PK</p>
                     </div>
                   </div>
@@ -2670,11 +2672,11 @@ IDOL MỈM CƯỜI + GESTURE
                     <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-gray-200">
                       <span className="text-[11px] font-bold text-gray-500 px-1.5">Vùng Miền:</span>
                       {[
-                        { key: 'all', label: 'Tất cả (30)' },
-                        { key: 'nam', label: 'Miền Nam (8)' },
-                        { key: 'bac', label: 'Miền Bắc (8)' },
-                        { key: 'trung', label: 'Miền Trung (6)' },
-                        { key: 'tay', label: 'Miền Tây (8)' }
+                        { key: 'all', label: `Tất cả (${VIETNAMESE_SALES_VOICES.length})` },
+                        { key: 'nam', label: `Miền Nam (${VIETNAMESE_SALES_VOICES.filter(v => v.dialect === 'nam' || v.category?.includes('Nam')).length})` },
+                        { key: 'bac', label: `Miền Bắc (${VIETNAMESE_SALES_VOICES.filter(v => v.dialect === 'bac' || v.category?.includes('Bắc')).length})` },
+                        { key: 'trung', label: `Miền Trung (${VIETNAMESE_SALES_VOICES.filter(v => v.dialect === 'trung' || v.category?.includes('Trung')).length})` },
+                        { key: 'tay', label: `Miền Tây (${VIETNAMESE_SALES_VOICES.filter(v => v.dialect === 'tay' || v.category?.includes('Tây')).length})` }
                       ].map(tab => (
                         <button
                           key={tab.key}
@@ -3291,14 +3293,14 @@ IDOL MỈM CƯỜI + GESTURE
                     <div className="flex items-center gap-1 bg-white p-1 rounded-lg border border-gray-200 overflow-x-auto">
                       <span className="text-[11px] font-bold text-gray-500 px-1.5">Bộ Sưu Tập:</span>
                       {[
-                        { key: 'all', label: 'Tất cả (100+)' },
-                        { key: 'vi_pro', label: '🇻🇳 Việt Nam Pro (41)' },
-                        { key: 'hottrend', label: '🔥 Hot Trend (20)' },
-                        { key: 'sales', label: '🛍️ Bán Hàng (30)' },
-                        { key: 'us_uk', label: '🇺🇸 Bắc Mỹ & Âu (12)' },
-                        { key: 'asia', label: '🌏 Châu Á (16)' },
-                        { key: 'game_pk', label: '🎮 BLV Game PK (8)' },
-                        { key: 'favorites', label: '⭐ Yêu thích' }
+                        { key: 'all', label: `Tất cả (${ALL_SYSTEM_VOICES.length + (settings.customVoices?.length || 0)})` },
+                        { key: 'vi_pro', label: `🇻🇳 Việt Nam Pro (${ALL_SYSTEM_VOICES.filter(v => (v.region === 'vi' || v.id === 'free_vi_female' || v.id?.startsWith('vn_') || v.id === 'el_adam') && !v.id?.startsWith('hottrend_') && !v.id?.startsWith('vn_sales_') && !v.category?.includes('Bán Hàng') && !v.category?.includes('Chốt Đơn') && v.styleCategory !== 'banhang').length})` },
+                        { key: 'hottrend', label: `🔥 Hot Trend (${VIETNAMESE_HOTTREND_VOICES.length})` },
+                        { key: 'sales', label: `🛍️ Bán Hàng (${VIETNAMESE_SALES_VOICES.length})` },
+                        { key: 'us_uk', label: `🇺🇸 Bắc Mỹ & Âu (${ALL_SYSTEM_VOICES.filter(v => (v.region !== 'vi' && !v.id?.startsWith('vn_') && v.id !== 'free_vi_female') && (v.region === 'us_uk' || v.region === 'eu' || v.lang?.startsWith('en'))).length})` },
+                        { key: 'asia', label: `🌏 Châu Á (${ALL_SYSTEM_VOICES.filter(v => (v.region !== 'vi' && !v.id?.startsWith('vn_') && v.id !== 'free_vi_female') && (v.region === 'asia' || v.lang?.startsWith('zh') || v.lang?.startsWith('ja') || v.lang?.startsWith('ko') || v.lang?.startsWith('th'))).length})` },
+                        { key: 'game_pk', label: `🎮 BLV Game PK (${ALL_SYSTEM_VOICES.filter(v => v.id?.startsWith('el_') || v.provider === 'elevenlabs' || v.styleCategory === 'blv_game').length})` },
+                        { key: 'favorites', label: `⭐ Yêu thích (${favoriteVoiceIds.length})` }
                       ].map(tab => (
                         <button
                           key={tab.key}

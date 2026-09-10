@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.7.2';
+export const APP_VERSION = '2.7.3';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🌸 Nạp Đủ Bộ 40 Giọng Nữ Master Voice DNA Tiếng Việt Mới Nhất [NEW]',
-    description: 'Tích hợp chuẩn 5 tầng Voice DNA (Region, Persona, Style, Emotion, Acoustic) vào mục Giọng Hot Trend. Gồm 20 giọng chuyên chốt đơn bán hàng đỉnh cao (Core Sales 50%) và 20 giọng đa dụng (CEO, Doanh nhân, Quảng cáo, Kể chuyện, TVC, Podcast, MC).'
+    title: '👑 Nâng Cấp Toàn Diện Master Voice Performance DNA v2.0 (40 Giọng Nữ)',
+    description: 'Tích hợp chuẩn 5 tầng Voice DNA v2.0 (Region, Persona, Style, Emotion, Performance: Placement, Texture, Rhythm, Articulation, Breath, Pause, Word Duration, Sentence Ending, DSP Parametric EQ) cho toàn bộ 40 giọng nữ. 100% độc bản, khác biệt, chất lượng đỉnh cao.'
   },
   {
-    title: '⚡ Cơ Chế Tự Động Phục Hồi Video (Zero-Black-Screen Guardian)',
-    description: 'Tự động tạo mới và tái sinh Blob URL từ dữ liệu gốc IDB khi mở ứng dụng hoặc đổi ô nhân vật, loại bỏ hoàn toàn lỗi màn hình đen cho video nhép miệng và video tải lên.'
+    title: '📊 Hiển Thị Số Lượng Giọng Đọc Tự Động & Động Cho Mọi Tab',
+    description: 'Hệ thống tab Giọng Ava Live, Giọng Hot Trend, Giọng Bán Hàng & Dịch Vụ và các bộ lọc phân loại tự động hiển thị số lượng chính xác tuyệt đối theo thời gian thực.'
   },
   {
-    title: '📐 Khóa Cố Định Giao Diện & Rút Gọn Tên Thông Minh',
-    description: 'Tự động rút gọn tên video dài, đảm bảo thanh điều khiển trên cùng và thanh công cụ phụ luôn hiển thị thẳng hàng, chống tràn và không vỡ layout.'
+    title: '⚡ Tự Động Phục Hồi Video & Khóa Khung Layout Chống Tràn',
+    description: 'Tự động tái sinh Blob URL chống lỗi màn hình đen khi mở app, đồng thời tối ưu layout thẳng hàng, gọn gàng.'
   }
 ];
 
