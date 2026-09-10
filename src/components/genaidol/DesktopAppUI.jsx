@@ -3004,8 +3004,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             >
               Dừng phát ✕
             </button>
-    </div>
-    </div>
+          </div>
+        </div>
       );
     }
 
@@ -3016,7 +3016,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             ref={desktopVideoRef}
             src={lipSyncVideoUrl} 
             className="w-full h-full object-contain bg-black"
-            autoPlay={localStorage.getItem('avalive_user_paused') !== 'true'} 
+            autoPlay
+            loop
             controls={false}
             muted={liveAudioMuted}
             onEnded={handleVideoEnded}
@@ -3056,7 +3057,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             ref={desktopVideoRef}
             src={activeVideoItem.mediaUrl} 
             className="w-full h-full object-contain bg-black"
-            autoPlay={localStorage.getItem('avalive_user_paused') !== 'true'} 
+            autoPlay
             loop={!isProcessingEvent}
             controls={false}
             muted={liveAudioMuted}
@@ -3087,14 +3088,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       if (selected.type === 'video') {
         return (
           <div className="relative w-full h-full group/videoContainer select-none overflow-hidden bg-black flex items-center justify-center">
-            {/* THẺ VIDEO PREVIEW TRÊN PHẦN MỀM: LUÔN MUTE ĐỂ CHỈ CÓ CỬA SỔ LIVE (OBS) PHÁT TIẾNG, TRÁNH DỘI ÂM */}
+            {/* THẺ VIDEO PREVIEW TRÊN PHẦN MỀM */}
             <video 
               ref={desktopVideoRef}
               data-main-player="true"
               src={selected.url} 
               className="w-full h-full object-contain bg-black transform-gpu cursor-pointer main-video-player"
               style={{ transform: 'translateZ(0)', willChange: 'transform' }}
-              autoPlay={localStorage.getItem('avalive_user_paused') !== 'true'} 
+              autoPlay
               loop 
               muted={liveAudioMuted} 
               controls={false}
@@ -3143,29 +3144,44 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 }
               }}
               onLoadedMetadata={(e) => {
-                e.currentTarget.muted = liveAudioMuted;
+                const v = e.currentTarget;
+                v.muted = liveAudioMuted;
                 if (!liveAudioMuted) {
-                  e.currentTarget.volume = liveVolume;
+                  v.volume = liveVolume;
                 }
-                // ⚡ Khôi phục vị trí đang phát nếu người dùng đổi tab hoặc đổi stage quay lại (Không bị tua lại từ đầu)
+                // ⚡ Khôi phục vị trí đang phát nếu người dùng đổi tab hoặc đổi stage quay lại
                 if (lastPlaybackTimeRef.current && lastPlaybackTimeRef.current > 0) {
                   try {
-                    e.currentTarget.currentTime = lastPlaybackTimeRef.current;
+                    v.currentTime = lastPlaybackTimeRef.current;
                   } catch (err) {}
                 }
-                const isPaused = localStorage.getItem('avalive_user_paused') === 'true';
-                if (isPaused) {
-                  e.currentTarget.dataset.userPaused = 'true';
-                  e.currentTarget.pause();
-                  setIsVideoPlaying(false);
-                } else {
-                  e.currentTarget.dataset.userPaused = 'false';
-                  e.currentTarget.play().then(() => setIsVideoPlaying(true)).catch(() => {
-                    e.currentTarget.muted = true;
-                    e.currentTarget.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+                const isManualPaused = v.dataset.userPaused === 'true';
+                if (!isManualPaused) {
+                  v.dataset.userPaused = 'false';
+                  v.play().then(() => setIsVideoPlaying(true)).catch(() => {
+                    v.muted = true;
+                    v.play().then(() => setIsVideoPlaying(true)).catch(() => {});
                   });
                 }
               }} 
+              onCanPlay={(e) => {
+                const v = e.currentTarget;
+                if (v.paused && v.dataset.userPaused !== 'true') {
+                  v.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+                }
+              }}
+              onWaiting={(e) => {
+                const v = e.currentTarget;
+                if (v.paused && v.dataset.userPaused !== 'true' && v.readyState >= 2) {
+                  v.play().catch(() => {});
+                }
+              }}
+              onStalled={(e) => {
+                const v = e.currentTarget;
+                if (v.paused && v.dataset.userPaused !== 'true' && v.readyState >= 2) {
+                  v.play().catch(() => {});
+                }
+              }}
               onPlay={(e) => {
                 if (isInternalPlaybackChangeRef.current) return;
                 try {
@@ -3219,49 +3235,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               onPause={(e) => {
                 if (isInternalPlaybackChangeRef.current) return;
                 const v = e.currentTarget;
-                const curTime = v.currentTime;
-                let playUrl = selected.url;
-                if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
-                  playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
+                if (v.seeking) return;
+                // Chỉ xử lý nếu đây là hành động do người dùng bấm Dừng chủ động
+                const isManualPaused = v.dataset.userPaused === 'true';
+                if (!isManualPaused) {
+                  if (v.paused && v.readyState >= 2) {
+                    v.play().catch(() => {});
+                  }
+                  return;
                 }
-                try {
-                  localStorage.setItem('avalive_user_paused', 'true');
-                  localStorage.setItem('avalive_window_capture_paused', 'true');
-                } catch (err) {}
-                v.dataset.userPaused = 'true';
                 setIsVideoPlaying(false);
-                
-                sendVideoControl({
-                  action: 'pause',
-                  currentTime: curTime,
-                  isPlaying: false,
-                  force: true,
-                  mediaUrl: playUrl,
-                  timestamp: Date.now()
-                }, socketRef.current);
-
-                syncMasterLiveState({
-                  stage: 'idol',
-                  mediaUrl: playUrl,
-                  isVideo: true,
-                  videoPlaybackEvent: 'pause',
-                  videoCurrentTime: curTime,
-                  force: true,
-                  isPlaying: false
-                }, socketRef.current);
-                try {
-                  const bc = new BroadcastChannel('avalive_master_live_stream');
-                  bc.postMessage({ 
-                    type: 'GLOBAL_PLAYBACK_CHANGE', 
-                    isPlaying: false, 
-                    userPaused: true, 
-                    currentTime: curTime, 
-                    force: true,
-                    source: 'desktop',
-                    timestamp: Date.now() 
-                  });
-                  setTimeout(() => bc.close(), 100);
-                } catch (err) {}
               }}
               onSeeked={(e) => {
                 const curTime = e.currentTarget.currentTime;
