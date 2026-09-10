@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.5.9';
+export const APP_VERSION = '2.6.0';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '📜 Mở Nhiều Tab Kịch Bản Bán Hàng & Tích Chọn Phát Live Linh Hoạt',
+    description: 'Người dùng có thể thêm không giới hạn các tab kịch bản bán hàng khác nhau (Mỹ phẩm, Thời trang, Flash Sale...), đổi tên, sao chép hoặc xóa tab; chỉ cần tích chọn kịch bản nào là kịch bản đó sẽ được sử dụng ngay khi phát sóng trực tiếp mà không lo mất cấu hình kịch bản cũ!'
+  },
   {
     title: '⚡ Chuyển Giọng Mở Phát Ngay Lập Tức (0.000s) & Xử Lý Đa Luồng Siêu Tốc',
     description: 'Sửa triệt để lỗi nghẽn WebSocket TTS backend và tối ưu pipeline song song 6 luồng: Khi chuyển bất kỳ giọng đọc nào, âm thanh câu đầu tiên phát ra NGAY TỨC THÌ 0ms không phải chờ đợi.'
@@ -13,10 +17,6 @@ export const UPDATE_NOTES = [
   {
     title: '🎙️ Bảo Toàn 100% Âm Sắc Gốc Khi Tăng / Giảm Tốc Độ Đọc',
     description: 'Tốc độ đọc (Rate) được xử lý trực tiếp bởi Neural Prosody Engine chuẩn phát thanh viên, giữ nguyên tuyệt đối chất giọng đặc trưng của từng nhân vật, không làm biến dạng cao độ hay vỡ tiếng.'
-  },
-  {
-    title: '👑 Đồng Bộ 100% Giữa Trình Nghe Thử & Phát Livestream Thực Tế',
-    description: 'Tất cả hiệu ứng DSP, EQ vùng miền và tốc độ phát khi kiểm tra kịch bản đều đồng bộ đồng nhất hoàn toàn khi phiên livestream chính thức lên sóng.'
   }
 ];
 

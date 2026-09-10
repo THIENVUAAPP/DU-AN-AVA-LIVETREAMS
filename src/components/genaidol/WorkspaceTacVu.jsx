@@ -4,7 +4,7 @@ import {
   Hand, ShoppingCart, Share, Sparkles, Mic, Heart, Play, HelpCircle, ChevronDown,
   Download, Upload, ShoppingBag, Trash2, Zap, Bot, Volume2, MessageSquare, FileText,
   BookOpen, Layers, Smile, Flame, Crown, Tag, FileUp, Sparkle, RefreshCw, CheckCircle2,
-  Video, Film, AlertCircle
+  Video, Film, AlertCircle, Copy, Check, Edit3, Star
 } from 'lucide-react';
 import { NEW_AI_PROMPT } from '../../utils/defaultAIPrompt';
 import { readUniversalFile } from '../../utils/universalDocumentParser';
@@ -352,12 +352,26 @@ const getDefaultEventConfigs = () => {
       speakAfterIdleSeconds: ev.id === 'idle' ? 5 : '',
       likeThreshold: ev.id === 'thanks_heart' ? 10 : '',
       
-      // Script Broadcast settings
+      // Script Broadcast settings & Multiple Script Tabs
       broadcastMode: ev.id === 'script_broadcast' ? 'fixed_script' : undefined,
       interruptOnComment: ev.id === 'script_broadcast' ? true : undefined,
       commentReplySource: ev.id === 'script_broadcast' ? 'knowledge_base' : undefined,
+      activeScriptTabId: ev.id === 'script_broadcast' ? 'tab_1' : undefined,
+      scriptTabs: ev.id === 'script_broadcast' ? [
+        {
+          id: 'tab_1',
+          name: 'Kịch bản 1: Mỹ Phẩm & Skincare',
+          active: true,
+          fixedScriptText: MASTER_SCRIPTS.cosmetics,
+          aiLiveStyle: 'sales_fast',
+          scriptDurationMinutes: 60,
+          pauseBetweenSentences: 0.1,
+          loopScript: true,
+          voiceId: 'free_vi_female'
+        }
+      ] : undefined,
       fixedScriptText: ev.id === 'script_broadcast' ? MASTER_SCRIPTS.cosmetics : undefined,
-      pauseBetweenSentences: ev.id === 'script_broadcast' ? 3 : undefined,
+      pauseBetweenSentences: ev.id === 'script_broadcast' ? 0.1 : undefined,
       scriptDurationMinutes: ev.id === 'script_broadcast' ? 60 : undefined,
       loopScript: ev.id === 'script_broadcast' ? true : undefined,
       aiLiveStyle: ev.id === 'script_broadcast' ? 'sales_fast' : undefined,
@@ -544,6 +558,26 @@ export default function WorkspaceTacVu() {
                       return p;
                     })
                   : defaults[key].checkoutProducts,
+                scriptTabs: key === 'script_broadcast'
+                  ? (Array.isArray(parsed[key]?.scriptTabs) && parsed[key].scriptTabs.length > 0
+                      ? parsed[key].scriptTabs
+                      : [
+                          {
+                            id: 'tab_1',
+                            name: 'Kịch bản 1: Mặc Định',
+                            active: true,
+                            fixedScriptText: parsed[key]?.fixedScriptText || defaults[key]?.fixedScriptText || MASTER_SCRIPTS.cosmetics,
+                            aiLiveStyle: parsed[key]?.aiLiveStyle || defaults[key]?.aiLiveStyle || 'sales_fast',
+                            scriptDurationMinutes: parsed[key]?.scriptDurationMinutes || defaults[key]?.scriptDurationMinutes || 60,
+                            pauseBetweenSentences: parsed[key]?.pauseBetweenSentences !== undefined ? parsed[key].pauseBetweenSentences : 0.1,
+                            loopScript: parsed[key]?.loopScript !== false,
+                            voiceId: parsed[key]?.voiceId || 'free_vi_female'
+                          }
+                        ])
+                  : defaults[key]?.scriptTabs,
+                activeScriptTabId: key === 'script_broadcast'
+                  ? (parsed[key]?.activeScriptTabId || (Array.isArray(parsed[key]?.scriptTabs) && parsed[key].scriptTabs.find(t => t.active)?.id) || 'tab_1')
+                  : defaults[key]?.activeScriptTabId,
               };
             }
           });
@@ -618,6 +652,152 @@ export default function WorkspaceTacVu() {
 
   const handleSimpleChange = (field, value) => {
     updateEventConfig(selectedEventId, { [field]: value });
+  };
+
+  // ==================== MULTIPLE SCRIPT TABS LOGIC ====================
+  const scriptBroadcastConfig = eventConfigs.script_broadcast || {};
+  const currentScriptTabs = (Array.isArray(scriptBroadcastConfig.scriptTabs) && scriptBroadcastConfig.scriptTabs.length > 0)
+    ? scriptBroadcastConfig.scriptTabs
+    : [
+        {
+          id: 'tab_1',
+          name: 'Kịch bản 1: Mỹ Phẩm & Skincare',
+          active: true,
+          fixedScriptText: scriptBroadcastConfig.fixedScriptText || MASTER_SCRIPTS.cosmetics,
+          aiLiveStyle: scriptBroadcastConfig.aiLiveStyle || 'sales_fast',
+          scriptDurationMinutes: scriptBroadcastConfig.scriptDurationMinutes || 60,
+          pauseBetweenSentences: scriptBroadcastConfig.pauseBetweenSentences !== undefined ? scriptBroadcastConfig.pauseBetweenSentences : 0.1,
+          loopScript: scriptBroadcastConfig.loopScript !== false,
+          voiceId: scriptBroadcastConfig.voiceId || 'free_vi_female'
+        }
+      ];
+
+  const [currentEditingScriptTabId, setCurrentEditingScriptTabId] = useState(
+    scriptBroadcastConfig.activeScriptTabId || currentScriptTabs.find(t => t.active)?.id || currentScriptTabs[0]?.id || 'tab_1'
+  );
+
+  // Lấy ra tab đang được chọn chỉnh sửa trong giao diện
+  const activeEditingTab = currentScriptTabs.find(t => t.id === currentEditingScriptTabId) || currentScriptTabs[0] || {
+    id: 'tab_1',
+    name: 'Kịch bản 1',
+    active: true,
+    fixedScriptText: MASTER_SCRIPTS.cosmetics,
+    aiLiveStyle: 'sales_fast',
+    scriptDurationMinutes: 60,
+    pauseBetweenSentences: 0.1,
+    loopScript: true,
+    voiceId: 'free_vi_female'
+  };
+
+  const handleAddScriptTab = () => {
+    const newId = `script_tab_${Date.now()}`;
+    const nextNum = currentScriptTabs.length + 1;
+    const newTab = {
+      id: newId,
+      name: `Kịch bản ${nextNum}: Mới`,
+      active: false,
+      fixedScriptText: '',
+      aiLiveStyle: 'sales_fast',
+      scriptDurationMinutes: 60,
+      pauseBetweenSentences: 0.1,
+      loopScript: true,
+      voiceId: scriptBroadcastConfig.voiceId || 'free_vi_female'
+    };
+    const updated = [...currentScriptTabs, newTab];
+    updateEventConfig('script_broadcast', { scriptTabs: updated });
+    setCurrentEditingScriptTabId(newId);
+    toast.success(`➕ Đã mở thêm Kịch bản ${nextNum}! Bạn có thể dán nội dung hoặc chọn mẫu cho kịch bản này.`);
+  };
+
+  const handleDuplicateScriptTab = (tabId) => {
+    const target = currentScriptTabs.find(t => t.id === tabId);
+    if (!target) return;
+    const newId = `script_tab_${Date.now()}`;
+    const newTab = {
+      ...target,
+      id: newId,
+      name: `${target.name} (Bản sao)`,
+      active: false
+    };
+    const updated = [...currentScriptTabs, newTab];
+    updateEventConfig('script_broadcast', { scriptTabs: updated });
+    setCurrentEditingScriptTabId(newId);
+    toast.success(`📋 Đã nhân bản "${target.name}" thành công!`);
+  };
+
+  const handleDeleteScriptTab = (tabId) => {
+    if (currentScriptTabs.length <= 1) {
+      toast.error('Phải giữ lại ít nhất 1 kịch bản trong danh sách!');
+      return;
+    }
+    const remaining = currentScriptTabs.filter(t => t.id !== tabId);
+    let newActiveId = scriptBroadcastConfig.activeScriptTabId;
+    if (!remaining.some(t => t.active)) {
+      remaining[0].active = true;
+      newActiveId = remaining[0].id;
+    }
+    const activeTab = remaining.find(t => t.active) || remaining[0];
+    updateEventConfig('script_broadcast', {
+      scriptTabs: remaining,
+      activeScriptTabId: activeTab.id,
+      fixedScriptText: activeTab.fixedScriptText,
+      aiLiveStyle: activeTab.aiLiveStyle,
+      scriptDurationMinutes: activeTab.scriptDurationMinutes,
+      pauseBetweenSentences: activeTab.pauseBetweenSentences,
+      loopScript: activeTab.loopScript
+    });
+    if (currentEditingScriptTabId === tabId) {
+      setCurrentEditingScriptTabId(activeTab.id);
+    }
+    toast.success('🗑️ Đã xóa kịch bản thành công.');
+  };
+
+  const handleSelectActiveScriptForLive = (tabId) => {
+    const updated = currentScriptTabs.map(t => ({
+      ...t,
+      active: t.id === tabId
+    }));
+    const chosen = updated.find(t => t.id === tabId);
+    if (!chosen) return;
+    updateEventConfig('script_broadcast', {
+      scriptTabs: updated,
+      activeScriptTabId: tabId,
+      fixedScriptText: chosen.fixedScriptText,
+      aiLiveStyle: chosen.aiLiveStyle,
+      scriptDurationMinutes: chosen.scriptDurationMinutes,
+      pauseBetweenSentences: chosen.pauseBetweenSentences,
+      loopScript: chosen.loopScript
+    });
+    toast.success(`🎯 Đã kích hoạt "${chosen.name}" làm kịch bản phát sóng chính khi Live!`);
+  };
+
+  const handleUpdateActiveScriptTab = (field, value) => {
+    const updated = currentScriptTabs.map(t => {
+      if (t.id === activeEditingTab.id) {
+        return { ...t, [field]: value };
+      }
+      return t;
+    });
+    const partial = { scriptTabs: updated };
+    if (activeEditingTab.active) {
+      partial[field] = value;
+    }
+    updateEventConfig('script_broadcast', partial);
+  };
+
+  const applyMasterScriptToTab = (type) => {
+    if (MASTER_SCRIPTS[type]) {
+      handleUpdateActiveScriptTab('fixedScriptText', MASTER_SCRIPTS[type]);
+      toast.success('✨ Đã nạp mẫu kịch bản bán hàng vào kịch bản này!');
+    }
+  };
+
+  const handleStyleChangeForTab = (styleKey) => {
+    handleUpdateActiveScriptTab('aiLiveStyle', styleKey);
+    if (MASTER_SCRIPTS[styleKey]) {
+      handleUpdateActiveScriptTab('fixedScriptText', MASTER_SCRIPTS[styleKey]);
+      toast.success(`✨ Đã nạp kịch bản phong cách: ${styleKey}`);
+    }
   };
 
   // ==================== SPECIAL GIFT SLOTS HANDLERS ====================
@@ -1656,7 +1836,7 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                 {/* 📜 3. NỘI DUNG THEO CHẾ ĐỘ ĐANG CHỌN */}
                 {(currentConfig.broadcastMode || 'fixed_script') === 'fixed_script' ? (
                   /* ========================================================================= */
-                  /* CHẾ ĐỘ 1: KỊCH BẢN BÁN HÀNG CÀI SẴN (FIXED SCRIPT) */
+                  /* CHẾ ĐỘ 1: KỊCH BẢN BÁN HÀNG CÀI SẴN (FIXED SCRIPT - NHIỀU TAB KỊCH BẢN) */
                   /* ========================================================================= */
                   <div className="space-y-4 mb-4">
                     <fieldset className="border-2 border-blue-300 rounded-2xl p-4 pt-4 relative bg-blue-50/30 shadow-xs">
@@ -1665,9 +1845,163 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                         <HelpTooltip helpKey="fixedScriptText" />
                       </legend>
 
-                      <div className="flex flex-col gap-3 mt-1">
-                        {/* 10 PHONG CÁCH LIVESTREAM AI & 10 MẪU NGÀNH HÀNG */}
-                        <div className="p-3.5 bg-white rounded-xl border border-blue-200 space-y-3 shadow-2xs">
+                      <div className="flex flex-col gap-4 mt-1">
+                        
+                        {/* 🌟 1. THANH QUẢN LÝ NHIỀU TAB KỊCH BẢN (MULTIPLE SCRIPT TABS) */}
+                        <div className="p-3.5 bg-white rounded-xl border border-blue-200 shadow-2xs space-y-3">
+                          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-2.5 pb-2.5 border-b border-blue-100">
+                            <div>
+                              <div className="text-xs font-black text-blue-900 flex items-center gap-1.5 uppercase tracking-wide">
+                                <Layers size={15} className="text-blue-600" /> DANH SÁCH CÁC TAB KỊCH BẢN BÁN HÀNG ({currentScriptTabs.length} Kịch Bản):
+                              </div>
+                              <p className="text-[11px] text-gray-500 mt-0.5">
+                                Mở nhiều kịch bản khác nhau để chuyển đổi nhanh khi Live. Tích chọn kịch bản bạn muốn sử dụng để phát sóng trực tiếp.
+                              </p>
+                            </div>
+
+                            <button
+                              type="button"
+                              onClick={handleAddScriptTab}
+                              className="px-3.5 py-1.5 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white text-xs font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-sm hover:scale-[1.02] active:scale-98 shrink-0"
+                            >
+                              <Plus size={15} /> ➕ Thêm Kịch Bản Mới
+                            </button>
+                          </div>
+
+                          {/* DANH SÁCH TAB PILLS */}
+                          <div className="flex items-center gap-2 overflow-x-auto pb-1.5 scrollbar-thin">
+                            {currentScriptTabs.map((tab, idx) => {
+                              const isEditing = tab.id === activeEditingTab.id;
+                              const isLiveActive = tab.active === true;
+                              const sentenceCount = (tab.fixedScriptText || '').split(/\r?\n/).filter(Boolean).length;
+
+                              return (
+                                <div
+                                  key={tab.id}
+                                  onClick={() => setCurrentEditingScriptTabId(tab.id)}
+                                  className={`group relative flex items-center gap-2 px-3 py-2 rounded-xl text-xs font-bold transition-all cursor-pointer border shrink-0 select-none shadow-2xs ${
+                                    isEditing
+                                      ? 'bg-blue-600 text-white border-blue-600 shadow-md ring-2 ring-blue-300'
+                                      : 'bg-white text-gray-700 border-gray-200 hover:border-blue-300 hover:bg-blue-50/50'
+                                  }`}
+                                >
+                                  <div className="flex items-center gap-1.5">
+                                    <FileText size={13} className={isEditing ? 'text-blue-200' : 'text-blue-500'} />
+                                    <span className="max-w-[150px] sm:max-w-[200px] truncate font-black">
+                                      {tab.name || `Kịch bản ${idx + 1}`}
+                                    </span>
+                                  </div>
+
+                                  {/* BADGE ACTIVE FOR LIVE */}
+                                  {isLiveActive && (
+                                    <span className={`px-1.5 py-0.5 rounded-full text-[10px] font-black uppercase tracking-wider flex items-center gap-0.5 shadow-2xs ${
+                                      isEditing
+                                        ? 'bg-emerald-400 text-emerald-950'
+                                        : 'bg-emerald-100 text-emerald-700 border border-emerald-300'
+                                    }`}>
+                                      <Check size={10} strokeWidth={3} /> Đang Phát Live
+                                    </span>
+                                  )}
+
+                                  <span className={`text-[10px] px-1.5 py-0.5 rounded-md font-mono ${
+                                    isEditing ? 'bg-blue-700/80 text-blue-100' : 'bg-gray-100 text-gray-500'
+                                  }`}>
+                                    {sentenceCount} câu
+                                  </span>
+
+                                  {/* QUICK DELETE IF > 1 */}
+                                  {currentScriptTabs.length > 1 && (
+                                    <button
+                                      type="button"
+                                      onClick={(e) => {
+                                        e.stopPropagation();
+                                        handleDeleteScriptTab(tab.id);
+                                      }}
+                                      className={`p-1 rounded-md transition-all cursor-pointer ml-1 ${
+                                        isEditing 
+                                          ? 'hover:bg-red-500 text-blue-200 hover:text-white' 
+                                          : 'hover:bg-red-50 text-gray-400 hover:text-red-600'
+                                      }`}
+                                      title="Xóa kịch bản này"
+                                    >
+                                      <Trash2 size={12} />
+                                    </button>
+                                  )}
+                                </div>
+                              );
+                            })}
+                          </div>
+                        </div>
+
+                        {/* 🌟 2. CẤU HÌNH & CHỈNH SỬA KỊCH BẢN ĐANG CHỌN */}
+                        <div className="p-4 bg-white rounded-xl border-2 border-blue-200 space-y-3.5 shadow-xs">
+                          {/* HEADER TAB ĐANG CHỌN: TÊN, CHECKBOX CHỌN PHÁT LIVE, NÚT NHÂN BẢN / XÓA */}
+                          <div className="flex flex-col md:flex-row md:items-center justify-between gap-3 pb-3 border-b border-gray-200">
+                            <div className="flex items-center gap-2 flex-1">
+                              <div className="flex items-center gap-1.5 text-xs font-bold text-gray-700 shrink-0">
+                                <Edit3 size={14} className="text-blue-600" />
+                                <span>Tên Kịch Bản:</span>
+                              </div>
+                              <input
+                                type="text"
+                                value={activeEditingTab.name || ''}
+                                onChange={(e) => handleUpdateActiveScriptTab('name', e.target.value)}
+                                placeholder="Nhập tên gợi nhớ cho kịch bản..."
+                                className="flex-1 min-w-[180px] max-w-[320px] border border-blue-300 rounded-lg px-2.5 py-1 text-xs font-bold text-blue-900 bg-blue-50/40 focus:bg-white focus:outline-blue-500 shadow-inner"
+                              />
+                            </div>
+
+                            <div className="flex items-center gap-2 flex-wrap">
+                              {/* RADIO / CHECKBOX SỬ DỤNG KỊCH BẢN NÀY ĐỂ PHÁT SÓNG */}
+                              <button
+                                type="button"
+                                onClick={() => handleSelectActiveScriptForLive(activeEditingTab.id)}
+                                className={`px-3 py-1.5 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer shadow-sm ${
+                                  activeEditingTab.active
+                                    ? 'bg-emerald-600 text-white shadow-emerald-200 ring-2 ring-emerald-400'
+                                    : 'bg-gray-100 hover:bg-emerald-50 text-gray-700 hover:text-emerald-700 border border-gray-300'
+                                }`}
+                              >
+                                {activeEditingTab.active ? (
+                                  <>
+                                    <CheckCircle2 size={15} className="text-white" />
+                                    <span>🎯 Kịch Bản Này Đang Được Chọn Phát Live</span>
+                                  </>
+                                ) : (
+                                  <>
+                                    <CheckSquare size={15} className="text-gray-400" />
+                                    <span>🎯 Tích Chọn Kịch Bản Này Để Phát Live</span>
+                                  </>
+                                )}
+                              </button>
+
+                              {/* NHÂN BẢN */}
+                              <button
+                                type="button"
+                                onClick={() => handleDuplicateScriptTab(activeEditingTab.id)}
+                                className="px-2.5 py-1.5 rounded-xl bg-gray-100 hover:bg-gray-200 text-gray-700 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer border border-gray-300 shadow-2xs"
+                                title="Tạo một bản sao từ kịch bản này"
+                              >
+                                <Copy size={13} />
+                                <span>Nhân Bản</span>
+                              </button>
+
+                              {/* XÓA */}
+                              {currentScriptTabs.length > 1 && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleDeleteScriptTab(activeEditingTab.id)}
+                                  className="px-2.5 py-1.5 rounded-xl bg-red-50 hover:bg-red-100 text-red-600 text-xs font-bold flex items-center gap-1 transition-all cursor-pointer border border-red-200 shadow-2xs"
+                                  title="Xóa kịch bản này"
+                                >
+                                  <Trash2 size={13} />
+                                  <span>Xóa</span>
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* 10 PHONG CÁCH LIVESTREAM AI & THỜI LƯỢNG CỦA TAB NÀY */}
                           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 pb-2 border-b border-blue-100">
                             <div>
                               <div className="flex items-center text-xs font-bold text-blue-900 mb-1">
@@ -1675,8 +2009,8 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                                 <HelpTooltip helpKey="aiLiveStyle" />
                               </div>
                               <select
-                                value={currentConfig.aiLiveStyle || 'sales_fast'}
-                                onChange={(e) => handleStyleChange(e.target.value)}
+                                value={activeEditingTab.aiLiveStyle || 'sales_fast'}
+                                onChange={(e) => handleStyleChangeForTab(e.target.value)}
                                 className="w-full border border-blue-300 rounded-lg px-2.5 py-1.5 text-xs bg-white font-bold text-blue-900 focus:outline-blue-500 cursor-pointer shadow-2xs"
                               >
                                 <option value="sales_fast">🔥 1. Hào Hứng - Năng Động - Chốt Sale Thần Tốc</option>
@@ -1698,8 +2032,8 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                                 <HelpTooltip helpKey="aiLiveDuration" />
                               </div>
                               <select
-                                value={currentConfig.scriptDurationMinutes || 60}
-                                onChange={(e) => handleSimpleChange('scriptDurationMinutes', Number(e.target.value) || 60)}
+                                value={activeEditingTab.scriptDurationMinutes || 60}
+                                onChange={(e) => handleUpdateActiveScriptTab('scriptDurationMinutes', Number(e.target.value) || 60)}
                                 className="w-full border border-blue-300 rounded-lg px-2.5 py-1.5 text-xs bg-white font-bold text-blue-900 focus:outline-blue-500 cursor-pointer shadow-2xs"
                               >
                                 <option value="15">⏱️ 15 phút (Phiên ngắn)</option>
@@ -1722,7 +2056,7 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
 
                             <div className="shrink-0">
                               <UniversalFileUploadButton 
-                                onLoaded={(text) => handleSimpleChange('fixedScriptText', text)}
+                                onLoaded={(text) => handleUpdateActiveScriptTab('fixedScriptText', text)}
                                 label="Nạp File (.docx, .pdf, .txt, .json)"
                               />
                             </div>
@@ -1744,115 +2078,121 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                               <button
                                 key={item.id}
                                 type="button"
-                                onClick={() => applyMasterScript(item.id)}
+                                onClick={() => applyMasterScriptToTab(item.id)}
                                 className={`p-2 border rounded-xl text-xs font-bold transition-all text-left truncate cursor-pointer shadow-2xs hover:scale-[1.02] active:scale-98 ${item.color}`}
                               >
                                 {item.label}
                               </button>
                             ))}
                           </div>
-                        </div>
 
-                        {/* TEXTAREA KỊCH BẢN */}
-                        <div className="flex flex-col gap-1.5">
-                          <div className="flex items-center justify-between flex-wrap gap-2">
-                            <span className="text-xs font-bold text-gray-700">📜 Nội dung kịch bản cố định:</span>
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const currentText = currentConfig.fixedScriptText !== undefined ? currentConfig.fixedScriptText : MASTER_SCRIPTS.cosmetics;
-                                  const optimized = polishAndOptimizeScript(currentText);
-                                  handleSimpleChange('fixedScriptText', optimized);
-                                  toast.success('✨ Đã tối ưu kịch bản cảm xúc, nhấn nhá và chốt đơn thành công!');
-                                }}
-                                className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-900 border border-amber-400/50 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
-                                title="Tự động sắp xếp lại câu từ, lấy hơi, ngữ điệu cảm xúc và tăng sức hút chốt đơn"
-                              >
-                                <Sparkles size={13} className="text-amber-600" />
-                                <span>Tối Ưu Kịch Bản Đỉnh Cao</span>
-                              </button>
-                              <UniversalFileUploadButton 
-                                onLoaded={(text) => handleSimpleChange('fixedScriptText', text)}
-                                label="Nạp File Kịch Bản (.docx, .pdf, .txt, .json, .xlsx)"
+                          {/* TEXTAREA KỊCH BẢN */}
+                          <div className="flex flex-col gap-1.5">
+                            <div className="flex items-center justify-between flex-wrap gap-2">
+                              <span className="text-xs font-bold text-gray-700 flex items-center gap-1.5">
+                                <FileText size={13} className="text-blue-600" />
+                                <span>Nội dung câu thoại của kịch bản <b className="text-blue-900">"{activeEditingTab.name || 'Kịch bản'}"</b>:</span>
+                              </span>
+                              <div className="flex items-center gap-2 flex-wrap">
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    const currentText = activeEditingTab.fixedScriptText !== undefined ? activeEditingTab.fixedScriptText : MASTER_SCRIPTS.cosmetics;
+                                    const optimized = polishAndOptimizeScript(currentText);
+                                    handleUpdateActiveScriptTab('fixedScriptText', optimized);
+                                    toast.success('✨ Đã tối ưu kịch bản cảm xúc, nhấn nhá và chốt đơn thành công!');
+                                  }}
+                                  className="px-2.5 py-1 rounded-xl bg-gradient-to-r from-amber-500/20 to-orange-500/20 hover:from-amber-500/30 hover:to-orange-500/30 text-amber-900 border border-amber-400/50 text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-2xs"
+                                  title="Tự động sắp xếp lại câu từ, lấy hơi, ngữ điệu cảm xúc và tăng sức hút chốt đơn"
+                                >
+                                  <Sparkles size={13} className="text-amber-600" />
+                                  <span>Tối Ưu Kịch Bản Đỉnh Cao</span>
+                                </button>
+                                <UniversalFileUploadButton 
+                                  onLoaded={(text) => handleUpdateActiveScriptTab('fixedScriptText', text)}
+                                  label="Nạp File Kịch Bản (.docx, .pdf, .txt, .json, .xlsx)"
+                                />
+                              </div>
+                            </div>
+                            <div className="relative">
+                              <textarea 
+                                value={activeEditingTab.fixedScriptText !== undefined ? activeEditingTab.fixedScriptText : MASTER_SCRIPTS.cosmetics} 
+                                onChange={(e) => handleUpdateActiveScriptTab('fixedScriptText', e.target.value)} 
+                                placeholder="Nhập hoặc dán chuỗi các câu thoại kịch bản bán hàng (mỗi dòng là một câu thoại). Idol sẽ đọc tuần tự từng câu theo đúng kịch bản..."
+                                className="w-full h-[240px] border border-gray-300 rounded-xl p-3.5 text-xs resize-y bg-white focus:outline-blue-500 font-sans leading-relaxed shadow-inner" 
                               />
+                              <div className="absolute bottom-3 right-3 text-[11px] text-gray-500 bg-white/90 px-2 py-0.5 rounded-md border border-gray-200 font-bold shadow-2xs">
+                                {(activeEditingTab.fixedScriptText || '').split(/\r?\n/).filter(Boolean).length} câu thoại
+                              </div>
                             </div>
                           </div>
-                          <div className="relative">
-                            <textarea 
-                              value={currentConfig.fixedScriptText !== undefined ? currentConfig.fixedScriptText : MASTER_SCRIPTS.cosmetics} 
-                              onChange={(e) => handleSimpleChange('fixedScriptText', e.target.value)} 
-                              placeholder="Nhập chuỗi các câu thoại kịch bản bán hàng (mỗi dòng là một câu thoại). Idol sẽ đọc tuần tự từng câu theo đúng kịch bản..."
-                              className="w-full h-[240px] border border-gray-300 rounded-xl p-3.5 text-xs resize-y bg-white focus:outline-blue-500 font-sans leading-relaxed shadow-inner" 
-                            />
-                            <div className="absolute bottom-3 right-3 text-[11px] text-gray-500 bg-white/90 px-2 py-0.5 rounded-md border border-gray-200 font-bold shadow-2xs">
-                              {(currentConfig.fixedScriptText || MASTER_SCRIPTS.cosmetics).split(/\r?\n/).filter(Boolean).length} câu thoại
-                            </div>
-                          </div>
-                        </div>
 
-                        {/* CÀI ĐẶT THỜI GIAN VÀ THỜI LƯỢNG */}
-                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 bg-white rounded-xl border border-gray-200 text-xs">
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="font-bold text-gray-700">⏱️ Thời gian nghỉ giữa câu:</span>
-                            <div className="flex items-center gap-1">
+                          {/* CÀI ĐẶT THỜI GIAN VÀ THỜI LƯỢNG */}
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 p-3.5 bg-blue-50/40 rounded-xl border border-blue-200 text-xs">
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-bold text-gray-700">⏱️ Thời gian nghỉ giữa câu:</span>
+                              <div className="flex items-center gap-1">
+                                <input 
+                                  type="number" 
+                                  min="0" 
+                                  max="30"
+                                  step="0.1"
+                                  value={activeEditingTab.pauseBetweenSentences !== undefined ? activeEditingTab.pauseBetweenSentences : 0.1} 
+                                  onChange={(e) => handleUpdateActiveScriptTab('pauseBetweenSentences', Number(e.target.value))}
+                                  className="w-16 border border-gray-300 rounded-lg px-2 py-1 text-center font-bold bg-white" 
+                                />
+                                <span className="text-gray-500">giây</span>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center justify-between gap-2">
+                              <span className="font-bold text-gray-700">⏳ Thời lượng phát kịch bản:</span>
+                              <div className="flex items-center gap-1">
+                                <select
+                                  value={activeEditingTab.scriptDurationMinutes || 60}
+                                  onChange={(e) => handleUpdateActiveScriptTab('scriptDurationMinutes', Number(e.target.value) || 60)}
+                                  className="border border-gray-300 rounded-lg px-2 py-1 text-xs font-bold bg-white cursor-pointer"
+                                >
+                                  <option value="30">30 phút</option>
+                                  <option value="45">45 phút</option>
+                                  <option value="60">60 phút (1 tiếng)</option>
+                                  <option value="90">90 phút (1.5 tiếng)</option>
+                                  <option value="120">120 phút (2 tiếng)</option>
+                                  <option value="180">180 phút (3 tiếng)</option>
+                                </select>
+                              </div>
+                            </div>
+
+                            <div className="flex items-center gap-2">
                               <input 
-                                type="number" 
-                                min="0" 
-                                max="30"
-                                step="0.1"
-                                value={currentConfig.pauseBetweenSentences !== undefined ? currentConfig.pauseBetweenSentences : 0.1} 
-                                onChange={(e) => handleSimpleChange('pauseBetweenSentences', Number(e.target.value))}
-                                className="w-16 border border-gray-300 rounded-lg px-2 py-1 text-center font-bold" 
+                                type="checkbox" 
+                                id={`loopScriptCheckbox_${activeEditingTab.id}`}
+                                checked={activeEditingTab.loopScript !== false} 
+                                onChange={(e) => handleUpdateActiveScriptTab('loopScript', e.target.checked)}
+                                className="w-4 h-4 text-blue-600 rounded cursor-pointer" 
                               />
-                              <span className="text-gray-500">giây</span>
+                              <label htmlFor={`loopScriptCheckbox_${activeEditingTab.id}`} className="font-bold text-gray-700 cursor-pointer">
+                                🔁 Tự động lặp lại kịch bản
+                              </label>
                             </div>
                           </div>
 
-                          <div className="flex items-center justify-between gap-2">
-                            <span className="font-bold text-gray-700">⏳ Thời lượng phát kịch bản:</span>
-                            <div className="flex items-center gap-1">
-                              <select
-                                value={currentConfig.scriptDurationMinutes || 60}
-                                onChange={(e) => handleSimpleChange('scriptDurationMinutes', Number(e.target.value) || 60)}
-                                className="border border-gray-300 rounded-lg px-2 py-1 text-xs font-bold bg-white cursor-pointer"
-                              >
-                                <option value="30">30 phút</option>
-                                <option value="45">45 phút</option>
-                                <option value="60">60 phút (1 tiếng)</option>
-                                <option value="90">90 phút (1.5 tiếng)</option>
-                                <option value="120">120 phút (2 tiếng)</option>
-                                <option value="180">180 phút (3 tiếng)</option>
-                              </select>
-                            </div>
-                          </div>
-
-                          <div className="flex items-center gap-2">
-                            <input 
-                              type="checkbox" 
-                              id="loopScriptCheckbox"
-                              checked={currentConfig.loopScript !== false} 
-                              onChange={(e) => handleSimpleChange('loopScript', e.target.checked)}
-                              className="w-4 h-4 text-blue-600 rounded cursor-pointer" 
-                            />
-                            <label htmlFor="loopScriptCheckbox" className="font-bold text-gray-700 cursor-pointer">
-                              🔁 Tự động lặp lại kịch bản
-                            </label>
-                          </div>
+                          {/* NGHE THỬ VOICE TOÀN BỘ KỊCH BẢN */}
+                          <EventVoiceTester 
+                            text={activeEditingTab.fixedScriptText || MASTER_SCRIPTS.cosmetics}
+                            defaultVoiceId={activeEditingTab.voiceId || currentConfig.voiceId || "free_vi_female"}
+                            onVoiceChange={(vid) => {
+                              handleUpdateActiveScriptTab('voiceId', vid);
+                              handleSimpleChange('voiceId', vid);
+                            }}
+                            onScriptOptimized={(optText) => {
+                              handleUpdateActiveScriptTab('fixedScriptText', optText);
+                              toast.success('✨ Đã cập nhật kịch bản tối ưu thành công!');
+                            }}
+                            label={`Nghe thử toàn bộ kịch bản "${activeEditingTab.name || 'này'}" (Mọi Giọng Đọc AI)`}
+                            compact={false}
+                          />
                         </div>
-
-                        {/* NGHE THỬ VOICE TOÀN BỘ KỊCH BẢN */}
-                        <EventVoiceTester 
-                          text={currentConfig.fixedScriptText || MASTER_SCRIPTS.cosmetics}
-                          defaultVoiceId={currentConfig.voiceId || "free_vi_female"}
-                          onVoiceChange={(vid) => handleSimpleChange('voiceId', vid)}
-                          onScriptOptimized={(optText) => {
-                            handleSimpleChange('fixedScriptText', optText);
-                            toast.success('✨ Đã cập nhật kịch bản tối ưu thành công!');
-                          }}
-                          label="Nghe thử toàn bộ kịch bản bán hàng cài sẵn (Mọi Giọng Đọc AI)"
-                          compact={false}
-                        />
                       </div>
                     </fieldset>
                   </div>

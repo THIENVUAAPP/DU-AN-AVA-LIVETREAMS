@@ -68,8 +68,18 @@ const AIAudioPlayer = forwardRef(({ isLive, onAudioPlayStateChange, onActionTrig
         if (eventConfigsRaw) {
           try {
             const evConf = JSON.parse(eventConfigsRaw);
-            if (evConf.script_broadcast && evConf.script_broadcast.fixedScriptText) {
-              scriptRaw = evConf.script_broadcast.fixedScriptText;
+            if (evConf.script_broadcast) {
+              if (Array.isArray(evConf.script_broadcast.scriptTabs) && evConf.script_broadcast.scriptTabs.length > 0) {
+                const activeTab = evConf.script_broadcast.scriptTabs.find(t => t.active) || 
+                  evConf.script_broadcast.scriptTabs.find(t => t.id === evConf.script_broadcast.activeScriptTabId) || 
+                  evConf.script_broadcast.scriptTabs[0];
+                if (activeTab && activeTab.fixedScriptText) {
+                  scriptRaw = activeTab.fixedScriptText;
+                }
+              }
+              if (!scriptRaw && evConf.script_broadcast.fixedScriptText) {
+                scriptRaw = evConf.script_broadcast.fixedScriptText;
+              }
             }
           } catch (e) {}
         }
