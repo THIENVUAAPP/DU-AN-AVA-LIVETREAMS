@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.7.4';
+export const APP_VERSION = '2.7.5';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🔥 Nâng Cấp Master Female Voice Ultra Emotive DNA v3.0 (40 Giọng Nữ)',
-    description: 'Chia làm 2 tầng độ tuổi rõ rệt: 20 giọng 20-24t (Trẻ trung, tươi sáng, hoạt ngôn, bắt trend, giật hook) và 20 giọng 24-28t (Trưởng thành, sâu lắng, quyến rũ, chốt deal thượng đỉnh). 100% độc bản, chuẩn ngữ pháp tiếng Việt, âm sắc lôi cuốn và truyền cảm chạm đến trái tim.'
+    title: '✨ Chuẩn Hóa Độ Tuổi & Phong Cách Giọng Đọc (Trẻ 20–24t & Trưởng Thành 24–28t)',
+    description: 'Cập nhật phân loại độ tuổi chính xác tuyệt đối trên bảng cấu hình giọng Ava Live, Giọng Hot Trend và Giọng Bán Hàng. Phân tách rõ ràng nhóm Trẻ 20–24t (xanh lá) và Trưởng Thành 24–28t (xanh dương) cùng các nhóm 28–40t và 40–70t.'
+  },
+  {
+    title: '🔥 Master Female Voice Ultra Emotive DNA v3.0 (40 Giọng Nữ)',
+    description: 'Tích hợp trọn bộ 40 giọng nữ Ultra Emotive DNA v3.0 độc bản với 20 giọng 20-24t (hoạt ngôn, bắt trend, giật hook) và 20 giọng 24-28t (sâu lắng, quyến rũ, chốt deal đỉnh cao).'
   },
   {
     title: '🎙️ First-Note & Onset Signature Độc Quyền',
-    description: 'Mỗi giọng đọc sở hữu âm đầu tiên (onset), khoảng ngắt nghỉ (micro-pause), cao độ động (pitch contour) và bộ xử lý âm sắc DSP phòng thu riêng biệt, loại bỏ hoàn toàn hiện tượng giọng máy móc hay na ná nhau.'
-  },
-  {
-    title: '📊 Tự Động Đồng Bộ Bộ Đếm Số Lượng Giọng Cho Mọi Tab & Danh Mục',
-    description: 'Hệ thống tab Giọng Ava Live, Giọng Hot Trend, Giọng Bán Hàng & Dịch Vụ và các bộ lọc tự động tính toán chính xác số lượng giọng theo thời gian thực.'
+    description: 'Mỗi giọng đọc sở hữu âm đầu tiên (onset), khoảng ngắt nghỉ (micro-pause), cao độ động (pitch contour) và bộ xử lý âm sắc DSP phòng thu riêng biệt.'
   }
 ];
 

@@ -24,6 +24,91 @@ const MAIN_VOICES = [...ALL_SYSTEM_VOICES];
 const ASSISTANT_VOICES = [...ALL_SYSTEM_VOICES];
 const GAME_VOICES = [...ALL_SYSTEM_VOICES];
 
+export const getVoiceAgeBadge = (v) => {
+  if (!v) return { text: 'Trẻ 20–28t', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+
+  if (
+    v.ageRange === '20-24' || 
+    v.dna?.persona?.age === '20-24' || 
+    v.ageGroup === 'young_20_24' ||
+    v.name?.includes('20–24') || 
+    v.name?.includes('20-24') ||
+    v.name?.includes('20-24t')
+  ) {
+    return {
+      text: 'Trẻ 20–24t',
+      color: 'bg-emerald-50 text-emerald-700 border-emerald-200'
+    };
+  }
+
+  if (
+    v.ageRange === '24-28' || 
+    v.dna?.persona?.age === '24-28' || 
+    v.ageGroup === 'young_24_28' ||
+    v.name?.includes('24–28') || 
+    v.name?.includes('24-28') ||
+    v.name?.includes('24-28t')
+  ) {
+    return {
+      text: 'Trưởng Thành 24–28t',
+      color: 'bg-blue-50 text-blue-700 border-blue-200'
+    };
+  }
+
+  if (
+    v.ageGroup === 'senior' || 
+    v.ageGroup === 'elder' || 
+    v.category?.includes('Lão Niên') || 
+    v.category?.includes('40-70t') || 
+    v.category?.includes('40–70') || 
+    v.name?.includes('40-70') || 
+    v.name?.includes('40–70') || 
+    v.dna?.persona?.age === '40-70' || 
+    v.dna?.persona?.age === '55-70'
+  ) {
+    return {
+      text: 'Trung / Lão Niên 40–70t',
+      color: 'bg-amber-50 text-amber-700 border-amber-200'
+    };
+  }
+
+  if (
+    v.ageGroup === 'middle' || 
+    v.ageGroup === 'mature' || 
+    v.category?.includes('28-40t') || 
+    v.category?.includes('28–40') || 
+    v.name?.includes('28-40') || 
+    v.name?.includes('28–40') || 
+    v.dna?.persona?.age === '28-40' || 
+    v.dna?.persona?.age === '30-45' || 
+    v.dna?.persona?.age === '38-50'
+  ) {
+    return {
+      text: 'Trưởng Thành 28–40t',
+      color: 'bg-purple-50 text-purple-700 border-purple-200'
+    };
+  }
+
+  if (v.ageGroup === 'young' || v.category?.includes('20-28t') || v.name?.includes('20-28t')) {
+    return {
+      text: 'Trẻ 20–28t',
+      color: 'bg-emerald-50 text-emerald-700 border-emerald-200'
+    };
+  }
+
+  if (v.dna?.persona?.age) {
+    return {
+      text: `${v.dna.persona.age} tuổi`,
+      color: 'bg-teal-50 text-teal-700 border-teal-200'
+    };
+  }
+
+  return {
+    text: 'Trẻ 20–28t',
+    color: 'bg-emerald-50 text-emerald-700 border-emerald-200'
+  };
+};
+
 export default function GeneralSettings({ onClose = () => {} }) {
   const [activeTab, setActiveTab] = useState('prompt');
   const [idleVideoCount, setIdleVideoCount] = useState(0);
@@ -2301,12 +2386,7 @@ IDOL MỈM CƯỜI + GESTURE
                           const isPlaying = previewingVoiceId === v.id;
                           const isFav = favoriteVoiceIds.includes(v.id);
                           const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
-                          const ageBadgeText = (v.ageGroup === 'senior' || v.ageGroup === 'elder' || v.ageGroup === 'mature') 
-                            ? 'Trung Niên 40-70t' 
-                            : (v.ageGroup === 'middle' ? 'Trưởng Thành 28-40t' : 'Trẻ 20-28t');
-                          const ageBadgeColor = (v.ageGroup === 'senior' || v.ageGroup === 'elder' || v.ageGroup === 'mature') 
-                            ? 'bg-amber-50 text-amber-700 border-amber-200' 
-                            : (v.ageGroup === 'middle' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200');
+                          const { text: ageBadgeText, color: ageBadgeColor } = getVoiceAgeBadge(v);
 
                           return (
                             <tr 
@@ -2780,12 +2860,7 @@ IDOL MỈM CƯỜI + GESTURE
                         const isPlaying = previewingVoiceId === v.id;
                         const isFav = favoriteVoiceIds.includes(v.id);
                         const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
-                        const ageBadgeText = (v.ageGroup === 'senior' || v.ageGroup === 'elder' || v.ageGroup === 'mature') 
-                          ? 'Trung Niên 40-70t' 
-                          : (v.ageGroup === 'middle' ? 'Trưởng Thành 28-40t' : 'Trẻ 20-28t');
-                        const ageBadgeColor = (v.ageGroup === 'senior' || v.ageGroup === 'elder' || v.ageGroup === 'mature') 
-                          ? 'bg-amber-50 text-amber-700 border-amber-200' 
-                          : (v.ageGroup === 'middle' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200');
+                        const { text: ageBadgeText, color: ageBadgeColor } = getVoiceAgeBadge(v);
 
                         return (
                           <tr 
@@ -3501,13 +3576,7 @@ IDOL MỈM CƯỜI + GESTURE
                           const isPlaying = previewingVoiceId === v.id;
                           const isFav = favoriteVoiceIds.includes(v.id);
                           const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
-
-                          const ageBadgeText = (v.ageGroup === 'senior' || v.ageGroup === 'elder' || v.ageGroup === 'mature') 
-                            ? 'Trung Niên 40-70t' 
-                            : (v.ageGroup === 'middle' ? 'Trưởng Thành 28-40t' : 'Trẻ 20-28t');
-                          const ageBadgeColor = (v.ageGroup === 'senior' || v.ageGroup === 'elder' || v.ageGroup === 'mature') 
-                            ? 'bg-amber-50 text-amber-700 border-amber-200' 
-                            : (v.ageGroup === 'middle' ? 'bg-blue-50 text-blue-700 border-blue-200' : 'bg-emerald-50 text-emerald-700 border-emerald-200');
+                          const { text: ageBadgeText, color: ageBadgeColor } = getVoiceAgeBadge(v);
 
                           return (
                             <tr 
