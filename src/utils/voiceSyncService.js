@@ -1679,23 +1679,24 @@ export const VIETNAMESE_SALES_VOICES = [
 export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
   {
     "id": "vn_f_sales_south_sweet_01",
-    "name": "[NEW] 01. Miền Nam Ngọt Ngào Chốt Đơn 👑 (VN-F-SALES-SOUTH-SWEET)",
+    "name": "[v3.0] 01. Sweet Spark 👑 (Nữ 20-24t - Miền Nam Ngọt Ngào, Bắt Tai)",
     "provider": "system",
     "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
     "gender": "Female",
     "lang": "vi-VN",
     "region": "vi",
     "dialect": "nam",
     "ageGroup": "young",
+    "ageRange": "20-24",
     "styleCategory": "banhang",
-    "category": "🔥 [NEW] Bán Hàng & Chốt Đơn",
-    "pitch": 1.05,
+    "category": "🔥 [v3.0] 20-24t • Bán Hàng & Chốt Deal",
+    "pitch": 1.06,
     "rate": 1.04,
     "recommendedFor": "both",
-    "desc": "Giọng nữ miền Nam phổ thông ngọt ngào, mềm và thân thiện, tạo thiện cảm cực cao, chốt đơn tự nhiên không gượng ép.",
-    "sampleText": "Dạ em xin chào cả nhà mình nha! Hôm nay em mang đến cho mấy chị một deal siêu hời luôn nè, ai chốt đơn liền tay trên live là được tặng ngay quà xịn nha!",
-    "edgePitch": "+5%",
+    "desc": "Giọng nữ miền Nam 20-24t ngọt ngào, tươi sáng, mở âm nụ cười thu hút ngay từ từ đầu tiên, chốt đơn tự nhiên và dễ mến.",
+    "sampleText": "Dạ em chào cả nhà mình nha! Hôm nay em mang đến một bất ngờ siêu ngọt ngào luôn nè, ai chốt đơn liền tay trên live là có quà xịn liền nha!",
+    "edgePitch": "+6%",
     "edgeRate": "+4%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
@@ -1706,70 +1707,60 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "accent_strength": 55
       },
       "persona": {
-        "age": "24-30",
-        "personality": "vui, gần gũi, dễ tạo thiện cảm",
-        "authority": 70,
-        "friendliness": 96
+        "age": "20-24",
+        "personality": "ngọt ngào, tươi vui, gần gũi, cuốn hút",
+        "authority": 72,
+        "friendliness": 98
       },
       "style": {
         "primary": "livestream_sales",
         "secondary": [
-          "consulting",
+          "sweet_consulting",
           "soft_cta",
-          "natural_closing"
+          "smile_closing"
         ]
       },
       "emotion": {
-        "warmth": 92,
-        "happiness": 88,
+        "warmth": 96,
+        "happiness": 91,
         "excitement": 82,
-        "confidence": 86,
-        "urgency": 55,
-        "empathy": 87
-      },
-      "performance": {
-        "vocal_placement": "mouth-forward",
-        "texture": "warm, silky-clean",
-        "pitch": 72,
-        "depth": 34,
-        "warmth": 91,
-        "resonance": 55,
-        "breathiness": 18,
-        "clarity": 94,
-        "articulation": 93,
-        "speed": 82,
-        "rhythm": 86,
-        "intonation": 91,
-        "energy": 87,
-        "emphasis": 88,
-        "pause": 42,
-        "word_duration": "kéo nhẹ từ thân mật",
-        "sentence_ending": "hạ nhẹ",
-        "character": "nguyên âm tròn, phụ âm mềm; cuối câu hạ nhẹ; kéo nhẹ từ thân mật"
+        "confidence": 82,
+        "urgency": 58,
+        "empathy": 90
       },
       "acoustic": {
-        "pitch": 72,
-        "depth": 34,
-        "warmth": 91,
-        "resonance": 55,
+        "pitch": 78,
+        "pitch_range": 72,
+        "depth": 25,
+        "warmth": 94,
+        "resonance": 48,
         "breathiness": 18,
-        "clarity": 94,
-        "articulation": 93,
-        "speed": 82,
-        "rhythm": 86,
-        "intonation": 91,
-        "energy": 87,
-        "emphasis": 88,
-        "pause": 42
+        "clarity": 93,
+        "articulation": 91,
+        "speed": 79,
+        "rhythm": 87,
+        "intonation": 94,
+        "energy": 86,
+        "emphasis": 86,
+        "pause": 43
+      },
+      "performance": {
+        "vocal_placement": "head/oral-forward",
+        "texture": "silky-bright",
+        "mouth_profile": "rounded-medium",
+        "onset": "smile + gentle pitch lift",
+        "ending": "warm-fall",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
       }
     },
     "dspProfile": {
       "lowGain": -0.5,
-      "midFreq": 1300,
+      "midFreq": 1350,
       "midGain": 2.8,
       "presenceFreq": 4200,
       "presenceGain": 5.2,
-      "highGain": 3.5,
+      "highGain": 3.8,
       "reverb": 0.05,
       "reverbDecay": 0.32,
       "compressor": {
@@ -1781,202 +1772,91 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     }
   },
   {
-    "id": "vn_f_sales_north_pro_02",
-    "name": "[NEW] 02. Nữ Bắc Thanh Lịch Bán Hàng 👑 (VN-F-SALES-NORTH-PRO)",
+    "id": "vn_f_sales_north_energy_02",
+    "name": "[v3.0] 02. Bright Bullet 👑 (Nữ 20-24t - Nữ Bắc Hoạt Ngôn Siêu Tốc)",
     "provider": "system",
     "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
     "gender": "Female",
     "lang": "vi-VN",
     "region": "vi",
     "dialect": "bac",
     "ageGroup": "young",
+    "ageRange": "20-24",
     "styleCategory": "banhang",
-    "category": "🔥 [NEW] Bán Hàng & Chốt Đơn",
-    "pitch": 0.98,
-    "rate": 1.01,
+    "category": "🔥 [v3.0] 20-24t • Bán Hàng & Chốt Deal",
+    "pitch": 1.08,
+    "rate": 1.12,
     "recommendedFor": "both",
-    "desc": "Giọng nữ Bắc thanh lịch, chuyên nghiệp, lập luận chặt chẽ đáng tin cậy, phù hợp dòng sản phẩm cao cấp và tư vấn chuyên gia.",
-    "sampleText": "Chào các anh chị đang theo dõi livestream! Sản phẩm hôm nay được cam kết chính hãng 100% nguyên seal với đầy đủ chứng nhận chất lượng cao nhất.",
-    "edgePitch": "-2%",
-    "edgeRate": "+1%",
+    "desc": "Giọng nữ Bắc trẻ cực kỳ nhanh nhạy, phụ âm bật sắc nét, năng lượng bùng nổ xử lý mọi tương tác bình luận trong chớp mắt.",
+    "sampleText": "Chào mừng các bác đã ghé livestream của em! Deal độc quyền giá sốc chỉ mở đúng trong 60 giây thôi, các bác nhanh tay bấm mua ngay kẻo lỡ nha!",
+    "edgePitch": "+8%",
+    "edgeRate": "+12%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
         "country": "VN",
         "region": "NORTH",
-        "accent": "Northern Standard",
+        "accent": "Northern Conversational",
         "accent_strength": 65
       },
       "persona": {
-        "age": "28-38",
-        "personality": "thanh lịch, có kiến thức, đáng tin",
-        "authority": 88,
-        "friendliness": 78
+        "age": "20-24",
+        "personality": "nhanh nhạy, sắc sảo, tự tin, hoạt ngôn",
+        "authority": 80,
+        "friendliness": 90
       },
       "style": {
-        "primary": "expert_sales",
+        "primary": "rapid_sales",
         "secondary": [
-          "luxury_live",
-          "logical_sales"
+          "fast_reaction",
+          "flash_sale",
+          "comment_interaction"
         ]
       },
       "emotion": {
-        "warmth": 78,
-        "happiness": 64,
-        "excitement": 68,
-        "confidence": 93,
-        "urgency": 40,
-        "empathy": 76
+        "warmth": 81,
+        "happiness": 92,
+        "excitement": 98,
+        "confidence": 88,
+        "urgency": 88,
+        "empathy": 75
+      },
+      "acoustic": {
+        "pitch": 81,
+        "pitch_range": 86,
+        "depth": 21,
+        "warmth": 81,
+        "resonance": 44,
+        "breathiness": 12,
+        "clarity": 95,
+        "articulation": 94,
+        "speed": 96,
+        "rhythm": 98,
+        "intonation": 98,
+        "energy": 99,
+        "emphasis": 96,
+        "pause": 20
       },
       "performance": {
         "vocal_placement": "oral-forward",
-        "texture": "clean, crisp, controlled",
-        "pitch": 58,
-        "depth": 52,
-        "warmth": 76,
-        "resonance": 70,
-        "breathiness": 10,
-        "clarity": 97,
-        "articulation": 98,
-        "speed": 72,
-        "rhythm": 74,
-        "intonation": 79,
-        "energy": 74,
-        "emphasis": 87,
-        "pause": 62,
-        "word_duration": "ít kéo chữ, phát âm chuẩn xác",
-        "sentence_ending": "kết câu chắc chắn",
-        "character": "khẩu hình gọn, phụ âm sắc, nguyên âm rõ; kết câu chắc, ít kéo chữ"
-      },
-      "acoustic": {
-        "pitch": 58,
-        "depth": 52,
-        "warmth": 76,
-        "resonance": 70,
-        "breathiness": 10,
-        "clarity": 97,
-        "articulation": 98,
-        "speed": 72,
-        "rhythm": 74,
-        "intonation": 79,
-        "energy": 74,
-        "emphasis": 87,
-        "pause": 62
+        "texture": "crisp-bright",
+        "mouth_profile": "compact-fast",
+        "onset": "rapid onset + punchy consonants",
+        "ending": "energetic fall",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
       }
     },
     "dspProfile": {
-      "lowGain": 2,
-      "midFreq": 1050,
-      "midGain": 2.5,
-      "presenceFreq": 3500,
-      "presenceGain": 4.5,
-      "highGain": 2.2,
-      "reverb": 0.05,
-      "reverbDecay": 0.3,
-      "compressor": {
-        "threshold": -18,
-        "ratio": 3.5,
-        "attack": 0.008,
-        "release": 0.18
-      }
-    }
-  },
-  {
-    "id": "vn_f_sales_south_energy_03",
-    "name": "[NEW] 03. Nữ Livestream Năng Lượng Cao 👑 (VN-F-SALES-SOUTH-ENERGY)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "nam",
-    "ageGroup": "young",
-    "styleCategory": "banhang",
-    "category": "🔥 [NEW] Bán Hàng & Chốt Đơn",
-    "pitch": 1.09,
-    "rate": 1.11,
-    "recommendedFor": "both",
-    "desc": "Giọng nữ hoạt bát, năng lượng bùng nổ, nhịp điệu dồn dập, chuyên trị flash sale, tạo nhiệt tương tác TikTok Live.",
-    "sampleText": "Mọi người ơi vào live bấm tim liên tục giúp em nha! Flash sale chớp nhoáng chỉ còn đúng 20 suất duy nhất cho ai nhanh tay nhất thôi nè!",
-    "edgePitch": "+9%",
-    "edgeRate": "+11%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "SOUTH",
-        "accent": "Southern Neutral",
-        "accent_strength": 48
-      },
-      "persona": {
-        "age": "22-28",
-        "personality": "hoạt bát, hướng ngoại",
-        "authority": 70,
-        "friendliness": 92
-      },
-      "style": {
-        "primary": "TikTok Live",
-        "secondary": [
-          "flash_sale",
-          "comment_interaction",
-          "strong_cta"
-        ]
-      },
-      "emotion": {
-        "warmth": 82,
-        "happiness": 94,
-        "excitement": 97,
-        "confidence": 90,
-        "urgency": 82,
-        "empathy": 72
-      },
-      "performance": {
-        "vocal_placement": "forward",
-        "texture": "bright, lively, crisp",
-        "pitch": 78,
-        "depth": 27,
-        "warmth": 82,
-        "resonance": 48,
-        "breathiness": 16,
-        "clarity": 91,
-        "articulation": 89,
-        "speed": 94,
-        "rhythm": 95,
-        "intonation": 96,
-        "energy": 98,
-        "emphasis": 97,
-        "pause": 28,
-        "word_duration": "nhóm từ ngắn, linh hoạt",
-        "sentence_ending": "cuối câu bật sáng",
-        "character": "câu ngắn, nhịp đảo, chuyển tốc độ nhanh/chậm, cuối câu bật sáng"
-      },
-      "acoustic": {
-        "pitch": 78,
-        "depth": 27,
-        "warmth": 82,
-        "resonance": 48,
-        "breathiness": 16,
-        "clarity": 91,
-        "articulation": 89,
-        "speed": 94,
-        "rhythm": 95,
-        "intonation": 96,
-        "energy": 98,
-        "emphasis": 97,
-        "pause": 28
-      }
-    },
-    "dspProfile": {
-      "lowGain": -1.2,
+      "lowGain": 0.2,
       "midFreq": 1450,
       "midGain": 3.2,
-      "presenceFreq": 4500,
+      "presenceFreq": 4400,
       "presenceGain": 5.8,
       "highGain": 4.2,
       "reverb": 0.04,
-      "reverbDecay": 0.25,
+      "reverbDecay": 0.24,
       "compressor": {
         "threshold": -22,
         "ratio": 4.5,
@@ -1986,201 +1866,278 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     }
   },
   {
-    "id": "vn_f_sales_north_energy_04",
-    "name": "[NEW] 04. Nữ Bắc Hoạt Ngôn 👑 (VN-F-SALES-NORTH-ENERGY)",
+    "id": "vn_f_sales_cute_03",
+    "name": "[v3.0] 03. Cute Wave 👑 (Nữ 20-24t - Dễ Thương Tự Nhiên, Hút Fan)",
     "provider": "system",
     "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
     "gender": "Female",
     "lang": "vi-VN",
     "region": "vi",
-    "dialect": "bac",
+    "dialect": "nam",
     "ageGroup": "young",
+    "ageRange": "20-24",
     "styleCategory": "banhang",
-    "category": "🔥 [NEW] Bán Hàng & Chốt Đơn",
-    "pitch": 1.06,
+    "category": "🔥 [v3.0] 20-24t • Bán Hàng & Chốt Deal",
+    "pitch": 1.11,
+    "rate": 1.02,
+    "recommendedFor": "both",
+    "desc": "Giọng nữ trẻ dễ thương tự nhiên, không làm nũng giả tạo, âm hơi nhẹ nhàng tạo cảm giác cưng xỉu cho sản phẩm phụ kiện, thời trang.",
+    "sampleText": "Hihi chiếc áo này xinh xỉu luôn á mọi người ơi! Mặc lên tôn dáng cực kỳ, nhìn là mê liền luôn đó nha!",
+    "edgePitch": "+11%",
+    "edgeRate": "+2%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "SOUTH",
+        "accent": "Southern Youthful",
+        "accent_strength": 52
+      },
+      "persona": {
+        "age": "20-24",
+        "personality": "dễ thương, trong sáng, đáng yêu, vui tươi",
+        "authority": 60,
+        "friendliness": 100
+      },
+      "style": {
+        "primary": "cute_sales",
+        "secondary": [
+          "fashion_accessories",
+          "fan_magnet",
+          "lifestyle"
+        ]
+      },
+      "emotion": {
+        "warmth": 95,
+        "happiness": 97,
+        "excitement": 88,
+        "confidence": 78,
+        "playfulness": 94,
+        "empathy": 88
+      },
+      "acoustic": {
+        "pitch": 86,
+        "pitch_range": 82,
+        "depth": 18,
+        "warmth": 92,
+        "resonance": 36,
+        "breathiness": 27,
+        "clarity": 89,
+        "articulation": 86,
+        "speed": 76,
+        "rhythm": 85,
+        "intonation": 99,
+        "energy": 89,
+        "emphasis": 82,
+        "pause": 38
+      },
+      "performance": {
+        "vocal_placement": "head-forward",
+        "texture": "airy-soft",
+        "mouth_profile": "soft-round",
+        "onset": "cute smile breath",
+        "ending": "playful lift",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": -1.8,
+      "midFreq": 1600,
+      "midGain": 3,
+      "presenceFreq": 4800,
+      "presenceGain": 6,
+      "highGain": 4.6,
+      "reverb": 0.06,
+      "reverbDecay": 0.32,
+      "compressor": {
+        "threshold": -20,
+        "ratio": 3.5,
+        "attack": 0.005,
+        "release": 0.16
+      }
+    }
+  },
+  {
+    "id": "vn_f_sales_south_energy_04",
+    "name": "[v3.0] 04. Live Queen 👑 (Nữ 20-24t - Nữ Hoàng Livestream Hoạt Náo)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "nam",
+    "ageGroup": "young",
+    "ageRange": "20-24",
+    "styleCategory": "banhang",
+    "category": "🔥 [v3.0] 20-24t • Bán Hàng & Chốt Deal",
+    "pitch": 1.07,
     "rate": 1.09,
     "recommendedFor": "both",
-    "desc": "Giọng nữ Bắc lanh lợi, hoạt ngôn, xử lý tình huống phản hồi bình luận cực nhanh, sắc sảo và dí dỏm.",
-    "sampleText": "Dạ em chào anh chị mới vào xem nha! Em vừa ghim mã giảm 50k trên màn hình rồi, các bác nhanh tay bấm mua ngay kẻo hết lượt nha!",
-    "edgePitch": "+6%",
+    "desc": "Giọng nữ livestream chuyên nghiệp, tương phản âm lượng và nhịp điệu đỉnh cao, kéo view giữ chân từ đầu tới cuối phiên.",
+    "sampleText": "Cả nhà mình ơi bấm tim liên tục giúp em nha! Chuẩn bị đếm ngược 3 giây để mở kho 50 suất giảm nửa giá đây ạ!",
+    "edgePitch": "+7%",
     "edgeRate": "+9%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
         "country": "VN",
-        "region": "NORTH",
-        "accent": "Northern Conversational",
-        "accent_strength": 68
+        "region": "SOUTH",
+        "accent": "Southern Live Pro",
+        "accent_strength": 55
       },
       "persona": {
-        "age": "23-32",
-        "personality": "lanh lợi, hoạt ngôn",
-        "authority": 75,
-        "friendliness": 90
+        "age": "20-24",
+        "personality": "hoạt náo, nhiệt huyết, lôi cuốn, chuyên nghiệp",
+        "authority": 85,
+        "friendliness": 95
       },
       "style": {
-        "primary": "live_interaction",
+        "primary": "live_hosting",
         "secondary": [
-          "comment_response",
-          "witty_sales"
+          "mega_sales",
+          "audience_retention",
+          "fast_cta"
         ]
       },
       "emotion": {
-        "warmth": 79,
-        "happiness": 91,
-        "excitement": 90,
-        "confidence": 89,
-        "urgency": 75,
-        "empathy": 78
-      },
-      "performance": {
-        "vocal_placement": "oral-forward",
-        "texture": "bright, crisp",
-        "pitch": 73,
-        "depth": 35,
-        "warmth": 79,
-        "resonance": 53,
-        "breathiness": 12,
-        "clarity": 96,
-        "articulation": 95,
-        "speed": 91,
-        "rhythm": 92,
-        "intonation": 94,
-        "energy": 94,
-        "emphasis": 93,
-        "pause": 32,
-        "word_duration": "nhịp dồn vừa, linh hoạt",
-        "sentence_ending": "câu hỏi rise rõ",
-        "character": "nhịp dồn vừa, micro-pause giữa ý, câu hỏi rise rõ"
+        "warmth": 83,
+        "happiness": 94,
+        "excitement": 97,
+        "confidence": 92,
+        "urgency": 86,
+        "empathy": 80
       },
       "acoustic": {
-        "pitch": 73,
-        "depth": 35,
-        "warmth": 79,
-        "resonance": 53,
-        "breathiness": 12,
-        "clarity": 96,
-        "articulation": 95,
-        "speed": 91,
-        "rhythm": 92,
-        "intonation": 94,
-        "energy": 94,
-        "emphasis": 93,
-        "pause": 32
+        "pitch": 77,
+        "pitch_range": 88,
+        "depth": 26,
+        "warmth": 83,
+        "resonance": 51,
+        "breathiness": 11,
+        "clarity": 94,
+        "articulation": 92,
+        "speed": 89,
+        "rhythm": 95,
+        "intonation": 97,
+        "energy": 99,
+        "emphasis": 95,
+        "pause": 27
+      },
+      "performance": {
+        "vocal_placement": "forward",
+        "texture": "bright-punchy",
+        "mouth_profile": "open-energetic",
+        "onset": "hook contrast lift",
+        "ending": "firm punch landing",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
       }
     },
     "dspProfile": {
-      "lowGain": 0.5,
-      "midFreq": 1350,
-      "midGain": 3,
-      "presenceFreq": 4000,
-      "presenceGain": 5,
-      "highGain": 3.8,
-      "reverb": 0.04,
+      "lowGain": -0.8,
+      "midFreq": 1400,
+      "midGain": 3.2,
+      "presenceFreq": 4300,
+      "presenceGain": 5.6,
+      "highGain": 4.2,
+      "reverb": 0.05,
       "reverbDecay": 0.28,
       "compressor": {
-        "threshold": -20,
-        "ratio": 4,
-        "attack": 0.005,
+        "threshold": -21,
+        "ratio": 4.2,
+        "attack": 0.004,
         "release": 0.14
       }
     }
   },
   {
     "id": "vn_f_sales_meko_sweet_05",
-    "name": "[NEW] 05. Nữ Miền Tây Chân Chất Ngọt Ngào 👑 (VN-F-SALES-MEKO-SWEET)",
+    "name": "[v3.0] 05. Mekong Honey 👑 (Nữ 20-24t - Gái Miền Tây Ngọt Ngào, Chân Tình)",
     "provider": "system",
     "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
     "gender": "Female",
     "lang": "vi-VN",
     "region": "vi",
     "dialect": "tay",
     "ageGroup": "young",
+    "ageRange": "20-24",
     "styleCategory": "banhang",
-    "category": "🔥 [NEW] Bán Hàng & Chốt Đơn",
-    "pitch": 1.04,
+    "category": "🔥 [v3.0] 20-24t • Bán Hàng & Chốt Deal",
+    "pitch": 1.05,
     "rate": 0.98,
     "recommendedFor": "both",
-    "desc": "Giọng nữ miền Tây chân tình, ngọt lịm như mía lùi, tạo cảm giác mộc mạc tin cậy tuyệt đối cho hàng gia đình, nông sản, ăn vặt.",
-    "sampleText": "Dạ bà con cô bác ơi, trái cây với đặc sản nhà em làm thủ công bao ngon bao sạch luôn nha, ủng hộ em gái miền Tây một đơn nha!",
-    "edgePitch": "+4%",
+    "desc": "Giọng nữ miền Tây ngọt lịm, mộc mạc, chân thành như người nhà, chinh phục lòng tin cho đặc sản vùng miền, nông sản sạch.",
+    "sampleText": "Dạ bà con cô bác ơi, mẻ bánh với trái cây này nhà em tự tay chọn lựa kỹ càng lắm, bà con ủng hộ em gái nhỏ một đơn nha!",
+    "edgePitch": "+5%",
     "edgeRate": "-2%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
         "country": "VN",
         "region": "MEKONG",
-        "accent": "Mekong River Delta",
-        "accent_strength": 72
+        "accent": "Mekong River Native",
+        "accent_strength": 75
       },
       "persona": {
-        "age": "25-35",
-        "personality": "chân thành, dễ mến, mộc mạc",
-        "authority": 65,
-        "friendliness": 98
+        "age": "20-24",
+        "personality": "chân chất, ngọt ngào, hiền lành, dễ thương",
+        "authority": 66,
+        "friendliness": 99
       },
       "style": {
-        "primary": "intimate_sales",
+        "primary": "sincere_sales",
         "secondary": [
+          "local_specialties",
           "family_products",
-          "local_specialty",
-          "lifestyle"
+          "natural_story"
         ]
       },
       "emotion": {
-        "warmth": 96,
-        "happiness": 84,
-        "excitement": 70,
-        "confidence": 81,
+        "warmth": 99,
+        "happiness": 88,
+        "excitement": 72,
+        "confidence": 80,
         "urgency": 35,
-        "empathy": 92
-      },
-      "performance": {
-        "vocal_placement": "relaxed",
-        "texture": "warm, soft, rounded",
-        "pitch": 69,
-        "depth": 38,
-        "warmth": 96,
-        "resonance": 52,
-        "breathiness": 20,
-        "clarity": 88,
-        "articulation": 87,
-        "speed": 73,
-        "rhythm": 78,
-        "intonation": 89,
-        "energy": 78,
-        "emphasis": 80,
-        "pause": 52,
-        "word_duration": "ngân nhẹ",
-        "sentence_ending": "kết câu mềm",
-        "character": "nguyên âm mềm/tròn, nhịp thong thả, ngân nhẹ, kết câu mềm; không caricature"
+        "empathy": 94
       },
       "acoustic": {
-        "pitch": 69,
-        "depth": 38,
-        "warmth": 96,
-        "resonance": 52,
-        "breathiness": 20,
-        "clarity": 88,
-        "articulation": 87,
-        "speed": 73,
-        "rhythm": 78,
-        "intonation": 89,
-        "energy": 78,
-        "emphasis": 80,
-        "pause": 52
+        "pitch": 74,
+        "pitch_range": 65,
+        "depth": 28,
+        "warmth": 99,
+        "resonance": 49,
+        "breathiness": 23,
+        "clarity": 87,
+        "articulation": 85,
+        "speed": 71,
+        "rhythm": 76,
+        "intonation": 91,
+        "energy": 75,
+        "emphasis": 79,
+        "pause": 55
+      },
+      "performance": {
+        "vocal_placement": "relaxed oral",
+        "texture": "rounded-warm",
+        "mouth_profile": "soft-mellow",
+        "onset": "warm intimate smile",
+        "ending": "soft fade",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
       }
     },
     "dspProfile": {
-      "lowGain": 1.5,
+      "lowGain": 1.2,
       "midFreq": 1150,
       "midGain": 2.6,
-      "presenceFreq": 3600,
-      "presenceGain": 4.2,
+      "presenceFreq": 3700,
+      "presenceGain": 4.4,
       "highGain": 2.8,
-      "reverb": 0.06,
+      "reverb": 0.07,
       "reverbDecay": 0.38,
       "compressor": {
         "threshold": -18,
@@ -2191,103 +2148,94 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     }
   },
   {
-    "id": "vn_f_sales_closer_06",
-    "name": "[NEW] 06. Nữ Chuyên Chốt Sale Quyết Đoán 👑 (VN-F-SALES-CLOSER)",
+    "id": "vn_f_sales_fomo_06",
+    "name": "[v3.0] 06. FOMO Flash 👑 (Nữ 20-24t - Tạo Khẩn Cấp Bùng Nổ Săn Deal)",
     "provider": "system",
     "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
     "gender": "Female",
     "lang": "vi-VN",
     "region": "vi",
     "dialect": "nam",
     "ageGroup": "young",
+    "ageRange": "20-24",
     "styleCategory": "banhang",
-    "category": "🔥 [NEW] Bán Hàng & Chốt Đơn",
-    "pitch": 1.01,
-    "rate": 1.05,
+    "category": "🔥 [v3.0] 20-24t • Bán Hàng & Chốt Deal",
+    "pitch": 1.08,
+    "rate": 1.14,
     "recommendedFor": "both",
-    "desc": "Giọng nữ quyết đoán, thôi thúc chốt deal, xử lý từ chối và tạo áp lực mua hàng không thể cưỡng lại.",
-    "sampleText": "Chỉ còn đúng 30 giây cuối cùng để chốt đơn với mức giá độc quyền này! Bấm vào nút Mua Ngay ở góc trái để không bỏ lỡ!",
-    "edgePitch": "+1%",
-    "edgeRate": "+5%",
+    "desc": "Giọng tạo áp lực khan hiếm đỉnh cao, tăng tốc dồn dập trước CTA, kích thích bấm mua ngay kẻo hết trong 3 giây.",
+    "sampleText": "Chỉ còn đúng 3 suất quà cuối cùng trong giỏ hàng thôi cả nhà ơi! Nhanh tay bấm đặt hàng ngay bây giờ kẻo hệ thống khóa giá nè!",
+    "edgePitch": "+8%",
+    "edgeRate": "+14%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
         "country": "VN",
-        "region": "Vietnamese Neutral",
-        "accent": "Neutral Direct",
-        "accent_strength": 35
+        "region": "SOUTH",
+        "accent": "Southern Flash",
+        "accent_strength": 55
       },
       "persona": {
-        "age": "27-38",
-        "personality": "quyết đoán, sắc bén",
-        "authority": 94,
-        "friendliness": 75
+        "age": "20-24",
+        "personality": "hối hả, quyết liệt, kích thích, lôi cuốn",
+        "authority": 82,
+        "friendliness": 88
       },
       "style": {
-        "primary": "closing",
+        "primary": "flash_sale",
         "secondary": [
-          "CTA_push",
-          "objection_handling",
-          "deal_closing"
+          "fomo_trigger",
+          "scarcity_closing",
+          "countdowns"
         ]
       },
       "emotion": {
-        "warmth": 80,
-        "happiness": 72,
-        "excitement": 88,
-        "confidence": 98,
-        "urgency": 88,
-        "intensity": 95
-      },
-      "performance": {
-        "vocal_placement": "chest-oral balanced",
-        "texture": "firm, dense, clean",
-        "pitch": 62,
-        "depth": 48,
-        "warmth": 80,
-        "resonance": 67,
-        "breathiness": 8,
-        "clarity": 97,
-        "articulation": 96,
-        "speed": 84,
-        "rhythm": 88,
-        "intonation": 93,
-        "energy": 91,
-        "emphasis": 99,
-        "pause": 58,
-        "word_duration": "sharp landing",
-        "sentence_ending": "decisive fall",
-        "character": "phụ âm cuối đóng chắc; pause trước/sau giá; CTA dứt khoát"
+        "warmth": 76,
+        "happiness": 86,
+        "excitement": 97,
+        "confidence": 91,
+        "urgency": 100,
+        "empathy": 68
       },
       "acoustic": {
-        "pitch": 62,
-        "depth": 48,
-        "warmth": 80,
-        "resonance": 67,
-        "breathiness": 8,
-        "clarity": 97,
-        "articulation": 96,
-        "speed": 84,
-        "rhythm": 88,
-        "intonation": 93,
-        "energy": 91,
-        "emphasis": 99,
-        "pause": 58
+        "pitch": 79,
+        "pitch_range": 88,
+        "depth": 22,
+        "warmth": 76,
+        "resonance": 43,
+        "breathiness": 7,
+        "clarity": 95,
+        "articulation": 93,
+        "speed": 94,
+        "rhythm": 96,
+        "intonation": 99,
+        "energy": 100,
+        "emphasis": 100,
+        "pause": 18
+      },
+      "performance": {
+        "vocal_placement": "forward",
+        "texture": "crisp",
+        "mouth_profile": "tight-rapid",
+        "onset": "urgent shock hook",
+        "ending": "sudden acceleration before CTA",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
       }
     },
     "dspProfile": {
-      "lowGain": 2.2,
-      "midFreq": 1200,
-      "midGain": 3.2,
-      "presenceFreq": 3800,
-      "presenceGain": 5.5,
-      "highGain": 3.2,
+      "lowGain": -0.6,
+      "midFreq": 1450,
+      "midGain": 3.5,
+      "presenceFreq": 4500,
+      "presenceGain": 5.8,
+      "highGain": 4.2,
       "reverb": 0.04,
-      "reverbDecay": 0.26,
+      "reverbDecay": 0.22,
       "compressor": {
-        "threshold": -24,
-        "ratio": 5,
+        "threshold": -23,
+        "ratio": 4.8,
         "attack": 0.003,
         "release": 0.1
       }
@@ -2295,24 +2243,25 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
   },
   {
     "id": "vn_f_sales_friend_07",
-    "name": "[NEW] 07. Nữ Bán Hàng Như Bạn Thân 👑 (VN-F-SALES-FRIEND)",
+    "name": "[v3.0] 07. Bestie Live 👑 (Nữ 20-24t - Bán Hàng Như Bạn Thân Tâm Sự)",
     "provider": "system",
     "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
     "gender": "Female",
     "lang": "vi-VN",
     "region": "vi",
     "dialect": "nam",
     "ageGroup": "young",
+    "ageRange": "20-24",
     "styleCategory": "banhang",
-    "category": "🔥 [NEW] Bán Hàng & Chốt Đơn",
+    "category": "🔥 [v3.0] 20-24t • Bán Hàng & Chốt Deal",
     "pitch": 1.04,
-    "rate": 1.02,
+    "rate": 1.01,
     "recommendedFor": "both",
-    "desc": "Giọng nữ tâm sự tự nhiên như bạn bè chia sẻ bí quyết, không có cảm giác đang quảng cáo, chuyển đổi khách hàng trung thành cao.",
-    "sampleText": "Mấy bà ơi xài cái này thích xỉu luôn á, tui dùng hết chai thứ 3 rồi mới dám review cho mấy bà đó nha, mê cực!",
+    "desc": "Giọng nữ chia sẻ bí quyết tự nhiên 100% như hội bạn thân rủ nhau mua sắm, tạo sự gắn kết bền chặt và tin cậy.",
+    "sampleText": "Mấy bà ơi dùng cái này bao ưng luôn á, tui xài suốt mấy tháng nay rồi mới dám mách cho mấy bà đó nha, thích xỉu luôn!",
     "edgePitch": "+4%",
-    "edgeRate": "+2%",
+    "edgeRate": "+1%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -2322,8 +2271,8 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "accent_strength": 58
       },
       "persona": {
-        "age": "24-32",
-        "personality": "thân mật, chân thật, vui vẻ",
+        "age": "20-24",
+        "personality": "thân mật, chân thật, vui tính, dễ gần",
         "authority": 68,
         "friendliness": 100
       },
@@ -2331,51 +2280,42 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "primary": "conversational_sales",
         "secondary": [
           "peer_review",
-          "soft_recommendation"
+          "honest_advice",
+          "bestie_sharing"
         ]
       },
       "emotion": {
-        "warmth": 97,
-        "happiness": 90,
-        "excitement": 78,
+        "warmth": 98,
+        "happiness": 92,
+        "excitement": 80,
         "confidence": 85,
-        "urgency": 30,
-        "empathy": 91
-      },
-      "performance": {
-        "vocal_placement": "relaxed mouth-forward",
-        "texture": "soft conversational",
-        "pitch": 70,
-        "depth": 36,
-        "warmth": 97,
-        "resonance": 45,
-        "breathiness": 24,
-        "clarity": 90,
-        "articulation": 88,
-        "speed": 78,
-        "rhythm": 82,
-        "intonation": 90,
-        "energy": 79,
-        "emphasis": 76,
-        "pause": 46,
-        "word_duration": "nối âm tự nhiên",
-        "sentence_ending": "thoải mái, thả lỏng",
-        "character": "nối âm tự nhiên, micro-variation, không quá hoàn hảo"
+        "urgency": 32,
+        "empathy": 92
       },
       "acoustic": {
-        "pitch": 70,
-        "depth": 36,
-        "warmth": 97,
-        "resonance": 45,
-        "breathiness": 24,
-        "clarity": 90,
-        "articulation": 88,
-        "speed": 78,
-        "rhythm": 82,
+        "pitch": 72,
+        "pitch_range": 66,
+        "depth": 27,
+        "warmth": 98,
+        "resonance": 40,
+        "breathiness": 21,
+        "clarity": 88,
+        "articulation": 84,
+        "speed": 74,
+        "rhythm": 81,
         "intonation": 90,
-        "energy": 79,
-        "emphasis": 76,
-        "pause": 46
+        "energy": 73,
+        "emphasis": 70,
+        "pause": 45
+      },
+      "performance": {
+        "vocal_placement": "relaxed-forward",
+        "texture": "casual-soft",
+        "mouth_profile": "relaxed-natural",
+        "onset": "casual friendly whisper-smile",
+        "ending": "natural conversational variation",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
       }
     },
     "dspProfile": {
@@ -2383,1337 +2323,102 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "midFreq": 1250,
       "midGain": 2.2,
       "presenceFreq": 3900,
-      "presenceGain": 4,
-      "highGain": 3,
-      "reverb": 0.05,
-      "reverbDecay": 0.32,
-      "compressor": {
-        "threshold": -18,
-        "ratio": 3.2,
-        "attack": 0.008,
-        "release": 0.2
-      }
-    }
-  },
-  {
-    "id": "vn_f_sales_luxury_08",
-    "name": "[NEW] 08. Nữ Bán Hàng Cao Cấp Luxury 👑 (VN-F-SALES-LUXURY)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "bac",
-    "ageGroup": "middle",
-    "styleCategory": "banhang",
-    "category": "🔥 [NEW] Bán Hàng & Chốt Đơn",
-    "pitch": 0.95,
-    "rate": 0.94,
-    "recommendedFor": "both",
-    "desc": "Giọng nữ sang trọng, điềm đạm, tôn vinh đẳng cấp sản phẩm hàng hiệu, trang sức, bất động sản và dịch vụ VIP.",
-    "sampleText": "Mỗi chi tiết đều là sự kết tinh hoàn hảo của nghệ thuật thủ công thượng hạng, khẳng định phong cách và vị thế độc bản của chủ nhân.",
-    "edgePitch": "-5%",
-    "edgeRate": "-6%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "NORTH",
-        "accent": "Northern Luxury Neutral",
-        "accent_strength": 60
-      },
-      "persona": {
-        "age": "30-40",
-        "personality": "sang trọng, điềm tĩnh, quý phái",
-        "authority": 92,
-        "friendliness": 72
-      },
-      "style": {
-        "primary": "premium_luxury",
-        "secondary": [
-          "exclusive_sales",
-          "high_ticket_consulting"
-        ]
-      },
-      "emotion": {
-        "warmth": 83,
-        "happiness": 58,
-        "excitement": 50,
-        "confidence": 96,
-        "urgency": 20,
-        "empathy": 75
-      },
-      "performance": {
-        "vocal_placement": "low oral-chest",
-        "texture": "velvety, dense",
-        "pitch": 52,
-        "depth": 64,
-        "warmth": 83,
-        "resonance": 82,
-        "breathiness": 12,
-        "clarity": 98,
-        "articulation": 96,
-        "speed": 61,
-        "rhythm": 65,
-        "intonation": 70,
-        "energy": 65,
-        "emphasis": 81,
-        "pause": 76,
-        "word_duration": "chậm rãi, ngân sâu",
-        "sentence_ending": "hạ thanh lịch",
-        "character": "chậm, ít pitch jump, pause dài, kết câu hạ thanh lịch"
-      },
-      "acoustic": {
-        "pitch": 52,
-        "depth": 64,
-        "warmth": 83,
-        "resonance": 82,
-        "breathiness": 12,
-        "clarity": 98,
-        "articulation": 96,
-        "speed": 61,
-        "rhythm": 65,
-        "intonation": 70,
-        "energy": 65,
-        "emphasis": 81,
-        "pause": 76
-      }
-    },
-    "dspProfile": {
-      "lowGain": 3.5,
-      "midFreq": 950,
-      "midGain": 2.2,
-      "presenceFreq": 3200,
-      "presenceGain": 3.8,
-      "highGain": 2,
-      "reverb": 0.08,
-      "reverbDecay": 0.45,
-      "compressor": {
-        "threshold": -16,
-        "ratio": 3,
-        "attack": 0.015,
-        "release": 0.25
-      }
-    }
-  },
-  {
-    "id": "vn_f_sales_fomo_09",
-    "name": "[NEW] 09. Nữ Tạo Khẩn Cấp FOMO Deal Khủng 👑 (VN-F-SALES-FOMO)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "nam",
-    "ageGroup": "young",
-    "styleCategory": "banhang",
-    "category": "🔥 [NEW] Bán Hàng & Chốt Đơn",
-    "pitch": 1.07,
-    "rate": 1.1,
-    "recommendedFor": "both",
-    "desc": "Giọng nữ tạo hiệu ứng khan hiếm, dồn dập, kích hoạt tâm lý sợ bỏ lỡ cơ hội trong các phiên livestream săn sale triệu view.",
-    "sampleText": "Chỉ còn đúng 5 suất quà cuối cùng trong giỏ hàng thôi cả nhà ơi! Nhanh tay bấm đặt hàng ngay bây giờ kẻo hết sạch kho nè!",
-    "edgePitch": "+7%",
-    "edgeRate": "+10%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "SOUTH",
-        "accent": "Southern Dynamic",
-        "accent_strength": 52
-      },
-      "persona": {
-        "age": "23-30",
-        "personality": "hối hả, quyết liệt, cuốn hút",
-        "authority": 78,
-        "friendliness": 85
-      },
-      "style": {
-        "primary": "flash_sale",
-        "secondary": [
-          "scarcity_sales",
-          "fomo_trigger"
-        ]
-      },
-      "emotion": {
-        "warmth": 76,
-        "happiness": 85,
-        "excitement": 94,
-        "confidence": 94,
-        "urgency": 100,
-        "empathy": 65
-      },
-      "performance": {
-        "vocal_placement": "forward",
-        "texture": "bright, firm",
-        "pitch": 74,
-        "depth": 33,
-        "warmth": 76,
-        "resonance": 52,
-        "breathiness": 8,
-        "clarity": 94,
-        "articulation": 92,
-        "speed": 89,
-        "rhythm": 93,
-        "intonation": 96,
-        "energy": 94,
-        "emphasis": 100,
-        "pause": 35,
-        "word_duration": "ngắn gọn, thúc giục",
-        "sentence_ending": "nhấn mạnh điểm chốt",
-        "character": "nhấn từ khan hiếm; tăng tốc ở urgency; giảm tốc trước giá/CTA"
-      },
-      "acoustic": {
-        "pitch": 74,
-        "depth": 33,
-        "warmth": 76,
-        "resonance": 52,
-        "breathiness": 8,
-        "clarity": 94,
-        "articulation": 92,
-        "speed": 89,
-        "rhythm": 93,
-        "intonation": 96,
-        "energy": 94,
-        "emphasis": 100,
-        "pause": 35
-      }
-    },
-    "dspProfile": {
-      "lowGain": -0.5,
-      "midFreq": 1400,
-      "midGain": 3.5,
-      "presenceFreq": 4400,
-      "presenceGain": 5.5,
-      "highGain": 4,
-      "reverb": 0.04,
-      "reverbDecay": 0.24,
-      "compressor": {
-        "threshold": -22,
-        "ratio": 4.8,
-        "attack": 0.003,
-        "release": 0.12
-      }
-    }
-  },
-  {
-    "id": "vn_f_sales_expert_10",
-    "name": "[NEW] 10. Nữ Chuyên Gia Tư Vấn Y Khoa / Dược Liệu 👑 (VN-F-SALES-EXPERT)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "standard",
-    "ageGroup": "middle",
-    "styleCategory": "banhang",
-    "category": "🔥 [NEW] Bán Hàng & Chốt Đơn",
-    "pitch": 0.96,
-    "rate": 0.98,
-    "recommendedFor": "both",
-    "desc": "Giọng nữ chuẩn mực, điềm tĩnh, tri thức, dẫn dắt bằng cơ chế khoa học cho dược phẩm, mỹ phẩm điều trị, thực phẩm chức năng.",
-    "sampleText": "Dựa trên bảng thành phần hoạt tính đạt chuẩn lâm sàng, sản phẩm giúp phục hồi hàng rào bảo vệ tự nhiên chỉ sau 14 ngày sử dụng.",
-    "edgePitch": "-4%",
-    "edgeRate": "-2%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "Neutral",
-        "accent": "Standard Vietnamese",
-        "accent_strength": 30
-      },
-      "persona": {
-        "age": "30-42",
-        "personality": "thông thái, khoa học, điềm đạm",
-        "authority": 98,
-        "friendliness": 76
-      },
-      "style": {
-        "primary": "expert_sales",
-        "secondary": [
-          "medical_cosmetic",
-          "scientific_proof"
-        ]
-      },
-      "emotion": {
-        "warmth": 78,
-        "happiness": 55,
-        "excitement": 52,
-        "confidence": 96,
-        "urgency": 25,
-        "empathy": 88
-      },
-      "performance": {
-        "vocal_placement": "balanced oral",
-        "texture": "clean, dense",
-        "pitch": 55,
-        "depth": 57,
-        "warmth": 78,
-        "resonance": 74,
-        "breathiness": 6,
-        "clarity": 99,
-        "articulation": 99,
-        "speed": 68,
-        "rhythm": 69,
-        "intonation": 74,
-        "energy": 67,
-        "emphasis": 86,
-        "pause": 70,
-        "word_duration": "nhấn bằng duration + articulation",
-        "sentence_ending": "vững vàng, chuẩn xác",
-        "character": "thuật ngữ rõ, pause để tiếp nhận, nhấn bằng duration + articulation"
-      },
-      "acoustic": {
-        "pitch": 55,
-        "depth": 57,
-        "warmth": 78,
-        "resonance": 74,
-        "breathiness": 6,
-        "clarity": 99,
-        "articulation": 99,
-        "speed": 68,
-        "rhythm": 69,
-        "intonation": 74,
-        "energy": 67,
-        "emphasis": 86,
-        "pause": 70
-      }
-    },
-    "dspProfile": {
-      "lowGain": 2.2,
-      "midFreq": 1100,
-      "midGain": 2.8,
-      "presenceFreq": 3700,
-      "presenceGain": 4.8,
-      "highGain": 2.5,
-      "reverb": 0.05,
-      "reverbDecay": 0.32,
-      "compressor": {
-        "threshold": -18,
-        "ratio": 3.5,
-        "attack": 0.008,
-        "release": 0.2
-      }
-    }
-  },
-  {
-    "id": "vn_f_sales_cute_11",
-    "name": "[NEW] 11. Cô Gái Trẻ Dễ Thương Tinh Nghịch 👑 (VN-F-SALES-CUTE)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "nam",
-    "ageGroup": "young",
-    "styleCategory": "banhang",
-    "category": "🔥 [NEW] Bán Hàng & Chốt Đơn",
-    "pitch": 1.12,
-    "rate": 1.05,
-    "recommendedFor": "both",
-    "desc": "Giọng nữ dễ thương, đáng yêu, vui nhộn, hút fan trẻ tuổi, cực kỳ thích hợp cho sản phẩm thời trang nữ, phụ kiện và quà tặng.",
-    "sampleText": "Hihi các bác xem chiếc váy này có xinh xỉu không nè! Mặc vào một cái là thành nàng thơ liền luôn nha cả nhà!",
-    "edgePitch": "+12%",
-    "edgeRate": "+5%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "SOUTH",
-        "accent": "Southern Youth",
-        "accent_strength": 55
-      },
-      "persona": {
-        "age": "18-25",
-        "personality": "cute, tinh nghịch, đáng yêu",
-        "authority": 55,
-        "friendliness": 98
-      },
-      "style": {
-        "primary": "young_live",
-        "secondary": [
-          "cute_sales",
-          "fashion_lifestyle"
-        ]
-      },
-      "emotion": {
-        "warmth": 93,
-        "happiness": 94,
-        "excitement": 90,
-        "confidence": 75,
-        "urgency": 45,
-        "empathy": 82
-      },
-      "performance": {
-        "vocal_placement": "head-forward",
-        "texture": "airy-soft, bright",
-        "pitch": 84,
-        "depth": 22,
-        "warmth": 93,
-        "resonance": 38,
-        "breathiness": 30,
-        "clarity": 89,
-        "articulation": 87,
-        "speed": 80,
-        "rhythm": 84,
-        "intonation": 97,
-        "energy": 89,
-        "emphasis": 82,
-        "pause": 39,
-        "word_duration": "nhẹ nhàng, lướt",
-        "sentence_ending": "nhún nhẹ, tươi tắn",
-        "character": "pitch contour nhiều biến thiên, cười nhẹ, không thành giọng trẻ con"
-      },
-      "acoustic": {
-        "pitch": 84,
-        "depth": 22,
-        "warmth": 93,
-        "resonance": 38,
-        "breathiness": 30,
-        "clarity": 89,
-        "articulation": 87,
-        "speed": 80,
-        "rhythm": 84,
-        "intonation": 97,
-        "energy": 89,
-        "emphasis": 82,
-        "pause": 39
-      }
-    },
-    "dspProfile": {
-      "lowGain": -2,
-      "midFreq": 1600,
-      "midGain": 3,
-      "presenceFreq": 4800,
-      "presenceGain": 6,
-      "highGain": 4.8,
-      "reverb": 0.06,
-      "reverbDecay": 0.32,
-      "compressor": {
-        "threshold": -20,
-        "ratio": 3.5,
-        "attack": 0.005,
-        "release": 0.15
-      }
-    }
-  },
-  {
-    "id": "vn_f_sales_mature_12",
-    "name": "[NEW] 12. Phụ Nữ Trưởng Thành Trải Nghiệm 👑 (VN-F-SALES-MATURE)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "nam",
-    "ageGroup": "middle",
-    "styleCategory": "banhang",
-    "category": "🔥 [NEW] Bán Hàng & Chốt Đơn",
-    "pitch": 0.92,
-    "rate": 0.96,
-    "recommendedFor": "both",
-    "desc": "Giọng nữ trầm ấm, trải đời, từng trải và đầy thấu hiểu, chốt đơn cho khách hàng trung niên, sản phẩm chăm sóc gia đình, bảo hiểm.",
-    "sampleText": "Ở độ tuổi của chị em mình, sức khỏe và sự an tâm cho gia đình mới là điều quý giá nhất. Hãy đầu tư đúng chỗ ngay hôm nay nhé.",
-    "edgePitch": "-8%",
-    "edgeRate": "-4%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "SOUTH",
-        "accent": "Southern Mature Neutral",
-        "accent_strength": 50
-      },
-      "persona": {
-        "age": "38-50",
-        "personality": "chín chắn, thấu hiểu, ấm áp",
-        "authority": 91,
-        "friendliness": 86
-      },
-      "style": {
-        "primary": "mature_sales",
-        "secondary": [
-          "family_care",
-          "life_experience"
-        ]
-      },
-      "emotion": {
-        "warmth": 91,
-        "happiness": 65,
-        "excitement": 55,
-        "confidence": 95,
-        "urgency": 30,
-        "empathy": 95
-      },
-      "performance": {
-        "vocal_placement": "chest-led",
-        "texture": "rich, warm, dense",
-        "pitch": 46,
-        "depth": 70,
-        "warmth": 91,
-        "resonance": 83,
-        "breathiness": 8,
-        "clarity": 97,
-        "articulation": 96,
-        "speed": 65,
-        "rhythm": 67,
-        "intonation": 70,
-        "energy": 68,
-        "emphasis": 84,
-        "pause": 72,
-        "word_duration": "đằm sâu, chắc nịch",
-        "sentence_ending": "ổn định, không màu trẻ",
-        "character": "âm dày, nhịp chậm, kết ổn định, không màu trẻ"
-      },
-      "acoustic": {
-        "pitch": 46,
-        "depth": 70,
-        "warmth": 91,
-        "resonance": 83,
-        "breathiness": 8,
-        "clarity": 97,
-        "articulation": 96,
-        "speed": 65,
-        "rhythm": 67,
-        "intonation": 70,
-        "energy": 68,
-        "emphasis": 84,
-        "pause": 72
-      }
-    },
-    "dspProfile": {
-      "lowGain": 3.8,
-      "midFreq": 900,
-      "midGain": 2.5,
-      "presenceFreq": 3000,
-      "presenceGain": 3.5,
-      "highGain": 1.8,
-      "reverb": 0.07,
-      "reverbDecay": 0.4,
-      "compressor": {
-        "threshold": -16,
-        "ratio": 3.2,
-        "attack": 0.012,
-        "release": 0.22
-      }
-    }
-  },
-  {
-    "id": "vn_f_sales_fast_13",
-    "name": "[NEW] 13. Nữ Tốc Độ Cao Bắn Rap Chốt Deal 👑 (VN-F-SALES-FAST)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "nam",
-    "ageGroup": "young",
-    "styleCategory": "banhang",
-    "category": "🔥 [NEW] Bán Hàng & Chốt Đơn",
-    "pitch": 1.05,
-    "rate": 1.15,
-    "recommendedFor": "both",
-    "desc": "Giọng nữ nói tốc độ siêu nhanh nhưng cực kỳ rõ chữ, cuốn người nghe theo từng nhịp điệu dồn dập, tăng tỷ lệ mua hàng tức thì.",
-    "sampleText": "Mẫu áo này form chuẩn vải xịn không nhăn không xù giá gốc năm trăm nay sale chỉ còn một trăm chín mươi chín cành chốt lẹ!",
-    "edgePitch": "+5%",
-    "edgeRate": "+15%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "SOUTH",
-        "accent": "Southern Rapid",
-        "accent_strength": 55
-      },
-      "persona": {
-        "age": "22-30",
-        "personality": "lưu loát, siêu tốc, tự tin",
-        "authority": 75,
-        "friendliness": 85
-      },
-      "style": {
-        "primary": "rapid_sales",
-        "secondary": [
-          "rap_closing",
-          "fast_paced_live"
-        ]
-      },
-      "emotion": {
-        "warmth": 76,
-        "happiness": 85,
-        "excitement": 95,
-        "confidence": 90,
-        "urgency": 95,
-        "energy": 98
-      },
-      "performance": {
-        "vocal_placement": "forward",
-        "texture": "crisp, compressed",
-        "pitch": 71,
-        "depth": 31,
-        "warmth": 76,
-        "resonance": 46,
-        "breathiness": 8,
-        "clarity": 94,
-        "articulation": 92,
-        "speed": 99,
-        "rhythm": 97,
-        "intonation": 91,
-        "energy": 98,
-        "emphasis": 94,
-        "pause": 18,
-        "word_duration": "ngắn, đanh",
-        "sentence_ending": "khóa từ chốt",
-        "character": "nhóm từ ngắn, micro-pause ít nhưng chính xác, tuyệt đối không nuốt chữ"
-      },
-      "acoustic": {
-        "pitch": 71,
-        "depth": 31,
-        "warmth": 76,
-        "resonance": 46,
-        "breathiness": 8,
-        "clarity": 94,
-        "articulation": 92,
-        "speed": 99,
-        "rhythm": 97,
-        "intonation": 91,
-        "energy": 98,
-        "emphasis": 94,
-        "pause": 18
-      }
-    },
-    "dspProfile": {
-      "lowGain": -1,
-      "midFreq": 1500,
-      "midGain": 3.5,
-      "presenceFreq": 4600,
-      "presenceGain": 6,
-      "highGain": 4.2,
-      "reverb": 0.03,
-      "reverbDecay": 0.2,
-      "compressor": {
-        "threshold": -24,
-        "ratio": 5.2,
-        "attack": 0.002,
-        "release": 0.08
-      }
-    }
-  },
-  {
-    "id": "vn_f_sales_trust_14",
-    "name": "[NEW] 14. Nữ Tạo Niềm Tin Chân Thật 👑 (VN-F-SALES-TRUST)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "bac",
-    "ageGroup": "middle",
-    "styleCategory": "banhang",
-    "category": "🔥 [NEW] Bán Hàng & Chốt Đơn",
-    "pitch": 0.96,
-    "rate": 0.97,
-    "recommendedFor": "both",
-    "desc": "Giọng nữ chân thật, mộc mạc, cam kết từ tâm, chinh phục mọi khách hàng khó tính bằng sự uy tín và minh bạch tuyệt đối.",
-    "sampleText": "Cửa hàng cam kết nếu nhận hàng không đúng như mô tả trên livestream, em xin hoàn lại 200% giá trị đơn hàng cho anh chị ngay.",
-    "edgePitch": "-4%",
-    "edgeRate": "-3%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "NORTH",
-        "accent": "Northern Trust Neutral",
-        "accent_strength": 55
-      },
-      "persona": {
-        "age": "30-40",
-        "personality": "chân thật, trách nhiệm, điềm đạm",
-        "authority": 90,
-        "friendliness": 88
-      },
-      "style": {
-        "primary": "trust_sales",
-        "secondary": [
-          "warranty_guarantee",
-          "honest_recommendation"
-        ]
-      },
-      "emotion": {
-        "warmth": 94,
-        "happiness": 60,
-        "excitement": 50,
-        "confidence": 95,
-        "urgency": 25,
-        "empathy": 92
-      },
-      "performance": {
-        "vocal_placement": "centered-chest",
-        "texture": "warm, stable",
-        "pitch": 55,
-        "depth": 54,
-        "warmth": 94,
-        "resonance": 72,
-        "breathiness": 7,
-        "clarity": 98,
-        "articulation": 97,
-        "speed": 67,
-        "rhythm": 68,
-        "intonation": 73,
-        "energy": 62,
-        "emphasis": 78,
-        "pause": 74,
-        "word_duration": "vừa vặn, từ tốn",
-        "sentence_ending": "hạ nhẹ, vững tâm",
-        "character": "ít pitch jump, pause sau thông tin quan trọng, kết câu hạ nhẹ"
-      },
-      "acoustic": {
-        "pitch": 55,
-        "depth": 54,
-        "warmth": 94,
-        "resonance": 72,
-        "breathiness": 7,
-        "clarity": 98,
-        "articulation": 97,
-        "speed": 67,
-        "rhythm": 68,
-        "intonation": 73,
-        "energy": 62,
-        "emphasis": 78,
-        "pause": 74
-      }
-    },
-    "dspProfile": {
-      "lowGain": 2.5,
-      "midFreq": 1000,
-      "midGain": 2.5,
-      "presenceFreq": 3400,
       "presenceGain": 4.2,
-      "highGain": 2,
+      "highGain": 3.2,
       "reverb": 0.05,
       "reverbDecay": 0.3,
       "compressor": {
         "threshold": -18,
-        "ratio": 3.5,
-        "attack": 0.008,
-        "release": 0.18
-      }
-    }
-  },
-  {
-    "id": "vn_f_sales_host_15",
-    "name": "[NEW] 15. Nữ MC Livestream Sự Kiện Hoạt Náo 👑 (VN-F-SALES-HOST)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "nam",
-    "ageGroup": "young",
-    "styleCategory": "banhang",
-    "category": "🔥 [NEW] Bán Hàng & Chốt Đơn",
-    "pitch": 1.03,
-    "rate": 1.04,
-    "recommendedFor": "both",
-    "desc": "Giọng nữ MC sân khấu chuyên nghiệp, khuấy động không khí, dẫn dắt chương trình mega live, gala sale tưng bừng.",
-    "sampleText": "Chào mừng quý vị khán giả đang đến với đêm đại nhạc hội siêu sale hoành tráng nhất năm cùng hàng ngàn phần quà giá trị!",
-    "edgePitch": "+3%",
-    "edgeRate": "+4%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "SOUTH",
-        "accent": "Southern Professional MC",
-        "accent_strength": 50
-      },
-      "persona": {
-        "age": "25-35",
-        "personality": "hoạt náo, chuyên nghiệp, hào hứng",
-        "authority": 88,
-        "friendliness": 94
-      },
-      "style": {
-        "primary": "live_host",
-        "secondary": [
-          "mega_live",
-          "event_hosting",
-          "grand_opening"
-        ]
-      },
-      "emotion": {
-        "warmth": 86,
-        "happiness": 92,
-        "excitement": 88,
-        "confidence": 93,
-        "urgency": 65,
-        "empathy": 78
-      },
-      "performance": {
-        "vocal_placement": "oral-forward",
-        "texture": "bright, polished",
-        "pitch": 67,
-        "depth": 40,
-        "warmth": 86,
-        "resonance": 69,
-        "breathiness": 10,
-        "clarity": 98,
-        "articulation": 97,
-        "speed": 79,
-        "rhythm": 91,
-        "intonation": 95,
-        "energy": 90,
-        "emphasis": 91,
-        "pause": 45,
-        "word_duration": "sang trọng, mở âm",
-        "sentence_ending": "sáng và dứt",
-        "character": "câu mở năng lượng, chuyển đoạn có pitch lift, CTA sáng và dứt"
-      },
-      "acoustic": {
-        "pitch": 67,
-        "depth": 40,
-        "warmth": 86,
-        "resonance": 69,
-        "breathiness": 10,
-        "clarity": 98,
-        "articulation": 97,
-        "speed": 79,
-        "rhythm": 91,
-        "intonation": 95,
-        "energy": 90,
-        "emphasis": 91,
-        "pause": 45
-      }
-    },
-    "dspProfile": {
-      "lowGain": 1,
-      "midFreq": 1300,
-      "midGain": 3,
-      "presenceFreq": 4200,
-      "presenceGain": 5.5,
-      "highGain": 3.8,
-      "reverb": 0.07,
-      "reverbDecay": 0.36,
-      "compressor": {
-        "threshold": -20,
-        "ratio": 4,
-        "attack": 0.005,
-        "release": 0.15
-      }
-    }
-  },
-  {
-    "id": "vn_f_sales_emotional_16",
-    "name": "[NEW] 16. Nữ Bán Hàng Giàu Cảm Xúc & Kể Chuyện 👑 (VN-F-SALES-EMOTIONAL)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "nam",
-    "ageGroup": "young",
-    "styleCategory": "banhang",
-    "category": "🔥 [NEW] Bán Hàng & Chốt Đơn",
-    "pitch": 1.03,
-    "rate": 0.97,
-    "recommendedFor": "both",
-    "desc": "Giọng nữ truyền cảm, chạm đến trái tim người nghe qua từng câu chuyện cảm động, tạo sự đồng cảm sâu sắc để chốt sale tinh tế.",
-    "sampleText": "Có những món quà tuy nhỏ nhưng lại chứa đựng trọn vẹn tình yêu thương mà chúng ta muốn gửi gắm đến những người thân yêu nhất.",
-    "edgePitch": "+3%",
-    "edgeRate": "-3%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "SOUTH",
-        "accent": "Southern Storyteller",
-        "accent_strength": 55
-      },
-      "persona": {
-        "age": "28-40",
-        "personality": "truyền cảm, ấm áp, sâu sắc",
-        "authority": 75,
-        "friendliness": 96
-      },
-      "style": {
-        "primary": "story_selling",
-        "secondary": [
-          "emotional_connection",
-          "meaningful_gifts"
-        ]
-      },
-      "emotion": {
-        "warmth": 96,
-        "happiness": 70,
-        "excitement": 60,
-        "confidence": 85,
-        "urgency": 30,
-        "empathy": 96,
-        "emotion": 98
-      },
-      "performance": {
-        "vocal_placement": "warm oral",
-        "texture": "slightly breathy, expressive",
-        "pitch": 67,
-        "depth": 42,
-        "warmth": 96,
-        "resonance": 60,
-        "breathiness": 25,
-        "clarity": 91,
-        "articulation": 89,
-        "speed": 67,
-        "rhythm": 76,
-        "intonation": 94,
-        "energy": 80,
-        "emphasis": 91,
-        "pause": 68,
-        "word_duration": "kéo nhẹ từ cảm xúc",
-        "sentence_ending": "nhẹ nhàng, lan tỏa",
-        "character": "pitch contour rộng, kéo nhẹ từ cảm xúc, pause trước câu quan trọng"
-      },
-      "acoustic": {
-        "pitch": 67,
-        "depth": 42,
-        "warmth": 96,
-        "resonance": 60,
-        "breathiness": 25,
-        "clarity": 91,
-        "articulation": 89,
-        "speed": 67,
-        "rhythm": 76,
-        "intonation": 94,
-        "energy": 80,
-        "emphasis": 91,
-        "pause": 68
-      }
-    },
-    "dspProfile": {
-      "lowGain": 1.8,
-      "midFreq": 1100,
-      "midGain": 2.6,
-      "presenceFreq": 3600,
-      "presenceGain": 4.5,
-      "highGain": 3.2,
-      "reverb": 0.08,
-      "reverbDecay": 0.42,
-      "compressor": {
-        "threshold": -18,
         "ratio": 3.2,
-        "attack": 0.01,
+        "attack": 0.008,
         "release": 0.2
       }
     }
   },
   {
-    "id": "vn_f_sales_assertive_17",
-    "name": "[NEW] 17. Nữ Bán Hàng Quyết Đoán Uy Quyền 👑 (VN-F-SALES-ASSERTIVE)",
+    "id": "vn_f_sales_viral_08",
+    "name": "[v3.0] 08. Viral Pop 👑 (Nữ 20-24t - Siêu Sao Bắt Trend Triệu View TikTok)",
     "provider": "system",
     "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "bac",
-    "ageGroup": "middle",
-    "styleCategory": "banhang",
-    "category": "🔥 [NEW] Bán Hàng & Chốt Đơn",
-    "pitch": 0.97,
-    "rate": 1.02,
-    "recommendedFor": "both",
-    "desc": "Giọng nữ sắc sảo, dứt khoát, uy lực, khẳng định giá trị không thể thương lượng, thích hợp cho khóa học, dịch vụ B2B và đầu tư.",
-    "sampleText": "Cơ hội chỉ thuộc về những ai dám nắm bắt trước người khác. Hãy ra quyết định ngay để làm chủ tương lai tài chính của bạn!",
-    "edgePitch": "-3%",
-    "edgeRate": "+2%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "NORTH",
-        "accent": "Northern Assertive Neutral",
-        "accent_strength": 65
-      },
-      "persona": {
-        "age": "30-42",
-        "personality": "uy quyền, quyết đoán, chắc nịch",
-        "authority": 100,
-        "friendliness": 65
-      },
-      "style": {
-        "primary": "assertive_closing",
-        "secondary": [
-          "b2b_sales",
-          "investment_education"
-        ]
-      },
-      "emotion": {
-        "warmth": 72,
-        "happiness": 50,
-        "excitement": 70,
-        "confidence": 100,
-        "urgency": 80,
-        "authority": 100
-      },
-      "performance": {
-        "vocal_placement": "chest-forward",
-        "texture": "firm, resonant",
-        "pitch": 56,
-        "depth": 59,
-        "warmth": 72,
-        "resonance": 79,
-        "breathiness": 4,
-        "clarity": 98,
-        "articulation": 98,
-        "speed": 74,
-        "rhythm": 79,
-        "intonation": 77,
-        "energy": 82,
-        "emphasis": 96,
-        "pause": 65,
-        "word_duration": "đanh thép, dứt khoát",
-        "sentence_ending": "hạ rõ, khẳng định",
-        "character": "phụ âm cuối mạnh, ít cười, câu kết hạ rõ"
-      },
-      "acoustic": {
-        "pitch": 56,
-        "depth": 59,
-        "warmth": 72,
-        "resonance": 79,
-        "breathiness": 4,
-        "clarity": 98,
-        "articulation": 98,
-        "speed": 74,
-        "rhythm": 79,
-        "intonation": 77,
-        "energy": 82,
-        "emphasis": 96,
-        "pause": 65
-      }
-    },
-    "dspProfile": {
-      "lowGain": 2.8,
-      "midFreq": 1150,
-      "midGain": 3,
-      "presenceFreq": 3600,
-      "presenceGain": 4.8,
-      "highGain": 2.8,
-      "reverb": 0.04,
-      "reverbDecay": 0.28,
-      "compressor": {
-        "threshold": -20,
-        "ratio": 4.2,
-        "attack": 0.005,
-        "release": 0.15
-      }
-    }
-  },
-  {
-    "id": "vn_f_sales_young_18",
-    "name": "[NEW] 18. Nữ Gen Z Bán Hàng Bắt Trend 👑 (VN-F-SALES-YOUNG)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
     "gender": "Female",
     "lang": "vi-VN",
     "region": "vi",
     "dialect": "nam",
     "ageGroup": "young",
-    "styleCategory": "banhang",
-    "category": "🔥 [NEW] Bán Hàng & Chốt Đơn",
+    "ageRange": "20-24",
+    "styleCategory": "idol_genz",
+    "category": "🔥 [v3.0] 20-24t • Creator & Viral",
     "pitch": 1.1,
-    "rate": 1.09,
+    "rate": 1.12,
     "recommendedFor": "both",
-    "desc": "Giọng nữ Gen Z trẻ trung, bắt trend cực nhạy, ngôn từ hiện đại viral, dễ dàng khuấy đảo các phiên live TikTok Shop.",
-    "sampleText": "Deal này hời chấn động luôn cả nhà ơi! Nhanh tay săn ngay chứ hết voucher 100k là khóc tiếng Mèo luôn á nha!",
+    "desc": "Giọng nữ bắt tai, quãng pitch rộng biến thiên cực nhanh, giật hook giữ trọn 3 giây vàng của Shorts & Reels.",
+    "sampleText": "Dừng lại 3 giây lướt màn hình ngay! Thứ này vừa cập bến là khiến dân tình phát sốt, xem hết video để nhận quà bí mật nha!",
     "edgePitch": "+10%",
-    "edgeRate": "+9%",
+    "edgeRate": "+12%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
         "country": "VN",
         "region": "SOUTH",
-        "accent": "Southern Gen Z",
+        "accent": "Southern Viral",
         "accent_strength": 60
       },
       "persona": {
-        "age": "18-25",
-        "personality": "trẻ trung, lanh lẹ, bắt trend",
-        "authority": 62,
+        "age": "20-24",
+        "personality": "bùng nổ, trendy, bất ngờ, cuốn hút",
+        "authority": 76,
         "friendliness": 96
       },
       "style": {
-        "primary": "genz_live",
-        "secondary": [
-          "tiktok_shop_viral",
-          "trend_setter"
-        ]
-      },
-      "emotion": {
-        "warmth": 87,
-        "happiness": 96,
-        "excitement": 97,
-        "confidence": 84,
-        "urgency": 80,
-        "empathy": 78
-      },
-      "performance": {
-        "vocal_placement": "forward-head",
-        "texture": "bright, elastic",
-        "pitch": 81,
-        "depth": 25,
-        "warmth": 87,
-        "resonance": 41,
-        "breathiness": 23,
-        "clarity": 89,
-        "articulation": 87,
-        "speed": 90,
-        "rhythm": 94,
-        "intonation": 98,
-        "energy": 96,
-        "emphasis": 94,
-        "pause": 25,
-        "word_duration": "linh hoạt, nhảy nhót",
-        "sentence_ending": "nhún nhảy tự nhiên",
-        "character": "pitch jump có kiểm soát, nhịp linh hoạt, không thành giọng trẻ con"
-      },
-      "acoustic": {
-        "pitch": 81,
-        "depth": 25,
-        "warmth": 87,
-        "resonance": 41,
-        "breathiness": 23,
-        "clarity": 89,
-        "articulation": 87,
-        "speed": 90,
-        "rhythm": 94,
-        "intonation": 98,
-        "energy": 96,
-        "emphasis": 94,
-        "pause": 25
-      }
-    },
-    "dspProfile": {
-      "lowGain": -1.5,
-      "midFreq": 1550,
-      "midGain": 3.2,
-      "presenceFreq": 4700,
-      "presenceGain": 6,
-      "highGain": 4.5,
-      "reverb": 0.04,
-      "reverbDecay": 0.25,
-      "compressor": {
-        "threshold": -22,
-        "ratio": 4.4,
-        "attack": 0.004,
-        "release": 0.12
-      }
-    }
-  },
-  {
-    "id": "vn_f_sales_calm_19",
-    "name": "[NEW] 19. Nữ Bán Hàng Nhẹ Nhàng Thư Thái 👑 (VN-F-SALES-CALM)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "bac",
-    "ageGroup": "young",
-    "styleCategory": "banhang",
-    "category": "🔥 [NEW] Bán Hàng & Chốt Đơn",
-    "pitch": 0.99,
-    "rate": 0.92,
-    "recommendedFor": "both",
-    "desc": "Giọng nữ êm ái, nhẹ nhàng, đem lại cảm giác bình yên thư giãn cho các sản phẩm spa, nến thơm, trà đạo, sách và yoga.",
-    "sampleText": "Hãy để hương thơm tự nhiên xoa dịu tâm hồn và mang lại không gian thư thái trọn vẹn nhất cho ngôi nhà của bạn sau ngày dài bận rộn.",
-    "edgePitch": "-1%",
-    "edgeRate": "-8%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "NORTH",
-        "accent": "Northern Calm Gentle",
-        "accent_strength": 55
-      },
-      "persona": {
-        "age": "28-40",
-        "personality": "dịu dàng, thư thái, an yên",
-        "authority": 78,
-        "friendliness": 95
-      },
-      "style": {
-        "primary": "soft_sales",
-        "secondary": [
-          "spa_wellness",
-          "meditation_tea",
-          "relaxing"
-        ]
-      },
-      "emotion": {
-        "warmth": 95,
-        "happiness": 75,
-        "excitement": 40,
-        "confidence": 88,
-        "urgency": 15,
-        "empathy": 94
-      },
-      "performance": {
-        "vocal_placement": "soft oral",
-        "texture": "silky, relaxed",
-        "pitch": 61,
-        "depth": 48,
-        "warmth": 95,
-        "resonance": 61,
-        "breathiness": 15,
-        "clarity": 96,
-        "articulation": 94,
-        "speed": 57,
-        "rhythm": 61,
-        "intonation": 77,
-        "energy": 51,
-        "emphasis": 70,
-        "pause": 82,
-        "word_duration": "mềm mại, êm dịu",
-        "sentence_ending": "kết câu êm ái",
-        "character": "hơi dài, pitch movement nhỏ, pause nhiều, kết câu êm"
-      },
-      "acoustic": {
-        "pitch": 61,
-        "depth": 48,
-        "warmth": 95,
-        "resonance": 61,
-        "breathiness": 15,
-        "clarity": 96,
-        "articulation": 94,
-        "speed": 57,
-        "rhythm": 61,
-        "intonation": 77,
-        "energy": 51,
-        "emphasis": 70,
-        "pause": 82
-      }
-    },
-    "dspProfile": {
-      "lowGain": 1.5,
-      "midFreq": 1050,
-      "midGain": 2.2,
-      "presenceFreq": 3500,
-      "presenceGain": 4,
-      "highGain": 2.8,
-      "reverb": 0.1,
-      "reverbDecay": 0.5,
-      "compressor": {
-        "threshold": -16,
-        "ratio": 2.8,
-        "attack": 0.02,
-        "release": 0.3
-      }
-    }
-  },
-  {
-    "id": "vn_f_sales_viral_20",
-    "name": "[NEW] 20. Nữ Creator Bán Hàng Triệu View TikTok 👑 (VN-F-SALES-VIRAL)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "nam",
-    "ageGroup": "young",
-    "styleCategory": "banhang",
-    "category": "🔥 [NEW] Bán Hàng & Chốt Đơn",
-    "pitch": 1.08,
-    "rate": 1.11,
-    "recommendedFor": "both",
-    "desc": "Giọng nữ bùng nổ năng lượng, giật hook cực mạnh, giữ chân người xem từ 3 giây đầu tiên đến giây cuối cùng.",
-    "sampleText": "Đừng lướt qua nếu không muốn bỏ lỡ siêu phẩm đang cháy hàng nhất tuần qua! Xem hết video để nhận mã freeship nha!",
-    "edgePitch": "+8%",
-    "edgeRate": "+11%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "SOUTH",
-        "accent": "Southern Viral Creator",
-        "accent_strength": 58
-      },
-      "persona": {
-        "age": "20-28",
-        "personality": "hút mắt, năng nổ, cuốn hút",
-        "authority": 80,
-        "friendliness": 94
-      },
-      "style": {
-        "primary": "viral_live",
+        "primary": "viral_shorts",
         "secondary": [
           "hook_master",
-          "short_form_video"
+          "tiktok_trend",
+          "pop_culture"
         ]
       },
       "emotion": {
-        "warmth": 86,
+        "warmth": 84,
         "happiness": 98,
-        "excitement": 99,
-        "confidence": 91,
-        "urgency": 90,
-        "energy": 100
-      },
-      "performance": {
-        "vocal_placement": "very forward",
-        "texture": "bright, punchy",
-        "pitch": 77,
-        "depth": 29,
-        "warmth": 86,
-        "resonance": 43,
-        "breathiness": 15,
-        "clarity": 91,
-        "articulation": 90,
-        "speed": 94,
-        "rhythm": 98,
-        "intonation": 99,
+        "excitement": 100,
+        "confidence": 92,
         "energy": 100,
-        "emphasis": 98,
-        "pause": 22,
-        "word_duration": "bật nảy, dứt khoát",
-        "sentence_ending": "hook punchline",
-        "character": "hook nhanh, nhịp đảo, pitch contour lớn, punchline có pause"
+        "humor": 82
       },
       "acoustic": {
-        "pitch": 77,
-        "depth": 29,
-        "warmth": 86,
-        "resonance": 43,
-        "breathiness": 15,
+        "pitch": 83,
+        "pitch_range": 94,
+        "depth": 19,
+        "warmth": 84,
+        "resonance": 38,
+        "breathiness": 14,
         "clarity": 91,
-        "articulation": 90,
-        "speed": 94,
-        "rhythm": 98,
-        "intonation": 99,
+        "articulation": 89,
+        "speed": 93,
+        "rhythm": 100,
+        "intonation": 100,
         "energy": 100,
         "emphasis": 98,
-        "pause": 22
+        "pause": 15
+      },
+      "performance": {
+        "vocal_placement": "head-forward",
+        "texture": "bright-punchy",
+        "mouth_profile": "dynamic-wide",
+        "onset": "shock hook explosion",
+        "ending": "unexpected pitch jump",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
       }
     },
     "dspProfile": {
-      "lowGain": -0.8,
-      "midFreq": 1450,
+      "lowGain": -1.2,
+      "midFreq": 1550,
       "midGain": 3.4,
-      "presenceFreq": 4500,
-      "presenceGain": 5.8,
-      "highGain": 4.4,
+      "presenceFreq": 4600,
+      "presenceGain": 6,
+      "highGain": 4.5,
       "reverb": 0.04,
       "reverbDecay": 0.22,
       "compressor": {
@@ -3725,125 +2430,1434 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     }
   },
   {
-    "id": "vn_f_ceo_21",
-    "name": "[NEW] 21. Nữ CEO Quyền Lực & Khí Chất 👑 (VN-F-CEO)",
+    "id": "vn_f_story_warm_09",
+    "name": "[v3.0] 09. Soft Heart 👑 (Nữ 20-24t - Tâm Sự Sâu Lắng Chạm Trái Tim)",
     "provider": "system",
     "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
     "gender": "Female",
     "lang": "vi-VN",
     "region": "vi",
     "dialect": "bac",
-    "ageGroup": "middle",
-    "styleCategory": "doanhnhan",
-    "category": "🔥 [NEW] Doanh Nhân & Lãnh Đạo",
-    "pitch": 0.93,
-    "rate": 0.95,
+    "ageGroup": "young",
+    "ageRange": "20-24",
+    "styleCategory": "podcast",
+    "category": "🔥 [v3.0] 20-24t • Kể Chuyện & Podcast",
+    "pitch": 1.01,
+    "rate": 0.92,
     "recommendedFor": "both",
-    "desc": "Giọng nữ lãnh đạo đĩnh đạc, trầm ổn, quyết đoán, truyền cảm hứng điều hành tập đoàn và thông điệp chiến lược.",
-    "sampleText": "Tầm nhìn chiến lược và sự kiên định với mục tiêu cốt lõi chính là kim chỉ nam giúp doanh nghiệp vượt qua mọi thử thách.",
-    "edgePitch": "-7%",
-    "edgeRate": "-5%",
+    "desc": "Giọng nữ Hà Thành dịu dàng, âm hơi thở chạm sâu vào cảm xúc, làm dịu lòng người nghe trong các video chữa lành, radio đêm.",
+    "sampleText": "Nếu hôm nay bạn cảm thấy mệt mỏi, hãy cho phép mình được nghỉ ngơi một chút nhé. Mọi chuyện rồi sẽ nhẹ nhàng trôi qua thôi.",
+    "edgePitch": "+1%",
+    "edgeRate": "-8%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
         "country": "VN",
         "region": "NORTH",
-        "accent": "Northern Executive",
-        "accent_strength": 65
+        "accent": "Northern Gentle Warm",
+        "accent_strength": 62
       },
       "persona": {
-        "age": "38-50",
-        "personality": "quyền lực, khí chất lãnh đạo",
-        "authority": 100,
-        "friendliness": 68
+        "age": "20-24",
+        "personality": "dịu dàng, sâu sắc, thấu cảm, vỗ về",
+        "authority": 70,
+        "friendliness": 98
       },
       "style": {
-        "primary": "executive_business",
+        "primary": "healing_radio",
         "secondary": [
-          "corporate_speech",
-          "strategic_vision"
+          "emotional_monologue",
+          "poetry_story",
+          "soft_whisper"
         ]
       },
       "emotion": {
-        "warmth": 74,
-        "happiness": 50,
-        "excitement": 45,
-        "confidence": 100,
-        "urgency": 30,
-        "empathy": 70
-      },
-      "performance": {
-        "vocal_placement": "chest-led",
-        "texture": "deep, dense, authoritative",
-        "pitch": 48,
-        "depth": 72,
-        "warmth": 74,
-        "resonance": 87,
-        "breathiness": 3,
-        "clarity": 99,
-        "articulation": 99,
-        "speed": 62,
-        "rhythm": 65,
-        "intonation": 69,
-        "energy": 67,
-        "emphasis": 86,
-        "pause": 82,
-        "word_duration": "đĩnh đạc, đằm",
-        "sentence_ending": "thấp và chắc",
-        "character": "ít pitch variation, pause chiến lược, kết câu thấp và chắc"
+        "warmth": 99,
+        "happiness": 65,
+        "excitement": 40,
+        "confidence": 82,
+        "empathy": 98,
+        "emotional_depth": 94
       },
       "acoustic": {
-        "pitch": 48,
-        "depth": 72,
-        "warmth": 74,
-        "resonance": 87,
-        "breathiness": 3,
-        "clarity": 99,
-        "articulation": 99,
-        "speed": 62,
-        "rhythm": 65,
-        "intonation": 69,
-        "energy": 67,
-        "emphasis": 86,
+        "pitch": 68,
+        "pitch_range": 70,
+        "depth": 31,
+        "warmth": 99,
+        "resonance": 58,
+        "breathiness": 29,
+        "clarity": 91,
+        "articulation": 89,
+        "speed": 58,
+        "rhythm": 62,
+        "intonation": 92,
+        "energy": 55,
+        "emphasis": 74,
         "pause": 82
+      },
+      "performance": {
+        "vocal_placement": "intimate oral",
+        "texture": "airy-warm",
+        "mouth_profile": "soft-whisper-open",
+        "onset": "breath-led intimate touch",
+        "ending": "emotional fade",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
       }
     },
     "dspProfile": {
-      "lowGain": 3.8,
-      "midFreq": 900,
+      "lowGain": 1.8,
+      "midFreq": 1050,
+      "midGain": 2.2,
+      "presenceFreq": 3400,
+      "presenceGain": 3.8,
+      "highGain": 2.8,
+      "reverb": 0.1,
+      "reverbDecay": 0.52,
+      "compressor": {
+        "threshold": -16,
+        "ratio": 2.8,
+        "attack": 0.02,
+        "release": 0.3
+      }
+    }
+  },
+  {
+    "id": "vn_f_ad_tech_10",
+    "name": "[v3.0] 10. Smart Sell 👑 (Nữ 20-24t - Nữ Công Nghệ & Khóa Học Rõ Ràng)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "bac",
+    "ageGroup": "young",
+    "ageRange": "20-24",
+    "styleCategory": "chuyengia",
+    "category": "🔥 [v3.0] 20-24t • Tri Thức & Công Nghệ",
+    "pitch": 0.99,
+    "rate": 1.02,
+    "recommendedFor": "both",
+    "desc": "Giọng đọc thông minh, khúc chiết, chuẩn xác từng thuật ngữ, lý tưởng cho video giới thiệu ứng dụng, phần mềm và khóa học số.",
+    "sampleText": "Tính năng tự động hóa thông minh này sẽ giúp bạn tiết kiệm tới 80% thời gian xử lý công việc hàng ngày mà vẫn đạt hiệu quả tối đa.",
+    "edgePitch": "-1%",
+    "edgeRate": "+2%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "NORTH",
+        "accent": "Northern Modern Tech",
+        "accent_strength": 65
+      },
+      "persona": {
+        "age": "20-24",
+        "personality": "thông minh, logic, rành mạch, hiện đại",
+        "authority": 90,
+        "friendliness": 82
+      },
+      "style": {
+        "primary": "tech_software",
+        "secondary": [
+          "app_demo",
+          "e_learning",
+          "smart_consulting"
+        ]
+      },
+      "emotion": {
+        "warmth": 76,
+        "happiness": 70,
+        "excitement": 72,
+        "confidence": 96,
+        "curiosity": 87,
+        "empathy": 75
+      },
+      "acoustic": {
+        "pitch": 64,
+        "pitch_range": 59,
+        "depth": 38,
+        "warmth": 76,
+        "resonance": 67,
+        "breathiness": 5,
+        "clarity": 99,
+        "articulation": 99,
+        "speed": 72,
+        "rhythm": 73,
+        "intonation": 78,
+        "energy": 73,
+        "emphasis": 87,
+        "pause": 61
+      },
+      "performance": {
+        "vocal_placement": "oral-centered",
+        "texture": "clean-precise",
+        "mouth_profile": "sharp-clear",
+        "onset": "precise crisp attack",
+        "ending": "controlled firm finish",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": 1.5,
+      "midFreq": 1200,
       "midGain": 2.8,
-      "presenceFreq": 3200,
-      "presenceGain": 4.2,
-      "highGain": 2,
+      "presenceFreq": 3800,
+      "presenceGain": 5,
+      "highGain": 3.2,
+      "reverb": 0.04,
+      "reverbDecay": 0.25,
+      "compressor": {
+        "threshold": -19,
+        "ratio": 3.8,
+        "attack": 0.005,
+        "release": 0.15
+      }
+    }
+  },
+  {
+    "id": "vn_f_sales_sunny_11",
+    "name": "[v3.0] 11. Sunny Seller 👑 (Nữ 20-24t - Năng Lượng Tích Cực Tỏa Nắng)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "nam",
+    "ageGroup": "young",
+    "ageRange": "20-24",
+    "styleCategory": "banhang",
+    "category": "🔥 [v3.0] 20-24t • Bán Hàng & Chốt Deal",
+    "pitch": 1.09,
+    "rate": 1.05,
+    "recommendedFor": "both",
+    "desc": "Giọng nói tràn đầy nụ cười, ấm áp và tươi tắn như ánh nắng mai, truyền nguồn năng lượng sảng khoái kích thích mua sắm.",
+    "sampleText": "Một ngày mới thật tuyệt vời nha cả nhà! Cùng em khám phá bộ sưu tập mới toanh giúp nâng tầm phong cách ngay hôm nay nhé!",
+    "edgePitch": "+9%",
+    "edgeRate": "+5%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "SOUTH",
+        "accent": "Southern Cheerful",
+        "accent_strength": 55
+      },
+      "persona": {
+        "age": "20-24",
+        "personality": "rạng rỡ, tích cực, vui tươi, lan tỏa",
+        "authority": 75,
+        "friendliness": 100
+      },
+      "style": {
+        "primary": "positive_sales",
+        "secondary": [
+          "morning_live",
+          "sunshine_lifestyle",
+          "joyful_closing"
+        ]
+      },
+      "emotion": {
+        "warmth": 91,
+        "happiness": 100,
+        "excitement": 92,
+        "confidence": 88,
+        "positivity": 99,
+        "empathy": 88
+      },
+      "acoustic": {
+        "pitch": 80,
+        "pitch_range": 76,
+        "depth": 21,
+        "warmth": 91,
+        "resonance": 42,
+        "breathiness": 17,
+        "clarity": 92,
+        "articulation": 90,
+        "speed": 81,
+        "rhythm": 86,
+        "intonation": 95,
+        "energy": 94,
+        "emphasis": 87,
+        "pause": 34
+      },
+      "performance": {
+        "vocal_placement": "bright-forward",
+        "texture": "sunny-clean",
+        "mouth_profile": "wide-smile",
+        "onset": "smile resonance attack",
+        "ending": "uplifting warm finish",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": -0.5,
+      "midFreq": 1400,
+      "midGain": 3,
+      "presenceFreq": 4400,
+      "presenceGain": 5.5,
+      "highGain": 4,
+      "reverb": 0.05,
+      "reverbDecay": 0.3,
+      "compressor": {
+        "threshold": -20,
+        "ratio": 3.8,
+        "attack": 0.005,
+        "release": 0.15
+      }
+    }
+  },
+  {
+    "id": "vn_f_sales_bold_12",
+    "name": "[v3.0] 12. Bold Girl 👑 (Nữ 20-24t - Nữ Trẻ Quyết Đoán & Sắc Sảo)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "bac",
+    "ageGroup": "young",
+    "ageRange": "20-24",
+    "styleCategory": "banhang",
+    "category": "🔥 [v3.0] 20-24t • Bán Hàng & Chốt Deal",
+    "pitch": 1,
+    "rate": 1.04,
+    "recommendedFor": "both",
+    "desc": "Giọng nữ cá tính, đanh thép, phát âm chắc nịch và quyết liệt, không khoan nhượng khi chốt các deal số lượng có hạn.",
+    "sampleText": "Đã thích là phải nhích liền tay! Cơ hội giá tốt như thế này không có lần thứ hai đâu, bấm nút đặt ngay bây giờ nhé!",
+    "edgePitch": "+0%",
+    "edgeRate": "+4%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "NORTH",
+        "accent": "Northern Bold",
+        "accent_strength": 68
+      },
+      "persona": {
+        "age": "20-24",
+        "personality": "cá tính, bản lĩnh, quyết đoán, sắc bén",
+        "authority": 91,
+        "friendliness": 78
+      },
+      "style": {
+        "primary": "bold_closing",
+        "secondary": [
+          "assertive_sales",
+          "limited_edition",
+          "trend_setter"
+        ]
+      },
+      "emotion": {
+        "warmth": 70,
+        "happiness": 75,
+        "excitement": 85,
+        "confidence": 99,
+        "urgency": 85,
+        "authority": 91
+      },
+      "acoustic": {
+        "pitch": 65,
+        "pitch_range": 58,
+        "depth": 42,
+        "warmth": 70,
+        "resonance": 73,
+        "breathiness": 3,
+        "clarity": 98,
+        "articulation": 98,
+        "speed": 78,
+        "rhythm": 78,
+        "intonation": 74,
+        "energy": 85,
+        "emphasis": 97,
+        "pause": 64
+      },
+      "performance": {
+        "vocal_placement": "oral-chest",
+        "texture": "firm-clean",
+        "mouth_profile": "firm-articulated",
+        "onset": "bold direct strike",
+        "ending": "hard consonant landing",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": 2.2,
+      "midFreq": 1150,
+      "midGain": 3,
+      "presenceFreq": 3700,
+      "presenceGain": 5,
+      "highGain": 2.8,
+      "reverb": 0.04,
+      "reverbDecay": 0.26,
+      "compressor": {
+        "threshold": -22,
+        "ratio": 4.2,
+        "attack": 0.004,
+        "release": 0.14
+      }
+    }
+  },
+  {
+    "id": "vn_f_sales_playful_13",
+    "name": "[v3.0] 13. Playful Closer 👑 (Nữ 20-24t - Chốt Deal Tinh Nghịch, Dí Dỏm)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "nam",
+    "ageGroup": "young",
+    "ageRange": "20-24",
+    "styleCategory": "banhang",
+    "category": "🔥 [v3.0] 20-24t • Bán Hàng & Chốt Deal",
+    "pitch": 1.1,
+    "rate": 1.08,
+    "recommendedFor": "both",
+    "desc": "Giọng nữ trêu đùa duyên dáng, nhử deal thông minh: tease nhẹ -> ngưng 1 nhịp -> chốt hạ khiến người nghe không thể cưỡng lại.",
+    "sampleText": "Ai mà còn chần chừ là tí nữa hết hàng ngồi tiếc hùi hụi ráng chịu nha, em bấm mở cổng giỏ hàng ngay bây giờ nè!",
+    "edgePitch": "+10%",
+    "edgeRate": "+8%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "SOUTH",
+        "accent": "Southern Playful",
+        "accent_strength": 58
+      },
+      "persona": {
+        "age": "20-24",
+        "personality": "tinh nghịch, hóm hỉnh, duyên dáng, lém lỉnh",
+        "authority": 74,
+        "friendliness": 98
+      },
+      "style": {
+        "primary": "playful_closing",
+        "secondary": [
+          "tease_and_close",
+          "humor_sales",
+          "viral_cta"
+        ]
+      },
+      "emotion": {
+        "warmth": 87,
+        "happiness": 96,
+        "excitement": 91,
+        "confidence": 90,
+        "humor": 95,
+        "urgency": 78
+      },
+      "acoustic": {
+        "pitch": 82,
+        "pitch_range": 91,
+        "depth": 20,
+        "warmth": 87,
+        "resonance": 39,
+        "breathiness": 18,
+        "clarity": 91,
+        "articulation": 88,
+        "speed": 87,
+        "rhythm": 96,
+        "intonation": 100,
+        "energy": 95,
+        "emphasis": 92,
+        "pause": 30
+      },
+      "performance": {
+        "vocal_placement": "forward-head",
+        "texture": "bright-elastic",
+        "mouth_profile": "playful-moving",
+        "onset": "tease pitch jump",
+        "ending": "dramatic pause before CTA",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": -1,
+      "midFreq": 1500,
+      "midGain": 3.2,
+      "presenceFreq": 4600,
+      "presenceGain": 5.8,
+      "highGain": 4.4,
+      "reverb": 0.04,
+      "reverbDecay": 0.25,
+      "compressor": {
+        "threshold": -21,
+        "ratio": 4.2,
+        "attack": 0.004,
+        "release": 0.12
+      }
+    }
+  },
+  {
+    "id": "vn_f_sales_calm_14",
+    "name": "[v3.0] 14. Calm Girl 👑 (Nữ 20-24t - Nhẹ Nhàng Thanh Khiết Nhưng Có Lực)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "bac",
+    "ageGroup": "young",
+    "ageRange": "20-24",
+    "styleCategory": "banhang",
+    "category": "🔥 [v3.0] 20-24t • Bán Hàng & Chốt Deal",
+    "pitch": 1,
+    "rate": 0.9,
+    "recommendedFor": "both",
+    "desc": "Giọng nữ thanh khiết, nói năng từ tốn, khoảng nghỉ dài kiểm soát, rất hợp nến thơm, skincare, trà sữa cao cấp và sách.",
+    "sampleText": "Chăm sóc bản thân từ những điều giản dị nhất sẽ mang lại cho bạn sự an yên và tự tin rạng ngời suốt cả ngày dài.",
+    "edgePitch": "+0%",
+    "edgeRate": "-10%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "NORTH",
+        "accent": "Northern Serene",
+        "accent_strength": 60
+      },
+      "persona": {
+        "age": "20-24",
+        "personality": "thanh khiết, điềm đạm, an yên, tinh tế",
+        "authority": 80,
+        "friendliness": 95
+      },
+      "style": {
+        "primary": "calm_sales",
+        "secondary": [
+          "wellness_spa",
+          "lifestyle_zen",
+          "soft_consulting"
+        ]
+      },
+      "emotion": {
+        "warmth": 93,
+        "happiness": 75,
+        "excitement": 40,
+        "confidence": 87,
+        "calm": 94,
+        "empathy": 95
+      },
+      "acoustic": {
+        "pitch": 67,
+        "pitch_range": 49,
+        "depth": 32,
+        "warmth": 94,
+        "resonance": 60,
+        "breathiness": 15,
+        "clarity": 95,
+        "articulation": 93,
+        "speed": 55,
+        "rhythm": 58,
+        "intonation": 76,
+        "energy": 48,
+        "emphasis": 71,
+        "pause": 85
+      },
+      "performance": {
+        "vocal_placement": "soft oral",
+        "texture": "silky",
+        "mouth_profile": "calm-relaxed",
+        "onset": "gentle air-cushioned onset",
+        "ending": "long controlled pauses",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": 1.5,
+      "midFreq": 1000,
+      "midGain": 2.2,
+      "presenceFreq": 3500,
+      "presenceGain": 4,
+      "highGain": 2.8,
+      "reverb": 0.08,
+      "reverbDecay": 0.45,
+      "compressor": {
+        "threshold": -16,
+        "ratio": 2.8,
+        "attack": 0.015,
+        "release": 0.28
+      }
+    }
+  },
+  {
+    "id": "vn_f_motivation_young_15",
+    "name": "[v3.0] 15. Empower Girl 👑 (Nữ 20-24t - Truyền Cảm Hứng & Thắp Lửa Đam Mê)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "bac",
+    "ageGroup": "young",
+    "ageRange": "20-24",
+    "styleCategory": "podcast",
+    "category": "🔥 [v3.0] 20-24t • Kể Chuyện & Podcast",
+    "pitch": 1.01,
+    "rate": 0.99,
+    "recommendedFor": "both",
+    "desc": "Giọng đọc nữ trẻ tràn đầy nhiệt huyết, cao trào cảm xúc dâng trào truyền động lực mạnh mẽ cho giới trẻ bứt phá vươn lên.",
+    "sampleText": "Đừng bao giờ để bất kỳ ai giới hạn ước mơ của bạn! Hãy mạnh dạn bước tới và chứng minh năng lực tuyệt vời của chính mình!",
+    "edgePitch": "+1%",
+    "edgeRate": "-1%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "NORTH",
+        "accent": "Northern Inspiring",
+        "accent_strength": 65
+      },
+      "persona": {
+        "age": "20-24",
+        "personality": "truyền lửa, tự tin, nhiệt huyết, khát vọng",
+        "authority": 88,
+        "friendliness": 90
+      },
+      "style": {
+        "primary": "youth_empowerment",
+        "secondary": [
+          "breakthrough_speech",
+          "habit_building",
+          "study_motivation"
+        ]
+      },
+      "emotion": {
+        "warmth": 82,
+        "happiness": 85,
+        "excitement": 92,
+        "confidence": 98,
+        "positivity": 99,
+        "energy": 94
+      },
+      "acoustic": {
+        "pitch": 68,
+        "pitch_range": 72,
+        "depth": 35,
+        "warmth": 82,
+        "resonance": 73,
+        "breathiness": 4,
+        "clarity": 97,
+        "articulation": 96,
+        "speed": 68,
+        "rhythm": 76,
+        "intonation": 88,
+        "energy": 95,
+        "emphasis": 98,
+        "pause": 63
+      },
+      "performance": {
+        "vocal_placement": "chest-oral",
+        "texture": "resonant-bright",
+        "mouth_profile": "open-projected",
+        "onset": "confident resonant onset",
+        "ending": "rising emotional build landing",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": 2.5,
+      "midFreq": 1150,
+      "midGain": 3,
+      "presenceFreq": 3700,
+      "presenceGain": 5,
+      "highGain": 3,
       "reverb": 0.06,
       "reverbDecay": 0.35,
       "compressor": {
+        "threshold": -20,
+        "ratio": 4,
+        "attack": 0.005,
+        "release": 0.16
+      }
+    }
+  },
+  {
+    "id": "vn_f_ad_beauty_16",
+    "name": "[v3.0] 16. Beauty Glow 👑 (Nữ 20-24t - Quảng Cáo Mỹ Phẩm Mượt Mà Như Lụa)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "nam",
+    "ageGroup": "young",
+    "ageRange": "20-24",
+    "styleCategory": "quangcao",
+    "category": "🔥 [v3.0] 20-24t • Quảng Cáo & TVC",
+    "pitch": 1.06,
+    "rate": 0.96,
+    "recommendedFor": "both",
+    "desc": "Giọng đọc TVC mỹ phẩm mềm mại, âm thanh lụa là thoáng khí, gợi tả làn da mọng nước và phong cách sang chảnh.",
+    "sampleText": "Chạm nhẹ để cảm nhận làn da căng bóng mịn màng, rạng rỡ tỏa sáng tự nhiên không tì vết suốt 24 giờ.",
+    "edgePitch": "+6%",
+    "edgeRate": "-4%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "SOUTH",
+        "accent": "Southern Beauty Glow",
+        "accent_strength": 50
+      },
+      "persona": {
+        "age": "20-24",
+        "personality": "thanh lịch, quyến rũ, tươi trẻ, mịn màng",
+        "authority": 80,
+        "friendliness": 95
+      },
+      "style": {
+        "primary": "beauty_advertising",
+        "secondary": [
+          "skincare_tvc",
+          "spa_glow",
+          "luxury_cosmetic"
+        ]
+      },
+      "emotion": {
+        "warmth": 96,
+        "happiness": 85,
+        "excitement": 65,
+        "confidence": 88,
+        "elegance": 94,
+        "empathy": 90
+      },
+      "acoustic": {
+        "pitch": 76,
+        "pitch_range": 67,
+        "depth": 24,
+        "warmth": 96,
+        "resonance": 54,
+        "breathiness": 30,
+        "clarity": 94,
+        "articulation": 91,
+        "speed": 64,
+        "rhythm": 70,
+        "intonation": 90,
+        "energy": 67,
+        "emphasis": 75,
+        "pause": 67
+      },
+      "performance": {
+        "vocal_placement": "soft-forward",
+        "texture": "silky-airy",
+        "mouth_profile": "soft-aesthetic",
+        "onset": "silky air breath",
+        "ending": "elegant fade",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": -0.2,
+      "midFreq": 1200,
+      "midGain": 2.5,
+      "presenceFreq": 4100,
+      "presenceGain": 5.2,
+      "highGain": 4.2,
+      "reverb": 0.08,
+      "reverbDecay": 0.4,
+      "compressor": {
         "threshold": -18,
+        "ratio": 3.2,
+        "attack": 0.008,
+        "release": 0.18
+      }
+    }
+  },
+  {
+    "id": "vn_f_comedy_young_17",
+    "name": "[v3.0] 17. Comedy Pop 👑 (Nữ 20-24t - Tấu Hài Viral, Nhả Chữ Cực Duyên)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "nam",
+    "ageGroup": "young",
+    "ageRange": "20-24",
+    "styleCategory": "idol_genz",
+    "category": "🔥 [v3.0] 20-24t • Creator & Viral",
+    "pitch": 1.1,
+    "rate": 1.1,
+    "recommendedFor": "both",
+    "desc": "Bậc thầy tấu hài, thả punchline bất ngờ kèm micro-pause kịch tính, biến mọi khoảnh khắc livestream thành tràng cười triệu view.",
+    "sampleText": "Trời đất ơi coi nè! Tui nói thiệt chứ không mua cái này là tối về ngủ không có yên giấc đâu nha quý vị ơi!",
+    "edgePitch": "+10%",
+    "edgeRate": "+10%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "SOUTH",
+        "accent": "Southern Comedy Club",
+        "accent_strength": 65
+      },
+      "persona": {
+        "age": "20-24",
+        "personality": "hài hước, lầy lội, diễn xuất cực duyên, sáng tạo",
+        "authority": 75,
+        "friendliness": 100
+      },
+      "style": {
+        "primary": "comedy_viral",
+        "secondary": [
+          "entertainment_live",
+          "tiktok_sketch",
+          "punchline_master"
+        ]
+      },
+      "emotion": {
+        "warmth": 90,
+        "happiness": 99,
+        "excitement": 98,
+        "confidence": 90,
+        "humor": 100,
+        "energy": 99
+      },
+      "acoustic": {
+        "pitch": 84,
+        "pitch_range": 97,
+        "depth": 18,
+        "warmth": 90,
+        "resonance": 36,
+        "breathiness": 10,
+        "clarity": 90,
+        "articulation": 87,
+        "speed": 90,
+        "rhythm": 100,
+        "intonation": 100,
+        "energy": 99,
+        "emphasis": 97,
+        "pause": 25
+      },
+      "performance": {
+        "vocal_placement": "forward",
+        "texture": "bright-elastic",
+        "mouth_profile": "wide-playful",
+        "onset": "comic sudden attack",
+        "ending": "punchline drop + dramatic micro-pause",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": -1,
+      "midFreq": 1450,
+      "midGain": 3.2,
+      "presenceFreq": 4500,
+      "presenceGain": 5.8,
+      "highGain": 4.4,
+      "reverb": 0.05,
+      "reverbDecay": 0.28,
+      "compressor": {
+        "threshold": -21,
+        "ratio": 4.2,
+        "attack": 0.004,
+        "release": 0.14
+      }
+    }
+  },
+  {
+    "id": "vn_f_curious_young_18",
+    "name": "[v3.0] 18. Curious Girl 👑 (Nữ 20-24t - Kích Thích Tò Mò, Giữ Chân Khán Giả)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "bac",
+    "ageGroup": "young",
+    "ageRange": "20-24",
+    "styleCategory": "banhang",
+    "category": "🔥 [v3.0] 20-24t • Bán Hàng & Chốt Deal",
+    "pitch": 1.07,
+    "rate": 1.02,
+    "recommendedFor": "both",
+    "desc": "Giọng đọc mở đầu bằng câu hỏi lôi cuốn, intonation thắc mắc treo cao (suspended rise), thôi thúc người xem tò mò xem tiếp.",
+    "sampleText": "Bạn có bao giờ tự hỏi vì sao sản phẩm này vừa ra mắt đã cháy hàng liên tục trên mọi nền tảng không? Bí mật nằm ở đây!",
+    "edgePitch": "+7%",
+    "edgeRate": "+2%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "NORTH",
+        "accent": "Northern Mystery Conversational",
+        "accent_strength": 60
+      },
+      "persona": {
+        "age": "20-24",
+        "personality": "tò mò, hào hứng, cuốn hút, tinh tế",
+        "authority": 80,
+        "friendliness": 92
+      },
+      "style": {
+        "primary": "curiosity_hook",
+        "secondary": [
+          "teaser_sales",
+          "unboxing_secret",
+          "interactive_question"
+        ]
+      },
+      "emotion": {
+        "warmth": 83,
+        "happiness": 85,
+        "excitement": 85,
+        "confidence": 90,
+        "curiosity": 100,
+        "urgency": 65
+      },
+      "acoustic": {
+        "pitch": 79,
+        "pitch_range": 91,
+        "depth": 23,
+        "warmth": 83,
+        "resonance": 47,
+        "breathiness": 13,
+        "clarity": 93,
+        "articulation": 92,
+        "speed": 75,
+        "rhythm": 84,
+        "intonation": 100,
+        "energy": 82,
+        "emphasis": 89,
+        "pause": 47
+      },
+      "performance": {
+        "vocal_placement": "oral-forward",
+        "texture": "bright-curious",
+        "mouth_profile": "questioning-open",
+        "onset": "curious pitch rise",
+        "ending": "suspended rise",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": 0.5,
+      "midFreq": 1350,
+      "midGain": 2.8,
+      "presenceFreq": 4100,
+      "presenceGain": 5.2,
+      "highGain": 3.8,
+      "reverb": 0.05,
+      "reverbDecay": 0.3,
+      "compressor": {
+        "threshold": -19,
         "ratio": 3.8,
-        "attack": 0.01,
+        "attack": 0.005,
+        "release": 0.16
+      }
+    }
+  },
+  {
+    "id": "vn_f_sales_trust_young_19",
+    "name": "[v3.0] 19. Trust Girl 👑 (Nữ 20-24t - Tạo Niềm Tin An Tâm Tuyệt Đối)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "nam",
+    "ageGroup": "young",
+    "ageRange": "20-24",
+    "styleCategory": "banhang",
+    "category": "🔥 [v3.0] 20-24t • Bán Hàng & Chốt Deal",
+    "pitch": 1.01,
+    "rate": 0.96,
+    "recommendedFor": "both",
+    "desc": "Giọng nữ ấm áp, cao độ ổn định không lên xuống thất thường, cam kết chân thành giúp khách hàng an tâm tuyệt đối khi xuống tiền.",
+    "sampleText": "Shop em cam kết hoàn tiền 100% nếu sản phẩm có bất kỳ lỗi nhỏ nào, các bác hoàn toàn yên tâm nhận hàng kiểm tra thoải mái nha!",
+    "edgePitch": "+1%",
+    "edgeRate": "-4%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "SOUTH",
+        "accent": "Southern Trustworthy",
+        "accent_strength": 52
+      },
+      "persona": {
+        "age": "20-24",
+        "personality": "thật thà, trách nhiệm, chu đáo, an tâm",
+        "authority": 82,
+        "friendliness": 98
+      },
+      "style": {
+        "primary": "trust_sales",
+        "secondary": [
+          "warranty_commit",
+          "honest_store",
+          "customer_peace_of_mind"
+        ]
+      },
+      "emotion": {
+        "warmth": 96,
+        "happiness": 75,
+        "excitement": 55,
+        "confidence": 95,
+        "trust": 99,
+        "empathy": 94
+      },
+      "acoustic": {
+        "pitch": 66,
+        "pitch_range": 54,
+        "depth": 34,
+        "warmth": 96,
+        "resonance": 63,
+        "breathiness": 8,
+        "clarity": 96,
+        "articulation": 94,
+        "speed": 64,
+        "rhythm": 67,
+        "intonation": 73,
+        "energy": 60,
+        "emphasis": 75,
+        "pause": 74
+      },
+      "performance": {
+        "vocal_placement": "centered-oral",
+        "texture": "warm-stable",
+        "mouth_profile": "calm-sincere",
+        "onset": "reassuring warm onset",
+        "ending": "stable pitch + reassuring landing",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": 1.6,
+      "midFreq": 1100,
+      "midGain": 2.5,
+      "presenceFreq": 3600,
+      "presenceGain": 4.5,
+      "highGain": 2.8,
+      "reverb": 0.05,
+      "reverbDecay": 0.32,
+      "compressor": {
+        "threshold": -18,
+        "ratio": 3.5,
+        "attack": 0.008,
+        "release": 0.18
+      }
+    }
+  },
+  {
+    "id": "vn_f_sales_closer_young_20",
+    "name": "[v3.0] 20. Mini Closer 👑 (Nữ 20-24t - Chốt Đơn Gọn Chắc, Nhanh Gọn Lẹ)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "nam",
+    "ageGroup": "young",
+    "ageRange": "20-24",
+    "styleCategory": "banhang",
+    "category": "🔥 [v3.0] 20-24t • Bán Hàng & Chốt Deal",
+    "pitch": 1.04,
+    "rate": 1.06,
+    "recommendedFor": "both",
+    "desc": "Giọng chốt sale ngắn gọn, dứt khoát, âm sắc đặc và chắc, chuyển đổi giỏ hàng siêu tốc cho các sản phẩm tiêu dùng nhanh.",
+    "sampleText": "Thêm vào giỏ hàng và thanh toán ngay thôi cả nhà ơi! Mã giảm 50k chỉ áp dụng cho 10 đơn hàng đầu tiên trong phiên này thôi nè!",
+    "edgePitch": "+4%",
+    "edgeRate": "+6%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "SOUTH",
+        "accent": "Southern Direct Closer",
+        "accent_strength": 50
+      },
+      "persona": {
+        "age": "20-24",
+        "personality": "nhanh nhẹn, dứt khoát, tự tin, thực tế",
+        "authority": 88,
+        "friendliness": 85
+      },
+      "style": {
+        "primary": "quick_closing",
+        "secondary": [
+          "instant_checkout",
+          "flash_voucher",
+          "direct_cta"
+        ]
+      },
+      "emotion": {
+        "warmth": 79,
+        "happiness": 85,
+        "excitement": 90,
+        "confidence": 99,
+        "urgency": 86,
+        "energy": 91
+      },
+      "acoustic": {
+        "pitch": 70,
+        "pitch_range": 61,
+        "depth": 29,
+        "warmth": 79,
+        "resonance": 60,
+        "breathiness": 5,
+        "clarity": 98,
+        "articulation": 98,
+        "speed": 84,
+        "rhythm": 87,
+        "intonation": 83,
+        "energy": 91,
+        "emphasis": 99,
+        "pause": 57
+      },
+      "performance": {
+        "vocal_placement": "oral-forward",
+        "texture": "crisp-dense",
+        "mouth_profile": "clean-firm",
+        "onset": "sharp decisive onset",
+        "ending": "decisive CTA landing",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": 1.8,
+      "midFreq": 1250,
+      "midGain": 3,
+      "presenceFreq": 3900,
+      "presenceGain": 5.2,
+      "highGain": 3.2,
+      "reverb": 0.04,
+      "reverbDecay": 0.24,
+      "compressor": {
+        "threshold": -22,
+        "ratio": 4.5,
+        "attack": 0.003,
+        "release": 0.12
+      }
+    }
+  },
+  {
+    "id": "vn_f_sales_luxury_21",
+    "name": "[v3.0] 21. Premium Lady 👑 (Nữ 24-28t - Bán Hàng Cao Cấp & Hàng Hiệu)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "bac",
+    "ageGroup": "young",
+    "ageRange": "24-28",
+    "styleCategory": "banhang",
+    "category": "🔥 [v3.0] 24-28t • Sang Trọng & Đẳng Cấp",
+    "pitch": 0.97,
+    "rate": 0.94,
+    "recommendedFor": "both",
+    "desc": "Giọng nữ sang trọng, điềm tĩnh, ấm dày và thanh tao, tôn vinh đẳng cấp sản phẩm thời trang thiết kế, trang sức và bất động sản.",
+    "sampleText": "Mỗi chi tiết đều được chế tác tinh xảo với tiêu chuẩn hoàn thiện cao nhất, mang lại vẻ đẹp thanh lịch và độc bản cho người sở hữu.",
+    "edgePitch": "-3%",
+    "edgeRate": "-6%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "NORTH",
+        "accent": "Northern Luxury Tone",
+        "accent_strength": 62
+      },
+      "persona": {
+        "age": "24-28",
+        "personality": "thanh lịch, quý phái, điềm đạm, đẳng cấp",
+        "authority": 92,
+        "friendliness": 85
+      },
+      "style": {
+        "primary": "luxury_sales",
+        "secondary": [
+          "high_ticket",
+          "jewelry_fashion",
+          "exclusive_consulting"
+        ]
+      },
+      "emotion": {
+        "warmth": 88,
+        "happiness": 70,
+        "excitement": 55,
+        "confidence": 97,
+        "elegance": 98,
+        "empathy": 82
+      },
+      "acoustic": {
+        "pitch": 58,
+        "pitch_range": 47,
+        "depth": 52,
+        "warmth": 88,
+        "resonance": 83,
+        "breathiness": 9,
+        "clarity": 99,
+        "articulation": 98,
+        "speed": 61,
+        "rhythm": 65,
+        "intonation": 71,
+        "energy": 63,
+        "emphasis": 83,
+        "pause": 78
+      },
+      "performance": {
+        "vocal_placement": "low oral-chest",
+        "texture": "velvety-dense",
+        "mouth_profile": "refined-calm",
+        "onset": "velvet elegant breath",
+        "ending": "elegant fall",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": 3.2,
+      "midFreq": 980,
+      "midGain": 2.4,
+      "presenceFreq": 3300,
+      "presenceGain": 4.2,
+      "highGain": 2.2,
+      "reverb": 0.08,
+      "reverbDecay": 0.44,
+      "compressor": {
+        "threshold": -17,
+        "ratio": 3.2,
+        "attack": 0.012,
+        "release": 0.24
+      }
+    }
+  },
+  {
+    "id": "vn_f_south_charme_22",
+    "name": "[v3.0] 22. Southern Charme 👑 (Nữ 24-28t - Nữ Sài Gòn Quyến Rũ Tinh Tế)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "nam",
+    "ageGroup": "young",
+    "ageRange": "24-28",
+    "styleCategory": "banhang",
+    "category": "🔥 [v3.0] 24-28t • Bán Hàng & Chốt Deal",
+    "pitch": 1.02,
+    "rate": 0.98,
+    "recommendedFor": "both",
+    "desc": "Giọng nữ Sài Gòn trưởng thành, duyên dáng, ngọt ngào có chiều sâu, tạo sức hút tự nhiên không thể rời tai.",
+    "sampleText": "Dạ em chào các anh chị nha! Hôm nay em lựa được mấy mẫu đầm thiết kế form dáng siêu chuẩn, mặc lên là thần thái ngút ngàn luôn nè!",
+    "edgePitch": "+2%",
+    "edgeRate": "-2%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "SOUTH",
+        "accent": "Southern Sophisticated",
+        "accent_strength": 52
+      },
+      "persona": {
+        "age": "24-28",
+        "personality": "quyến rũ, tinh tế, nữ tính, tự tin",
+        "authority": 82,
+        "friendliness": 97
+      },
+      "style": {
+        "primary": "charme_sales",
+        "secondary": [
+          "beauty_lifestyle",
+          "soft_persuasion",
+          "perfume_fashion"
+        ]
+      },
+      "emotion": {
+        "warmth": 97,
+        "happiness": 85,
+        "excitement": 70,
+        "confidence": 92,
+        "charm": 96,
+        "empathy": 90
+      },
+      "acoustic": {
+        "pitch": 64,
+        "pitch_range": 61,
+        "depth": 42,
+        "warmth": 97,
+        "resonance": 61,
+        "breathiness": 22,
+        "clarity": 94,
+        "articulation": 92,
+        "speed": 65,
+        "rhythm": 71,
+        "intonation": 89,
+        "energy": 72,
+        "emphasis": 80,
+        "pause": 65
+      },
+      "performance": {
+        "vocal_placement": "oral-soft",
+        "texture": "silky-warm",
+        "mouth_profile": "soft-expressive",
+        "onset": "charming silky onset",
+        "ending": "warm lingering finish",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": 1.5,
+      "midFreq": 1150,
+      "midGain": 2.6,
+      "presenceFreq": 3700,
+      "presenceGain": 4.8,
+      "highGain": 3.2,
+      "reverb": 0.07,
+      "reverbDecay": 0.38,
+      "compressor": {
+        "threshold": -18,
+        "ratio": 3.5,
+        "attack": 0.008,
         "release": 0.2
       }
     }
   },
   {
-    "id": "vn_f_founder_22",
-    "name": "[NEW] 22. Nữ Doanh Nhân Khởi Nghiệp Truyền Cảm Hứng 👑 (VN-F-FOUNDER)",
+    "id": "vn_f_ceo_23",
+    "name": "[v3.0] 23. Executive Woman 👑 (Nữ 24-28t - Nữ Doanh Nhân Khí Chất & Quyền Lực)",
     "provider": "system",
     "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "bac",
+    "ageGroup": "young",
+    "ageRange": "24-28",
+    "styleCategory": "doanhnhan",
+    "category": "🔥 [v3.0] 24-28t • Doanh Nhân & Lãnh Đạo",
+    "pitch": 0.94,
+    "rate": 0.94,
+    "recommendedFor": "both",
+    "desc": "Giọng nói trầm chắc từ lồng ngực, quyền uy và đĩnh đạc, truyền tải thông điệp chiến lược, tầm nhìn và quản trị đỉnh cao.",
+    "sampleText": "Sự kiên định với chất lượng cốt lõi và tư duy đột phá chính là chìa khóa giúp chúng ta bứt phá và dẫn đầu thị trường.",
+    "edgePitch": "-6%",
+    "edgeRate": "-6%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "NORTH",
+        "accent": "Northern Executive Pro",
+        "accent_strength": 68
+      },
+      "persona": {
+        "age": "24-28",
+        "personality": "lãnh đạo, quyền lực, đĩnh đạc, quyết đoán",
+        "authority": 100,
+        "friendliness": 70
+      },
+      "style": {
+        "primary": "executive_leadership",
+        "secondary": [
+          "corporate_vision",
+          "business_pitch",
+          "strategic_message"
+        ]
+      },
+      "emotion": {
+        "warmth": 73,
+        "happiness": 55,
+        "excitement": 50,
+        "confidence": 100,
+        "authority": 100,
+        "empathy": 72
+      },
+      "acoustic": {
+        "pitch": 51,
+        "pitch_range": 38,
+        "depth": 68,
+        "warmth": 73,
+        "resonance": 89,
+        "breathiness": 2,
+        "clarity": 100,
+        "articulation": 100,
+        "speed": 59,
+        "rhythm": 63,
+        "intonation": 64,
+        "energy": 69,
+        "emphasis": 94,
+        "pause": 86
+      },
+      "performance": {
+        "vocal_placement": "chest-led",
+        "texture": "dense-authoritative",
+        "mouth_profile": "firm-controlled",
+        "onset": "authoritative chest resonance",
+        "ending": "decisive low fall",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": 4,
+      "midFreq": 900,
+      "midGain": 2.8,
+      "presenceFreq": 3100,
+      "presenceGain": 4,
+      "highGain": 2,
+      "reverb": 0.05,
+      "reverbDecay": 0.32,
+      "compressor": {
+        "threshold": -18,
+        "ratio": 4,
+        "attack": 0.008,
+        "release": 0.18
+      }
+    }
+  },
+  {
+    "id": "vn_f_founder_24",
+    "name": "[v3.0] 24. Founder Spirit 👑 (Nữ 24-28t - Nữ Sáng Lập Khởi Nghiệp Đam Mê)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
     "gender": "Female",
     "lang": "vi-VN",
     "region": "vi",
     "dialect": "standard",
     "ageGroup": "young",
+    "ageRange": "24-28",
     "styleCategory": "doanhnhan",
-    "category": "🔥 [NEW] Doanh Nhân & Lãnh Đạo",
+    "category": "🔥 [v3.0] 24-28t • Doanh Nhân & Lãnh Đạo",
     "pitch": 0.98,
     "rate": 1,
     "recommendedFor": "both",
-    "desc": "Giọng nữ doanh nhân trẻ đầy đam mê, nhiệt huyết, thắp lửa hoài bão cho các dự án khởi nghiệp và phát triển cá nhân.",
-    "sampleText": "Khi bạn tin vào giá trị mà mình tạo ra, mỗi bước đi đều mang ý nghĩa thay đổi cuộc sống của hàng triệu con người.",
+    "desc": "Giọng nữ founder giàu hoài bão, ấm áp và truyền cảm, thắp sáng niềm tin và tinh thần phụng sự trong từng dự án kinh doanh.",
+    "sampleText": "Mỗi sản phẩm chúng tôi tạo ra không chỉ là công nghệ, mà là tâm huyết mang lại giải pháp tốt nhất cho cộng đồng.",
     "edgePitch": "-2%",
     "edgeRate": "+0%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
@@ -3851,73 +3865,63 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "region": {
         "country": "VN",
         "region": "Neutral",
-        "accent": "Standard Vietnamese",
-        "accent_strength": 40
+        "accent": "Standard Vietnamese Modern",
+        "accent_strength": 38
       },
       "persona": {
-        "age": "30-45",
-        "personality": "tham vọng, nhiệt huyết, ấm áp",
+        "age": "24-28",
+        "personality": "khát vọng, truyền cảm hứng, đam mê, ấm áp",
         "authority": 92,
-        "friendliness": 85
+        "friendliness": 90
       },
       "style": {
         "primary": "founder_story",
         "secondary": [
-          "startup_pitch",
-          "empowerment"
+          "startup_vision",
+          "brand_mission",
+          "investor_pitch"
         ]
       },
       "emotion": {
-        "warmth": 82,
-        "happiness": 75,
+        "warmth": 86,
+        "happiness": 80,
         "excitement": 85,
         "confidence": 98,
-        "urgency": 50,
-        "empathy": 82,
-        "positivity": 95
-      },
-      "performance": {
-        "vocal_placement": "balanced chest-oral",
-        "texture": "rich, confident",
-        "pitch": 57,
-        "depth": 55,
-        "warmth": 82,
-        "resonance": 72,
-        "breathiness": 5,
-        "clarity": 97,
-        "articulation": 96,
-        "speed": 70,
-        "rhythm": 76,
-        "intonation": 82,
-        "energy": 86,
-        "emphasis": 90,
-        "pause": 62,
-        "word_duration": "vững vàng, nhiệt huyết",
-        "sentence_ending": "rise ở tầm nhìn, chốt đanh",
-        "character": "cao trào tăng energy; pitch rise ở tầm nhìn; pause trước thông điệp"
+        "positivity": 97,
+        "empathy": 85
       },
       "acoustic": {
         "pitch": 57,
-        "depth": 55,
-        "warmth": 82,
-        "resonance": 72,
+        "pitch_range": 63,
+        "depth": 49,
+        "warmth": 86,
+        "resonance": 76,
         "breathiness": 5,
-        "clarity": 97,
-        "articulation": 96,
-        "speed": 70,
+        "clarity": 98,
+        "articulation": 97,
+        "speed": 69,
         "rhythm": 76,
-        "intonation": 82,
-        "energy": 86,
-        "emphasis": 90,
-        "pause": 62
+        "intonation": 84,
+        "energy": 89,
+        "emphasis": 92,
+        "pause": 67
+      },
+      "performance": {
+        "vocal_placement": "mixed chest/oral",
+        "texture": "rich-confident",
+        "mouth_profile": "open-sincere",
+        "onset": "warm confident inspiration",
+        "ending": "vision words receive emotional rise",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
       }
     },
     "dspProfile": {
-      "lowGain": 2.2,
+      "lowGain": 2.5,
       "midFreq": 1100,
-      "midGain": 2.6,
+      "midGain": 2.8,
       "presenceFreq": 3600,
-      "presenceGain": 4.6,
+      "presenceGain": 4.8,
       "highGain": 2.8,
       "reverb": 0.06,
       "reverbDecay": 0.32,
@@ -3930,92 +3934,84 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     }
   },
   {
-    "id": "vn_f_ad_luxury_23",
-    "name": "[NEW] 23. Nữ Quảng Cáo Thương Hiệu Cao Cấp Luxury TVC 👑 (VN-F-AD-LUXURY)",
+    "id": "vn_f_ad_luxury_25",
+    "name": "[v3.0] 25. Luxury Voice 👑 (Nữ 24-28t - Quảng Cáo TVC Chuẩn Điện Ảnh Quốc Tế)",
     "provider": "system",
     "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
     "gender": "Female",
     "lang": "vi-VN",
     "region": "vi",
     "dialect": "bac",
-    "ageGroup": "middle",
+    "ageGroup": "young",
+    "ageRange": "24-28",
     "styleCategory": "quangcao",
-    "category": "🔥 [NEW] Quảng Cáo & TVC",
+    "category": "🔥 [v3.0] 24-28t • Quảng Cáo & TVC",
     "pitch": 0.94,
-    "rate": 0.91,
+    "rate": 0.88,
     "recommendedFor": "both",
-    "desc": "Giọng đọc TVC quảng cáo đẳng cấp quốc tế, âm sắc sâu lắng, quý phái, nâng tầm nhận diện thương hiệu hàng đầu.",
-    "sampleText": "Tuyệt tác của không gian sống hoàn mỹ, nơi hội tụ tinh hoa kiến trúc và chuẩn mực phong cách sống thượng lưu.",
+    "desc": "Giọng đọc TVC thương hiệu thượng lưu, trầm sâu, sang quý như nhung, tôn vinh kiệt tác kiến trúc và phong cách sống xa hoa.",
+    "sampleText": "Không gian sống hoàn mỹ, nơi hội tụ những giá trị trường tồn và khẳng định vị thế độc tôn của chủ nhân xứng tầm.",
     "edgePitch": "-6%",
-    "edgeRate": "-9%",
+    "edgeRate": "-12%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
         "country": "VN",
         "region": "NORTH",
-        "accent": "Northern Luxury TVC",
+        "accent": "Northern Luxury Cinematic",
         "accent_strength": 65
       },
       "persona": {
-        "age": "30-45",
-        "personality": "quý phái, tinh tế, điện ảnh",
+        "age": "24-28",
+        "personality": "thượng lưu, quý phái, điềm tĩnh, sang trọng",
         "authority": 95,
-        "friendliness": 70
+        "friendliness": 72
       },
       "style": {
-        "primary": "luxury_advertising",
+        "primary": "luxury_tvc",
         "secondary": [
-          "cinematic_tvc",
-          "brand_heritage"
+          "cinematic_brand",
+          "real_estate_luxury",
+          "masterpiece"
         ]
       },
       "emotion": {
-        "warmth": 82,
+        "warmth": 85,
         "happiness": 55,
         "excitement": 40,
-        "confidence": 97,
-        "urgency": 15,
-        "empathy": 78
-      },
-      "performance": {
-        "vocal_placement": "low oral-chest",
-        "texture": "velvety, cinematic",
-        "pitch": 51,
-        "depth": 66,
-        "warmth": 82,
-        "resonance": 88,
-        "breathiness": 10,
-        "clarity": 99,
-        "articulation": 98,
-        "speed": 54,
-        "rhythm": 58,
-        "intonation": 68,
-        "energy": 57,
-        "emphasis": 76,
-        "pause": 85,
-        "word_duration": "chậm, ngân vang",
-        "sentence_ending": "hạ sâu điện ảnh",
-        "character": "chậm, âm vang sâu, pause điện ảnh, không over-emote"
+        "confidence": 92,
+        "elegance": 100,
+        "calm": 94
       },
       "acoustic": {
-        "pitch": 51,
-        "depth": 66,
-        "warmth": 82,
-        "resonance": 88,
-        "breathiness": 10,
+        "pitch": 52,
+        "pitch_range": 41,
+        "depth": 67,
+        "warmth": 85,
+        "resonance": 91,
+        "breathiness": 11,
         "clarity": 99,
         "articulation": 98,
-        "speed": 54,
-        "rhythm": 58,
-        "intonation": 68,
-        "energy": 57,
+        "speed": 52,
+        "rhythm": 56,
+        "intonation": 67,
+        "energy": 55,
         "emphasis": 76,
-        "pause": 85
+        "pause": 89
+      },
+      "performance": {
+        "vocal_placement": "low chest/oral",
+        "texture": "cinematic-velvet",
+        "mouth_profile": "aristocratic-calm",
+        "onset": "cinematic deep velvet breath",
+        "ending": "deep cinematic fade",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
       }
     },
     "dspProfile": {
-      "lowGain": 3.6,
+      "lowGain": 3.8,
       "midFreq": 920,
       "midGain": 2.2,
       "presenceFreq": 3100,
@@ -4032,1008 +4028,80 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     }
   },
   {
-    "id": "vn_f_ad_beauty_24",
-    "name": "[NEW] 24. Nữ Quảng Cáo Mỹ Phẩm & Làm Đẹp 👑 (VN-F-AD-BEAUTY)",
+    "id": "vn_f_expert_26",
+    "name": "[v3.0] 26. Expert Pro 👑 (Nữ 24-28t - Chuyên Gia Phân Tích Thuyết Phục)",
     "provider": "system",
     "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "nam",
-    "ageGroup": "young",
-    "styleCategory": "quangcao",
-    "category": "🔥 [NEW] Quảng Cáo & TVC",
-    "pitch": 1.04,
-    "rate": 0.97,
-    "recommendedFor": "both",
-    "desc": "Giọng đọc quảng cáo mỹ phẩm mềm mại, mượt mà như lụa, gợi cảm giác làn da căng bóng mịn màng và tươi trẻ.",
-    "sampleText": "Đánh thức vẻ đẹp rạng ngời từ sâu bên trong tế bào, cho làn da luôn tươi mới, căng tràn sức sống mỗi sớm mai.",
-    "edgePitch": "+4%",
-    "edgeRate": "-3%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "SOUTH",
-        "accent": "Southern Beauty Aesthetic",
-        "accent_strength": 52
-      },
-      "persona": {
-        "age": "25-35",
-        "personality": "thanh lịch, quyến rũ, tươi trẻ",
-        "authority": 80,
-        "friendliness": 94
-      },
-      "style": {
-        "primary": "beauty_advertising",
-        "secondary": [
-          "skincare_promo",
-          "spa_aesthetic"
-        ]
-      },
-      "emotion": {
-        "warmth": 94,
-        "happiness": 85,
-        "excitement": 65,
-        "confidence": 89,
-        "urgency": 25,
-        "empathy": 90
-      },
-      "performance": {
-        "vocal_placement": "forward-soft",
-        "texture": "silky, slightly airy",
-        "pitch": 70,
-        "depth": 34,
-        "warmth": 94,
-        "resonance": 59,
-        "breathiness": 24,
-        "clarity": 95,
-        "articulation": 93,
-        "speed": 65,
-        "rhythm": 70,
-        "intonation": 86,
-        "energy": 72,
-        "emphasis": 80,
-        "pause": 65,
-        "word_duration": "mềm mại, lướt êm",
-        "sentence_ending": "lượn intonation nhẹ",
-        "character": "khẩu hình mềm, lượn intonation, không thì thầm"
-      },
-      "acoustic": {
-        "pitch": 70,
-        "depth": 34,
-        "warmth": 94,
-        "resonance": 59,
-        "breathiness": 24,
-        "clarity": 95,
-        "articulation": 93,
-        "speed": 65,
-        "rhythm": 70,
-        "intonation": 86,
-        "energy": 72,
-        "emphasis": 80,
-        "pause": 65
-      }
-    },
-    "dspProfile": {
-      "lowGain": 0,
-      "midFreq": 1200,
-      "midGain": 2.4,
-      "presenceFreq": 4000,
-      "presenceGain": 5.2,
-      "highGain": 4,
-      "reverb": 0.08,
-      "reverbDecay": 0.4,
-      "compressor": {
-        "threshold": -18,
-        "ratio": 3.2,
-        "attack": 0.008,
-        "release": 0.18
-      }
-    }
-  },
-  {
-    "id": "vn_f_ad_tech_25",
-    "name": "[NEW] 25. Nữ Quảng Cáo Công Nghệ Hiện Đại 👑 (VN-F-AD-TECH)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
     "gender": "Female",
     "lang": "vi-VN",
     "region": "vi",
     "dialect": "standard",
     "ageGroup": "young",
-    "styleCategory": "quangcao",
-    "category": "🔥 [NEW] Quảng Cáo & TVC",
-    "pitch": 0.99,
-    "rate": 1.02,
+    "ageRange": "24-28",
+    "styleCategory": "chuyengia",
+    "category": "🔥 [v3.0] 24-28t • Tri Thức & Công Nghệ",
+    "pitch": 0.96,
+    "rate": 0.97,
     "recommendedFor": "both",
-    "desc": "Giọng đọc công nghệ sắc nét, thông minh, chuẩn xác, thể hiện tinh thần chuyển đổi số, phần mềm AI và thiết bị thông minh.",
-    "sampleText": "Trải nghiệm tốc độ xử lý vượt trội cùng trí tuệ nhân tạo thế hệ mới, mở khóa tiềm năng vô hạn trong công việc của bạn.",
-    "edgePitch": "-1%",
-    "edgeRate": "+2%",
+    "desc": "Giọng đọc chuẩn mực, đĩnh đạc, dựa trên số liệu và cơ chế khoa học, tạo độ tin cậy tuyệt đối cho tài chính, y dược, thẩm mỹ.",
+    "sampleText": "Kết quả kiểm nghiệm lâm sàng đã chứng minh sản phẩm cải thiện độ đàn hồi rõ rệt sau 2 tuần sử dụng liên tục.",
+    "edgePitch": "-4%",
+    "edgeRate": "-3%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
         "country": "VN",
         "region": "Neutral",
-        "accent": "Standard Modern Tech",
-        "accent_strength": 35
+        "accent": "Standard Scientific",
+        "accent_strength": 32
       },
       "persona": {
-        "age": "27-40",
-        "personality": "thông minh, hiện đại, sắc sảo",
-        "authority": 94,
+        "age": "24-28",
+        "personality": "uyên bác, khoa học, điềm đạm, thuyết phục",
+        "authority": 96,
         "friendliness": 78
       },
       "style": {
-        "primary": "tech_advertising",
+        "primary": "expert_consulting",
         "secondary": [
-          "software_promo",
-          "ai_showcase"
+          "scientific_proof",
+          "medical_finance",
+          "analytical_sales"
         ]
       },
       "emotion": {
-        "warmth": 68,
-        "happiness": 65,
-        "excitement": 70,
-        "confidence": 95,
-        "urgency": 40,
-        "empathy": 70
-      },
-      "performance": {
-        "vocal_placement": "oral-forward",
-        "texture": "clean, precise",
-        "pitch": 58,
-        "depth": 52,
-        "warmth": 68,
-        "resonance": 76,
-        "breathiness": 5,
-        "clarity": 99,
-        "articulation": 99,
-        "speed": 72,
-        "rhythm": 74,
-        "intonation": 76,
-        "energy": 73,
-        "emphasis": 83,
-        "pause": 62,
-        "word_duration": "dứt khoát, chuẩn xác",
-        "sentence_ending": "gọn gàng, trung tính",
-        "character": "thuật ngữ sắc nét, rhythm chính xác, không cảm xúc dư"
-      },
-      "acoustic": {
-        "pitch": 58,
-        "depth": 52,
-        "warmth": 68,
-        "resonance": 76,
-        "breathiness": 5,
-        "clarity": 99,
-        "articulation": 99,
-        "speed": 72,
-        "rhythm": 74,
-        "intonation": 76,
-        "energy": 73,
-        "emphasis": 83,
-        "pause": 62
-      }
-    },
-    "dspProfile": {
-      "lowGain": 1.5,
-      "midFreq": 1250,
-      "midGain": 2.8,
-      "presenceFreq": 3800,
-      "presenceGain": 5,
-      "highGain": 3.2,
-      "reverb": 0.04,
-      "reverbDecay": 0.26,
-      "compressor": {
-        "threshold": -19,
-        "ratio": 3.8,
-        "attack": 0.005,
-        "release": 0.15
-      }
-    }
-  },
-  {
-    "id": "vn_f_motivation_26",
-    "name": "[NEW] 26. Nữ Truyền Động Lực & Đột Phá 👑 (VN-F-MOTIVATION)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "bac",
-    "ageGroup": "middle",
-    "styleCategory": "podcast",
-    "category": "🔥 [NEW] Kể Chuyện & Podcast",
-    "pitch": 0.98,
-    "rate": 0.98,
-    "recommendedFor": "both",
-    "desc": "Giọng đọc hùng hồn, nội lực mạnh mẽ, khích lệ tinh thần vượt lên nghịch cảnh và chạm tới ước mơ vĩ đại.",
-    "sampleText": "Đừng để nỗi sợ hãi níu giữ đôi chân bạn! Hãy thức dậy với sự kiên cường và chứng minh cho cả thế giới thấy bạn là ai!",
-    "edgePitch": "-2%",
-    "edgeRate": "-2%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "NORTH",
-        "accent": "Northern Motivational",
-        "accent_strength": 60
-      },
-      "persona": {
-        "age": "30-45",
-        "personality": "mạnh mẽ, nhiệt huyết, thủ lĩnh",
-        "authority": 96,
-        "friendliness": 82
-      },
-      "style": {
-        "primary": "motivational",
-        "secondary": [
-          "coach_speech",
-          "life_breakthrough"
-        ]
-      },
-      "emotion": {
-        "warmth": 84,
-        "happiness": 80,
-        "excitement": 90,
+        "warmth": 76,
+        "happiness": 60,
+        "excitement": 50,
         "confidence": 98,
-        "urgency": 70,
-        "empathy": 86,
-        "positivity": 98
-      },
-      "performance": {
-        "vocal_placement": "chest-oral",
-        "texture": "resonant, powerful",
-        "pitch": 57,
-        "depth": 58,
-        "warmth": 84,
-        "resonance": 78,
-        "breathiness": 5,
-        "clarity": 97,
-        "articulation": 96,
-        "speed": 67,
-        "rhythm": 72,
-        "intonation": 87,
-        "energy": 92,
-        "emphasis": 96,
-        "pause": 68,
-        "word_duration": "đanh thép, ngân cao trào",
-        "sentence_ending": "tuyên bố landing mạnh",
-        "character": "cao trào tăng pitch/energy; câu tuyên bố landing mạnh"
-      },
-      "acoustic": {
-        "pitch": 57,
-        "depth": 58,
-        "warmth": 84,
-        "resonance": 78,
-        "breathiness": 5,
-        "clarity": 97,
-        "articulation": 96,
-        "speed": 67,
-        "rhythm": 72,
-        "intonation": 87,
-        "energy": 92,
-        "emphasis": 96,
-        "pause": 68
-      }
-    },
-    "dspProfile": {
-      "lowGain": 2.8,
-      "midFreq": 1100,
-      "midGain": 3,
-      "presenceFreq": 3600,
-      "presenceGain": 5.2,
-      "highGain": 3,
-      "reverb": 0.06,
-      "reverbDecay": 0.35,
-      "compressor": {
-        "threshold": -20,
-        "ratio": 4.2,
-        "attack": 0.005,
-        "release": 0.15
-      }
-    }
-  },
-  {
-    "id": "vn_f_story_warm_27",
-    "name": "[NEW] 27. Nữ Kể Chuyện Ấm Áp Sâu Lắng 👑 (VN-F-STORY-WARM)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "nam",
-    "ageGroup": "middle",
-    "styleCategory": "podcast",
-    "category": "🔥 [NEW] Kể Chuyện & Podcast",
-    "pitch": 0.97,
-    "rate": 0.9,
-    "recommendedFor": "both",
-    "desc": "Giọng kể chuyện ấm cúng, gần gũi như bà mẹ, người chị tâm sự bên bếp lửa, thích hợp cho audio book, chuyện đêm muộn.",
-    "sampleText": "Đêm nay, giữa khoảng lặng êm đềm của phố thị, hãy để những câu chuyện nhỏ đưa bạn về với miền ký ức tuổi thơ tươi đẹp.",
-    "edgePitch": "-3%",
-    "edgeRate": "-10%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "SOUTH",
-        "accent": "Southern Warm Story",
-        "accent_strength": 55
-      },
-      "persona": {
-        "age": "30-45",
-        "personality": "ấm áp, hiền dịu, bao dung",
-        "authority": 75,
-        "friendliness": 98
-      },
-      "style": {
-        "primary": "warm_storytelling",
-        "secondary": [
-          "audiobook",
-          "bedtime_story"
-        ]
-      },
-      "emotion": {
-        "warmth": 98,
-        "happiness": 70,
-        "excitement": 40,
-        "confidence": 85,
-        "urgency": 10,
-        "empathy": 96,
-        "emotional_depth": 94
-      },
-      "performance": {
-        "vocal_placement": "warm oral",
-        "texture": "rounded, intimate",
-        "pitch": 57,
-        "depth": 52,
-        "warmth": 98,
-        "resonance": 65,
-        "breathiness": 22,
-        "clarity": 94,
-        "articulation": 92,
-        "speed": 55,
-        "rhythm": 61,
-        "intonation": 88,
-        "energy": 52,
-        "emphasis": 72,
-        "pause": 88,
-        "word_duration": "chậm rãi, âm đầu mềm",
-        "sentence_ending": "nhẹ nhàng, lắng đọng",
-        "character": "nhịp chậm, âm đầu mềm, pause dài, pitch đổi theo diễn biến"
-      },
-      "acoustic": {
-        "pitch": 57,
-        "depth": 52,
-        "warmth": 98,
-        "resonance": 65,
-        "breathiness": 22,
-        "clarity": 94,
-        "articulation": 92,
-        "speed": 55,
-        "rhythm": 61,
-        "intonation": 88,
-        "energy": 52,
-        "emphasis": 72,
-        "pause": 88
-      }
-    },
-    "dspProfile": {
-      "lowGain": 2.5,
-      "midFreq": 1000,
-      "midGain": 2.2,
-      "presenceFreq": 3300,
-      "presenceGain": 3.8,
-      "highGain": 2.2,
-      "reverb": 0.1,
-      "reverbDecay": 0.5,
-      "compressor": {
-        "threshold": -16,
-        "ratio": 2.8,
-        "attack": 0.02,
-        "release": 0.3
-      }
-    }
-  },
-  {
-    "id": "vn_f_story_cinema_28",
-    "name": "[NEW] 28. Nữ Kể Chuyện Điện Ảnh Huyền Bí Cinema 👑 (VN-F-STORY-CINEMA)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "bac",
-    "ageGroup": "middle",
-    "styleCategory": "podcast",
-    "category": "🔥 [NEW] Kể Chuyện & Podcast",
-    "pitch": 0.92,
-    "rate": 0.88,
-    "recommendedFor": "both",
-    "desc": "Giọng đọc điện ảnh ma mị, huyền bí, kịch tính cao, chuyên trị review phim bom tấn, truyện trinh thám và tư liệu lịch sử ly kỳ.",
-    "sampleText": "Khi màn đêm buông xuống, bóng tối bắt đầu nuốt chửng những bí mật kinh hoàng nhất mà nhân loại từng cố chôn giấu.",
-    "edgePitch": "-8%",
-    "edgeRate": "-12%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "NORTH",
-        "accent": "Northern Cinematic Mystery",
-        "accent_strength": 65
-      },
-      "persona": {
-        "age": "30-45",
-        "personality": "bí ẩn, kịch tính, lôi cuốn",
-        "authority": 90,
-        "friendliness": 60
-      },
-      "style": {
-        "primary": "cinematic_storytelling",
-        "secondary": [
-          "movie_review",
-          "history_thriller"
-        ]
-      },
-      "emotion": {
-        "warmth": 77,
-        "happiness": 40,
-        "excitement": 65,
-        "confidence": 95,
-        "urgency": 45,
-        "emotional_depth": 95
-      },
-      "performance": {
-        "vocal_placement": "chest-low",
-        "texture": "resonant, cinematic, dark-warm",
-        "pitch": 49,
-        "depth": 67,
-        "warmth": 77,
-        "resonance": 91,
-        "breathiness": 12,
-        "clarity": 96,
-        "articulation": 94,
-        "speed": 50,
-        "rhythm": 57,
-        "intonation": 82,
-        "energy": 64,
-        "emphasis": 89,
-        "pause": 94,
-        "word_duration": "dài, dramatic pause",
-        "sentence_ending": "pitch xuống ở kết",
-        "character": "câu dài, dramatic pause, pitch xuống ở kết, kéo duration từ khóa hình ảnh"
-      },
-      "acoustic": {
-        "pitch": 49,
-        "depth": 67,
-        "warmth": 77,
-        "resonance": 91,
-        "breathiness": 12,
-        "clarity": 96,
-        "articulation": 94,
-        "speed": 50,
-        "rhythm": 57,
-        "intonation": 82,
-        "energy": 64,
-        "emphasis": 89,
-        "pause": 94
-      }
-    },
-    "dspProfile": {
-      "lowGain": 4.2,
-      "midFreq": 850,
-      "midGain": 2.5,
-      "presenceFreq": 2900,
-      "presenceGain": 4.2,
-      "highGain": 2,
-      "reverb": 0.14,
-      "reverbDecay": 0.65,
-      "compressor": {
-        "threshold": -18,
-        "ratio": 3.5,
-        "attack": 0.015,
-        "release": 0.3
-      }
-    }
-  },
-  {
-    "id": "vn_f_documentary_29",
-    "name": "[NEW] 29. Nữ Thuyết Minh Phim Tài Liệu VTV 👑 (VN-F-DOCUMENTARY)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "standard",
-    "ageGroup": "middle",
-    "styleCategory": "mc_btv",
-    "category": "🔥 [NEW] MC, BTV & Tin Tức",
-    "pitch": 0.94,
-    "rate": 0.95,
-    "recommendedFor": "both",
-    "desc": "Giọng thuyết minh khoa học, khách quan, điềm tĩnh, chuẩn mực phóng sự Discovery, Địa lý & Thiên nhiên hoang dã.",
-    "sampleText": "Trải qua hàng triệu năm kiến tạo địa chất, dòng sông đã bào mòn các vách đá vôi để tạo nên kỳ quan thiên nhiên độc nhất vô nhị.",
-    "edgePitch": "-6%",
-    "edgeRate": "-5%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "Neutral",
-        "accent": "Standard Documentary",
-        "accent_strength": 35
-      },
-      "persona": {
-        "age": "32-50",
-        "personality": "khách quan, thông thái, điềm tĩnh",
-        "authority": 96,
-        "friendliness": 72
-      },
-      "style": {
-        "primary": "documentary",
-        "secondary": [
-          "nature_science",
-          "historical_report"
-        ]
-      },
-      "emotion": {
-        "warmth": 71,
-        "happiness": 50,
-        "excitement": 45,
-        "confidence": 96,
-        "urgency": 15,
-        "empathy": 75
-      },
-      "performance": {
-        "vocal_placement": "centered-chest",
-        "texture": "clean-dense",
-        "pitch": 51,
-        "depth": 61,
-        "warmth": 71,
-        "resonance": 80,
-        "breathiness": 4,
-        "clarity": 99,
-        "articulation": 99,
-        "speed": 59,
-        "rhythm": 63,
-        "intonation": 70,
-        "energy": 55,
-        "emphasis": 76,
-        "pause": 75,
-        "word_duration": "chuẩn mực, không diễn quá",
-        "sentence_ending": "khách quan, chắc chắn",
-        "character": "khách quan, emphasis chọn lọc, không diễn quá"
-      },
-      "acoustic": {
-        "pitch": 51,
-        "depth": 61,
-        "warmth": 71,
-        "resonance": 80,
-        "breathiness": 4,
-        "clarity": 99,
-        "articulation": 99,
-        "speed": 59,
-        "rhythm": 63,
-        "intonation": 70,
-        "energy": 55,
-        "emphasis": 76,
-        "pause": 75
-      }
-    },
-    "dspProfile": {
-      "lowGain": 3,
-      "midFreq": 950,
-      "midGain": 2.4,
-      "presenceFreq": 3300,
-      "presenceGain": 4,
-      "highGain": 2.2,
-      "reverb": 0.06,
-      "reverbDecay": 0.35,
-      "compressor": {
-        "threshold": -17,
-        "ratio": 3.2,
-        "attack": 0.01,
-        "release": 0.22
-      }
-    }
-  },
-  {
-    "id": "vn_f_news_30",
-    "name": "[NEW] 30. Nữ Phát Thanh Viên Thời Sự Quốc Gia 👑 (VN-F-NEWS)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "bac",
-    "ageGroup": "middle",
-    "styleCategory": "mc_btv",
-    "category": "🔥 [NEW] MC, BTV & Tin Tức",
-    "pitch": 0.97,
-    "rate": 1,
-    "recommendedFor": "both",
-    "desc": "Giọng đọc bản tin thời sự nghiêm trang, rõ ràng, phát âm tròn vành rõ chữ từng phụ âm, mang tính chính luận quốc gia.",
-    "sampleText": "Kính chào quý vị và các đồng chí, mời quý vị theo dõi bản tin thời sự sáng nay với những diễn biến kinh tế xã hội quan trọng nhất.",
-    "edgePitch": "-3%",
-    "edgeRate": "+0%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "NORTH",
-        "accent": "Northern Standard News",
-        "accent_strength": 70
-      },
-      "persona": {
-        "age": "28-45",
-        "personality": "nghiêm túc, chuẩn mực, chính xác",
-        "authority": 100,
-        "friendliness": 60
-      },
-      "style": {
-        "primary": "news_broadcasting",
-        "secondary": [
-          "politics_economy",
-          "official_announcement"
-        ]
-      },
-      "emotion": {
-        "warmth": 48,
-        "happiness": 45,
-        "excitement": 40,
-        "confidence": 99,
-        "urgency": 30,
-        "empathy": 60
-      },
-      "performance": {
-        "vocal_placement": "oral-forward",
-        "texture": "clean, neutral",
-        "pitch": 55,
-        "depth": 50,
-        "warmth": 48,
-        "resonance": 67,
-        "breathiness": 2,
-        "clarity": 100,
-        "articulation": 100,
-        "speed": 68,
-        "rhythm": 73,
-        "intonation": 68,
-        "energy": 62,
-        "emphasis": 70,
-        "pause": 59,
-        "word_duration": "ngắt nhịp chuẩn xác",
-        "sentence_ending": "trung tính, dứt khoát",
-        "character": "không cười, contour kiểm soát, kết câu trung tính"
+        "trust": 96,
+        "authority": 96
       },
       "acoustic": {
         "pitch": 55,
-        "depth": 50,
-        "warmth": 48,
-        "resonance": 67,
-        "breathiness": 2,
+        "pitch_range": 45,
+        "depth": 55,
+        "warmth": 76,
+        "resonance": 78,
+        "breathiness": 3,
         "clarity": 100,
         "articulation": 100,
-        "speed": 68,
-        "rhythm": 73,
-        "intonation": 68,
-        "energy": 62,
-        "emphasis": 70,
-        "pause": 59
-      }
-    },
-    "dspProfile": {
-      "lowGain": 2,
-      "midFreq": 1100,
-      "midGain": 2.8,
-      "presenceFreq": 3500,
-      "presenceGain": 4.8,
-      "highGain": 2.5,
-      "reverb": 0.03,
-      "reverbDecay": 0.22,
-      "compressor": {
-        "threshold": -18,
-        "ratio": 3.8,
-        "attack": 0.006,
-        "release": 0.16
-      }
-    }
-  },
-  {
-    "id": "vn_f_mc_elegant_31",
-    "name": "[NEW] 31. MC Nữ Sang Trọng Lễ Trao Giải Gala 👑 (VN-F-MC-ELEGANT)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "bac",
-    "ageGroup": "young",
-    "styleCategory": "mc_btv",
-    "category": "🔥 [NEW] MC, BTV & Tin Tức",
-    "pitch": 1.01,
-    "rate": 1,
-    "recommendedFor": "both",
-    "desc": "Giọng nữ MC đài các, thanh cao, nhấn nhá lộng lẫy trong các sự kiện vinh danh, dạ tiệc thảm đỏ và lễ kỷ niệm cao cấp.",
-    "sampleText": "Và ngay sau đây, giây phút trang trọng nhất được mong chờ nhất trong đêm nay: xin vinh danh những cá nhân xuất sắc nhất!",
-    "edgePitch": "+1%",
-    "edgeRate": "+0%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "NORTH",
-        "accent": "Northern Elegant MC",
-        "accent_strength": 65
-      },
-      "persona": {
-        "age": "28-40",
-        "personality": "thanh lịch, trang trọng, đài các",
-        "authority": 92,
-        "friendliness": 85
-      },
-      "style": {
-        "primary": "elegant_mc",
-        "secondary": [
-          "award_ceremony",
-          "gala_dinner"
-        ]
-      },
-      "emotion": {
-        "warmth": 85,
-        "happiness": 85,
-        "excitement": 80,
-        "confidence": 97,
-        "urgency": 35,
-        "empathy": 80
-      },
-      "performance": {
-        "vocal_placement": "oral-mask",
-        "texture": "silky-clear, polished",
-        "pitch": 61,
-        "depth": 47,
-        "warmth": 85,
-        "resonance": 79,
-        "breathiness": 8,
-        "clarity": 99,
-        "articulation": 99,
-        "speed": 69,
-        "rhythm": 86,
-        "intonation": 91,
-        "energy": 80,
-        "emphasis": 84,
-        "pause": 60,
-        "word_duration": "uyển chuyển, trang trọng",
-        "sentence_ending": "hạ thanh lịch",
-        "character": "pitch contour uyển chuyển, giới thiệu có lift, kết hạ thanh lịch"
-      },
-      "acoustic": {
-        "pitch": 61,
-        "depth": 47,
-        "warmth": 85,
-        "resonance": 79,
-        "breathiness": 8,
-        "clarity": 99,
-        "articulation": 99,
-        "speed": 69,
-        "rhythm": 86,
-        "intonation": 91,
-        "energy": 80,
-        "emphasis": 84,
-        "pause": 60
-      }
-    },
-    "dspProfile": {
-      "lowGain": 1.8,
-      "midFreq": 1150,
-      "midGain": 2.8,
-      "presenceFreq": 3800,
-      "presenceGain": 5,
-      "highGain": 3.2,
-      "reverb": 0.08,
-      "reverbDecay": 0.42,
-      "compressor": {
-        "threshold": -18,
-        "ratio": 3.5,
-        "attack": 0.008,
-        "release": 0.2
-      }
-    }
-  },
-  {
-    "id": "vn_f_mc_energy_32",
-    "name": "[NEW] 32. MC Nữ Sự Kiện Ngoài Trời Năng Lượng 👑 (VN-F-MC-ENERGY)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "nam",
-    "ageGroup": "young",
-    "styleCategory": "mc_btv",
-    "category": "🔥 [NEW] MC, BTV & Tin Tức",
-    "pitch": 1.06,
-    "rate": 1.08,
-    "recommendedFor": "both",
-    "desc": "Giọng MC nữ hoạt náo ngoài trời, countdown, teambuilding và lễ hội âm nhạc với độ vang sáng và năng lượng tràn ngập.",
-    "sampleText": "Các bạn đã sẵn sàng bùng cháy cùng chúng tôi trong ngày hội hôm nay chưa nào! Hãy giơ cao cánh tay và cùng đếm ngược nào!",
-    "edgePitch": "+6%",
-    "edgeRate": "+8%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "SOUTH",
-        "accent": "Southern Festival Host",
-        "accent_strength": 55
-      },
-      "persona": {
-        "age": "24-35",
-        "personality": "bùng nổ, hoạt bát, truyền lửa",
-        "authority": 88,
-        "friendliness": 95
-      },
-      "style": {
-        "primary": "event_mc",
-        "secondary": [
-          "outdoor_festival",
-          "countdown_host"
-        ]
-      },
-      "emotion": {
-        "warmth": 81,
-        "happiness": 98,
-        "excitement": 96,
-        "confidence": 96,
-        "urgency": 85,
-        "energy": 99
-      },
-      "performance": {
-        "vocal_placement": "forward-bright",
-        "texture": "punchy",
-        "pitch": 72,
-        "depth": 32,
-        "warmth": 81,
-        "resonance": 55,
-        "breathiness": 6,
-        "clarity": 97,
-        "articulation": 96,
-        "speed": 87,
-        "rhythm": 94,
-        "intonation": 97,
-        "energy": 99,
-        "emphasis": 94,
-        "pause": 35,
-        "word_duration": "bật nảy, vang sáng",
-        "sentence_ending": "CTA sáng, punchline có pause",
-        "character": "nhịp dồn, pitch lift lớn, CTA sáng, punchline có pause"
-      },
-      "acoustic": {
-        "pitch": 72,
-        "depth": 32,
-        "warmth": 81,
-        "resonance": 55,
-        "breathiness": 6,
-        "clarity": 97,
-        "articulation": 96,
-        "speed": 87,
-        "rhythm": 94,
-        "intonation": 97,
-        "energy": 99,
-        "emphasis": 94,
-        "pause": 35
-      }
-    },
-    "dspProfile": {
-      "lowGain": 0,
-      "midFreq": 1350,
-      "midGain": 3.2,
-      "presenceFreq": 4400,
-      "presenceGain": 5.8,
-      "highGain": 4,
-      "reverb": 0.06,
-      "reverbDecay": 0.32,
-      "compressor": {
-        "threshold": -22,
-        "ratio": 4.5,
-        "attack": 0.004,
-        "release": 0.12
-      }
-    }
-  },
-  {
-    "id": "vn_f_expert_33",
-    "name": "[NEW] 33. Nữ Chuyên Gia Tư Vấn Tài Chính & Luật 👑 (VN-F-EXPERT)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "standard",
-    "ageGroup": "middle",
-    "styleCategory": "doanhnhan",
-    "category": "🔥 [NEW] Doanh Nhân & Lãnh Đạo",
-    "pitch": 0.95,
-    "rate": 0.97,
-    "recommendedFor": "both",
-    "desc": "Giọng đọc sắc sảo, khúc chiết, chuẩn xác từng điều khoản, chuyên biệt cho video phân tích tài chính, pháp lý và đầu tư.",
-    "sampleText": "Việc tối ưu hóa cấu trúc vốn và tuân thủ các quy định pháp lý sẽ bảo vệ tài sản doanh nghiệp an toàn trước mọi rủi ro thị trường.",
-    "edgePitch": "-5%",
-    "edgeRate": "-3%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "Neutral",
-        "accent": "Standard Legal Financial",
-        "accent_strength": 30
-      },
-      "persona": {
-        "age": "35-50",
-        "personality": "uyên bác, chuẩn xác, đáng tin",
-        "authority": 100,
-        "friendliness": 65
-      },
-      "style": {
-        "primary": "expert",
-        "secondary": [
-          "financial_analysis",
-          "legal_consulting"
-        ]
-      },
-      "emotion": {
-        "warmth": 70,
-        "happiness": 50,
-        "excitement": 40,
-        "confidence": 98,
-        "urgency": 20,
-        "empathy": 72
+        "speed": 66,
+        "rhythm": 68,
+        "intonation": 72,
+        "energy": 64,
+        "emphasis": 88,
+        "pause": 74
       },
       "performance": {
         "vocal_placement": "centered-chest",
         "texture": "dense-clean",
-        "pitch": 54,
-        "depth": 59,
-        "warmth": 70,
-        "resonance": 77,
-        "breathiness": 3,
-        "clarity": 100,
-        "articulation": 100,
-        "speed": 66,
-        "rhythm": 68,
-        "intonation": 71,
-        "energy": 60,
-        "emphasis": 84,
-        "pause": 73,
-        "word_duration": "thuật ngữ sắc, không nuốt",
-        "sentence_ending": "chuẩn xác, tiết chế",
-        "character": "thuật ngữ không nuốt, pause sau luận điểm, cảm xúc tiết chế"
-      },
-      "acoustic": {
-        "pitch": 54,
-        "depth": 59,
-        "warmth": 70,
-        "resonance": 77,
-        "breathiness": 3,
-        "clarity": 100,
-        "articulation": 100,
-        "speed": 66,
-        "rhythm": 68,
-        "intonation": 71,
-        "energy": 60,
-        "emphasis": 84,
-        "pause": 73
+        "mouth_profile": "precise-objective",
+        "onset": "scientific articulate attack",
+        "ending": "firm objective finish",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
       }
     },
     "dspProfile": {
@@ -5054,201 +4122,279 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     }
   },
   {
-    "id": "vn_f_educator_34",
-    "name": "[NEW] 34. Nữ Giảng Viên Khóa Học Học Thuật 👑 (VN-F-EDUCATOR)",
+    "id": "vn_f_story_emotional_27",
+    "name": "[v3.0] 27. Heart Story 👑 (Nữ 24-28t - Kể Chuyện Cảm Động Chạm Tới Trái Tim)",
     "provider": "system",
     "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "bac",
-    "ageGroup": "middle",
-    "styleCategory": "chuyengia",
-    "category": "🔥 [NEW] Tư Vấn & Chăm Sóc",
-    "pitch": 0.99,
-    "rate": 0.94,
-    "recommendedFor": "both",
-    "desc": "Giọng nữ sư phạm ấm áp, kiên nhẫn, phân tích từ từ dễ hiểu, phù hợp cho bài giảng E-learning, đào tạo nội bộ.",
-    "sampleText": "Chào các bạn học viên, trong bài học ngày hôm nay chúng ta sẽ cùng nhau tìm hiểu 3 nguyên lý nền tảng quan trọng nhất.",
-    "edgePitch": "-1%",
-    "edgeRate": "-6%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "NORTH",
-        "accent": "Northern Academic Educator",
-        "accent_strength": 65
-      },
-      "persona": {
-        "age": "30-48",
-        "personality": "sư phạm, kiên nhẫn, truyền đạt tốt",
-        "authority": 90,
-        "friendliness": 88
-      },
-      "style": {
-        "primary": "education",
-        "secondary": [
-          "e_learning",
-          "academic_lecture"
-        ]
-      },
-      "emotion": {
-        "warmth": 88,
-        "happiness": 70,
-        "excitement": 55,
-        "confidence": 93,
-        "urgency": 15,
-        "empathy": 90
-      },
-      "performance": {
-        "vocal_placement": "oral-warm",
-        "texture": "clear, patient",
-        "pitch": 63,
-        "depth": 43,
-        "warmth": 88,
-        "resonance": 61,
-        "breathiness": 8,
-        "clarity": 98,
-        "articulation": 98,
-        "speed": 61,
-        "rhythm": 65,
-        "intonation": 82,
-        "energy": 72,
-        "emphasis": 81,
-        "pause": 72,
-        "word_duration": "nhấn từ khóa bằng pitch + duration",
-        "sentence_ending": "câu hỏi rise nhẹ, tiếp nhận tốt",
-        "character": "nhấn từ khóa bằng pitch + duration; pause để tiếp nhận; câu hỏi rise nhẹ"
-      },
-      "acoustic": {
-        "pitch": 63,
-        "depth": 43,
-        "warmth": 88,
-        "resonance": 61,
-        "breathiness": 8,
-        "clarity": 98,
-        "articulation": 98,
-        "speed": 61,
-        "rhythm": 65,
-        "intonation": 82,
-        "energy": 72,
-        "emphasis": 81,
-        "pause": 72
-      }
-    },
-    "dspProfile": {
-      "lowGain": 1.5,
-      "midFreq": 1100,
-      "midGain": 2.5,
-      "presenceFreq": 3600,
-      "presenceGain": 4.5,
-      "highGain": 2.8,
-      "reverb": 0.05,
-      "reverbDecay": 0.32,
-      "compressor": {
-        "threshold": -18,
-        "ratio": 3.2,
-        "attack": 0.01,
-        "release": 0.2
-      }
-    }
-  },
-  {
-    "id": "vn_f_customer_care_35",
-    "name": "[NEW] 35. Nữ Chăm Sóc Khách Hàng Chu Đáo Tận Tâm 👑 (VN-F-CUSTOMER-CARE)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
     "gender": "Female",
     "lang": "vi-VN",
     "region": "vi",
     "dialect": "nam",
     "ageGroup": "young",
-    "styleCategory": "chuyengia",
-    "category": "🔥 [NEW] Tư Vấn & Chăm Sóc",
-    "pitch": 1.02,
-    "rate": 0.95,
+    "ageRange": "24-28",
+    "styleCategory": "podcast",
+    "category": "🔥 [v3.0] 24-28t • Kể Chuyện & Podcast",
+    "pitch": 0.98,
+    "rate": 0.88,
     "recommendedFor": "both",
-    "desc": "Giọng tổng đài viên cao cấp, lắng nghe chu đáo, giải quyết khiếu nại nhẹ nhàng, biến mọi sự bực dọc thành hài lòng.",
-    "sampleText": "Dạ em rất hiểu sự bất tiện mà anh chị đang gặp phải. Em xin phép được hỗ trợ xử lý ngay vấn đề này cho mình ạ.",
-    "edgePitch": "+2%",
-    "edgeRate": "-5%",
+    "desc": "Giọng kể chuyện đong đầy cảm xúc, ấm áp lắng đọng từng hơi thở, chạm sâu vào những góc khuất tâm hồn người nghe.",
+    "sampleText": "Có những kỷ niệm dù đã qua đi rất lâu, nhưng mỗi khi nhớ lại, lòng ta vẫn vẹn nguyên cảm xúc ngọt ngào như ngày đầu.",
+    "edgePitch": "-2%",
+    "edgeRate": "-12%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
         "country": "VN",
         "region": "SOUTH",
-        "accent": "Southern Professional CS",
-        "accent_strength": 50
+        "accent": "Southern Deep Storyteller",
+        "accent_strength": 55
       },
       "persona": {
-        "age": "25-38",
-        "personality": "chu đáo, tận tâm, hòa nhã",
-        "authority": 70,
-        "friendliness": 100
+        "age": "24-28",
+        "personality": "truyền cảm, sâu sắc, bao dung, ấm áp",
+        "authority": 75,
+        "friendliness": 98
       },
       "style": {
-        "primary": "customer_service",
+        "primary": "deep_storytelling",
         "secondary": [
-          "call_center",
-          "problem_solving"
+          "emotional_audiobook",
+          "heart_connection",
+          "memory_lane"
         ]
       },
       "emotion": {
-        "warmth": 99,
-        "happiness": 75,
-        "excitement": 40,
+        "warmth": 100,
+        "happiness": 65,
+        "excitement": 35,
         "confidence": 85,
-        "urgency": 10,
-        "empathy": 97
-      },
-      "performance": {
-        "vocal_placement": "soft oral",
-        "texture": "warm-clean",
-        "pitch": 67,
-        "depth": 37,
-        "warmth": 99,
-        "resonance": 50,
-        "breathiness": 15,
-        "clarity": 96,
-        "articulation": 95,
-        "speed": 60,
-        "rhythm": 63,
-        "intonation": 84,
-        "energy": 57,
-        "emphasis": 61,
-        "pause": 69,
-        "word_duration": "dịu, kiên nhẫn",
-        "sentence_ending": "xác nhận có rise nhẹ",
-        "character": "dịu, kiên nhẫn; xác nhận có rise nhẹ; không mang màu chốt sale"
+        "emotional_depth": 100,
+        "empathy": 98
       },
       "acoustic": {
-        "pitch": 67,
-        "depth": 37,
-        "warmth": 99,
-        "resonance": 50,
-        "breathiness": 15,
-        "clarity": 96,
-        "articulation": 95,
-        "speed": 60,
-        "rhythm": 63,
-        "intonation": 84,
-        "energy": 57,
-        "emphasis": 61,
-        "pause": 69
+        "pitch": 58,
+        "pitch_range": 68,
+        "depth": 51,
+        "warmth": 100,
+        "resonance": 66,
+        "breathiness": 28,
+        "clarity": 93,
+        "articulation": 91,
+        "speed": 52,
+        "rhythm": 57,
+        "intonation": 93,
+        "energy": 48,
+        "emphasis": 78,
+        "pause": 92
+      },
+      "performance": {
+        "vocal_placement": "intimate oral",
+        "texture": "warm-breathy",
+        "mouth_profile": "soft-expressive",
+        "onset": "heartfelt breath-led touch",
+        "ending": "deep emotional resonance fade",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
       }
     },
     "dspProfile": {
-      "lowGain": 0.5,
-      "midFreq": 1150,
-      "midGain": 2.2,
-      "presenceFreq": 3700,
+      "lowGain": 2.8,
+      "midFreq": 980,
+      "midGain": 2.4,
+      "presenceFreq": 3300,
       "presenceGain": 4.2,
-      "highGain": 3,
-      "reverb": 0.05,
-      "reverbDecay": 0.3,
+      "highGain": 2.8,
+      "reverb": 0.12,
+      "reverbDecay": 0.58,
+      "compressor": {
+        "threshold": -16,
+        "ratio": 2.8,
+        "attack": 0.02,
+        "release": 0.3
+      }
+    }
+  },
+  {
+    "id": "vn_f_story_cinema_28",
+    "name": "[v3.0] 28. Cinema Narrator 👑 (Nữ 24-28t - Thuyết Minh Review Phim Bom Tấn)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "bac",
+    "ageGroup": "young",
+    "ageRange": "24-28",
+    "styleCategory": "podcast",
+    "category": "🔥 [v3.0] 24-28t • Kể Chuyện & Podcast",
+    "pitch": 0.92,
+    "rate": 0.86,
+    "recommendedFor": "both",
+    "desc": "Giọng đọc điện ảnh kịch tính, trầm tối ma mị, khoảng lặng hồi hộp tạo cảm giác điện ảnh đỉnh cao cho review phim và trinh thám.",
+    "sampleText": "Khi sự thật dần hé lộ sau bức màn bí ẩn, tất cả những kẻ đứng sau kế hoạch tàn nhẫn đều không ngờ tới kết cục này.",
+    "edgePitch": "-8%",
+    "edgeRate": "-14%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "NORTH",
+        "accent": "Northern Cinema Suspense",
+        "accent_strength": 65
+      },
+      "persona": {
+        "age": "24-28",
+        "personality": "hồi hộp, bí ẩn, cuốn hút, điện ảnh",
+        "authority": 92,
+        "friendliness": 65
+      },
+      "style": {
+        "primary": "cinematic_narration",
+        "secondary": [
+          "movie_recap",
+          "mystery_thriller",
+          "suspense_story"
+        ]
+      },
+      "emotion": {
+        "warmth": 78,
+        "happiness": 40,
+        "excitement": 70,
+        "confidence": 96,
+        "depth": 98,
+        "suspense": 91
+      },
+      "acoustic": {
+        "pitch": 49,
+        "pitch_range": 54,
+        "depth": 72,
+        "warmth": 78,
+        "resonance": 94,
+        "breathiness": 10,
+        "clarity": 97,
+        "articulation": 95,
+        "speed": 48,
+        "rhythm": 53,
+        "intonation": 84,
+        "energy": 60,
+        "emphasis": 91,
+        "pause": 95
+      },
+      "performance": {
+        "vocal_placement": "chest-low",
+        "texture": "cinematic-dark-warm",
+        "mouth_profile": "suspense-low",
+        "onset": "dramatic dark onset",
+        "ending": "cinematic low drop",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": 4.4,
+      "midFreq": 850,
+      "midGain": 2.6,
+      "presenceFreq": 2900,
+      "presenceGain": 4.4,
+      "highGain": 2,
+      "reverb": 0.14,
+      "reverbDecay": 0.65,
+      "compressor": {
+        "threshold": -18,
+        "ratio": 3.5,
+        "attack": 0.015,
+        "release": 0.3
+      }
+    }
+  },
+  {
+    "id": "vn_f_sales_soft_29",
+    "name": "[v3.0] 29. Soft Seller 👑 (Nữ 24-28t - Bán Hàng Mềm Mại Thuyết Phục)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "nam",
+    "ageGroup": "young",
+    "ageRange": "24-28",
+    "styleCategory": "banhang",
+    "category": "🔥 [v3.0] 24-28t • Bán Hàng & Chốt Deal",
+    "pitch": 1,
+    "rate": 0.94,
+    "recommendedFor": "both",
+    "desc": "Bán hàng không tạo áp lực, nhịp điệu thuyết phục êm dịu, mưa dầm thấm lâu, khách nghe là tự động muốn chốt đơn.",
+    "sampleText": "Chị em mình đầu tư cho bản thân một sản phẩm chất lượng như vầy thì vừa tiết kiệm thời gian mà kết quả lại vượt mong đợi nè.",
+    "edgePitch": "+0%",
+    "edgeRate": "-6%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "SOUTH",
+        "accent": "Southern Soft Persuasion",
+        "accent_strength": 52
+      },
+      "persona": {
+        "age": "24-28",
+        "personality": "thuyết phục, êm ái, thấu hiểu, kiên nhẫn",
+        "authority": 82,
+        "friendliness": 98
+      },
+      "style": {
+        "primary": "soft_selling",
+        "secondary": [
+          "consultative_sales",
+          "gentle_closing",
+          "home_wellness"
+        ]
+      },
+      "emotion": {
+        "warmth": 98,
+        "happiness": 75,
+        "excitement": 50,
+        "confidence": 89,
+        "trust": 97,
+        "empathy": 95
+      },
+      "acoustic": {
+        "pitch": 61,
+        "pitch_range": 48,
+        "depth": 43,
+        "warmth": 98,
+        "resonance": 60,
+        "breathiness": 18,
+        "clarity": 96,
+        "articulation": 94,
+        "speed": 58,
+        "rhythm": 62,
+        "intonation": 78,
+        "energy": 52,
+        "emphasis": 78,
+        "pause": 81
+      },
+      "performance": {
+        "vocal_placement": "soft-oral",
+        "texture": "soft-mellow",
+        "mouth_profile": "relaxed-gentle",
+        "onset": "low-pressure gentle onset",
+        "ending": "low-pressure persuasive cadence",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": 1.8,
+      "midFreq": 1100,
+      "midGain": 2.2,
+      "presenceFreq": 3600,
+      "presenceGain": 4.2,
+      "highGain": 2.8,
+      "reverb": 0.07,
+      "reverbDecay": 0.38,
       "compressor": {
         "threshold": -17,
         "ratio": 3,
@@ -5258,297 +4404,648 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     }
   },
   {
-    "id": "vn_f_empathy_36",
-    "name": "[NEW] 36. Nữ Trấn An & Đồng Cảm Tâm Lý 👑 (VN-F-EMPATHY)",
+    "id": "vn_f_sales_closer_elite_30",
+    "name": "[v3.0] 30. Closer Elite 👑 (Nữ 24-28t - Nữ Hoàng Chốt Sale Thượng Đỉnh)",
     "provider": "system",
     "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
     "gender": "Female",
     "lang": "vi-VN",
     "region": "vi",
-    "dialect": "nam",
-    "ageGroup": "middle",
-    "styleCategory": "chuyengia",
-    "category": "🔥 [NEW] Tư Vấn & Chăm Sóc",
-    "pitch": 0.96,
-    "rate": 0.88,
+    "dialect": "bac",
+    "ageGroup": "young",
+    "ageRange": "24-28",
+    "styleCategory": "banhang",
+    "category": "🔥 [v3.0] 24-28t • Bán Hàng & Chốt Deal",
+    "pitch": 0.97,
+    "rate": 1.05,
     "recommendedFor": "both",
-    "desc": "Giọng đọc chữa lành tâm hồn, xoa dịu lo âu, thấu hiểu tổn thương, chuyên trị radio chữa lành, thiền định và tâm lý học.",
-    "sampleText": "Mọi chuyện rồi sẽ ổn thôi, bạn đã làm rất tốt rồi. Hãy cho phép bản thân được nghỉ ngơi và thở một hơi thật sâu nhé.",
-    "edgePitch": "-4%",
-    "edgeRate": "-12%",
+    "desc": "Quy trình chốt sale hoàn hảo: ngưng lặng -> báo giá -> ngưng lặng -> dứt khoát kêu gọi hành động, biến mọi lưỡng lự thành đơn hàng.",
+    "sampleText": "Cơ hội duy nhất trong ngày hôm nay: đúng 500 nghìn đồng. Bấm vào nút Mua Ngay để nhận ưu đãi trước khi kết thúc phiên!",
+    "edgePitch": "-3%",
+    "edgeRate": "+5%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
         "country": "VN",
-        "region": "SOUTH",
-        "accent": "Southern Healing Empathy",
-        "accent_strength": 50
+        "region": "NORTH",
+        "accent": "Northern Elite Closing",
+        "accent_strength": 65
       },
       "persona": {
-        "age": "30-45",
-        "personality": "vỗ về, chữa lành, thấu cảm",
-        "authority": 65,
-        "friendliness": 100
+        "age": "24-28",
+        "personality": "sắc sảo, tự tin tuyệt đối, làm chủ tình thế",
+        "authority": 96,
+        "friendliness": 78
       },
       "style": {
-        "primary": "empathy",
+        "primary": "elite_closing",
         "secondary": [
-          "healing_radio",
-          "meditation_counseling"
+          "deal_breaker",
+          "high_conversion",
+          "objection_crusher"
         ]
       },
       "emotion": {
-        "warmth": 100,
-        "happiness": 65,
-        "excitement": 30,
-        "confidence": 80,
-        "urgency": 5,
-        "empathy": 100,
-        "depth": 97
-      },
-      "performance": {
-        "vocal_placement": "low-soft oral",
-        "texture": "intimate, airy-warm",
-        "pitch": 55,
-        "depth": 49,
-        "warmth": 100,
-        "resonance": 57,
-        "breathiness": 28,
-        "clarity": 92,
-        "articulation": 90,
-        "speed": 48,
-        "rhythm": 54,
-        "intonation": 82,
-        "energy": 38,
-        "emphasis": 55,
-        "pause": 91,
-        "word_duration": "chậm, nhẹ",
-        "sentence_ending": "êm dịu, không kịch",
-        "character": "chậm, nhẹ, pitch movement nhỏ, pause dài, không kịch"
+        "warmth": 78,
+        "happiness": 75,
+        "excitement": 88,
+        "confidence": 100,
+        "urgency": 91,
+        "authority": 96
       },
       "acoustic": {
-        "pitch": 55,
-        "depth": 49,
-        "warmth": 100,
-        "resonance": 57,
-        "breathiness": 28,
-        "clarity": 92,
-        "articulation": 90,
-        "speed": 48,
-        "rhythm": 54,
-        "intonation": 82,
-        "energy": 38,
-        "emphasis": 55,
-        "pause": 91
+        "pitch": 56,
+        "pitch_range": 48,
+        "depth": 57,
+        "warmth": 78,
+        "resonance": 81,
+        "breathiness": 2,
+        "clarity": 100,
+        "articulation": 100,
+        "speed": 77,
+        "rhythm": 83,
+        "intonation": 80,
+        "energy": 90,
+        "emphasis": 100,
+        "pause": 69
+      },
+      "performance": {
+        "vocal_placement": "chest-oral balanced",
+        "texture": "firm-resonant",
+        "mouth_profile": "clean-sharp",
+        "onset": "silence → price → silence → CTA",
+        "ending": "decisive conversion landing",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
       }
     },
     "dspProfile": {
-      "lowGain": 2,
-      "midFreq": 950,
-      "midGain": 2,
-      "presenceFreq": 3200,
-      "presenceGain": 3.5,
-      "highGain": 2.5,
-      "reverb": 0.12,
-      "reverbDecay": 0.6,
+      "lowGain": 2.8,
+      "midFreq": 1150,
+      "midGain": 3.2,
+      "presenceFreq": 3700,
+      "presenceGain": 5.4,
+      "highGain": 3,
+      "reverb": 0.04,
+      "reverbDecay": 0.25,
       "compressor": {
-        "threshold": -15,
-        "ratio": 2.5,
-        "attack": 0.025,
-        "release": 0.35
+        "threshold": -23,
+        "ratio": 4.8,
+        "attack": 0.003,
+        "release": 0.1
       }
     }
   },
   {
-    "id": "vn_f_friendly_37",
-    "name": "[NEW] 37. Nữ Bạn Bè Đời Thường Gần Gũi 👑 (VN-F-FRIENDLY)",
+    "id": "vn_f_ad_beauty_lux_31",
+    "name": "[v3.0] 31. Beauty Lux 👑 (Nữ 24-28t - Mỹ Phẩm Thượng Lưu, Spa Hoàng Gia)",
     "provider": "system",
     "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
     "gender": "Female",
     "lang": "vi-VN",
     "region": "vi",
     "dialect": "nam",
     "ageGroup": "young",
-    "styleCategory": "idol_genz",
-    "category": "🔥 [NEW] Livestream & Creator Viral",
+    "ageRange": "24-28",
+    "styleCategory": "quangcao",
+    "category": "🔥 [v3.0] 24-28t • Quảng Cáo & TVC",
     "pitch": 1.03,
-    "rate": 1.01,
+    "rate": 0.94,
     "recommendedFor": "both",
-    "desc": "Giọng nói tự nhiên như cuộc tán gẫu hàng ngày, không màu mè diễn xuất, tạo sự kết nối bạn bè chân thành 100%.",
-    "sampleText": "Hôm nay đi làm về có mệt không? Ngồi xuống đây uống miếng nước rồi tám chuyện với mình một xíu cho vui nha!",
+    "desc": "Giọng đọc làm đẹp thượng lưu, thanh tao quý phái, hơi thở nhẹ êm gợi cảm giác đắm mình trong liệu trình spa cao cấp.",
+    "sampleText": "Khơi nguồn nét thanh xuân bất tận cùng tinh chất vàng hoàng gia, nuôi dưỡng từng tế bào da căng tràn sức sống.",
     "edgePitch": "+3%",
-    "edgeRate": "+1%",
+    "edgeRate": "-6%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
         "country": "VN",
         "region": "SOUTH",
-        "accent": "Southern Everyday Friend",
-        "accent_strength": 55
+        "accent": "Southern Royal Beauty",
+        "accent_strength": 50
       },
       "persona": {
-        "age": "20-35",
-        "personality": "thân mật, tự nhiên, thoải mái",
-        "authority": 60,
-        "friendliness": 100
+        "age": "24-28",
+        "personality": "quý tộc, tao nhã, kiêu sa, mượt mà",
+        "authority": 88,
+        "friendliness": 92
       },
       "style": {
-        "primary": "casual_social",
+        "primary": "luxury_beauty",
         "secondary": [
-          "vlog_daily",
-          "friend_chat"
+          "royal_spa",
+          "anti_aging",
+          "aesthetic_clinic"
         ]
       },
       "emotion": {
-        "warmth": 96,
-        "happiness": 85,
-        "excitement": 70,
-        "confidence": 80,
-        "urgency": 20,
+        "warmth": 95,
+        "happiness": 80,
+        "excitement": 60,
+        "confidence": 91,
+        "elegance": 98,
         "empathy": 90
       },
-      "performance": {
-        "vocal_placement": "relaxed",
-        "texture": "casual, soft-bright",
-        "pitch": 69,
-        "depth": 32,
-        "warmth": 96,
-        "resonance": 42,
-        "breathiness": 20,
-        "clarity": 87,
-        "articulation": 84,
-        "speed": 76,
-        "rhythm": 80,
-        "intonation": 91,
-        "energy": 75,
-        "emphasis": 62,
-        "pause": 44,
-        "word_duration": "nối âm đời thường",
-        "sentence_ending": "tự nhiên, không MC",
-        "character": "nối âm và micro-variation; không mang giọng MC"
-      },
       "acoustic": {
-        "pitch": 69,
-        "depth": 32,
-        "warmth": 96,
-        "resonance": 42,
-        "breathiness": 20,
-        "clarity": 87,
-        "articulation": 84,
-        "speed": 76,
-        "rhythm": 80,
-        "intonation": 91,
-        "energy": 75,
-        "emphasis": 62,
-        "pause": 44
+        "pitch": 67,
+        "pitch_range": 59,
+        "depth": 35,
+        "warmth": 95,
+        "resonance": 62,
+        "breathiness": 27,
+        "clarity": 96,
+        "articulation": 93,
+        "speed": 61,
+        "rhythm": 67,
+        "intonation": 88,
+        "energy": 65,
+        "emphasis": 78,
+        "pause": 71
+      },
+      "performance": {
+        "vocal_placement": "forward-soft",
+        "texture": "silky-airy",
+        "mouth_profile": "elegant-aesthetic",
+        "onset": "royal breath whisper",
+        "ending": "silky floating fade",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
       }
     },
     "dspProfile": {
-      "lowGain": 0,
-      "midFreq": 1200,
-      "midGain": 2.2,
+      "lowGain": 0.5,
+      "midFreq": 1150,
+      "midGain": 2.6,
+      "presenceFreq": 3900,
+      "presenceGain": 5,
+      "highGain": 4,
+      "reverb": 0.09,
+      "reverbDecay": 0.45,
+      "compressor": {
+        "threshold": -17,
+        "ratio": 3,
+        "attack": 0.01,
+        "release": 0.22
+      }
+    }
+  },
+  {
+    "id": "vn_f_ad_tech_future_32",
+    "name": "[v3.0] 32. Tech Future 👑 (Nữ 24-28t - Trí Tuệ Nhân Tạo & Công Nghệ Tương Lai)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "standard",
+    "ageGroup": "young",
+    "ageRange": "24-28",
+    "styleCategory": "quangcao",
+    "category": "🔥 [v3.0] 24-28t • Quảng Cáo & TVC",
+    "pitch": 0.99,
+    "rate": 1.02,
+    "recommendedFor": "both",
+    "desc": "Giọng đọc sắc sảo, siêu hiện đại, biểu tượng của trí tuệ nhân tạo thế hệ mới, giải pháp công nghệ đám mây và tương lai số.",
+    "sampleText": "Khám phá kỷ nguyên trí tuệ nhân tạo toàn diện, tự động hóa mọi quy trình và mở khóa tiềm năng phát triển không giới hạn.",
+    "edgePitch": "-1%",
+    "edgeRate": "+2%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "Neutral",
+        "accent": "Standard AI Modern Tech",
+        "accent_strength": 32
+      },
+      "persona": {
+        "age": "24-28",
+        "personality": "thông tuệ, sắc sảo, hiện đại, tương lai",
+        "authority": 96,
+        "friendliness": 80
+      },
+      "style": {
+        "primary": "ai_technology",
+        "secondary": [
+          "future_software",
+          "cloud_computing",
+          "smart_device"
+        ]
+      },
+      "emotion": {
+        "warmth": 69,
+        "happiness": 65,
+        "excitement": 74,
+        "confidence": 96,
+        "intelligence": 98,
+        "curiosity": 86
+      },
+      "acoustic": {
+        "pitch": 59,
+        "pitch_range": 49,
+        "depth": 48,
+        "warmth": 69,
+        "resonance": 78,
+        "breathiness": 4,
+        "clarity": 100,
+        "articulation": 100,
+        "speed": 73,
+        "rhythm": 75,
+        "intonation": 77,
+        "energy": 74,
+        "emphasis": 86,
+        "pause": 61
+      },
+      "performance": {
+        "vocal_placement": "oral-forward",
+        "texture": "clean-modern",
+        "mouth_profile": "sharp-precise",
+        "onset": "high-tech articulate attack",
+        "ending": "crisp modern finish",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": 1.8,
+      "midFreq": 1250,
+      "midGain": 3,
       "presenceFreq": 3800,
-      "presenceGain": 4.2,
-      "highGain": 3.2,
+      "presenceGain": 5.2,
+      "highGain": 3.4,
+      "reverb": 0.04,
+      "reverbDecay": 0.26,
+      "compressor": {
+        "threshold": -19,
+        "ratio": 3.8,
+        "attack": 0.005,
+        "release": 0.15
+      }
+    }
+  },
+  {
+    "id": "vn_f_motivation_queen_33",
+    "name": "[v3.0] 33. Motivation Queen 👑 (Nữ 24-28t - Diễn Giả Truyền Động Lực Quyền Uy)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "bac",
+    "ageGroup": "young",
+    "ageRange": "24-28",
+    "styleCategory": "podcast",
+    "category": "🔥 [v3.0] 24-28t • Kể Chuyện & Podcast",
+    "pitch": 0.98,
+    "rate": 0.99,
+    "recommendedFor": "both",
+    "desc": "Giọng đọc hùng tráng của nữ thủ lĩnh, nội lực cuồn cuộn, tuyên bố mạnh mẽ giúp người nghe thức tỉnh và hành động ngay lập tức.",
+    "sampleText": "Thành công không tự nhiên đến với người chỉ biết ngồi chờ đợi! Hãy đứng dậy, dấn thân và kiến tạo tương lai của chính bạn!",
+    "edgePitch": "-2%",
+    "edgeRate": "-1%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "NORTH",
+        "accent": "Northern Powerful Keynote",
+        "accent_strength": 68
+      },
+      "persona": {
+        "age": "24-28",
+        "personality": "thủ lĩnh, hùng hồn, mạnh mẽ, truyền cảm",
+        "authority": 98,
+        "friendliness": 85
+      },
+      "style": {
+        "primary": "keynote_motivational",
+        "secondary": [
+          "life_coaching",
+          "high_energy_speech",
+          "unstoppable_mindset"
+        ]
+      },
+      "emotion": {
+        "warmth": 86,
+        "happiness": 85,
+        "excitement": 95,
+        "confidence": 100,
+        "positivity": 100,
+        "energy": 96
+      },
+      "acoustic": {
+        "pitch": 58,
+        "pitch_range": 70,
+        "depth": 55,
+        "warmth": 86,
+        "resonance": 82,
+        "breathiness": 3,
+        "clarity": 98,
+        "articulation": 98,
+        "speed": 68,
+        "rhythm": 73,
+        "intonation": 91,
+        "energy": 97,
+        "emphasis": 100,
+        "pause": 71
+      },
+      "performance": {
+        "vocal_placement": "chest-oral",
+        "texture": "powerful-resonant",
+        "mouth_profile": "wide-projected",
+        "onset": "resonant thunderous onset",
+        "ending": "powerful authoritative impact",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": 3.2,
+      "midFreq": 1100,
+      "midGain": 3.2,
+      "presenceFreq": 3600,
+      "presenceGain": 5.2,
+      "highGain": 3,
+      "reverb": 0.06,
+      "reverbDecay": 0.35,
+      "compressor": {
+        "threshold": -20,
+        "ratio": 4.2,
+        "attack": 0.005,
+        "release": 0.15
+      }
+    }
+  },
+  {
+    "id": "vn_f_trusted_advisor_34",
+    "name": "[v3.0] 34. Trusted Advisor 👑 (Nữ 24-28t - Cố Vấn Cao Cấp Chân Thành)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "bac",
+    "ageGroup": "young",
+    "ageRange": "24-28",
+    "styleCategory": "chuyengia",
+    "category": "🔥 [v3.0] 24-28t • Tri Thức & Công Nghệ",
+    "pitch": 0.96,
+    "rate": 0.95,
+    "recommendedFor": "both",
+    "desc": "Giọng tư vấn trung thực, trầm ấm, chuẩn mực, đem lại sự tin cậy tuyệt đối cho các hợp đồng lớn, bảo hiểm và giải pháp tài chính.",
+    "sampleText": "Chúng tôi luôn đồng hành và bảo vệ quyền lợi tối đa của bạn với những giải pháp tài chính an toàn và bền vững nhất.",
+    "edgePitch": "-4%",
+    "edgeRate": "-5%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "NORTH",
+        "accent": "Northern Trusted Advisor",
+        "accent_strength": 62
+      },
+      "persona": {
+        "age": "24-28",
+        "personality": "đáng tin cậy, chân thành, trách nhiệm, điềm tĩnh",
+        "authority": 95,
+        "friendliness": 92
+      },
+      "style": {
+        "primary": "trusted_advisory",
+        "secondary": [
+          "wealth_management",
+          "financial_consulting",
+          "insurance_advisor"
+        ]
+      },
+      "emotion": {
+        "warmth": 95,
+        "happiness": 65,
+        "excitement": 45,
+        "confidence": 96,
+        "trust": 100,
+        "empathy": 91
+      },
+      "acoustic": {
+        "pitch": 55,
+        "pitch_range": 43,
+        "depth": 51,
+        "warmth": 95,
+        "resonance": 75,
+        "breathiness": 5,
+        "clarity": 99,
+        "articulation": 98,
+        "speed": 62,
+        "rhythm": 65,
+        "intonation": 70,
+        "energy": 57,
+        "emphasis": 75,
+        "pause": 79
+      },
+      "performance": {
+        "vocal_placement": "centered",
+        "texture": "warm-dense",
+        "mouth_profile": "calm-sincere",
+        "onset": "reassuring solid attack",
+        "ending": "firm comforting landing",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": 2.8,
+      "midFreq": 1000,
+      "midGain": 2.6,
+      "presenceFreq": 3400,
+      "presenceGain": 4.4,
+      "highGain": 2.2,
       "reverb": 0.05,
       "reverbDecay": 0.3,
       "compressor": {
         "threshold": -18,
-        "ratio": 3.2,
+        "ratio": 3.5,
+        "attack": 0.008,
+        "release": 0.18
+      }
+    }
+  },
+  {
+    "id": "vn_f_mc_elegance_35",
+    "name": "[v3.0] 35. MC Elegance 👑 (Nữ 24-28t - MC Đài Các, Sự Kiện Vinh Danh Thảm Đỏ)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "bac",
+    "ageGroup": "young",
+    "ageRange": "24-28",
+    "styleCategory": "mc_btv",
+    "category": "🔥 [v3.0] 24-28t • MC, BTV & Sự Kiện",
+    "pitch": 1.01,
+    "rate": 0.99,
+    "recommendedFor": "both",
+    "desc": "Giọng nữ MC đài các, uyển chuyển, giới thiệu có độ nâng thanh lịch, tôn vinh các lễ trao giải, dạ tiệc và lễ kỷ niệm trang trọng.",
+    "sampleText": "Kính thưa quý vị đại biểu, giây phút trang trọng nhất đêm nay: xin được vinh danh những gương mặt xuất sắc và tiêu biểu nhất!",
+    "edgePitch": "+1%",
+    "edgeRate": "-1%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "NORTH",
+        "accent": "Northern High Gala MC",
+        "accent_strength": 65
+      },
+      "persona": {
+        "age": "24-28",
+        "personality": "đài các, lộng lẫy, chuẩn mực, trang trọng",
+        "authority": 94,
+        "friendliness": 90
+      },
+      "style": {
+        "primary": "gala_mc",
+        "secondary": [
+          "award_ceremony",
+          "red_carpet",
+          "grand_opening"
+        ]
+      },
+      "emotion": {
+        "warmth": 87,
+        "happiness": 88,
+        "excitement": 82,
+        "confidence": 98,
+        "elegance": 98,
+        "empathy": 82
+      },
+      "acoustic": {
+        "pitch": 62,
+        "pitch_range": 60,
+        "depth": 44,
+        "warmth": 87,
+        "resonance": 80,
+        "breathiness": 6,
+        "clarity": 100,
+        "articulation": 100,
+        "speed": 68,
+        "rhythm": 85,
+        "intonation": 93,
+        "energy": 79,
+        "emphasis": 85,
+        "pause": 63
+      },
+      "performance": {
+        "vocal_placement": "oral-mask",
+        "texture": "polished-silky",
+        "mouth_profile": "refined-mask",
+        "onset": "grand gala lift",
+        "ending": "elegant noble finish",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": 2,
+      "midFreq": 1150,
+      "midGain": 2.8,
+      "presenceFreq": 3800,
+      "presenceGain": 5,
+      "highGain": 3.2,
+      "reverb": 0.08,
+      "reverbDecay": 0.42,
+      "compressor": {
+        "threshold": -18,
+        "ratio": 3.5,
         "attack": 0.008,
         "release": 0.2
       }
     }
   },
   {
-    "id": "vn_f_podcast_38",
-    "name": "[NEW] 38. Nữ Host Podcast Trò Chuyện Chuyên Sâu 👑 (VN-F-PODCAST)",
+    "id": "vn_f_podcast_intimate_36",
+    "name": "[v3.0] 36. Podcast Intimate 👑 (Nữ 24-28t - Host Podcast Phòng Thu Gần Gũi)",
     "provider": "system",
     "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
     "gender": "Female",
     "lang": "vi-VN",
     "region": "vi",
     "dialect": "standard",
     "ageGroup": "young",
+    "ageRange": "24-28",
     "styleCategory": "podcast",
-    "category": "🔥 [NEW] Kể Chuyện & Podcast",
-    "pitch": 0.95,
-    "rate": 0.94,
+    "category": "🔥 [v3.0] 24-28t • Kể Chuyện & Podcast",
+    "pitch": 0.96,
+    "rate": 0.93,
     "recommendedFor": "both",
-    "desc": "Giọng host podcast chất lượng phòng thu, gần gũi micro (close-mic), ấm áp, đĩnh đạc, dẫn dắt các cuộc trò chuyện sâu sắc.",
-    "sampleText": "Chào mừng các bạn quay trở lại với series podcast hàng tuần, nơi chúng ta cùng bóc tách những góc nhìn đa chiều về cuộc sống.",
-    "edgePitch": "-5%",
-    "edgeRate": "-6%",
+    "desc": "Giọng host podcast ấm áp chuẩn phòng thu close-mic, tĩnh lặng và sâu lắng, dẫn dắt các cuộc trò chuyện nhân sinh đa chiều.",
+    "sampleText": "Chào mừng bạn quay trở lại với không gian podcast, nơi chúng ta cùng ngồi lại và chia sẻ những góc nhìn chân thật nhất về cuộc sống.",
+    "edgePitch": "-4%",
+    "edgeRate": "-7%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
         "country": "VN",
         "region": "Neutral",
-        "accent": "Standard Podcast Neutral",
+        "accent": "Standard Studio Close-Mic",
         "accent_strength": 35
       },
       "persona": {
-        "age": "28-42",
-        "personality": "thấu hiểu, điềm đạm, lắng nghe",
+        "age": "24-28",
+        "personality": "lắng nghe, thấu cảm, đĩnh đạc, ấm áp",
         "authority": 88,
-        "friendliness": 92
+        "friendliness": 95
       },
       "style": {
-        "primary": "podcast_talk",
+        "primary": "intimate_podcast",
         "secondary": [
-          "deep_interview",
+          "deep_talk",
+          "life_reflections",
           "thought_sharing"
         ]
       },
       "emotion": {
-        "warmth": 89,
-        "happiness": 68,
-        "excitement": 50,
-        "confidence": 88,
-        "urgency": 15,
-        "empathy": 92
-      },
-      "performance": {
-        "vocal_placement": "close-mic, chest-oral",
-        "texture": "warm-rich",
-        "pitch": 54,
-        "depth": 60,
-        "warmth": 89,
-        "resonance": 76,
-        "breathiness": 18,
-        "clarity": 96,
-        "articulation": 94,
-        "speed": 58,
-        "rhythm": 63,
-        "intonation": 79,
-        "energy": 61,
-        "emphasis": 72,
-        "pause": 76,
-        "word_duration": "thân mật, contour nhẹ",
-        "sentence_ending": "pause tự nhiên, ổn định",
-        "character": "thân mật, pause tự nhiên, pitch ổn định nhưng có contour nhẹ"
+        "warmth": 96,
+        "happiness": 70,
+        "excitement": 45,
+        "confidence": 90,
+        "trust": 94,
+        "calm": 91
       },
       "acoustic": {
-        "pitch": 54,
-        "depth": 60,
-        "warmth": 89,
-        "resonance": 76,
-        "breathiness": 18,
+        "pitch": 55,
+        "pitch_range": 43,
+        "depth": 58,
+        "warmth": 96,
+        "resonance": 72,
+        "breathiness": 20,
         "clarity": 96,
         "articulation": 94,
-        "speed": 58,
-        "rhythm": 63,
+        "speed": 55,
+        "rhythm": 61,
         "intonation": 79,
-        "energy": 61,
-        "emphasis": 72,
-        "pause": 76
+        "energy": 54,
+        "emphasis": 69,
+        "pause": 82
+      },
+      "performance": {
+        "vocal_placement": "close oral-chest",
+        "texture": "warm-rich",
+        "mouth_profile": "close-mic-warm",
+        "onset": "intimate close-mic breath",
+        "ending": "calm lingering finish",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
       }
     },
     "dspProfile": {
-      "lowGain": 3.2,
+      "lowGain": 3.4,
       "midFreq": 980,
       "midGain": 2.6,
       "presenceFreq": 3400,
@@ -5565,207 +5062,378 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     }
   },
   {
-    "id": "vn_f_emotional_39",
-    "name": "[NEW] 39. Nữ Tâm Sự Tình Cảm Sâu Sắc & Nỗi Niềm 👑 (VN-F-EMOTIONAL)",
+    "id": "vn_f_comedy_muse_37",
+    "name": "[v3.0] 37. Comedy Muse 👑 (Nữ 24-28t - Hài Hước Trưởng Thành, Châm Biếm Duyên Dáng)",
     "provider": "system",
     "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
-    "gender": "Female",
-    "lang": "vi-VN",
-    "region": "vi",
-    "dialect": "bac",
-    "ageGroup": "middle",
-    "styleCategory": "podcast",
-    "category": "🔥 [NEW] Kể Chuyện & Podcast",
-    "pitch": 0.94,
-    "rate": 0.88,
-    "recommendedFor": "both",
-    "desc": "Giọng nữ tâm sự đêm muộn đong đầy cảm xúc, chạm tới những rung cảm sâu kín nhất của tình yêu và cuộc sống.",
-    "sampleText": "Có những ngày ta chỉ muốn buông bỏ tất cả, để một lần được đối diện thật lòng với những nỗi buồn chất chứa trong tim.",
-    "edgePitch": "-6%",
-    "edgeRate": "-12%",
-    "neuralVoice": "vi-VN-HoaiMyNeural",
-    "dna": {
-      "region": {
-        "country": "VN",
-        "region": "NORTH",
-        "accent": "Northern Emotional Confession",
-        "accent_strength": 65
-      },
-      "persona": {
-        "age": "30-50",
-        "personality": "sâu sắc, nội tâm, trữ tình",
-        "authority": 70,
-        "friendliness": 95
-      },
-      "style": {
-        "primary": "emotional_storytelling",
-        "secondary": [
-          "late_night_confession",
-          "poetry_prose"
-        ]
-      },
-      "emotion": {
-        "warmth": 98,
-        "happiness": 45,
-        "excitement": 30,
-        "confidence": 80,
-        "urgency": 10,
-        "empathy": 99,
-        "emotional_depth": 100
-      },
-      "performance": {
-        "vocal_placement": "low-intimate",
-        "texture": "warm-breathy, dense",
-        "pitch": 52,
-        "depth": 62,
-        "warmth": 98,
-        "resonance": 73,
-        "breathiness": 27,
-        "clarity": 93,
-        "articulation": 91,
-        "speed": 47,
-        "rhythm": 54,
-        "intonation": 89,
-        "energy": 42,
-        "emphasis": 79,
-        "pause": 94,
-        "word_duration": "kéo từ cảm xúc",
-        "sentence_ending": "pause trước thông điệp, tránh khóc giả",
-        "character": "câu dài chậm, kéo từ cảm xúc, pause trước thông điệp, tránh khóc giả"
-      },
-      "acoustic": {
-        "pitch": 52,
-        "depth": 62,
-        "warmth": 98,
-        "resonance": 73,
-        "breathiness": 27,
-        "clarity": 93,
-        "articulation": 91,
-        "speed": 47,
-        "rhythm": 54,
-        "intonation": 89,
-        "energy": 42,
-        "emphasis": 79,
-        "pause": 94
-      }
-    },
-    "dspProfile": {
-      "lowGain": 3.5,
-      "midFreq": 920,
-      "midGain": 2.2,
-      "presenceFreq": 3100,
-      "presenceGain": 4,
-      "highGain": 2.5,
-      "reverb": 0.12,
-      "reverbDecay": 0.55,
-      "compressor": {
-        "threshold": -16,
-        "ratio": 2.8,
-        "attack": 0.02,
-        "release": 0.3
-      }
-    }
-  },
-  {
-    "id": "vn_f_comedy_40",
-    "name": "[NEW] 40. Nữ Hài Hước Tấu Hài & Bắt Trend Viral 👑 (VN-F-COMEDY)",
-    "provider": "system",
-    "tier": "pro",
-    "badge": "🔥 [NEW] Hot Trend VIP",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
     "gender": "Female",
     "lang": "vi-VN",
     "region": "vi",
     "dialect": "nam",
     "ageGroup": "young",
+    "ageRange": "24-28",
     "styleCategory": "idol_genz",
-    "category": "🔥 [NEW] Livestream & Creator Viral",
-    "pitch": 1.09,
-    "rate": 1.08,
+    "category": "🔥 [v3.0] 24-28t • Creator & Viral",
+    "pitch": 1.07,
+    "rate": 1.06,
     "recommendedFor": "both",
-    "desc": "Giọng nữ hài hước, dí dỏm, tấu hài cực duyên, biến mọi khoảnh khắc livestream thành tràng cười sảng khoái triệu view.",
-    "sampleText": "Trời ơi là trời! Tui nói thiệt chứ cuộc đời tui chưa bao giờ thấy cái chuyện nào mà nó cười ra nước mắt như vầy luôn á!",
-    "edgePitch": "+9%",
-    "edgeRate": "+8%",
+    "desc": "Hài hước sâu cay và duyên dáng của phụ nữ trưởng thành, timing nhả chữ đỉnh cao, biến video drama thành tiếng cười dí dỏm.",
+    "sampleText": "Đời người ngắn ngủi lắm mấy bà ơi, rảnh đâu mà buồn phiền, cứ sắm sửa cho đẹp rạng ngời rồi tự tin bước tiếp nha!",
+    "edgePitch": "+7%",
+    "edgeRate": "+6%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
         "country": "VN",
         "region": "SOUTH",
-        "accent": "Southern Comedy",
-        "accent_strength": 65
+        "accent": "Southern Witty Adult",
+        "accent_strength": 58
       },
       "persona": {
-        "age": "20-35",
-        "personality": "hài hước, duyên dáng, lầy lội",
-        "authority": 75,
-        "friendliness": 100
+        "age": "24-28",
+        "personality": "hài hước, duyên dáng, thông minh, châm biếm nhẹ",
+        "authority": 82,
+        "friendliness": 98
       },
       "style": {
-        "primary": "comedy_viral",
+        "primary": "mature_comedy",
         "secondary": [
-          "standup_comedy",
-          "entertainment_live"
+          "witty_commentary",
+          "satirical_talk",
+          "lifestyle_humor"
         ]
       },
       "emotion": {
-        "warmth": 91,
-        "happiness": 98,
+        "warmth": 90,
+        "happiness": 96,
+        "excitement": 92,
+        "confidence": 95,
         "humor": 100,
-        "confidence": 88,
-        "excitement": 98,
-        "energy": 98
-      },
-      "performance": {
-        "vocal_placement": "forward-bright",
-        "texture": "playful, elastic",
-        "pitch": 78,
-        "depth": 25,
-        "warmth": 91,
-        "resonance": 42,
-        "breathiness": 15,
-        "clarity": 90,
-        "articulation": 88,
-        "speed": 89,
-        "rhythm": 98,
-        "intonation": 100,
-        "energy": 98,
-        "emphasis": 96,
-        "pause": 30,
-        "word_duration": "nhanh chậm bất ngờ",
-        "sentence_ending": "pause trước punchline",
-        "character": "timing là trọng tâm; pause trước punchline; pitch jump bất ngờ; đổi tốc độ có chủ ý"
+        "energy": 96
       },
       "acoustic": {
-        "pitch": 78,
-        "depth": 25,
-        "warmth": 91,
-        "resonance": 42,
-        "breathiness": 15,
-        "clarity": 90,
-        "articulation": 88,
-        "speed": 89,
-        "rhythm": 98,
+        "pitch": 75,
+        "pitch_range": 91,
+        "depth": 29,
+        "warmth": 90,
+        "resonance": 47,
+        "breathiness": 10,
+        "clarity": 94,
+        "articulation": 91,
+        "speed": 84,
+        "rhythm": 99,
         "intonation": 100,
-        "energy": 98,
+        "energy": 96,
         "emphasis": 96,
-        "pause": 30
+        "pause": 34
+      },
+      "performance": {
+        "vocal_placement": "forward",
+        "texture": "bright-elastic",
+        "mouth_profile": "witty-playful",
+        "onset": "witty conversational onset",
+        "ending": "comedic timing drop",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
       }
     },
     "dspProfile": {
-      "lowGain": -1,
-      "midFreq": 1450,
-      "midGain": 3.2,
-      "presenceFreq": 4500,
-      "presenceGain": 5.8,
-      "highGain": 4.4,
+      "lowGain": -0.5,
+      "midFreq": 1400,
+      "midGain": 3,
+      "presenceFreq": 4400,
+      "presenceGain": 5.6,
+      "highGain": 4.2,
       "reverb": 0.05,
       "reverbDecay": 0.28,
       "compressor": {
         "threshold": -21,
-        "ratio": 4.2,
+        "ratio": 4,
         "attack": 0.004,
         "release": 0.14
+      }
+    }
+  },
+  {
+    "id": "vn_f_calm_authority_38",
+    "name": "[v3.0] 38. Calm Authority 👑 (Nữ 24-28t - Điềm Tĩnh Quyền Uy, Uy Lực Lắng Đọng)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "bac",
+    "ageGroup": "young",
+    "ageRange": "24-28",
+    "styleCategory": "doanhnhan",
+    "category": "🔥 [v3.0] 24-28t • Doanh Nhân & Lãnh Đạo",
+    "pitch": 0.93,
+    "rate": 0.91,
+    "recommendedFor": "both",
+    "desc": "Giọng nói không cần lên gân nhưng toát ra uy lực tối cao, khoảng dừng chiến lược làm chủ toàn bộ khán phòng.",
+    "sampleText": "Chất lượng đích thực không cần phải phô trương. Nó tự khẳng định giá trị bằng sự tin tưởng và trải nghiệm của khách hàng.",
+    "edgePitch": "-7%",
+    "edgeRate": "-9%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "NORTH",
+        "accent": "Northern Calm Authority",
+        "accent_strength": 68
+      },
+      "persona": {
+        "age": "24-28",
+        "personality": "uy lực, điềm đạm, sâu sắc, không lay chuyển",
+        "authority": 99,
+        "friendliness": 68
+      },
+      "style": {
+        "primary": "calm_authority",
+        "secondary": [
+          "deep_statement",
+          "executive_closing",
+          "premium_counsel"
+        ]
+      },
+      "emotion": {
+        "warmth": 79,
+        "happiness": 50,
+        "excitement": 40,
+        "confidence": 98,
+        "authority": 99,
+        "calm": 97
+      },
+      "acoustic": {
+        "pitch": 50,
+        "pitch_range": 37,
+        "depth": 65,
+        "warmth": 79,
+        "resonance": 88,
+        "breathiness": 2,
+        "clarity": 99,
+        "articulation": 99,
+        "speed": 56,
+        "rhythm": 59,
+        "intonation": 65,
+        "energy": 62,
+        "emphasis": 88,
+        "pause": 90
+      },
+      "performance": {
+        "vocal_placement": "chest-led",
+        "texture": "deep-clean",
+        "mouth_profile": "calm-commanding",
+        "onset": "unshakable chest onset",
+        "ending": "low authoritative silence",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": 3.8,
+      "midFreq": 900,
+      "midGain": 2.8,
+      "presenceFreq": 3100,
+      "presenceGain": 4.2,
+      "highGain": 2,
+      "reverb": 0.06,
+      "reverbDecay": 0.35,
+      "compressor": {
+        "threshold": -18,
+        "ratio": 4,
+        "attack": 0.01,
+        "release": 0.2
+      }
+    }
+  },
+  {
+    "id": "vn_f_desire_sales_39",
+    "name": "[v3.0] 39. Desire Voice 👑 (Nữ 24-28t - Khơi Gợi Khao Khát Sở Hữu Đỉnh Cao)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "nam",
+    "ageGroup": "young",
+    "ageRange": "24-28",
+    "styleCategory": "banhang",
+    "category": "🔥 [v3.0] 24-28t • Bán Hàng & Chốt Deal",
+    "pitch": 1.03,
+    "rate": 0.97,
+    "recommendedFor": "both",
+    "desc": "Âm sắc mượt mà, nhấn nhá lưu luyến ở từ khóa lợi ích rồi chốt hạ dứt khoát, kích hoạt khao khát sở hữu sản phẩm mãnh liệt.",
+    "sampleText": "Hãy tưởng tượng cảm giác tuyệt vời khi bạn bước ra phố với diện mạo quyến rũ và tự tin nhất. Đừng chần chừ, sở hữu ngay hôm nay nhé!",
+    "edgePitch": "+3%",
+    "edgeRate": "-3%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "SOUTH",
+        "accent": "Southern Alluring Sales",
+        "accent_strength": 54
+      },
+      "persona": {
+        "age": "24-28",
+        "personality": "quyến rũ, khơi gợi, tự tin, cuốn hút",
+        "authority": 85,
+        "friendliness": 95
+      },
+      "style": {
+        "primary": "desire_sales",
+        "secondary": [
+          "aspirational_closing",
+          "premium_lifestyle",
+          "fashion_allure"
+        ]
+      },
+      "emotion": {
+        "warmth": 94,
+        "happiness": 85,
+        "excitement": 82,
+        "confidence": 92,
+        "desire": 98,
+        "empathy": 90
+      },
+      "acoustic": {
+        "pitch": 65,
+        "pitch_range": 64,
+        "depth": 39,
+        "warmth": 94,
+        "resonance": 61,
+        "breathiness": 24,
+        "clarity": 95,
+        "articulation": 93,
+        "speed": 63,
+        "rhythm": 69,
+        "intonation": 90,
+        "energy": 75,
+        "emphasis": 91,
+        "pause": 68
+      },
+      "performance": {
+        "vocal_placement": "intimate-forward",
+        "texture": "silky-warm",
+        "mouth_profile": "alluring-warm",
+        "onset": "linger on benefit words",
+        "ending": "decisive conversion CTA",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": 1.5,
+      "midFreq": 1150,
+      "midGain": 2.8,
+      "presenceFreq": 3800,
+      "presenceGain": 5,
+      "highGain": 3.5,
+      "reverb": 0.08,
+      "reverbDecay": 0.4,
+      "compressor": {
+        "threshold": -18,
+        "ratio": 3.5,
+        "attack": 0.008,
+        "release": 0.18
+      }
+    }
+  },
+  {
+    "id": "vn_f_master_closer_40",
+    "name": "[v3.0] 40. Master Closer 👑 (Nữ 24-28t - Siêu Bậc Thầy Bán Hàng & Chốt Đơn Toàn Diện)",
+    "provider": "system",
+    "tier": "pro",
+    "badge": "🔥 [v3.0] Hot Trend VIP",
+    "gender": "Female",
+    "lang": "vi-VN",
+    "region": "vi",
+    "dialect": "nam",
+    "ageGroup": "young",
+    "ageRange": "24-28",
+    "styleCategory": "banhang",
+    "category": "🔥 [v3.0] 24-28t • Bán Hàng & Chốt Deal",
+    "pitch": 1.01,
+    "rate": 1.03,
+    "recommendedFor": "both",
+    "desc": "Giọng đọc đỉnh cao hội tụ toàn bộ 5 tầng DNA: Hook sáng -> Lợi ích ấm -> Báo giá sâu -> Khẩn cấp nhanh -> CTA đanh -> Chốt hạ quyết đoán.",
+    "sampleText": "Duy nhất trong phiên live này: cơ hội sở hữu trọn bộ giải pháp cao cấp với mức giá độc quyền! Bấm Mua Ngay để nhận trọn bộ quà tặng đặc quyền!",
+    "edgePitch": "+1%",
+    "edgeRate": "+3%",
+    "neuralVoice": "vi-VN-HoaiMyNeural",
+    "dna": {
+      "region": {
+        "country": "VN",
+        "region": "SOUTH/NORTH neutral blend",
+        "accent": "Vietnamese Master Live Blend",
+        "accent_strength": 45
+      },
+      "persona": {
+        "age": "24-28",
+        "personality": "bậc thầy chuyển đổi, uy lực, ấm áp, hoàn hảo",
+        "authority": 98,
+        "friendliness": 96
+      },
+      "style": {
+        "primary": "master_sales",
+        "secondary": [
+          "all_round_closer",
+          "mega_conversion",
+          "irresistible_offer"
+        ]
+      },
+      "emotion": {
+        "warmth": 91,
+        "happiness": 92,
+        "excitement": 90,
+        "confidence": 100,
+        "urgency": 93,
+        "trust": 96
+      },
+      "acoustic": {
+        "pitch": 61,
+        "pitch_range": 69,
+        "depth": 46,
+        "warmth": 91,
+        "resonance": 72,
+        "breathiness": 7,
+        "clarity": 99,
+        "articulation": 99,
+        "speed": 80,
+        "rhythm": 88,
+        "intonation": 93,
+        "energy": 94,
+        "emphasis": 100,
+        "pause": 67
+      },
+      "performance": {
+        "vocal_placement": "mixed chest/oral",
+        "texture": "rich-crisp",
+        "mouth_profile": "precise-open",
+        "onset": "warm-confident mastery onset",
+        "ending": "HOOK bright → BENEFIT warm → PRICE deep → URGENCY fast → CTA firm → CLOSE warm decisive",
+        "attention_curve": true,
+        "emotional_micro_dynamics": true
+      }
+    },
+    "dspProfile": {
+      "lowGain": 2.5,
+      "midFreq": 1100,
+      "midGain": 3.2,
+      "presenceFreq": 3700,
+      "presenceGain": 5.5,
+      "highGain": 3.5,
+      "reverb": 0.05,
+      "reverbDecay": 0.3,
+      "compressor": {
+        "threshold": -22,
+        "ratio": 4.5,
+        "attack": 0.004,
+        "release": 0.12
       }
     }
   }

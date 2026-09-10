@@ -2274,15 +2274,15 @@ IDOL MỈM CƯỜI + GESTURE
                         .filter(v => {
                           if (hotTrendGender !== 'all' && v.gender !== hotTrendGender) return false;
                           if (hotTrendCategory === 'sales') {
-                            if (!v.id.includes('sales') && !v.id.includes('closer') && !v.id.includes('fomo') && !v.id.includes('adam') && !v.id.includes('tungdang') && !v.category?.includes('Bán Hàng')) return false;
+                            if (!v.id.includes('sales') && !v.id.includes('closer') && !v.id.includes('fomo') && !v.id.includes('adam') && !v.id.includes('tungdang') && !v.id.includes('charme') && !v.id.includes('desire') && !v.category?.includes('Bán Hàng') && !v.category?.includes('Chốt Deal')) return false;
                           } else if (hotTrendCategory === 'social') {
-                            if (!v.id.includes('viral') && !v.id.includes('tiktok') && !v.id.includes('brian') && !v.id.includes('liam') && !v.id.includes('jessica') && !v.id.includes('cute') && !v.id.includes('young') && !v.id.includes('comedy') && !v.id.includes('friendly') && !v.category?.includes('Viral') && !v.category?.includes('Creator')) return false;
+                            if (!v.id.includes('viral') && !v.id.includes('tiktok') && !v.id.includes('brian') && !v.id.includes('liam') && !v.id.includes('jessica') && !v.id.includes('cute') && !v.id.includes('young') && !v.id.includes('comedy') && !v.id.includes('friendly') && !v.id.includes('muse') && !v.category?.includes('Viral') && !v.category?.includes('Creator')) return false;
                           } else if (hotTrendCategory === 'business') {
-                            if (!v.id.includes('ceo') && !v.id.includes('founder') && !v.id.includes('ad_') && !v.id.includes('expert') && !v.id.includes('motivation') && !v.category?.includes('Doanh Nhân') && !v.category?.includes('Chuyên Gia') && !v.category?.includes('Authority')) return false;
+                            if (!v.id.includes('ceo') && !v.id.includes('founder') && !v.id.includes('ad_') && !v.id.includes('expert') && !v.id.includes('motivation') && !v.id.includes('authority') && !v.id.includes('advisor') && !v.category?.includes('Doanh Nhân') && !v.category?.includes('Chuyên Gia') && !v.category?.includes('Tri Thức') && !v.category?.includes('Authority')) return false;
                           } else if (hotTrendCategory === 'story') {
-                            if (!v.id.includes('story') && !v.id.includes('cinema') && !v.id.includes('podcast') && !v.id.includes('emotional') && !v.id.includes('empathy') && !v.id.includes('matilda') && !v.id.includes('trieuduong') && !v.category?.includes('Kể Chuyện') && !v.category?.includes('Cảm Xúc')) return false;
+                            if (!v.id.includes('story') && !v.id.includes('cinema') && !v.id.includes('podcast') && !v.id.includes('emotional') && !v.id.includes('empathy') && !v.id.includes('heart') && !v.id.includes('intimate') && !v.id.includes('matilda') && !v.id.includes('trieuduong') && !v.category?.includes('Kể Chuyện') && !v.category?.includes('Cảm Xúc') && !v.category?.includes('Podcast')) return false;
                           } else if (hotTrendCategory === 'news') {
-                            if (!v.id.includes('news') && !v.id.includes('documentary') && !v.id.includes('mc') && !v.id.includes('educator') && !v.id.includes('customer_care') && !v.id.includes('sarah') && !v.id.includes('trungcaha') && !v.id.includes('huyen') && !v.category?.includes('Bản Tin') && !v.category?.includes('MC')) return false;
+                            if (!v.id.includes('news') && !v.id.includes('documentary') && !v.id.includes('mc') && !v.id.includes('educator') && !v.id.includes('customer_care') && !v.id.includes('elegance') && !v.id.includes('sarah') && !v.id.includes('trungcaha') && !v.id.includes('huyen') && !v.category?.includes('Bản Tin') && !v.category?.includes('MC') && !v.category?.includes('Sự Kiện')) return false;
                           }
                           if (hotTrendSearchQuery.trim()) {
                             const q = hotTrendSearchQuery.toLowerCase();
