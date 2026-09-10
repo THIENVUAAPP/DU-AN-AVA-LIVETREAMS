@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.6.5';
+export const APP_VERSION = '2.6.6';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '▶️ Di Chuyển "PHÁT KỊCH BẢN" Lên Ngay Cạnh Nút "BẬT TẤT CẢ"',
-    description: 'Bố trí lại nút bấm thống nhất "PHÁT KỊCH BẢN" kèm dropdown chọn kịch bản trực tiếp lên thanh điều khiển trên cùng, nằm liền kề nút "BẬT TẤT CẢ" giúp thao tác livestream cực kỳ thuận tiện và trực quan.'
+    title: '🔥 Sửa Lỗi Truy Cập Tab Giọng Hot Trend (20) & Bán Hàng (30)',
+    description: 'Khắc phục triệt để lỗi khi bấm vào tab Giọng Hot Trend và Giọng Bán Hàng & Dịch Vụ trong Cài Đặt Chung. Giao diện hiển thị mượt mà, hỗ trợ nghe thử và gán nhanh vào Idol/Trợ lý/Game PK.'
+  },
+  {
+    title: '▶️ Cụm "PHÁT KỊCH BẢN" Đặt Ngay Cạnh Nút "BẬT TẤT CẢ"',
+    description: 'Bố trí lại nút bấm thống nhất "PHÁT KỊCH BẢN" kèm dropdown chọn kịch bản trực tiếp lên thanh điều khiển trên cùng, nằm liền kề nút "BẬT TẤT CẢ" giúp thao tác livestream cực kỳ thuận tiện.'
   },
   {
     title: '⚡ Kích Hoạt Đọc Ngay Lập Tức Kịch Bản Đã Cài Đặt Sẵn',
-    description: 'Khắc phục triệt để luồng phát âm thanh: Khi bấm "PHÁT KỊCH BẢN", AI Idol lập tức đọc tuần tự từng câu thoại trong file kịch bản của tab đang chọn, đồng bộ khẩu hình 60 FPS, không bị kẹt hay chỉ phát sự kiện phụ.'
-  },
-  {
-    title: '👑 Hệ Thống 25 Giọng Nữ AI Phân Theo 3 Độ Tuổi (20-28t | 28-40t | 40-70t)',
-    description: 'Âm sắc độc bản 100%, phân hóa rõ nét khắp các vùng miền (Bắc - Trung - Nam - Tây) và phong cách bán hàng, MC, doanh nhân, ASMR, kể chuyện.'
+    description: 'Khi bấm "PHÁT KỊCH BẢN", AI Idol lập tức đọc tuần tự từng câu thoại trong file kịch bản của tab đang chọn, đồng bộ khẩu hình 60 FPS chuẩn xác.'
   }
 ];
 

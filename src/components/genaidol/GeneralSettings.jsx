@@ -2033,19 +2033,19 @@ IDOL MỈM CƯỜI + GESTURE
           onClick={() => setActiveTab('ava-voice')}
           className={`flex items-center gap-2 px-4 py-3 font-bold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'ava-voice' ? 'border-blue-600 text-blue-600 bg-blue-50/60 shadow-xs' : 'border-transparent text-gray-700 hover:text-blue-600 hover:bg-blue-50/30'}`}
         >
-          <Sparkles size={16} className="text-blue-600" /> 🎙️ GIỌNG AVA LIVE
+          <Sparkles size={16} className="text-blue-600" /> GIỌNG AVA LIVE
         </button>
         <button 
           onClick={() => setActiveTab('hottrend-voice')}
           className={`flex items-center gap-2 px-4 py-3 font-bold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'hottrend-voice' ? 'border-orange-500 text-orange-600 bg-orange-50/60 shadow-xs' : 'border-transparent text-orange-700 hover:text-orange-600 hover:bg-orange-50/30'}`}
         >
-          <Flame size={16} className="text-orange-500" /> 🔥 GIỌNG HOT TREND (20)
+          <Flame size={16} className="text-orange-500" /> GIỌNG HOT TREND (20)
         </button>
         <button 
           onClick={() => setActiveTab('sales-voice')}
           className={`flex items-center gap-2 px-4 py-3 font-bold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'sales-voice' ? 'border-rose-600 text-rose-600 bg-rose-50/50' : 'border-transparent text-rose-700 hover:text-rose-600 hover:bg-rose-50/30'}`}
         >
-          <ShoppingBag size={16} className="text-rose-600" /> 🛍️ GIỌNG BÁN HÀNG & DỊCH VỤ (30)
+          <ShoppingBag size={16} className="text-rose-600" /> GIỌNG BÁN HÀNG & DỊCH VỤ (30)
         </button>
         <button 
           onClick={() => setActiveTab('quick-config')}
@@ -2295,6 +2295,7 @@ IDOL MỈM CƯỜI + GESTURE
                           const isSelectedAsGame = settings.gameVoiceId === v.id;
                           const isPlaying = previewingVoiceId === v.id;
                           const isFav = favoriteVoiceIds.includes(v.id);
+                          const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
                           const ageBadgeText = (v.ageGroup === 'senior' || v.ageGroup === 'elder' || v.ageGroup === 'mature') 
                             ? 'Trung Niên 40-70t' 
                             : (v.ageGroup === 'middle' ? 'Trưởng Thành 28-40t' : 'Trẻ 20-28t');
@@ -2773,6 +2774,7 @@ IDOL MỈM CƯỜI + GESTURE
                         const isSelectedAsGame = settings.gameVoiceId === v.id;
                         const isPlaying = previewingVoiceId === v.id;
                         const isFav = favoriteVoiceIds.includes(v.id);
+                        const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
                         const ageBadgeText = (v.ageGroup === 'senior' || v.ageGroup === 'elder' || v.ageGroup === 'mature') 
                           ? 'Trung Niên 40-70t' 
                           : (v.ageGroup === 'middle' ? 'Trưởng Thành 28-40t' : 'Trẻ 20-28t');
