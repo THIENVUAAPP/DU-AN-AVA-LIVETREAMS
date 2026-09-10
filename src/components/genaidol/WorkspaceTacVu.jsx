@@ -1522,7 +1522,7 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
           {/* 0. STUDIO 2–4 AVATAR (MULTI-AVATAR LIVE STUDIO) */}
           {/* ========================================================================= */}
           {selectedEventId === 'multi_avatar_studio' ? (
-            <div className="h-full flex flex-col pb-4">
+            <div className="h-full flex flex-col">
               <MultiAvatarStudioPanel 
                 isEmbedded={true}
                 onApplyScriptTemplate={(scriptText, count) => {
@@ -1537,7 +1537,7 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
             /* 2. QUÀ TẶNG ĐẶC BIỆT (SPECIAL GIFT SLOTS) */
             /* ========================================================================= */
             <>
-              <div className="border border-gray-300 rounded-2xl bg-white mb-4 shadow-sm px-4 py-5">
+                <div className="border border-gray-300 rounded-2xl bg-white mb-4 shadow-sm px-4 py-5">
                 <div className="flex items-center gap-6 mb-5 pb-3 border-b border-gray-100 flex-wrap">
                   <div className="flex items-center">
                     <FieldLabel icon="✅" text="Kích hoạt chung" helpKey="active" minW="min-w-[130px]" htmlFor="active-special-gift" />
@@ -3331,28 +3331,30 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
         </div>
 
         {/* Footer Save & Export/Import Buttons */}
-        <div className="mt-3 flex flex-col sm:flex-row gap-2">
-          <button 
-            onClick={handleSave}
-            className="flex-1 py-3 bg-[#4caf50] hover:bg-[#43a047] text-white font-bold rounded-xl shadow transition-colors text-[14px] uppercase tracking-wide flex justify-center items-center gap-2 cursor-pointer"
-          >
-            <CheckSquare size={18} /> Lưu cấu hình sự kiện
-          </button>
-          <button 
-            onClick={handleExportEvents}
-            title="Lưu cấu hình sự kiện thành file mới để dùng lại bất kỳ lúc nào"
-            className="px-4 py-3 bg-cyan-600/30 hover:bg-cyan-600/50 text-cyan-200 border border-cyan-500/40 font-bold rounded-xl shadow transition-all text-xs flex justify-center items-center gap-1.5 cursor-pointer"
-          >
-            <Download size={16} /> Xuất File Mới
-          </button>
-          <label 
-            title="Nạp file cấu hình sự kiện đã lưu trước đó"
-            className="px-4 py-3 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 font-bold rounded-xl shadow transition-all text-xs flex justify-center items-center gap-1.5 cursor-pointer"
-          >
-            <Upload size={16} /> Nạp File
-            <input type="file" accept=".json" className="hidden" onChange={handleImportEvents} />
-          </label>
-        </div>
+        {selectedEventId !== 'multi_avatar_studio' && (
+          <div className="mt-3 flex flex-col sm:flex-row gap-2">
+            <button 
+              onClick={handleSave}
+              className="flex-1 py-3 bg-[#4caf50] hover:bg-[#43a047] text-white font-bold rounded-xl shadow transition-colors text-[14px] uppercase tracking-wide flex justify-center items-center gap-2 cursor-pointer"
+            >
+              <CheckSquare size={18} /> Lưu cấu hình sự kiện
+            </button>
+            <button 
+              onClick={handleExportEvents}
+              title="Lưu cấu hình sự kiện thành file mới để dùng lại bất kỳ lúc nào"
+              className="px-4 py-3 bg-cyan-600/30 hover:bg-cyan-600/50 text-cyan-200 border border-cyan-500/40 font-bold rounded-xl shadow transition-all text-xs flex justify-center items-center gap-1.5 cursor-pointer"
+            >
+              <Download size={16} /> Xuất File Mới
+            </button>
+            <label 
+              title="Nạp file cấu hình sự kiện đã lưu trước đó"
+              className="px-4 py-3 bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-500/40 font-bold rounded-xl shadow transition-all text-xs flex justify-center items-center gap-1.5 cursor-pointer"
+            >
+              <Upload size={16} /> Nạp File
+              <input type="file" accept=".json" className="hidden" onChange={handleImportEvents} />
+            </label>
+          </div>
+        )}
 
         {/* Modal Cấu Hình Studio 2-4 Avatar (Đa Nhân Vật) */}
         <MultiAvatarStudioModal 

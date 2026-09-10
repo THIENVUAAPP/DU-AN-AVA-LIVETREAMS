@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.8.5';
+export const APP_VERSION = '2.8.6';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🎬 Tải Video & Hình Ảnh Trực Tiếp Trên Từng Ô Nhân Vật Sân Khấu',
-    description: 'Bấm tải trực tiếp video nói (khẩu hình) hoặc video lắng nghe từ máy tính ngay trên khung sân khấu kéo thả hoặc thanh điều khiển bên phải.'
+    title: '🖥️ Sân Khấu Studio Đa Avatar Vừa Vặn Toàn Diện Khung Nhìn (Viewport-Fitted Stage)',
+    description: 'Tối ưu toàn bộ tỷ lệ sân khấu 9:16 & 16:9 luôn hiển thị trọn vẹn 100% không bị che khuất hay cuộn trang, giúp dễ dàng quan sát và thao tác sắp xếp.'
   },
   {
-    title: '🪑 5 Tư Thế Sân Khấu 1-Click (Đứng, Ngồi Ghế, Bàn Sofa, Nửa Người, Cận Cảnh)',
-    description: 'Chuyển đổi tư thế và kích thước nhân vật tự động nhanh chóng chỉ với 1 cú nhấp chuột, kết hợp kéo 8 góc mở rộng linh hoạt.'
+    title: '🎬 Hiển Thị Trực Quan Tất Cả Avatar & Tải Video Trực Tiếp Từ Máy Tính',
+    description: 'Mọi ô nhân vật đều hiển thị khung viền Neon, nhãn tên, ảnh/video preview rõ ràng kèm nút tải file video/ảnh trực tiếp từ máy tính cả trên sân khấu lẫn bảng điều khiển.'
   },
   {
-    title: '✨ Tối Giản Giao Diện Kịch Bản Idol & Bảng Điều Khiển Tinh Gọn',
-    description: 'Loại bỏ các nút bấm dư thừa ở phần soạn thảo kịch bản, gom toàn bộ tính năng vào Studio Sân Khấu đa nhân vật chuyên nghiệp.'
+    title: '🪑 Bộ 5 Tư Thế Chuẩn Sân Khấu & Tách Nền / Giọng Đọc / Nền Studio Tinh Gọn',
+    description: 'Chuyển đổi 1-click tư thế Đứng, Ghế, Bàn Sofa, Nửa Người, Cận Cảnh cùng thanh điều chỉnh chuyên sâu gọn gàng, tiện lợi.'
   }
 ];
 
