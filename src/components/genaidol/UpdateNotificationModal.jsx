@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.9.2';
+export const APP_VERSION = '2.9.3';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '📦 Cập Nhật Trọn Bộ Bộ Cài Standalone ZIP Cho Cả Windows & macOS (v2.9.3)',
+    description: 'Đồng bộ hóa 100% phiên bản tải về độc lập (.zip) cho máy tính Windows và macOS; tích hợp sẵn Node Portable & Cloudflare Tunnel không cần cài đặt phức tạp, mở là chạy ngay.'
+  },
   {
     title: '📜 Sửa Triệt Để Lỗi Tab Kịch Bản Studio & Áp Dụng 1-Chạm Mượt Mà',
     description: 'Khắc phục hoàn toàn lỗi mở kịch bản 2–4 nhân vật; nạp và áp dụng kịch bản đối thoại tức thì vào hệ thống phát Live không giật lag.'
