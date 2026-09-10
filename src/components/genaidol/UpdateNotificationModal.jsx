@@ -2,13 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.9.3';
+export const APP_VERSION = '2.9.4';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '📦 Cập Nhật Trọn Bộ Bộ Cài Standalone ZIP Cho Cả Windows & macOS (v2.9.3)',
-    description: 'Đồng bộ hóa 100% phiên bản tải về độc lập (.zip) cho máy tính Windows và macOS; tích hợp sẵn Node Portable & Cloudflare Tunnel không cần cài đặt phức tạp, mở là chạy ngay.'
+    title: '⚡ Khắc Phục Triệt Để Lỗi Tải ZIP Trực Tiếp & Tự Động Lưu Về Máy 100%',
+    description: 'Xử lý triệt để lỗi chuyển hướng sang giao diện GitHub. Khi bấm "Tải bản Windows" hoặc "Tải bản macOS", trình duyệt sẽ kích hoạt tải thẳng file ZIP về máy ngay lập tức.'
+  },
+  {
+    title: '📦 Trọn Bộ Gói Cài Standalone ZIP v2.9.4 Cho Windows & macOS',
+    description: 'Đồng bộ hóa phiên bản tải về độc lập (.zip); tích hợp sẵn Node Portable & Cloudflare Tunnel không cần cài đặt môi trường, mở 1-Click là dùng ngay.'
   },
   {
     title: '📜 Sửa Triệt Để Lỗi Tab Kịch Bản Studio & Áp Dụng 1-Chạm Mượt Mà',
