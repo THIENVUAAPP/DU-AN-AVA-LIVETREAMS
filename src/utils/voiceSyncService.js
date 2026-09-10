@@ -5921,6 +5921,7 @@ export const INTERNATIONAL_VOICES = [
     recommendedFor: 'idol', 
     desc: 'Giọng nữ bản xứ Mỹ truyền cảm chuẩn quốc tế.',
     sampleText: 'Hello everyone! Welcome to our special interactive livestream today!',
+    neuralVoice: 'en-US-JennyNeural',
     dspProfile: { semitones: 2.0, rate: 1.0, lowGain: 0, midFreq: 1200, midGain: 2, presenceFreq: 3500, presenceGain: 4, highGain: 3 }
   },
   { 
@@ -5938,6 +5939,7 @@ export const INTERNATIONAL_VOICES = [
     recommendedFor: 'game', 
     desc: 'Giọng nam tiếng Anh phong cách streamer năng động Mỹ.',
     sampleText: 'What is up guys! Get ready for an epic interactive battle today!',
+    neuralVoice: 'en-US-GuyNeural',
     dspProfile: { semitones: -7.2, rate: 1.08, lowGain: 7.5, midFreq: 550, midGain: 3.0, presenceFreq: 2400, presenceGain: 2.0, highGain: -2 }
   },
   { 
@@ -5955,6 +5957,7 @@ export const INTERNATIONAL_VOICES = [
     recommendedFor: 'idol', 
     desc: 'Giọng nữ quý tộc Anh Quốc sang trọng, chuẩn mực.',
     sampleText: 'Good evening ladies and gentlemen. It is a pleasure to have you here with us.',
+    neuralVoice: 'en-GB-SoniaNeural',
     dspProfile: { semitones: 1.5, rate: 0.98, lowGain: 1, midFreq: 1100, midGain: 2, presenceFreq: 3400, presenceGain: 3.5, highGain: 2.5 }
   },
   { 
@@ -5972,6 +5975,7 @@ export const INTERNATIONAL_VOICES = [
     recommendedFor: 'game', 
     desc: 'Giọng nam quý ông Anh Quốc lịch lãm, đẳng cấp.',
     sampleText: 'Welcome to the broadcast. Prepare yourselves for an extraordinary journey.',
+    neuralVoice: 'en-GB-RyanNeural',
     dspProfile: { semitones: -8.5, rate: 0.98, lowGain: 9.5, midFreq: 420, midGain: 3.5, presenceFreq: 2000, presenceGain: 0.5, highGain: -3.5 }
   },
   { 
@@ -5989,6 +5993,7 @@ export const INTERNATIONAL_VOICES = [
     recommendedFor: 'both', 
     desc: 'Giọng nam Canada thân thiện, giao lưu cởi mở.',
     sampleText: 'Hey everyone, so glad you could drop by our stream today! Have fun!',
+    neuralVoice: 'en-CA-LiamNeural',
     dspProfile: { semitones: -7.0, rate: 1.02, lowGain: 7.5, midFreq: 520, midGain: 2.8, presenceFreq: 2300, presenceGain: 1.5, highGain: -2.0 }
   },
   { 
@@ -6006,6 +6011,7 @@ export const INTERNATIONAL_VOICES = [
     recommendedFor: 'both', 
     desc: 'Giọng nam bản xứ Úc tự nhiên, phóng khoáng.',
     sampleText: 'G day mate! Welcome to the show, let us get this party started right now!',
+    neuralVoice: 'en-AU-WilliamNeural',
     dspProfile: { semitones: -7.5, rate: 1.05, lowGain: 8.0, midFreq: 500, midGain: 3.0, presenceFreq: 2400, presenceGain: 2.0, highGain: -2.0 }
   },
 
@@ -6025,6 +6031,7 @@ export const INTERNATIONAL_VOICES = [
     recommendedFor: 'idol', 
     desc: 'Giọng nữ quý phái phong cách Paris lãng mạn.',
     sampleText: 'Bonjour à tous et bienvenue sur notre diffusion en direct !',
+    neuralVoice: 'fr-FR-DeniseNeural',
     dspProfile: { semitones: 2.4, rate: 1.0, lowGain: 0, midFreq: 1300, midGain: 2.5, presenceFreq: 3700, presenceGain: 4.5, highGain: 3.5 }
   },
   { 
@@ -6042,6 +6049,7 @@ export const INTERNATIONAL_VOICES = [
     recommendedFor: 'both', 
     desc: 'Giọng nam Pháp trầm ấm, lịch thiệp.',
     sampleText: 'Bienvenue à tous mes chers amis, c est un plaisir de vous accueillir.',
+    neuralVoice: 'fr-FR-HenriNeural',
     dspProfile: { semitones: -8.0, rate: 0.98, lowGain: 9.0, midFreq: 450, midGain: 3.0, presenceFreq: 2100, presenceGain: 0.5, highGain: -3.0 }
   },
   { 
@@ -6059,6 +6067,7 @@ export const INTERNATIONAL_VOICES = [
     recommendedFor: 'idol', 
     desc: 'Giọng nữ Ý du dương, ngọt ngào và cuốn hút.',
     sampleText: 'Ciao a tutti e benvenuti nella nostra meravigliosa diretta live!',
+    neuralVoice: 'it-IT-ElsaNeural',
     dspProfile: { semitones: 3.0, rate: 1.02, lowGain: -1, midFreq: 1400, midGain: 3, presenceFreq: 3900, presenceGain: 5, highGain: 4 }
   },
   { 
@@ -6076,6 +6085,7 @@ export const INTERNATIONAL_VOICES = [
     recommendedFor: 'both', 
     desc: 'Giọng nam Ý nồng nhiệt, giàu cảm xúc.',
     sampleText: 'Buonasera a tutti quanti, iniziamo questa grande avventura cùng nhau!',
+    neuralVoice: 'it-IT-DiegoNeural',
     dspProfile: { semitones: -7.8, rate: 1.04, lowGain: 8.5, midFreq: 480, midGain: 3.2, presenceFreq: 2300, presenceGain: 1.5, highGain: -2.5 }
   },
   { 
@@ -6093,6 +6103,7 @@ export const INTERNATIONAL_VOICES = [
     recommendedFor: 'idol', 
     desc: 'Giọng nữ Đức chính xác, chuẩn mực.',
     sampleText: 'Hallo zusammen! Herzlich willkommen zu unserem offiziellen Livestream!',
+    neuralVoice: 'de-DE-KatjaNeural',
     dspProfile: { semitones: 1.0, rate: 1.0, lowGain: 1, midFreq: 1100, midGain: 2, presenceFreq: 3300, presenceGain: 3.5, highGain: 2 }
   },
   { 
@@ -6110,6 +6121,7 @@ export const INTERNATIONAL_VOICES = [
     recommendedFor: 'manager', 
     desc: 'Giọng nam Đức dõng dạc, uy lực và đĩnh đạc.',
     sampleText: 'Guten Tag meine Damen und Herren, wir starten jetzt die Übertragung!',
+    neuralVoice: 'de-DE-ConradNeural',
     dspProfile: { semitones: -9.5, rate: 0.98, lowGain: 11.5, midFreq: 350, midGain: 4.2, presenceFreq: 1800, presenceGain: -1.5, highGain: -5.0 }
   },
   { 
@@ -6127,6 +6139,7 @@ export const INTERNATIONAL_VOICES = [
     recommendedFor: 'idol', 
     desc: 'Giọng nữ Tây Ban Nha rực rỡ, tràn đầy sức sống.',
     sampleText: '¡Hola a todos! ¡Bienvenidos a nuestra emocionante transmisión en vivo!',
+    neuralVoice: 'es-ES-ElviraNeural',
     dspProfile: { semitones: 3.2, rate: 1.06, lowGain: -1.5, midFreq: 1500, midGain: 3, presenceFreq: 4000, presenceGain: 5.5, highGain: 4.5 }
   },
   { 
@@ -6144,6 +6157,7 @@ export const INTERNATIONAL_VOICES = [
     recommendedFor: 'idol', 
     desc: 'Giọng nữ Nga sâu lắng, truyền cảm.',
     sampleText: 'Всем привет! Добро пожаловать на наш прямой эфир!',
+    neuralVoice: 'ru-RU-SvetlanaNeural',
     dspProfile: { semitones: 0.8, rate: 0.96, lowGain: 2, midFreq: 950, midGain: 2.2, presenceFreq: 3000, presenceGain: 3, highGain: 1.5 }
   },
 
@@ -6199,6 +6213,7 @@ export const INTERNATIONAL_VOICES = [
     recommendedFor: 'idol', 
     desc: 'Giọng nữ livestream bán hàng thương mại điện tử Trung Quốc.',
     sampleText: '各位直播间的朋友们大家好！欢迎来到我们的互动直播间！',
+    neuralVoice: 'zh-CN-XiaoxiaoNeural',
     dspProfile: { semitones: 3.6, rate: 1.10, lowGain: -2, midFreq: 1500, midGain: 3.2, presenceFreq: 4000, presenceGain: 6, highGain: 4.5 }
   },
   { 
@@ -6216,6 +6231,7 @@ export const INTERNATIONAL_VOICES = [
     recommendedFor: 'game', 
     desc: 'Giọng nam bình luận viên võ thuật Trung Hoa.',
     sampleText: '直播间的家人们大家晚上好！精彩对决马上开始！',
+    neuralVoice: 'zh-CN-YunxiNeural',
     dspProfile: { semitones: -8.0, rate: 1.08, lowGain: 9.0, midFreq: 460, midGain: 3.5, presenceFreq: 2200, presenceGain: 1.5, highGain: -3.0 }
   },
   { 
@@ -6250,6 +6266,7 @@ export const INTERNATIONAL_VOICES = [
     recommendedFor: 'idol', 
     desc: 'Giọng nữ Nhật Bản ngọt ngào chuẩn Anime VTuber.',
     sampleText: 'みなさん、こんにちは！ライブ配信へようこそ！一緒に盛り上がりましょう！',
+    neuralVoice: 'ja-JP-NanamiNeural',
     dspProfile: { semitones: 6.0, rate: 1.06, lowGain: -4.5, midFreq: 1900, midGain: 4, presenceFreq: 4600, presenceGain: 7.5, highGain: 6.5 }
   },
   { 
@@ -6267,6 +6284,7 @@ export const INTERNATIONAL_VOICES = [
     recommendedFor: 'game', 
     desc: 'Giọng nam Samurai dũng mãnh chuẩn điện ảnh Nhật Bản.',
     sampleText: '皆様、ようこそお越しくださいました！熱き戦いを始めよう！',
+    neuralVoice: 'ja-JP-KeitaNeural',
     dspProfile: { semitones: -9.8, rate: 1.02, lowGain: 12.0, midFreq: 340, midGain: 4.2, presenceFreq: 1900, presenceGain: 0.0, highGain: -5.0 }
   },
   { 
@@ -6284,6 +6302,7 @@ export const INTERNATIONAL_VOICES = [
     recommendedFor: 'idol', 
     desc: 'Giọng nữ idol K-Pop thanh thoát, trẻ trung.',
     sampleText: '안녕하세요 여러분! 라이브 방송에 오신 것을 진심으로 환영합니다!',
+    neuralVoice: 'ko-KR-SunHiNeural',
     dspProfile: { semitones: 3.8, rate: 1.04, lowGain: -2, midFreq: 1500, midGain: 3.2, presenceFreq: 4100, presenceGain: 6, highGain: 4.5 }
   },
   { 
@@ -6301,6 +6320,7 @@ export const INTERNATIONAL_VOICES = [
     recommendedFor: 'both', 
     desc: 'Giọng nam MC truyền hình Hàn Quốc ấm áp.',
     sampleText: '반갑습니다 여러분! 오늘 라이브도 즐겁게 함께해요!',
+    neuralVoice: 'ko-KR-InJoonNeural',
     dspProfile: { semitones: -7.6, rate: 0.98, lowGain: 8.5, midFreq: 480, midGain: 3.0, presenceFreq: 2200, presenceGain: 1.0, highGain: -3.0 }
   },
   { 
@@ -6318,6 +6338,7 @@ export const INTERNATIONAL_VOICES = [
     recommendedFor: 'idol', 
     desc: 'Giọng nữ Thái Lan dịu dàng, trong trẻo.',
     sampleText: 'สวัสดีค่ะทุกคน ยินดีต้อนรับสู่การถ่ายทอดสดของเราค่ะ!',
+    neuralVoice: 'th-TH-PremwadeeNeural',
     dspProfile: { semitones: 3.0, rate: 1.0, lowGain: -1, midFreq: 1350, midGain: 2.8, presenceFreq: 3800, presenceGain: 5, highGain: 4 }
   },
   { 

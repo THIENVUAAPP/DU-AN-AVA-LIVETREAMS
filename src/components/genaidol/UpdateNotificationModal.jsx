@@ -2,17 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.7.7';
+export const APP_VERSION = '2.7.8';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🎙️ Sắp Xếp & Phân Tầng Kho Giọng Đọc Kịch Bản Siêu Gọn Gàng',
-    description: 'Menu chọn giọng trong phần Kịch Bản & Tác Vụ được tái cấu trúc hoàn hảo theo Giới tính (Nam/Nữ), Độ tuổi (20-24t, 24-28t, 28-40t, 40-70t), Vùng miền (Bắc, Trung, Nam, Tây) và Quốc tế.'
+    title: '🌐 Khắc Phục Triệt Để & Hiển Thị Hoàn Hảo Kho Giọng Quốc Tế',
+    description: 'Xử lý triệt để mã hóa Unicode cho cờ quốc gia (Mỹ, Anh, Pháp, Đức, Ý, Nhật, Hàn, Trung, Thái...), hiển thị tên gọi sắc nét và kết nối trực tiếp đến mô hình giọng đọc AI bản xứ cao cấp nhất.'
   },
   {
-    title: '✨ Tinh Gọn Icon & Giao Diện Menu Trực Quan Chuyên Nghiệp',
-    description: 'Loại bỏ hoàn toàn các icon dư thừa, trùng lặp. Mỗi dòng giọng đọc chỉ hiển thị 1 icon tinh tế, chuẩn xác, dễ đọc và thao tác nhanh chóng.'
+    title: '🎙️ Sắp Xếp & Phân Tầng Kho Giọng Đọc Kịch Bản Siêu Gọn Gàng',
+    description: 'Menu chọn giọng trong phần Kịch Bản & Tác Vụ được phân nhóm thông minh theo Giới tính (Nam/Nữ), Độ tuổi (20-24t, 24-28t, 28-40t, 40-70t), Vùng miền và Quốc tế.'
   },
   {
     title: '🔥 Master Female Ultra Emotive DNA 40 Giọng Độc Bản Đồng Bộ 100%',

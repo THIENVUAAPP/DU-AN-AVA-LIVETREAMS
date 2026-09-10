@@ -410,7 +410,7 @@ export default function EventVoiceTester({
 
   const cleanVoiceName = (name) => {
     if (!name) return '';
-    return name.replace(/[👑💎🇻🇳⚡⭐🔥♀♂]/g, '').replace(/\s+/g, ' ').trim();
+    return name.replace(/[👑💎⚡🔥♀♂★☆]/gu, '').replace(/\s+/g, ' ').trim();
   };
 
   const renderVoiceOptions = () => (
