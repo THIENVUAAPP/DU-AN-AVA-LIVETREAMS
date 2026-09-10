@@ -800,41 +800,24 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       .catch(() => {});
   }, []);
 
-  // 🎯 VÒNG LẶP RENDER CANVAS 2D GƯƠNG 60FPS CHO VIDEO MP4 TRÊN PHẦN MỀM
-  // Giúp OBS Studio & TikTok Live Studio khi dùng Bắt Cửa Sổ (Window Capture) chụp cửa sổ phần mềm không bị màn hình đen
-  // Tự động tạm dừng 100% khi người dùng chuyển sang Game Bản Đồ hoặc Game Chiến Đấu để dồn toàn bộ GPU/CPU cho Game 3D
+  // ⚡ TỰ ĐỘNG PHÁT VIDEO LIÊN TỤC & SIÊU MƯỢT KHI MỞ HOẶC CHỌN NHÂN VẬT (CHỐNG ĐỨNG HÌNH 100%)
   useEffect(() => {
-    if (isGameBanDoActive || isGameBattleActive) return;
-
-    let animId;
-    let isMounted = true;
-
-    const renderDesktopVideo = () => {
-      if (!isMounted) return;
-      const video = desktopVideoRef.current;
-      const canvas = desktopCanvasRef.current;
-      if (video && canvas && video.readyState >= 2 && video.videoWidth > 0 && !video.paused) {
-        if (canvas.width !== video.videoWidth || canvas.height !== video.videoHeight) {
-          canvas.width = video.videoWidth;
-          canvas.height = video.videoHeight;
-        }
-        const ctx = canvas.getContext('2d', { alpha: false, desynchronized: true });
-        if (ctx) {
-          try {
-            ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
-          } catch (e) {}
-        }
+    const vid = desktopVideoRef.current;
+    if (vid) {
+      vid.dataset.userPaused = 'false';
+      vid.muted = liveAudioMuted;
+      if (!liveAudioMuted) vid.volume = liveVolume;
+      const playPromise = vid.play();
+      if (playPromise !== undefined) {
+        playPromise
+          .then(() => setIsVideoPlaying(true))
+          .catch(() => {
+            vid.muted = true;
+            vid.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+          });
       }
-      animId = requestAnimationFrame(renderDesktopVideo);
-    };
-
-    animId = requestAnimationFrame(renderDesktopVideo);
-
-    return () => {
-      isMounted = false;
-      if (animId) cancelAnimationFrame(animId);
-    };
-  }, [isGameBanDoActive, isGameBattleActive]);
+    }
+  }, [selectedCharacter, userLockedMediaUrl, customCharacters, liveAudioMuted, liveVolume]);
 
   // 🛡️ BACKGROUND KEEP-ALIVE CHO PHẦN MỀM CHÍNH: CHỐNG ĐÓNG BĂNG/DỪNG VIDEO KHI CHUYỂN TAB HOẶC ẨN CỬA SỔ
   useEffect(() => {
@@ -3294,13 +3277,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   e.currentTarget.play().catch(() => {});
                 } catch (err) {}
               }}
-            />
-
-            {/* CANVAS 2D MIRROR 60FPS: ÉP CHROMIUM VẼ FRAME VÀO WINDOW BUFFER ĐỂ WINDOW CAPTURE OBS / TIKTOK LIVE STUDIO KHÔNG BỊ ĐEN MÀN HÌNH */}
-            <canvas 
-              ref={desktopCanvasRef}
-              className="w-full h-full object-contain absolute inset-0 pointer-events-none select-none z-10"
-              style={{ width: '100%', height: '100%' }}
             />
 
             {/* 2 NÚT CHÌM TỰ ĐỘNG ẨN: CHỈ HIỆN KHI RÊ CHUỘT HOẶC CHẠM VÀO VIDEO (GIỮ KHUNG HÌNH 100% SẠCH SẼ & ĐẸP MẮT) */}

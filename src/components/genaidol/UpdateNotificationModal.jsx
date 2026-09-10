@@ -2,20 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.6.9';
+export const APP_VERSION = '2.7.0';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Tối Ưu Siêu Mượt Video & Khẩu Hình Lip-Sync 60 FPS (Không Bị Đứng)',
-    description: 'Khắc phục triệt để lỗi video bị đứng im khi mở hoặc đổi slot nhân vật. Tự động phát mượt mà không độ trễ, đồng bộ thời gian thực chuẩn từng mili-giây với Voice AI và khử hoàn toàn tình trạng pause lock.'
+    title: '⚡ Xử Lý Triệt Để Lỗi Video Bị Đứng Hình & Tự Động Chạy Mượt 100%',
+    description: 'Loại bỏ hoàn toàn lớp Canvas đè khung hình, bổ sung cơ chế Auto-Play Guardian tự động kích hoạt video phát tức thì khi mở app hoặc đổi nhân vật. Video chạy siêu mượt 60 FPS, liên tục không ngừng nghỉ.'
   },
   {
-    title: '🎬 Tự Động Lặp Video Vô Tận (Seamless Looping 24/7)',
-    description: 'Video nhân vật chạy liên tục không bị khựng hình khi lặp lại, giữ đồng bộ tuyệt đối với cửa sổ livestream TikTok Live Studio, OBS và màn hình chính.'
+    title: '🎙️ Khớp Khẩu Hình Lip-Sync Chuẩn Từng Câu Thoại Kịch Bản',
+    description: 'Kết nối trực tiếp Voice AI với bộ phân tích khẩu hình, cử động môi mượt mà tự nhiên, đọc kịch bản tuần tự và lặp vô tận liền mạch.'
   },
   {
-    title: '🌸 Kho 15 Giọng Nữ 20-28t Độc Bản Siêu Viral (Đa Tông Sắc & Vùng Miền)',
+    title: '🌸 Kho 15 Giọng Nữ 20-28t Độc Bản Siêu Viral',
     description: 'Nâng cấp toàn diện 15 chất giọng nữ tuổi 20-28 với tông giọng, ngữ điệu, âm sắc và DSP EQ hoàn toàn khác biệt: Ngọc Nhi, Anika Hoạt Ngôn TikTok, Quỳnh Lương Đanh Thép, Jessica Sang Chảnh ASMR, Viên Vibi Hài Hước, Út Mai Cần Thơ, Bé Ba Bến Tre, Lan Anh Xứ Huế, Ánh Tuyết Đà Nẵng, Hương Giang Xứ Nghệ, Thảo Tâm Song Ngữ...'
   }
 ];
