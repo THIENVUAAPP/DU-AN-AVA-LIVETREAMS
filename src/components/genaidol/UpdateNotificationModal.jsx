@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.8.9';
+export const APP_VERSION = '2.9.0';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🔘 Công Tắc Bật / Tắt Kích Hoạt Studio 2–4 Avatar Linh Hoạt',
-    description: 'Thêm công tắc BẬT / TẮT trực quan cho chế độ Studio 2–4 Avatar. Khi TẮT, hệ thống tự động hoàn nguyên về chế độ 1 Avatar & 1 kịch bản tiêu chuẩn như ban đầu.'
+    title: '🟢 Hoàn Thiện Xóa Phông Nền (Chroma Key) Xanh Lá / Dương / Đen / Trắng 4K',
+    description: 'Tối ưu hóa bộ lọc Chroma Key cực sắc nét, loại bỏ hoàn toàn phông xanh/đen/trắng trên cả ảnh và video nhân vật, trong suốt tuyệt đối.'
   },
   {
-    title: '⚡ Sửa Triệt Để Lỗi Mở Giao Diện Studio & Tối Ưu Tốc Độ Khởi Động',
-    description: 'Khắc phục hoàn toàn lỗi crash khi bấm mở Studio 2-4 Avatar, bổ sung nút truy cập nhanh từ thanh công cụ Live chính và Settings.'
+    title: '⚡ Tải Đồng Loạt Nhiều Ảnh & Video & Tự Do Sắp Xếp Trên Sân Khấu',
+    description: 'Bổ sung nút nạp đồng thời 2-4 tệp ảnh/video cho các nhân vật, hỗ trợ kéo thả, co giãn, đổi ảnh riêng biệt cho từng lớp siêu mượt.'
   },
   {
-    title: '🖼️ Kéo Thả & Co Giãn Ảnh Nền & Video Nhân Vật Đa Luồng Siêu Mượt',
-    description: 'Hoàn thiện 8 điểm neo co giãn tự do, thanh trượt Zoom 50%-300%, hiệu ứng mờ Blur và độ sáng Brightness mượt mà chuẩn OBS / TikTok Studio.'
+    title: '🖥️ Giao Diện Studio To Rộng Full Màn Hình & Nút Đóng Đỏ Nổi Bật Góc Phải',
+    description: 'Mở rộng khung Studio full màn hình sắc nét, chuyển nút ĐÓNG sang góc phải trên cùng trực quan, dễ bấm.'
   }
 ];
 

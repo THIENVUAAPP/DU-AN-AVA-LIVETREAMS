@@ -23,26 +23,26 @@ export const SvgChromaFilters = () => (
   <svg width="0" height="0" className="absolute pointer-events-none opacity-0" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>
     <defs>
       {/* 🟢 Tách Nền Xanh Lá 4K */}
-      <filter id="avalive-chroma-green" colorInterpolationFilters="sRGB">
+      <filter id="avalive-chroma-green" colorInterpolationFilters="sRGB" x="0%" y="0%" width="100%" height="100%">
         <feColorMatrix
           type="matrix"
           values="
-            1.05  0.00  0.00  0.00  0.00
+            1.00  0.00  0.00  0.00  0.00
             0.00  1.00  0.00  0.00  0.00
-            0.00  0.00  1.05  0.00  0.00
-            1.80 -2.20  1.80  1.00  0.00"
+            0.00  0.00  1.00  0.00  0.00
+            1.60 -2.40  1.60  1.00  0.00"
         />
       </filter>
 
       {/* 🔵 Tách Nền Xanh Dương 4K */}
-      <filter id="avalive-chroma-blue" colorInterpolationFilters="sRGB">
+      <filter id="avalive-chroma-blue" colorInterpolationFilters="sRGB" x="0%" y="0%" width="100%" height="100%">
         <feColorMatrix
           type="matrix"
           values="
-            1.05  0.00  0.00  0.00  0.00
-            0.00  1.05  0.00  0.00  0.00
+            1.00  0.00  0.00  0.00  0.00
+            0.00  1.00  0.00  0.00  0.00
             0.00  0.00  1.00  0.00  0.00
-            1.80  1.80 -2.20  1.00  0.00"
+            1.60  1.60 -2.40  1.00  0.00"
         />
       </filter>
     </defs>
@@ -179,7 +179,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     });
   };
 
-  const handleAvatarChromaChange = (avatarId, field, value) => {
+  const handleAvatarChromaBatch = (avatarId, changes) => {
     setConfig(prev => {
       const currentAvatars = prev.avatars || DEFAULT_MULTI_AVATAR_CONFIG.avatars;
       const updated = {
@@ -191,7 +191,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
               ...av,
               chromaKey: {
                 ...currentChroma,
-                [field]: value
+                ...changes
               }
             };
           }
@@ -201,6 +201,10 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
       saveMultiAvatarConfig(updated);
       return updated;
     });
+  };
+
+  const handleAvatarChromaChange = (avatarId, field, value) => {
+    handleAvatarChromaBatch(avatarId, { [field]: value });
   };
 
   const handleAvatarTransformBatch = (avatarId, changes) => {
@@ -274,13 +278,44 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
         const dataUrl = loadEvt.target?.result;
         if (dataUrl) {
           handleAvatarChange(avatarId, field, dataUrl);
+          toast.success(`🖼️ Đã nạp ảnh thành công!`);
         }
       };
       reader.readAsDataURL(file);
     } else {
       const objectUrl = URL.createObjectURL(file);
       handleAvatarChange(avatarId, field, objectUrl);
+      toast.success(`🎬 Đã nạp video thành công!`);
     }
+    e.target.value = '';
+  };
+
+  const handleMultiFileUpload = (e) => {
+    const files = Array.from(e.target.files || []);
+    if (files.length === 0) return;
+
+    files.forEach((file, index) => {
+      if (index >= 4) return;
+      const targetAvatarId = `avatar_${index + 1}`;
+      if (file.type.startsWith('image/')) {
+        const reader = new FileReader();
+        reader.onload = (loadEvt) => {
+          const dataUrl = loadEvt.target?.result;
+          if (dataUrl) {
+            handleAvatarChange(targetAvatarId, 'talkVideo', dataUrl);
+            handleAvatarChange(targetAvatarId, 'idleVideo', dataUrl);
+          }
+        };
+        reader.readAsDataURL(file);
+      } else {
+        const objectUrl = URL.createObjectURL(file);
+        handleAvatarChange(targetAvatarId, 'talkVideo', objectUrl);
+        handleAvatarChange(targetAvatarId, 'idleVideo', objectUrl);
+      }
+    });
+
+    toast.success(`⚡ Đã nạp đồng loạt ${files.length} tệp cho các nhân vật!`);
+    e.target.value = '';
   };
 
   const handleApplyPosePreset = (avatarId, poseType) => {
@@ -713,12 +748,29 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
           </button>
         </div>
 
-        {/* Nút Action Lưu & Trợ Giúp */}
-        <div className="flex items-center gap-2">
+        {/* Nút Action Lưu, Trợ Giúp, Tải Nhiều File & NÚT ĐÓNG TO RÕ GÓC PHẢI */}
+        <div className="flex items-center gap-2 ml-auto">
+          {/* Nút Nạp Nhanh Nhiều File */}
+          <label 
+            className="px-2.5 py-1.5 rounded-xl text-xs font-black bg-purple-600/30 hover:bg-purple-600/50 text-purple-200 border border-purple-400/40 flex items-center gap-1 cursor-pointer shadow-xs transition-all hover:scale-102"
+            title="Chọn đồng thời 2-4 ảnh hoặc video để tự động gán vào các nhân vật"
+          >
+            <Upload size={13} />
+            <span className="hidden sm:inline">Nạp 2–4 File Cùng Lúc</span>
+            <span className="sm:hidden">Nạp Nhiều</span>
+            <input 
+              type="file" 
+              multiple 
+              accept="video/*,image/*" 
+              onChange={handleMultiFileUpload} 
+              className="hidden" 
+            />
+          </label>
+
           <button
             type="button"
             onClick={() => setShowHelpModal(true)}
-            className="px-2.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1 transition-all cursor-pointer bg-amber-50 hover:bg-amber-100 text-amber-800 dark:bg-amber-950/40 dark:text-amber-300 border border-amber-300 dark:border-amber-800 shadow-2xs"
+            className="px-2.5 py-1.5 rounded-xl font-bold text-xs flex items-center gap-1 transition-all cursor-pointer bg-amber-500/15 hover:bg-amber-500/25 text-amber-300 border border-amber-500/30 shadow-2xs"
             title="Hướng dẫn & Phím tắt"
           >
             <HelpCircle size={14} /> Trợ Giúp
@@ -737,9 +789,11 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
             <button
               type="button"
               onClick={onClose}
-              className="p-1.5 rounded-xl text-gray-500 hover:text-gray-800 dark:hover:text-gray-200 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors cursor-pointer"
+              className="px-3 py-1.5 rounded-xl bg-red-600/80 hover:bg-red-600 text-white border border-red-500 transition-all font-black text-xs flex items-center gap-1.5 cursor-pointer shadow-md hover:scale-105"
+              title="Đóng cửa sổ Studio (Góc phải màn hình)"
             >
-              <X size={18} />
+              <X size={16} />
+              <span>ĐÓNG</span>
             </button>
           )}
         </div>
@@ -944,7 +998,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                     >
                       {/* MEDIA CONTAINER */}
                       <div 
-                        className="w-full h-full overflow-hidden rounded-[inherit] relative group bg-black/40"
+                        className="w-full h-full overflow-hidden rounded-[inherit] relative group bg-transparent"
                         style={chromaStyle}
                       >
                         {mediaSrc ? (
@@ -953,8 +1007,11 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                               <img
                                 src={mediaSrc}
                                 alt={avatar.name}
-                                className="w-full h-full pointer-events-none select-none"
-                                style={{ objectFit: transform.objectFit || 'cover' }}
+                                className="w-full h-full pointer-events-none select-none bg-transparent"
+                                style={{ 
+                                  objectFit: transform.objectFit || 'cover',
+                                  ...chromaStyle
+                                }}
                               />
                             ) : (
                               <video
@@ -963,8 +1020,11 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                                 loop
                                 muted
                                 playsInline
-                                className="w-full h-full pointer-events-none select-none"
-                                style={{ objectFit: transform.objectFit || 'cover' }}
+                                className="w-full h-full pointer-events-none select-none bg-transparent"
+                                style={{ 
+                                  objectFit: transform.objectFit || 'cover',
+                                  ...chromaStyle
+                                }}
                               />
                             )}
                             {/* Hover Quick Action Buttons */}
@@ -1459,27 +1519,47 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
 
               {inspectorTab === 'chroma' && (
                 <div className={`p-3 rounded-2xl border space-y-2 animate-in fade-in duration-150 ${isEmbedded ? 'bg-white border-gray-200 shadow-xs' : 'bg-[#171922] border-gray-800'}`}>
-                  <div className="flex items-center justify-between border-b pb-1.5 border-gray-200 dark:border-gray-800">
+                  <div className="flex items-center justify-between border-b pb-2 border-gray-200 dark:border-gray-800">
                     <div className="flex items-center gap-1">
                       <Wand2 size={13} className="text-emerald-500" />
                       <h4 className="text-[11px] font-black uppercase text-emerald-600 dark:text-emerald-400">
                         Xóa Phông Nền (Chroma Key)
                       </h4>
                     </div>
-                    <label className="relative inline-flex items-center cursor-pointer">
-                      <input 
-                        type="checkbox" 
-                        checked={!!selectedAvatar.chromaKey?.enabled}
-                        onChange={(e) => handleAvatarChromaChange(selectedAvatar.id, 'enabled', e.target.checked)}
-                        className="sr-only peer"
-                      />
-                      <div className="w-8 h-4 bg-gray-300 peer-focus:outline-none rounded-full peer dark:bg-gray-700 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-3 after:w-3 after:transition-all peer-checked:bg-emerald-500"></div>
-                    </label>
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const nextVal = !selectedAvatar.chromaKey?.enabled;
+                        handleAvatarChromaChange(selectedAvatar.id, 'enabled', nextVal);
+                        if (nextVal) {
+                          toast.success('🟢 Đã bật xóa phông nền!');
+                        } else {
+                          toast.info('⚪ Đã tắt xóa phông nền.');
+                        }
+                      }}
+                      className={`px-3 py-1 rounded-xl text-[11px] font-black transition-all flex items-center gap-1.5 cursor-pointer ${
+                        selectedAvatar.chromaKey?.enabled
+                          ? 'bg-emerald-600 text-white shadow-md shadow-emerald-500/30 ring-2 ring-emerald-300'
+                          : 'bg-slate-200 dark:bg-gray-800 text-gray-600 dark:text-gray-400 border border-gray-300 dark:border-gray-700'
+                      }`}
+                    >
+                      {selectedAvatar.chromaKey?.enabled ? (
+                        <>
+                          <span className="w-2 h-2 rounded-full bg-emerald-300 animate-pulse" />
+                          <span>Đang Bật Tách Nền</span>
+                        </>
+                      ) : (
+                        <>
+                          <span className="w-2 h-2 rounded-full bg-gray-400" />
+                          <span>Đang Tắt</span>
+                        </>
+                      )}
+                    </button>
                   </div>
 
                   <div className="space-y-2 text-xs">
                     <div className="space-y-0.5">
-                      <label className="text-[10px] font-bold text-gray-500">Màu Nền Cần Tách:</label>
+                      <label className="text-[10px] font-bold text-gray-500">Màu Nền Cần Tách (Bấm để Tách Ngay):</label>
                       <div className="grid grid-cols-4 gap-1">
                         {[
                           { mode: 'green', color: '#00ff00', label: '🟢 Xanh Lá' },
@@ -1491,13 +1571,17 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                             key={c.mode}
                             type="button"
                             onClick={() => {
-                              handleAvatarChromaChange(selectedAvatar.id, 'mode', c.mode);
-                              handleAvatarChromaChange(selectedAvatar.id, 'color', c.color);
+                              handleAvatarChromaBatch(selectedAvatar.id, {
+                                enabled: true,
+                                mode: c.mode,
+                                color: c.color
+                              });
+                              toast.success(`✨ Đã bật tách ${c.label}!`);
                             }}
-                            className={`py-1 px-1 rounded-lg font-bold text-[10px] border transition-all cursor-pointer text-center ${
-                              selectedAvatar.chromaKey?.mode === c.mode || selectedAvatar.chromaKey?.color === c.color
-                                ? 'bg-emerald-600 text-white border-emerald-400 shadow-xs'
-                                : 'bg-slate-50 dark:bg-black/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800'
+                            className={`py-1.5 px-1 rounded-xl font-black text-[10px] border transition-all cursor-pointer text-center ${
+                              selectedAvatar.chromaKey?.enabled && (selectedAvatar.chromaKey?.mode === c.mode || selectedAvatar.chromaKey?.color === c.color)
+                                ? 'bg-emerald-600 text-white border-emerald-400 shadow-xs ring-1 ring-emerald-300 scale-102'
+                                : 'bg-slate-50 dark:bg-black/30 text-gray-700 dark:text-gray-300 border-gray-200 dark:border-gray-800 hover:border-emerald-300'
                             }`}
                           >
                             {c.label}
@@ -1896,8 +1980,8 @@ export default function MultiAvatarStudioModal({ isOpen, onClose, onApplyScriptT
   if (!isOpen) return null;
 
   return (
-    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in duration-200">
-      <div className="bg-[#11131a] text-white max-w-6xl w-full rounded-3xl shadow-2xl border border-cyan-500/30 overflow-hidden flex flex-col max-h-[94vh]">
+    <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md p-1 sm:p-3 animate-in fade-in duration-200">
+      <div className="bg-[#0f1118] text-white w-full h-full max-w-[1700px] max-h-[98vh] rounded-3xl shadow-2xl border border-cyan-500/40 overflow-hidden flex flex-col">
         <div className="flex-1 overflow-hidden">
           <MultiAvatarStudioPanel 
             isEmbedded={false} 

@@ -2233,7 +2233,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                         }}
                       >
                         <div 
-                          className="w-full h-full overflow-hidden rounded-[inherit]"
+                          className="w-full h-full overflow-hidden rounded-[inherit] bg-transparent"
                           style={chromaStyle}
                         >
                           {vidSrc ? (
@@ -2241,12 +2241,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                               <img
                                 src={vidSrc}
                                 alt={avatar.name}
-                                className="w-full h-full object-cover select-none pointer-events-none transform-gpu"
+                                className="w-full h-full object-cover select-none pointer-events-none transform-gpu bg-transparent"
                                 style={{
                                   width: '100%',
                                   height: '100%',
                                   objectFit: transform.objectFit || 'cover',
-                                  imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto'
+                                  imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto',
+                                  ...chromaStyle
                                 }}
                               />
                             ) : (
@@ -2261,7 +2262,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                                 controls={false}
                                 preload="auto"
                                 disableRemotePlayback
-                                className="w-full h-full select-none pointer-events-none transform-gpu"
+                                className="w-full h-full select-none pointer-events-none transform-gpu bg-transparent"
                                 style={{
                                   width: '100%',
                                   height: '100%',
@@ -2269,7 +2270,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                                   backgroundColor: 'transparent',
                                   transform: 'translate3d(0, 0, 0)',
                                   WebkitTransform: 'translate3d(0, 0, 0)',
-                                  imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto'
+                                  imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto',
+                                  ...chromaStyle
                                 }}
                               />
                             )

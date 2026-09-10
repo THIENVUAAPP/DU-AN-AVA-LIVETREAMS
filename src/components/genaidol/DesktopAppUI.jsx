@@ -3213,7 +3213,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 }}
               >
                 <div 
-                  className="w-full h-full overflow-hidden rounded-[inherit]"
+                  className="w-full h-full overflow-hidden rounded-[inherit] bg-transparent"
                   style={chromaStyle}
                 >
                   {vidSrc ? (
@@ -3221,11 +3221,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       <img
                         src={vidSrc}
                         alt={avatar.name}
-                        className="w-full h-full select-none pointer-events-none"
+                        className="w-full h-full select-none pointer-events-none bg-transparent"
                         style={{
                           width: '100%',
                           height: '100%',
-                          objectFit: transform.objectFit || 'cover'
+                          objectFit: transform.objectFit || 'cover',
+                          ...chromaStyle
                         }}
                       />
                     ) : (
@@ -3237,12 +3238,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                         muted={liveAudioMuted}
                         playsInline
                         controls={false}
-                        className="w-full h-full select-none pointer-events-none"
+                        className="w-full h-full select-none pointer-events-none bg-transparent"
                         style={{
                           width: '100%',
                           height: '100%',
                           objectFit: transform.objectFit || 'cover',
-                          backgroundColor: 'transparent'
+                          backgroundColor: 'transparent',
+                          ...chromaStyle
                         }}
                       />
                     )
