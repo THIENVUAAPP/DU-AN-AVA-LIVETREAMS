@@ -75,7 +75,7 @@ function getSavedEventConfigs() {
           useTTS: true,
           ttsVoiceRole: 'idol',
           muteSourceVideo: true,
-          aiPrompt: 'Trong vai là một nhân viên sale chuyên nghiệp hãy đọc bình luận và đem ra câu trả lời để chốt đơn, giá phần mềm là 3 triệu rưỡi/1 năm, hoặc gói dùng thử là 500000 đồng trên 1 tháng. Chốt sale hoặc cần tư vấn thêm thì hãy liên hệ với đội ngũ admin'
+          aiPrompt: 'Trong vai là một nhân viên sale chuyên nghiệp hãy đọc bình luận và đem ra câu trả lời để chốt đơn, giá phần mềm là 3 triệu rưỡi/1 năm, hoặc gói dùng thử là'
         }
       ]
     },
@@ -86,6 +86,12 @@ function getSavedEventConfigs() {
       muteSourceVideo: true,
       videoCategory: 'comment',
       useAi: true,
+      commentReplyMode: 'hybrid',
+      repeatCommentFirst: true,
+      repeatCommentPrefix: 'Dạ bạn {user} vừa hỏi là: "{comment}". ',
+      unknownFallbackReply: 'Dạ bạn {user} ơi, câu hỏi này em là trợ lý live nên xin phép ghi nhận lại để hỏi lại shop và phản hồi chi tiết cho mình sau nha! Bạn có thể nhắn tin (inbox) trực tiếp cho shop để nhận hỗ trợ nhanh nhất ạ!',
+      appendFollowUpQuestion: true,
+      followUpQuestionText: ' Dạ không biết bạn {user} có cần em hỗ trợ thêm điều gì nữa không ạ? Bạn có thể nhắn tin trực tiếp cho shop để nhận tư vấn chi tiết và nhiều ưu đãi nha!',
       aiPrompt: '### NHIỆM VỤ: Trả lời bình luận của người dùng tên {user} ngắn gọn, thông minh, lịch sự và thu hút.',
       sampleAnswers: 'Cảm ơn bạn {user} đã bình luận nhé!\nMình đã nhận được bình luận của {user} rồi ạ.',
       assistantPrompt: 'A, có bạn {user} vừa mới bình luận là: {comment}'
@@ -130,11 +136,11 @@ function getSavedEventConfigs() {
     const raw = localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup');
     if (raw) {
       const parsed = JSON.parse(raw);
-      if (parsed && typeof parsed === 'object') {
-        return { ...defaultEventConfigs, ...parsed };
-      }
+      return { ...defaultEventConfigs, ...parsed };
     }
-  } catch (e) {}
+  } catch (e) {
+    console.warn('Lỗi đọc cấu hình live:', e);
+  }
   return defaultEventConfigs;
 }
 
@@ -154,39 +160,25 @@ function fillTemplate(template, vars = {}) {
   return result;
 }
 
-  // Hàm xử lý sự kiện chính (theo đúng 100% kịch bản người dùng đã cài đặt trong Workspace)
-  const handleLiveEvent = async (type, payload) => {
-    if (!type) return;
-
-    const configs = getSavedEventConfigs() || {};
-
-    if (type === 'VIEWER_JOIN') {
-      const viewerName = (payload?.name || '').trim().toLowerCase();
-      if (!viewerName || viewerName === 'khách mới' || greetedViewersRef.current.has(viewerName)) {
-        return; // Đã chào rồi, không chào lặp lại cùng 1 người
-      }
-      greetedViewersRef.current.add(viewerName);
-      if (greetedViewersRef.current.size > 500) {
-        const first = greetedViewersRef.current.values().next().value;
-        greetedViewersRef.current.delete(first);
-      }
-    }
-
-    setIsProcessingEvent(true);
+  // Hàm kích hoạt xử lý sự kiện Live từ TikTok / Chat / Giả lập
+  const handleLiveEvent = (type, payload) => {
+    if (!isConnected) return;
     resetIdleTimer();
 
+    const configs = getSavedEventConfigs();
     let replyText = '';
-    let shouldAction = 'none';
+    let shouldAction = null;
     const userName = (payload?.name || payload?.username || 'Bạn').trim();
 
     try {
-      // 1. XỬ LÝ SỰ KIỆN BÌNH LUẬN (COMMENT)
+      // 1. XỬ LÝ SỰ KIỆN BÌNH LUẬN (COMMENT) - QUY TRÌNH 4 BƯỚC THÔNG MINH
       if (type === 'COMMENT') {
         const commentText = (payload?.text || payload?.comment || '').trim();
         const commentConfig = configs.comment || {};
         const scriptConfig = configs.script_broadcast || configs.checkout || {};
         const checkoutConfig = configs.checkout || {};
         const replySource = scriptConfig.commentReplySource || checkoutConfig.commentReplySource || 'knowledge_base';
+        const replyMode = commentConfig.commentReplyMode || 'hybrid';
 
         // A. Kiểm tra từ khóa bị cấm (Banned Words)
         if (commentConfig.bannedWords) {
@@ -197,29 +189,37 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
+        // BƯỚC 1: TIỀN TỐ ĐỌC LẠI BÌNH LUẬN / CÂU HỎI CỦA KHÁCH
+        let repeatPrefix = '';
+        if (commentConfig.repeatCommentFirst !== false && commentText) {
+          const tpl = commentConfig.repeatCommentPrefix || 'Dạ bạn {user} vừa hỏi là: "{comment}". ';
+          repeatPrefix = fillTemplate(tpl, { user: userName, comment: commentText });
+        }
+
+        let bodyAnswer = '';
         let isHandled = false;
         const lowerComment = commentText.toLowerCase();
 
-        // B. PHẢN HỒI THEO KHO TRI THỨC DOANH NGHIỆP & SẢN PHẨM (AI KNOWLEDGE BASE)
-        if (replySource === 'knowledge_base' || replySource === 'both') {
-          const company = scriptConfig.companyName || checkoutConfig.companyName || 'Shop Mỹ Phẩm & Làm Đẹp Cao Cấp';
-          const product = scriptConfig.productName || checkoutConfig.productName || 'Bộ Đôi Serum Tế Bào Gốc & Nước Hoa Pháp';
-          const price = scriptConfig.productPrice || checkoutConfig.productPrice || '1.850.000đ - Flash Sale 890.000đ';
-          const promo = scriptConfig.promotions || checkoutConfig.promotions || 'Tặng kèm kem dưỡng ẩm mini + Freeship toàn quốc';
-          const features = scriptConfig.keyFeatures || checkoutConfig.keyFeatures || 'Dưỡng da căng bóng mịn màng sau 7 ngày, nước hoa lưu hương 12 giờ';
-          const warranty = scriptConfig.warrantyPolicy || checkoutConfig.warrantyPolicy || 'Bảo hành 1 đổi 1 trong 30 ngày, hoàn tiền 200% nếu phát hiện hàng không chuẩn';
+        // BƯỚC 2: PHẢN HỒI THEO KHO TRI THỨC DOANH NGHIỆP & SẢN PHẨM (AI KNOWLEDGE BASE)
+        const company = scriptConfig.companyName || checkoutConfig.companyName || 'Shop';
+        const product = scriptConfig.productName || checkoutConfig.productName || 'Sản phẩm';
+        const price = scriptConfig.productPrice || checkoutConfig.productPrice || 'ưu đãi cực sốc';
+        const promo = scriptConfig.promotions || checkoutConfig.promotions || 'freeship toàn quốc';
+        const features = scriptConfig.keyFeatures || checkoutConfig.keyFeatures || 'chất lượng cao, cam kết chính hãng';
+        const warranty = scriptConfig.warrantyPolicy || checkoutConfig.warrantyPolicy || 'bảo hành đổi trả uy tín';
 
-          if (lowerComment.includes('giá') || lowerComment.includes('bao nhiêu') || lowerComment.includes('tiền') || lowerComment.includes('chi phí')) {
-            replyText = `Dạ bạn ${userName} ơi, sản phẩm ${product} của ${company} đang có giá ${price} kèm khuyến mãi: ${promo}. Bạn bấm ngay vào giỏ hàng góc trái màn hình để nhận ưu đãi nha!`;
+        if (replyMode !== 'ai_only' || replySource === 'knowledge_base' || replySource === 'both') {
+          if (lowerComment.includes('giá') || lowerComment.includes('bao nhiêu') || lowerComment.includes('tiền') || lowerComment.includes('chi phí') || lowerComment.includes('sale')) {
+            bodyAnswer = `Sản phẩm ${product} của ${company} đang có giá ${price} kèm khuyến mãi: ${promo}. Bạn bấm ngay vào giỏ hàng góc trái màn hình để nhận ưu đãi nha!`;
             isHandled = true;
-          } else if (lowerComment.includes('bảo hành') || lowerComment.includes('đổi trả') || lowerComment.includes('ship') || lowerComment.includes('giao hàng')) {
-            replyText = `Dạ bạn ${userName} yên tâm nha, ${company} có chính sách: ${warranty} ạ!`;
+          } else if (lowerComment.includes('bảo hành') || lowerComment.includes('đổi trả') || lowerComment.includes('ship') || lowerComment.includes('giao hàng') || lowerComment.includes('vận chuyển')) {
+            bodyAnswer = `Bạn yên tâm nha, bên em có chính sách: ${warranty} và hỗ trợ giao hàng tận nơi ạ!`;
             isHandled = true;
           } else if (lowerComment.includes('mua') || lowerComment.includes('đặt hàng') || lowerComment.includes('chốt') || lowerComment.includes('lấy') || lowerComment.includes('order')) {
-            replyText = `Dạ em cảm ơn bạn ${userName} đã tin tưởng ${company}! Bạn bấm trực tiếp vào giỏ hàng góc trái màn hình để chốt đơn ${product} nhận ngay mã freeship nha!`;
+            bodyAnswer = `Em cảm ơn bạn đã tin tưởng ${company}! Bạn bấm trực tiếp vào giỏ hàng góc trái màn hình để chốt đơn ${product} nhận ngay mã quà tặng nha!`;
             isHandled = true;
-          } else if (lowerComment.includes('dùng') || lowerComment.includes('tính năng') || lowerComment.includes('chức năng') || lowerComment.includes('sao') || lowerComment.includes('như thế nào')) {
-            replyText = `Dạ bạn ${userName} ơi, ${product} nổi bật với tính năng: ${features.split('\n')[0] || features}. Rất dễ sử dụng và hiệu quả cho phiên live ạ!`;
+          } else if (lowerComment.includes('dùng') || lowerComment.includes('tính năng') || lowerComment.includes('chức năng') || lowerComment.includes('sao') || lowerComment.includes('như thế nào') || lowerComment.includes('chất liệu') || lowerComment.includes('công dụng')) {
+            bodyAnswer = `${product} nổi bật với tính năng: ${features.split('\n')[0] || features}. Sử dụng rất thích và hiệu quả cao ạ!`;
             isHandled = true;
           }
         }
@@ -232,9 +232,9 @@ function fillTemplate(template, vars = {}) {
               if (kws.some(k => commentText.toLowerCase().includes(k)) || (prod.productName && commentText.toLowerCase().includes(prod.productName.toLowerCase()))) {
                 isHandled = true;
                 if (prod.sampleAnswers) {
-                  replyText = fillTemplate(getRandomSample(prod.sampleAnswers), { user: userName, comment: commentText, product: prod.productName });
+                  bodyAnswer = fillTemplate(getRandomSample(prod.sampleAnswers), { user: userName, comment: commentText, product: prod.productName });
                 } else {
-                  replyText = `Dạ em chào bạn ${userName}! Sản phẩm ${prod.productName || 'này'} đang có ưu đãi cực sốc trong giỏ hàng góc trái màn hình, bạn bấm vào đặt hàng ngay nhé!`;
+                  bodyAnswer = `Sản phẩm ${prod.productName || 'này'} đang có ưu đãi cực sốc trong giỏ hàng góc trái màn hình, bạn bấm vào đặt hàng ngay nhé!`;
                 }
                 shouldAction = 'gift_reaction';
                 break;
@@ -244,37 +244,53 @@ function fillTemplate(template, vars = {}) {
         }
 
         // D. Kiểm tra bộ quy tắc từ khóa (Keyword Rules)
-        if (!isHandled && commentConfig.active !== false) {
-          const replyMode = commentConfig.commentReplyMode || 'hybrid';
-          let isKeywordMatched = false;
-
-          if (replyMode !== 'ai_only' && Array.isArray(commentConfig.keywordRules) && commentConfig.keywordRules.length > 0) {
+        if (!isHandled && commentConfig.active !== false && replyMode !== 'ai_only') {
+          if (Array.isArray(commentConfig.keywordRules) && commentConfig.keywordRules.length > 0) {
             for (const rule of commentConfig.keywordRules) {
               if (rule.enabled !== false && rule.keywords) {
                 const kwArr = Array.isArray(rule.keywords) ? rule.keywords : String(rule.keywords).split(/[,;]/);
                 const matched = kwArr.some(k => k.trim() && lowerComment.includes(k.trim().toLowerCase()));
                 if (matched && rule.replyText) {
-                  replyText = fillTemplate(rule.replyText, { user: userName, comment: commentText });
-                  isKeywordMatched = true;
+                  bodyAnswer = fillTemplate(rule.replyText, { user: userName, comment: commentText });
                   isHandled = true;
                   break;
                 }
               }
             }
           }
+        }
 
-          // E. Tự động trả lời tự nhiên thông minh
-          if (!isKeywordMatched && replyMode !== 'keywords_only') {
-            if (commentConfig.sampleAnswers) {
-              const rawSample = getRandomSample(commentConfig.sampleAnswers);
-              replyText = fillTemplate(rawSample, { user: userName, comment: commentText });
-            } else if (lowerComment.includes('xinh') || lowerComment.includes('đẹp') || lowerComment.includes('chào') || lowerComment.includes('dễ thương')) {
-              replyText = `Dạ em cảm ơn bạn ${userName} nhiều nha! Chúc bạn xem livestream thật vui và săn được nhiều deal hời cùng shop ạ!`;
-            } else {
-              replyText = `Dạ em chào bạn ${userName}, em đã thấy bình luận của bạn rồi nha! Cảm ơn bạn đã tương tác cùng live ạ!`;
-            }
+        // E. BỘ NÃO AI SÁNG TẠO / XỬ LÝ KHÉO LÉO KHI KHÔNG BIẾT CÂU HỎI
+        if (!isHandled) {
+          if (lowerComment.includes('xinh') || lowerComment.includes('đẹp') || lowerComment.includes('chào') || lowerComment.includes('dễ thương') || lowerComment.includes('hello') || lowerComment.includes('hi')) {
+            bodyAnswer = `Em cảm ơn bạn rất nhiều nha! Chúc bạn xem livestream thật vui và săn được nhiều deal hời cùng shop ạ!`;
+            isHandled = true;
+          } else if (commentConfig.sampleAnswers && replyMode === 'keywords_only') {
+            const rawSample = getRandomSample(commentConfig.sampleAnswers);
+            bodyAnswer = fillTemplate(rawSample, { user: userName, comment: commentText });
+            isHandled = true;
+          } else if (replyMode === 'keywords_only') {
+            // Chế độ chỉ kịch bản từ khóa mà không khớp -> dùng câu fallback khéo léo
+            const fbTpl = commentConfig.unknownFallbackReply || 'Dạ bạn {user} ơi, câu hỏi này em là trợ lý live nên xin phép ghi nhận lại để hỏi lại shop và phản hồi chi tiết cho mình sau nha! Bạn có thể nhắn tin (inbox) trực tiếp cho shop để nhận hỗ trợ nhanh nhất ạ!';
+            bodyAnswer = fillTemplate(fbTpl, { user: userName, comment: commentText });
+            isHandled = true;
+          } else {
+            // BỘ NÃO AI PHÂN TÍCH THÔNG MINH HOẶC DÙNG Ô XỬ LÝ KHÉO LÉO (FALLBACK)
+            const fbTpl = commentConfig.unknownFallbackReply || 'Dạ bạn {user} ơi, câu hỏi này em là trợ lý live nên xin phép ghi nhận lại để hỏi lại shop và phản hồi chi tiết cho mình sau nha! Bạn có thể nhắn tin (inbox) trực tiếp cho shop để nhận hỗ trợ nhanh nhất ạ!';
+            bodyAnswer = fillTemplate(fbTpl, { user: userName, comment: commentText });
+            isHandled = true;
           }
         }
+
+        // BƯỚC 3: HẬU TỐ CÂU HỎI GỢI MỞ CHĂM SÓC KHÁCH HÀNG & CẢM ƠN (INBOX SHOP)
+        let followUpPart = '';
+        if (commentConfig.appendFollowUpQuestion !== false) {
+          const tpl = commentConfig.followUpQuestionText || ' Dạ không biết bạn {user} có cần em hỗ trợ thêm điều gì nữa không ạ? Bạn có thể nhắn tin trực tiếp cho shop để nhận tư vấn chi tiết và nhiều ưu đãi nha!';
+          followUpPart = fillTemplate(tpl, { user: userName, comment: commentText });
+        }
+
+        // GHÉP TOÀN BỘ CÂU THOẠI 4 BƯỚC HOÀN HẢO
+        replyText = `${repeatPrefix} ${bodyAnswer} ${followUpPart}`.replace(/\s+/g, ' ').trim();
       }
 
       // 2. XỬ LÝ SỰ KIỆN QUÀ TẶNG (GIFT)

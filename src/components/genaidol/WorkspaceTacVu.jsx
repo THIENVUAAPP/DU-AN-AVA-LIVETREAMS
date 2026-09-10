@@ -339,6 +339,13 @@ const getDefaultEventConfigs = () => {
       commentReplyMode: 'hybrid', // 'keywords_only' | 'ai_only' | 'hybrid'
       commentResponseFormat: 'both', // 'voice_only' | 'text_only' | 'both'
 
+      // Cấu hình quy trình 4 bước trả lời bình luận thông minh
+      repeatCommentFirst: ev.id === 'comment' ? true : undefined,
+      repeatCommentPrefix: ev.id === 'comment' ? 'Dạ bạn {user} vừa hỏi là: "{comment}". ' : undefined,
+      unknownFallbackReply: ev.id === 'comment' ? 'Dạ bạn {user} ơi, câu hỏi này em là trợ lý live nên xin phép ghi nhận lại để hỏi lại shop và phản hồi chi tiết cho mình sau nha! Bạn có thể nhắn tin (inbox) trực tiếp cho shop để nhận hỗ trợ nhanh nhất ạ!' : undefined,
+      appendFollowUpQuestion: ev.id === 'comment' ? true : undefined,
+      followUpQuestionText: ev.id === 'comment' ? ' Dạ không biết bạn {user} có cần em hỗ trợ thêm điều gì nữa không ạ? Bạn có thể nhắn tin trực tiếp cho shop để nhận tư vấn chi tiết và nhiều ưu đãi nha!' : undefined,
+
       greetMinutes: ev.id === 'apology' || ev.id === 'welcome' ? 1 : '',
       waitBetweenEvents: ev.id === 'comment' ? 1 : ev.id === 'follow' ? 60 : ev.id === 'gift' ? 0 : '',
       replyRate: ev.id === 'comment' ? 70 : '',
@@ -2637,69 +2644,189 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                     
                     <div className="flex flex-col gap-3">
                       
-                      {/* Cấu hình đặc biệt cho Bình luận (Comment Mode & Response Format) */}
+                      {/* Cấu hình tương tác Bình luận Thông minh 4 bước Đỉnh Cao */}
                       {selectedEventId === 'comment' && (
-                        <div className="p-3.5 rounded-xl bg-gradient-to-r from-purple-50 via-indigo-50 to-blue-50 border border-purple-200 mb-2 space-y-3">
-                          <div>
-                            <label className="text-xs font-black text-purple-900 flex items-center gap-1.5 mb-1.5">
-                              <Sparkles size={14} className="text-purple-600" />
-                              CHẾ ĐỘ TRẢ LỜI BÌNH LUẬN (COMMENT REPLY MODE):
-                            </label>
+                        <div className="p-3.5 rounded-xl bg-gradient-to-br from-purple-50 via-indigo-50/70 to-blue-50 border border-purple-200 mb-3 space-y-4 shadow-sm">
+                          
+                          {/* BƯỚC 1: ĐỌC LẠI BÌNH LUẬN TRƯỚC KHI TRẢ LỜI */}
+                          <div className="bg-white/90 p-3 rounded-xl border border-indigo-100 shadow-xs space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs font-black text-indigo-950 flex items-center gap-1.5 cursor-pointer" htmlFor="repeatCommentFirst-toggle">
+                                <span className="w-5 h-5 rounded-full bg-indigo-600 text-white flex items-center justify-center text-[10px] font-bold">1</span>
+                                <span>ĐỌC LẠI CÂU HỎI / BÌNH LUẬN TRƯỚC KHI TRẢ LỜI</span>
+                              </label>
+                              <div className="flex items-center gap-2">
+                                <input 
+                                  type="checkbox" 
+                                  id="repeatCommentFirst-toggle" 
+                                  name="repeatCommentFirst" 
+                                  checked={currentConfig.repeatCommentFirst !== false} 
+                                  onChange={(e) => updateEventConfig('comment', { repeatCommentFirst: e.target.checked })} 
+                                  className="w-4 h-4 text-indigo-600 rounded cursor-pointer accent-indigo-600" 
+                                />
+                                <span className="text-[11px] font-bold text-indigo-700">{currentConfig.repeatCommentFirst !== false ? 'Đang Bật' : 'Tắt'}</span>
+                              </div>
+                            </div>
+                            
+                            {currentConfig.repeatCommentFirst !== false && (
+                              <div className="space-y-1.5 pt-1">
+                                <div className="flex items-center justify-between text-[11px] text-gray-500">
+                                  <span>Mẫu câu đọc lại (Biến: <code className="text-indigo-600 font-bold">{'{user}'}</code> = tên khách, <code className="text-indigo-600 font-bold">{'{comment}'}</code> = nội dung hỏi):</span>
+                                  <UniversalFileUploadButton 
+                                    onLoaded={(text) => updateEventConfig('comment', { repeatCommentPrefix: text })} 
+                                    label="Nạp File Mẫu" 
+                                  />
+                                </div>
+                                <input 
+                                  type="text" 
+                                  name="repeatCommentPrefix" 
+                                  value={currentConfig.repeatCommentPrefix ?? 'Dạ bạn {user} vừa hỏi là: "{comment}". '} 
+                                  onChange={(e) => updateEventConfig('comment', { repeatCommentPrefix: e.target.value })} 
+                                  placeholder='Dạ bạn {user} vừa hỏi là: "{comment}". '
+                                  className="w-full border border-indigo-200 rounded-lg px-2.5 py-1.5 text-xs bg-indigo-50/30 focus:bg-white focus:outline-indigo-500 font-medium text-gray-800"
+                                />
+                              </div>
+                            )}
+                          </div>
+
+                          {/* BƯỚC 2: CHẾ ĐỘ TRẢ LỜI & NGUỒN TRI THỨC AI */}
+                          <div className="bg-white/90 p-3 rounded-xl border border-purple-100 shadow-xs space-y-2.5">
+                            <div className="text-xs font-black text-purple-950 flex items-center gap-1.5">
+                              <span className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-bold">2</span>
+                              <span>CHẾ ĐỘ TRẢ LỜI & BỘ NÃO AI SÁNG TẠO</span>
+                            </div>
                             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
                               {[
                                 { id: 'keywords_only', label: '1. Chỉ Kịch Bản Từ Khóa', desc: 'Chỉ trả lời khi khớp từ khóa cài sẵn, bỏ qua câu khác' },
-                                { id: 'ai_only', label: '2. Chỉ Bộ Não AI', desc: 'AI Gemini tự động phân tích và trả lời 100% bình luận' },
-                                { id: 'hybrid', label: '3. Kết Hợp Thông Minh', desc: 'Ưu tiên kịch bản từ khóa, nếu không khớp AI sẽ trả lời' },
+                                { id: 'ai_only', label: '2. Chỉ Bộ Não AI', desc: 'AI tự động đọc thông tin sản phẩm / hồ sơ & sáng tạo câu trả lời' },
+                                { id: 'hybrid', label: '3. Kết Hợp Thông Minh', desc: 'Ưu tiên kịch bản từ khóa, nếu không khớp AI sẽ phân tích trả lời' },
                               ].map(mode => (
                                 <button
                                   key={mode.id}
                                   type="button"
                                   onClick={() => updateEventConfig('comment', { commentReplyMode: mode.id })}
-                                  className={`p-2.5 rounded-xl border text-left transition-all cursor-pointer ${
+                                  className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
                                     (currentConfig.commentReplyMode || 'hybrid') === mode.id
-                                      ? 'bg-blue-600 text-white border-blue-700 shadow-md font-bold'
-                                      : 'bg-white text-gray-700 border-gray-300 hover:bg-blue-50/50'
+                                      ? 'bg-purple-600 text-white border-purple-700 shadow-md font-bold'
+                                      : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-50/50'
                                   }`}
                                 >
                                   <div className="text-xs font-black flex items-center justify-between">
                                     <span>{mode.label}</span>
-                                    {(currentConfig.commentReplyMode || 'hybrid') === mode.id && <CheckSquare size={14} />}
+                                    {(currentConfig.commentReplyMode || 'hybrid') === mode.id && <CheckSquare size={13} />}
                                   </div>
-                                  <div className={`text-[11px] mt-1 line-clamp-2 ${(currentConfig.commentReplyMode || 'hybrid') === mode.id ? 'text-blue-100' : 'text-gray-500'}`}>
+                                  <div className={`text-[10.5px] mt-0.5 line-clamp-2 ${(currentConfig.commentReplyMode || 'hybrid') === mode.id ? 'text-purple-100' : 'text-gray-500'}`}>
                                     {mode.desc}
                                   </div>
                                 </button>
                               ))}
                             </div>
-                          </div>
 
-                          <div className="pt-2 border-t border-purple-200/60">
-                            <label className="text-xs font-black text-purple-900 flex items-center gap-1.5 mb-1.5">
-                              <Volume2 size={14} className="text-purple-600" />
-                              HÌNH THỨC PHẢN HỒI (RESPONSE FORMAT):
-                            </label>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                              {[
-                                { id: 'voice_only', label: '🗣️ Chỉ Phát Giọng Đọc Voice', icon: Volume2 },
-                                { id: 'text_only', label: '💬 Chỉ Gửi Tin Nhắn Chat', icon: MessageSquare },
-                                { id: 'both', label: '🔄 Cả Giọng Đọc Voice + Gửi Text', icon: Sparkles },
-                              ].map(fmt => (
-                                <button
-                                  key={fmt.id}
-                                  type="button"
-                                  onClick={() => updateEventConfig('comment', { commentResponseFormat: fmt.id })}
-                                  className={`p-2 rounded-xl border text-left transition-all cursor-pointer flex items-center gap-2 ${
-                                    (currentConfig.commentResponseFormat || 'both') === fmt.id
-                                      ? 'bg-purple-600 text-white border-purple-700 shadow-md font-bold'
-                                      : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-50/50'
-                                  }`}
-                                >
-                                  <fmt.icon size={14} className={(currentConfig.commentResponseFormat || 'both') === fmt.id ? 'text-white' : 'text-purple-600'} />
-                                  <span className="text-xs font-bold">{fmt.label}</span>
-                                </button>
-                              ))}
+                            {/* HÌNH THỨC PHẢN HỒI */}
+                            <div className="pt-2 border-t border-purple-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
+                              <span className="text-[11.5px] font-bold text-gray-700 flex items-center gap-1">
+                                <Volume2 size={13} className="text-purple-600" /> Hình thức phát:
+                              </span>
+                              <div className="flex items-center gap-1.5">
+                                {[
+                                  { id: 'voice_only', label: '🗣️ Giọng Đọc Voice' },
+                                  { id: 'text_only', label: '💬 Chat Text' },
+                                  { id: 'both', label: '🔄 Voice + Chat' },
+                                ].map(fmt => (
+                                  <button
+                                    key={fmt.id}
+                                    type="button"
+                                    onClick={() => updateEventConfig('comment', { commentResponseFormat: fmt.id })}
+                                    className={`px-2.5 py-1 rounded-lg border text-[11px] font-bold transition-all cursor-pointer ${
+                                      (currentConfig.commentResponseFormat || 'both') === fmt.id
+                                        ? 'bg-purple-700 text-white border-purple-800 shadow-xs'
+                                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
+                                    }`}
+                                  >
+                                    {fmt.label}
+                                  </button>
+                                ))}
+                              </div>
                             </div>
                           </div>
+
+                          {/* BƯỚC 3: Ô CẤU HÌNH XỬ LÝ KHI AI KHÔNG BIẾT / KHÔNG HIỂU CÂU HỎI (FALLBACK KHÉO LÉO) */}
+                          <div className="bg-white/90 p-3 rounded-xl border border-amber-200 shadow-xs space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs font-black text-amber-950 flex items-center gap-1.5">
+                                <span className="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center text-[10px] font-bold">3</span>
+                                <span>XỬ LÝ KHI AI KHÔNG BIẾT / KHÔNG HIỂU CÂU HỎI (KHÉO LÉO & CHUYÊN NGHIỆP)</span>
+                              </label>
+                              <UniversalFileUploadButton 
+                                onLoaded={(text) => updateEventConfig('comment', { unknownFallbackReply: text })} 
+                                label="Nạp File" 
+                              />
+                            </div>
+                            <p className="text-[11px] text-amber-800 leading-snug">
+                              Khi khách hỏi câu hỏi nằm ngoài kho tri thức hoặc AI chưa rõ, trợ lý AI sẽ tự động trả lời khéo léo thông báo là trợ lý live, sẽ ghi nhận lại hỏi shop và mời khách inbox trực tiếp:
+                            </p>
+                            <textarea 
+                              name="unknownFallbackReply" 
+                              value={currentConfig.unknownFallbackReply ?? 'Dạ bạn {user} ơi, câu hỏi này em là trợ lý live nên xin phép ghi nhận lại để hỏi lại shop và phản hồi chi tiết cho mình sau nha! Bạn có thể nhắn tin (inbox) trực tiếp cho shop để nhận hỗ trợ nhanh nhất ạ!'} 
+                              onChange={(e) => updateEventConfig('comment', { unknownFallbackReply: e.target.value })} 
+                              placeholder="Dạ bạn {user} ơi, câu hỏi này em là trợ lý live nên xin phép ghi nhận lại để hỏi lại shop..."
+                              className="w-full h-[65px] border border-amber-200 rounded-lg p-2 text-xs resize-none bg-amber-50/30 focus:bg-white focus:outline-amber-500 font-medium text-gray-800" 
+                            />
+                            <div className="flex items-center justify-between text-[10.5px] text-gray-500">
+                              <span>Hỗ trợ biến: <code className="text-amber-700 font-bold">{'{user}'}</code>, <code className="text-amber-700 font-bold">{'{comment}'}</code></span>
+                              <button 
+                                type="button" 
+                                onClick={() => updateEventConfig('comment', { 
+                                  unknownFallbackReply: 'Dạ bạn {user} ơi, câu hỏi này em là trợ lý live nên xin phép ghi nhận lại để hỏi lại shop và phản hồi chi tiết cho mình sau nha! Bạn có thể nhắn tin (inbox) trực tiếp cho shop để nhận hỗ trợ nhanh nhất ạ!' 
+                                })}
+                                className="text-amber-700 hover:text-amber-900 font-bold underline cursor-pointer"
+                              >
+                                Khôi phục câu chuẩn khéo léo
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* BƯỚC 4: THÊM CÂU HỎI GỢI MỞ CHĂM SÓC KHÁCH HÀNG & CẢM ƠN SAU KHI TRẢ LỜI */}
+                          <div className="bg-white/90 p-3 rounded-xl border border-emerald-100 shadow-xs space-y-2">
+                            <div className="flex items-center justify-between">
+                              <label className="text-xs font-black text-emerald-950 flex items-center gap-1.5 cursor-pointer" htmlFor="appendFollowUpQuestion-toggle">
+                                <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold">4</span>
+                                <span>CÂU HỎI GỢI MỞ CHĂM SÓC KHÁCH HÀNG & CẢM ƠN (INBOX SHOP)</span>
+                              </label>
+                              <div className="flex items-center gap-2">
+                                <input 
+                                  type="checkbox" 
+                                  id="appendFollowUpQuestion-toggle" 
+                                  name="appendFollowUpQuestion" 
+                                  checked={currentConfig.appendFollowUpQuestion !== false} 
+                                  onChange={(e) => updateEventConfig('comment', { appendFollowUpQuestion: e.target.checked })} 
+                                  className="w-4 h-4 text-emerald-600 rounded cursor-pointer accent-emerald-600" 
+                                />
+                                <span className="text-[11px] font-bold text-emerald-700">{currentConfig.appendFollowUpQuestion !== false ? 'Đang Bật' : 'Tắt'}</span>
+                              </div>
+                            </div>
+
+                            {currentConfig.appendFollowUpQuestion !== false && (
+                              <div className="space-y-1.5 pt-1">
+                                <div className="flex items-center justify-between text-[11px] text-gray-500">
+                                  <span>Tự động ghép vào cuối sau khi trả lời xong câu hỏi:</span>
+                                  <UniversalFileUploadButton 
+                                    onLoaded={(text) => updateEventConfig('comment', { followUpQuestionText: text })} 
+                                    label="Nạp File" 
+                                  />
+                                </div>
+                                <input 
+                                  type="text" 
+                                  name="followUpQuestionText" 
+                                  value={currentConfig.followUpQuestionText ?? ' Dạ không biết bạn {user} có cần em hỗ trợ thêm điều gì nữa không ạ? Bạn có thể nhắn tin trực tiếp cho shop để nhận tư vấn chi tiết và nhiều ưu đãi nha!'} 
+                                  onChange={(e) => updateEventConfig('comment', { followUpQuestionText: e.target.value })} 
+                                  placeholder=' Dạ không biết bạn {user} có cần em hỗ trợ thêm điều gì nữa không ạ?...'
+                                  className="w-full border border-emerald-200 rounded-lg px-2.5 py-1.5 text-xs bg-emerald-50/30 focus:bg-white focus:outline-emerald-500 font-medium text-gray-800" 
+                                />
+                              </div>
+                            )}
+                          </div>
+
                         </div>
                       )}
 

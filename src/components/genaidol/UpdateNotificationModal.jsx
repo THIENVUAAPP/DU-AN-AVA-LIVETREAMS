@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.6.0';
+export const APP_VERSION = '2.6.1';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '📜 Mở Nhiều Tab Kịch Bản Bán Hàng & Tích Chọn Phát Live Linh Hoạt',
-    description: 'Người dùng có thể thêm không giới hạn các tab kịch bản bán hàng khác nhau (Mỹ phẩm, Thời trang, Flash Sale...), đổi tên, sao chép hoặc xóa tab; chỉ cần tích chọn kịch bản nào là kịch bản đó sẽ được sử dụng ngay khi phát sóng trực tiếp mà không lo mất cấu hình kịch bản cũ!'
+    title: '🧠 Trả Lời Bình Luận Thông Minh 4 Bước & Tự Động Đọc Lại Câu Hỏi',
+    description: 'Khi khách bình luận, AI tự động đọc lại câu hỏi của khách trước khi trả lời, phản hồi cực kỳ thông minh theo hồ sơ tri thức doanh nghiệp hoặc kịch bản cài sẵn, sau đó tự động thêm câu hỏi gợi mở chăm sóc khách hàng (hướng dẫn inbox shop) và tiếp tục phát sóng kịch bản bán hàng.'
   },
   {
-    title: '⚡ Chuyển Giọng Mở Phát Ngay Lập Tức (0.000s) & Xử Lý Đa Luồng Siêu Tốc',
-    description: 'Sửa triệt để lỗi nghẽn WebSocket TTS backend và tối ưu pipeline song song 6 luồng: Khi chuyển bất kỳ giọng đọc nào, âm thanh câu đầu tiên phát ra NGAY TỨC THÌ 0ms không phải chờ đợi.'
+    title: '🛡️ Ô Xử Lý Khéo Léo Khi AI Không Biết / Không Hiểu Câu Hỏi',
+    description: 'Trang bị ô cấu hình xử lý tình huống chuyên nghiệp: Khi gặp câu hỏi nằm ngoài kho tri thức hoặc chưa rõ thông tin, trợ lý AI sẽ tự động trả lời khéo léo thông báo là trợ lý live, sẽ ghi nhận lại hỏi shop và mời khách inbox trực tiếp cho shop để nhận hỗ trợ chu đáo nhất.'
   },
   {
-    title: '🎙️ Bảo Toàn 100% Âm Sắc Gốc Khi Tăng / Giảm Tốc Độ Đọc',
-    description: 'Tốc độ đọc (Rate) được xử lý trực tiếp bởi Neural Prosody Engine chuẩn phát thanh viên, giữ nguyên tuyệt đối chất giọng đặc trưng của từng nhân vật, không làm biến dạng cao độ hay vỡ tiếng.'
+    title: '📜 Quản Lý Nhiều Tab Kịch Bản Bán Hàng Linh Hoạt',
+    description: 'Thêm không giới hạn tab kịch bản bán hàng, tùy chọn phát live kịch bản mong muốn, nhân bản, đổi tên và lưu trữ bền vững vĩnh viễn không lo mất cấu hình.'
   }
 ];
 
