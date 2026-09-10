@@ -2611,13 +2611,9 @@ export function setRealtimeAudioParams({ volume, rate, pitch } = {}) {
 
   if (rate !== undefined && !isNaN(Number(rate))) {
     const rateNum = Math.max(0.5, Math.min(2.0, Number(rate)));
-    if (activeSourceNode && activeAudioContext) {
-      try {
-        activeSourceNode.playbackRate.setValueAtTime(rateNum, activeAudioContext.currentTime);
-      } catch (e) {}
-    }
     if (activePreviewAudio) {
       try {
+        activePreviewAudio.preservesPitch = true;
         activePreviewAudio.playbackRate = rateNum;
       } catch (e) {}
     }
@@ -3217,10 +3213,9 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   const isMale = checkIsMale(voice);
   const dsp = voice?.dspProfile || {};
 
-  // 1. PLAYBACK RATE & PITCH SHIFT THEO ĐÚNG ĐẶC TÍNH CỦA TỪNG GIỌNG ĐỌC
-  const pitchFactor = getVoicePitchShiftFactor(voice, isMale);
-  const userRate = requestedRate !== undefined && !isNaN(requestedRate) ? Number(requestedRate) : 1.0;
-  source.playbackRate.value = Math.max(0.5, Math.min(2.0, pitchFactor * userRate));
+  // 1. PLAYBACK RATE: Giữ nguyên 1.0 để bảo toàn tuyệt đối 100% âm sắc gốc của nhân vật
+  // Tốc độ đọc (rate) và cao độ (pitch) tự nhiên đã được xử lý hoàn hảo bởi Microsoft Neural TTS Engine
+  source.playbackRate.value = 1.0;
 
   // 2. LOW-SHELF FILTER (Độ trầm, độ dày lồng ngực & âm ấm)
   const lowFilter = audioCtx.createBiquadFilter();
@@ -3433,12 +3428,12 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
 
   const ttsQuery = `text=${encodeURIComponent(ttsText)}&voice=${encodeURIComponent(neuralVoice)}&voiceId=${encodeURIComponent(voice?.id || '')}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(effectivePitch)}&rate=${encodeURIComponent(effectiveRate)}&lang=${encodeURIComponent(shortLang)}`;
 
-  const endpointCandidates = [
+  const endpointCandidates = Array.from(new Set([
     ...(currentOrigin ? [`${currentOrigin}/api/tts`] : []),
     `/api/tts`,
     `http://127.0.0.1:3001/api/tts`,
     `http://localhost:3001/api/tts`
-  ];
+  ]));
 
   const doFetch = async () => {
     for (let attempt = 0; attempt < 2; attempt++) {

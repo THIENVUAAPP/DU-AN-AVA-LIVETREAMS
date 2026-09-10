@@ -190,10 +190,10 @@ export default function EventVoiceTester({
     setCurrentSentenceIdx(0);
     currentSentenceIdxRef.current = 0;
 
-    // Pipeline prefetch toàn bộ các câu trong kịch bản cho giọng mới
-    sentences.forEach((s) => {
-      prefetchTTSAudio(s, newVoiceObj, { rate: speedRef.current });
-    });
+    // Lookahead prefetch chỉ câu tiếp theo (câu 1) để không làm nghẽn băng thông của câu 0
+    if (sentences.length > 1) {
+      prefetchTTSAudio(sentences[1], newVoiceObj, { rate: speedRef.current });
+    }
 
     // Phát ngay lập tức 0ms câu đầu tiên với giọng mới
     playSentenceAtIndex(0, newVoiceObj);
@@ -305,12 +305,12 @@ export default function EventVoiceTester({
           
           // Nếu chọn 0.0s (Liền mạch): Phát câu tiếp theo NGAY LẬP TỨC 0ms không qua bất kỳ timer delay nào!
           if (pauseSec <= 0.02) {
-            playSentenceAtIndex(index + 1);
+            playSentenceAtIndex(index + 1, voiceObj);
           } else {
             const pauseMs = Math.max(0, Math.round(pauseSec * 1000));
             queueTimeoutRef.current = setTimeout(() => {
               if (isPlayingRef.current) {
-                playSentenceAtIndex(index + 1);
+                playSentenceAtIndex(index + 1, voiceObj);
               }
             }, pauseMs);
           }

@@ -2107,6 +2107,8 @@ function resolveNeuralVoice(voice, gender, lang) {
   if (shortLang === 'th') return isMale ? 'th-TH-NiwatNeural' : 'th-TH-PremwadeeNeural';
   
   return isMale ? 'vi-VN-NamMinhNeural' : 'vi-VN-HoaiMyNeural';
+}
+
 function humanizeTextForBackendTTS(rawText, gender, lang) {
   if (!rawText || typeof rawText !== 'string') return '';
   let text = rawText
@@ -2178,6 +2180,28 @@ function humanizeTextForBackendTTS(rawText, gender, lang) {
   return text.replace(/,\s*,+/g, ', ').replace(/\.\s*\.+/g, '. ').replace(/!\s*!+/g, '! ').replace(/\s+/g, ' ').trim();
 }
 
+// Concurrency pool for high-throughput parallel EdgeTTS processing
+let activeEdgeTtsCount = 0;
+const MAX_CONCURRENT_EDGE_TTS = 6;
+const edgeTtsWaiters = [];
+
+async function acquireEdgeTtsSlot() {
+  if (activeEdgeTtsCount < MAX_CONCURRENT_EDGE_TTS) {
+    activeEdgeTtsCount++;
+    return;
+  }
+  return new Promise(resolve => edgeTtsWaiters.push(resolve));
+}
+
+function releaseEdgeTtsSlot() {
+  activeEdgeTtsCount--;
+  if (edgeTtsWaiters.length > 0) {
+    activeEdgeTtsCount++;
+    const next = edgeTtsWaiters.shift();
+    if (next) next();
+  }
+}
+
 async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+0Hz', rate = '+0%' }) {
   if (!EdgeTTS) return null;
   const neuralVoice = resolveNeuralVoice(voice, gender, lang);
@@ -2186,35 +2210,35 @@ async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+
   const processedText = humanizeTextForBackendTTS(text, gender, lang) || text;
   const tmpFile = path.join(os.tmpdir(), `tts_${Date.now()}_${Math.random().toString(36).slice(2)}.mp3`);
 
-  return new Promise((resolve) => {
-    edgeTtsQueue = edgeTtsQueue.then(async () => {
-      for (let attempt = 0; attempt < 2; attempt++) {
-        try {
-          const tts = new EdgeTTS({
-            voice: neuralVoice,
-            lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
-            pitch: safePitch,
-            rate: safeRate,
-            outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
-            timeout: 15000
-          });
-          await tts.ttsPromise(processedText, tmpFile);
-          if (fs.existsSync(tmpFile)) {
-            const buf = fs.readFileSync(tmpFile);
-            try { fs.unlinkSync(tmpFile); } catch (e) {}
-            resolve(buf);
-            return;
-          }
-        } catch (err) {
-          if (fs.existsSync(tmpFile)) {
-            try { fs.unlinkSync(tmpFile); } catch (e) {}
-          }
-          if (attempt === 0) await new Promise(r => setTimeout(r, 100));
+  await acquireEdgeTtsSlot();
+  try {
+    for (let attempt = 0; attempt < 2; attempt++) {
+      try {
+        const tts = new EdgeTTS({
+          voice: neuralVoice,
+          lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
+          pitch: safePitch,
+          rate: safeRate,
+          outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
+          timeout: 8000
+        });
+        await tts.ttsPromise(processedText, tmpFile);
+        if (fs.existsSync(tmpFile)) {
+          const buf = fs.readFileSync(tmpFile);
+          try { fs.unlinkSync(tmpFile); } catch (e) {}
+          return buf;
         }
+      } catch (err) {
+        if (fs.existsSync(tmpFile)) {
+          try { fs.unlinkSync(tmpFile); } catch (e) {}
+        }
+        if (attempt === 0) await new Promise(r => setTimeout(r, 80));
       }
-      resolve(null);
-    });
-  });
+    }
+  } finally {
+    releaseEdgeTtsSlot();
+  }
+  return null;
 }
 
 // TTS Proxy with Ultra-Fast In-Memory Cache & Multi-Tier Fallback

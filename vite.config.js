@@ -13,7 +13,26 @@ try {
   EdgeTTS = edgePkg.EdgeTTS || edgePkg;
 } catch (e) {}
 
-let viteEdgeTtsQueue = Promise.resolve();
+let activeViteEdgeTtsCount = 0;
+const MAX_CONCURRENT_VITE_EDGE_TTS = 6;
+const viteEdgeTtsWaiters = [];
+
+async function acquireViteEdgeTtsSlot() {
+  if (activeViteEdgeTtsCount < MAX_CONCURRENT_VITE_EDGE_TTS) {
+    activeViteEdgeTtsCount++;
+    return;
+  }
+  return new Promise(resolve => viteEdgeTtsWaiters.push(resolve));
+}
+
+function releaseViteEdgeTtsSlot() {
+  activeViteEdgeTtsCount--;
+  if (viteEdgeTtsWaiters.length > 0) {
+    activeViteEdgeTtsCount++;
+    const next = viteEdgeTtsWaiters.shift();
+    if (next) next();
+  }
+}
 const viteTtsCache = new Map();
 
 function normalizeViteTtsPitch(p) {
@@ -179,61 +198,29 @@ export default defineConfig({
             if (EdgeTTS) {
               const tmpFile = path.resolve(os.tmpdir(), `tts_vite_${Date.now()}_${Math.random().toString(36).slice(2)}.mp3`);
               
-              await new Promise((resolveMiddleware) => {
-                viteEdgeTtsQueue = viteEdgeTtsQueue.then(async () => {
-                  for (let attempt = 0; attempt < 2; attempt++) {
-                    try {
-                      const tts = new EdgeTTS({
-                        voice: neuralVoice,
-                        lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
-                        pitch: safePitch,
-                        rate: safeRate,
-                        outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
-                        timeout: 15000
-                      });
-                      await tts.ttsPromise(text, tmpFile);
-                      if (fs.existsSync(tmpFile)) {
-                        const buf = fs.readFileSync(tmpFile);
-                        try { fs.unlinkSync(tmpFile); } catch (e) {}
-
-                        if (viteTtsCache.size > 300) {
-                          const first = viteTtsCache.keys().next().value;
-                          viteTtsCache.delete(first);
-                        }
-                        viteTtsCache.set(cacheKey, buf);
-
-                        res.setHeader('Access-Control-Allow-Origin', '*');
-                        if (req.method === 'POST') {
-                          res.setHeader('Content-Type', 'application/json');
-                          res.statusCode = 200;
-                          res.end(JSON.stringify({ success: true, audioBase64: buf.toString('base64') }));
-                        } else {
-                          res.setHeader('Content-Type', 'audio/mpeg');
-                          res.setHeader('Cache-Control', 'public, max-age=86400');
-                          res.statusCode = 200;
-                          res.end(buf);
-                        }
-                        resolveMiddleware();
-                        return;
-                      }
-                    } catch (e) {
-                      if (fs.existsSync(tmpFile)) try { fs.unlinkSync(tmpFile); } catch(err) {}
-                      if (attempt === 0) await new Promise(r => setTimeout(r, 100));
-                    }
-                  }
-
-                  // Fallback Google Translate TTS nếu mạng EdgeTTS gặp sự cố
+              await acquireViteEdgeTtsSlot();
+              try {
+                for (let attempt = 0; attempt < 2; attempt++) {
                   try {
-                    const fallbackUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(lang)}&q=${encodeURIComponent(text.slice(0, 200))}`;
-                    const fbRes = await fetch(fallbackUrl, {
-                      headers: {
-                        'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
-                      }
+                    const tts = new EdgeTTS({
+                      voice: neuralVoice,
+                      lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
+                      pitch: safePitch,
+                      rate: safeRate,
+                      outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
+                      timeout: 8000
                     });
-                    if (fbRes.ok) {
-                      const arrBuf = await fbRes.arrayBuffer();
-                      const buf = Buffer.from(arrBuf);
+                    await tts.ttsPromise(text, tmpFile);
+                    if (fs.existsSync(tmpFile)) {
+                      const buf = fs.readFileSync(tmpFile);
+                      try { fs.unlinkSync(tmpFile); } catch (e) {}
+
+                      if (viteTtsCache.size > 300) {
+                        const first = viteTtsCache.keys().next().value;
+                        viteTtsCache.delete(first);
+                      }
                       viteTtsCache.set(cacheKey, buf);
+
                       res.setHeader('Access-Control-Allow-Origin', '*');
                       if (req.method === 'POST') {
                         res.setHeader('Content-Type', 'application/json');
@@ -241,19 +228,49 @@ export default defineConfig({
                         res.end(JSON.stringify({ success: true, audioBase64: buf.toString('base64') }));
                       } else {
                         res.setHeader('Content-Type', 'audio/mpeg');
+                        res.setHeader('Cache-Control', 'public, max-age=86400');
                         res.statusCode = 200;
                         res.end(buf);
                       }
-                      resolveMiddleware();
                       return;
                     }
-                  } catch (e) {}
+                  } catch (e) {
+                    if (fs.existsSync(tmpFile)) try { fs.unlinkSync(tmpFile); } catch(err) {}
+                    if (attempt === 0) await new Promise(r => setTimeout(r, 80));
+                  }
+                }
+              } finally {
+                releaseViteEdgeTtsSlot();
+              }
 
-                  res.statusCode = 500;
-                  res.end(JSON.stringify({ error: 'EdgeTTS failed' }));
-                  resolveMiddleware();
+              // Fallback Google Translate TTS nếu mạng EdgeTTS gặp sự cố
+              try {
+                const fallbackUrl = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(lang)}&q=${encodeURIComponent(text.slice(0, 200))}`;
+                const fbRes = await fetch(fallbackUrl, {
+                  headers: {
+                    'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36'
+                  }
                 });
-              });
+                if (fbRes.ok) {
+                  const arrBuf = await fbRes.arrayBuffer();
+                  const buf = Buffer.from(arrBuf);
+                  viteTtsCache.set(cacheKey, buf);
+                  res.setHeader('Access-Control-Allow-Origin', '*');
+                  if (req.method === 'POST') {
+                    res.setHeader('Content-Type', 'application/json');
+                    res.statusCode = 200;
+                    res.end(JSON.stringify({ success: true, audioBase64: buf.toString('base64') }));
+                  } else {
+                    res.setHeader('Content-Type', 'audio/mpeg');
+                    res.statusCode = 200;
+                    res.end(buf);
+                  }
+                  return;
+                }
+              } catch (e) {}
+
+              res.statusCode = 500;
+              res.end(JSON.stringify({ error: 'EdgeTTS failed' }));
               return;
             } else {
               res.statusCode = 503;
