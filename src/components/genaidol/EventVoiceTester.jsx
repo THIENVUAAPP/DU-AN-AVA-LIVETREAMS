@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from 'react';
 import { Volume2, VolumeX, Play, Square, Sparkles, ChevronDown, Check, Gauge, Sliders, Star, Timer, Wand2 } from 'lucide-react';
 import { 
   ALL_SYSTEM_VOICES, 
+  MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES,
   VIETNAMESE_HOTTREND_VOICES,
   VIETNAMESE_SALES_VOICES,
   VIETNAMESE_FEMALE_VOICES,
@@ -407,79 +408,139 @@ export default function EventVoiceTester({
   const currentManagerVoice = ALL_SYSTEM_VOICES.find(v => v.id === dualConfig?.managerVoice?.id);
   const currentGameVoice = ALL_SYSTEM_VOICES.find(v => v.id === dualConfig?.gameBlvVoice?.id);
 
+  const cleanVoiceName = (name) => {
+    if (!name) return '';
+    return name.replace(/[👑💎🇻🇳⚡⭐🔥♀♂]/g, '').replace(/\s+/g, ' ').trim();
+  };
+
   const renderVoiceOptions = () => (
     <>
       {/* 1. GIỌNG ĐỌC YÊU THÍCH ĐÃ CHỌN */}
       {favoriteVoices.length > 0 && (
-        <optgroup label={`⭐ GIỌNG YÊU THÍCH ĐÃ CHỌN (${favoriteVoices.length} Giọng)`}>
+        <optgroup label={`⭐ GIỌNG YÊU THÍCH (${favoriteVoices.length} Giọng)`}>
           {favoriteVoices.map(v => (
             <option key={`fav_${v.id}`} value={v.id}>
-              ⭐ {v.name.replace(/ 💎| 🇻🇳/g, '')}
+              ⭐ {cleanVoiceName(v.name)}
             </option>
           ))}
         </optgroup>
       )}
 
       {/* 2. CÁC GIỌNG ĐANG GÁN TRỰC TIẾP CHO PHIÊN LIVE */}
-      <optgroup label="🎙️ VAI TRÒ GÁN TRỰC TIẾP TRÊN PHIÊN LIVE">
+      <optgroup label="🎙️ VAI TRÒ GÁN TRÊN PHIÊN LIVE">
         {currentIdolVoice && (
           <option value={currentIdolVoice.id}>
-            🎤 [Idol Live] {currentIdolVoice.name.replace(/ 💎| 🇻🇳/g, '')}
+            🎤 [Idol Live] {cleanVoiceName(currentIdolVoice.name)}
           </option>
         )}
         {currentManagerVoice && currentManagerVoice.id !== currentIdolVoice?.id && (
           <option value={currentManagerVoice.id}>
-            💼 [Quản Lý/Trợ Lý] {currentManagerVoice.name.replace(/ 💎| 🇻🇳/g, '')}
+            💼 [Trợ Lý Live] {cleanVoiceName(currentManagerVoice.name)}
           </option>
         )}
         {currentGameVoice && currentGameVoice.id !== currentIdolVoice?.id && currentGameVoice.id !== currentManagerVoice?.id && (
           <option value={currentGameVoice.id}>
-            🎮 [BLV Game PK] {currentGameVoice.name.replace(/ 💎| 🇻🇳/g, '')}
+            🎮 [BLV Game PK] {cleanVoiceName(currentGameVoice.name)}
           </option>
         )}
       </optgroup>
 
-      {/* 3. BỘ GIỌNG HOT TREND & 40 MASTER VOICE DNA TRIỆU VIEW */}
-      <optgroup label="🔥 BỘ GIỌNG HOT TREND & 40 MASTER VOICE DNA (NEW)">
-        {VIETNAMESE_HOTTREND_VOICES.map(v => (
-          <option key={`hot_${v.id}`} value={v.id}>
-            {isVoiceFavorite(v.id) ? '⭐ ' : '🔥 '} {v.name.replace(/ 💎| 🇻🇳/g, '')}
+      {/* 3. 🌸 GIỌNG NỮ VIỆT NAM (THEO ĐỘ TUỔI & PHONG CÁCH) */}
+      <optgroup label="── 👩 NỮ TRẺ 20–24t (Hot Trend & Bán Hàng) ──">
+        {MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES.filter(v => v.ageRange === '20-24').map(v => (
+          <option key={`fem_20_24_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
           </option>
         ))}
       </optgroup>
 
-      {/* 4. BỘ 30 GIỌNG BÁN HÀNG & DỊCH VỤ ĐA NGÀNH */}
-      <optgroup label="🛍️ BỘ 30 GIỌNG BÁN HÀNG & DỊCH VỤ ĐA NGÀNH">
+      <optgroup label="── 👩 NỮ TRẺ 20–28t (Idol Live, Creator & Đa Miền) ──">
+        {VIETNAMESE_FEMALE_VOICES.filter(v => v.ageGroup === 'young').map(v => (
+          <option key={`fem_young_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      <optgroup label="── 👩 NỮ TRƯỞNG THÀNH 24–28t (Sang Trọng & Quyến Rũ) ──">
+        {MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES.filter(v => v.ageRange === '24-28').map(v => (
+          <option key={`fem_24_28_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      <optgroup label="── 👩 NỮ TRƯỞNG THÀNH 28–40t (Thời Sự VTV, Diễn Giả, Doanh Nhân) ──">
+        {VIETNAMESE_FEMALE_VOICES.filter(v => v.ageGroup === 'middle').map(v => (
+          <option key={`fem_mid_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      <optgroup label="── 👵 NỮ TRUNG & LÃO NIÊN 40–70t (Chữa Lành & Dân Gian) ──">
+        {VIETNAMESE_FEMALE_VOICES.filter(v => v.ageGroup === 'elder' || v.ageGroup === 'senior').map(v => (
+          <option key={`fem_eld_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      {/* 4. 👔 GIỌNG NAM VIỆT NAM (THEO ĐỘ TUỔI & PHONG CÁCH) */}
+      <optgroup label="── 👨 NAM TRẺ 20–28t (BLV Game PK, Creator & TikTok) ──">
+        {VIETNAMESE_MALE_VOICES.filter(v => v.ageGroup === 'young').map(v => (
+          <option key={`male_young_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      <optgroup label="── 👨 NAM TRƯỞNG THÀNH 28–40t (MC Sự Kiện, Phóng Sự VTV & Doanh Nhân) ──">
+        {VIETNAMESE_MALE_VOICES.filter(v => v.ageGroup === 'middle').map(v => (
+          <option key={`male_mid_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      <optgroup label="── 👴 NAM TRUNG & LÃO NIÊN 40–70t (Bác Sĩ, Lão Nông & Thầy Lang) ──">
+        {VIETNAMESE_MALE_VOICES.filter(v => v.ageGroup === 'elder' || v.ageGroup === 'senior').map(v => (
+          <option key={`male_eld_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      {/* 5. 🛍️ GIỌNG BÁN HÀNG & DỊCH VỤ ĐA NGÀNH */}
+      <optgroup label="── 🛍️ BÁN HÀNG SẢN PHẨM & NÔNG SẢN ĐẶC SẢN ──">
         {VIETNAMESE_SALES_VOICES.map(v => (
           <option key={`sales_${v.id}`} value={v.id}>
-            {isVoiceFavorite(v.id) ? '⭐ ' : '🛍️ '} {v.name.replace(/ 💎| 🇻🇳/g, '')}
+            {cleanVoiceName(v.name)}
           </option>
         ))}
       </optgroup>
 
-      {/* 5. 25 GIỌNG NỮ VIỆT NAM CAO CẤP PHÂN 3 ĐỘ TUỔI */}
-      <optgroup label="👑 25 GIỌNG NỮ CAO CẤP (20-28t | 28-40t | 40-70t)">
-        {VIETNAMESE_FEMALE_VOICES.map(v => (
-          <option key={`fem_${v.id}`} value={v.id}>
-            {isVoiceFavorite(v.id) ? '⭐ ' : '♀ '} {v.name.replace(/ 💎| 🇻🇳/g, '')}
+      {/* 6. 🌐 GIỌNG ĐỌC QUỐC TẾ ĐA NGÔN NGỮ */}
+      <optgroup label="── 🇺🇸 🇬🇧 TIẾNG ANH (Mỹ, Anh, Úc, Canada) ──">
+        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('en')).map(v => (
+          <option key={`intl_en_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
           </option>
         ))}
       </optgroup>
 
-      {/* 6. 20 GIỌNG NAM VIỆT NAM HÀO SẢNG & TRẦM HÙNG */}
-      <optgroup label="👑 20 GIỌNG NAM VIỆT NAM HÀO SẢNG & TRẦM HÙNG">
-        {VIETNAMESE_MALE_VOICES.map(v => (
-          <option key={`male_${v.id}`} value={v.id}>
-            {isVoiceFavorite(v.id) ? '⭐ ' : '♂ '} {v.name.replace(/ 💎| 🇻🇳/g, '')}
+      <optgroup label="── 🌏 TIẾNG CHÂU Á (Nhật, Hàn, Trung, Thái) ──">
+        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('ja') || v.lang?.startsWith('ko') || v.lang?.startsWith('zh') || v.lang?.startsWith('th')).map(v => (
+          <option key={`intl_asia_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
           </option>
         ))}
       </optgroup>
 
-      {/* 7. 28 GIỌNG ĐỌC QUỐC TẾ ĐA NGÔN NGỮ */}
-      <optgroup label="🌐 28 GIỌNG ĐỌC QUỐC TẾ ĐA NGÔN NGỮ">
-        {INTERNATIONAL_VOICES.map(v => (
-          <option key={`intl_${v.id}`} value={v.id}>
-            {isVoiceFavorite(v.id) ? '⭐ ' : '🌐 '} {v.name.replace(/ 💎| ⚡/g, '')}
+      <optgroup label="── 🌍 TIẾNG CHÂU ÂU (Pháp, Đức, Ý, TBN, Nga) ──">
+        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('fr') || v.lang?.startsWith('de') || v.lang?.startsWith('it') || v.lang?.startsWith('es') || v.lang?.startsWith('ru')).map(v => (
+          <option key={`intl_eu_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
           </option>
         ))}
       </optgroup>

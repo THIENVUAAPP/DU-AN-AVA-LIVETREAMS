@@ -2,20 +2,20 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.7.6';
+export const APP_VERSION = '2.7.7';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '✨ Tinh Gọn & Loại Bỏ Hoàn Toàn Ký Tự Trùng Lặp Trong Bảng Giọng Đọc',
-    description: 'Đã loại bỏ các tiền tố dư thừa như [v3.0], .0, các đoạn lặp lại độ tuổi trong tên giọng, xóa các placeholder giọng cá nhân trống trải, mang lại giao diện tinh gọn, thoáng đãng, sang trọng và dễ chọn lựa.'
+    title: '🎙️ Sắp Xếp & Phân Tầng Kho Giọng Đọc Kịch Bản Siêu Gọn Gàng',
+    description: 'Menu chọn giọng trong phần Kịch Bản & Tác Vụ được tái cấu trúc hoàn hảo theo Giới tính (Nam/Nữ), Độ tuổi (20-24t, 24-28t, 28-40t, 40-70t), Vùng miền (Bắc, Trung, Nam, Tây) và Quốc tế.'
   },
   {
-    title: '🏷️ Chuẩn Hóa Phân Loại Nhóm & Độ Tuổi Tuyệt Đối Rõ Ràng',
-    description: 'Cột Nhóm Giọng và cột Độ Tuổi & Phong Cách được hiển thị chuẩn xác, phân tầng màu sắc trực quan (Trẻ 20–24t xanh lục, Trưởng Thành 24–28t xanh dương, 28–40t tím, 40–70t hổ phách).'
+    title: '✨ Tinh Gọn Icon & Giao Diện Menu Trực Quan Chuyên Nghiệp',
+    description: 'Loại bỏ hoàn toàn các icon dư thừa, trùng lặp. Mỗi dòng giọng đọc chỉ hiển thị 1 icon tinh tế, chuẩn xác, dễ đọc và thao tác nhanh chóng.'
   },
   {
-    title: '🎙️ Master Female Ultra Emotive DNA 40 Giọng Độc Bản Đồng Bộ 100%',
+    title: '🔥 Master Female Ultra Emotive DNA 40 Giọng Độc Bản Đồng Bộ 100%',
     description: 'Toàn bộ 40 giọng đọc nữ đỉnh cao sở hữu DNA biểu cảm, Onset Signature, Micro-pause và DSP phòng thu cao cấp độc quyền.'
   }
 ];
