@@ -2,24 +2,24 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.9.8';
+export const APP_VERSION = '2.9.9';
 export const RELEASE_DATE = '10/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🌐 Khôi Phục Đường Link Cloudflare Live-Stream Chuẩn 60 FPS Cho TikTok Live Studio',
-    description: 'Tối ưu hóa đường link phát siêu nhẹ (/live-stream) tải tức thì 0.05s qua Cloudflare Tunnel, mở là nạp video 60 FPS ngay lập tức, không bị xoay tròn load hoài.'
+    title: '🖥️ Khắc Phục Triệt Để Lỗi Màn Hình Đen Cửa Sổ Bắt Màn Hình (Window Capture)',
+    description: 'Tự động nạp và phát video/nhân vật AI ngay tức thì 0ms, đồng bộ chính xác 100% hình ảnh, khung hình, cử chỉ và thời gian thực giữa phần mềm máy tính và Window Capture OBS/TikTok Live Studio.'
   },
   {
-    title: '🔊 Khắc Phục Triệt Để Lỗi Âm Thanh Giật / Nhấp Nháy & Tối Ưu Độ Nét Window Capture',
-    description: 'Loại bỏ xung đột âm thanh phần cứng, khóa tốc độ 1.0x nguyên bản trong trẻo, đồng bộ chính xác 100% hình ảnh, cử chỉ, khung hình và âm thanh giữa phần mềm gốc và Window Capture OBS/TikTok Live Studio.'
+    title: '🌐 Tự Động Kết Nối & Hiển Thị Trực Tiếp Link Đám Mây Cloudflare Tunnel 60 FPS',
+    description: 'Khắc phục hoàn toàn lỗi hiển thị đang kết nối, tự động nạp đường link Cloudflare Online HTTPS (/live-stream) siêu mượt 60 FPS, sao chép và dán vào TikTok Live Studio mở là phát ngay.'
   },
   {
-    title: '🖥️ Đồng Bộ Khóa Chặt (Lockstep Sync) 2 Chiều Giữa Phần Mềm Và Cửa Sổ Live',
-    description: 'Khi phần mềm bấm Tạm dừng / Tiếp tục thì bản chia sẻ Window Capture phản hồi ngay lập tức, phát liền mạch từ đầu đến đuôi không bị nhảy về 0:00.'
+    title: '🔊 Đồng Bộ Khóa Chặt Lockstep 2 Chiều: Dừng Ở Đâu Phát Tiếp Ở Đó',
+    description: 'Khi phần mềm bấm Tạm dừng thì Window Capture dừng lại tại đúng vị trí khung hình; khi tiếp tục phát thì phát tiếp liền mạch từ vị trí đó, tuyệt đối không bị nhảy lại từ đầu (0:00).'
   },
   {
-    title: '📦 Trọn Bộ Gói Cài Standalone ZIP v2.9.8 Cho Windows & macOS',
+    title: '📦 Trọn Bộ Gói Cài Standalone ZIP v2.9.9 Cho Windows & macOS',
     description: 'Đồng bộ hóa phiên bản tải về độc lập (.zip); tích hợp sẵn Node Portable & Cloudflare Tunnel không cần cài đặt môi trường, mở 1-Click là dùng ngay.'
   },
   {

@@ -96,7 +96,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       mediaUrl: directVideoUrl || (saved?.mediaUrl && !saved.mediaUrl.includes('nhep_mieng.mp4') && !saved.mediaUrl.includes('demo_dancer.mp4') && !saved.mediaUrl.includes('default_idol.mp4') ? saved.mediaUrl : null),
       flvUrl: directVideoUrl || saved?.flvUrl || null,
       isVideo: saved?.isVideo !== false,
-      selectedCharacter: saved?.selectedCharacter || '',
+      selectedCharacter: urlParams?.get('char') || saved?.selectedCharacter || (typeof window !== 'undefined' ? localStorage.getItem('avalive_active_character_id') : '') || '',
       characterName: saved?.characterName || 'AvaLive VIP PRO',
       isConnected: true,
       isSpeaking: saved?.isSpeaking || false,
@@ -1026,6 +1026,20 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               const masterTime = event.data.currentTime;
               const isMasterPlaying = !!event.data.isPlaying;
               const v = overlayVideoRef.current;
+
+              if (event.data.selectedCharacter && masterState.selectedCharacter !== event.data.selectedCharacter) {
+                setMasterState(prev => ({
+                  ...prev,
+                  selectedCharacter: event.data.selectedCharacter,
+                  mediaUrl: event.data.mediaUrl || prev.mediaUrl
+                }));
+              } else if (event.data.mediaUrl && masterState.mediaUrl !== event.data.mediaUrl) {
+                setMasterState(prev => ({
+                  ...prev,
+                  mediaUrl: event.data.mediaUrl
+                }));
+              }
+
               if (v && typeof masterTime === 'number' && !isNaN(masterTime)) {
                 const cur = v.currentTime || 0;
                 const diff = Math.abs(cur - masterTime);
@@ -1935,7 +1949,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v2.9.8
+                v2.9.9
               </span>
             </div>
 

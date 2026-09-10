@@ -19,7 +19,7 @@ export default async function handler(req, res) {
       isMac = userAgent.includes('mac');
     }
 
-    const currentVersion = '2.9.8';
+    const currentVersion = '2.9.9';
     const prefix = isMac ? `AvaLive_VIP_PRO_Mac_v${currentVersion}` : `AvaLive_VIP_PRO_Windows_v${currentVersion}`;
     const fallbackFileName = isMac ? `AvaLive_VIP_PRO_Mac_v${currentVersion}.zip` : `AvaLive_VIP_PRO_Windows_v${currentVersion}.zip`;
     const githubToken = process.env.GITHUB_TOKEN;
@@ -34,7 +34,7 @@ export default async function handler(req, res) {
 
     let downloadUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${currentVersion}/${fallbackFileName}`;
 
-    // 1. Quét GitHub Releases tag chính xác v2.9.8
+    // 1. Quét GitHub Releases tag chính xác v2.9.9
     try {
       const relRes = await fetch(`https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/tags/v${currentVersion}`, { headers });
       if (relRes.ok) {

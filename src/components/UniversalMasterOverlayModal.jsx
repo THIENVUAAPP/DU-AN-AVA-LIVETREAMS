@@ -54,11 +54,13 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     const left = Math.max(0, Math.round((screenW - width) / 2));
     const top = Math.max(0, Math.round((screenH - height) / 2));
 
-    let activeUrl = '';
+    let activeUrl = activeMediaUrl || '';
+    let selectedCharId = '';
     let curTime = 0;
     try {
       const saved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
-      if (saved.mediaUrl) activeUrl = saved.mediaUrl;
+      if (!activeUrl && saved.mediaUrl) activeUrl = saved.mediaUrl;
+      if (saved.selectedCharacter) selectedCharId = saved.selectedCharacter;
       if (typeof saved.videoCurrentTime === 'number') curTime = saved.videoCurrentTime;
       if (!activeUrl) activeUrl = localStorage.getItem('avalive_user_locked_media') || '';
     } catch (e) {}
@@ -68,16 +70,45 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
       if (deskVid && typeof deskVid.currentTime === 'number' && deskVid.currentTime > 0) {
         curTime = deskVid.currentTime;
       }
+      if (!activeUrl && deskVid) {
+        if (deskVid.currentSrc) activeUrl = deskVid.currentSrc;
+        else if (deskVid.src) activeUrl = deskVid.src;
+      }
     } catch (e) {}
+
+    if (!selectedCharId) {
+      try {
+        const customRaw = localStorage.getItem('avalive_custom_characters');
+        if (customRaw) {
+          const list = JSON.parse(customRaw);
+          if (Array.isArray(list) && list.length > 0) {
+            selectedCharId = list[0].id;
+            if (!activeUrl) activeUrl = list[0].url || list[0].mediaUrl || '';
+          }
+        }
+      } catch (e) {}
+    }
 
     try {
       localStorage.removeItem('avalive_user_paused');
       localStorage.removeItem('avalive_window_capture_paused');
       localStorage.setItem('avalive_master_live_running', 'true');
+      const stateToSave = {
+        stage: 'idol',
+        mediaUrl: activeUrl,
+        selectedCharacter: selectedCharId,
+        isVideo: true,
+        videoPlaybackEvent: 'play',
+        videoCurrentTime: curTime,
+        isPlaying: true
+      };
+      localStorage.setItem('avalive_master_live_state', JSON.stringify(stateToSave));
     } catch (e) {}
 
+    const charQuery = selectedCharId ? `&char=${encodeURIComponent(selectedCharId)}` : '';
     const timeQuery = curTime > 0 ? `&t=${Math.round(curTime * 100) / 100}` : '';
-    const query = `${activeUrl ? `&v=${encodeURIComponent(activeUrl)}` : ''}${timeQuery}`;
+    const vQuery = activeUrl && !activeUrl.startsWith('blob:') ? `&v=${encodeURIComponent(activeUrl)}` : '';
+    const query = `${vQuery}${charQuery}${timeQuery}`;
     const origin = typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')
       ? window.location.origin
       : 'http://localhost:3001';
@@ -95,25 +126,30 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
       const host = typeof window !== 'undefined' && window.location.origin.includes('http')
         ? window.location.origin
         : 'http://127.0.0.1:3001';
-      let res;
-      try {
-        res = await fetch(`${host}/api/tunnel-url`);
-      } catch (e) {
+      
+      const endpoints = [
+        `${host}/api/tunnel-url`,
+        'http://127.0.0.1:3001/api/tunnel-url',
+        'http://localhost:3001/api/tunnel-url',
+        `${host}/api/tunnel-status`,
+        'http://127.0.0.1:3001/api/tunnel-status'
+      ];
+      let data = null;
+      for (const ep of endpoints) {
         try {
-          res = await fetch('http://127.0.0.1:3001/api/tunnel-url');
-        } catch (e2) {
-          res = await fetch('http://127.0.0.1:3001/api/tunnel-status');
-        }
+          const res = await fetch(ep, { signal: AbortSignal.timeout(2500) });
+          if (res && res.ok) {
+            data = await res.json();
+            if (data && (data.tunnelUrl || data.status === 'active')) break;
+          }
+        } catch (e) {}
       }
-      if (res && res.ok) {
-        const data = await res.json();
-        if (data) {
-          setTunnelData(data);
+
+      if (data) {
+        setTunnelData(data);
+        if (data.status === 'active' || data.tunnelUrl) {
           setTunnelLoading(false);
           try { localStorage.setItem('avalive_tunnel_data', JSON.stringify(data)); } catch (e) {}
-        }
-        if (data.status !== "active") {
-          setTimeout(fetchTunnelUrl, 2000);
         }
       }
     } catch (err) {
@@ -283,7 +319,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
               <h2 className="text-base font-black text-white tracking-wide flex items-center gap-2">
                 <span>TRUNG TÂM PHÁT SÓNG TIKTOK LIVE STUDIO & OBS</span>
                 <span className="text-[10px] bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-2 py-0.5 rounded-full font-bold">
-                  v2.9.8 ONLINE
+                  v2.9.9 ONLINE
                 </span>
               </h2>
               <p className="text-xs text-gray-400 font-medium">

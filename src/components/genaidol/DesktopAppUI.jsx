@@ -726,8 +726,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }, socketRef.current);
     }
 
+    const charQuery = selectedCharacter ? `&char=${encodeURIComponent(selectedCharacter)}` : '';
     const timeQuery = curTime > 0 ? `&t=${Math.round(curTime * 100) / 100}` : '';
-    const query = `${activeUrl ? `&v=${encodeURIComponent(activeUrl)}` : ''}${timeQuery}`;
+    const vQuery = activeUrl && !activeUrl.startsWith('blob:') ? `&v=${encodeURIComponent(activeUrl)}` : '';
+    const query = `${vQuery}${charQuery}${timeQuery}`;
     const origin = typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')
       ? window.location.origin
       : 'http://localhost:3001';
@@ -1936,11 +1938,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             const vid = desktopVideoRef.current;
             const curTime = vid ? vid.currentTime : (lastPlaybackTimeRef.current || 0);
             const isPlaying = vid ? !vid.paused : isMasterLiveRunning;
+            const charMatch = (customCharacters && Array.isArray(customCharacters)) ? customCharacters.find(c => c.id === selectedCharacter) : null;
+            let playUrl = (charMatch ? (charMatch.mediaUrl || charMatch.url) : null) || userLockedMediaUrl || (selected ? selected.url : null);
+            if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
+              playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
+            }
             try {
               bc.postMessage({
                 type: 'MASTER_TIME_SYNC',
                 currentTime: curTime,
                 isPlaying: isPlaying,
+                selectedCharacter: selectedCharacter,
+                mediaUrl: playUrl,
                 force: true,
                 isMuted: isLocalSpeakerMuted,
                 timestamp: Date.now()
