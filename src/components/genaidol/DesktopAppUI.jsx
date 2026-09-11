@@ -726,9 +726,22 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }, socketRef.current);
     }
 
+    let serverActiveUrl = activeUrl;
+    if (serverActiveUrl && serverActiveUrl.startsWith('blob:')) {
+      const matchChar = customCharacters.find(c => c.id === selectedCharacter);
+      if (matchChar && matchChar.mediaUrl && !matchChar.mediaUrl.startsWith('blob:')) {
+        serverActiveUrl = matchChar.mediaUrl;
+      } else {
+        const locked = localStorage.getItem('avalive_user_locked_media');
+        if (locked && !locked.startsWith('blob:')) serverActiveUrl = locked;
+      }
+    }
+    if (typeof serverActiveUrl === 'string' && serverActiveUrl.includes('/uploads/')) {
+      serverActiveUrl = serverActiveUrl.substring(serverActiveUrl.indexOf('/uploads/'));
+    }
     const charQuery = selectedCharacter ? `&char=${encodeURIComponent(selectedCharacter)}` : '';
     const timeQuery = curTime > 0 ? `&t=${Math.round(curTime * 100) / 100}` : '';
-    const vQuery = activeUrl && !activeUrl.startsWith('blob:') ? `&v=${encodeURIComponent(activeUrl)}` : '';
+    const vQuery = serverActiveUrl && !serverActiveUrl.startsWith('blob:') ? `&v=${encodeURIComponent(serverActiveUrl)}` : '';
     const query = `${vQuery}${charQuery}${timeQuery}`;
     const origin = typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')
       ? window.location.origin
@@ -4486,7 +4499,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   <div
                     key={charItem.id || index}
                     onClick={() => {
-                      let charUrl = charItem.url || charItem.mediaUrl;
+                      const serverUrl = (charItem.mediaUrl && !charItem.mediaUrl.startsWith('blob:')) 
+                        ? charItem.mediaUrl 
+                        : (charItem.url && !charItem.url.startsWith('blob:') ? charItem.url : null);
+                      let charUrl = serverUrl || charItem.url || charItem.mediaUrl;
                       if ((!charUrl || charUrl.startsWith('blob:')) && charItem.fileData) {
                         try {
                           charUrl = URL.createObjectURL(charItem.fileData);
@@ -4507,9 +4523,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                         if (typeof cleanUrl === 'string' && cleanUrl.includes('/uploads/')) {
                           cleanUrl = cleanUrl.substring(cleanUrl.indexOf('/uploads/'));
                         }
+                        let broadcastUrl = serverUrl || cleanUrl;
+                        if (typeof broadcastUrl === 'string' && broadcastUrl.includes('/uploads/')) {
+                          broadcastUrl = broadcastUrl.substring(broadcastUrl.indexOf('/uploads/'));
+                        }
                         const isVid = charItem.type === 'video' || (charItem.fileData?.type?.startsWith('video/')) || (typeof cleanUrl === 'string' && (cleanUrl.startsWith('blob:') || cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.mov') || cleanUrl.includes('/uploads/') || cleanUrl.includes('/api/stream')));
-                        setUserLockedMediaUrl(cleanUrl);
-                        try { localStorage.setItem('avalive_user_locked_media', cleanUrl); } catch (e) {}
+                        setUserLockedMediaUrl(broadcastUrl || cleanUrl);
+                        try { localStorage.setItem('avalive_user_locked_media', broadcastUrl || cleanUrl); } catch (e) {}
 
                         // ⚡ 1. CẬP NHẬT TRÌNH CHIẾU GIAO DIỆN PHẦN MỀM NGAY LẬP TỨC
                         if (desktopVideoRef.current) {
@@ -4531,7 +4551,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                           const bc = new BroadcastChannel('avalive_master_live_stream');
                           bc.postMessage({
                             type: 'GLOBAL_MEDIA_CHANGE',
-                            mediaUrl: cleanUrl,
+                            mediaUrl: broadcastUrl,
                             characterId: charItem.id,
                             characterName: charItem.name || 'AI Idol',
                             isVideo: isVid,
@@ -4558,7 +4578,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                           currentTime: 0,
                           force: true,
                           isPlaying: true,
-                          mediaUrl: cleanUrl,
+                          mediaUrl: broadcastUrl,
                           timestamp: Date.now()
                         }, socketRef.current);
                         syncMasterLiveState({

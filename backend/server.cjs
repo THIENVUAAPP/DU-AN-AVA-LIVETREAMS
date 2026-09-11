@@ -362,7 +362,9 @@ app.all('/uploads/:filename', (req, res, next) => {
         'Content-Length': currentOnDiskSize,
         'Content-Type': contentType,
         'Accept-Ranges': 'bytes',
-        'Cache-Control': 'public, max-age=86400, immutable'
+        'Cache-Control': 'public, max-age=86400, immutable',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Expose-Headers': 'Content-Range, Accept-Ranges, Content-Length'
       });
       if (req.method === 'HEAD') {
         return res.end();
@@ -656,7 +658,6 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         const isNewSrc = (vid.src !== fullUrl && !vid.src.endsWith(url));
         if (isNewSrc) {
           currentSrc = url;
-          vid.crossOrigin = 'anonymous';
           vid.src = fullUrl;
           vid.load();
         }
@@ -1102,8 +1103,8 @@ let currentMasterLiveState = savedState || {
   updatedAt: Date.now()
 };
 
-// Tuyệt đối không tự ý gán video phát nền ngầm (chỉ phát khi người dùng chủ động tải lên / chọn video)
-if (currentMasterLiveState.mediaUrl && currentMasterLiveState.mediaUrl.includes('default_idol.mp4')) {
+// Tuyệt đối không tự ý gán video phát nền ngầm hoặc blob tạm thời
+if (currentMasterLiveState.mediaUrl && (currentMasterLiveState.mediaUrl.includes('default_idol.mp4') || currentMasterLiveState.mediaUrl.startsWith('blob:'))) {
   currentMasterLiveState.mediaUrl = null;
 }
 

@@ -105,9 +105,23 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
       localStorage.setItem('avalive_master_live_state', JSON.stringify(stateToSave));
     } catch (e) {}
 
+    let serverActiveUrl = activeUrl;
+    if (serverActiveUrl && serverActiveUrl.startsWith('blob:')) {
+      try {
+        const locked = localStorage.getItem('avalive_user_locked_media');
+        if (locked && !locked.startsWith('blob:')) serverActiveUrl = locked;
+        if (!serverActiveUrl || serverActiveUrl.startsWith('blob:')) {
+          const masterSaved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
+          if (masterSaved.mediaUrl && !masterSaved.mediaUrl.startsWith('blob:')) serverActiveUrl = masterSaved.mediaUrl;
+        }
+      } catch (e) {}
+    }
+    if (typeof serverActiveUrl === 'string' && serverActiveUrl.includes('/uploads/')) {
+      serverActiveUrl = serverActiveUrl.substring(serverActiveUrl.indexOf('/uploads/'));
+    }
     const charQuery = selectedCharId ? `&char=${encodeURIComponent(selectedCharId)}` : '';
     const timeQuery = curTime > 0 ? `&t=${Math.round(curTime * 100) / 100}` : '';
-    const vQuery = activeUrl && !activeUrl.startsWith('blob:') ? `&v=${encodeURIComponent(activeUrl)}` : '';
+    const vQuery = serverActiveUrl && !serverActiveUrl.startsWith('blob:') ? `&v=${encodeURIComponent(serverActiveUrl)}` : '';
     const query = `${vQuery}${charQuery}${timeQuery}`;
     const origin = typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')
       ? window.location.origin
@@ -332,7 +346,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
               <h2 className="text-base font-black text-white tracking-wide flex items-center gap-2">
                 <span>TRUNG TÂM PHÁT SÓNG TIKTOK LIVE STUDIO & OBS</span>
                 <span className="text-[10px] bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-2 py-0.5 rounded-full font-bold">
-                  v2.9.12 ONLINE
+                  v1.0.0 ONLINE
                 </span>
               </h2>
               <p className="text-xs text-gray-400 font-medium">

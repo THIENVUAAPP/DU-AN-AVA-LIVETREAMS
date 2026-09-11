@@ -2,24 +2,24 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.9.12';
+export const APP_VERSION = '1.0.0';
 export const RELEASE_DATE = '11/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🖥️ Đồng Bộ Khóa Chặt 100% Khung Hình & Âm Thanh Window Capture OBS Siêu Mượt',
-    description: 'Khắc phục hoàn toàn hiện tượng chậm hình, đứng hình và tiếng cà giật trên Window Capture OBS. Thuật toán vi sai lockstep khớp từng mili-giây, từng cử chỉ, âm thanh và trạng thái bật/tắt tiếng tức thì.'
+    title: '🖥️ Cửa Sổ Bắt Màn Hình (Window Capture) Hiển Thị Ngay Lập Tức 0ms & Siêu Mượt 60 FPS',
+    description: 'Nạp video ngay trong 0ms khi mở Window Capture, đồng bộ 100% tỷ lệ khung hình, cử chỉ hành động và âm thanh. Tách biệt hoàn toàn xử lý Mute/Volume khỏi luồng phát, khắc phục triệt để lỗi đứng hình và voice cà giật.'
   },
   {
-    title: '🌐 Nâng Cấp Nguồn Trình Duyệt (Browser Source) TikTok Live Studio 1080p 60FPS Không Màn Hình Đen',
-    description: 'Tự động định tuyến link Cloudflare Tunnel HTTPS (/live-stream) trực tiếp đến máy chủ nguồn, nạp nhanh tức thì 0ms, loại bỏ hoàn toàn lỗi màn hình đen và tải trễ.'
+    title: '🌐 Nguồn Trình Duyệt (Browser Source) TikTok Live Studio 1080p 60 FPS Trực Tuyến',
+    description: 'Định tuyến chuẩn xác qua Cloudflare Tunnel HTTPS (/live-stream), nạp trực tiếp video gốc trên máy chủ, chạy liên tục 5-10 tiếng siêu nét, siêu mượt, không màn hình đen.'
   },
   {
     title: '⚡ Tối Ưu Hóa Tuyệt Đối Video Tải Lên: Phát Siêu Mượt 60 FPS Không Gián Đoạn',
     description: 'Tách biệt luồng phát nội bộ (In-Memory Blob URL) và luồng nạp nền (Chunked Fast-Stream), giúp video tải lên phát ngay tức thì 0ms, loại bỏ hoàn toàn tình trạng đứng hình, giật lag hay nghẽn đĩa.'
   },
   {
-    title: '📦 Trọn Bộ Gói Cài Standalone ZIP v2.9.12 Tích Hợp Sẵn Binary Cloudflare',
+    title: '📦 Trọn Bộ Gói Cài Standalone ZIP v1.0.0 Tích Hợp Sẵn Binary Cloudflare',
     description: 'Tích hợp sẵn binary Cloudflare Tunnel cho cả Windows và macOS; khởi động 1-Click là dùng ngay không cần cài đặt môi trường.'
   },
   {

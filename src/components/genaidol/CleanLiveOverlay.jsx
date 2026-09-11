@@ -78,7 +78,25 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     const pathname = typeof window !== 'undefined' ? window.location.pathname.toLowerCase() : '';
     const overlayParam = urlParams ? urlParams.get('overlay') : '';
     const ratioParam = urlParams ? urlParams.get('ratio') : (saved?.aspectRatio || '9:16');
-    const directVideoUrl = urlParams ? urlParams.get('v') : null;
+    let directVideoUrl = urlParams ? urlParams.get('v') : null;
+    if (directVideoUrl && typeof directVideoUrl === 'string') {
+      try { directVideoUrl = decodeURIComponent(directVideoUrl); } catch (e) {}
+    }
+
+    let resolvedMedia = directVideoUrl;
+    if (!resolvedMedia && typeof window !== 'undefined') {
+      try {
+        const locked = localStorage.getItem('avalive_user_locked_media');
+        if (locked && !locked.startsWith('blob:')) resolvedMedia = locked;
+        if (!resolvedMedia && saved?.mediaUrl && !saved.mediaUrl.startsWith('blob:')) resolvedMedia = saved.mediaUrl;
+        if (!resolvedMedia) {
+          const customChars = JSON.parse(localStorage.getItem('avalive_custom_characters') || '[]');
+          const charId = urlParams?.get('char') || saved?.selectedCharacter || localStorage.getItem('avalive_selected_char');
+          const found = customChars.find(c => c.id === charId);
+          if (found) resolvedMedia = (found.mediaUrl && !found.mediaUrl.startsWith('blob:')) ? found.mediaUrl : found.url;
+        }
+      } catch (e) {}
+    }
     
     let defaultStage = 'idol'; // Mặc định AI Idol
     if (overlayParam === 'bando' || overlayParam === 'vietnam_map' || overlayParam === 'map' || pathname.includes('/bando')) defaultStage = 'bando';
@@ -93,8 +111,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     return {
       stage: defaultStage, // 'idol' | 'dancefloor' | 'battle' | 'bando' | 'broadcast'
       aspectRatio: ratioParam || '9:16',
-      mediaUrl: directVideoUrl || (saved?.mediaUrl && !saved.mediaUrl.includes('nhep_mieng.mp4') && !saved.mediaUrl.includes('demo_dancer.mp4') && !saved.mediaUrl.includes('default_idol.mp4') ? saved.mediaUrl : null),
-      flvUrl: directVideoUrl || saved?.flvUrl || null,
+      mediaUrl: resolvedMedia || (saved?.mediaUrl && !saved.mediaUrl.includes('nhep_mieng.mp4') && !saved.mediaUrl.includes('demo_dancer.mp4') && !saved.mediaUrl.includes('default_idol.mp4') ? saved.mediaUrl : null),
+      flvUrl: resolvedMedia || saved?.flvUrl || null,
       isVideo: saved?.isVideo !== false,
       selectedCharacter: urlParams?.get('char') || saved?.selectedCharacter || (typeof window !== 'undefined' ? localStorage.getItem('avalive_active_character_id') : '') || '',
       characterName: saved?.characterName || 'AvaLive VIP PRO',
@@ -1462,6 +1480,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
   // 🔊 CẬP NHẬT ÂM LƯỢNG & MUTE RIÊNG BIỆT (TUYỆT ĐỐI KHÔNG CAN THIỆP PLAY/PAUSE)
   useEffect(() => {
+    const vid = overlayVideoRef.current;
+    if (vid) {
+      vid.muted = isVideoAudioMuted;
+      if (!isVideoAudioMuted) {
+        try { vid.volume = videoVolume; } catch (e) {}
+      }
+    }
     const allMedia = document.querySelectorAll('video, audio');
     allMedia.forEach(el => {
       try {
@@ -1751,8 +1776,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
       // 1. Phục hồi khi video bị paused ngoài ý muốn (Autoplay Policy hoặc buffer restart)
       if (vid.paused && !vid.seeking) {
-        vid.muted = isVideoAudioMuted;
-        if (!isVideoAudioMuted) vid.volume = videoVolume;
         vid.play().then(() => setIsPlayingState(true)).catch(() => {});
         return;
       }
@@ -1774,10 +1797,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           lastObservedTimeRef.current = cur;
         }
       }
-    }, 1500);
+    }, 2000);
 
     return () => clearInterval(watchdogTimer);
-  }, [isVideoAudioMuted, videoVolume, activeMedia.url, activeMedia.isVideo]);
+  }, [activeMedia.url, activeMedia.isVideo]);
 
   // 🖼️ HỖ TRỢ CHẾ ĐỘ CỬA SỔ NỔI (PICTURE-IN-PICTURE)
   const togglePip = async () => {
@@ -1908,8 +1931,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       const isUserPaused = checkIfUserPaused();
       if (!isUserPaused) {
         vid.dataset.userPaused = 'false';
-        vid.muted = isVideoAudioMuted;
-        try { vid.volume = videoVolume; } catch (e) {}
         
         // CHỈ GỌI vid.load() KHI URL THỰC SỰ THAY ĐỔI
         // TUYỆT ĐỐI KHÔNG GỌI vid.load() KHI CHUYỂN TAB ĐỂ TRÁNH RESET 0:00 HOẶC MẤT VIDEO
@@ -1939,7 +1960,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         setIsPlayingState(false);
       }
     }
-  }, [activeMedia.url, isVideoAudioMuted, videoVolume, masterState.videoPlaybackEvent, masterState.isPlaying]);
+  }, [activeMedia.url, masterState.videoPlaybackEvent, masterState.isPlaying]);
 
   // 4 SÂN KHẤU: ĐƯỢC LỒNG TRONG KHUNG PHÁT SÓNG SẠCH 100% CỐ ĐỊNH TỈ LỆ
   // 4 SÂN KHẤU: ĐƯỢC LỒNG TRONG KHUNG PHÁT SÓNG SẠCH 100% PURE FULL-FRAME
@@ -1963,7 +1984,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v2.9.12
+                v1.0.0
               </span>
             </div>
 
