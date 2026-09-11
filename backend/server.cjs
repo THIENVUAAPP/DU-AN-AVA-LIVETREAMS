@@ -704,7 +704,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       }
 
       function fetchLatestState() {
-        fetch(window.location.origin + '/api/master-live-state')
+        fetch(window.location.origin + '/api/live-state')
           .then(function(res) { return res.json(); })
           .then(function(data) {
             if (!data) return;
@@ -1067,6 +1067,20 @@ let isConnectingTikTok = false; // 🔒 Connection Lock — Ngăn race condition
 
 const stateFilePath = path.join(__dirname, 'live_state.json');
 
+// 🎬 TỰ ĐỘNG TÌM VIDEO MỚI NHẤT & CHUẨN XÁC TRONG THƯ MỤC UPLOADS
+function getLatestUploadMediaUrl() {
+  try {
+    const files = fs.readdirSync(uploadsDir)
+      .filter(f => (f.endsWith('.mp4') || f.endsWith('.webm') || f.endsWith('.mov')) && !f.includes('default_idol'))
+      .map(f => ({ name: f, time: fs.statSync(path.join(uploadsDir, f)).mtimeMs }))
+      .sort((a, b) => b.time - a.time);
+    if (files.length > 0) {
+      return `/uploads/${files[0].name}`;
+    }
+  } catch (e) {}
+  return null;
+}
+
 let saveFileTimeout = null;
 function saveLiveStateToFile(immediate = false) {
   if (saveFileTimeout) {
@@ -1075,6 +1089,10 @@ function saveLiveStateToFile(immediate = false) {
   }
   const doSave = () => {
     try {
+      // Tuyệt đối không bao giờ ghi blob: URL vào file state vĩnh viễn
+      if (currentMasterLiveState && currentMasterLiveState.mediaUrl && currentMasterLiveState.mediaUrl.startsWith('blob:')) {
+        currentMasterLiveState.mediaUrl = getLatestUploadMediaUrl();
+      }
       fs.writeFile(stateFilePath, JSON.stringify(currentMasterLiveState, null, 2), 'utf8', () => {});
     } catch (err) {}
   };
@@ -1090,7 +1108,7 @@ function loadLiveStateFromFile() {
     if (fs.existsSync(stateFilePath)) {
       const data = JSON.parse(fs.readFileSync(stateFilePath, 'utf8'));
       if (data && typeof data === 'object') {
-        if (typeof data.mediaUrl === 'string' && (data.mediaUrl.includes('nhep_mieng.mp4') || data.mediaUrl.includes('demo_dancer.mp4'))) {
+        if (typeof data.mediaUrl === 'string' && (data.mediaUrl.startsWith('blob:') || data.mediaUrl.includes('nhep_mieng.mp4') || data.mediaUrl.includes('demo_dancer.mp4') || data.mediaUrl.includes('default_idol.mp4'))) {
           data.mediaUrl = null;
         }
         return data;
@@ -1116,27 +1134,20 @@ let currentMasterLiveState = savedState || {
 };
 
 // Tuyệt đối không tự ý gán video phát nền ngầm hoặc blob tạm thời
-if (currentMasterLiveState.mediaUrl && (currentMasterLiveState.mediaUrl.includes('default_idol.mp4') || currentMasterLiveState.mediaUrl.startsWith('blob:'))) {
-  currentMasterLiveState.mediaUrl = null;
+if (!currentMasterLiveState.mediaUrl || currentMasterLiveState.mediaUrl.startsWith('blob:') || currentMasterLiveState.mediaUrl.includes('default_idol.mp4')) {
+  currentMasterLiveState.mediaUrl = getLatestUploadMediaUrl();
 }
 
 // 🎬 TỰ ĐỘNG KHÔI PHỤC VIDEO GẦN NHẤT CỦA NGƯỜI DÙNG:
-// Nếu mediaUrl bị null hoặc file không tồn tại, tự động lấy video mới nhất mà người dùng đã tải lên trong uploads/
 if (!currentMasterLiveState.mediaUrl || !fs.existsSync(path.join(uploadsDir, path.basename(currentMasterLiveState.mediaUrl)))) {
-  try {
-    const files = fs.readdirSync(uploadsDir)
-      .filter(f => f.endsWith('.mp4') || f.endsWith('.webm') || f.endsWith('.mov'))
-      .map(f => ({ name: f, time: fs.statSync(path.join(uploadsDir, f)).mtimeMs }))
-      .sort((a, b) => b.time - a.time);
-    if (files.length > 0) {
-      currentMasterLiveState.mediaUrl = `/uploads/${files[0].name}`;
-      currentMasterLiveState.isVideo = true;
-      currentMasterLiveState.isPlaying = true;
-      currentMasterLiveState.isUserExplicitMediaLocked = true;
-      console.log(`[AutoRestore] 🎬 Đã khôi phục video gần nhất của người dùng: ${files[0].name}`);
-      saveLiveStateToFile();
-    }
-  } catch (err) {}
+  currentMasterLiveState.mediaUrl = getLatestUploadMediaUrl();
+  if (currentMasterLiveState.mediaUrl) {
+    currentMasterLiveState.isVideo = true;
+    currentMasterLiveState.isPlaying = true;
+    currentMasterLiveState.isUserExplicitMediaLocked = true;
+    console.log(`[AutoRestore] 🎬 Đã khôi phục video gần nhất của người dùng: ${currentMasterLiveState.mediaUrl}`);
+    saveLiveStateToFile();
+  }
 }
 let currentBandoGameState = null;
 let currentBattleGameState = null;
@@ -1264,13 +1275,22 @@ io.on('connection', (socket) => {
     if (state && typeof state === 'object') {
       const cleanState = { ...state };
       delete cleanState.force; // Không lưu cờ force vào file state vĩnh viễn
+
+      // 🛡️ LOẠI BỎ TRIỆT ĐỂ BLOB: Không bao giờ lưu blob: URL vào live state
+      if (cleanState.mediaUrl && typeof cleanState.mediaUrl === 'string') {
+        if (cleanState.mediaUrl.startsWith('blob:')) {
+          delete cleanState.mediaUrl;
+        } else if (cleanState.mediaUrl.includes('/uploads/')) {
+          cleanState.mediaUrl = cleanState.mediaUrl.substring(cleanState.mediaUrl.indexOf('/uploads/'));
+        }
+      }
+
       const nextState = { ...currentMasterLiveState, ...cleanState, updatedAt: Date.now() };
       delete nextState.force;
       // BẢO VỆ TUYỆT ĐỐI VIDEO ĐANG PHÁT: Không bao giờ tự ý xoá mediaUrl hiện tại nếu client gửi null/undefined
-      // Chỉ xoá khi người dùng bấm xoá với cờ rõ ràng clearMedia: true
-      if (!cleanState.mediaUrl && !cleanState.clearMedia && currentMasterLiveState.mediaUrl) {
-        nextState.mediaUrl = currentMasterLiveState.mediaUrl;
-        nextState.isVideo = currentMasterLiveState.isVideo;
+      if (!nextState.mediaUrl || nextState.mediaUrl.startsWith('blob:')) {
+        nextState.mediaUrl = currentMasterLiveState.mediaUrl || getLatestUploadMediaUrl();
+        nextState.isVideo = true;
       }
       currentMasterLiveState = nextState;
       io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
@@ -1964,13 +1984,16 @@ app.post('/api/shopee/test-order', (req, res) => {
   res.json({ success: true, order: orderEvent });
 });
 
-// Live State APIs
-app.get('/api/live-state', (req, res) => {
+// Live State APIs (Hỗ trợ cả /api/live-state và /api/master-live-state)
+app.get(['/api/live-state', '/api/master-live-state'], (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
   if (currentTunnelUrl) {
     currentMasterLiveState.tunnelUrl = currentTunnelUrl;
+  }
+  if (!currentMasterLiveState.mediaUrl || currentMasterLiveState.mediaUrl.startsWith('blob:')) {
+    currentMasterLiveState.mediaUrl = getLatestUploadMediaUrl();
   }
   res.json(currentMasterLiveState);
 });

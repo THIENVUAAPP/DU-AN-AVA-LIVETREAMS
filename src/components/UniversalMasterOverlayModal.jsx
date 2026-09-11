@@ -34,6 +34,32 @@ import {
  */
 export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUser, onOpenLogin, activeMediaUrl }) {
   const [copiedId, setCopiedId] = useState(null);
+  const [serverLiveMediaUrl, setServerLiveMediaUrl] = useState(() => {
+    try {
+      const saved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
+      if (saved.mediaUrl && !saved.mediaUrl.startsWith('blob:')) return saved.mediaUrl;
+      const locked = localStorage.getItem('avalive_user_locked_media') || '';
+      if (locked && !locked.startsWith('blob:')) return locked;
+    } catch (e) {}
+    return '';
+  });
+
+  useEffect(() => {
+    const fetchLiveMedia = () => {
+      fetch('/api/live-state')
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.mediaUrl && !data.mediaUrl.startsWith('blob:')) {
+            setServerLiveMediaUrl(data.mediaUrl);
+          }
+        })
+        .catch(() => {});
+    };
+    fetchLiveMedia();
+    const timer = setInterval(fetchLiveMedia, 3000);
+    return () => clearInterval(timer);
+  }, []);
+
   const [tunnelData, setTunnelData] = useState(() => {
     try {
       const saved = localStorage.getItem('avalive_tunnel_data');
@@ -59,10 +85,13 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     let curTime = 0;
     try {
       const saved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
-      if (!activeUrl && saved.mediaUrl) activeUrl = saved.mediaUrl;
+      if (!activeUrl && saved.mediaUrl && !saved.mediaUrl.startsWith('blob:')) activeUrl = saved.mediaUrl;
       if (saved.selectedCharacter) selectedCharId = saved.selectedCharacter;
       if (typeof saved.videoCurrentTime === 'number') curTime = saved.videoCurrentTime;
-      if (!activeUrl) activeUrl = localStorage.getItem('avalive_user_locked_media') || '';
+      if (!activeUrl) {
+        const locked = localStorage.getItem('avalive_user_locked_media') || '';
+        if (locked && !locked.startsWith('blob:')) activeUrl = locked;
+      }
     } catch (e) {}
 
     try {
@@ -71,8 +100,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
         curTime = deskVid.currentTime;
       }
       if (!activeUrl && deskVid) {
-        if (deskVid.currentSrc) activeUrl = deskVid.currentSrc;
-        else if (deskVid.src) activeUrl = deskVid.src;
+        if (deskVid.currentSrc && !deskVid.currentSrc.startsWith('blob:')) activeUrl = deskVid.currentSrc;
+        else if (deskVid.src && !deskVid.src.startsWith('blob:')) activeUrl = deskVid.src;
       }
     } catch (e) {}
 
@@ -83,30 +112,17 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
           const list = JSON.parse(customRaw);
           if (Array.isArray(list) && list.length > 0) {
             selectedCharId = list[0].id;
-            if (!activeUrl) activeUrl = list[0].url || list[0].mediaUrl || '';
+            if (!activeUrl) {
+              const itemUrl = list[0].mediaUrl || list[0].url || '';
+              if (itemUrl && !itemUrl.startsWith('blob:')) activeUrl = itemUrl;
+            }
           }
         }
       } catch (e) {}
     }
 
-    try {
-      localStorage.removeItem('avalive_user_paused');
-      localStorage.removeItem('avalive_window_capture_paused');
-      localStorage.setItem('avalive_master_live_running', 'true');
-      const stateToSave = {
-        stage: 'idol',
-        mediaUrl: activeUrl,
-        selectedCharacter: selectedCharId,
-        isVideo: true,
-        videoPlaybackEvent: 'play',
-        videoCurrentTime: curTime,
-        isPlaying: true
-      };
-      localStorage.setItem('avalive_master_live_state', JSON.stringify(stateToSave));
-    } catch (e) {}
-
     let serverActiveUrl = activeUrl;
-    if (serverActiveUrl && serverActiveUrl.startsWith('blob:')) {
+    if (!serverActiveUrl || serverActiveUrl.startsWith('blob:')) {
       try {
         const locked = localStorage.getItem('avalive_user_locked_media');
         if (locked && !locked.startsWith('blob:')) serverActiveUrl = locked;
@@ -116,12 +132,33 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
         }
       } catch (e) {}
     }
+    if (!serverActiveUrl || serverActiveUrl.startsWith('blob:')) {
+      serverActiveUrl = serverLiveMediaUrl || '';
+    }
+
     if (typeof serverActiveUrl === 'string' && serverActiveUrl.includes('/uploads/')) {
       serverActiveUrl = serverActiveUrl.substring(serverActiveUrl.indexOf('/uploads/'));
     }
+
+    try {
+      localStorage.removeItem('avalive_user_paused');
+      localStorage.removeItem('avalive_window_capture_paused');
+      localStorage.setItem('avalive_master_live_running', 'true');
+      const stateToSave = {
+        stage: 'idol',
+        mediaUrl: serverActiveUrl,
+        selectedCharacter: selectedCharId,
+        isVideo: true,
+        videoPlaybackEvent: 'play',
+        videoCurrentTime: curTime,
+        isPlaying: true
+      };
+      localStorage.setItem('avalive_master_live_state', JSON.stringify(stateToSave));
+    } catch (e) {}
+
     const charQuery = selectedCharId ? `&char=${encodeURIComponent(selectedCharId)}` : '';
     const timeQuery = curTime > 0 ? `&t=${Math.round(curTime * 100) / 100}` : '';
-    const vQuery = serverActiveUrl && !serverActiveUrl.startsWith('blob:') ? `&v=${encodeURIComponent(serverActiveUrl)}` : '';
+    const vQuery = serverActiveUrl ? `&v=${encodeURIComponent(serverActiveUrl)}` : '';
     const query = `${vQuery}${charQuery}${timeQuery}`;
     const origin = typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')
       ? window.location.origin
@@ -265,6 +302,9 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
         }
       } catch (e) {}
     }
+    if (!finalMedia || (typeof finalMedia === 'string' && finalMedia.startsWith('blob:'))) {
+      finalMedia = serverLiveMediaUrl;
+    }
 
     let glue = baseUrl.includes('?') ? '&' : '?';
     if (finalMedia && typeof finalMedia === 'string' && !finalMedia.startsWith('blob:') && (path === 'idol' || path === 'live-stream' || path === 'studio' || path === 'overlay' || path === 'live')) {
@@ -346,7 +386,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
               <h2 className="text-base font-black text-white tracking-wide flex items-center gap-2">
                 <span>TRUNG TÂM PHÁT SÓNG TIKTOK LIVE STUDIO & OBS</span>
                 <span className="text-[10px] bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-2 py-0.5 rounded-full font-bold">
-                  v1.0.1 ONLINE
+                  v1.0.2 ONLINE
                 </span>
               </h2>
               <p className="text-xs text-gray-400 font-medium">

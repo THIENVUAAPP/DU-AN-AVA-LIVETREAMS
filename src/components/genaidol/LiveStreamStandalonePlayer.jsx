@@ -100,6 +100,17 @@ export default function LiveStreamStandalonePlayer() {
     }
   }, [videoSrc]);
 
+  useEffect(() => {
+    fetch(window.location.origin + '/api/live-state')
+      .then(r => r.json())
+      .then(d => {
+        if (d && d.mediaUrl && !d.mediaUrl.startsWith('blob:')) {
+          setVideoSrc(prev => prev || d.mediaUrl);
+        }
+      })
+      .catch(() => {});
+  }, []);
+
   // Kết nối Socket.io & BroadcastChannel để đồng bộ Realtime 0ms
   useEffect(() => {
     let socket = null;
@@ -219,6 +230,20 @@ export default function LiveStreamStandalonePlayer() {
         playsInline
         loop
         preload="auto"
+        onLoadedMetadata={(e) => {
+          if (!isExplicitlyPausedRef.current && e.currentTarget.paused) {
+            e.currentTarget.play().catch(() => {});
+          }
+        }}
+        onError={() => {
+          fetch(window.location.origin + '/api/live-state')
+            .then(r => r.json())
+            .then(d => {
+              if (d && d.mediaUrl && !d.mediaUrl.startsWith('blob:')) {
+                setVideoSrc(d.mediaUrl);
+              }
+            }).catch(() => {});
+        }}
         onEnded={() => {
           if (videoRef.current && !isExplicitlyPausedRef.current) {
             videoRef.current.currentTime = 0;

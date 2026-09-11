@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.0.1';
+export const APP_VERSION = '1.0.2';
 export const RELEASE_DATE = '11/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🖥️ Cửa Sổ Bắt Màn Hình (Window Capture) Hiển Thị Ngay Lập Tức 0ms & Siêu Mượt 60 FPS',
-    description: 'Nạp video ngay trong 0ms khi mở Window Capture, đồng bộ 100% tỷ lệ khung hình, cử chỉ hành động và âm thanh. Tách biệt hoàn toàn xử lý Mute/Volume khỏi luồng phát, khắc phục triệt để lỗi đứng hình và voice cà giật.'
+    title: '🖥️ Cửa Sổ Bắt Màn Hình (Window Capture) & Nguồn Trình Duyệt: Phát Video Tức Thì 0ms Siêu Mượt 60 FPS',
+    description: 'Khắc phục triệt để lỗi không lên hình/màn hình đen khi mở Window Capture hoặc Browser Source OBS/TikTok Live Studio. Video tải lên, video thư viện hay đường link trực tuyến đều tự động đồng bộ hóa chuẩn xác, phát ngay tức thì 0ms, độ nét gốc 1080p 60 FPS, chạy liên tục 5-10 tiếng không giật lag đứng hình.'
   },
   {
     title: '🌐 Nguồn Trình Duyệt (Browser Source) TikTok Live Studio 1080p 60 FPS Trực Tuyến',

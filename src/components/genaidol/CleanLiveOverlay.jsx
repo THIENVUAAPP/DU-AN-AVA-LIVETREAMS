@@ -804,6 +804,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             vid.dataset.userPaused = 'false';
             vid.muted = isVideoAudioMuted;
             if (!isVideoAudioMuted) vid.volume = videoVolume;
+            if (data.mediaUrl && typeof data.mediaUrl === 'string' && !data.mediaUrl.startsWith('blob:')) {
+              let cleanUrl = data.mediaUrl;
+              if (cleanUrl.includes('/uploads/')) cleanUrl = cleanUrl.substring(cleanUrl.indexOf('/uploads/'));
+              if (vid.src !== cleanUrl && !vid.src.endsWith(cleanUrl)) {
+                vid.src = cleanUrl;
+                vid.load();
+              }
+            }
             // 🎯 CHỈ SEEK THỜI GIAN KHI CÓ CỜ FORCE CHỦ ĐỘNG HOẶC CHUYỂN BÀI (TRÁNH TRIỆT ĐỂ POLLING TUA VỀ 0 LẶP CÂU ĐẦU TIÊN)
             if (data.force && typeof data.videoCurrentTime === 'number' && !isNaN(data.videoCurrentTime)) {
               if (Math.abs(vid.currentTime - data.videoCurrentTime) > 0.5) {
@@ -1975,7 +1983,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.0.1
+                v1.0.2
               </span>
             </div>
 
@@ -2182,7 +2190,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                                 loop
                                 muted={isVideoAudioMuted}
                                 playsInline
-                                crossOrigin="anonymous"
                                 controls={false}
                                 preload="auto"
                                 disableRemotePlayback
@@ -2362,7 +2369,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                                 loop
                                 muted={isVideoAudioMuted}
                                 playsInline
-                                crossOrigin="anonymous"
                                 controls={false}
                                 preload="auto"
                                 disableRemotePlayback
@@ -2410,7 +2416,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   loop={true}
                   muted={isVideoAudioMuted}
                   playsInline
-                  crossOrigin="anonymous"
                   controls={false}
                   preload="auto"
                   disableRemotePlayback
@@ -2565,6 +2570,15 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     const v = e.currentTarget;
                     const err = v?.error;
                     console.warn('[CleanLiveOverlay] Video playback notification:', err ? `${err.code} - ${err.message}` : '');
+                    fetch('/api/live-state')
+                      .then(r => r.json())
+                      .then(d => {
+                        if (d && d.mediaUrl && !d.mediaUrl.startsWith('blob:') && v && v.src !== d.mediaUrl) {
+                          v.src = d.mediaUrl;
+                          v.load();
+                          v.play().catch(() => {});
+                        }
+                      }).catch(() => {});
                     if (v && !checkIfUserPaused()) {
                       setTimeout(() => {
                         try { v.play().catch(() => {}); } catch(err) {}

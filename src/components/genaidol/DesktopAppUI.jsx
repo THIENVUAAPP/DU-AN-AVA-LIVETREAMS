@@ -2830,7 +2830,24 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               mediaUrl: fileUrl
             }).catch(() => {});
 
-            // 🚀 BẮN PHÁT SÓNG REALTIME VIDEO ĐẾN TIKTOK LIVE STUDIO / OBS
+            // 🚀 BẮN PHÁT SÓNG REALTIME VIDEO ĐẾN TIKTOK LIVE STUDIO / OBS & WINDOW CAPTURE
+            try {
+              const bc = new BroadcastChannel('avalive_master_live_stream');
+              bc.postMessage({
+                type: 'GLOBAL_MEDIA_CHANGE',
+                mediaUrl: fileUrl,
+                characterId: newCharId,
+                characterName: charName,
+                isVideo: true,
+                isPlaying: true,
+                currentTime: 0,
+                force: true,
+                source: 'desktop',
+                timestamp: Date.now()
+              });
+              setTimeout(() => bc.close(), 100);
+            } catch (err) {}
+
             sendVideoControl({
               action: 'play',
               currentTime: 0,
@@ -2868,6 +2885,22 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   const fallbackUrl = data.url.includes('/uploads/') ? data.url.substring(data.url.indexOf('/uploads/')) : data.url;
                   setUserLockedMediaUrl(fallbackUrl);
                   try { localStorage.setItem('avalive_user_locked_media', fallbackUrl); } catch (e) {}
+                  try {
+                    const bc = new BroadcastChannel('avalive_master_live_stream');
+                    bc.postMessage({
+                      type: 'GLOBAL_MEDIA_CHANGE',
+                      mediaUrl: fallbackUrl,
+                      characterId: newCharId,
+                      characterName: charName,
+                      isVideo: true,
+                      isPlaying: true,
+                      currentTime: 0,
+                      force: true,
+                      source: 'desktop',
+                      timestamp: Date.now()
+                    });
+                    setTimeout(() => bc.close(), 100);
+                  } catch (err) {}
                   sendVideoControl({
                     action: 'play',
                     currentTime: 0,
@@ -4499,9 +4532,19 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   <div
                     key={charItem.id || index}
                     onClick={() => {
-                      const serverUrl = (charItem.mediaUrl && !charItem.mediaUrl.startsWith('blob:')) 
+                      let serverUrl = (charItem.mediaUrl && !charItem.mediaUrl.startsWith('blob:')) 
                         ? charItem.mediaUrl 
                         : (charItem.url && !charItem.url.startsWith('blob:') ? charItem.url : null);
+                      if (!serverUrl && typeof charItem.url === 'string' && charItem.url.includes('/uploads/')) {
+                        serverUrl = charItem.url.substring(charItem.url.indexOf('/uploads/'));
+                      }
+                      if (!serverUrl) {
+                        try {
+                          const locked = localStorage.getItem('avalive_user_locked_media');
+                          if (locked && !locked.startsWith('blob:')) serverUrl = locked;
+                        } catch(e) {}
+                      }
+
                       let charUrl = serverUrl || charItem.url || charItem.mediaUrl;
                       if ((!charUrl || charUrl.startsWith('blob:')) && charItem.fileData) {
                         try {
@@ -4523,13 +4566,40 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                         if (typeof cleanUrl === 'string' && cleanUrl.includes('/uploads/')) {
                           cleanUrl = cleanUrl.substring(cleanUrl.indexOf('/uploads/'));
                         }
-                        let broadcastUrl = serverUrl || cleanUrl;
+                        let broadcastUrl = serverUrl || (cleanUrl.includes('/uploads/') ? cleanUrl : '');
                         if (typeof broadcastUrl === 'string' && broadcastUrl.includes('/uploads/')) {
                           broadcastUrl = broadcastUrl.substring(broadcastUrl.indexOf('/uploads/'));
                         }
                         const isVid = charItem.type === 'video' || (charItem.fileData?.type?.startsWith('video/')) || (typeof cleanUrl === 'string' && (cleanUrl.startsWith('blob:') || cleanUrl.endsWith('.mp4') || cleanUrl.endsWith('.webm') || cleanUrl.endsWith('.mov') || cleanUrl.includes('/uploads/') || cleanUrl.includes('/api/stream')));
-                        setUserLockedMediaUrl(broadcastUrl || cleanUrl);
-                        try { localStorage.setItem('avalive_user_locked_media', broadcastUrl || cleanUrl); } catch (e) {}
+                        if (broadcastUrl) {
+                          setUserLockedMediaUrl(broadcastUrl);
+                          try { localStorage.setItem('avalive_user_locked_media', broadcastUrl); } catch (e) {}
+                        }
+
+                        // ⚡ NẾU CHƯA CÓ SERVER URL MÀ CÓ FILE DỮ LIỆU -> NẠP LÊN SERVER NGAY LẬP TỨC
+                        if (!broadcastUrl && charItem.fileData) {
+                          try {
+                            const formData = new FormData();
+                            formData.append('file', charItem.fileData);
+                            fetch('/api/upload-media', { method: 'POST', body: formData })
+                              .then(r => r.json())
+                              .then(d => {
+                                if (d && d.url) {
+                                  const u = d.url.includes('/uploads/') ? d.url.substring(d.url.indexOf('/uploads/')) : d.url;
+                                  charItem.mediaUrl = u;
+                                  setUserLockedMediaUrl(u);
+                                  try { localStorage.setItem('avalive_user_locked_media', u); } catch(e) {}
+                                  syncMasterLiveState({ stage: 'idol', mediaUrl: u, isVideo: true, isPlaying: true }, socketRef.current);
+                                  sendVideoControl({ action: 'play', mediaUrl: u, isPlaying: true }, socketRef.current);
+                                  try {
+                                    const bc2 = new BroadcastChannel('avalive_master_live_stream');
+                                    bc2.postMessage({ type: 'GLOBAL_MEDIA_CHANGE', mediaUrl: u, isVideo: true, isPlaying: true, force: true, timestamp: Date.now() });
+                                    setTimeout(() => bc2.close(), 100);
+                                  } catch(e) {}
+                                }
+                              }).catch(() => {});
+                          } catch(e) {}
+                        }
 
                         // ⚡ 1. CẬP NHẬT TRÌNH CHIẾU GIAO DIỆN PHẦN MỀM NGAY LẬP TỨC
                         if (desktopVideoRef.current) {
@@ -4551,7 +4621,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                           const bc = new BroadcastChannel('avalive_master_live_stream');
                           bc.postMessage({
                             type: 'GLOBAL_MEDIA_CHANGE',
-                            mediaUrl: broadcastUrl,
+                            mediaUrl: broadcastUrl || cleanUrl,
                             characterId: charItem.id,
                             characterName: charItem.name || 'AI Idol',
                             isVideo: isVid,
@@ -4585,7 +4655,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                           stage: 'idol',
                           selectedCharacter: charItem.id,
                           characterName: charItem.name || 'AI Idol',
-                          mediaUrl: cleanUrl,
+                          mediaUrl: broadcastUrl || undefined,
                           isVideo: isVid,
                           videoPlaybackEvent: 'play',
                           videoCurrentTime: 0,
