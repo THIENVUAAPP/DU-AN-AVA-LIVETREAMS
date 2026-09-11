@@ -714,19 +714,18 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
 
       vid.onerror = function() {
         console.warn('Video error occurred, attempting state recovery...');
-        setTimeout(fetchLatestState, 1000);
+        setTimeout(fetchLatestState, 300);
       };
 
+      fetchLatestState();
       if (currentSrc) {
         const urlParams = new URLSearchParams(window.location.search);
         const initTime = parseFloat(urlParams.get('t') || '0');
         loadAndPlay(currentSrc, isNaN(initTime) ? 0 : initTime);
-      } else {
-        fetchLatestState();
       }
 
-      // Tự động kiểm tra đồng bộ định kỳ mỗi 3s (dự phòng trường hợp socket rớt mạng)
-      setInterval(fetchLatestState, 3000);
+      // Tự động kiểm tra đồng bộ định kỳ mỗi 2s (dự phòng trường hợp socket rớt mạng)
+      setInterval(fetchLatestState, 2000);
 
       window.addEventListener('click', function() {
         if (!targetMuted) vid.muted = false;

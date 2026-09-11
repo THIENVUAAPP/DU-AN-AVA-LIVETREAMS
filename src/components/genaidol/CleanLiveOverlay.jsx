@@ -721,14 +721,24 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           try { vid.currentTime = targetTime; } catch (e) {}
         }
       } else if (action === 'time_sync') {
-        // 🎯 ĐỒNG BỘ THỜI GIAN THỰC (SIÊU MƯỢT 60 FPS, KHÓA TỐC ĐỘ 1.0X CHUẨN XÁC, ÂM THANH TRONG TRẺO)
-        if (control.force && typeof targetTime === 'number' && !isNaN(targetTime)) {
-          try { vid.currentTime = targetTime; } catch (e) {}
-        } else if (typeof targetTime === 'number' && !isNaN(targetTime) && !vid.paused) {
+        // 🎯 ĐỒNG BỘ THỜI GIAN THỰC (SIÊU MƯỢT 60 FPS, KHÔNG LỆCH FRAME, ÂM THANH TRONG TRẺO)
+        if (typeof targetTime === 'number' && !isNaN(targetTime)) {
           const cur = vid.currentTime || 0;
           const diff = Math.abs(cur - targetTime);
-          if (diff > 20.0) {
-            try { vid.currentTime = targetTime; } catch (e) {}
+          if (control.force || diff > 1.2) {
+            try { 
+              vid.currentTime = targetTime; 
+              vid.playbackRate = 1.0;
+            } catch (e) {}
+          } else if (diff > 0.15 && !vid.paused) {
+            // Hiệu chỉnh vi sai tốc độ siêu mịn (Catch-up / Slow-down nhẹ) để không gây khựng hình hay rè tiếng
+            if (cur < targetTime) {
+              vid.playbackRate = 1.05;
+            } else {
+              vid.playbackRate = 0.95;
+            }
+          } else {
+            if (vid.playbackRate !== 1.0) vid.playbackRate = 1.0;
           }
         }
         if (!isUserPausedRef.current && vid.paused && vid.readyState >= 2) {
@@ -1050,9 +1060,21 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 const cur = v.currentTime || 0;
                 const diff = Math.abs(cur - masterTime);
                 
-                // 🎯 1. Chỉ hard seek khi có cờ force chủ động (tua, restart) hoặc lệch quá xa (> 20 giây)
-                if (event.data.force || diff > 20.0) {
-                  try { v.currentTime = masterTime; } catch (e) {}
+                // 🎯 1. Đồng bộ khung hình và thời gian chính xác 100%
+                if (event.data.force || diff > 1.2) {
+                  try { 
+                    v.currentTime = masterTime; 
+                    v.playbackRate = 1.0;
+                  } catch (e) {}
+                } else if (diff > 0.15 && isMasterPlaying && !v.paused) {
+                  // Tinh chỉnh tốc độ mượt mà bắt kịp từng frame mà không giật
+                  if (cur < masterTime) {
+                    v.playbackRate = 1.05;
+                  } else {
+                    v.playbackRate = 0.95;
+                  }
+                } else {
+                  if (v.playbackRate !== 1.0) v.playbackRate = 1.0;
                 }
 
                 // 🎯 2. Đồng bộ trạng thái Phát / Tạm dừng
@@ -1066,6 +1088,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 } else if (event.data.userPaused === true || isMasterPlaying === false) {
                   v.dataset.userPaused = 'true';
                   isUserPausedRef.current = true;
+                  v.playbackRate = 1.0;
                   if (!v.paused) {
                     v.pause();
                   }
@@ -1940,7 +1963,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v2.9.11
+                v2.9.12
               </span>
             </div>
 
