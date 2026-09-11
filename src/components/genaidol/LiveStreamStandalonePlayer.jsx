@@ -24,9 +24,9 @@ export default function LiveStreamStandalonePlayer() {
   });
 
   const [fitMode, setFitMode] = useState(() => {
-    if (typeof window === 'undefined') return 'contain';
+    if (typeof window === 'undefined') return 'cover';
     const params = new URLSearchParams(window.location.search);
-    return params.get('fit') || 'contain';
+    return params.get('fit') || 'cover';
   });
 
   const isExplicitlyPausedRef = useRef(false);
@@ -49,17 +49,27 @@ export default function LiveStreamStandalonePlayer() {
     return window.location.origin + '/' + url;
   };
 
+  const isSameMedia = (srcA, srcB) => {
+    if (!srcA || !srcB) return false;
+    if (srcA === srcB) return true;
+    try {
+      const uA = new URL(srcA, window.location.href);
+      const uB = new URL(srcB, window.location.href);
+      return uA.pathname === uB.pathname;
+    } catch (e) {
+      const pA = String(srcA).split('?')[0].split('#')[0];
+      const pB = String(srcB).split('?')[0].split('#')[0];
+      return pA === pB || pA.endsWith(pB) || pB.endsWith(pA);
+    }
+  };
+
   // ⚡ Clock Drift Compensation (Khóa tốc độ 1.0x để giữ audio và video siêu mượt, không cà giật)
   const applyTimeSync = (targetTime, force = false) => {
     const vid = videoRef.current;
     if (!vid || typeof targetTime !== 'number' || isNaN(targetTime)) return;
     if (isExplicitlyPausedRef.current) return;
 
-    const cur = vid.currentTime;
-    const diff = targetTime - cur;
-    const absDiff = Math.abs(diff);
-
-    if (force || absDiff > 2.0) {
+    if (force) {
       try {
         vid.currentTime = targetTime;
       } catch (e) {}
@@ -93,7 +103,7 @@ export default function LiveStreamStandalonePlayer() {
     if (!vid) return;
 
     const fullSrc = resolveUrl(videoSrc);
-    if (fullSrc && (vid.src !== fullSrc && !vid.src.endsWith(videoSrc))) {
+    if (fullSrc && !isSameMedia(vid.src, fullSrc)) {
       vid.src = fullSrc;
       vid.load();
       tryPlayWithSound();
@@ -134,10 +144,7 @@ export default function LiveStreamStandalonePlayer() {
         if (typeof data.videoCurrentTime === 'number') {
           applyTimeSync(data.videoCurrentTime, Boolean(data.force));
         }
-        if (data.isPlaying === false || data.userPaused === true) {
-          isExplicitlyPausedRef.current = true;
-          videoRef.current?.pause();
-        } else {
+        if (data.isPlaying === true) {
           isExplicitlyPausedRef.current = false;
           tryPlayWithSound();
         }
@@ -149,11 +156,7 @@ export default function LiveStreamStandalonePlayer() {
           setVideoSrc(control.mediaUrl);
           return;
         }
-        if (control.action === 'pause') {
-          isExplicitlyPausedRef.current = true;
-          videoRef.current?.pause();
-          return;
-        } else if (control.action === 'play') {
+        if (control.action === 'play' || control.action === 'unmute') {
           isExplicitlyPausedRef.current = false;
           tryPlayWithSound();
         }

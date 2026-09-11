@@ -64,6 +64,20 @@ const getBackendUrl = () => {
   return `http://${hostname}:${usePort}`;
 };
 
+export const isSameMediaUrl = (srcA, srcB) => {
+  if (!srcA || !srcB) return false;
+  if (srcA === srcB) return true;
+  try {
+    const uA = new URL(srcA, window.location.href);
+    const uB = new URL(srcB, window.location.href);
+    return uA.pathname === uB.pathname;
+  } catch (e) {
+    const pA = String(srcA).split('?')[0].split('#')[0];
+    const pB = String(srcB).split('?')[0].split('#')[0];
+    return pA === pB || pA.endsWith(pB) || pB.endsWith(pA);
+  }
+};
+
 export default function CleanLiveOverlay({ customStyle = {} }) {
   const overlayVideoRef = useRef(null);
   const blobUrlMapRef = useRef(new Map());
@@ -783,59 +797,53 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     const applyMasterState = (data) => {
       if (!data) return;
 
-      // 🎬 ĐỒNG BỘ PLAY / PAUSE / TIME LẬP TỨC THEO PHẦN MỀM GỐC
+      // 🎬 ĐỒNG BỘ NẠP VIDEO & PHÁT LIỀN MẠCH 60 FPS
       const vid = overlayVideoRef.current || document.querySelector('video');
-      const isExplicitPause = (data.userPaused === true) || (data.force && data.videoPlaybackEvent === 'pause');
-      if (isExplicitPause) {
-        isUserPausedRef.current = true;
-        if (vid) {
-          vid.dataset.userPaused = 'true';
-          if (typeof data.videoCurrentTime === 'number' && !isNaN(data.videoCurrentTime) && (data.force || data.videoPlaybackEvent === 'pause')) {
-            try { vid.currentTime = data.videoCurrentTime; } catch (e) {}
-          }
-          if (!vid.paused) {
-            try { vid.pause(); } catch (e) {}
-          }
-        }
-        setIsPlayingState(false);
-      } else if (data.isPlaying === true || data.videoPlaybackEvent === 'play' || data.mediaUrl) {
-        if (!isUserPausedRef.current) {
-          if (vid) {
-            vid.dataset.userPaused = 'false';
-            vid.muted = isVideoAudioMuted;
-            if (!isVideoAudioMuted) vid.volume = videoVolume;
-            if (data.mediaUrl && typeof data.mediaUrl === 'string' && !data.mediaUrl.startsWith('blob:')) {
-              let cleanUrl = data.mediaUrl;
-              if (cleanUrl.includes('/uploads/')) cleanUrl = cleanUrl.substring(cleanUrl.indexOf('/uploads/'));
-              if (vid.src !== cleanUrl && !vid.src.endsWith(cleanUrl)) {
-                vid.src = cleanUrl;
-                vid.load();
-              }
-            }
-            // 🎯 CHỈ SEEK THỜI GIAN KHI CÓ CỜ FORCE CHỦ ĐỘNG HOẶC CHUYỂN BÀI (TRÁNH TRIỆT ĐỂ POLLING TUA VỀ 0 LẶP CÂU ĐẦU TIÊN)
-            if (data.force && typeof data.videoCurrentTime === 'number' && !isNaN(data.videoCurrentTime)) {
-              if (Math.abs(vid.currentTime - data.videoCurrentTime) > 0.5) {
-                try { vid.currentTime = data.videoCurrentTime; } catch (e) {}
-              }
-            }
-            if (vid.paused) {
-              vid.play().catch(() => {});
-            }
-          }
-          setIsPlayingState(true);
+
+      if (data.mediaUrl && typeof data.mediaUrl === 'string' && !data.mediaUrl.startsWith('blob:')) {
+        let cleanUrl = data.mediaUrl;
+        if (cleanUrl.includes('/uploads/')) cleanUrl = cleanUrl.substring(cleanUrl.indexOf('/uploads/'));
+        // CHỈ NẠP LẠI KHI THỰC SỰ LÀ FILE VIDEO KHÁC (TRÁNH BUFFER RESET GÂY ĐỨNG HÌNH & CHẬP CHỜN TIẾNG)
+        if (vid && !isSameMediaUrl(vid.src, cleanUrl)) {
+          vid.src = cleanUrl;
+          vid.load();
         }
       }
 
-      // Đồng bộ Âm thanh & Âm lượng từ Phần Mềm Chính (Đồng bộ trực tiếp sang Window Capture & Khán giả)
-      if (typeof data.isVideoAudioMuted === 'boolean') {
-        setIsVideoAudioMuted(data.isVideoAudioMuted);
-        if (vid) vid.muted = data.isVideoAudioMuted;
-        bandoAudio.setLocalSpeakerMute(data.isVideoAudioMuted);
-        bandoAudio.setMuted(data.isVideoAudioMuted);
+      // Khi người dùng bấm TẠM DỪNG độc lập trên dock Window Capture
+      if (isUserPausedRef.current) {
+        if (vid && !vid.paused) {
+          try { vid.pause(); } catch (e) {}
+        }
+        setIsPlayingState(false);
+      } else if (data.isPlaying === true || data.videoPlaybackEvent === 'play' || data.mediaUrl) {
+        if (vid) {
+          vid.dataset.userPaused = 'false';
+          vid.muted = isVideoAudioMuted;
+          if (!isVideoAudioMuted) vid.volume = videoVolume;
+          // Chỉ tua khi người dùng chủ động kéo tua
+          if (data.force && data.videoPlaybackEvent === 'seeked' && typeof data.videoCurrentTime === 'number') {
+            try { vid.currentTime = data.videoCurrentTime; } catch (e) {}
+          }
+          if (vid.paused) {
+            vid.play().catch(() => {});
+          }
+        }
+        setIsPlayingState(true);
       }
-      if (typeof data.videoVolume === 'number') {
+
+      // 🔊 ĐIỀU KHIỂN ÂM THANH ĐỘC LẬP: Mở đồng bộ - Tắt độc lập
+      // Khi phần mềm chính MỞ tiếng (isMuted === false): Window Capture tự động mở tiếng đồng bộ
+      if (data.isVideoAudioMuted === false || data.isMuted === false) {
+        setIsVideoAudioMuted(false);
+        if (vid) vid.muted = false;
+        bandoAudio.setLocalSpeakerMute(false);
+        bandoAudio.setMuted(false);
+      }
+      // Khi phần mềm chính TẮT tiếng loa máy: KHÔNG câm tiếng Window Capture (để khán giả livestream vẫn nghe bình thường)!
+      if (typeof data.videoVolume === 'number' && data.videoVolume > 0) {
         setVideoVolume(data.videoVolume);
-        if (vid && !data.isVideoAudioMuted) vid.volume = data.videoVolume;
+        if (vid && !isVideoAudioMuted) vid.volume = data.videoVolume;
         bandoAudio.setMasterVolume(data.videoVolume);
       }
 
@@ -1983,7 +1991,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.0.2
+                v1.0.3
               </span>
             </div>
 
@@ -2419,19 +2427,18 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   controls={false}
                   preload="auto"
                   disableRemotePlayback
-                  className="w-full h-full object-contain select-none pointer-events-none transform-gpu"
+                  className="w-full h-full select-none pointer-events-none transform-gpu"
                   style={{
                     width: '100%',
                     height: '100%',
-                    objectFit: objectFitState || 'contain',
+                    objectFit: objectFitState || 'cover',
                     backgroundColor: '#000000',
                     transform: 'translate3d(0, 0, 0)',
                     WebkitTransform: 'translate3d(0, 0, 0)',
                     backfaceVisibility: 'hidden',
                     WebkitBackfaceVisibility: 'hidden',
                     willChange: 'transform',
-                    imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto',
-                    filter: isUltraSharp ? 'contrast(1.04) saturate(1.06) brightness(1.01)' : 'none'
+                    imageRendering: 'auto'
                   }}
                   onCanPlay={(e) => {
                     // ⚡ INSTANT 0MS PLAYBACK: Phát ngay lập tức khi frame đầu tiên sẵn sàng

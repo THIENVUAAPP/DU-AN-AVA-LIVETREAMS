@@ -2,41 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.0.2';
+export const APP_VERSION = '1.0.3';
 export const RELEASE_DATE = '11/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🖥️ Cửa Sổ Bắt Màn Hình (Window Capture) & Nguồn Trình Duyệt: Phát Video Tức Thì 0ms Siêu Mượt 60 FPS',
-    description: 'Khắc phục triệt để lỗi không lên hình/màn hình đen khi mở Window Capture hoặc Browser Source OBS/TikTok Live Studio. Video tải lên, video thư viện hay đường link trực tuyến đều tự động đồng bộ hóa chuẩn xác, phát ngay tức thì 0ms, độ nét gốc 1080p 60 FPS, chạy liên tục 5-10 tiếng không giật lag đứng hình.'
+    title: '🔊 Âm Thanh Video Độc Lập & Không Chập Chờn (Mở Đồng Bộ – Tắt Độc Lập)',
+    description: 'Khi phần mềm mở âm thanh thì video có âm thanh đồng bộ. Khi streamer tắt tiếng trên máy tính cá nhân để tránh dội mic, luồng Live (Window Capture & TikTok Live Studio) vẫn phát âm thanh bình thường tới khán giả. Khắc phục triệt để lỗi âm thanh bị chập chờn, cà giật.'
   },
   {
-    title: '🌐 Nguồn Trình Duyệt (Browser Source) TikTok Live Studio 1080p 60 FPS Trực Tuyến',
-    description: 'Định tuyến chuẩn xác qua Cloudflare Tunnel HTTPS (/live-stream), nạp trực tiếp video gốc trên máy chủ, chạy liên tục 5-10 tiếng siêu nét, siêu mượt, không màn hình đen.'
+    title: '🎬 Video Siêu Nét 1080p 60 FPS – Khắc Phục Triệt Để Mờ & Giảm Độ Phân Giải',
+    description: 'Tối ưu độ phân giải chuẩn gốc 1080 × 1920 (9:16) và 1920 × 1080 (16:9) tràn viền sắc nét, loại bỏ hiện tượng co nhỏ khung hình, mờ nhòe hay vỡ hạt khi đưa vào TikTok Live Studio và OBS.'
   },
   {
-    title: '⚡ Tối Ưu Hóa Tuyệt Đối Video Tải Lên: Phát Siêu Mượt 60 FPS Không Gián Đoạn',
-    description: 'Tách biệt luồng phát nội bộ (In-Memory Blob URL) và luồng nạp nền (Chunked Fast-Stream), giúp video tải lên phát ngay tức thì 0ms, loại bỏ hoàn toàn tình trạng đứng hình, giật lag hay nghẽn đĩa.'
+    title: '⚡ Chạy Siêu Mượt 60 FPS – Khắc Phục Triệt Để Lỗi Giật, Lắc, Chậm, Đứng Hình',
+    description: 'Ứng dụng thuật toán phát liên tục không reload video ngầm (Seamless Zero-Reload Loop), giải phóng 100% tài nguyên GPU hardware decoding, giúp video phát mượt mà liên tục 5–10 tiếng không đứng hình.'
   },
   {
-    title: '📦 Trọn Bộ Gói Cài Standalone ZIP v1.0.0 Tích Hợp Sẵn Binary Cloudflare',
-    description: 'Tích hợp sẵn binary Cloudflare Tunnel cho cả Windows và macOS; khởi động 1-Click là dùng ngay không cần cài đặt môi trường.'
-  },
-  {
-    title: '📜 Sửa Triệt Để Lỗi Tab Kịch Bản Studio & Áp Dụng 1-Chạm Mượt Mà',
-    description: 'Khắc phục hoàn toàn lỗi mở kịch bản 2–4 nhân vật; nạp và áp dụng kịch bản đối thoại tức thì vào hệ thống phát Live không giật lag.'
-  },
-  {
-    title: '🖼️ Tải Lên & Quản Lý Nhiều Hình Ảnh Cùng Lúc / Kéo Thả Sắp Xếp Tự Do',
-    description: 'Cho phép tải lên cùng lúc hoặc nhiều lần không giới hạn hình ảnh, logo, banner; tùy chỉnh co giãn 8 góc cạnh, bo góc, độ mờ và tách nền phông xanh.'
-  },
-  {
-    title: '👄 Nâng Cấp Công Nghệ Nhép Miệng (Lip-Sync) AI Tự Động Khớp Voice Siêu Mượt',
-    description: 'Bộ thuật toán phân tích phổ âm thanh FFT & Formant F1/F2 thời gian thực (<20ms), mô phỏng khẩu hình, nhịp thở và chuyển động cơ thể chân thực chuẩn phong cách HeyGen/Remina không phụ thuộc API ngoài.'
-  },
-  {
-    title: '📺 Kết Nối Phát Trực Tiếp TikTok Live Studio & OBS Studio Siêu Nét 1080p',
-    description: 'Đồng bộ 100% hình ảnh, video, âm thanh và chuyển động ra Browser Source hoặc Window Capture, hiển thị trọn vẹn mọi lớp đồ họa trên sóng livestream.'
+    title: '🛡️ Sửa Lỗi Tải File ZIP Trên Windows: Chỉ Tải Đúng 1 File Duy Nhất',
+    description: 'Khắc phục triệt để lỗi bấm tải một lần nhưng tải 2 file cùng lúc trên hệ điều hành Windows; tích hợp khóa Debounce Lock bảo vệ tải xuống 1-Click ổn định 100%.'
   }
 ];
 

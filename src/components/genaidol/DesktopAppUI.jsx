@@ -1648,20 +1648,25 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       localStorage.setItem('avalive_local_speaker_muted', String(nextState));
     } catch (e) {}
 
-    // ⚡ Đồng bộ trực tiếp trạng thái Tắt/Mở tiếng sang Window Capture & TikTok Live Overlay
-    syncMasterLiveState({
-      isVideoAudioMuted: nextState,
-      isMuted: nextState,
-      videoVolume: nextState ? 0 : (liveVolume || 1.0)
-    }, socketRef.current);
+    // ⚡ ÂM THANH ĐỘC LẬP: Mở thì mở đồng bộ, Tắt thì tắt độc lập
+    // Khi Streamer MỞ tiếng: Tự động mở tiếng đồng bộ cho cả Window Capture & TikTok Live
+    if (!nextState) {
+      syncMasterLiveState({
+        isVideoAudioMuted: false,
+        isMuted: false,
+        videoVolume: liveVolume || 1.0
+      }, socketRef.current);
 
-    sendVideoControl({
-      action: nextState ? 'mute' : 'unmute',
-      isMuted: nextState,
-      isVideoAudioMuted: nextState,
-      volume: nextState ? 0 : (liveVolume || 1.0),
-      timestamp: Date.now()
-    }, socketRef.current);
+      sendVideoControl({
+        action: 'unmute',
+        isMuted: false,
+        isVideoAudioMuted: false,
+        volume: liveVolume || 1.0,
+        timestamp: Date.now()
+      }, socketRef.current);
+    }
+    // Khi Streamer TẮT tiếng trên máy (để tránh dội âm thanh vào Micro):
+    // Luồng phát sóng Live (Window Capture / Browser Source) VẪN PHÁT ÂM THANH BÌNH THƯỜNG cho khán giả!
 
     // Phát sự kiện BroadcastChannel lập tức cho Window Capture
     postMasterBroadcast({

@@ -574,7 +574,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
   }
   const soundParam = req.query.sound !== '0';
   const ratioParam = req.query.ratio || '9:16';
-  const fitParam = req.query.fit || 'contain';
+  const fitParam = req.query.fit || 'cover';
 
   const html = `<!DOCTYPE html>
 <html lang="vi">
@@ -603,11 +603,32 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       object-fit: ${fitParam};
       background: #000;
       display: block;
-      transform: translateZ(0);
+      transform: translate3d(0, 0, 0);
+      -webkit-transform: translate3d(0, 0, 0);
       backface-visibility: hidden;
       will-change: transform;
       outline: none; border: none;
+      image-rendering: auto;
     }
+    #controlsDock {
+      position: absolute; top: 8px; right: 8px; z-index: 50;
+      display: flex; align-items: center; gap: 6px;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      padding: 4px 8px; border-radius: 20px;
+      border: 1px solid rgba(6, 182, 212, 0.4);
+      opacity: 0.3; transition: opacity 0.25s ease;
+    }
+    #controlsDock:hover { opacity: 1; }
+    .dock-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff; font-size: 11px; font-weight: bold;
+      padding: 3px 8px; border-radius: 12px;
+      cursor: pointer; display: flex; align-items: center; gap: 4px;
+      transition: all 0.2s;
+    }
+    .dock-btn:hover { background: rgba(6, 182, 212, 0.4); border-color: #06b6d4; }
     #badge {
       position: absolute; bottom: 8px; right: 8px;
       background: rgba(0,0,0,0.6); color: #06b6d4;
@@ -631,20 +652,55 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       preload="auto" 
       ${soundParam ? '' : 'muted'}
     ></video>
-    <div id="badge">🔴 60 FPS REALTIME</div>
+    <div id="controlsDock">
+      <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập">⏸️ Dừng</button>
+      <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
+      <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
+    </div>
+    <div id="badge">🔴 1080P 60 FPS REALTIME</div>
   </div>
   <script>
     (function() {
       const vid = document.getElementById('videoPlayer');
       const badge = document.getElementById('badge');
+      const btnPlayPause = document.getElementById('btnPlayPause');
+      const btnMuteUnmute = document.getElementById('btnMuteUnmute');
+      const btnFitToggle = document.getElementById('btnFitToggle');
+
       let currentSrc = ${JSON.stringify(vParam)};
-      let isExplicitlyPaused = false;
+      let isStreamUserPaused = false;
       let targetMuted = ${soundParam ? 'false' : 'true'};
       let targetVolume = 1.0;
+      let currentFit = ${JSON.stringify(fitParam)};
 
       setTimeout(function() { if (badge) badge.style.opacity = '0.2'; }, 6000);
 
-      // 🌐 CHUYỂN ĐỔI URL THÔNG MINH CHO CẢ LOCAL LẪN CLOUDFLARE ONLINE HTTPS
+      function updateDockUI() {
+        if (btnPlayPause) {
+          btnPlayPause.innerHTML = vid.paused ? '▶️ Phát' : '⏸️ Dừng';
+        }
+        if (btnMuteUnmute) {
+          btnMuteUnmute.innerHTML = vid.muted ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng';
+        }
+        if (btnFitToggle) {
+          btnFitToggle.innerHTML = currentFit === 'cover' ? '📐 Tràn' : '📐 Vừa';
+        }
+      }
+
+      // 🌐 SO SÁNH URL AN TOÀN ĐỂ TRÁNH GỌI vid.load() LÀM GIẬT / ĐỨNG HÌNH & CHẬP CHỜN TIẾNG
+      function isSameMedia(srcA, srcB) {
+        if (!srcA || !srcB) return false;
+        try {
+          const uA = new URL(srcA, window.location.href);
+          const uB = new URL(srcB, window.location.href);
+          return uA.pathname === uB.pathname;
+        } catch (e) {
+          const pA = srcA.split('?')[0].split('#')[0];
+          const pB = srcB.split('?')[0].split('#')[0];
+          return pA === pB || pA.endsWith(pB) || pB.endsWith(pA);
+        }
+      }
+
       function resolveUrl(url) {
         if (!url) return '';
         if (url.startsWith('blob:')) return '';
@@ -661,46 +717,87 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         return window.location.origin + '/' + url;
       }
 
-      // 🎬 NẠP VÀ PHÁT VIDEO CHUẨN XÁC 60 FPS KHÔNG GIẬT LAG
-      function loadAndPlay(url, seekTime) {
+      // 🎬 NẠP VÀ PHÁT VIDEO 60 FPS LIỀN MẠCH TUYỆT ĐỐI
+      function loadAndPlay(url, forceSeekTime) {
         if (!url) return;
         const fullUrl = resolveUrl(url);
         if (!fullUrl) return;
 
-        const isNewSrc = (vid.src !== fullUrl && !vid.src.endsWith(url));
-        if (isNewSrc) {
+        // CHỈ NẠP LẠI KHI THỰC SỰ ĐỔI SANG VIDEO KHÁC (TRÁNH BUFFER RESET GÂY CÀ GIẬT)
+        if (!isSameMedia(vid.src, fullUrl)) {
           currentSrc = url;
           vid.src = fullUrl;
           vid.load();
         }
 
-        if (typeof seekTime === 'number' && seekTime > 0 && Math.abs(vid.currentTime - seekTime) > 2.0) {
-          try { vid.currentTime = seekTime; } catch(e) {}
+        if (typeof forceSeekTime === 'number' && forceSeekTime > 0) {
+          try { vid.currentTime = forceSeekTime; } catch(e) {}
         }
 
         vid.muted = targetMuted;
         vid.volume = targetVolume;
 
-        if (!isExplicitlyPaused) {
+        if (!isStreamUserPaused) {
           const p = vid.play();
           if (p !== undefined) {
-            p.catch(function() {
+            p.then(updateDockUI).catch(function() {
               vid.muted = true;
-              vid.play().catch(function() {});
+              vid.play().then(updateDockUI).catch(function() {});
             });
           }
         }
+        updateDockUI();
       }
 
-      function applyAudioState(isMuted, vol) {
-        if (typeof isMuted === 'boolean') {
-          targetMuted = isMuted;
-          vid.muted = isMuted;
+      // 🔊 ĐIỀU KHIỂN ÂM THANH ĐỘC LẬP: MỞ ĐỒNG BỘ - TẮT ĐỘC LẬP
+      function handleRemoteAudio(isMuted, vol) {
+        // Nếu phần mềm chính MỞ tiếng (isMuted === false): Stream tự động mở tiếng đồng bộ
+        if (isMuted === false) {
+          targetMuted = false;
+          vid.muted = false;
         }
-        if (typeof vol === 'number' && !isNaN(vol)) {
+        // Nếu phần mềm chính TẮT tiếng: KHÔNG tự động câm tiếng luồng live (để khán giả vẫn nghe bình thường)
+        if (typeof vol === 'number' && !isNaN(vol) && vol > 0) {
           targetVolume = Math.max(0, Math.min(1, vol));
           vid.volume = targetVolume;
         }
+        updateDockUI();
+      }
+
+      // Nút điều khiển cục bộ trên màn hình Live Stream
+      if (btnPlayPause) {
+        btnPlayPause.addEventListener('click', function(e) {
+          e.stopPropagation();
+          if (vid.paused) {
+            isStreamUserPaused = false;
+            vid.play().then(updateDockUI).catch(function() {});
+          } else {
+            isStreamUserPaused = true;
+            vid.pause();
+            updateDockUI();
+          }
+        });
+      }
+
+      if (btnMuteUnmute) {
+        btnMuteUnmute.addEventListener('click', function(e) {
+          e.stopPropagation();
+          targetMuted = !vid.muted;
+          vid.muted = targetMuted;
+          if (!targetMuted) {
+            vid.volume = targetVolume || 1.0;
+          }
+          updateDockUI();
+        });
+      }
+
+      if (btnFitToggle) {
+        btnFitToggle.addEventListener('click', function(e) {
+          e.stopPropagation();
+          currentFit = currentFit === 'cover' ? 'contain' : 'cover';
+          vid.style.objectFit = currentFit;
+          updateDockUI();
+        });
       }
 
       function fetchLatestState() {
@@ -708,18 +805,16 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
           .then(function(res) { return res.json(); })
           .then(function(data) {
             if (!data) return;
-            if (data.mediaUrl && data.mediaUrl !== currentSrc) {
-              loadAndPlay(data.mediaUrl, data.videoCurrentTime || 0);
+            // Chỉ nạp khi thực sự đổi video file mới
+            if (data.mediaUrl && !isSameMedia(vid.src, data.mediaUrl)) {
+              loadAndPlay(data.mediaUrl);
             }
             if (typeof data.isVideoAudioMuted === 'boolean') {
-              applyAudioState(data.isVideoAudioMuted, data.videoVolume);
+              handleRemoteAudio(data.isVideoAudioMuted, data.videoVolume);
             }
-            if (data.isPlaying === false || data.userPaused === true) {
-              isExplicitlyPaused = true;
-              vid.pause();
-            } else if (data.isPlaying === true && vid.paused) {
-              isExplicitlyPaused = false;
-              vid.play().catch(function() {});
+            // Stream chỉ phát khi có lệnh nạp video mới hoặc đang chạy
+            if (!isStreamUserPaused && vid.paused && data.isPlaying === true) {
+              vid.play().then(updateDockUI).catch(function() {});
             }
           })
           .catch(function() {});
@@ -727,29 +822,36 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
 
       vid.onerror = function() {
         console.warn('Video error occurred, attempting state recovery...');
-        setTimeout(fetchLatestState, 300);
+        setTimeout(fetchLatestState, 500);
       };
 
       fetchLatestState();
       if (currentSrc) {
-        const urlParams = new URLSearchParams(window.location.search);
-        const initTime = parseFloat(urlParams.get('t') || '0');
-        loadAndPlay(currentSrc, isNaN(initTime) ? 0 : initTime);
+        loadAndPlay(currentSrc);
       }
 
-      // Tự động kiểm tra đồng bộ định kỳ mỗi 2s (dự phòng trường hợp socket rớt mạng)
-      setInterval(fetchLatestState, 2000);
+      // Polling dự phòng mỗi 4s kiểm tra nếu rớt kết nối Socket
+      setInterval(fetchLatestState, 4000);
 
       window.addEventListener('click', function() {
         if (!targetMuted) vid.muted = false;
         vid.volume = targetVolume;
-        if (vid.paused && !isExplicitlyPaused) vid.play().catch(function() {});
+        if (vid.paused && !isStreamUserPaused) vid.play().then(updateDockUI).catch(function() {});
+      });
+
+      window.addEventListener('keydown', function(e) {
+        if (e.code === 'Space') {
+          e.preventDefault();
+          if (btnPlayPause) btnPlayPause.click();
+        } else if (e.key === 'm' || e.key === 'M') {
+          if (btnMuteUnmute) btnMuteUnmute.click();
+        }
       });
 
       vid.addEventListener('ended', function() {
         try {
           vid.currentTime = 0;
-          if (!isExplicitlyPaused) vid.play().catch(function() {});
+          if (!isStreamUserPaused) vid.play().catch(function() {});
         } catch (e) {}
       });
 
@@ -763,7 +865,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         });
 
         socket.on('connect', function() {
-          if (badge) badge.innerText = '🟢 60 FPS REALTIME';
+          if (badge) badge.innerText = '🟢 1080P 60 FPS REALTIME';
           socket.emit('REQUEST_MASTER_LIVE_STATE');
         });
 
@@ -773,59 +875,37 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
 
         socket.on('MASTER_LIVE_STATE_UPDATE', function(data) {
           if (!data) return;
-          if (data.mediaUrl && data.mediaUrl !== currentSrc) {
-            loadAndPlay(data.mediaUrl, data.videoCurrentTime || 0);
+          if (data.mediaUrl && !isSameMedia(vid.src, data.mediaUrl)) {
+            loadAndPlay(data.mediaUrl);
           }
-          // Điều khiển Âm thanh (Bật/Tắt tiếng & Âm lượng)
+          // Điều khiển Âm thanh độc lập: Bật thì bật cùng nhau
           if (typeof data.isVideoAudioMuted === 'boolean') {
-            applyAudioState(data.isVideoAudioMuted, data.videoVolume);
+            handleRemoteAudio(data.isVideoAudioMuted, data.videoVolume);
           } else if (typeof data.isMuted === 'boolean') {
-            applyAudioState(data.isMuted, data.volume || data.videoVolume);
-          } else if (typeof data.videoVolume === 'number') {
-            applyAudioState(targetMuted, data.videoVolume);
+            handleRemoteAudio(data.isMuted, data.volume || data.videoVolume);
           }
 
-          // Điều khiển Play / Pause
-          if (data.isPlaying === false || data.userPaused === true) {
-            isExplicitlyPaused = true;
-            vid.pause();
-          } else if (data.isPlaying === true) {
-            isExplicitlyPaused = false;
-            if (vid.paused) vid.play().catch(function() {});
+          // Khi có video mới chuyển, tự động phát
+          if (!isStreamUserPaused && vid.paused && data.isPlaying === true) {
+            vid.play().then(updateDockUI).catch(function() {});
           }
 
-          // Tua khi có yêu cầu rõ ràng
-          if (data.force && typeof data.videoCurrentTime === 'number') {
+          // Chỉ tua khi người dùng chủ động kéo thanh thời gian
+          if (data.force && data.videoPlaybackEvent === 'seeked' && typeof data.videoCurrentTime === 'number') {
             try { vid.currentTime = data.videoCurrentTime; } catch(e) {}
           }
         });
 
         socket.on('VIDEO_PLAYBACK_CONTROL', function(control) {
           if (!control) return;
-          if (control.mediaUrl && control.mediaUrl !== currentSrc) {
-            loadAndPlay(control.mediaUrl, control.currentTime || 0);
+          if (control.mediaUrl && !isSameMedia(vid.src, control.mediaUrl)) {
+            loadAndPlay(control.mediaUrl);
           }
-          // Điều khiển Dừng / Tiếp Tục
-          if (control.action === 'pause' || control.isPlaying === false) {
-            isExplicitlyPaused = true;
-            vid.pause();
-          } else if (control.action === 'play' || control.isPlaying === true) {
-            isExplicitlyPaused = false;
-            if (vid.paused) vid.play().catch(function() {});
+          if (control.action === 'unmute' || control.isMuted === false) {
+            handleRemoteAudio(false, control.volume);
           }
-
-          // Điều khiển Âm thanh
-          if (typeof control.isMuted === 'boolean') {
-            applyAudioState(control.isMuted, control.volume);
-          } else if (typeof control.volume === 'number') {
-            applyAudioState(targetMuted, control.volume);
-          }
-
-          // Tua khi có seek
-          if (control.action === 'seek' || control.force === true) {
-            if (typeof control.currentTime === 'number') {
-              try { vid.currentTime = control.currentTime; } catch(e) {}
-            }
+          if (control.action === 'seek' && typeof control.currentTime === 'number') {
+            try { vid.currentTime = control.currentTime; } catch(e) {}
           }
         });
 
@@ -833,18 +913,10 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
           const bc = new BroadcastChannel('avalive_master_live_stream');
           bc.onmessage = function(ev) {
             if (!ev.data) return;
-            if (ev.data.type === 'GLOBAL_MEDIA_CHANGE' && ev.data.mediaUrl) {
-              loadAndPlay(ev.data.mediaUrl, ev.data.currentTime || 0);
-            } else if (ev.data.type === 'GLOBAL_PLAYBACK_CHANGE') {
-              if (ev.data.isPlaying) {
-                isExplicitlyPaused = false;
-                vid.play().catch(function() {});
-              } else {
-                isExplicitlyPaused = true;
-                vid.pause();
-              }
-            } else if (ev.data.type === 'GLOBAL_AUDIO_CHANGE') {
-              applyAudioState(ev.data.isMuted, ev.data.volume);
+            if (ev.data.type === 'GLOBAL_MEDIA_CHANGE' && ev.data.mediaUrl && !isSameMedia(vid.src, ev.data.mediaUrl)) {
+              loadAndPlay(ev.data.mediaUrl);
+            } else if (ev.data.type === 'GLOBAL_AUDIO_CHANGE' && ev.data.isMuted === false) {
+              handleRemoteAudio(false, ev.data.volume);
             }
           };
         }

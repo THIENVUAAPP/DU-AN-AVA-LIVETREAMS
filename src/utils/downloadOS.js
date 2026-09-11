@@ -47,25 +47,16 @@ export const triggerDirectDownload = (url, fileName) => {
       }, 5000);
     } catch (e) {}
 
-    // 1. Kỹ thuật 1: Sử dụng iframe ẩn chuyên dụng tải file nhị phân
-    // Trình duyệt sẽ nhận diện Content-Disposition: attachment và lưu file vào máy
-    // Trang web cha hiện tại được giữ nguyên 100%, tuyệt đối không reload hay nhảy trang
-    let iframe = document.getElementById('avalive-direct-downloader-frame');
-    if (!iframe) {
-      iframe = document.createElement('iframe');
-      iframe.id = 'avalive-direct-downloader-frame';
-      iframe.style.display = 'none';
-      iframe.style.position = 'fixed';
-      iframe.style.width = '0px';
-      iframe.style.height = '0px';
-      iframe.style.border = 'none';
-      iframe.style.opacity = '0';
-      document.body.appendChild(iframe);
+    // 🛡️ CHỐNG TẢI TRÙNG LẶP: Khóa chống click đúp hoặc kích hoạt 2 file cùng lúc (Debounce Lock 2.5s)
+    const now = Date.now();
+    if (window._avalive_last_download_time && (now - window._avalive_last_download_time < 2500)) {
+      console.log('⚡ Yêu cầu tải đã được xử lý gần đây, bỏ qua lệnh trùng lặp!');
+      return;
     }
-    iframe.src = url;
+    window._avalive_last_download_time = now;
 
-    // 2. Kỹ thuật 2: Thẻ <a> hỗ trợ với thuộc tính download & target _blank
-    // Đảm bảo không bao giờ chiếm quyền trang hiện tại
+    // ✅ Kỹ thuật chuẩn xác: Sử dụng thẻ <a> duy nhất với thuộc tính download
+    // Đảm bảo trình duyệt chỉ nhận diện DUY NHẤT 1 luồng tải về, tuyệt đối không bị tải 2 file cùng lúc!
     const a = document.createElement('a');
     a.href = url;
     a.setAttribute('download', finalFileName);
