@@ -49,7 +49,7 @@ export default function LiveStreamStandalonePlayer() {
     return window.location.origin + '/' + url;
   };
 
-  // ⚡ Clock Drift Compensation
+  // ⚡ Clock Drift Compensation (Khóa tốc độ 1.0x để giữ audio và video siêu mượt, không cà giật)
   const applyTimeSync = (targetTime, force = false) => {
     const vid = videoRef.current;
     if (!vid || typeof targetTime !== 'number' || isNaN(targetTime)) return;
@@ -59,15 +59,13 @@ export default function LiveStreamStandalonePlayer() {
     const diff = targetTime - cur;
     const absDiff = Math.abs(diff);
 
-    if (force || absDiff > 3.5) {
+    if (force || absDiff > 2.0) {
       try {
         vid.currentTime = targetTime;
-        vid.playbackRate = 1.0;
       } catch (e) {}
-    } else if (absDiff > 0.4) {
-      vid.playbackRate = diff > 0 ? 1.03 : 0.97;
-    } else {
-      if (vid.playbackRate !== 1.0) vid.playbackRate = 1.0;
+    }
+    if (vid.playbackRate !== 1.0) {
+      vid.playbackRate = 1.0;
     }
   };
 

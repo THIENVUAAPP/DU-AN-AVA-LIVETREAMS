@@ -560,7 +560,18 @@ app.post('/api/upload-media', upload.single('file'), (req, res) => {
 // Tối ưu hóa GPU Hardware Acceleration 100%, đồng bộ thời gian thực 0ms, không lag giật đứng hình
 // ============================================================
 app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
-  const vParam = req.query.v || currentMasterLiveState.mediaUrl || '';
+  let vParam = req.query.v || currentMasterLiveState.mediaUrl || '';
+  if (!vParam || vParam.startsWith('blob:') || vParam.includes('default_idol.mp4')) {
+    try {
+      const files = fs.readdirSync(uploadsDir)
+        .filter(f => f.endsWith('.mp4') || f.endsWith('.webm') || f.endsWith('.mov'))
+        .map(f => ({ name: f, time: fs.statSync(path.join(uploadsDir, f)).mtimeMs }))
+        .sort((a, b) => b.time - a.time);
+      if (files.length > 0) {
+        vParam = `/uploads/${files[0].name}`;
+      }
+    } catch (e) {}
+  }
   const soundParam = req.query.sound !== '0';
   const ratioParam = req.query.ratio || '9:16';
   const fitParam = req.query.fit || 'contain';
@@ -611,6 +622,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
   <div id="stage">
     <video 
       id="videoPlayer" 
+      src="${vParam ? (vParam.startsWith('/') ? vParam : '/' + vParam) : ''}"
       autoplay 
       playsinline 
       webkit-playsinline 

@@ -6,6 +6,7 @@ let bgmAudioElement = null;
 let isBgmPlaying = false;
 let bgmLoopTimer = null;
 let isDucked = false;
+let duckTimer = null;
 let currentBgmVolume = 0.5;
 let currentSfxVolume = 0.85;
 let currentVoiceVolume = 1.0;
@@ -600,10 +601,23 @@ export const battleAudio = {
     }
   },
 
-  duckBgm(shouldDuck = true) {
-    isDucked = shouldDuck;
+  duckBgm(shouldDuck = true, durationMs = 2500) {
+    if (duckTimer) {
+      clearTimeout(duckTimer);
+      duckTimer = null;
+    }
+    isDucked = !!shouldDuck;
     if (bgmAudioElement) {
-      bgmAudioElement.volume = isDucked ? currentBgmVolume * 0.3 : currentBgmVolume;
+      bgmAudioElement.volume = isDucked ? currentBgmVolume * 0.25 : currentBgmVolume;
+    }
+    if (isDucked && durationMs > 0) {
+      duckTimer = setTimeout(() => {
+        isDucked = false;
+        if (bgmAudioElement) {
+          bgmAudioElement.volume = currentBgmVolume;
+        }
+        duckTimer = null;
+      }, durationMs);
     }
   },
 
