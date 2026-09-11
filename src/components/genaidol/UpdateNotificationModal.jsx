@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '2.9.10';
-export const RELEASE_DATE = '10/09/2026';
+export const APP_VERSION = '2.9.11';
+export const RELEASE_DATE = '11/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🔇 Khắc Phục Triệt Để Lỗi Âm Thanh Nhấp Nháy (Mute/Unmute Loop)',
-    description: 'Xử lý dứt điểm hiện tượng âm thanh chớp nháy nhấp nháy khi bấm Tắt tiếng. Quy tắc chuẩn: Tắt là im ru 100%, Mở là phát rõ ràng; đồng bộ tuyệt đối giữa phần mềm, Window Capture và luồng TikTok Live Studio.'
+    title: '⚡ Tối Ưu Hóa Tuyệt Đối Video Tải Lên: Phát Siêu Mượt 60 FPS Không Gián Đoạn',
+    description: 'Tách biệt luồng phát nội bộ (In-Memory Blob URL) và luồng nạp nền (Chunked Fast-Stream), giúp video tải lên phát ngay tức thì 0ms, loại bỏ hoàn toàn tình trạng đứng hình, giật lag hay nghẽn đĩa.'
   },
   {
-    title: '⚡ Tối Ưu Hóa Video Tải Lên Từ Máy Tính Chạy Siêu Mượt 60 FPS',
-    description: 'Khắc phục hoàn toàn lỗi đứng hình, chậm giật khi tải video máy tính vào ô nhân vật. Bộ đệm Fast-Stream và GPU Hardware Acceleration giúp video phát siêu mượt mà, siêu nét 1080p.'
+    title: '🖥️ Cửa Sổ Bắt Màn Hình (Window Capture) Mở Tức Thì & Khóa Chặt Khung Hình 1:1',
+    description: 'Nạp video ngay trong vài giây đầu khi mở Window Capture, đồng bộ 100% tỷ lệ khung hình, cử chỉ hành động và âm thanh. Khi tạm dừng thì dừng đúng khung hình, khi tiếp tục phát thì phát tiếp liền mạch từ đúng vị trí đó.'
   },
   {
-    title: '🌐 Kết Nối Đám Mây Cloudflare Tunnel & Window Capture OBS Tức Thì 0ms',
-    description: 'Tự động cấp link Cloudflare Online HTTPS (/live-stream) 60 FPS không bị quay chờ; mở Window Capture là hiển thị ngay lập tức không bị giật lag, khóa chặt 1:1 khung hình và âm thanh.'
+    title: '🌐 Nâng Cấp Nguồn Trình Duyệt (Browser Source) TikTok Live Studio 1080p Siêu Nét',
+    description: 'Tích hợp cơ chế tự động khôi phục luồng stream và fallback đồng bộ 2 chiều qua Cloudflare HTTPS (/live-stream), sao chép link dán vào TikTok Live Studio là phát ngay không lỗi.'
   },
   {
-    title: '📦 Trọn Bộ Gói Cài Standalone ZIP v2.9.10 Cho Windows & macOS',
-    description: 'Đồng bộ hóa phiên bản tải về độc lập (.zip); tích hợp sẵn Node Portable & Cloudflare Tunnel không cần cài đặt môi trường, mở 1-Click là dùng ngay.'
+    title: '📦 Trọn Bộ Gói Cài Standalone ZIP v2.9.11 Tích Hợp Sẵn Binary Cloudflare',
+    description: 'Tích hợp sẵn binary Cloudflare Tunnel cho cả Windows và macOS; khởi động 1-Click là dùng ngay không cần cài đặt môi trường.'
   },
   {
     title: '📜 Sửa Triệt Để Lỗi Tab Kịch Bản Studio & Áp Dụng 1-Chạm Mượt Mà',

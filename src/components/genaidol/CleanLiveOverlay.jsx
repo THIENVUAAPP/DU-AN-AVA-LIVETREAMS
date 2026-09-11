@@ -1940,7 +1940,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v2.9.10
+                v2.9.11
               </span>
             </div>
 

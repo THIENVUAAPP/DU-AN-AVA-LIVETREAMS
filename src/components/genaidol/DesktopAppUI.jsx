@@ -2793,9 +2793,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             const updatedChar = {
               id: newCharId,
               name: charName,
-              url: fileUrl,
-              mediaUrl: fileUrl,
-              type: 'video'
+              url: localUrl, // Giữ nguyên Blob URL cho Desktop preview siêu mượt không lag
+              mediaUrl: fileUrl, // Server URL cho TikTok Live Studio & OBS
+              type: 'video',
+              fileData: file
             };
 
             // 🔒 KHOÁ CỐ ĐỊNH VIDEO CỦA NGƯỜI DÙNG: Cập nhật đường dẫn server vĩnh viễn

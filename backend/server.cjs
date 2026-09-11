@@ -656,6 +656,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         const isNewSrc = (vid.src !== fullUrl && !vid.src.endsWith(url));
         if (isNewSrc) {
           currentSrc = url;
+          vid.crossOrigin = 'anonymous';
           vid.src = fullUrl;
           vid.load();
         }
@@ -672,9 +673,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
           if (p !== undefined) {
             p.catch(function() {
               vid.muted = true;
-              vid.play().then(function() {
-                setTimeout(function() { vid.muted = targetMuted; }, 300);
-              }).catch(function() {});
+              vid.play().catch(function() {});
             });
           }
         }
@@ -691,11 +690,43 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         }
       }
 
+      function fetchLatestState() {
+        fetch(window.location.origin + '/api/master-live-state')
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            if (!data) return;
+            if (data.mediaUrl && data.mediaUrl !== currentSrc) {
+              loadAndPlay(data.mediaUrl, data.videoCurrentTime || 0);
+            }
+            if (typeof data.isVideoAudioMuted === 'boolean') {
+              applyAudioState(data.isVideoAudioMuted, data.videoVolume);
+            }
+            if (data.isPlaying === false || data.userPaused === true) {
+              isExplicitlyPaused = true;
+              vid.pause();
+            } else if (data.isPlaying === true && vid.paused) {
+              isExplicitlyPaused = false;
+              vid.play().catch(function() {});
+            }
+          })
+          .catch(function() {});
+      }
+
+      vid.onerror = function() {
+        console.warn('Video error occurred, attempting state recovery...');
+        setTimeout(fetchLatestState, 1000);
+      };
+
       if (currentSrc) {
         const urlParams = new URLSearchParams(window.location.search);
         const initTime = parseFloat(urlParams.get('t') || '0');
         loadAndPlay(currentSrc, isNaN(initTime) ? 0 : initTime);
+      } else {
+        fetchLatestState();
       }
+
+      // Tự động kiểm tra đồng bộ định kỳ mỗi 3s (dự phòng trường hợp socket rớt mạng)
+      setInterval(fetchLatestState, 3000);
 
       window.addEventListener('click', function() {
         if (!targetMuted) vid.muted = false;

@@ -300,6 +300,7 @@ fs.mkdirSync(path.join(macSystemDir, 'uploads'), { recursive: true });
 
 // Copy cloudflared binary cho Mac Tunnel (Hỗ trợ TikTok Live Studio trên Mac)
 const macCloudflaredCandidates = [
+  path.join(rootDir, 'scripts', 'bin', 'cloudflared'),
   path.join(rootDir, 'node_modules', 'cloudflared', 'bin', 'cloudflared'),
   path.join(rootDir, 'system', 'cloudflared'),
   path.join(rootDir, 'cloudflared')
