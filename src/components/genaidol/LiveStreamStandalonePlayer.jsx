@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 
 /**
@@ -6,9 +6,16 @@ import { io } from 'socket.io-client';
  * - Tối ưu 100% GPU Hardware Acceleration, không giật lag, không đứng hình
  * - Luôn mở sẵn âm thanh cho luồng live (âm thanh khán giả nghe thấy 100%)
  * - Tự động đồng bộ thời gian thực 0ms với phần mềm AvaLive
+ * - Hỗ trợ đầy đủ Dừng (Pause), Phát (Play), Tắt tiếng (Mute), Mở tiếng (Unmute) dứt khoát 100%
  */
 export default function LiveStreamStandalonePlayer() {
   const videoRef = useRef(null);
+  const [tunnelUrl, setTunnelUrl] = useState(() => {
+    if (typeof window === 'undefined') return '';
+    const params = new URLSearchParams(window.location.search);
+    return params.get('tunnel') || localStorage.getItem('avalive_tunnel_url') || '';
+  });
+
   const [videoSrc, setVideoSrc] = useState(() => {
     if (typeof window === 'undefined') return '';
     const params = new URLSearchParams(window.location.search);
@@ -29,25 +36,50 @@ export default function LiveStreamStandalonePlayer() {
     return params.get('fit') || 'cover';
   });
 
+  const [isVideoLoading, setIsVideoLoading] = useState(true);
+  const [isPlaybackActive, setIsPlaybackActive] = useState(false);
+
   const isExplicitlyPausedRef = useRef(false);
   const lastReportedTimeRef = useRef(0);
 
-  // 🌐 Chuyển đổi URL thông minh cho cả local và Cloudflare HTTPS
-  const resolveUrl = (url) => {
+  // 🌐 Chuyển đổi URL thông minh cho cả local, Cloudflare Tunnel HTTPS và Vercel
+  const resolveUrl = useCallback((url) => {
     if (!url || typeof url !== 'string') return '';
     if (url.startsWith('blob:')) return '';
+
+    // Nếu là URL hoàn chỉnh http/https
     if (url.startsWith('http://') || url.startsWith('https://')) {
       if (url.includes('localhost:') || url.includes('127.0.0.1:')) {
         try {
           const u = new URL(url);
+          // Nếu đang chạy trên Vercel và có tunnel URL, proxy qua tunnel URL
+          if (window.location.hostname.includes('vercel.app') && tunnelUrl) {
+            return `${tunnelUrl.replace(/\/$/, '')}${u.pathname}${u.search}`;
+          }
           return window.location.origin + u.pathname + u.search;
         } catch (e) {}
       }
       return url;
     }
-    if (url.startsWith('/')) return window.location.origin + url;
-    return window.location.origin + '/' + url;
-  };
+
+    // Nếu là đường dẫn file upload tương đối (/uploads/...)
+    if (url.startsWith('/uploads/') || url.includes('/uploads/')) {
+      const pathPart = url.substring(url.indexOf('/uploads/'));
+      if (window.location.hostname.includes('vercel.app') && tunnelUrl) {
+        return `${tunnelUrl.replace(/\/$/, '')}${pathPart}`;
+      }
+      return `${window.location.origin}${pathPart}`;
+    }
+
+    if (url.startsWith('/')) {
+      if (window.location.hostname.includes('vercel.app') && tunnelUrl) {
+        return `${tunnelUrl.replace(/\/$/, '')}${url}`;
+      }
+      return `${window.location.origin}${url}`;
+    }
+
+    return `${window.location.origin}/${url}`;
+  }, [tunnelUrl]);
 
   const isSameMedia = (srcA, srcB) => {
     if (!srcA || !srcB) return false;
@@ -87,15 +119,29 @@ export default function LiveStreamStandalonePlayer() {
     vid.volume = 1.0;
     const p = vid.play();
     if (p !== undefined) {
-      p.catch(() => {
+      p.then(() => {
+        setIsPlaybackActive(true);
+        setIsVideoLoading(false);
+      }).catch(() => {
         vid.muted = true;
         vid.play().then(() => {
+          setIsPlaybackActive(true);
+          setIsVideoLoading(false);
           setTimeout(() => {
-            if (vid) vid.muted = false;
+            if (vid && !isExplicitlyPausedRef.current) vid.muted = false;
           }, 300);
         }).catch(() => {});
       });
     }
+  };
+
+  const applyExplicitPause = () => {
+    isExplicitlyPausedRef.current = true;
+    const vid = videoRef.current;
+    if (vid && !vid.paused) {
+      try { vid.pause(); } catch (e) {}
+    }
+    setIsPlaybackActive(false);
   };
 
   useEffect(() => {
@@ -104,22 +150,46 @@ export default function LiveStreamStandalonePlayer() {
 
     const fullSrc = resolveUrl(videoSrc);
     if (fullSrc && !isSameMedia(vid.src, fullSrc)) {
+      setIsVideoLoading(true);
       vid.src = fullSrc;
       vid.load();
-      tryPlayWithSound();
+      if (!isExplicitlyPausedRef.current) {
+        tryPlayWithSound();
+      }
     }
-  }, [videoSrc]);
+  }, [videoSrc, resolveUrl]);
 
+  // Cập nhật live state và tunnel URL định kỳ
   useEffect(() => {
-    fetch(window.location.origin + '/api/live-state')
-      .then(r => r.json())
-      .then(d => {
-        if (d && d.mediaUrl && !d.mediaUrl.startsWith('blob:')) {
-          setVideoSrc(prev => prev || d.mediaUrl);
-        }
-      })
-      .catch(() => {});
-  }, []);
+    const fetchLiveState = () => {
+      fetch(`${window.location.origin}/api/live-state`)
+        .then(r => r.json())
+        .then(d => {
+          if (!d) return;
+          if (d.tunnelUrl && d.tunnelUrl !== tunnelUrl) {
+            setTunnelUrl(d.tunnelUrl);
+            try { localStorage.setItem('avalive_tunnel_url', d.tunnelUrl); } catch (e) {}
+          }
+          if (d.mediaUrl && !d.mediaUrl.startsWith('blob:')) {
+            setVideoSrc(prev => prev || d.mediaUrl);
+          }
+          if (d.isPlaying === false || d.videoPlaybackEvent === 'pause') {
+            applyExplicitPause();
+          } else if (d.isPlaying === true && isExplicitlyPausedRef.current) {
+            isExplicitlyPausedRef.current = false;
+            tryPlayWithSound();
+          }
+          if (typeof d.isVideoAudioMuted === 'boolean' && videoRef.current) {
+            videoRef.current.muted = d.isVideoAudioMuted;
+          }
+        })
+        .catch(() => {});
+    };
+
+    fetchLiveState();
+    const interval = setInterval(fetchLiveState, 4000);
+    return () => clearInterval(interval);
+  }, [tunnelUrl]);
 
   // Kết nối Socket.io & BroadcastChannel để đồng bộ Realtime 0ms
   useEffect(() => {
@@ -136,9 +206,19 @@ export default function LiveStreamStandalonePlayer() {
         socket.emit('REQUEST_MASTER_LIVE_STATE');
       });
 
+      socket.on('TUNNEL_URL_UPDATE', (tData) => {
+        if (tData && tData.tunnelUrl) {
+          setTunnelUrl(tData.tunnelUrl);
+          try { localStorage.setItem('avalive_tunnel_url', tData.tunnelUrl); } catch (e) {}
+        }
+      });
+
       socket.on('MASTER_LIVE_STATE_UPDATE', (data) => {
         if (!data) return;
-        if (data.mediaUrl && data.mediaUrl !== videoSrc && !data.mediaUrl.startsWith('blob:')) {
+        if (data.tunnelUrl && data.tunnelUrl !== tunnelUrl) {
+          setTunnelUrl(data.tunnelUrl);
+        }
+        if (data.mediaUrl && !data.mediaUrl.startsWith('blob:') && !isSameMedia(videoSrc, data.mediaUrl)) {
           setVideoSrc(data.mediaUrl);
         }
         if (typeof data.videoCurrentTime === 'number') {
@@ -147,19 +227,45 @@ export default function LiveStreamStandalonePlayer() {
         if (data.isPlaying === true) {
           isExplicitlyPausedRef.current = false;
           tryPlayWithSound();
+        } else if (data.isPlaying === false || data.videoPlaybackEvent === 'pause') {
+          applyExplicitPause();
+        }
+        if (typeof data.isVideoAudioMuted === 'boolean') {
+          if (videoRef.current) videoRef.current.muted = data.isVideoAudioMuted;
+        } else if (typeof data.isMuted === 'boolean') {
+          if (videoRef.current) videoRef.current.muted = data.isMuted;
+        }
+        if (typeof data.videoVolume === 'number' && videoRef.current) {
+          try { videoRef.current.volume = data.videoVolume; } catch (e) {}
         }
       });
 
       socket.on('VIDEO_PLAYBACK_CONTROL', (control) => {
         if (!control) return;
-        if (control.mediaUrl && control.mediaUrl !== videoSrc && !control.mediaUrl.startsWith('blob:')) {
+        if (control.mediaUrl && !control.mediaUrl.startsWith('blob:') && !isSameMedia(videoSrc, control.mediaUrl)) {
           setVideoSrc(control.mediaUrl);
           return;
         }
-        if (control.action === 'play' || control.action === 'unmute') {
+        // 🎯 DỪNG DỨT KHOÁT KHI STREAMER BẤM TẠM DỪNG
+        if (control.action === 'pause' || control.isPlaying === false) {
+          applyExplicitPause();
+        } else if (control.action === 'play' || control.isPlaying === true) {
           isExplicitlyPausedRef.current = false;
           tryPlayWithSound();
+        } else if (control.action === 'mute') {
+          if (videoRef.current) videoRef.current.muted = true;
+        } else if (control.action === 'unmute') {
+          if (videoRef.current) {
+            videoRef.current.muted = false;
+            videoRef.current.volume = 1.0;
+          }
+        } else if (control.action === 'audio_sync') {
+          if (videoRef.current) {
+            if (typeof control.isMuted === 'boolean') videoRef.current.muted = control.isMuted;
+            if (typeof control.volume === 'number') videoRef.current.volume = control.volume;
+          }
         }
+
         if (typeof control.currentTime === 'number') {
           applyTimeSync(control.currentTime, control.action === 'seek' || control.force === true);
         }
@@ -174,15 +280,25 @@ export default function LiveStreamStandalonePlayer() {
           if (!ev.data) return;
           if (ev.data.type === 'MASTER_TIME_SYNC' && typeof ev.data.currentTime === 'number') {
             applyTimeSync(ev.data.currentTime, Boolean(ev.data.force));
+            if (ev.data.isPlaying === true && isExplicitlyPausedRef.current) {
+              isExplicitlyPausedRef.current = false;
+              tryPlayWithSound();
+            } else if (ev.data.isPlaying === false || ev.data.userPaused === true) {
+              applyExplicitPause();
+            }
           } else if (ev.data.type === 'MASTER_MEDIA_CHANGE' && ev.data.mediaUrl && !ev.data.mediaUrl.startsWith('blob:')) {
             setVideoSrc(ev.data.mediaUrl);
-          } else if (ev.data.type === 'GLOBAL_PLAY_STATE_CHANGE') {
-            if (ev.data.isPlaying === false) {
-              isExplicitlyPausedRef.current = true;
-              videoRef.current?.pause();
+          } else if (ev.data.type === 'GLOBAL_PLAYBACK_CHANGE' || ev.data.type === 'GLOBAL_PLAY_STATE_CHANGE') {
+            if (ev.data.isPlaying === false || ev.data.userPaused === true) {
+              applyExplicitPause();
             } else {
               isExplicitlyPausedRef.current = false;
               tryPlayWithSound();
+            }
+          } else if (ev.data.type === 'GLOBAL_AUDIO_CHANGE') {
+            if (videoRef.current) {
+              if (typeof ev.data.isMuted === 'boolean') videoRef.current.muted = ev.data.isMuted;
+              if (typeof ev.data.volume === 'number') videoRef.current.volume = ev.data.volume;
             }
           }
         };
@@ -190,7 +306,9 @@ export default function LiveStreamStandalonePlayer() {
     }
 
     const handleWindowClick = () => {
-      tryPlayWithSound();
+      if (!isExplicitlyPausedRef.current) {
+        tryPlayWithSound();
+      }
     };
     window.addEventListener('click', handleWindowClick);
 
@@ -212,7 +330,7 @@ export default function LiveStreamStandalonePlayer() {
       window.removeEventListener('click', handleWindowClick);
       clearInterval(watchdog);
     };
-  }, [videoSrc]);
+  }, [videoSrc, tunnelUrl]);
 
   return (
     <div
@@ -224,7 +342,8 @@ export default function LiveStreamStandalonePlayer() {
         display: 'flex',
         alignItems: 'center',
         justifyContent: 'center',
-        userSelect: 'none'
+        userSelect: 'none',
+        position: 'relative'
       }}
     >
       <video
@@ -234,16 +353,33 @@ export default function LiveStreamStandalonePlayer() {
         loop
         preload="auto"
         onLoadedMetadata={(e) => {
+          setIsVideoLoading(false);
           if (!isExplicitlyPausedRef.current && e.currentTarget.paused) {
-            e.currentTarget.play().catch(() => {});
+            e.currentTarget.play().then(() => setIsPlaybackActive(true)).catch(() => {});
+          }
+        }}
+        onPlaying={() => {
+          setIsPlaybackActive(true);
+          setIsVideoLoading(false);
+        }}
+        onWaiting={() => {
+          setIsVideoLoading(true);
+        }}
+        onCanPlay={() => {
+          setIsVideoLoading(false);
+          if (!isExplicitlyPausedRef.current && videoRef.current?.paused) {
+            videoRef.current.play().catch(() => {});
           }
         }}
         onError={() => {
-          fetch(window.location.origin + '/api/live-state')
+          fetch(`${window.location.origin}/api/live-state`)
             .then(r => r.json())
             .then(d => {
               if (d && d.mediaUrl && !d.mediaUrl.startsWith('blob:')) {
                 setVideoSrc(d.mediaUrl);
+              }
+              if (d && d.tunnelUrl) {
+                setTunnelUrl(d.tunnelUrl);
               }
             }).catch(() => {});
         }}
@@ -259,13 +395,46 @@ export default function LiveStreamStandalonePlayer() {
           objectFit: fitMode,
           backgroundColor: '#000',
           display: 'block',
-          transform: 'translateZ(0)',
-          backfaceVisibility: 'hidden',
-          willChange: 'transform',
           outline: 'none',
-          border: 'none'
+          border: 'none',
+          imageRendering: '-webkit-optimize-contrast'
         }}
       />
+
+      {/* Hiển thị chỉ báo đang tải mượt mà (chống đen màn hình chết nếu mạng lag) */}
+      {isVideoLoading && !isPlaybackActive && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: 'rgba(0,0,0,0.85)',
+            color: '#38bdf8',
+            fontFamily: 'sans-serif',
+            gap: '12px',
+            zIndex: 5
+          }}
+        >
+          <div
+            style={{
+              width: '40px',
+              height: '40px',
+              border: '3px solid rgba(6, 182, 212, 0.2)',
+              borderTopColor: '#06b6d4',
+              borderRadius: '50%',
+              animation: 'spin 1s linear infinite'
+            }}
+          />
+          <span style={{ fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
+            Đang Đồng Bộ Luồng 60 FPS...
+          </span>
+          <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+        </div>
+      )}
+
       <div
         style={{
           position: 'absolute',
@@ -279,11 +448,11 @@ export default function LiveStreamStandalonePlayer() {
           padding: '2px 6px',
           borderRadius: '4px',
           pointerEvents: 'none',
-          opacity: 0.25,
+          opacity: 0.35,
           zIndex: 10
         }}
       >
-        🔴 60 FPS REALTIME
+        🔴 60 FPS REALTIME v1.0.7
       </div>
     </div>
   );

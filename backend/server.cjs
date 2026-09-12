@@ -2580,6 +2580,7 @@ const scheme = usingHttps ? 'https' : 'http';
 // ============================================================
 let currentTunnelUrl = (currentMasterLiveState && typeof currentMasterLiveState.tunnelUrl === 'string' && currentMasterLiveState.tunnelUrl.startsWith('https://')) ? currentMasterLiveState.tunnelUrl : null;
 let tunnelStatus = currentTunnelUrl ? 'active' : 'connecting'; // 'connecting' | 'active' | 'error'
+let cloudflaredConsecutiveFails = 0;
 
 // API: Cho phép frontend lấy tunnel URL để dán vào TikTok Studio (hỗ trợ cả /api/tunnel-url và /api/tunnel-status)
 app.get(['/api/tunnel-url', '/api/tunnel-status'], (req, res) => {
@@ -2780,12 +2781,13 @@ async function startCloudflaredTunnel(port) {
           const str = data.toString();
           if (str.includes('429 Too Many Requests') || str.includes('1015') || str.includes('rate limited')) {
             isRateLimited = true;
-            console.warn('⚠️  [Tunnel] Cloudflare Quick Tunnel đang bị giới hạn tần suất (429). Hệ thống kích hoạt chế độ Vercel Cloud bảo vệ...');
+            console.warn('⚠️  [Tunnel] Cloudflare Quick Tunnel đang bị giới hạn tần suất (429/1015). Sẽ tạm dừng 60s trước khi thử lại...');
           }
           const match = str.match(/https:\/\/[a-z0-9\-]+\.trycloudflare\.com/);
           if (match && !currentTunnelUrl) {
             currentTunnelUrl = match[0];
             tunnelStatus = 'active';
+            cloudflaredConsecutiveFails = 0;
             currentMasterLiveState.tunnelUrl = currentTunnelUrl;
             printTunnelReady(currentTunnelUrl);
             io.emit('TUNNEL_URL_UPDATE', {
@@ -2809,8 +2811,9 @@ async function startCloudflaredTunnel(port) {
       if (proc.stderr) proc.stderr.on('data', parseUrl);
 
       proc.on('exit', (code) => {
-        const delay = isRateLimited ? 45000 : 8000;
-        console.log(`\n⚠️  [Tunnel] Cloudflared thoát (code ${code}). Sẽ thử lại sau ${delay / 1000}s...`);
+        cloudflaredConsecutiveFails++;
+        const delay = isRateLimited || cloudflaredConsecutiveFails >= 2 ? 60000 : 15000;
+        console.log(`\n⚠️  [Tunnel] Cloudflared thoát (code ${code}, lần ${cloudflaredConsecutiveFails}). Sẽ thử lại sau ${delay / 1000}s...`);
         currentTunnelUrl = null;
         tunnelStatus = 'connecting';
         activeCloudflaredProc = null;

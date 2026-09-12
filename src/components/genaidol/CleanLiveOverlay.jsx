@@ -1073,7 +1073,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   selectedCharacter: event.data.selectedCharacter,
                   mediaUrl: event.data.mediaUrl || prev.mediaUrl
                 }));
-              } else if (event.data.mediaUrl && masterState.mediaUrl !== event.data.mediaUrl) {
+              } else if (event.data.mediaUrl && !isSameMediaUrl(masterState.mediaUrl, event.data.mediaUrl)) {
                 setMasterState(prev => ({
                   ...prev,
                   mediaUrl: event.data.mediaUrl
@@ -1565,6 +1565,23 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     };
   }, []);
 
+  // Helper lấy hoặc cache Blob URL từ IndexedDB (tránh tạo objectURL mới liên tục ở mỗi render)
+  const getCachedBlobUrl = useCallback((id, fileBlob) => {
+    if (!fileBlob) return null;
+    const key = id || fileBlob.name || 'default_blob';
+    if (!blobUrlMapRef.current) blobUrlMapRef.current = new Map();
+    if (blobUrlMapRef.current.has(key)) {
+      return blobUrlMapRef.current.get(key);
+    }
+    try {
+      const url = URL.createObjectURL(fileBlob);
+      blobUrlMapRef.current.set(key, url);
+      return url;
+    } catch (e) {
+      return null;
+    }
+  }, []);
+
   // Helper giải mã URL media chính xác (tôn trọng 100% video/nhân vật người dùng chọn)
   const resolveActiveMedia = () => {
     let candidateUrl = masterState.mediaUrl || null;
@@ -1596,7 +1613,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       const match = localDbItems.find(i => i.id === masterState.selectedCharacter);
       if (match) {
         if (match.fileBlob) {
-          try { candidateUrl = URL.createObjectURL(match.fileBlob); } catch (e) {}
+          candidateUrl = getCachedBlobUrl(match.id, match.fileBlob);
         }
         if (!candidateUrl && match.mediaUrl && !match.mediaUrl.startsWith('blob:')) {
           candidateUrl = match.mediaUrl;
@@ -1648,9 +1665,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       const firstValidItem = localDbItems.find(i => i.mediaUrl || i.url || i.fileBlob);
       if (firstValidItem) {
         if (firstValidItem.fileBlob) {
-          try {
-            candidateUrl = URL.createObjectURL(firstValidItem.fileBlob);
-          } catch (e) {}
+          candidateUrl = getCachedBlobUrl(firstValidItem.id, firstValidItem.fileBlob);
         } else {
           candidateUrl = firstValidItem.mediaUrl || firstValidItem.url;
         }
@@ -1665,10 +1680,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       } else {
         const match = localDbItems.find(i => i.id === masterState.selectedCharacter);
         if (match && match.fileBlob) {
-          try {
-            candidateUrl = URL.createObjectURL(match.fileBlob);
-            if (blobUrlMapRef.current) blobUrlMapRef.current.set(charId, candidateUrl);
-          } catch (e) {}
+          candidateUrl = getCachedBlobUrl(charId, match.fileBlob);
         } else if (match && (match.mediaUrl || match.url) && !match.mediaUrl?.startsWith('blob:')) {
           candidateUrl = match.mediaUrl || match.url;
         }
@@ -1754,20 +1766,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   // 🚀 FASTSTART ZERO-LATENCY STREAMING:
   // Video được phát trực tiếp qua chuẩn HTTP 206 Partial Content kết hợp FastStart MP4 (moov atom ở byte 28)
   // Không fetch ngầm trùng lặp để bảo vệ 100% băng thông đường truyền phát sóng 60 FPS liên tục 24/24!
-  useEffect(() => {
-    const rawUrl = activeMedia.url;
-    if (!rawUrl || !activeMedia.isVideo) {
-      setBlobVideoUrl(null);
-      return;
-    }
-
-    // Nếu video là Blob cục bộ (từ IndexedDB hoặc File Selector máy) thì sử dụng
-    if (rawUrl.startsWith('blob:')) {
-      setBlobVideoUrl(rawUrl);
-    } else {
-      setBlobVideoUrl(null);
-    }
-  }, [activeMedia.url, activeMedia.isVideo]);
 
   // 🕒 24/7 CONTINUOUS PLAYBACK & SMART FREEZE/STUCK DETECTOR (GIẢI CỨU ĐỨNG HÌNH CHO VIDEO DÀI & NẶNG)
   useEffect(() => {
@@ -1943,7 +1941,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         
         // CHỈ GỌI vid.load() KHI URL THỰC SỰ THAY ĐỔI
         // TUYỆT ĐỐI KHÔNG GỌI vid.load() KHI CHUYỂN TAB ĐỂ TRÁNH RESET 0:00 HOẶC MẤT VIDEO
-        const isNewUrl = lastLoadedMediaUrlRef.current !== activeMedia.url;
+        const isNewUrl = !isSameMediaUrl(lastLoadedMediaUrlRef.current, activeMedia.url);
         if (isNewUrl) {
           lastLoadedMediaUrlRef.current = activeMedia.url;
           isUserPausedRef.current = false;
@@ -1993,7 +1991,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.0.6
+                v1.0.7
               </span>
             </div>
 
@@ -2166,7 +2164,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   <div className={gridClass}>
                     {activeList.map((avatar, idx) => {
                       const isSpeakingNow = isSpeakerActive && (activeSpeakerId === avatar.id || (!activeSpeakerId && avatar.id === 'idol'));
-                      const fallbackUrl = blobVideoUrl || activeMedia?.url || '';
+                      const fallbackUrl = activeMedia?.url || '';
                       
                       const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || '';
                       const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || '';
@@ -2328,7 +2326,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                       borderRadius: 16
                     };
                     const isSpeakingNow = isSpeakerActive && (activeSpeakerId === avatar.id || (!activeSpeakerId && avatar.id === 'idol'));
-                    const fallbackUrl = blobVideoUrl || activeMedia?.url || '';
+                    const fallbackUrl = activeMedia?.url || '';
                     
                     const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || '';
                     const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || '';
@@ -2421,7 +2419,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 <video
                   ref={overlayVideoRef}
                   key="avalive_overlay_main_video"
-                  src={blobVideoUrl || activeMedia.url}
+                  src={activeMedia.url}
                   autoPlay={true}
                   loop={true}
                   muted={isVideoAudioMuted}
@@ -2583,7 +2581,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     fetch('/api/live-state')
                       .then(r => r.json())
                       .then(d => {
-                        if (d && d.mediaUrl && !d.mediaUrl.startsWith('blob:') && v && v.src !== d.mediaUrl) {
+                        if (d && d.mediaUrl && !d.mediaUrl.startsWith('blob:') && v && !isSameMediaUrl(v.src, d.mediaUrl)) {
                           v.src = d.mediaUrl;
                           v.load();
                           v.play().catch(() => {});

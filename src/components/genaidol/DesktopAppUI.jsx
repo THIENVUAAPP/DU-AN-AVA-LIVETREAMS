@@ -3550,6 +3550,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                     isMuted: liveAudioMuted,
                     isVideoAudioMuted: liveAudioMuted,
                     volume: liveAudioMuted ? 0 : liveVolume,
+                    mediaUrl: playUrl && typeof playUrl === 'string' && !playUrl.startsWith('blob:') ? playUrl : undefined,
                     source: 'desktop',
                     timestamp: now
                   });

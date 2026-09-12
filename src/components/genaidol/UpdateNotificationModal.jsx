@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.0.6';
+export const APP_VERSION = '1.0.7';
 export const RELEASE_DATE = '12/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🛍️ Sửa Dứt Điểm Lỗi Tab "Giọng Bán Hàng & Dịch Vụ" (Mở Mượt Mà 100%)',
-    description: 'Khắc phục hoàn toàn sự cố crash khi bấm vào tab Giọng Bán Hàng; giao diện mở tức thì, hiển thị đầy đủ 30 chất giọng bán hàng chuyên sâu, bộ lọc đa chiều Vùng Miền (Nam/Bắc/Trung/Tây), Độ Tuổi và thanh trượt tốc độ realtime.'
+    title: '🎬 Khắc Phục Triệt Để Chớp Nháy / Chớp Giật Window Capture OBS (Siêu Mượt 60 FPS)',
+    description: 'Tối ưu hóa sâu cơ chế bộ đệm Blob Memory Caching, chấm dứt hoàn toàn hiện tượng tạo lại URL vô tận gây hủy và nạp lại luồng giải mã video. Video phát xuyên suốt 24/24 từ đầu đến cuối mượt mà, không chớp giật, không chập chờn hình ảnh và âm thanh.'
   },
   {
-    title: '🎙️ Độc Bản Hóa Toàn Bộ Kho Giọng Đọc (100% Khác Biệt, Không Trùng Lặp Âm Sắc)',
-    description: 'Giải quyết triệt để vấn đề các giọng phát ra giống nhau; tái hiệu chuẩn dải tần Pitch (-35% đến +32%) và Rate (-20% đến +26%) kết hợp công nghệ Web Audio Detune Cents, đảm bảo mỗi nhân vật sở hữu một màu giọng hoàn toàn riêng biệt.'
+    title: '⏯️ Đồng Bộ Dứt Khoát 100% Play / Pause & Mute / Unmute Trên Mọi Cửa Sổ',
+    description: 'Bấm Dừng (Pause) là dừng ngay lập tức cả hình lẫn tiếng trên Phần mềm, Window Capture và luồng live; Bấm Phát (Play) là chạy tiếp mượt mà ngay tức khắc đúng vị trí; Tắt/Mở tiếng dứt khoát không có độ trễ.'
   },
   {
-    title: '👵 Phân Tầng Rõ Nét 3 Độ Tuổi: Trẻ Trung, Trưởng Thành & Lão Niên Chân Thật',
-    description: 'Phân loại rõ nét theo từng tầng độ tuổi: Giọng Trẻ (20-28t) cao vút trong trẻo; Giọng Trưởng Thành (28-40t) đĩnh đạc bản lĩnh; Giọng Lão Niên (40-70t) trầm ấm dầy dặn kết hợp hiệu ứng rung giọng tự nhiên (Tremolo LFO 4.8Hz) chuẩn bậc cao niên.'
+    title: '🌐 Sửa Dứt Điểm Lỗi Màn Hình Đen Trên Link Browser Source (TikTok Live Studio & OBS)',
+    description: 'Phân giải đường dẫn video thông minh qua Cloudflare Tunnel HTTPS và phòng thủ 404 Vercel, đảm bảo link phát video siêu nét, siêu thực 60 FPS, đồng bộ 0ms chuẩn xác với phần mềm.'
   },
   {
-    title: '🗺️ Phân Rõ 4 Vùng Miền: Chuẩn Phương Ngữ Nam, Bắc, Trung, Tây',
-    description: 'Nam Bộ rộn ràng phóng khoáng ("nha cả nhà mình ơi"), Miền Tây sông nước ngọt lịm ("nghen bà con cô bác"), Miền Trung sâu lắng tha thiết ("nì cả nhà ơi"), Miền Bắc sang trọng chuẩn mực ("nhé các bác và anh chị").'
+    title: '🛍️ Giữ Trọn Vẹn 100% Bộ Giọng Bán Hàng Đa Vùng Miền & Đa Độ Tuổi',
+    description: 'Bảo toàn toàn bộ 30 chất giọng bán hàng AI độc bản, phân tầng rõ nét 3 độ tuổi (Trẻ, Trưởng Thành, Lão Niên) và 4 vùng miền (Nam, Bắc, Trung, Tây).'
   }
 ];
 
