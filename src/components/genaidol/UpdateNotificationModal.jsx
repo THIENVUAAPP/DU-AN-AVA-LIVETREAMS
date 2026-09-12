@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.0.3';
-export const RELEASE_DATE = '11/09/2026';
+export const APP_VERSION = '1.0.4';
+export const RELEASE_DATE = '12/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🔊 Âm Thanh Video Độc Lập & Không Chập Chờn (Mở Đồng Bộ – Tắt Độc Lập)',
-    description: 'Khi phần mềm mở âm thanh thì video có âm thanh đồng bộ. Khi streamer tắt tiếng trên máy tính cá nhân để tránh dội mic, luồng Live (Window Capture & TikTok Live Studio) vẫn phát âm thanh bình thường tới khán giả. Khắc phục triệt để lỗi âm thanh bị chập chờn, cà giật.'
+    title: '🎬 Video Siêu Nét Chuẩn Gốc 1080p 60 FPS (Window Capture & Đường Link)',
+    description: 'Nâng cấp bộ render phần cứng GPU với bộ lọc tối ưu tương phản sắc nét, loại bỏ triệt để hiện tượng mờ nhòe hay vỡ hạt khi phóng to trên OBS Window Capture và TikTok Live Studio Browser Source.'
   },
   {
-    title: '🎬 Video Siêu Nét 1080p 60 FPS – Khắc Phục Triệt Để Mờ & Giảm Độ Phân Giải',
-    description: 'Tối ưu độ phân giải chuẩn gốc 1080 × 1920 (9:16) và 1920 × 1080 (16:9) tràn viền sắc nét, loại bỏ hiện tượng co nhỏ khung hình, mờ nhòe hay vỡ hạt khi đưa vào TikTok Live Studio và OBS.'
+    title: '⚡ Chạy Siêu Mượt – Khắc Phục Triệt Để Giật, Lắc, Đứng Hình Khi Loop 4–10 Tiếng',
+    description: 'Triệt tiêu hoàn toàn hiện tượng dội lệch frame time-sync, khóa chuẩn 1.0x playback rate và kích hoạt cơ chế giải cứu đệm buffer tự động, đảm bảo luồng phát lặp 4–10 tiếng liên tục mượt mà 60 FPS.'
   },
   {
-    title: '⚡ Chạy Siêu Mượt 60 FPS – Khắc Phục Triệt Để Lỗi Giật, Lắc, Chậm, Đứng Hình',
-    description: 'Ứng dụng thuật toán phát liên tục không reload video ngầm (Seamless Zero-Reload Loop), giải phóng 100% tài nguyên GPU hardware decoding, giúp video phát mượt mà liên tục 5–10 tiếng không đứng hình.'
+    title: '🔊 Âm Thanh Video Chuẩn Độc Lập Cho Streamer (Mở Đồng Bộ – Tắt Độc Lập)',
+    description: 'Streamer tắt tiếng loa máy tính cá nhân để tránh dội mic khi nói chuyện, luồng phát Live (Window Capture & TikTok Live Studio) vẫn truyền âm thanh video nguyên bản, trong trẻo đến khán giả.'
   },
   {
-    title: '🛡️ Sửa Lỗi Tải File ZIP Trên Windows: Chỉ Tải Đúng 1 File Duy Nhất',
-    description: 'Khắc phục triệt để lỗi bấm tải một lần nhưng tải 2 file cùng lúc trên hệ điều hành Windows; tích hợp khóa Debounce Lock bảo vệ tải xuống 1-Click ổn định 100%.'
+    title: '🛡️ Bảo Vệ Luồng Phát Tuyệt Đối – Không Đen Màn Hình',
+    description: 'Đảm bảo 100% video luôn hiển thị chuẩn khung hình, đúng thời gian thực, tương thích hoàn hảo cả 2 phương thức phát sóng mà không bị gián đoạn hay đen màn hình.'
   }
 ];
 

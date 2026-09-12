@@ -380,6 +380,10 @@ export default function DesktopAppUI() {
       return false;
     }
   });
+  const isLocalSpeakerMutedRef = useRef(isLocalSpeakerMuted);
+  useEffect(() => {
+    isLocalSpeakerMutedRef.current = isLocalSpeakerMuted;
+  }, [isLocalSpeakerMuted]);
   const [liveAudioMuted, setLiveAudioMuted] = useState(() => {
     try {
       const saved = localStorage.getItem('avalive_audio_muted');
@@ -1622,72 +1626,73 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
   // 🔇 Xử lý Bật/Tắt Âm Thanh Toàn Diện (Đồng bộ trực tiếp cả Máy Streamer, Window Capture & TikTok Live)
   const handleToggleLocalSpeakerMute = useCallback(() => {
-    const nextState = !isLocalSpeakerMuted;
-    setIsLocalSpeakerMuted(nextState);
-    setLiveAudioMuted(nextState);
+    setIsLocalSpeakerMuted(prev => {
+      const nextState = !prev;
+      isLocalSpeakerMutedRef.current = nextState;
+      setLiveAudioMuted(nextState);
 
-    // Tắt/Mở tiếng video trên màn hình điều khiển
-    if (desktopVideoRef.current) {
-      desktopVideoRef.current.muted = nextState;
-      if (!nextState) {
-        desktopVideoRef.current.volume = liveVolume || 1.0;
+      // Tắt/Mở tiếng video trên màn hình điều khiển
+      if (desktopVideoRef.current) {
+        desktopVideoRef.current.muted = nextState;
+        if (!nextState) {
+          desktopVideoRef.current.volume = liveVolume || 1.0;
+          desktopVideoRef.current.play().catch(() => {});
+        }
       }
-    }
-    if (flvVideoRef.current) {
-      flvVideoRef.current.muted = nextState;
-      if (!nextState) {
-        flvVideoRef.current.volume = liveVolume || 1.0;
+      if (flvVideoRef.current) {
+        flvVideoRef.current.muted = nextState;
+        if (!nextState) {
+          flvVideoRef.current.volume = liveVolume || 1.0;
+        }
       }
-    }
 
-    // Tắt/Mở tiếng Audio Engine và Loa máy
-    bandoAudio.setLocalSpeakerMute(nextState);
-    bandoAudio.setMuted(nextState);
+      // Tắt/Mở tiếng Audio Engine và Loa máy
+      bandoAudio.setLocalSpeakerMute(nextState);
+      bandoAudio.setMuted(nextState);
 
-    try {
-      localStorage.setItem('avalive_local_speaker_muted', String(nextState));
-    } catch (e) {}
+      try {
+        localStorage.setItem('avalive_local_speaker_muted', String(nextState));
+        localStorage.setItem('avalive_audio_muted', String(nextState));
+      } catch (e) {}
 
-    // ⚡ ÂM THANH ĐỘC LẬP: Mở thì mở đồng bộ, Tắt thì tắt độc lập
-    // Khi Streamer MỞ tiếng: Tự động mở tiếng đồng bộ cho cả Window Capture & TikTok Live
-    if (!nextState) {
+      // Đồng bộ sang Window Capture OBS & TikTok Live
       syncMasterLiveState({
-        isVideoAudioMuted: false,
-        isMuted: false,
-        videoVolume: liveVolume || 1.0
+        isVideoAudioMuted: nextState,
+        isMuted: nextState,
+        videoVolume: nextState ? 0 : (liveVolume || 1.0)
       }, socketRef.current);
 
       sendVideoControl({
-        action: 'unmute',
-        isMuted: false,
-        isVideoAudioMuted: false,
-        volume: liveVolume || 1.0,
+        action: nextState ? 'mute' : 'unmute',
+        isMuted: nextState,
+        isVideoAudioMuted: nextState,
+        volume: nextState ? 0 : (liveVolume || 1.0),
         timestamp: Date.now()
       }, socketRef.current);
-    }
-    // Khi Streamer TẮT tiếng trên máy (để tránh dội âm thanh vào Micro):
-    // Luồng phát sóng Live (Window Capture / Browser Source) VẪN PHÁT ÂM THANH BÌNH THƯỜNG cho khán giả!
 
-    // Phát sự kiện BroadcastChannel lập tức cho Window Capture
-    postMasterBroadcast({
-      type: 'GLOBAL_AUDIO_CHANGE',
-      isMuted: nextState,
-      volume: nextState ? 0 : (liveVolume || 1.0),
-      source: 'desktop'
+      // Phát sự kiện BroadcastChannel lập tức cho Window Capture
+      postMasterBroadcast({
+        type: 'GLOBAL_AUDIO_CHANGE',
+        isMuted: nextState,
+        volume: nextState ? 0 : (liveVolume || 1.0),
+        source: 'desktop'
+      });
+
+      if (nextState) {
+        setToast({
+          type: 'info',
+          message: '🔇 Đã TẮT TIẾNG TOÀN BỘ (Đồng bộ Window Capture & Khán giả TikTok Live đã tắt tiếng)'
+        });
+      } else {
+        setToast({
+          type: 'success',
+          message: '🔊 Đã BẬT TIẾNG TOÀN BỘ (Window Capture & TikTok Live đã phát âm thanh)'
+        });
+      }
+
+      return nextState;
     });
-
-    if (nextState) {
-      setToast({
-        type: 'info',
-        message: '🔇 Đã TẮT TIẾNG TOÀN BỘ (Đồng bộ Window Capture & Khán giả TikTok Live đã tắt tiếng)'
-      });
-    } else {
-      setToast({
-        type: 'success',
-        message: '🔊 Đã BẬT TIẾNG TOÀN BỘ (Window Capture & TikTok Live đã phát âm thanh)'
-      });
-    }
-  }, [isLocalSpeakerMuted, liveVolume]);
+  }, [liveVolume]);
 
   // Quản lý trạng thái Play / Pause của video live trên khung hình phần mềm
   const [isVideoPlaying, setIsVideoPlaying] = useState(() => {
@@ -1899,6 +1904,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     const handleMuteSync = (e) => {
       if (e.detail && typeof e.detail.isMuted === 'boolean') {
         setIsLocalSpeakerMuted(e.detail.isMuted);
+        isLocalSpeakerMutedRef.current = e.detail.isMuted;
       }
     };
     window.addEventListener('avalive_local_mute_change', handleMuteSync);
@@ -1949,7 +1955,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
             if (typeof event.data.currentTime === 'number' && desktopVideoRef.current) {
               try {
-                if (event.data.force || Math.abs(desktopVideoRef.current.currentTime - event.data.currentTime) > 0.3) {
+                if (event.data.force && Math.abs(desktopVideoRef.current.currentTime - event.data.currentTime) > 1.5) {
                   desktopVideoRef.current.currentTime = event.data.currentTime;
                 }
               } catch (e) {}
@@ -2007,13 +2013,21 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             const vol = typeof event.data.volume === 'number' ? event.data.volume : 1;
             isInternalAudioChangeRef.current = true;
             setIsLocalSpeakerMuted(isMuted);
+            isLocalSpeakerMutedRef.current = isMuted;
             setLiveAudioMuted(isMuted);
             setLiveVolume(vol);
             if (desktopVideoRef.current) {
-              desktopVideoRef.current.muted = true; // Preview trên phần mềm luôn luôn im lặng để tránh vọng âm
+              desktopVideoRef.current.muted = isMuted;
+              if (!isMuted) {
+                desktopVideoRef.current.volume = vol;
+                desktopVideoRef.current.play().catch(() => {});
+              }
             }
             if (flvVideoRef.current) {
-              flvVideoRef.current.muted = true;
+              flvVideoRef.current.muted = isMuted;
+              if (!isMuted) {
+                flvVideoRef.current.volume = vol;
+              }
             }
             setTimeout(() => { isInternalAudioChangeRef.current = false; }, 300);
           }
@@ -2068,9 +2082,21 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         const isMuted = e.newValue === 'true';
         isInternalAudioChangeRef.current = true;
         setIsLocalSpeakerMuted(isMuted);
+        isLocalSpeakerMutedRef.current = isMuted;
         setLiveAudioMuted(isMuted);
-        if (desktopVideoRef.current) desktopVideoRef.current.muted = true;
-        if (flvVideoRef.current) flvVideoRef.current.muted = true;
+        if (desktopVideoRef.current) {
+          desktopVideoRef.current.muted = isMuted;
+          if (!isMuted) {
+            desktopVideoRef.current.volume = liveVolume || 1;
+            desktopVideoRef.current.play().catch(() => {});
+          }
+        }
+        if (flvVideoRef.current) {
+          flvVideoRef.current.muted = isMuted;
+          if (!isMuted) {
+            flvVideoRef.current.volume = liveVolume || 1;
+          }
+        }
         setTimeout(() => { isInternalAudioChangeRef.current = false; }, 300);
       }
 
@@ -3442,13 +3468,22 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               data-main-player="true"
               src={selected.url} 
               className="w-full h-full object-contain bg-black transform-gpu cursor-pointer main-video-player"
-              style={{ transform: 'translateZ(0)', willChange: 'transform' }}
+              style={{ 
+                transform: 'translate3d(0, 0, 0)', 
+                WebkitTransform: 'translate3d(0, 0, 0)', 
+                backfaceVisibility: 'hidden', 
+                WebkitBackfaceVisibility: 'hidden', 
+                willChange: 'transform', 
+                imageRendering: '-webkit-optimize-contrast',
+                filter: 'contrast(1.03) saturate(1.05) brightness(1.01)'
+              }}
               autoPlay
               loop 
-              muted={liveAudioMuted} 
+              muted={isLocalSpeakerMuted} 
               controls={false}
               preload="auto"
               disablePictureInPicture
+              disableRemotePlayback
               playsInline 
               onClick={toggleDesktopVideoPlayback}
               onError={(e) => {
@@ -3502,7 +3537,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                     action: 'time_sync',
                     currentTime: curTime,
                     isPlaying: !e.currentTarget.paused,
-                    isMuted: liveAudioMuted,
+                    isMuted: isLocalSpeakerMuted,
                     volume: liveVolume,
                     timestamp: now
                   };
@@ -3515,9 +3550,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                     type: 'MASTER_TIME_SYNC',
                     currentTime: curTime,
                     isPlaying: !e.currentTarget.paused,
-                    isMuted: liveAudioMuted,
-                    isVideoAudioMuted: liveAudioMuted,
-                    volume: liveAudioMuted ? 0 : liveVolume,
+                    isMuted: isLocalSpeakerMuted,
+                    isVideoAudioMuted: isLocalSpeakerMuted,
+                    volume: isLocalSpeakerMuted ? 0 : liveVolume,
                     source: 'desktop',
                     timestamp: now
                   });
@@ -3525,8 +3560,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               }}
               onLoadedMetadata={(e) => {
                 const v = e.currentTarget;
-                v.muted = liveAudioMuted;
-                if (!liveAudioMuted) {
+                v.muted = isLocalSpeakerMuted;
+                if (!isLocalSpeakerMuted) {
                   v.volume = liveVolume;
                 }
                 // ⚡ Khôi phục vị trí đang phát nếu người dùng đổi tab hoặc đổi stage quay lại
@@ -3550,16 +3585,31 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   v.play().then(() => setIsVideoPlaying(true)).catch(() => {});
                 }
               }}
+              onCanPlayThrough={(e) => {
+                const v = e.currentTarget;
+                if (v.paused && v.dataset.userPaused !== 'true') {
+                  v.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+                }
+              }}
               onWaiting={(e) => {
                 const v = e.currentTarget;
-                if (v.paused && v.dataset.userPaused !== 'true' && v.readyState >= 2) {
-                  v.play().catch(() => {});
+                if (v && v.dataset.userPaused !== 'true') {
+                  const resumePlay = () => {
+                    if (v.dataset.userPaused !== 'true' && v.readyState >= 3) {
+                      v.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+                    }
+                  };
+                  v.addEventListener('canplay', resumePlay, { once: true });
                 }
               }}
               onStalled={(e) => {
                 const v = e.currentTarget;
-                if (v.paused && v.dataset.userPaused !== 'true' && v.readyState >= 2) {
-                  v.play().catch(() => {});
+                if (v && v.dataset.userPaused !== 'true') {
+                  setTimeout(() => {
+                    if (v.dataset.userPaused !== 'true' && v.readyState >= 2) {
+                      v.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+                    }
+                  }, 500);
                 }
               }}
               onPlay={(e) => {

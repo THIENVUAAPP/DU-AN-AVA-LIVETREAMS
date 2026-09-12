@@ -753,25 +753,15 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           try { vid.currentTime = targetTime; } catch (e) {}
         }
       } else if (action === 'time_sync') {
-        // 🎯 ĐỒNG BỘ THỜI GIAN THỰC (SIÊU MƯỢT 60 FPS, KHÔNG LỆCH FRAME, ÂM THANH TRONG TRẺO)
+        // 🎯 ĐỒNG BỘ THỜI GIAN THỰC (SIÊU MƯỢT 60 FPS, KHÔNG LỆCH FRAME, KHÔNG GIẬT KHỰNG BUFFER)
         if (typeof targetTime === 'number' && !isNaN(targetTime)) {
-          const cur = vid.currentTime || 0;
-          const diff = Math.abs(cur - targetTime);
-          if (control.force || diff > 1.2) {
+          if (control.force) {
             try { 
               vid.currentTime = targetTime; 
-              vid.playbackRate = 1.0;
             } catch (e) {}
-          } else if (diff > 0.15 && !vid.paused) {
-            // Hiệu chỉnh vi sai tốc độ siêu mịn (Catch-up / Slow-down nhẹ) để không gây khựng hình hay rè tiếng
-            if (cur < targetTime) {
-              vid.playbackRate = 1.05;
-            } else {
-              vid.playbackRate = 0.95;
-            }
-          } else {
-            if (vid.playbackRate !== 1.0) vid.playbackRate = 1.0;
           }
+          // Luôn khóa cứng tốc độ phát 1.0x để GPU và bộ giải mã video OBS/TikTok Live Studio không bị khựng đệm
+          if (vid.playbackRate !== 1.0) vid.playbackRate = 1.0;
         }
         if (!isUserPausedRef.current && vid.paused && vid.readyState >= 2) {
           vid.play().catch(() => {});
@@ -1991,7 +1981,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.0.3
+                v1.0.4
               </span>
             </div>
 
@@ -2438,7 +2428,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     backfaceVisibility: 'hidden',
                     WebkitBackfaceVisibility: 'hidden',
                     willChange: 'transform',
-                    imageRendering: 'auto'
+                    imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto',
+                    filter: isUltraSharp ? 'contrast(1.03) saturate(1.05) brightness(1.01)' : 'none',
+                    WebkitFilter: isUltraSharp ? 'contrast(1.03) saturate(1.05) brightness(1.01)' : 'none'
                   }}
                   onCanPlay={(e) => {
                     // ⚡ INSTANT 0MS PLAYBACK: Phát ngay lập tức khi frame đầu tiên sẵn sàng
@@ -2514,6 +2506,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     if (e.target && e.target.seeking) return;
                     if (!isUserPausedRef.current) return;
                     setIsPlayingState(false);
+                  }}
+                  onCanPlayThrough={(e) => {
+                    const v = e.currentTarget;
+                    if (!checkIfUserPaused() && v.paused && v.readyState >= 3) {
+                      v.play().catch(() => {});
+                    }
                   }}
                   onWaiting={(e) => {
                     const v = e.currentTarget;
