@@ -1665,9 +1665,16 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     // 2.7. Khi ở chế độ Window Capture, cho phép lấy trực tiếp từ window.opener nếu cùng tab/browser session
     if (!candidateUrl && isWindowCapture && typeof window !== 'undefined' && window.opener) {
       try {
-        const opSaved = JSON.parse(window.opener.localStorage?.getItem('avalive_master_live_state') || '{}');
-        if (opSaved.mediaUrl) {
-          candidateUrl = opSaved.mediaUrl;
+        const opDoc = window.opener.document;
+        const opVid = opDoc?.querySelector('video[data-main-player="true"]') || opDoc?.querySelector('.main-video-player') || opDoc?.querySelector('video');
+        if (opVid && (opVid.currentSrc || opVid.src)) {
+          candidateUrl = opVid.currentSrc || opVid.src;
+        }
+        if (!candidateUrl) {
+          const opSaved = JSON.parse(window.opener.localStorage?.getItem('avalive_master_live_state') || '{}');
+          if (opSaved.mediaUrl) {
+            candidateUrl = opSaved.mediaUrl;
+          }
         }
       } catch (e) {}
     }
@@ -2003,7 +2010,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.1.1
+                v1.1.2
               </span>
             </div>
 

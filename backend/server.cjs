@@ -749,15 +749,11 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         updateDockUI();
       }
 
-      // 🔊 ĐIỀU KHIỂN ÂM THANH ĐỘC LẬP: MỞ ĐỒNG BỘ - TẮT ĐỘC LẬP
+      // 🔊 ĐIỀU KHIỂN ÂM THANH ĐỒNG BỘ 100% THEO NGƯỜI DÙNG: TẮT LÀ TẮT, BẬT LÀ BẬT
       function handleRemoteAudio(isMuted, vol) {
-        // Nếu phần mềm chính MỞ tiếng (isMuted === false): Stream tự động mở tiếng đồng bộ
-        if (isMuted === false) {
-          targetMuted = false;
-          vid.muted = false;
-        }
-        // Nếu phần mềm chính TẮT tiếng: KHÔNG tự động câm tiếng luồng live (để khán giả vẫn nghe bình thường)
-        if (typeof vol === 'number' && !isNaN(vol) && vol > 0) {
+        targetMuted = (isMuted === true);
+        vid.muted = targetMuted;
+        if (!targetMuted && typeof vol === 'number' && !isNaN(vol) && vol > 0) {
           targetVolume = Math.max(0, Math.min(1, vol));
           vid.volume = targetVolume;
         }
@@ -812,8 +808,11 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
             if (typeof data.isVideoAudioMuted === 'boolean') {
               handleRemoteAudio(data.isVideoAudioMuted, data.videoVolume);
             }
-            // Stream chỉ phát khi có lệnh nạp video mới hoặc đang chạy
-            if (!isStreamUserPaused && vid.paused && data.isPlaying === true) {
+            if (data.videoPlaybackEvent === 'pause' || data.isPlaying === false) {
+              isStreamUserPaused = true;
+              vid.pause();
+              updateDockUI();
+            } else if (!isStreamUserPaused && vid.paused && data.isPlaying === true) {
               vid.play().then(updateDockUI).catch(function() {});
             }
           })
@@ -878,15 +877,17 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
           if (data.mediaUrl && !isSameMedia(vid.src, data.mediaUrl)) {
             loadAndPlay(data.mediaUrl);
           }
-          // Điều khiển Âm thanh độc lập: Bật thì bật cùng nhau
           if (typeof data.isVideoAudioMuted === 'boolean') {
             handleRemoteAudio(data.isVideoAudioMuted, data.videoVolume);
           } else if (typeof data.isMuted === 'boolean') {
             handleRemoteAudio(data.isMuted, data.volume || data.videoVolume);
           }
 
-          // Khi có video mới chuyển, tự động phát
-          if (!isStreamUserPaused && vid.paused && data.isPlaying === true) {
+          if (data.videoPlaybackEvent === 'pause' || data.isPlaying === false) {
+            isStreamUserPaused = true;
+            vid.pause();
+            updateDockUI();
+          } else if (!isStreamUserPaused && vid.paused && data.isPlaying === true) {
             vid.play().then(updateDockUI).catch(function() {});
           }
 
@@ -901,7 +902,19 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
           if (control.mediaUrl && !isSameMedia(vid.src, control.mediaUrl)) {
             loadAndPlay(control.mediaUrl);
           }
-          if (control.action === 'unmute' || control.isMuted === false) {
+          if (control.action === 'pause' || control.isPlaying === false) {
+            isStreamUserPaused = true;
+            vid.pause();
+            updateDockUI();
+          } else if (control.action === 'play' || control.isPlaying === true) {
+            isStreamUserPaused = false;
+            vid.play().then(updateDockUI).catch(function() {});
+          }
+          if (typeof control.isMuted === 'boolean') {
+            handleRemoteAudio(control.isMuted, control.volume);
+          } else if (control.action === 'mute') {
+            handleRemoteAudio(true);
+          } else if (control.action === 'unmute') {
             handleRemoteAudio(false, control.volume);
           }
           if (control.action === 'seek' && typeof control.currentTime === 'number') {
@@ -913,10 +926,19 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
           const bc = new BroadcastChannel('avalive_master_live_stream');
           bc.onmessage = function(ev) {
             if (!ev.data) return;
-            if (ev.data.type === 'GLOBAL_MEDIA_CHANGE' && ev.data.mediaUrl && !isSameMedia(vid.src, ev.data.mediaUrl)) {
+            if ((ev.data.type === 'GLOBAL_MEDIA_CHANGE' || ev.data.type === 'MASTER_MEDIA_CHANGE') && ev.data.mediaUrl && !isSameMedia(vid.src, ev.data.mediaUrl)) {
               loadAndPlay(ev.data.mediaUrl);
-            } else if (ev.data.type === 'GLOBAL_AUDIO_CHANGE' && ev.data.isMuted === false) {
-              handleRemoteAudio(false, ev.data.volume);
+            } else if (ev.data.type === 'GLOBAL_AUDIO_CHANGE' && typeof ev.data.isMuted === 'boolean') {
+              handleRemoteAudio(ev.data.isMuted, ev.data.volume);
+            } else if (ev.data.type === 'GLOBAL_PLAYBACK_CHANGE' || ev.data.type === 'GLOBAL_PLAY_STATE_CHANGE') {
+              if (ev.data.isPlaying === false || ev.data.userPaused === true) {
+                isStreamUserPaused = true;
+                vid.pause();
+                updateDockUI();
+              } else if (ev.data.isPlaying === true) {
+                isStreamUserPaused = false;
+                vid.play().then(updateDockUI).catch(function() {});
+              }
             }
           };
         }
@@ -1015,7 +1037,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '1.1.1';
+  let ver = '1.1.2';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1053,7 +1075,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '1.1.1';
+  let ver = '1.1.2';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;

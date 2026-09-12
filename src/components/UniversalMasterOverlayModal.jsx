@@ -100,8 +100,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
         curTime = deskVid.currentTime;
       }
       if (!activeUrl && deskVid) {
-        if (deskVid.currentSrc && !deskVid.currentSrc.startsWith('blob:')) activeUrl = deskVid.currentSrc;
-        else if (deskVid.src && !deskVid.src.startsWith('blob:')) activeUrl = deskVid.src;
+        if (deskVid.currentSrc) activeUrl = deskVid.currentSrc;
+        else if (deskVid.src) activeUrl = deskVid.src;
       }
     } catch (e) {}
 
@@ -113,8 +113,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
           if (Array.isArray(list) && list.length > 0) {
             selectedCharId = list[0].id;
             if (!activeUrl) {
-              const itemUrl = list[0].mediaUrl || list[0].url || '';
-              if (itemUrl && !itemUrl.startsWith('blob:')) activeUrl = itemUrl;
+              const itemUrl = list[0].url || list[0].mediaUrl || '';
+              if (itemUrl) activeUrl = itemUrl;
             }
           }
         }
@@ -122,17 +122,17 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     }
 
     let serverActiveUrl = activeUrl;
-    if (!serverActiveUrl || serverActiveUrl.startsWith('blob:')) {
+    if (!serverActiveUrl) {
       try {
         const locked = localStorage.getItem('avalive_user_locked_media');
-        if (locked && !locked.startsWith('blob:')) serverActiveUrl = locked;
-        if (!serverActiveUrl || serverActiveUrl.startsWith('blob:')) {
+        if (locked) serverActiveUrl = locked;
+        if (!serverActiveUrl) {
           const masterSaved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
-          if (masterSaved.mediaUrl && !masterSaved.mediaUrl.startsWith('blob:')) serverActiveUrl = masterSaved.mediaUrl;
+          if (masterSaved.mediaUrl) serverActiveUrl = masterSaved.mediaUrl;
         }
       } catch (e) {}
     }
-    if (!serverActiveUrl || serverActiveUrl.startsWith('blob:')) {
+    if (!serverActiveUrl) {
       serverActiveUrl = serverLiveMediaUrl || '';
     }
 
@@ -146,7 +146,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
       localStorage.setItem('avalive_master_live_running', 'true');
       const stateToSave = {
         stage: 'idol',
-        mediaUrl: serverActiveUrl,
+        mediaUrl: activeUrl || serverActiveUrl,
         selectedCharacter: selectedCharId,
         isVideo: true,
         videoPlaybackEvent: 'play',
@@ -158,7 +158,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
     const charQuery = selectedCharId ? `&char=${encodeURIComponent(selectedCharId)}` : '';
     const timeQuery = curTime > 0 ? `&t=${Math.round(curTime * 100) / 100}` : '';
-    const vQuery = serverActiveUrl ? `&v=${encodeURIComponent(serverActiveUrl)}` : '';
+    const vQuery = (activeUrl || serverActiveUrl) ? `&v=${encodeURIComponent(activeUrl || serverActiveUrl)}` : '';
     const query = `${vQuery}${charQuery}${timeQuery}`;
     const origin = typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')
       ? window.location.origin
@@ -393,7 +393,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
               <h2 className="text-base font-black text-white tracking-wide flex items-center gap-2">
                 <span>TRUNG TÂM PHÁT SÓNG TIKTOK LIVE STUDIO & OBS</span>
                 <span className="text-[10px] bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-2 py-0.5 rounded-full font-bold">
-                  v1.1.1 ONLINE
+                  v1.1.2 ONLINE
                 </span>
               </h2>
               <p className="text-xs text-gray-400 font-medium">

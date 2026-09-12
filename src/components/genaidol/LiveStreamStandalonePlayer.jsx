@@ -115,8 +115,12 @@ export default function LiveStreamStandalonePlayer() {
   const tryPlayWithSound = () => {
     const vid = videoRef.current;
     if (!vid || isExplicitlyPausedRef.current) return;
-    vid.muted = false;
-    vid.volume = 1.0;
+    if (isUserMutedRef.current) {
+      vid.muted = true;
+    } else {
+      vid.muted = false;
+      vid.volume = 1.0;
+    }
     const p = vid.play();
     if (p !== undefined) {
       p.then(() => {
@@ -127,9 +131,11 @@ export default function LiveStreamStandalonePlayer() {
         vid.play().then(() => {
           setIsPlaybackActive(true);
           setIsVideoLoading(false);
-          setTimeout(() => {
-            if (vid && !isExplicitlyPausedRef.current) vid.muted = false;
-          }, 300);
+          if (!isUserMutedRef.current) {
+            setTimeout(() => {
+              if (vid && !isExplicitlyPausedRef.current && !isUserMutedRef.current) vid.muted = false;
+            }, 300);
+          }
         }).catch(() => {});
       });
     }
@@ -185,14 +191,15 @@ export default function LiveStreamStandalonePlayer() {
               return prev;
             });
           }
-          if (d.videoPlaybackEvent === 'pause') {
+          if (d.videoPlaybackEvent === 'pause' || d.isPlaying === false) {
             applyExplicitPause();
           } else {
             if (isExplicitlyPausedRef.current) isExplicitlyPausedRef.current = false;
             tryPlayWithSound();
           }
-          if (typeof d.isVideoAudioMuted === 'boolean' && videoRef.current) {
-            videoRef.current.muted = d.isVideoAudioMuted;
+          if (typeof d.isVideoAudioMuted === 'boolean') {
+            isUserMutedRef.current = d.isVideoAudioMuted;
+            if (videoRef.current) videoRef.current.muted = d.isVideoAudioMuted;
           }
         })
         .catch(() => {});
@@ -243,8 +250,10 @@ export default function LiveStreamStandalonePlayer() {
           applyExplicitPause();
         }
         if (typeof data.isVideoAudioMuted === 'boolean') {
+          isUserMutedRef.current = data.isVideoAudioMuted;
           if (videoRef.current) videoRef.current.muted = data.isVideoAudioMuted;
         } else if (typeof data.isMuted === 'boolean') {
+          isUserMutedRef.current = data.isMuted;
           if (videoRef.current) videoRef.current.muted = data.isMuted;
         }
         if (typeof data.videoVolume === 'number' && videoRef.current) {
@@ -265,15 +274,20 @@ export default function LiveStreamStandalonePlayer() {
           isExplicitlyPausedRef.current = false;
           tryPlayWithSound();
         } else if (control.action === 'mute') {
+          isUserMutedRef.current = true;
           if (videoRef.current) videoRef.current.muted = true;
         } else if (control.action === 'unmute') {
+          isUserMutedRef.current = false;
           if (videoRef.current) {
             videoRef.current.muted = false;
             videoRef.current.volume = 1.0;
           }
         } else if (control.action === 'audio_sync') {
           if (videoRef.current) {
-            if (typeof control.isMuted === 'boolean') videoRef.current.muted = control.isMuted;
+            if (typeof control.isMuted === 'boolean') {
+              isUserMutedRef.current = control.isMuted;
+              videoRef.current.muted = control.isMuted;
+            }
             if (typeof control.volume === 'number') videoRef.current.volume = control.volume;
           }
         }
@@ -298,7 +312,7 @@ export default function LiveStreamStandalonePlayer() {
             } else if (ev.data.isPlaying === false || ev.data.userPaused === true) {
               applyExplicitPause();
             }
-          } else if (ev.data.type === 'MASTER_MEDIA_CHANGE' && ev.data.mediaUrl && !ev.data.mediaUrl.startsWith('blob:')) {
+          } else if ((ev.data.type === 'GLOBAL_MEDIA_CHANGE' || ev.data.type === 'MASTER_MEDIA_CHANGE') && ev.data.mediaUrl && !ev.data.mediaUrl.startsWith('blob:')) {
             setVideoSrc(ev.data.mediaUrl);
           } else if (ev.data.type === 'GLOBAL_PLAYBACK_CHANGE' || ev.data.type === 'GLOBAL_PLAY_STATE_CHANGE') {
             if (ev.data.isPlaying === false || ev.data.userPaused === true) {
@@ -309,7 +323,10 @@ export default function LiveStreamStandalonePlayer() {
             }
           } else if (ev.data.type === 'GLOBAL_AUDIO_CHANGE') {
             if (videoRef.current) {
-              if (typeof ev.data.isMuted === 'boolean') videoRef.current.muted = ev.data.isMuted;
+              if (typeof ev.data.isMuted === 'boolean') {
+                isUserMutedRef.current = ev.data.isMuted;
+                videoRef.current.muted = ev.data.isMuted;
+              }
               if (typeof ev.data.volume === 'number') videoRef.current.volume = ev.data.volume;
             }
           }
@@ -465,7 +482,7 @@ export default function LiveStreamStandalonePlayer() {
           zIndex: 10
         }}
       >
-        🔴 60 FPS REALTIME v1.1.1
+        🔴 60 FPS REALTIME v1.1.2
       </div>
     </div>
   );

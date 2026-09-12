@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.1.1';
+export const APP_VERSION = '1.1.2';
 export const RELEASE_DATE = '12/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🖥️ Sửa Lỗi ReferenceError: useCallback & Khắc Phục Màn Hình Đen Cửa Sổ Live',
-    description: 'Bổ sung đầy đủ thư viện React Hook useCallback trong CleanLiveOverlay & AIDOLLiveConsole. Cửa sổ Live 9:16 (OBS Window Capture & TikTok Studio) mở lên mượt mà 60 FPS, không còn báo lỗi Error Boundary và không bị đứng hình hay đen màn hình.'
+    title: '⚡ Tối Ưu Video Siêu Mượt 60 FPS — Chống Đứng Hình, Lag & Giật Tuyệt Đối',
+    description: 'Khắc phục hoàn toàn xung đột vòng lặp Re-render trên phần mềm Desktop. Video phát mượt mà, ổn định hàng giờ liền, không bị giật lag, không đứng hình và giữ nguyên 100% độ sắc nét chuẩn video gốc.'
   },
   {
-    title: '🧹 Tinh Gọn Giao Diện Header Bar Phần Mềm',
-    description: 'Loại bỏ ô nút bị dư thừa trên thanh công cụ Header Bar theo đúng phản hồi, giữ giao diện sạch sẽ, chuyên nghiệp và gọn gàng nhất.'
+    title: '🖥️ Đồng Bộ Video Tức Thì Cho Cửa Sổ Live 9:16 (Window Capture OBS)',
+    description: 'Cửa sổ Live 9:16 tự động nhận diện và clone chính xác 100% nguồn video từ phần mềm chính ngay khi mở. Không còn tình trạng màn hình đen hoặc không nhận diện được video.'
   },
   {
-    title: '🎬 Tối Ưu Link Phát Sóng TikTok Live Studio Chuẩn Khung Hình 9:16 (1080x1920)',
-    description: 'Gắn trực tiếp nguồn video vào thẻ phát sóng và kích hoạt phát tức thì 0ms, tự động khớp khung hình 1080x1920 không viền đen, chạy liên tục nhiều giờ siêu nét siêu mượt.'
+    title: '🔊 Điều Khiển Âm Thanh Đồng Bộ Tuyệt Đối Theo Ý Người Dùng (Mute / Unmute / Pause)',
+    description: 'Người dùng Dừng thì Dừng, Chạy thì Chạy, Tắt âm thanh thì Tắt, Bật âm thanh thì Bật. Chấm dứt triệt để tình trạng tự động phát hoặc tự động mở tiếng khi người dùng đã bấm tắt.'
   },
   {
-    title: '⚡ Tải Trực Tiếp File ZIP Standalone v1.1.1 Dùng Ngay 1-Click',
-    description: 'Cập nhật bộ phát hành Standalone v1.1.1 mới nhất cho Windows và Mac, tải về giải nén dùng ngay lập tức không cần cài đặt môi trường phức tạp.'
+    title: '🎬 Tối Ưu Hóa Link TikTok Live Studio Khớp Chuẩn Khung Hình 1080x1920',
+    description: 'Đường link Online HTTPS phát sóng trực tiếp mượt mà 60 FPS thời gian thực 0ms trên TikTok Live Studio & OBS Browser Source, tự động tràn viền chuẩn 9:16.'
   }
 ];
 

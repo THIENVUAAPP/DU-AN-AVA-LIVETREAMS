@@ -905,14 +905,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       .catch(() => {});
   }, []);
 
-  // ⚡ TỰ ĐỘNG PHÁT VIDEO LIÊN TỤC & SIÊU MƯỢT KHI MỞ HOẶC CHỌN NHÂN VẬT (CHỐNG ĐỨNG HÌNH 100%)
+  // ⚡ TỰ ĐỘNG PHÁT VIDEO LIÊN TỤC & SIÊU MƯỢT KHI MỞ HOẶC ĐỔI NHÂN VẬT (CHỐNG ĐỨNG HÌNH 100%)
   useEffect(() => {
     const vid = desktopVideoRef.current;
     if (vid) {
-      vid.dataset.userPaused = 'false';
       vid.muted = isLocalSpeakerMuted;
       if (!isLocalSpeakerMuted) vid.volume = liveVolume || 1.0;
-      if (vid.paused) {
+      
+      const isManualPaused = vid.dataset.userPaused === 'true' || localStorage.getItem('avalive_user_paused') === 'true';
+      if (!isManualPaused && vid.paused) {
         const playPromise = vid.play();
         if (playPromise !== undefined) {
           playPromise
@@ -924,7 +925,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         }
       }
     }
-  }, [selectedCharacter, userLockedMediaUrl, customCharacters]);
+  }, [selectedCharacter, userLockedMediaUrl]);
 
   // 🔊 ĐỒNG BỘ ÂM LƯỢNG & TẮT/MỞ TIẾNG TỨC THÌ (0MS DELAY - KHÔNG RESTART VIDEO - KHÔNG GIẬT HÌNH)
   useEffect(() => {
@@ -2094,7 +2095,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               desktopVideoRef.current.muted = isMuted;
               if (!isMuted) {
                 desktopVideoRef.current.volume = vol;
-                desktopVideoRef.current.play().catch(() => {});
               }
             }
             if (flvVideoRef.current) {
@@ -2162,7 +2162,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           desktopVideoRef.current.muted = isMuted;
           if (!isMuted) {
             desktopVideoRef.current.volume = liveVolume || 1;
-            desktopVideoRef.current.play().catch(() => {});
           }
         }
         if (flvVideoRef.current) {
