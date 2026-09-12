@@ -1654,13 +1654,25 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     if (!candidateUrl) {
       try {
         const saved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
-        if (saved.mediaUrl && typeof saved.mediaUrl === 'string' && !saved.mediaUrl.startsWith('blob:')) {
-          candidateUrl = saved.mediaUrl;
+        if (saved.mediaUrl && typeof saved.mediaUrl === 'string') {
+          if (!saved.mediaUrl.startsWith('blob:') || isWindowCapture) {
+            candidateUrl = saved.mediaUrl;
+          }
         }
       } catch (e) {}
     }
 
-    // 2.7. Nếu vẫn chưa có nhưng có item trong IndexedDB -> Khôi phục item đầu tiên
+    // 2.7. Khi ở chế độ Window Capture, cho phép lấy trực tiếp từ window.opener nếu cùng tab/browser session
+    if (!candidateUrl && isWindowCapture && typeof window !== 'undefined' && window.opener) {
+      try {
+        const opSaved = JSON.parse(window.opener.localStorage?.getItem('avalive_master_live_state') || '{}');
+        if (opSaved.mediaUrl) {
+          candidateUrl = opSaved.mediaUrl;
+        }
+      } catch (e) {}
+    }
+
+    // 2.8. Nếu vẫn chưa có nhưng có item trong IndexedDB -> Khôi phục item đầu tiên
     if (!candidateUrl && localDbItems.length > 0) {
       const firstValidItem = localDbItems.find(i => i.mediaUrl || i.url || i.fileBlob);
       if (firstValidItem) {
@@ -1991,7 +2003,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.0.8
+                v1.0.9
               </span>
             </div>
 

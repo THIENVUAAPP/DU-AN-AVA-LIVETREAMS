@@ -159,7 +159,7 @@ export default function LiveStreamStandalonePlayer() {
     }
   }, [videoSrc, resolveUrl]);
 
-  // Cập nhật live state và tunnel URL định kỳ
+  // Cập nhật live state và tunnel URL định kỳ (chống đen màn hình 100%)
   useEffect(() => {
     const fetchLiveState = () => {
       fetch(`${window.location.origin}/api/live-state`)
@@ -171,7 +171,12 @@ export default function LiveStreamStandalonePlayer() {
             try { localStorage.setItem('avalive_tunnel_url', d.tunnelUrl); } catch (e) {}
           }
           if (d.mediaUrl && !d.mediaUrl.startsWith('blob:')) {
-            setVideoSrc(prev => prev || d.mediaUrl);
+            setVideoSrc(prev => {
+              if (!prev || !isSameMedia(prev, d.mediaUrl)) {
+                return d.mediaUrl;
+              }
+              return prev;
+            });
           }
           if (d.isPlaying === false || d.videoPlaybackEvent === 'pause') {
             applyExplicitPause();
@@ -187,9 +192,9 @@ export default function LiveStreamStandalonePlayer() {
     };
 
     fetchLiveState();
-    const interval = setInterval(fetchLiveState, 4000);
+    const interval = setInterval(fetchLiveState, 3000);
     return () => clearInterval(interval);
-  }, [tunnelUrl]);
+  }, [tunnelUrl, videoSrc]);
 
   // Kết nối Socket.io & BroadcastChannel để đồng bộ Realtime 0ms
   useEffect(() => {
@@ -452,7 +457,7 @@ export default function LiveStreamStandalonePlayer() {
           zIndex: 10
         }}
       >
-        🔴 60 FPS REALTIME v1.0.8
+        🔴 60 FPS REALTIME v1.0.9
       </div>
     </div>
   );

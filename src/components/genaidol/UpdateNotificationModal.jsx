@@ -2,29 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.0.8';
+export const APP_VERSION = '1.0.9';
 export const RELEASE_DATE = '12/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Tải Trực Tiếp File ZIP Standalone Về Máy Tính 100% Không Nhảy Sang GitHub',
-    description: 'Khắc phục triệt để lỗi khi bấm tải phần mềm bị chuyển hướng sang trang web GitHub. Nút tải Windows và Mac giờ đây lập tức kích hoạt luồng tải trực tiếp file ZIP bản mới nhất v1.0.8 về máy tính, không mở trang GitHub, giải nén và 1-click dùng ngay.'
+    title: '🔊 Bật / Tắt Tiếng Video Tức Thì 0ms — Không Giựt / Không Chớp Nháy / Bật Là Lên Tiếng Ngay',
+    description: 'Tách biệt triệt để cơ chế điều khiển âm thanh và luồng giải mã video. Bấm "Bật Tiếng" là âm thanh phát ngay lập tức không trễ 1 mili-giây, không bị gián đoạn hay khởi động lại khung hình, chấm dứt hoàn toàn hiện tượng kẹt âm thanh.'
   },
   {
-    title: '🎬 Khắc Phục Triệt Để Chớp Nháy / Chớp Giật Window Capture OBS (Siêu Mượt 60 FPS)',
-    description: 'Tối ưu hóa sâu cơ chế bộ đệm Blob Memory Caching, chấm dứt hoàn toàn hiện tượng tạo lại URL vô tận gây hủy và nạp lại luồng giải mã video. Video phát xuyên suốt 24/24 từ đầu đến cuối mượt mà, không chớp giật, không chập chờn hình ảnh và âm thanh.'
+    title: '🖥️ Khắc Phục Lỗi Mở Cửa Sổ Live 9:16 (Window Capture OBS & TikTok Live Studio)',
+    description: 'Xử lý triệt để hiện tượng trình duyệt chặn popup, nâng cấp cơ chế dự phòng mở tab mới và nạp sẵn 100% video đang phát. Cửa sổ Live 9:16 mở lên mượt mà, khung hình đồng bộ chính xác từng mili-giây.'
   },
   {
-    title: '⏯️ Đồng Bộ Dứt Khoát 100% Play / Pause & Mute / Unmute Trên Mọi Cửa Sổ',
-    description: 'Bấm Dừng (Pause) là dừng ngay lập tức cả hình lẫn tiếng trên Phần mềm, Window Capture và luồng live; Bấm Phát (Play) là chạy tiếp mượt mà ngay tức khắc đúng vị trí; Tắt/Mở tiếng dứt khoát không có độ trễ.'
+    title: '🎬 Sửa Dứt Điểm Lỗi Màn Hình Đen Khi Dán Link Sang TikTok Live Studio',
+    description: 'Tự động phát hiện và gắn video media thực tế vào đường link Online HTTPS (Cloudflare Tunnel & Vercel), cơ chế phục hồi liên tục chống đen màn hình, tối ưu GPU Hardware Acceleration 60 FPS sắc nét như video gốc.'
   },
   {
-    title: '🌐 Sửa Dứt Điểm Lỗi Màn Hình Đen Trên Link Browser Source (TikTok Live Studio & OBS)',
-    description: 'Phân giải đường dẫn video thông minh qua Cloudflare Tunnel HTTPS và phòng thủ 404 Vercel, đảm bảo link phát video siêu nét, siêu thực 60 FPS, đồng bộ 0ms chuẩn xác với phần mềm.'
-  },
-  {
-    title: '🛍️ Giữ Trọn Vẹn 100% Bộ Giọng Bán Hàng Đa Vùng Miền & Đa Độ Tuổi',
-    description: 'Bảo toàn toàn bộ 30 chất giọng bán hàng AI độc bản, phân tầng rõ nét 3 độ tuổi (Trẻ, Trưởng Thành, Lão Niên) và 4 vùng miền (Nam, Bắc, Trung, Tây).'
+    title: '⚡ Tải Trực Tiếp File ZIP Standalone v1.0.9 Dùng Ngay 1-Click Không Qua GitHub',
+    description: 'Cập nhật bộ phát hành Standalone v1.0.9 mới nhất cho Windows và Mac, tải về giải nén dùng ngay lập tức không cần cài đặt môi trường phức tạp.'
   }
 ];
 

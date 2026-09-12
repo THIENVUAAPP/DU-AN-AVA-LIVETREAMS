@@ -691,7 +691,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     let activeUrl = userLockedMediaUrl || desktopVideoRef.current?.src || '';
     if (activeUrl && typeof activeUrl === 'string' && activeUrl.startsWith('blob:')) {
       const match = customCharacters.find(c => (c.mediaUrl && !c.mediaUrl.startsWith('blob:')) || (c.url && !c.url.startsWith('blob:')));
-      activeUrl = match ? (match.mediaUrl || match.url) : '';
+      activeUrl = match ? (match.mediaUrl || match.url) : activeUrl;
     }
     if (!activeUrl && selectedCharacter && Array.isArray(customCharacters)) {
       const match = customCharacters.find(c => c.id === selectedCharacter && ((c.mediaUrl && !c.mediaUrl.startsWith('blob:')) || (c.url && !c.url.startsWith('blob:'))));
@@ -705,12 +705,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       activeUrl = activeUrl.substring(activeUrl.indexOf('/uploads/'));
     }
 
-    try {
-      localStorage.removeItem('avalive_user_paused');
-      localStorage.removeItem('avalive_window_capture_paused');
-      localStorage.setItem('avalive_master_live_running', 'true');
-    } catch (e) {}
-
     let curTime = 0;
     if (desktopVideoRef.current && typeof desktopVideoRef.current.currentTime === 'number' && !isNaN(desktopVideoRef.current.currentTime)) {
       curTime = desktopVideoRef.current.currentTime;
@@ -718,9 +712,27 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       curTime = lastPlaybackTimeRef.current;
     }
 
+    try {
+      localStorage.removeItem('avalive_user_paused');
+      localStorage.removeItem('avalive_window_capture_paused');
+      localStorage.setItem('avalive_master_live_running', 'true');
+      const stateToSave = {
+        stage: 'idol',
+        mediaUrl: activeUrl,
+        selectedCharacter: selectedCharacter,
+        isVideo: true,
+        videoPlaybackEvent: 'play',
+        videoCurrentTime: curTime,
+        isPlaying: true,
+        aspectRatio: globalAspectRatio || '9:16'
+      };
+      localStorage.setItem('avalive_master_live_state', JSON.stringify(stateToSave));
+    } catch (e) {}
+
     if (activeUrl) {
       syncMasterLiveState({
         stage: 'idol',
+        selectedCharacter: selectedCharacter,
         mediaUrl: activeUrl,
         isVideo: true,
         videoPlaybackEvent: 'play',
@@ -729,6 +741,22 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         aspectRatio: globalAspectRatio || '9:16'
       }, socketRef.current);
     }
+
+    try {
+      const bc = new BroadcastChannel('avalive_master_live_stream');
+      bc.postMessage({
+        type: 'GLOBAL_MEDIA_CHANGE',
+        mediaUrl: activeUrl,
+        characterId: selectedCharacter,
+        isVideo: true,
+        isPlaying: true,
+        currentTime: curTime,
+        force: true,
+        source: 'desktop',
+        timestamp: Date.now()
+      });
+      setTimeout(() => bc.close(), 100);
+    } catch (err) {}
 
     let serverActiveUrl = activeUrl;
     if (serverActiveUrl && serverActiveUrl.startsWith('blob:')) {
@@ -750,11 +778,27 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     const origin = typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')
       ? window.location.origin
       : 'http://localhost:3001';
-    window.open(
-      `${origin}/idol?mode=window_capture&sound=1&autoplay=1${query}`,
-      'avalive_window_capture_target',
-      `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes`
-    );
+    const captureUrl = `${origin}/idol?mode=window_capture&sound=1&autoplay=1&fit=cover${query}`;
+    
+    let newWin = null;
+    try {
+      newWin = window.open(
+        captureUrl,
+        'avalive_window_capture_target',
+        `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes`
+      );
+    } catch (err) {
+      console.warn('[WindowCapture] Popup error, trying fallback:', err);
+    }
+
+    if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+      try {
+        newWin = window.open(captureUrl, '_blank');
+      } catch (e) {
+        console.warn('[WindowCapture] Fallback _blank failed:', e);
+      }
+    }
+
     showToast('🖥️ Đã mở Cửa Sổ Live 9:16! Khung hình đồng bộ chính xác 100% với phần mềm.', 'success');
   };
 
@@ -866,19 +910,39 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     const vid = desktopVideoRef.current;
     if (vid) {
       vid.dataset.userPaused = 'false';
-      vid.muted = liveAudioMuted;
-      if (!liveAudioMuted) vid.volume = liveVolume;
-      const playPromise = vid.play();
-      if (playPromise !== undefined) {
-        playPromise
-          .then(() => setIsVideoPlaying(true))
-          .catch(() => {
-            vid.muted = true;
-            vid.play().then(() => setIsVideoPlaying(true)).catch(() => {});
-          });
+      vid.muted = isLocalSpeakerMuted;
+      if (!isLocalSpeakerMuted) vid.volume = liveVolume || 1.0;
+      if (vid.paused) {
+        const playPromise = vid.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => setIsVideoPlaying(true))
+            .catch(() => {
+              vid.muted = true;
+              vid.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+            });
+        }
       }
     }
-  }, [selectedCharacter, userLockedMediaUrl, customCharacters, liveAudioMuted, liveVolume]);
+  }, [selectedCharacter, userLockedMediaUrl, customCharacters]);
+
+  // 🔊 ĐỒNG BỘ ÂM LƯỢNG & TẮT/MỞ TIẾNG TỨC THÌ (0MS DELAY - KHÔNG RESTART VIDEO - KHÔNG GIẬT HÌNH)
+  useEffect(() => {
+    const vid = desktopVideoRef.current;
+    if (vid) {
+      vid.muted = isLocalSpeakerMuted;
+      if (!isLocalSpeakerMuted) {
+        vid.volume = liveVolume || 1.0;
+      }
+    }
+    const flv = flvVideoRef.current;
+    if (flv) {
+      flv.muted = isLocalSpeakerMuted;
+      if (!isLocalSpeakerMuted) {
+        flv.volume = liveVolume || 1.0;
+      }
+    }
+  }, [isLocalSpeakerMuted, liveVolume]);
 
   // 🛡️ BACKGROUND KEEP-ALIVE CHO PHẦN MỀM CHÍNH: CHỐNG ĐÓNG BĂNG/DỪNG VIDEO KHI CHUYỂN TAB HOẶC ẨN CỬA SỔ
   useEffect(() => {
@@ -1632,12 +1696,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       isLocalSpeakerMutedRef.current = nextState;
       setLiveAudioMuted(nextState);
 
-      // Tắt/Mở tiếng video trên màn hình điều khiển
+      // Tắt/Mở tiếng video trên màn hình điều khiển (Tác động tức thì vào DOM element)
       if (desktopVideoRef.current) {
         desktopVideoRef.current.muted = nextState;
         if (!nextState) {
           desktopVideoRef.current.volume = liveVolume || 1.0;
-          desktopVideoRef.current.play().catch(() => {});
+          if (desktopVideoRef.current.paused && desktopVideoRef.current.dataset.userPaused !== 'true') {
+            desktopVideoRef.current.play().catch(() => {});
+          }
         }
       }
       if (flvVideoRef.current) {
@@ -1650,6 +1716,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       // Tắt/Mở tiếng Audio Engine và Loa máy
       bandoAudio.setLocalSpeakerMute(nextState);
       bandoAudio.setMuted(nextState);
+
+      try {
+        const AudioCtx = window.AudioContext || window.webkitAudioContext;
+        if (AudioCtx && window.__avaLiveAudioContext?.state === 'suspended' && !nextState) {
+          window.__avaLiveAudioContext.resume().catch(() => {});
+        }
+      } catch (e) {}
 
       try {
         localStorage.setItem('avalive_local_speaker_muted', String(nextState));
