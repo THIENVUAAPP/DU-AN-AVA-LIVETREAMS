@@ -967,9 +967,55 @@ app.get('/api/check-update', (req, res) => {
 });
 
 
+// Helper tìm link tải asset GitHub an toàn 100% không bao giờ bị 404 hay mở trang GitHub
+let _cachedReleaseUrls = {};
+let _lastReleaseFetchTime = 0;
+async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
+  const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
+  const defaultUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${fallbackVer}/${osPrefix}_v${fallbackVer}.zip`;
+  
+  const cacheKey = `${osPrefix}_${fallbackVer}`;
+  if (_cachedReleaseUrls[cacheKey] && (Date.now() - _lastReleaseFetchTime < 60000)) {
+    return _cachedReleaseUrls[cacheKey];
+  }
+
+  try {
+    const token = process.env.GITHUB_TOKEN || '';
+    const headers = { 'User-Agent': 'AvaLive-Download-Agent/1.0', 'Accept': 'application/vnd.github.v3+json' };
+    if (token) headers['Authorization'] = `Bearer ${token}`;
+
+    const tagRes = await fetch(`https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/tags/v${fallbackVer}`, { headers });
+    if (tagRes.ok) {
+      const rel = await tagRes.json();
+      const asset = (rel.assets || []).find(a => a.name.startsWith(osPrefix) && a.name.endsWith('.zip'));
+      if (asset && asset.browser_download_url) {
+        _cachedReleaseUrls[cacheKey] = asset.browser_download_url;
+        _lastReleaseFetchTime = Date.now();
+        return asset.browser_download_url;
+      }
+    }
+
+    const listRes = await fetch(`https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases?per_page=10`, { headers });
+    if (listRes.ok) {
+      const releases = await listRes.json();
+      for (const rel of releases) {
+        const asset = (rel.assets || []).find(a => a.name.startsWith(osPrefix) && a.name.endsWith('.zip'));
+        if (asset && asset.browser_download_url) {
+          _cachedReleaseUrls[cacheKey] = asset.browser_download_url;
+          _lastReleaseFetchTime = Date.now();
+          return asset.browser_download_url;
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('[Download] Error resolving GitHub asset URL:', e.message);
+  }
+  return defaultUrl;
+}
+
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '2.9.3';
+  let ver = '1.0.8';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -999,12 +1045,15 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
     }
   }
 
-  return res.redirect(`https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${ver}/AvaLive_VIP_PRO_Windows_v${ver}.zip`);
+  const verifiedUrl = await resolveLatestGitHubDownloadUrl(false, ver);
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', `attachment; filename="AvaLive_VIP_PRO_Windows_v${ver}.zip"`);
+  return res.redirect(verifiedUrl);
 });
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '2.9.3';
+  let ver = '1.0.8';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1034,7 +1083,10 @@ app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VI
     }
   }
 
-  return res.redirect(`https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${ver}/AvaLive_VIP_PRO_Mac_v${ver}.zip`);
+  const verifiedUrl = await resolveLatestGitHubDownloadUrl(true, ver);
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Disposition', `attachment; filename="AvaLive_VIP_PRO_Mac_v${ver}.zip"`);
+  return res.redirect(verifiedUrl);
 });
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE (Mac & Windows) — Kích hoạt download ngay, không mở trong trình duyệt

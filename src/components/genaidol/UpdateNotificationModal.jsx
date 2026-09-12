@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.0.7';
+export const APP_VERSION = '1.0.8';
 export const RELEASE_DATE = '12/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Tải Trực Tiếp File ZIP Standalone Về Máy Tính 100% Không Nhảy Sang GitHub',
+    description: 'Khắc phục triệt để lỗi khi bấm tải phần mềm bị chuyển hướng sang trang web GitHub. Nút tải Windows và Mac giờ đây lập tức kích hoạt luồng tải trực tiếp file ZIP bản mới nhất v1.0.8 về máy tính, không mở trang GitHub, giải nén và 1-click dùng ngay.'
+  },
   {
     title: '🎬 Khắc Phục Triệt Để Chớp Nháy / Chớp Giật Window Capture OBS (Siêu Mượt 60 FPS)',
     description: 'Tối ưu hóa sâu cơ chế bộ đệm Blob Memory Caching, chấm dứt hoàn toàn hiện tượng tạo lại URL vô tận gây hủy và nạp lại luồng giải mã video. Video phát xuyên suốt 24/24 từ đầu đến cuối mượt mà, không chớp giật, không chập chờn hình ảnh và âm thanh.'
