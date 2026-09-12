@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.1.5';
+export const APP_VERSION = '1.1.6';
 export const RELEASE_DATE = '12/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🖥️ Khắc Phục Triệt Để Video Cửa Sổ Bắt Hình (Window Capture OBS)',
-    description: 'Chấm dứt hoàn toàn hiện tượng không hiển thị hoặc chập chờn video khi mở Cửa Sổ Live 9:16. Video được đồng bộ chính xác 100% theo video phần mềm với độ phân giải 4K sắc nét và 60 FPS mượt mà.'
+    title: '🔊 Sửa Triệt Để Bật/Tắt Tiếng Video Xem Trước Phần Mềm',
+    description: 'Nút bật/tắt tiếng và thanh trượt âm lượng trên phần mềm điều khiển trực tiếp mọi video và audio theo thời gian thực 0ms, đảm bảo video tải lên nghe rõ ràng hoặc tắt tiếng theo đúng ý streamer.'
   },
   {
-    title: '🌐 Nâng Cấp Đường Truyền Cloudflare Tunnel HTTPS Cho TikTok Live Studio',
-    description: 'Ưu tiên kết nối trực tiếp qua hạ tầng Cloudflare Tunnel HTTPS 60 FPS, tự động đồng bộ thời gian thực 0ms và loại bỏ hoàn toàn hiện tượng màn hình đen khi dán link vào TikTok Live Studio.'
+    title: '🖥️ Cửa Sổ Live 9:16 (Window Capture OBS) Hiển Thị Video Tức Thì',
+    description: 'Chấm dứt hoàn toàn hiện tượng không xuất hiện video khi mở Cửa Sổ Live 9:16. Video xuất hiện ngay lập tức (0ms delay), giữ nguyên độ phân giải gốc 4K/1080p và tốc độ 60 FPS siêu mượt không đứng hình.'
   },
   {
-    title: '🔇 Hệ Thống Âm Thanh Độc Lập 100% (Chống Tiếng Vang Echo)',
-    description: 'Streamer tắt/bật loa máy tính hoàn toàn độc lập, không làm ngắt âm thanh của luồng live TikTok hay Window Capture phát cho khán giả.'
+    title: '⚡ Link TikTok Live Studio & OBS Phát Ngay Lập Tức Chuẩn 9:16',
+    description: 'Dán đường link Online Cloudflare Tunnel HTTPS vào TikTok Live Studio là phát video tức thì, đúng độ phân giải và tỉ lệ khung hình 9:16 chuẩn TikTok, chạy mượt mà 24/24 không gián đoạn.'
   }
 ];
 

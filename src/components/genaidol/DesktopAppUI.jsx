@@ -944,16 +944,34 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     if (vid) {
       vid.muted = isLocalSpeakerMuted;
       if (!isLocalSpeakerMuted) {
-        vid.volume = liveVolume || 1.0;
+        vid.volume = (typeof liveVolume === 'number' && liveVolume > 0) ? liveVolume : 1.0;
       }
     }
     const flv = flvVideoRef.current;
     if (flv) {
       flv.muted = isLocalSpeakerMuted;
       if (!isLocalSpeakerMuted) {
-        flv.volume = liveVolume || 1.0;
+        flv.volume = (typeof liveVolume === 'number' && liveVolume > 0) ? liveVolume : 1.0;
       }
     }
+    try {
+      document.querySelectorAll('video').forEach(v => {
+        try {
+          v.muted = isLocalSpeakerMuted;
+          if (!isLocalSpeakerMuted) {
+            v.volume = (typeof liveVolume === 'number' && liveVolume > 0) ? liveVolume : 1.0;
+          }
+        } catch (e) {}
+      });
+      document.querySelectorAll('audio').forEach(a => {
+        try {
+          a.muted = isLocalSpeakerMuted;
+          if (!isLocalSpeakerMuted) {
+            a.volume = (typeof liveVolume === 'number' && liveVolume > 0) ? liveVolume : 1.0;
+          }
+        } catch (e) {}
+      });
+    } catch (err) {}
   }, [isLocalSpeakerMuted, liveVolume]);
 
   // 🛡️ BACKGROUND KEEP-ALIVE CHO PHẦN MỀM CHÍNH: CHỐNG ĐÓNG BĂNG/DỪNG VIDEO KHI CHUYỂN TAB HOẶC ẨN CỬA SỔ
@@ -1701,28 +1719,51 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     showToast(`🔊 Đang phát kiểm tra âm thanh Giọng ${role === 'idol' ? 'Nhân vật chính' : role === 'manager' ? 'Trợ lý' : 'Game'}!`, 'success');
   }, [unlockAllAudio]);
 
-  // 🔇 Xử lý Bật/Tắt Âm Thanh Loa Xem Trước Máy Streamer (Độc Lập 100%, KHÔNG câm tiếng luồng live TikTok/OBS để chống lặp tiếng)
+  // 🔇 Xử lý Bật/Tắt Âm Thanh Video & Loa Xem Trước Phần Mềm (Độc Lập 100%, Áp Dụng Ngay Lập Tức Tức Thì 0ms)
   const handleToggleLocalSpeakerMute = useCallback(() => {
     setIsLocalSpeakerMuted(prev => {
       const nextState = !prev;
       isLocalSpeakerMutedRef.current = nextState;
       setLiveAudioMuted(nextState);
 
-      // Tắt/Mở tiếng video trên màn hình điều khiển xem trước
+      // 1. Tắt/Mở tiếng video trên màn hình điều khiển xem trước
       if (desktopVideoRef.current) {
         desktopVideoRef.current.muted = nextState;
         if (!nextState) {
-          desktopVideoRef.current.volume = liveVolume || 1.0;
+          desktopVideoRef.current.volume = (typeof liveVolume === 'number' && liveVolume > 0) ? liveVolume : 1.0;
         }
       }
       if (flvVideoRef.current) {
         flvVideoRef.current.muted = nextState;
         if (!nextState) {
-          flvVideoRef.current.volume = liveVolume || 1.0;
+          flvVideoRef.current.volume = (typeof liveVolume === 'number' && liveVolume > 0) ? liveVolume : 1.0;
         }
       }
 
-      // Tắt/Mở tiếng Loa xem trước của Audio Engine máy tính
+      // 2. Quét và ép buộc 100% tất cả các thẻ <video> & <audio> trong DOM áp dụng trạng thái âm thanh
+      try {
+        document.querySelectorAll('video').forEach(v => {
+          try {
+            v.muted = nextState;
+            if (!nextState) {
+              v.volume = (typeof liveVolume === 'number' && liveVolume > 0) ? liveVolume : 1.0;
+              if (v.paused && v.dataset.userPaused !== 'true') {
+                v.play().catch(() => {});
+              }
+            }
+          } catch (err) {}
+        });
+        document.querySelectorAll('audio').forEach(a => {
+          try {
+            a.muted = nextState;
+            if (!nextState) {
+              a.volume = (typeof liveVolume === 'number' && liveVolume > 0) ? liveVolume : 1.0;
+            }
+          } catch (err) {}
+        });
+      } catch (err) {}
+
+      // 3. Tắt/Mở tiếng Loa xem trước của Audio Engine máy tính
       bandoAudio.setLocalSpeakerMute(nextState);
 
       try {
@@ -1734,17 +1775,19 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
       try {
         localStorage.setItem('avalive_local_speaker_muted', String(nextState));
+        localStorage.setItem('avalive_audio_muted', String(nextState));
+        localStorage.setItem('avalive_overlay_audio_muted', String(nextState));
       } catch (e) {}
 
       if (nextState) {
         setToast({
           type: 'info',
-          message: '🔇 Đã TẮT LOA XEM TRƯỚC (Chống vọng tiếng - Luồng TikTok Live & OBS vẫn phát âm thanh 100%)'
+          message: '🔇 Đã TẮT TIẾNG (Mute) — Video và âm thanh xem trước trên phần mềm đã tắt tiếng.'
         });
       } else {
         setToast({
           type: 'success',
-          message: '🔊 Đã BẬT LOA XEM TRƯỚC (Nghe âm thanh xem trước trên máy tính)'
+          message: '🔊 Đã BẬT TIẾNG (Unmute) — Video và âm thanh xem trước trên phần mềm đang phát.'
         });
       }
 
@@ -1991,6 +2034,29 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       localStorage.setItem('avalive_overlay_volume', String(newVol));
       localStorage.setItem('avalive_audio_muted', String(isMutedNow));
       localStorage.setItem('avalive_overlay_audio_muted', String(isMutedNow));
+    } catch (e) {}
+
+    if (desktopVideoRef.current) {
+      desktopVideoRef.current.volume = newVol;
+      desktopVideoRef.current.muted = isMutedNow;
+    }
+    if (flvVideoRef.current) {
+      flvVideoRef.current.volume = newVol;
+      flvVideoRef.current.muted = isMutedNow;
+    }
+    try {
+      document.querySelectorAll('video').forEach(v => {
+        try {
+          v.volume = newVol;
+          v.muted = isMutedNow;
+        } catch (e) {}
+      });
+      document.querySelectorAll('audio').forEach(a => {
+        try {
+          a.volume = newVol;
+          a.muted = isMutedNow;
+        } catch (e) {}
+      });
     } catch (e) {}
 
     bandoAudio.setMasterVolume(newVol);

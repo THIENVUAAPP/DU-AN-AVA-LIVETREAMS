@@ -1390,8 +1390,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         const saved = localStorage.getItem('avalive_master_live_state');
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (parsed.updatedAt && parsed.updatedAt > lastUpdatedTimestamp) {
-            lastUpdatedTimestamp = parsed.updatedAt;
+          if (!masterStateRef.current?.mediaUrl || (parsed.updatedAt && parsed.updatedAt > lastUpdatedTimestamp) || (parsed.mediaUrl && !isSameMediaUrl(parsed.mediaUrl, masterStateRef.current?.mediaUrl))) {
+            if (parsed.updatedAt) lastUpdatedTimestamp = parsed.updatedAt;
             applyMasterState(parsed);
           }
         }
@@ -1403,8 +1403,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       fetch(endpoint)
         .then(r => r.json())
         .then(data => {
-          if (data && data.updatedAt && data.updatedAt > lastUpdatedTimestamp) {
-            lastUpdatedTimestamp = data.updatedAt;
+          if (data && (!masterStateRef.current?.mediaUrl || (data.updatedAt && data.updatedAt > lastUpdatedTimestamp) || (data.mediaUrl && !isSameMediaUrl(data.mediaUrl, masterStateRef.current?.mediaUrl)))) {
+            if (data.updatedAt) lastUpdatedTimestamp = data.updatedAt;
             applyMasterState(data);
           }
         })
@@ -1412,7 +1412,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         .finally(() => {
           isFetchingLiveState = false;
         });
-    }, 2500);
+    }, 2000);
 
     return () => {
       clearInterval(frameInterval);
@@ -2006,7 +2006,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.1.5
+                v1.1.6
               </span>
             </div>
 
