@@ -1069,7 +1069,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '1.1.6';
+  let ver = '1.1.7';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1107,7 +1107,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '1.1.6';
+  let ver = '1.1.7';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -2708,10 +2708,10 @@ const PORT = process.env.PORT || 3001;
 const scheme = usingHttps ? 'https' : 'http';
 
 // ============================================================
-// TUNNEL URL — Lưu URL công khai do cloudflared / localtunnel cấp
+// TUNNEL URL — Lưu URL công khai do Cloudflare Quick Tunnel cấp (trycloudflare.com)
 // ============================================================
-let currentTunnelUrl = (currentMasterLiveState && typeof currentMasterLiveState.tunnelUrl === 'string' && currentMasterLiveState.tunnelUrl.startsWith('https://')) ? currentMasterLiveState.tunnelUrl : null;
-let tunnelStatus = currentTunnelUrl ? 'active' : 'connecting'; // 'connecting' | 'active' | 'error'
+let currentTunnelUrl = null;
+let tunnelStatus = 'connecting'; // 'connecting' | 'active' | 'error'
 let cloudflaredConsecutiveFails = 0;
 
 // API: Cho phép frontend lấy tunnel URL để dán vào TikTok Studio (hỗ trợ cả /api/tunnel-url và /api/tunnel-status)
@@ -2786,10 +2786,8 @@ try {
 
 // ============================================================
 // 🌐 CLOUDFLARE QUICK TUNNEL — Cross-platform (Windows + Mac + Linux)
-// ✅ Dùng npm package 'cloudflared' — tự tải đúng binary cho mỗi OS
-// ✅ Không có trang cảnh báo IP như localtunnel
-// ✅ TikTok Studio chấp nhận *.trycloudflare.com ngay lập tức
-// ✅ User tải phần mềm về, npm install, chạy là xong — không cần cài thêm gì
+// ✅ Dùng trycloudflare.com chuẩn 100% (Không bao giờ dùng localtunnel)
+// ✅ Không có trang cảnh báo IP, TikTok Studio chấp thuận tức thì
 // ============================================================
 const { spawn } = require('child_process');
 
@@ -2798,7 +2796,7 @@ let healthCheckTimer = null;
 
 // API: Làm mới tunnel thủ công khi cần
 app.post('/api/refresh-tunnel', (req, res) => {
-  console.log('🔄 [Tunnel] Yêu cầu cấp lại đường link tunnel mới...');
+  console.log('🔄 [Tunnel] Yêu cầu cấp lại đường link Cloudflare Tunnel mới...');
   if (activeCloudflaredProc) {
     try { activeCloudflaredProc.kill('SIGKILL'); } catch (e) {}
     activeCloudflaredProc = null;
@@ -2815,7 +2813,7 @@ app.post('/api/refresh-tunnel', (req, res) => {
 });
 
 async function startCloudflaredTunnel(port) {
-  console.log('\n🔗 [Tunnel] Khởi động Cloudflare Quick Tunnel...');
+  console.log('\n🔗 [Tunnel] Khởi động Cloudflare Quick Tunnel (trycloudflare.com)...');
   tunnelStatus = 'connecting';
 
   if (activeCloudflaredProc) {
@@ -2877,7 +2875,7 @@ async function startCloudflaredTunnel(port) {
     }
   }
 
-  // 3. Khởi chạy binary an toàn 100% không bao giờ gây crash
+  // 3. Khởi chạy binary Cloudflare Tunnel
   if (cloudflaredBin) {
     if (process.platform !== 'win32' && fs.existsSync(cloudflaredBin)) {
       try { fs.chmodSync(cloudflaredBin, 0o755); } catch (e) {}
@@ -2902,9 +2900,9 @@ async function startCloudflaredTunnel(port) {
       activeCloudflaredProc = proc;
 
       proc.on('error', (err) => {
-        console.warn('❌ [Tunnel] Lỗi spawn binary:', err.message);
+        console.warn('❌ [Tunnel] Lỗi spawn cloudflared binary:', err.message);
         tunnelStatus = 'error';
-        startLocaltunnelFallback(port);
+        setTimeout(() => startCloudflaredTunnel(port), 10000);
       });
 
       let isRateLimited = false;
@@ -2915,27 +2913,30 @@ async function startCloudflaredTunnel(port) {
             isRateLimited = true;
             console.warn('⚠️  [Tunnel] Cloudflare Quick Tunnel đang bị giới hạn tần suất (429/1015). Sẽ tạm dừng 60s trước khi thử lại...');
           }
-          const match = str.match(/https:\/\/[a-z0-9\-]+\.trycloudflare\.com/);
-          if (match && !currentTunnelUrl) {
-            currentTunnelUrl = match[0];
-            tunnelStatus = 'active';
-            cloudflaredConsecutiveFails = 0;
-            currentMasterLiveState.tunnelUrl = currentTunnelUrl;
-            printTunnelReady(currentTunnelUrl);
-            io.emit('TUNNEL_URL_UPDATE', {
-              status: 'active',
-              tunnelUrl: currentTunnelUrl,
-              projects: {
-                idol: `${currentTunnelUrl}/live-stream`,
-                'live-stream': `${currentTunnelUrl}/live-stream`,
-                bando: `${currentTunnelUrl}/bando`,
-                battle: `${currentTunnelUrl}/battle`
-              }
-            });
-            io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
-            saveLiveStateToFile(false);
-            startTunnelLivenessMonitor(currentTunnelUrl, port);
-            syncToVercelCloudState();
+          const match = str.match(/https:\/\/[a-zA-Z0-9\-]+\.trycloudflare\.com/);
+          if (match) {
+            const newUrl = match[0];
+            if (newUrl !== currentTunnelUrl) {
+              currentTunnelUrl = newUrl;
+              tunnelStatus = 'active';
+              cloudflaredConsecutiveFails = 0;
+              currentMasterLiveState.tunnelUrl = currentTunnelUrl;
+              printTunnelReady(currentTunnelUrl);
+              io.emit('TUNNEL_URL_UPDATE', {
+                status: 'active',
+                tunnelUrl: currentTunnelUrl,
+                projects: {
+                  idol: `${currentTunnelUrl}/live-stream`,
+                  'live-stream': `${currentTunnelUrl}/live-stream`,
+                  bando: `${currentTunnelUrl}/bando`,
+                  battle: `${currentTunnelUrl}/battle`
+                }
+              });
+              io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+              saveLiveStateToFile(false);
+              startTunnelLivenessMonitor(currentTunnelUrl, port);
+              syncToVercelCloudState();
+            }
           }
         } catch (e) {}
       };
@@ -2957,17 +2958,17 @@ async function startCloudflaredTunnel(port) {
     } catch (spawnErr) {
       console.warn('❌ [Tunnel Exception caught]:', spawnErr.message);
       tunnelStatus = 'error';
+      setTimeout(() => startCloudflaredTunnel(port), 10000);
     }
+  } else {
+    console.warn('\n⚠️  [Tunnel] Đang chờ binary cloudflared. Thử lại sau 10s...');
+    setTimeout(() => startCloudflaredTunnel(port), 10000);
   }
-
-  // Cách 3: Fallback localtunnel
-  console.warn('\n⚠️  [Tunnel] Không tìm thấy cloudflared. Thử localtunnel dự phòng...');
-  startLocaltunnelFallback(port);
 }
 
 function printTunnelReady(tunnelUrl) {
   console.log('\n╔══════════════════════════════════════════════════════╗');
-  console.log('║  🎉 CLOUDFLARE TUNNEL ĐÃ SẴN SÀNG (KHÔNG CẦN IP)!   ║');
+  console.log('║  🎉 CLOUDFLARE TUNNEL ĐÃ SẴN SÀNG (trycloudflare.com) ║');
   console.log('╠══════════════════════════════════════════════════════╣');
   console.log(`║  🌐 Base URL:  ${tunnelUrl.padEnd(38)}║`);
   console.log(`║  👑 AI Idol:   ${(tunnelUrl + '/live-stream').padEnd(38)}║`);
@@ -2976,27 +2977,6 @@ function printTunnelReady(tunnelUrl) {
   console.log('╠══════════════════════════════════════════════════════╣');
   console.log('║  ✅ Dán link trên vào TikTok Live Studio - 100% OK!  ║');
   console.log('╚══════════════════════════════════════════════════════╝\n');
-}
-
-// Fallback: localtunnel nếu cloudflared không hoạt động
-async function startLocaltunnelFallback(port) {
-  try {
-    const localtunnel = require('localtunnel');
-    console.log('🔗 [Tunnel Fallback] Thử localtunnel...');
-    const tunnel = await localtunnel({ port });
-    currentTunnelUrl = tunnel.url;
-    tunnelStatus = 'active';
-    console.log(`🌐 [Tunnel Fallback] URL: ${tunnel.url} (lưu ý: cần nhập IP khi lần đầu truy cập)`);
-    tunnel.on('close', () => {
-      currentTunnelUrl = null;
-      tunnelStatus = 'connecting';
-      setTimeout(() => startLocaltunnelFallback(port), 3000);
-    });
-  } catch (err) {
-    console.error('❌ [Tunnel] Tất cả phương thức tunnel đều thất bại:', err.message);
-    tunnelStatus = 'error';
-    setTimeout(() => startCloudflaredTunnel(port), 15000);
-  }
 }
 
 let consecutiveTunnelFailures = 0;

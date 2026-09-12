@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.1.6';
+export const APP_VERSION = '1.1.7';
 export const RELEASE_DATE = '12/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🔊 Sửa Triệt Để Bật/Tắt Tiếng Video Xem Trước Phần Mềm',
-    description: 'Nút bật/tắt tiếng và thanh trượt âm lượng trên phần mềm điều khiển trực tiếp mọi video và audio theo thời gian thực 0ms, đảm bảo video tải lên nghe rõ ràng hoặc tắt tiếng theo đúng ý streamer.'
+    title: '🌐 Chuẩn Hóa 100% Cloudflare Quick Tunnel (trycloudflare.com)',
+    description: 'Chấm dứt hoàn toàn localtunnel. Đường truyền online sử dụng 100% trycloudflare.com HTTPS, tự động cấp link mới khi mở phần mềm, dán link vào TikTok Live Studio là nhận video và phát 60 FPS tức thì không bị chặn.'
   },
   {
-    title: '🖥️ Cửa Sổ Live 9:16 (Window Capture OBS) Hiển Thị Video Tức Thì',
-    description: 'Chấm dứt hoàn toàn hiện tượng không xuất hiện video khi mở Cửa Sổ Live 9:16. Video xuất hiện ngay lập tức (0ms delay), giữ nguyên độ phân giải gốc 4K/1080p và tốc độ 60 FPS siêu mượt không đứng hình.'
+    title: '🖥️ Cửa Sổ Live 9:16 (Window Capture OBS) Đầy Đủ Cả Hình Lẫn Tiếng',
+    description: 'Khắc phục triệt để lỗi có tiếng nhưng mất hình trên Window Capture. Video được dựng frame trực tiếp và render liên tục 60 FPS, bảo toàn 100% độ phân giải gốc 4K/1080p, không gián đoạn.'
   },
   {
-    title: '⚡ Link TikTok Live Studio & OBS Phát Ngay Lập Tức Chuẩn 9:16',
-    description: 'Dán đường link Online Cloudflare Tunnel HTTPS vào TikTok Live Studio là phát video tức thì, đúng độ phân giải và tỉ lệ khung hình 9:16 chuẩn TikTok, chạy mượt mà 24/24 không gián đoạn.'
+    title: '⚡ Tối Ưu Hóa Bộ Đồng Bộ Video & Tách Biệt Âm Thanh Độc Lập',
+    description: 'Hệ thống tự động đồng bộ video mượt mà qua các kênh truyền, âm thanh phát chuẩn xác, không bị giật lag hay đứng hình sau nhiều giờ livestream liên tục.'
   }
 ];
 

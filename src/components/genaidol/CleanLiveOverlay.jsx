@@ -1701,9 +1701,17 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       } catch (e) {}
     }
 
-    // 6. Tuyệt đối loại bỏ video nền cũ nếu có trong cache
-    if (typeof candidateUrl === 'string' && (candidateUrl.includes('nhep_mieng.mp4') || candidateUrl.includes('demo_dancer.mp4') || candidateUrl.includes('default_idol.mp4'))) {
-      candidateUrl = null;
+    // 6. Kiểm tra trực tiếp từ cửa sổ phần mềm cha (window.opener) nếu mở từ Window Capture
+    if (!candidateUrl && typeof window !== 'undefined' && window.opener && !window.opener.closed) {
+      try {
+        const openerVid = window.opener.document.querySelector('video.main-video-player, video[data-main-player="true"], video');
+        if (openerVid) {
+          const s = openerVid.currentSrc || openerVid.src;
+          if (s && typeof s === 'string' && !s.startsWith('blob:') && s.trim() !== '') {
+            candidateUrl = s;
+          }
+        }
+      } catch (e) {}
     }
 
     // 7. Chuẩn hoá tuyệt đối URL cho HTTPS Overlay (TikTok Live Studio / OBS Browser Source)
@@ -1756,7 +1764,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       }
     }
 
-    // 6. Xác định chính xác video hay ảnh
+    // 8. Xác định chính xác video hay ảnh
     if (typeof candidateUrl === 'string') {
       const lower = candidateUrl.toLowerCase();
       if (lower.endsWith('.mp4') || lower.endsWith('.webm') || lower.endsWith('.mov') || lower.includes('/uploads/')) {
@@ -1764,12 +1772,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       } else if (lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.webp')) {
         isVideo = false;
       }
-    }
-
-    // 7. TUYỆT ĐỐI KHÔNG DÙNG VIDEO NỀN MẶC ĐỊNH KHI CHƯA YÊU CẦU: NẾU KHÔNG CÓ URL HOẶC URL LÀ RÁC/NULL -> TRẢ VỀ NULL
-    if (!candidateUrl || candidateUrl.includes('mixkit.co') || candidateUrl.includes('default_idol.mp4')) {
-      candidateUrl = null;
-      isVideo = false;
     }
 
     return { url: candidateUrl, isVideo };
@@ -2006,7 +2008,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.1.6
+                v1.1.7
               </span>
             </div>
 
@@ -2161,7 +2163,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           {currentStage === 'idol' && (
             <div className="w-full h-full absolute inset-0 flex items-center justify-center overflow-hidden bg-black">
             {/* MULTI-AVATAR STUDIO CANVAS (2-4 CHARACTERS) */}
-            {multiAvatarConfig?.enabled && multiAvatarConfig?.activeCount >= 2 ? (() => {
+            {multiAvatarConfig?.enabled && multiAvatarConfig?.activeCount >= 2 && Array.isArray(multiAvatarConfig?.avatars) && multiAvatarConfig.avatars.some(a => a.talkVideo || a.idleVideo || a.videoUrl) ? (() => {
               const activeList = (multiAvatarConfig.avatars || [])
                 .filter(a => a.enabled)
                 .slice(0, multiAvatarConfig.activeCount);
@@ -2433,22 +2435,23 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               <>
                 <video
                   ref={overlayVideoRef}
-                  key="avalive_overlay_main_video"
+                  key={activeMedia.url || 'avalive_overlay_main_video'}
                   src={activeMedia.url}
                   autoPlay={true}
                   loop={true}
                   muted={isVideoAudioMuted}
                   playsInline
+                  webkit-playsinline
                   controls={false}
                   preload="auto"
                   disableRemotePlayback
-                  className="w-full h-full select-none pointer-events-none"
+                  className="w-full h-full select-none"
                   style={{
                     width: '100%',
                     height: '100%',
                     objectFit: objectFitState || 'cover',
                     backgroundColor: '#000000',
-                    imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto'
+                    display: 'block'
                   }}
                   onCanPlay={(e) => {
                     // ⚡ INSTANT 0MS PLAYBACK: Phát ngay lập tức khi frame đầu tiên sẵn sàng
