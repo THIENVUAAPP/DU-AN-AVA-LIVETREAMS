@@ -6,7 +6,7 @@
   "mediaUrl": "/uploads/media-1789044811424-233037063.mp4",
   "isVideo": true,
   "videoPlaybackEvent": "play",
-  "isPlaying": false,
+  "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
   "updatedAt": 1789209434658,

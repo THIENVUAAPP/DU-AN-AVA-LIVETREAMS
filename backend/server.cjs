@@ -650,7 +650,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       x5-video-player-type="h5" 
       loop 
       preload="auto" 
-      ${soundParam ? '' : 'muted'}
+      muted
     ></video>
     <div id="controlsDock">
       <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập">⏸️ Dừng</button>
@@ -691,12 +691,18 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       function isSameMedia(srcA, srcB) {
         if (!srcA || !srcB) return false;
         try {
+          const pA = String(srcA).split('?')[0].split('#')[0];
+          const pB = String(srcB).split('?')[0].split('#')[0];
+          if (pA === pB) return true;
+          const fA = pA.substring(pA.lastIndexOf('/') + 1);
+          const fB = pB.substring(pB.lastIndexOf('/') + 1);
+          if (fA && fB && fA === fB && !fA.startsWith('blob:') && !fB.startsWith('blob:')) return true;
           const uA = new URL(srcA, window.location.href);
           const uB = new URL(srcB, window.location.href);
           return uA.pathname === uB.pathname;
         } catch (e) {
-          const pA = srcA.split('?')[0].split('#')[0];
-          const pB = srcB.split('?')[0].split('#')[0];
+          const pA = String(srcA).split('?')[0].split('#')[0];
+          const pB = String(srcB).split('?')[0].split('#')[0];
           return pA === pB || pA.endsWith(pB) || pB.endsWith(pA);
         }
       }
@@ -734,20 +740,46 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
           try { vid.currentTime = forceSeekTime; } catch(e) {}
         }
 
-        vid.muted = targetMuted;
-        vid.volume = targetVolume;
-
         if (!isStreamUserPaused) {
           const p = vid.play();
           if (p !== undefined) {
-            p.then(updateDockUI).catch(function() {
+            p.then(function() {
+              if (!targetMuted) {
+                vid.muted = false;
+                vid.volume = targetVolume;
+              }
+              updateDockUI();
+            }).catch(function() {
               vid.muted = true;
-              vid.play().then(updateDockUI).catch(function() {});
+              vid.play().then(function() {
+                if (!targetMuted) {
+                  setTimeout(function() { vid.muted = false; vid.volume = targetVolume; }, 200);
+                }
+                updateDockUI();
+              }).catch(function() {});
             });
           }
         }
         updateDockUI();
       }
+
+      vid.addEventListener('canplay', function() {
+        if (!isStreamUserPaused && vid.paused) {
+          vid.play().then(function() {
+            if (!targetMuted) { vid.muted = false; vid.volume = targetVolume; }
+            updateDockUI();
+          }).catch(function() {});
+        }
+      });
+
+      vid.addEventListener('loadedmetadata', function() {
+        if (!isStreamUserPaused && vid.paused) {
+          vid.play().then(function() {
+            if (!targetMuted) { vid.muted = false; vid.volume = targetVolume; }
+            updateDockUI();
+          }).catch(function() {});
+        }
+      });
 
       // 🔊 ĐIỀU KHIỂN ÂM THANH ĐỒNG BỘ 100% THEO NGƯỜI DÙNG: TẮT LÀ TẮT, BẬT LÀ BẬT
       function handleRemoteAudio(isMuted, vol) {
@@ -1075,7 +1107,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '1.1.3';
+  let ver = '1.1.4';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;

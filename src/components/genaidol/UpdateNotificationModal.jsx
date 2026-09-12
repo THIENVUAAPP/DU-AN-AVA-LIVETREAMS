@@ -2,25 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.1.3';
+export const APP_VERSION = '1.1.4';
 export const RELEASE_DATE = '12/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🖥️ Cửa Sổ Window Capture OBS Nhận Diện & Mở Video Tức Thì 0ms (Hết Màn Hình Đen)',
-    description: 'Cửa sổ Live 9:16 (Window Capture) tự động liên kết và clone video đang phát trên phần mềm với độ trễ 0ms. Tự động nhận diện video mọi lúc, chạy siêu mượt 60 FPS chuẩn sắc nét 100% video gốc.'
+    title: '⚡ Khắc Phục Triệt Để Lỗi Chớp Nháy Trên Window Capture OBS (Chạy Liền Mạch 100%)',
+    description: 'Chấm dứt hoàn toàn hiện tượng nhấp nháy/chớp tắt video trên cửa sổ Live 9:16 do xung đột so sánh URL. Video phát mượt mà, liên tục hàng giờ liền 60 FPS chuẩn sắc nét video gốc.'
   },
   {
-    title: '🔇 Hệ Thống Âm Thanh Độc Lập Hoàn Toàn — Chống Vọng/Lặp Tiếng Giữa Phần Mềm & TikTok Live',
-    description: 'Tách biệt độc lập âm thanh Loa xem trước trên máy Streamer, Cửa sổ Window Capture và Luồng TikTok Live Studio. Streamer có thể tắt loa máy tính để không bị lặp tiếng mà khán giả trên TikTok Live Studio / OBS vẫn nghe âm thanh trong trẻo 100%.'
+    title: '🎬 Khắc Phục Màn Hình Đen Cho Link TikTok Live Studio & OBS Browser Source',
+    description: 'Tối ưu hóa chuẩn Autoplay Policy của trình duyệt nhúng TikTok Live Studio. Video mở lên ngay lập tức 0ms, không còn màn hình đen, tự động đồng bộ âm thanh và hình ảnh sắc nét 1080x1920.'
   },
   {
-    title: '🚀 Đường Link TikTok Live Studio Tự Động Cập Nhật Video Ngay Lập Tức',
-    description: 'Khi đổi hoặc phát video mới trên phần mềm, đường link Online HTTPS tự động cập nhật và phát ngay lập tức không có độ trễ, chuẩn tỷ lệ 9:16 (1080x1920) 60 FPS.'
-  },
-  {
-    title: '🎛️ Bổ Sung Bảng Điều Khiển Nổi Trên Luồng Standalone Player',
-    description: 'Thêm nút Tạm dừng / Tiếp tục, Bật / Tắt âm thanh và Đổi chế độ Khung hình (Tràn viền / Vừa vặn) độc lập ngay trên giao diện phát sóng.'
+    title: '🔇 Hệ Thống Âm Thanh Độc Lập 100% — Chống Lặp Tiếng Tuyệt Đối',
+    description: 'Streamer có thể bật/tắt hoặc điều chỉnh âm lượng trên từng cửa sổ độc lập (Phần mềm Desktop, Cửa sổ Window Capture, Link TikTok Live Studio) mà không gây vọng tiếng hay mất tiếng luồng phát.'
   }
 ];
 

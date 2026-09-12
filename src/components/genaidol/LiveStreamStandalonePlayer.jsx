@@ -410,25 +410,43 @@ export default function LiveStreamStandalonePlayer() {
         src={resolveUrl(videoSrc) || undefined}
         autoPlay
         playsInline
+        webkit-playsinline
         loop
         preload="auto"
+        muted={true}
         onLoadedMetadata={(e) => {
           setIsVideoLoading(false);
           if (!isExplicitlyPausedRef.current && e.currentTarget.paused) {
-            e.currentTarget.play().then(() => setIsPlaybackActive(true)).catch(() => {});
+            e.currentTarget.play().then(() => {
+              setIsPlaybackActive(true);
+              if (!isUserMutedRef.current) {
+                e.currentTarget.muted = false;
+                e.currentTarget.volume = 1.0;
+              }
+            }).catch(() => {});
           }
         }}
-        onPlaying={() => {
+        onPlaying={(e) => {
           setIsPlaybackActive(true);
           setIsVideoLoading(false);
+          if (!isUserMutedRef.current && e.currentTarget.muted) {
+            e.currentTarget.muted = false;
+            e.currentTarget.volume = 1.0;
+          }
         }}
         onWaiting={() => {
           setIsVideoLoading(true);
         }}
-        onCanPlay={() => {
+        onCanPlay={(e) => {
           setIsVideoLoading(false);
-          if (!isExplicitlyPausedRef.current && videoRef.current?.paused) {
-            videoRef.current.play().catch(() => {});
+          if (!isExplicitlyPausedRef.current && e.currentTarget.paused) {
+            e.currentTarget.play().then(() => {
+              setIsPlaybackActive(true);
+              if (!isUserMutedRef.current) {
+                e.currentTarget.muted = false;
+                e.currentTarget.volume = 1.0;
+              }
+            }).catch(() => {});
           }
         }}
         onError={() => {
@@ -580,7 +598,7 @@ export default function LiveStreamStandalonePlayer() {
           zIndex: 10
         }}
       >
-        🔴 60 FPS REALTIME v1.1.3
+        🔴 60 FPS REALTIME v1.1.4
       </div>
     </div>
   );

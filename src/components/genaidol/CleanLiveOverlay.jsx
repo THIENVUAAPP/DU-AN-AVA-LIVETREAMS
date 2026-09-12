@@ -68,6 +68,12 @@ export const isSameMediaUrl = (srcA, srcB) => {
   if (!srcA || !srcB) return false;
   if (srcA === srcB) return true;
   try {
+    const pA = String(srcA).split('?')[0].split('#')[0];
+    const pB = String(srcB).split('?')[0].split('#')[0];
+    if (pA === pB) return true;
+    const fA = pA.substring(pA.lastIndexOf('/') + 1);
+    const fB = pB.substring(pB.lastIndexOf('/') + 1);
+    if (fA && fB && fA === fB && !fA.startsWith('blob:') && !fB.startsWith('blob:')) return true;
     const uA = new URL(srcA, window.location.href);
     const uB = new URL(srcB, window.location.href);
     return uA.pathname === uB.pathname;
@@ -688,32 +694,26 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     }
   }, []);
 
-  // ⚡ LIVE MIRROR WATCHER CHO WINDOW CAPTURE OBS (ĐỒNG BỘ TỨC THÌ 0MS VỚI PHẦN MỀM CHÍNH)
+  // ⚡ Ghi nhận video từ cửa sổ chính khi khởi động Window Capture
   useEffect(() => {
     if (!isWindowCapture) return;
-    const syncWithOpener = () => {
-      if (typeof window === 'undefined' || !window.opener) return;
-      try {
-        const opDoc = window.opener.document;
-        const opVid = opDoc?.querySelector('video[data-main-player="true"]') || opDoc?.querySelector('.main-video-player') || opDoc?.querySelector('video');
-        if (opVid) {
-          const opSrc = opVid.currentSrc || opVid.src;
-          if (opSrc && (!masterState.mediaUrl || !isSameMediaUrl(masterState.mediaUrl, opSrc))) {
-            setMasterState(prev => ({
-              ...prev,
-              mediaUrl: opSrc,
-              isVideo: true,
-              isPlaying: !opVid.paused
-            }));
-          }
+    if (typeof window === 'undefined' || !window.opener) return;
+    try {
+      const opDoc = window.opener.document;
+      const opVid = opDoc?.querySelector('video[data-main-player="true"]') || opDoc?.querySelector('.main-video-player') || opDoc?.querySelector('video');
+      if (opVid) {
+        const opSrc = opVid.currentSrc || opVid.src;
+        if (opSrc && !masterState.mediaUrl) {
+          setMasterState(prev => ({
+            ...prev,
+            mediaUrl: opSrc,
+            isVideo: true,
+            isPlaying: !opVid.paused
+          }));
         }
-      } catch (e) {}
-    };
-
-    syncWithOpener();
-    const t = setInterval(syncWithOpener, 600);
-    return () => clearInterval(t);
-  }, [isWindowCapture, masterState.mediaUrl]);
+      }
+    } catch (e) {}
+  }, [isWindowCapture]);
 
   useEffect(() => {
     const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
@@ -2048,7 +2048,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.1.3
+                v1.1.4
               </span>
             </div>
 
