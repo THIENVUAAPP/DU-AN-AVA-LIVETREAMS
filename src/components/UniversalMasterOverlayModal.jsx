@@ -163,6 +163,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     const origin = typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')
       ? window.location.origin
       : 'http://localhost:3001';
+    const captureUrl = `${origin}/idol?mode=window_capture&sound=1&autoplay=1&fit=cover${query}`;
     let newWin = null;
     try {
       newWin = window.open(
@@ -392,7 +393,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
               <h2 className="text-base font-black text-white tracking-wide flex items-center gap-2">
                 <span>TRUNG TÂM PHÁT SÓNG TIKTOK LIVE STUDIO & OBS</span>
                 <span className="text-[10px] bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-2 py-0.5 rounded-full font-bold">
-                  v1.0.9 ONLINE
+                  v1.1.0 ONLINE
                 </span>
               </h2>
               <p className="text-xs text-gray-400 font-medium">

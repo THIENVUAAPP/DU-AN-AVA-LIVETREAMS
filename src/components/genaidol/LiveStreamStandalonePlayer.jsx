@@ -159,6 +159,13 @@ export default function LiveStreamStandalonePlayer() {
     }
   }, [videoSrc, resolveUrl]);
 
+  // Kích hoạt phát tức thì ngay khi mount (0ms delay cho TikTok Live Studio)
+  useEffect(() => {
+    tryPlayWithSound();
+    const t = setTimeout(tryPlayWithSound, 400);
+    return () => clearTimeout(t);
+  }, []);
+
   // Cập nhật live state và tunnel URL định kỳ (chống đen màn hình 100%)
   useEffect(() => {
     const fetchLiveState = () => {
@@ -178,10 +185,10 @@ export default function LiveStreamStandalonePlayer() {
               return prev;
             });
           }
-          if (d.isPlaying === false || d.videoPlaybackEvent === 'pause') {
+          if (d.videoPlaybackEvent === 'pause') {
             applyExplicitPause();
-          } else if (d.isPlaying === true && isExplicitlyPausedRef.current) {
-            isExplicitlyPausedRef.current = false;
+          } else {
+            if (isExplicitlyPausedRef.current) isExplicitlyPausedRef.current = false;
             tryPlayWithSound();
           }
           if (typeof d.isVideoAudioMuted === 'boolean' && videoRef.current) {
@@ -192,7 +199,7 @@ export default function LiveStreamStandalonePlayer() {
     };
 
     fetchLiveState();
-    const interval = setInterval(fetchLiveState, 3000);
+    const interval = setInterval(fetchLiveState, 2500);
     return () => clearInterval(interval);
   }, [tunnelUrl, videoSrc]);
 
@@ -457,7 +464,7 @@ export default function LiveStreamStandalonePlayer() {
           zIndex: 10
         }}
       >
-        🔴 60 FPS REALTIME v1.0.9
+        🔴 60 FPS REALTIME v1.1.0
       </div>
     </div>
   );

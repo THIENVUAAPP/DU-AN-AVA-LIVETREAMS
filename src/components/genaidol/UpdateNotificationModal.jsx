@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.0.9';
+export const APP_VERSION = '1.1.0';
 export const RELEASE_DATE = '12/09/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '🖥️ Sửa Triệt Để Lỗi Bấm Mở Cửa Sổ Live 9:16 (Window Capture OBS & TikTok Studio)',
+    description: 'Khắc phục hoàn toàn lỗi JavaScript khiến nút bấm mở Window Capture không phản hồi. Giờ đây bấm nút "🖥️ Cửa Sổ Live" trên thanh công cụ hoặc trong bảng điều khiển sẽ lập tức mở Cửa Sổ Live 9:16 mang tên [AvaLive VIP PRO] với video phát mượt mà 60 FPS, 0ms delay.'
+  },
+  {
+    title: '🎬 Khắc Phục Dứt Điểm Lỗi Màn Hình Đen Trên Link TikTok Live Studio',
+    description: 'Tự động kích hoạt luồng phát 60 FPS từ frame đầu tiên ngay khi mở trên TikTok Live Studio / OBS Browser Source, chống tình trạng bị giữ ở trạng thái paused hoặc màn hình đen tĩnh.'
+  },
+  {
     title: '🔊 Bật / Tắt Tiếng Video Tức Thì 0ms — Không Giựt / Không Chớp Nháy / Bật Là Lên Tiếng Ngay',
-    description: 'Tách biệt triệt để cơ chế điều khiển âm thanh và luồng giải mã video. Bấm "Bật Tiếng" là âm thanh phát ngay lập tức không trễ 1 mili-giây, không bị gián đoạn hay khởi động lại khung hình, chấm dứt hoàn toàn hiện tượng kẹt âm thanh.'
+    description: 'Tách biệt triệt để cơ chế điều khiển âm thanh và luồng giải mã video. Bấm "Bật Tiếng" là âm thanh phát ngay lập tức không trễ 1 mili-giây, không bị gián đoạn hay khởi động lại khung hình.'
   },
   {
-    title: '🖥️ Khắc Phục Lỗi Mở Cửa Sổ Live 9:16 (Window Capture OBS & TikTok Live Studio)',
-    description: 'Xử lý triệt để hiện tượng trình duyệt chặn popup, nâng cấp cơ chế dự phòng mở tab mới và nạp sẵn 100% video đang phát. Cửa sổ Live 9:16 mở lên mượt mà, khung hình đồng bộ chính xác từng mili-giây.'
-  },
-  {
-    title: '🎬 Sửa Dứt Điểm Lỗi Màn Hình Đen Khi Dán Link Sang TikTok Live Studio',
-    description: 'Tự động phát hiện và gắn video media thực tế vào đường link Online HTTPS (Cloudflare Tunnel & Vercel), cơ chế phục hồi liên tục chống đen màn hình, tối ưu GPU Hardware Acceleration 60 FPS sắc nét như video gốc.'
-  },
-  {
-    title: '⚡ Tải Trực Tiếp File ZIP Standalone v1.0.9 Dùng Ngay 1-Click Không Qua GitHub',
-    description: 'Cập nhật bộ phát hành Standalone v1.0.9 mới nhất cho Windows và Mac, tải về giải nén dùng ngay lập tức không cần cài đặt môi trường phức tạp.'
+    title: '⚡ Tải Trực Tiếp File ZIP Standalone v1.1.0 Dùng Ngay 1-Click Không Qua GitHub',
+    description: 'Cập nhật bộ phát hành Standalone v1.1.0 mới nhất cho Windows và Mac, tải về giải nén dùng ngay lập tức không cần cài đặt môi trường phức tạp.'
   }
 ];
 

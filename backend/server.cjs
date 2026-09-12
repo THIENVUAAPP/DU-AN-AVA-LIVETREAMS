@@ -1015,7 +1015,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '1.0.9';
+  let ver = '1.1.0';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1053,7 +1053,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '1.0.9';
+  let ver = '1.1.0';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1265,13 +1265,17 @@ if (!currentMasterLiveState.mediaUrl || currentMasterLiveState.mediaUrl.startsWi
 // 🎬 TỰ ĐỘNG KHÔI PHỤC VIDEO GẦN NHẤT CỦA NGƯỜI DÙNG:
 if (!currentMasterLiveState.mediaUrl || !fs.existsSync(path.join(uploadsDir, path.basename(currentMasterLiveState.mediaUrl)))) {
   currentMasterLiveState.mediaUrl = getLatestUploadMediaUrl();
-  if (currentMasterLiveState.mediaUrl) {
-    currentMasterLiveState.isVideo = true;
-    currentMasterLiveState.isPlaying = true;
-    currentMasterLiveState.isUserExplicitMediaLocked = true;
-    console.log(`[AutoRestore] 🎬 Đã khôi phục video gần nhất của người dùng: ${currentMasterLiveState.mediaUrl}`);
-    saveLiveStateToFile();
-  }
+}
+if (currentMasterLiveState.mediaUrl) {
+  currentMasterLiveState.isVideo = true;
+  currentMasterLiveState.isPlaying = true;
+  currentMasterLiveState.videoPlaybackEvent = 'play';
+  currentMasterLiveState.isUserExplicitMediaLocked = true;
+  console.log(`[AutoRestore] 🎬 Đã khôi phục video gần nhất của người dùng: ${currentMasterLiveState.mediaUrl}`);
+  saveLiveStateToFile();
+} else {
+  currentMasterLiveState.isPlaying = true;
+  currentMasterLiveState.videoPlaybackEvent = 'play';
 }
 let currentBandoGameState = null;
 let currentBattleGameState = null;
