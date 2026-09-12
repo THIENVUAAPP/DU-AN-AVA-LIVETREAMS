@@ -4486,16 +4486,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             <span className="whitespace-nowrap">📡 Link Live</span>
           </button>
 
-          {/* Nút Mở Trực Tiếp Cửa Sổ Live 9:16 (Window Capture OBS / TikTok Studio) */}
-          <button
-            onClick={handleOpenWindowCapture}
-            className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold border shadow-xs transition-all hover:scale-105 cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white border-blue-400/50"
-            title="Mở Cửa Sổ Live 9:16 độc lập để chia sẻ qua Window Capture trong OBS Studio / TikTok LIVE Studio"
-          >
-            <Monitor size={10} className="text-yellow-300 animate-pulse" />
-            <span className="whitespace-nowrap">🖥️ Cửa Sổ Live</span>
-          </button>
-
 
           {/* 👑 1 Ô DUY NHẤT: LOGO TÀI KHOẢN + GÓI (GỌN GÀNG) */}
           <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-[9.5px] shadow-xs shrink-0 ${isDarkMode ? 'bg-[#12131d]/90 border-cyan-500/30' : 'bg-white border-gray-300'}`}>

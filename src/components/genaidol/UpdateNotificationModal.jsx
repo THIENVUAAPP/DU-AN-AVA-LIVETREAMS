@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.1.0';
+export const APP_VERSION = '1.1.1';
 export const RELEASE_DATE = '12/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🖥️ Sửa Triệt Để Lỗi Bấm Mở Cửa Sổ Live 9:16 (Window Capture OBS & TikTok Studio)',
-    description: 'Khắc phục hoàn toàn lỗi JavaScript khiến nút bấm mở Window Capture không phản hồi. Giờ đây bấm nút "🖥️ Cửa Sổ Live" trên thanh công cụ hoặc trong bảng điều khiển sẽ lập tức mở Cửa Sổ Live 9:16 mang tên [AvaLive VIP PRO] với video phát mượt mà 60 FPS, 0ms delay.'
+    title: '🖥️ Sửa Lỗi ReferenceError: useCallback & Khắc Phục Màn Hình Đen Cửa Sổ Live',
+    description: 'Bổ sung đầy đủ thư viện React Hook useCallback trong CleanLiveOverlay & AIDOLLiveConsole. Cửa sổ Live 9:16 (OBS Window Capture & TikTok Studio) mở lên mượt mà 60 FPS, không còn báo lỗi Error Boundary và không bị đứng hình hay đen màn hình.'
   },
   {
-    title: '🎬 Khắc Phục Dứt Điểm Lỗi Màn Hình Đen Trên Link TikTok Live Studio',
-    description: 'Tự động kích hoạt luồng phát 60 FPS từ frame đầu tiên ngay khi mở trên TikTok Live Studio / OBS Browser Source, chống tình trạng bị giữ ở trạng thái paused hoặc màn hình đen tĩnh.'
+    title: '🧹 Tinh Gọn Giao Diện Header Bar Phần Mềm',
+    description: 'Loại bỏ ô nút bị dư thừa trên thanh công cụ Header Bar theo đúng phản hồi, giữ giao diện sạch sẽ, chuyên nghiệp và gọn gàng nhất.'
   },
   {
-    title: '🔊 Bật / Tắt Tiếng Video Tức Thì 0ms — Không Giựt / Không Chớp Nháy / Bật Là Lên Tiếng Ngay',
-    description: 'Tách biệt triệt để cơ chế điều khiển âm thanh và luồng giải mã video. Bấm "Bật Tiếng" là âm thanh phát ngay lập tức không trễ 1 mili-giây, không bị gián đoạn hay khởi động lại khung hình.'
+    title: '🎬 Tối Ưu Link Phát Sóng TikTok Live Studio Chuẩn Khung Hình 9:16 (1080x1920)',
+    description: 'Gắn trực tiếp nguồn video vào thẻ phát sóng và kích hoạt phát tức thì 0ms, tự động khớp khung hình 1080x1920 không viền đen, chạy liên tục nhiều giờ siêu nét siêu mượt.'
   },
   {
-    title: '⚡ Tải Trực Tiếp File ZIP Standalone v1.1.0 Dùng Ngay 1-Click Không Qua GitHub',
-    description: 'Cập nhật bộ phát hành Standalone v1.1.0 mới nhất cho Windows và Mac, tải về giải nén dùng ngay lập tức không cần cài đặt môi trường phức tạp.'
+    title: '⚡ Tải Trực Tiếp File ZIP Standalone v1.1.1 Dùng Ngay 1-Click',
+    description: 'Cập nhật bộ phát hành Standalone v1.1.1 mới nhất cho Windows và Mac, tải về giải nén dùng ngay lập tức không cần cài đặt môi trường phức tạp.'
   }
 ];
 

@@ -360,6 +360,7 @@ export default function LiveStreamStandalonePlayer() {
     >
       <video
         ref={videoRef}
+        src={resolveUrl(videoSrc) || undefined}
         autoPlay
         playsInline
         loop
@@ -464,7 +465,7 @@ export default function LiveStreamStandalonePlayer() {
           zIndex: 10
         }}
       >
-        🔴 60 FPS REALTIME v1.1.0
+        🔴 60 FPS REALTIME v1.1.1
       </div>
     </div>
   );
