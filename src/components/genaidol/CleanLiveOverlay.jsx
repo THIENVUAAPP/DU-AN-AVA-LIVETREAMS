@@ -100,8 +100,19 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     let resolvedMedia = directVideoUrl;
     if (!resolvedMedia && typeof window !== 'undefined') {
       try {
+        const activeSrc = localStorage.getItem('avalive_active_video_src');
+        if (activeSrc && typeof activeSrc === 'string' && activeSrc.trim() !== '') {
+          resolvedMedia = activeSrc;
+        }
+        if (!resolvedMedia && window.opener) {
+          const opDoc = window.opener.document;
+          const opVid = opDoc?.querySelector('video[data-main-player="true"]') || opDoc?.querySelector('.main-video-player') || opDoc?.querySelector('video');
+          if (opVid && (opVid.currentSrc || opVid.src)) {
+            resolvedMedia = opVid.currentSrc || opVid.src;
+          }
+        }
         const locked = localStorage.getItem('avalive_user_locked_media');
-        if (locked && !locked.startsWith('blob:')) resolvedMedia = locked;
+        if (!resolvedMedia && locked && !locked.startsWith('blob:')) resolvedMedia = locked;
         if (!resolvedMedia && saved?.mediaUrl && !saved.mediaUrl.startsWith('blob:')) resolvedMedia = saved.mediaUrl;
         if (!resolvedMedia) {
           const customChars = JSON.parse(localStorage.getItem('avalive_custom_characters') || '[]');
@@ -676,6 +687,33 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       navigator.wakeLock.request('screen').catch(() => {});
     }
   }, []);
+
+  // ⚡ LIVE MIRROR WATCHER CHO WINDOW CAPTURE OBS (ĐỒNG BỘ TỨC THÌ 0MS VỚI PHẦN MỀM CHÍNH)
+  useEffect(() => {
+    if (!isWindowCapture) return;
+    const syncWithOpener = () => {
+      if (typeof window === 'undefined' || !window.opener) return;
+      try {
+        const opDoc = window.opener.document;
+        const opVid = opDoc?.querySelector('video[data-main-player="true"]') || opDoc?.querySelector('.main-video-player') || opDoc?.querySelector('video');
+        if (opVid) {
+          const opSrc = opVid.currentSrc || opVid.src;
+          if (opSrc && (!masterState.mediaUrl || !isSameMediaUrl(masterState.mediaUrl, opSrc))) {
+            setMasterState(prev => ({
+              ...prev,
+              mediaUrl: opSrc,
+              isVideo: true,
+              isPlaying: !opVid.paused
+            }));
+          }
+        }
+      } catch (e) {}
+    };
+
+    syncWithOpener();
+    const t = setInterval(syncWithOpener, 600);
+    return () => clearInterval(t);
+  }, [isWindowCapture, masterState.mediaUrl]);
 
   useEffect(() => {
     const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
@@ -2010,7 +2048,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.1.2
+                v1.1.3
               </span>
             </div>
 

@@ -40,6 +40,7 @@ export default function LiveStreamStandalonePlayer() {
   const [isPlaybackActive, setIsPlaybackActive] = useState(false);
 
   const isExplicitlyPausedRef = useRef(false);
+  const isUserMutedRef = useRef(false);
   const lastReportedTimeRef = useRef(0);
 
   // 🌐 Chuyển đổi URL thông minh cho cả local, Cloudflare Tunnel HTTPS và Vercel
@@ -361,6 +362,35 @@ export default function LiveStreamStandalonePlayer() {
     };
   }, [videoSrc, tunnelUrl]);
 
+  const toggleStandalonePlay = () => {
+    const vid = videoRef.current;
+    if (!vid) return;
+    if (isExplicitlyPausedRef.current || vid.paused) {
+      isExplicitlyPausedRef.current = false;
+      tryPlayWithSound();
+    } else {
+      applyExplicitPause();
+    }
+  };
+
+  const toggleStandaloneMute = () => {
+    const vid = videoRef.current;
+    if (!vid) return;
+    const nextMute = !isUserMutedRef.current;
+    isUserMutedRef.current = nextMute;
+    vid.muted = nextMute;
+    if (!nextMute) {
+      vid.volume = 1.0;
+      if (vid.paused && !isExplicitlyPausedRef.current) {
+        vid.play().catch(() => {});
+      }
+    }
+  };
+
+  const toggleStandaloneFit = () => {
+    setFitMode(prev => prev === 'cover' ? 'contain' : 'cover');
+  };
+
   return (
     <div
       style={{
@@ -431,6 +461,74 @@ export default function LiveStreamStandalonePlayer() {
         }}
       />
 
+      {/* Floating Controls Dock */}
+      <div
+        style={{
+          position: 'absolute',
+          top: '10px',
+          right: '10px',
+          zIndex: 50,
+          display: 'flex',
+          alignItems: 'center',
+          gap: '6px',
+          background: 'rgba(0, 0, 0, 0.75)',
+          backdropFilter: 'blur(8px)',
+          padding: '4px 8px',
+          borderRadius: '20px',
+          border: '1px solid rgba(6, 182, 212, 0.4)',
+          opacity: 0.3,
+          transition: 'opacity 0.25s ease'
+        }}
+        onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+        onMouseLeave={(e) => e.currentTarget.style.opacity = '0.3'}
+      >
+        <button
+          onClick={toggleStandalonePlay}
+          style={{
+            background: 'rgba(255, 255, 255, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            color: '#fff',
+            fontSize: '11px',
+            fontWeight: 'bold',
+            padding: '4px 8px',
+            borderRadius: '12px',
+            cursor: 'pointer'
+          }}
+        >
+          {isExplicitlyPausedRef.current ? '▶️ Phát' : '⏸️ Dừng'}
+        </button>
+        <button
+          onClick={toggleStandaloneMute}
+          style={{
+            background: 'rgba(255, 255, 255, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            color: '#fff',
+            fontSize: '11px',
+            fontWeight: 'bold',
+            padding: '4px 8px',
+            borderRadius: '12px',
+            cursor: 'pointer'
+          }}
+        >
+          {isUserMutedRef.current ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}
+        </button>
+        <button
+          onClick={toggleStandaloneFit}
+          style={{
+            background: 'rgba(255, 255, 255, 0.1)',
+            border: '1px solid rgba(255, 255, 255, 0.2)',
+            color: '#fff',
+            fontSize: '11px',
+            fontWeight: 'bold',
+            padding: '4px 8px',
+            borderRadius: '12px',
+            cursor: 'pointer'
+          }}
+        >
+          {fitMode === 'cover' ? '📐 Tràn' : '📐 Vừa'}
+        </button>
+      </div>
+
       {/* Hiển thị chỉ báo đang tải mượt mà (chống đen màn hình chết nếu mạng lag) */}
       {isVideoLoading && !isPlaybackActive && (
         <div
@@ -482,7 +580,7 @@ export default function LiveStreamStandalonePlayer() {
           zIndex: 10
         }}
       >
-        🔴 60 FPS REALTIME v1.1.2
+        🔴 60 FPS REALTIME v1.1.3
       </div>
     </div>
   );

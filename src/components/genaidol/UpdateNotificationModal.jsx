@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.1.2';
+export const APP_VERSION = '1.1.3';
 export const RELEASE_DATE = '12/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Tối Ưu Video Siêu Mượt 60 FPS — Chống Đứng Hình, Lag & Giật Tuyệt Đối',
-    description: 'Khắc phục hoàn toàn xung đột vòng lặp Re-render trên phần mềm Desktop. Video phát mượt mà, ổn định hàng giờ liền, không bị giật lag, không đứng hình và giữ nguyên 100% độ sắc nét chuẩn video gốc.'
+    title: '🖥️ Cửa Sổ Window Capture OBS Nhận Diện & Mở Video Tức Thì 0ms (Hết Màn Hình Đen)',
+    description: 'Cửa sổ Live 9:16 (Window Capture) tự động liên kết và clone video đang phát trên phần mềm với độ trễ 0ms. Tự động nhận diện video mọi lúc, chạy siêu mượt 60 FPS chuẩn sắc nét 100% video gốc.'
   },
   {
-    title: '🖥️ Đồng Bộ Video Tức Thì Cho Cửa Sổ Live 9:16 (Window Capture OBS)',
-    description: 'Cửa sổ Live 9:16 tự động nhận diện và clone chính xác 100% nguồn video từ phần mềm chính ngay khi mở. Không còn tình trạng màn hình đen hoặc không nhận diện được video.'
+    title: '🔇 Hệ Thống Âm Thanh Độc Lập Hoàn Toàn — Chống Vọng/Lặp Tiếng Giữa Phần Mềm & TikTok Live',
+    description: 'Tách biệt độc lập âm thanh Loa xem trước trên máy Streamer, Cửa sổ Window Capture và Luồng TikTok Live Studio. Streamer có thể tắt loa máy tính để không bị lặp tiếng mà khán giả trên TikTok Live Studio / OBS vẫn nghe âm thanh trong trẻo 100%.'
   },
   {
-    title: '🔊 Điều Khiển Âm Thanh Đồng Bộ Tuyệt Đối Theo Ý Người Dùng (Mute / Unmute / Pause)',
-    description: 'Người dùng Dừng thì Dừng, Chạy thì Chạy, Tắt âm thanh thì Tắt, Bật âm thanh thì Bật. Chấm dứt triệt để tình trạng tự động phát hoặc tự động mở tiếng khi người dùng đã bấm tắt.'
+    title: '🚀 Đường Link TikTok Live Studio Tự Động Cập Nhật Video Ngay Lập Tức',
+    description: 'Khi đổi hoặc phát video mới trên phần mềm, đường link Online HTTPS tự động cập nhật và phát ngay lập tức không có độ trễ, chuẩn tỷ lệ 9:16 (1080x1920) 60 FPS.'
   },
   {
-    title: '🎬 Tối Ưu Hóa Link TikTok Live Studio Khớp Chuẩn Khung Hình 1080x1920',
-    description: 'Đường link Online HTTPS phát sóng trực tiếp mượt mà 60 FPS thời gian thực 0ms trên TikTok Live Studio & OBS Browser Source, tự động tràn viền chuẩn 9:16.'
+    title: '🎛️ Bổ Sung Bảng Điều Khiển Nổi Trên Luồng Standalone Player',
+    description: 'Thêm nút Tạm dừng / Tiếp tục, Bật / Tắt âm thanh và Đổi chế độ Khung hình (Tràn viền / Vừa vặn) độc lập ngay trên giao diện phát sóng.'
   }
 ];
 

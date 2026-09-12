@@ -84,6 +84,10 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     let selectedCharId = '';
     let curTime = 0;
     try {
+      const activeSrc = localStorage.getItem('avalive_active_video_src');
+      if (activeSrc && typeof activeSrc === 'string' && activeSrc.trim() !== '') {
+        activeUrl = activeSrc;
+      }
       const saved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
       if (!activeUrl && saved.mediaUrl && !saved.mediaUrl.startsWith('blob:')) activeUrl = saved.mediaUrl;
       if (saved.selectedCharacter) selectedCharId = saved.selectedCharacter;
@@ -140,13 +144,18 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
       serverActiveUrl = serverActiveUrl.substring(serverActiveUrl.indexOf('/uploads/'));
     }
 
+    const finalVideoUrl = activeUrl || serverActiveUrl;
+
     try {
       localStorage.removeItem('avalive_user_paused');
       localStorage.removeItem('avalive_window_capture_paused');
       localStorage.setItem('avalive_master_live_running', 'true');
+      if (finalVideoUrl) {
+        localStorage.setItem('avalive_active_video_src', finalVideoUrl);
+      }
       const stateToSave = {
         stage: 'idol',
-        mediaUrl: activeUrl || serverActiveUrl,
+        mediaUrl: finalVideoUrl,
         selectedCharacter: selectedCharId,
         isVideo: true,
         videoPlaybackEvent: 'play',
@@ -393,7 +402,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
               <h2 className="text-base font-black text-white tracking-wide flex items-center gap-2">
                 <span>TRUNG TÂM PHÁT SÓNG TIKTOK LIVE STUDIO & OBS</span>
                 <span className="text-[10px] bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-2 py-0.5 rounded-full font-bold">
-                  v1.1.2 ONLINE
+                  v1.1.3 ONLINE
                 </span>
               </h2>
               <p className="text-xs text-gray-400 font-medium">

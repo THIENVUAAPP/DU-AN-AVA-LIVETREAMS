@@ -1690,21 +1690,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     showToast(`🔊 Đang phát kiểm tra âm thanh Giọng ${role === 'idol' ? 'Nhân vật chính' : role === 'manager' ? 'Trợ lý' : 'Game'}!`, 'success');
   }, [unlockAllAudio]);
 
-  // 🔇 Xử lý Bật/Tắt Âm Thanh Toàn Diện (Đồng bộ trực tiếp cả Máy Streamer, Window Capture & TikTok Live)
+  // 🔇 Xử lý Bật/Tắt Âm Thanh Loa Xem Trước Máy Streamer (Độc Lập 100%, KHÔNG câm tiếng luồng live TikTok/OBS để chống lặp tiếng)
   const handleToggleLocalSpeakerMute = useCallback(() => {
     setIsLocalSpeakerMuted(prev => {
       const nextState = !prev;
       isLocalSpeakerMutedRef.current = nextState;
       setLiveAudioMuted(nextState);
 
-      // Tắt/Mở tiếng video trên màn hình điều khiển (Tác động tức thì vào DOM element)
+      // Tắt/Mở tiếng video trên màn hình điều khiển xem trước
       if (desktopVideoRef.current) {
         desktopVideoRef.current.muted = nextState;
         if (!nextState) {
           desktopVideoRef.current.volume = liveVolume || 1.0;
-          if (desktopVideoRef.current.paused && desktopVideoRef.current.dataset.userPaused !== 'true') {
-            desktopVideoRef.current.play().catch(() => {});
-          }
         }
       }
       if (flvVideoRef.current) {
@@ -1714,9 +1711,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         }
       }
 
-      // Tắt/Mở tiếng Audio Engine và Loa máy
+      // Tắt/Mở tiếng Loa xem trước của Audio Engine máy tính
       bandoAudio.setLocalSpeakerMute(nextState);
-      bandoAudio.setMuted(nextState);
 
       try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
@@ -1727,47 +1723,85 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
       try {
         localStorage.setItem('avalive_local_speaker_muted', String(nextState));
-        localStorage.setItem('avalive_audio_muted', String(nextState));
       } catch (e) {}
-
-      // Đồng bộ sang Window Capture OBS & TikTok Live
-      syncMasterLiveState({
-        isVideoAudioMuted: nextState,
-        isMuted: nextState,
-        videoVolume: nextState ? 0 : (liveVolume || 1.0)
-      }, socketRef.current);
-
-      sendVideoControl({
-        action: nextState ? 'mute' : 'unmute',
-        isMuted: nextState,
-        isVideoAudioMuted: nextState,
-        volume: nextState ? 0 : (liveVolume || 1.0),
-        timestamp: Date.now()
-      }, socketRef.current);
-
-      // Phát sự kiện BroadcastChannel lập tức cho Window Capture
-      postMasterBroadcast({
-        type: 'GLOBAL_AUDIO_CHANGE',
-        isMuted: nextState,
-        volume: nextState ? 0 : (liveVolume || 1.0),
-        source: 'desktop'
-      });
 
       if (nextState) {
         setToast({
           type: 'info',
-          message: '🔇 Đã TẮT TIẾNG TOÀN BỘ (Đồng bộ Window Capture & Khán giả TikTok Live đã tắt tiếng)'
+          message: '🔇 Đã TẮT LOA XEM TRƯỚC (Chống vọng tiếng - Luồng TikTok Live & OBS vẫn phát âm thanh 100%)'
         });
       } else {
         setToast({
           type: 'success',
-          message: '🔊 Đã BẬT TIẾNG TOÀN BỘ (Window Capture & TikTok Live đã phát âm thanh)'
+          message: '🔊 Đã BẬT LOA XEM TRƯỚC (Nghe âm thanh xem trước trên máy tính)'
         });
       }
 
       return nextState;
     });
   }, [liveVolume]);
+
+  const handleSelectCharacter = useCallback((charId) => {
+    const charItem = customCharacters.find(c => c.id === charId);
+    if (!charItem) return;
+    const charUrl = charItem.mediaUrl || charItem.url;
+    setSelectedCharacter(charId);
+    try { localStorage.setItem('avalive_selected_char', charId); } catch (e) {}
+    setIsGameBattleActive(false);
+    setIsGameBanDoActive(false);
+    if (charUrl) {
+      let cleanUrl = charUrl;
+      if (typeof cleanUrl === 'string' && cleanUrl.includes('/uploads/')) {
+        cleanUrl = cleanUrl.substring(cleanUrl.indexOf('/uploads/'));
+      }
+      setUserLockedMediaUrl(cleanUrl);
+      try {
+        localStorage.setItem('avalive_user_locked_media', cleanUrl);
+        localStorage.setItem('avalive_active_video_src', cleanUrl);
+      } catch (e) {}
+      if (desktopVideoRef.current) {
+        desktopVideoRef.current.src = cleanUrl;
+        desktopVideoRef.current.currentTime = 0;
+        desktopVideoRef.current.dataset.userPaused = 'false';
+        desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+      }
+      setIsVideoPlaying(true);
+      try {
+        const bc = new BroadcastChannel('avalive_master_live_stream');
+        bc.postMessage({
+          type: 'GLOBAL_MEDIA_CHANGE',
+          mediaUrl: cleanUrl,
+          characterId: charItem.id,
+          characterName: charItem.name || 'AI Idol',
+          isVideo: true,
+          isPlaying: true,
+          currentTime: 0,
+          force: true,
+          source: 'desktop',
+          timestamp: Date.now()
+        });
+        setTimeout(() => bc.close(), 100);
+      } catch (e) {}
+      sendVideoControl({
+        action: 'play',
+        currentTime: 0,
+        force: true,
+        isPlaying: true,
+        mediaUrl: cleanUrl,
+        timestamp: Date.now()
+      }, socketRef.current);
+      syncMasterLiveState({
+        stage: 'idol',
+        selectedCharacter: charItem.id,
+        characterName: charItem.name || 'AI Idol',
+        mediaUrl: cleanUrl,
+        isVideo: true,
+        videoPlaybackEvent: 'play',
+        videoCurrentTime: 0,
+        isPlaying: true
+      }, socketRef.current);
+    }
+  }, [customCharacters]);
 
   // Quản lý trạng thái Play / Pause của video live trên khung hình phần mềm
   const [isVideoPlaying, setIsVideoPlaying] = useState(() => {
