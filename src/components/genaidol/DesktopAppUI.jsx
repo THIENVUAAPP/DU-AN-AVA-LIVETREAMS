@@ -712,13 +712,37 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       curTime = lastPlaybackTimeRef.current;
     }
 
+    let serverActiveUrl = activeUrl;
+    if (!serverActiveUrl || serverActiveUrl.startsWith('blob:')) {
+      const matchChar = customCharacters.find(c => c.id === selectedCharacter);
+      if (matchChar && matchChar.mediaUrl && !matchChar.mediaUrl.startsWith('blob:')) {
+        serverActiveUrl = matchChar.mediaUrl;
+      } else {
+        const locked = localStorage.getItem('avalive_user_locked_media');
+        if (locked && !locked.startsWith('blob:')) serverActiveUrl = locked;
+        else {
+          const actSrc = localStorage.getItem('avalive_active_video_src');
+          if (actSrc && !actSrc.startsWith('blob:')) serverActiveUrl = actSrc;
+        }
+      }
+    }
+    if (typeof serverActiveUrl === 'string' && serverActiveUrl.includes('/uploads/')) {
+      serverActiveUrl = serverActiveUrl.substring(serverActiveUrl.indexOf('/uploads/'));
+    }
+
+    const broadcastUrl = serverActiveUrl || activeUrl;
+
     try {
       localStorage.removeItem('avalive_user_paused');
       localStorage.removeItem('avalive_window_capture_paused');
       localStorage.setItem('avalive_master_live_running', 'true');
+      if (broadcastUrl && !broadcastUrl.startsWith('blob:')) {
+        localStorage.setItem('avalive_active_video_src', broadcastUrl);
+        localStorage.setItem('avalive_user_locked_media', broadcastUrl);
+      }
       const stateToSave = {
         stage: 'idol',
-        mediaUrl: activeUrl,
+        mediaUrl: broadcastUrl,
         selectedCharacter: selectedCharacter,
         isVideo: true,
         videoPlaybackEvent: 'play',
@@ -729,11 +753,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       localStorage.setItem('avalive_master_live_state', JSON.stringify(stateToSave));
     } catch (e) {}
 
-    if (activeUrl) {
+    if (broadcastUrl) {
       syncMasterLiveState({
         stage: 'idol',
         selectedCharacter: selectedCharacter,
-        mediaUrl: activeUrl,
+        mediaUrl: broadcastUrl,
         isVideo: true,
         videoPlaybackEvent: 'play',
         videoCurrentTime: curTime,
@@ -746,7 +770,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       const bc = new BroadcastChannel('avalive_master_live_stream');
       bc.postMessage({
         type: 'GLOBAL_MEDIA_CHANGE',
-        mediaUrl: activeUrl,
+        mediaUrl: broadcastUrl,
         characterId: selectedCharacter,
         isVideo: true,
         isPlaying: true,
@@ -758,19 +782,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       setTimeout(() => bc.close(), 100);
     } catch (err) {}
 
-    let serverActiveUrl = activeUrl;
-    if (serverActiveUrl && serverActiveUrl.startsWith('blob:')) {
-      const matchChar = customCharacters.find(c => c.id === selectedCharacter);
-      if (matchChar && matchChar.mediaUrl && !matchChar.mediaUrl.startsWith('blob:')) {
-        serverActiveUrl = matchChar.mediaUrl;
-      } else {
-        const locked = localStorage.getItem('avalive_user_locked_media');
-        if (locked && !locked.startsWith('blob:')) serverActiveUrl = locked;
-      }
-    }
-    if (typeof serverActiveUrl === 'string' && serverActiveUrl.includes('/uploads/')) {
-      serverActiveUrl = serverActiveUrl.substring(serverActiveUrl.indexOf('/uploads/'));
-    }
     const charQuery = selectedCharacter ? `&char=${encodeURIComponent(selectedCharacter)}` : '';
     const timeQuery = curTime > 0 ? `&t=${Math.round(curTime * 100) / 100}` : '';
     const vQuery = serverActiveUrl && !serverActiveUrl.startsWith('blob:') ? `&v=${encodeURIComponent(serverActiveUrl)}` : '';

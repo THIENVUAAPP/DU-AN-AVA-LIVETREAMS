@@ -1069,7 +1069,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '1.1.3';
+  let ver = '1.1.5';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1107,7 +1107,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '1.1.4';
+  let ver = '1.1.5';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -2166,6 +2166,26 @@ app.post('/api/shopee/test-order', (req, res) => {
   res.json({ success: true, order: orderEvent });
 });
 
+let _syncVercelTimer = null;
+function syncToVercelCloudState() {
+  if (_syncVercelTimer) clearTimeout(_syncVercelTimer);
+  _syncVercelTimer = setTimeout(async () => {
+    try {
+      if (!currentMasterLiveState) return;
+      const bodyData = {
+        ...currentMasterLiveState,
+        tunnelUrl: currentTunnelUrl || currentMasterLiveState.tunnelUrl || null
+      };
+      await fetch('https://avalivepro.vercel.app/api/live-state', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(bodyData),
+        signal: AbortSignal.timeout(4000)
+      }).catch(() => {});
+    } catch (e) {}
+  }, 400);
+}
+
 // Live State APIs (Hỗ trợ cả /api/live-state và /api/master-live-state)
 app.get(['/api/live-state', '/api/master-live-state'], (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, proxy-revalidate');
@@ -2219,6 +2239,7 @@ app.post('/api/live-state', (req, res) => {
       });
     }
     saveLiveStateToFile(false);
+    syncToVercelCloudState();
   }
   res.json({ success: true, state: currentMasterLiveState });
 });
@@ -2263,6 +2284,7 @@ app.post('/api/video-control', (req, res) => {
       currentMasterLiveState.updatedAt = Date.now();
       io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
       saveLiveStateToFile(false);
+      syncToVercelCloudState();
     }
   }
   res.json({ success: true, state: currentMasterLiveState });
@@ -2913,6 +2935,7 @@ async function startCloudflaredTunnel(port) {
             io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
             saveLiveStateToFile(false);
             startTunnelLivenessMonitor(currentTunnelUrl, port);
+            syncToVercelCloudState();
           }
         } catch (e) {}
       };

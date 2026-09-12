@@ -104,18 +104,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     }
 
     let resolvedMedia = directVideoUrl;
+    if (resolvedMedia && resolvedMedia.startsWith('blob:')) resolvedMedia = null;
     if (!resolvedMedia && typeof window !== 'undefined') {
       try {
         const activeSrc = localStorage.getItem('avalive_active_video_src');
-        if (activeSrc && typeof activeSrc === 'string' && activeSrc.trim() !== '') {
+        if (activeSrc && typeof activeSrc === 'string' && !activeSrc.startsWith('blob:') && activeSrc.trim() !== '') {
           resolvedMedia = activeSrc;
-        }
-        if (!resolvedMedia && window.opener) {
-          const opDoc = window.opener.document;
-          const opVid = opDoc?.querySelector('video[data-main-player="true"]') || opDoc?.querySelector('.main-video-player') || opDoc?.querySelector('video');
-          if (opVid && (opVid.currentSrc || opVid.src)) {
-            resolvedMedia = opVid.currentSrc || opVid.src;
-          }
         }
         const locked = localStorage.getItem('avalive_user_locked_media');
         if (!resolvedMedia && locked && !locked.startsWith('blob:')) resolvedMedia = locked;
@@ -124,7 +118,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           const customChars = JSON.parse(localStorage.getItem('avalive_custom_characters') || '[]');
           const charId = urlParams?.get('char') || saved?.selectedCharacter || localStorage.getItem('avalive_selected_char');
           const found = customChars.find(c => c.id === charId);
-          if (found) resolvedMedia = (found.mediaUrl && !found.mediaUrl.startsWith('blob:')) ? found.mediaUrl : found.url;
+          if (found) resolvedMedia = (found.mediaUrl && !found.mediaUrl.startsWith('blob:')) ? found.mediaUrl : (found.url && !found.url.startsWith('blob:') ? found.url : null);
         }
       } catch (e) {}
     }
@@ -142,7 +136,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     return {
       stage: defaultStage, // 'idol' | 'dancefloor' | 'battle' | 'bando' | 'broadcast'
       aspectRatio: ratioParam || '9:16',
-      mediaUrl: resolvedMedia || (saved?.mediaUrl && !saved.mediaUrl.includes('nhep_mieng.mp4') && !saved.mediaUrl.includes('demo_dancer.mp4') && !saved.mediaUrl.includes('default_idol.mp4') ? saved.mediaUrl : null),
+      mediaUrl: resolvedMedia || (saved?.mediaUrl && !saved.mediaUrl.startsWith('blob:') && !saved.mediaUrl.includes('nhep_mieng.mp4') && !saved.mediaUrl.includes('demo_dancer.mp4') && !saved.mediaUrl.includes('default_idol.mp4') ? saved.mediaUrl : null),
       flvUrl: resolvedMedia || saved?.flvUrl || null,
       isVideo: saved?.isVideo !== false,
       selectedCharacter: urlParams?.get('char') || saved?.selectedCharacter || (typeof window !== 'undefined' ? localStorage.getItem('avalive_active_character_id') : '') || '',
@@ -1622,17 +1616,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
   // Helper giải mã URL media chính xác (tôn trọng 100% video/nhân vật người dùng chọn)
   const resolveActiveMedia = () => {
-    let candidateUrl = masterState.mediaUrl || null;
+    let candidateUrl = null;
     let isVideo = masterState.isVideo !== false;
 
-    // 0. Ưu tiên số 1: Trực tiếp từ masterState.mediaUrl (được Dashboard bắn sang thời gian thực)
-    if (masterState.mediaUrl && typeof masterState.mediaUrl === 'string') {
-      if (!masterState.mediaUrl.startsWith('blob:')) {
-        candidateUrl = masterState.mediaUrl;
-      } else if (isWindowCapture) {
-        // Cửa sổ Window Capture trên cùng máy được phép dùng trực tiếp blob URL
-        candidateUrl = masterState.mediaUrl;
-      }
+    // 0. Ưu tiên số 1: Trực tiếp từ masterState.mediaUrl nếu không phải blob
+    if (masterState.mediaUrl && typeof masterState.mediaUrl === 'string' && !masterState.mediaUrl.startsWith('blob:')) {
+      candidateUrl = masterState.mediaUrl;
     }
 
     // 0.5. Ưu tiên tham số URL ?v=... truyền khi mở Cửa sổ Window Capture hoặc Link Live
@@ -1640,116 +1629,84 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       try {
         const urlParams = new URLSearchParams(window.location.search);
         const directV = urlParams.get('v');
-        if (directV && typeof directV === 'string' && directV !== 'null' && directV !== 'undefined' && directV.trim() !== '') {
+        if (directV && typeof directV === 'string' && !directV.startsWith('blob:') && directV !== 'null' && directV !== 'undefined' && directV.trim() !== '') {
           candidateUrl = decodeURIComponent(directV);
         }
       } catch (e) {}
     }
 
-    // 1. Kiểm tra trong localDbItems (IndexedDB)
-    if (!candidateUrl && masterState.selectedCharacter && localDbItems.length > 0) {
-      const match = localDbItems.find(i => i.id === masterState.selectedCharacter);
-      if (match) {
-        if (match.fileBlob) {
-          candidateUrl = getCachedBlobUrl(match.id, match.fileBlob);
+    // 1. Kiểm tra video đã được người dùng chọn phát cố định (Persistent Lock)
+    if (!candidateUrl) {
+      try {
+        const locked = localStorage.getItem('avalive_user_locked_media');
+        if (locked && typeof locked === 'string' && !locked.startsWith('blob:') && locked !== 'null' && locked !== 'undefined' && locked.trim() !== '') {
+          candidateUrl = locked;
         }
-        if (!candidateUrl && match.mediaUrl && !match.mediaUrl.startsWith('blob:')) {
-          candidateUrl = match.mediaUrl;
-        } else if (!candidateUrl && match.url) {
-          candidateUrl = match.url;
-        }
-      }
+      } catch (e) {}
     }
 
-    // 2. Kiểm tra trong danh sách custom characters người dùng đã tải lên
+    // 2. Kiểm tra active video src lưu trong localStorage
+    if (!candidateUrl) {
+      try {
+        const activeSrc = localStorage.getItem('avalive_active_video_src');
+        if (activeSrc && typeof activeSrc === 'string' && !activeSrc.startsWith('blob:') && activeSrc.trim() !== '') {
+          candidateUrl = activeSrc;
+        }
+      } catch (e) {}
+    }
+
+    // 3. Kiểm tra trong danh sách custom characters người dùng đã tải lên
     if (!candidateUrl) {
       try {
         const customRaw = localStorage.getItem('avalive_custom_characters');
         if (customRaw) {
           const customList = JSON.parse(customRaw);
           const customFound = customList.find(c => c.id === masterState.selectedCharacter);
-          if (customFound && (customFound.mediaUrl || customFound.url)) {
-            candidateUrl = customFound.mediaUrl || customFound.url;
-          } else if (customList.length > 0) {
-            const firstValid = customList.find(c => c.mediaUrl || c.url);
+          if (customFound) {
+            if (customFound.mediaUrl && !customFound.mediaUrl.startsWith('blob:')) {
+              candidateUrl = customFound.mediaUrl;
+            } else if (customFound.url && !customFound.url.startsWith('blob:')) {
+              candidateUrl = customFound.url;
+            }
+          }
+          if (!candidateUrl && customList.length > 0) {
+            const firstValid = customList.find(c => (c.mediaUrl && !c.mediaUrl.startsWith('blob:')) || (c.url && !c.url.startsWith('blob:')));
             if (firstValid) candidateUrl = firstValid.mediaUrl || firstValid.url;
           }
         }
       } catch (e) {}
     }
 
-    // 2.5. Kiểm tra video đã được người dùng chọn phát cố định (Persistent Lock)
-    if (!candidateUrl) {
-      try {
-        const locked = localStorage.getItem('avalive_user_locked_media');
-        if (locked && typeof locked === 'string' && locked !== 'null' && locked !== 'undefined' && locked.trim() !== '') {
-          candidateUrl = locked;
+    // 4. Kiểm tra trong localDbItems (IndexedDB)
+    if (!candidateUrl && localDbItems.length > 0) {
+      const match = localDbItems.find(i => i.id === masterState.selectedCharacter) || localDbItems[0];
+      if (match) {
+        if (match.mediaUrl && !match.mediaUrl.startsWith('blob:')) {
+          candidateUrl = match.mediaUrl;
+        } else if (match.url && !match.url.startsWith('blob:')) {
+          candidateUrl = match.url;
+        } else if (match.fileBlob) {
+          candidateUrl = getCachedBlobUrl(match.id, match.fileBlob);
         }
-      } catch (e) {}
+      }
     }
 
-    // 2.6. Kiểm tra state lưu trữ từ phiên trước
+    // 5. Kiểm tra state lưu trữ từ phiên trước
     if (!candidateUrl) {
       try {
         const saved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
-        if (saved.mediaUrl && typeof saved.mediaUrl === 'string') {
-          if (!saved.mediaUrl.startsWith('blob:') || isWindowCapture) {
-            candidateUrl = saved.mediaUrl;
-          }
+        if (saved.mediaUrl && typeof saved.mediaUrl === 'string' && !saved.mediaUrl.startsWith('blob:')) {
+          candidateUrl = saved.mediaUrl;
         }
       } catch (e) {}
     }
 
-    // 2.7. Khi ở chế độ Window Capture, cho phép lấy trực tiếp từ window.opener nếu cùng tab/browser session
-    if (!candidateUrl && isWindowCapture && typeof window !== 'undefined' && window.opener) {
-      try {
-        const opDoc = window.opener.document;
-        const opVid = opDoc?.querySelector('video[data-main-player="true"]') || opDoc?.querySelector('.main-video-player') || opDoc?.querySelector('video');
-        if (opVid && (opVid.currentSrc || opVid.src)) {
-          candidateUrl = opVid.currentSrc || opVid.src;
-        }
-        if (!candidateUrl) {
-          const opSaved = JSON.parse(window.opener.localStorage?.getItem('avalive_master_live_state') || '{}');
-          if (opSaved.mediaUrl) {
-            candidateUrl = opSaved.mediaUrl;
-          }
-        }
-      } catch (e) {}
-    }
-
-    // 2.8. Nếu vẫn chưa có nhưng có item trong IndexedDB -> Khôi phục item đầu tiên
-    if (!candidateUrl && localDbItems.length > 0) {
-      const firstValidItem = localDbItems.find(i => i.mediaUrl || i.url || i.fileBlob);
-      if (firstValidItem) {
-        if (firstValidItem.fileBlob) {
-          candidateUrl = getCachedBlobUrl(firstValidItem.id, firstValidItem.fileBlob);
-        } else {
-          candidateUrl = firstValidItem.mediaUrl || firstValidItem.url;
-        }
-      }
-    }
-
-    // 3. Khôi phục Blob URL từ IndexedDB nếu là video tùy chỉnh, và dùng Cache để không tạo URL mới liên tục
-    if (typeof candidateUrl === 'string' && candidateUrl.startsWith('blob:')) {
-      const charId = masterState.selectedCharacter || candidateUrl;
-      if (blobUrlMapRef.current && blobUrlMapRef.current.has(charId)) {
-        candidateUrl = blobUrlMapRef.current.get(charId);
-      } else {
-        const match = localDbItems.find(i => i.id === masterState.selectedCharacter);
-        if (match && match.fileBlob) {
-          candidateUrl = getCachedBlobUrl(charId, match.fileBlob);
-        } else if (match && (match.mediaUrl || match.url) && !match.mediaUrl?.startsWith('blob:')) {
-          candidateUrl = match.mediaUrl || match.url;
-        }
-      }
-    }
-
-    // 4. Tuyệt đối loại bỏ video nền cũ nếu có trong cache
+    // 6. Tuyệt đối loại bỏ video nền cũ nếu có trong cache
     if (typeof candidateUrl === 'string' && (candidateUrl.includes('nhep_mieng.mp4') || candidateUrl.includes('demo_dancer.mp4') || candidateUrl.includes('default_idol.mp4'))) {
       candidateUrl = null;
     }
 
-    // 5. Chuẩn hoá tuyệt đối URL cho HTTPS Overlay (TikTok Live Studio / OBS Browser Source)
+    // 7. Chuẩn hoá tuyệt đối URL cho HTTPS Overlay (TikTok Live Studio / OBS Browser Source)
     if (typeof candidateUrl === 'string') {
       const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
       const isHttps = typeof window !== 'undefined' && window.location.protocol === 'https:';
@@ -1765,7 +1722,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       let tunnelBase = masterState.tunnelUrl || null;
       if (!tunnelBase && typeof window !== 'undefined') {
         try {
-          tunnelBase = localStorage.getItem('avalive_tunnel_url') || (JSON.parse(localStorage.getItem('avalive_tunnel_data') || '{}')?.tunnelUrl) || null;
+          const urlParams = new URLSearchParams(window.location.search);
+          tunnelBase = urlParams.get('tunnel') || localStorage.getItem('avalive_tunnel_url') || (JSON.parse(localStorage.getItem('avalive_tunnel_data') || '{}')?.tunnelUrl) || null;
         } catch(e) {
           tunnelBase = null;
         }
@@ -2048,7 +2006,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.1.4
+                v1.1.5
               </span>
             </div>
 

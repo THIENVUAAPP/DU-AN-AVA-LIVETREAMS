@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.1.4';
+export const APP_VERSION = '1.1.5';
 export const RELEASE_DATE = '12/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Khắc Phục Triệt Để Lỗi Chớp Nháy Trên Window Capture OBS (Chạy Liền Mạch 100%)',
-    description: 'Chấm dứt hoàn toàn hiện tượng nhấp nháy/chớp tắt video trên cửa sổ Live 9:16 do xung đột so sánh URL. Video phát mượt mà, liên tục hàng giờ liền 60 FPS chuẩn sắc nét video gốc.'
+    title: '🖥️ Khắc Phục Triệt Để Video Cửa Sổ Bắt Hình (Window Capture OBS)',
+    description: 'Chấm dứt hoàn toàn hiện tượng không hiển thị hoặc chập chờn video khi mở Cửa Sổ Live 9:16. Video được đồng bộ chính xác 100% theo video phần mềm với độ phân giải 4K sắc nét và 60 FPS mượt mà.'
   },
   {
-    title: '🎬 Khắc Phục Màn Hình Đen Cho Link TikTok Live Studio & OBS Browser Source',
-    description: 'Tối ưu hóa chuẩn Autoplay Policy của trình duyệt nhúng TikTok Live Studio. Video mở lên ngay lập tức 0ms, không còn màn hình đen, tự động đồng bộ âm thanh và hình ảnh sắc nét 1080x1920.'
+    title: '🌐 Nâng Cấp Đường Truyền Cloudflare Tunnel HTTPS Cho TikTok Live Studio',
+    description: 'Ưu tiên kết nối trực tiếp qua hạ tầng Cloudflare Tunnel HTTPS 60 FPS, tự động đồng bộ thời gian thực 0ms và loại bỏ hoàn toàn hiện tượng màn hình đen khi dán link vào TikTok Live Studio.'
   },
   {
-    title: '🔇 Hệ Thống Âm Thanh Độc Lập 100% — Chống Lặp Tiếng Tuyệt Đối',
-    description: 'Streamer có thể bật/tắt hoặc điều chỉnh âm lượng trên từng cửa sổ độc lập (Phần mềm Desktop, Cửa sổ Window Capture, Link TikTok Live Studio) mà không gây vọng tiếng hay mất tiếng luồng phát.'
+    title: '🔇 Hệ Thống Âm Thanh Độc Lập 100% (Chống Tiếng Vang Echo)',
+    description: 'Streamer tắt/bật loa máy tính hoàn toàn độc lập, không làm ngắt âm thanh của luồng live TikTok hay Window Capture phát cho khán giả.'
   }
 ];
 
