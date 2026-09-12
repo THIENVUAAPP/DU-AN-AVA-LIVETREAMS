@@ -278,7 +278,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     const handleInteractUnlock = () => {
       hasAutoplayStartedRef.current = true;
       const vid = overlayVideoRef.current;
-      const isMutedNow = isVideoAudioMuted || (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_audio_muted') === 'true' || localStorage.getItem('avalive_local_speaker_muted') === 'true'));
+      const isMutedNow = isVideoAudioMuted || (typeof localStorage !== 'undefined' && localStorage.getItem('avalive_audio_muted') === 'true');
       if (vid) {
         if (vid.paused && localStorage.getItem('avalive_user_paused') !== 'true') {
           vid.play().catch(() => {});
@@ -1571,8 +1571,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     let isVideo = masterState.isVideo !== false;
 
     // 0. Ưu tiên số 1: Trực tiếp từ masterState.mediaUrl (được Dashboard bắn sang thời gian thực)
-    if (masterState.mediaUrl && typeof masterState.mediaUrl === 'string' && !masterState.mediaUrl.startsWith('blob:')) {
-      candidateUrl = masterState.mediaUrl;
+    if (masterState.mediaUrl && typeof masterState.mediaUrl === 'string') {
+      if (!masterState.mediaUrl.startsWith('blob:')) {
+        candidateUrl = masterState.mediaUrl;
+      } else if (isWindowCapture) {
+        // Cửa sổ Window Capture trên cùng máy được phép dùng trực tiếp blob URL
+        candidateUrl = masterState.mediaUrl;
+      }
     }
 
     // 0.5. Ưu tiên tham số URL ?v=... truyền khi mở Cửa sổ Window Capture hoặc Link Live
@@ -1589,8 +1594,15 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     // 1. Kiểm tra trong localDbItems (IndexedDB)
     if (!candidateUrl && masterState.selectedCharacter && localDbItems.length > 0) {
       const match = localDbItems.find(i => i.id === masterState.selectedCharacter);
-      if (match && (match.mediaUrl || match.url)) {
-        candidateUrl = match.mediaUrl || match.url;
+      if (match) {
+        if (match.fileBlob) {
+          try { candidateUrl = URL.createObjectURL(match.fileBlob); } catch (e) {}
+        }
+        if (!candidateUrl && match.mediaUrl && !match.mediaUrl.startsWith('blob:')) {
+          candidateUrl = match.mediaUrl;
+        } else if (!candidateUrl && match.url) {
+          candidateUrl = match.url;
+        }
       }
     }
 
@@ -1601,11 +1613,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         if (customRaw) {
           const customList = JSON.parse(customRaw);
           const customFound = customList.find(c => c.id === masterState.selectedCharacter);
-          if (customFound && (customFound.url || customFound.mediaUrl)) {
-            candidateUrl = customFound.url || customFound.mediaUrl;
+          if (customFound && (customFound.mediaUrl || customFound.url)) {
+            candidateUrl = customFound.mediaUrl || customFound.url;
           } else if (customList.length > 0) {
-            const firstValid = customList.find(c => (c.url && !c.url.startsWith('blob:')) || (c.mediaUrl && !c.mediaUrl.startsWith('blob:')));
-            if (firstValid) candidateUrl = firstValid.url || firstValid.mediaUrl;
+            const firstValid = customList.find(c => c.mediaUrl || c.url);
+            if (firstValid) candidateUrl = firstValid.mediaUrl || firstValid.url;
           }
         }
       } catch (e) {}
@@ -1981,7 +1993,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.0.4
+                v1.0.5
               </span>
             </div>
 
@@ -2417,20 +2429,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   controls={false}
                   preload="auto"
                   disableRemotePlayback
-                  className="w-full h-full select-none pointer-events-none transform-gpu"
+                  className="w-full h-full select-none pointer-events-none"
                   style={{
                     width: '100%',
                     height: '100%',
                     objectFit: objectFitState || 'cover',
                     backgroundColor: '#000000',
-                    transform: 'translate3d(0, 0, 0)',
-                    WebkitTransform: 'translate3d(0, 0, 0)',
-                    backfaceVisibility: 'hidden',
-                    WebkitBackfaceVisibility: 'hidden',
-                    willChange: 'transform',
-                    imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto',
-                    filter: isUltraSharp ? 'contrast(1.03) saturate(1.05) brightness(1.01)' : 'none',
-                    WebkitFilter: isUltraSharp ? 'contrast(1.03) saturate(1.05) brightness(1.01)' : 'none'
+                    imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto'
                   }}
                   onCanPlay={(e) => {
                     // ⚡ INSTANT 0MS PLAYBACK: Phát ngay lập tức khi frame đầu tiên sẵn sàng

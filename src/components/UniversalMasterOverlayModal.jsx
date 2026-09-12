@@ -260,20 +260,12 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
   const getProjectOverlayUrl = (path) => {
     let baseUrl = '';
 
-    // 1. Ưu tiên hàng đầu: Link Cloudflare Tunnel HTTPS trực tiếp tới máy phát
-    const effectiveTunnel = (tunnelData?.tunnelUrl && tunnelData.tunnelUrl.startsWith('https://'))
+    // 1. Ưu tiên hàng đầu: Link Cloudflare Tunnel HTTPS ĐANG HOẠT ĐỘNG THỰC TẾ
+    const effectiveTunnel = (tunnelData?.status === 'active' && tunnelData?.tunnelUrl && tunnelData.tunnelUrl.startsWith('https://'))
       ? tunnelData.tunnelUrl
-      : (() => {
-          try {
-            const d = localStorage.getItem('avalive_tunnel_url');
-            if (d && d.startsWith('https://')) return d;
-            const saved = JSON.parse(localStorage.getItem('avalive_tunnel_data') || '{}');
-            if (saved.tunnelUrl && saved.tunnelUrl.startsWith('https://')) return saved.tunnelUrl;
-          } catch (e) {}
-          return null;
-        })();
+      : null;
 
-    if (tunnelData?.projects?.[path]) {
+    if (tunnelData?.projects?.[path] && effectiveTunnel) {
       baseUrl = tunnelData.projects[path];
     } else if (effectiveTunnel) {
       const targetRoute = (path === 'idol') ? 'live-stream' : path;
@@ -283,8 +275,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
       if (currentOrigin && currentOrigin.startsWith('https://') && !currentOrigin.includes('localhost') && !currentOrigin.includes('127.0.0.1')) {
         baseUrl = `${currentOrigin}/${path === 'idol' ? 'live-stream' : path}`;
       } else {
-        // Fallback Online Cloud Production chính thức 100% (KHÔNG BAO GIỜ DÙNG LOCALHOST)
-        baseUrl = `https://avalivepro.vercel.app/${path}`;
+        // Fallback Online Cloud Production chính thức 100% (Vercel HTTPS luôn luôn chạy 24/7 không bao giờ lỗi 1033)
+        baseUrl = `https://avalivepro.vercel.app/${path === 'idol' ? 'live-stream' : path}`;
       }
     }
 
@@ -386,7 +378,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
               <h2 className="text-base font-black text-white tracking-wide flex items-center gap-2">
                 <span>TRUNG TÂM PHÁT SÓNG TIKTOK LIVE STUDIO & OBS</span>
                 <span className="text-[10px] bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-2 py-0.5 rounded-full font-bold">
-                  v1.0.4 ONLINE
+                  v1.0.5 ONLINE
                 </span>
               </h2>
               <p className="text-xs text-gray-400 font-medium">

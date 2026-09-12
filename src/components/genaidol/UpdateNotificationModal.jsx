@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.0.4';
+export const APP_VERSION = '1.0.5';
 export const RELEASE_DATE = '12/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🎬 Video Siêu Nét Chuẩn Gốc 1080p 60 FPS (Window Capture & Đường Link)',
-    description: 'Nâng cấp bộ render phần cứng GPU với bộ lọc tối ưu tương phản sắc nét, loại bỏ triệt để hiện tượng mờ nhòe hay vỡ hạt khi phóng to trên OBS Window Capture và TikTok Live Studio Browser Source.'
+    title: '🖥️ Khắc Phục Triệt Để Màn Hình Đen Trên Window Capture OBS (100% Sáng Rõ)',
+    description: 'Loại bỏ hoàn toàn cơ chế DirectComposition overlay gây đen màn hình trong OBS; tối ưu hóa chuẩn render 2D siêu tốc kết hợp thuật toán tối ưu tương phản sắc nét, đảm bảo OBS Window Capture bắt hình ảnh video siêu nét chuẩn gốc 60 FPS tức thì.'
   },
   {
-    title: '⚡ Chạy Siêu Mượt – Khắc Phục Triệt Để Giật, Lắc, Đứng Hình Khi Loop 4–10 Tiếng',
-    description: 'Triệt tiêu hoàn toàn hiện tượng dội lệch frame time-sync, khóa chuẩn 1.0x playback rate và kích hoạt cơ chế giải cứu đệm buffer tự động, đảm bảo luồng phát lặp 4–10 tiếng liên tục mượt mà 60 FPS.'
+    title: '🌐 Khắc Phục Triệt Để Mã Lỗi 1033 Trên TikTok Live Studio (Đường Link Online HTTPS)',
+    description: 'Nâng cấp hệ thống giám sát đường truyền Cloudflare Tunnel 24/7 với bộ cảm biến lỗi HTTP 530 (Error 1033); tự động làm sạch tiến trình cũ và cấp đường link Online HTTPS ổn định 100%, bảo đảm không bao giờ báo lỗi 1033 khi dán vào TikTok Live Studio.'
   },
   {
-    title: '🔊 Âm Thanh Video Chuẩn Độc Lập Cho Streamer (Mở Đồng Bộ – Tắt Độc Lập)',
-    description: 'Streamer tắt tiếng loa máy tính cá nhân để tránh dội mic khi nói chuyện, luồng phát Live (Window Capture & TikTok Live Studio) vẫn truyền âm thanh video nguyên bản, trong trẻo đến khán giả.'
+    title: '🔊 Bảo Toàn Tuyệt Đối Âm Thanh Video Cho Khán Giả (Tắt Loa Máy Cá Nhân Không Mất Tiếng Live)',
+    description: 'Sửa dứt điểm lỗi đồng bộ âm thanh gây chập chờn; streamer thoải mái tắt tiếng trên loa máy tính cá nhân để tránh dội mic, luồng phát sóng (Window Capture & TikTok Live Studio) vẫn truyền âm thanh video to rõ, mượt mà đến khán giả.'
   },
   {
-    title: '🛡️ Bảo Vệ Luồng Phát Tuyệt Đối – Không Đen Màn Hình',
-    description: 'Đảm bảo 100% video luôn hiển thị chuẩn khung hình, đúng thời gian thực, tương thích hoàn hảo cả 2 phương thức phát sóng mà không bị gián đoạn hay đen màn hình.'
+    title: '⚡ Tự Động Khôi Phục Video Gốc Từ Server Khi Mở Phát Sóng',
+    description: 'Khắc phục triệt để lỗi mất đường dẫn video khi mở cửa sổ mới; tự động định tuyến đường dẫn video server gốc (/uploads/...) giúp mọi nguồn phát sóng luôn có video chuẩn ngay từ frame đầu tiên.'
   }
 ];
 

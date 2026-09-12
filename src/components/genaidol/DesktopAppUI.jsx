@@ -1139,6 +1139,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           name: cleanName,
           type: isVid ? 'video' : (c.type || 'image'),
           url: finalUrl,
+          mediaUrl: c.mediaUrl || (finalUrl && !finalUrl.startsWith('blob:') ? finalUrl : ''),
           fileData: c.fileData
         };
       });
@@ -2350,7 +2351,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     };
     
     // Ưu tiên video nhân vật đang chọn -> video khóa người dùng -> các nguồn phản hồi
-    let currentMedia = quickResponseActiveVideo?.url || lipSyncVideoUrl || (activeVideoItem?.mediaUrl) || char.mediaUrl || char.url || userLockedMediaUrl || '';
+    const serverCharMedia = (char.mediaUrl && !char.mediaUrl.startsWith('blob:')) ? char.mediaUrl : ((char.url && !char.url.startsWith('blob:')) ? char.url : null);
+    const lockedServerMedia = (userLockedMediaUrl && !userLockedMediaUrl.startsWith('blob:')) ? userLockedMediaUrl : null;
+    let currentMedia = quickResponseActiveVideo?.url || lipSyncVideoUrl || (activeVideoItem?.mediaUrl) || serverCharMedia || lockedServerMedia || char.mediaUrl || userLockedMediaUrl || char.url || '';
     let isVid = !!userLockedMediaUrl || char.type === 'video' || (typeof currentMedia === 'string' && (currentMedia.endsWith('.mp4') || currentMedia.includes('/uploads/') || currentMedia.startsWith('http') || currentMedia.startsWith('blob:')));
     let streamFlvUrl = null;
 
@@ -3462,20 +3465,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       if (selected.type === 'video') {
         return (
           <div className="relative w-full h-full group/videoContainer select-none overflow-hidden bg-black flex items-center justify-center">
-            {/* THẺ VIDEO PREVIEW TRÊN PHẦN MỀM */}
+            {/* THẺ VIDEO PREVIEW TRÊN PHẦN MỀM (TƯƠNG THÍCH HOÀN HẢO VỚI OBS WINDOW CAPTURE - KHÔNG BAO GIỜ ĐEN MÀN HÌNH) */}
             <video 
               ref={desktopVideoRef}
               data-main-player="true"
               src={selected.url} 
-              className="w-full h-full object-contain bg-black transform-gpu cursor-pointer main-video-player"
+              className="w-full h-full object-contain bg-black cursor-pointer main-video-player"
               style={{ 
-                transform: 'translate3d(0, 0, 0)', 
-                WebkitTransform: 'translate3d(0, 0, 0)', 
-                backfaceVisibility: 'hidden', 
-                WebkitBackfaceVisibility: 'hidden', 
-                willChange: 'transform', 
-                imageRendering: '-webkit-optimize-contrast',
-                filter: 'contrast(1.03) saturate(1.05) brightness(1.01)'
+                imageRendering: '-webkit-optimize-contrast'
               }}
               autoPlay
               loop 
@@ -3537,7 +3534,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                     action: 'time_sync',
                     currentTime: curTime,
                     isPlaying: !e.currentTarget.paused,
-                    isMuted: isLocalSpeakerMuted,
+                    isMuted: liveAudioMuted,
                     volume: liveVolume,
                     timestamp: now
                   };
@@ -3550,9 +3547,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                     type: 'MASTER_TIME_SYNC',
                     currentTime: curTime,
                     isPlaying: !e.currentTarget.paused,
-                    isMuted: isLocalSpeakerMuted,
-                    isVideoAudioMuted: isLocalSpeakerMuted,
-                    volume: isLocalSpeakerMuted ? 0 : liveVolume,
+                    isMuted: liveAudioMuted,
+                    isVideoAudioMuted: liveAudioMuted,
+                    volume: liveAudioMuted ? 0 : liveVolume,
                     source: 'desktop',
                     timestamp: now
                   });

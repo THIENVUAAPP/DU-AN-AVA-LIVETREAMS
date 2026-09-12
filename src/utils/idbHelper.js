@@ -150,7 +150,7 @@ export const saveCharacterToIDB = async (char) => {
     name: char.name,
     type: char.type,
     fileBlob: char.fileData || char.fileBlob,
-    mediaUrl: char.url
+    mediaUrl: char.mediaUrl || char.url
   });
 };
 

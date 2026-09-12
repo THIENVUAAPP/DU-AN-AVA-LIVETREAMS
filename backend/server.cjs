@@ -2127,8 +2127,14 @@ app.post('/api/video-control', (req, res) => {
       currentMasterLiveState.videoCurrentTime = control.currentTime;
     }
     if (control.mediaUrl && typeof control.mediaUrl === 'string') {
-      currentMasterLiveState.mediaUrl = control.mediaUrl;
-      currentMasterLiveState.isVideo = true;
+      if (!control.mediaUrl.startsWith('blob:')) {
+        let cleanUrl = control.mediaUrl;
+        if (cleanUrl.includes('/uploads/')) {
+          cleanUrl = cleanUrl.substring(cleanUrl.indexOf('/uploads/'));
+        }
+        currentMasterLiveState.mediaUrl = cleanUrl;
+        currentMasterLiveState.isVideo = true;
+      }
     }
     if (typeof control.isMuted === 'boolean') {
       currentMasterLiveState.isVideoAudioMuted = control.isMuted;
@@ -2680,8 +2686,12 @@ async function startCloudflaredTunnel(port) {
   tunnelStatus = 'connecting';
 
   if (activeCloudflaredProc) {
-    try { activeCloudflaredProc.kill('SIGKILL'); } catch (e) {}
+    const oldProc = activeCloudflaredProc;
     activeCloudflaredProc = null;
+    try {
+      oldProc.removeAllListeners();
+      oldProc.kill('SIGKILL');
+    } catch (e) {}
   }
 
   let cloudflaredBin = null;
@@ -2764,9 +2774,14 @@ async function startCloudflaredTunnel(port) {
         startLocaltunnelFallback(port);
       });
 
+      let isRateLimited = false;
       const parseUrl = (data) => {
         try {
           const str = data.toString();
+          if (str.includes('429 Too Many Requests') || str.includes('1015') || str.includes('rate limited')) {
+            isRateLimited = true;
+            console.warn('⚠️  [Tunnel] Cloudflare Quick Tunnel đang bị giới hạn tần suất (429). Hệ thống kích hoạt chế độ Vercel Cloud bảo vệ...');
+          }
           const match = str.match(/https:\/\/[a-z0-9\-]+\.trycloudflare\.com/);
           if (match && !currentTunnelUrl) {
             currentTunnelUrl = match[0];
@@ -2794,11 +2809,12 @@ async function startCloudflaredTunnel(port) {
       if (proc.stderr) proc.stderr.on('data', parseUrl);
 
       proc.on('exit', (code) => {
-        console.log(`\n⚠️  [Tunnel] Cloudflared thoát (code ${code}). Đang khởi động lại...`);
+        const delay = isRateLimited ? 45000 : 8000;
+        console.log(`\n⚠️  [Tunnel] Cloudflared thoát (code ${code}). Sẽ thử lại sau ${delay / 1000}s...`);
         currentTunnelUrl = null;
         tunnelStatus = 'connecting';
         activeCloudflaredProc = null;
-        setTimeout(() => startCloudflaredTunnel(port), 3000);
+        setTimeout(() => startCloudflaredTunnel(port), delay);
       });
 
       return;
@@ -2848,40 +2864,58 @@ async function startLocaltunnelFallback(port) {
 }
 
 let consecutiveTunnelFailures = 0;
+function triggerTunnelRestart(port) {
+  console.warn(`🚨 [Tunnel Watchdog] Phát hiện đường link Cloudflare bị lỗi (1033/Edge disconnect). Đang cấp link mới ngay...`);
+  consecutiveTunnelFailures = 0;
+  if (healthCheckTimer) clearInterval(healthCheckTimer);
+  if (activeCloudflaredProc) {
+    const oldProc = activeCloudflaredProc;
+    activeCloudflaredProc = null;
+    try {
+      oldProc.removeAllListeners();
+      oldProc.kill('SIGKILL');
+    } catch (e) {}
+  }
+  currentTunnelUrl = null;
+  tunnelStatus = 'connecting';
+  io.emit('TUNNEL_URL_UPDATE', { status: 'connecting', tunnelUrl: null, projects: {} });
+  setTimeout(() => startCloudflaredTunnel(port), 1000);
+}
+
 function startTunnelLivenessMonitor(tunnelUrl, port) {
   if (healthCheckTimer) clearInterval(healthCheckTimer);
   consecutiveTunnelFailures = 0;
-  console.log(`🛡️  [Tunnel] Khởi động giám sát tự phục hồi 24/7 cho: ${tunnelUrl}`);
+  console.log(`🛡️  [Tunnel] Khởi động giám sát tự phục hồi 24/7 (phát hiện lỗi 1033) cho: ${tunnelUrl}`);
 
   healthCheckTimer = setInterval(() => {
     if (!currentTunnelUrl || currentTunnelUrl !== tunnelUrl) return;
 
     try {
-      const parsed = new URL(tunnelUrl);
-      const hostname = parsed.hostname;
-      dns.lookup(hostname, (err) => {
-        if (err && (err.code === 'ENOTFOUND' || err.code === 'EAI_AGAIN')) {
+      const pingUrl = `${tunnelUrl}/api/live-state`;
+      const pingReq = https.get(pingUrl, { timeout: 8000 }, (res) => {
+        // Cloudflare returns 530 for Error 1033 (Argo Tunnel Error) or 502/504 when tunnel is down
+        if (res.statusCode === 530 || res.statusCode === 502 || res.statusCode === 504 || res.statusCode === 404) {
           consecutiveTunnelFailures++;
-          console.warn(`⚠️ [Tunnel Watchdog] DNS lookup thất bại cho ${hostname} (${consecutiveTunnelFailures}/3): ${err.code}`);
-          if (consecutiveTunnelFailures >= 3) {
-            console.warn(`🚨 [Tunnel Watchdog] Tên miền tunnel đã hết hạn trên Cloudflare Edge! Đang cấp link mới...`);
-            consecutiveTunnelFailures = 0;
-            clearInterval(healthCheckTimer);
-            if (activeCloudflaredProc) {
-              try { activeCloudflaredProc.kill('SIGKILL'); } catch (e) {}
-              activeCloudflaredProc = null;
-            }
-            currentTunnelUrl = null;
-            tunnelStatus = 'connecting';
-            io.emit('TUNNEL_URL_UPDATE', { status: 'connecting', tunnelUrl: null, projects: {} });
-            setTimeout(() => startCloudflaredTunnel(port), 1000);
+          console.warn(`⚠️ [Tunnel Watchdog] Cloudflare trả về mã lỗi ${res.statusCode} (Error 1033) (${consecutiveTunnelFailures}/2)`);
+          if (consecutiveTunnelFailures >= 2) {
+            triggerTunnelRestart(port);
           }
         } else {
           consecutiveTunnelFailures = 0;
         }
       });
+      pingReq.on('error', (err) => {
+        consecutiveTunnelFailures++;
+        console.warn(`⚠️ [Tunnel Watchdog] Kiểm tra kết nối thất bại (${consecutiveTunnelFailures}/2): ${err.message}`);
+        if (consecutiveTunnelFailures >= 2) {
+          triggerTunnelRestart(port);
+        }
+      });
+      pingReq.on('timeout', () => {
+        pingReq.destroy();
+      });
     } catch (e) {}
-  }, 25000);
+  }, 15000);
 }
 
 // Khởi động tunnel ngay sau khi server chạy
