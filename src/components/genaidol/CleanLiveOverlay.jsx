@@ -755,14 +755,22 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       } else if (action === 'time_sync') {
         // 🎯 ĐỒNG BỘ THỜI GIAN THỰC (SIÊU MƯỢT 60 FPS, KHÔNG LỆCH FRAME, ÂM THANH TRONG TRẺO)
         if (typeof targetTime === 'number' && !isNaN(targetTime)) {
-          // Chỉ seek khi có cờ force chủ động (streamer tua thủ công hoặc restart)
-          if (control.force) {
+          const cur = vid.currentTime || 0;
+          const diff = Math.abs(cur - targetTime);
+          if (control.force || diff > 1.2) {
             try { 
               vid.currentTime = targetTime; 
+              vid.playbackRate = 1.0;
             } catch (e) {}
-          }
-          if (vid.playbackRate !== 1.0) {
-            vid.playbackRate = 1.0;
+          } else if (diff > 0.15 && !vid.paused) {
+            // Hiệu chỉnh vi sai tốc độ siêu mịn (Catch-up / Slow-down nhẹ) để không gây khựng hình hay rè tiếng
+            if (cur < targetTime) {
+              vid.playbackRate = 1.05;
+            } else {
+              vid.playbackRate = 0.95;
+            }
+          } else {
+            if (vid.playbackRate !== 1.0) vid.playbackRate = 1.0;
           }
         }
         if (!isUserPausedRef.current && vid.paused && vid.readyState >= 2) {
@@ -1983,7 +1991,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.0.4
+                v1.0.3
               </span>
             </div>
 
@@ -2507,31 +2515,16 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     if (!isUserPausedRef.current) return;
                     setIsPlayingState(false);
                   }}
-                  onCanPlayThrough={(e) => {
-                    const v = e.currentTarget;
-                    if (v && !checkIfUserPaused() && v.paused) {
-                      v.play().catch(() => {});
-                    }
-                  }}
                   onWaiting={(e) => {
                     const v = e.currentTarget;
-                    if (v && !checkIfUserPaused()) {
-                      const checkResume = () => {
-                        if (!checkIfUserPaused() && v.readyState >= 3) {
-                          v.play().catch(() => {});
-                        }
-                      };
-                      v.addEventListener('canplay', checkResume, { once: true });
+                    if (v && !checkIfUserPaused() && v.paused && v.readyState >= 2) {
+                      try { v.play().catch(() => {}); } catch(err) {}
                     }
                   }}
                   onStalled={(e) => {
                     const v = e.currentTarget;
-                    if (v && !checkIfUserPaused()) {
-                      setTimeout(() => {
-                        if (!checkIfUserPaused() && v.readyState >= 2) {
-                          v.play().catch(() => {});
-                        }
-                      }, 500);
+                    if (v && !checkIfUserPaused() && v.paused && v.readyState >= 2) {
+                      try { v.play().catch(() => {}); } catch(err){}
                     }
                   }}
                   onEnded={(e) => {

@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.0.4';
+export const APP_VERSION = '1.0.3';
 export const RELEASE_DATE = '11/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🔊 Khắc Phục Triệt Để Nút Tắt/Mở Tiếng Trên Phần Mềm (1-Click Ăn Ngay 100%)',
-    description: 'Sửa dứt điểm lỗi nút Tắt Tiếng / Mở Tiếng lúc bấm được lúc không; áp dụng State Ref Functional Updater đảm bảo bấm phát ăn ngay 100%, đồng bộ âm thanh chuẩn xác giữa máy Streamer, Window Capture OBS và TikTok Live Studio.'
+    title: '🔊 Âm Thanh Video Độc Lập & Không Chập Chờn (Mở Đồng Bộ – Tắt Độc Lập)',
+    description: 'Khi phần mềm mở âm thanh thì video có âm thanh đồng bộ. Khi streamer tắt tiếng trên máy tính cá nhân để tránh dội mic, luồng Live (Window Capture & TikTok Live Studio) vẫn phát âm thanh bình thường tới khán giả. Khắc phục triệt để lỗi âm thanh bị chập chờn, cà giật.'
   },
   {
-    title: '⚡ Khắc Phục Triệt Để Lỗi Đứng Hình, Giật, Lag Trên Cả Window Capture & Đường Link',
-    description: 'Loại bỏ hoàn toàn vòng lặp dội thời gian (time-sync feedback loop), khóa tốc độ 1.0x mượt mà 60 FPS cố định, tích hợp bộ tự phục hồi giải mã buffer tức thì giúp video phát liên tục hàng chục tiếng đồng hồ siêu mượt không đứng hình.'
+    title: '🎬 Video Siêu Nét 1080p 60 FPS – Khắc Phục Triệt Để Mờ & Giảm Độ Phân Giải',
+    description: 'Tối ưu độ phân giải chuẩn gốc 1080 × 1920 (9:16) và 1920 × 1080 (16:9) tràn viền sắc nét, loại bỏ hiện tượng co nhỏ khung hình, mờ nhòe hay vỡ hạt khi đưa vào TikTok Live Studio và OBS.'
   },
   {
-    title: '🎬 Video Siêu Sắc Nét Chuẩn Gốc Tràn Khung Hình 1080p 60 FPS',
-    description: 'Tối ưu bộ lọc tăng tốc phần cứng GPU D3D11 / NVDEC, chống răng cưa và xé hình khi truyền tải trực tiếp qua Window Capture và Browser Source trên TikTok Live Studio.'
+    title: '⚡ Chạy Siêu Mượt 60 FPS – Khắc Phục Triệt Để Lỗi Giật, Lắc, Chậm, Đứng Hình',
+    description: 'Ứng dụng thuật toán phát liên tục không reload video ngầm (Seamless Zero-Reload Loop), giải phóng 100% tài nguyên GPU hardware decoding, giúp video phát mượt mà liên tục 5–10 tiếng không đứng hình.'
   },
   {
-    title: '🛡️ Đồng Bộ Âm Thanh Độc Lập Thông Minh',
-    description: 'Streamer có thể bật tiếng hoặc tắt tiếng trên máy tính cá nhân để chống dội mic mà khán giả xem Live trên TikTok vẫn nghe âm thanh trong trẻo, to rõ ràng.'
+    title: '🛡️ Sửa Lỗi Tải File ZIP Trên Windows: Chỉ Tải Đúng 1 File Duy Nhất',
+    description: 'Khắc phục triệt để lỗi bấm tải một lần nhưng tải 2 file cùng lúc trên hệ điều hành Windows; tích hợp khóa Debounce Lock bảo vệ tải xuống 1-Click ổn định 100%.'
   }
 ];
 
