@@ -110,8 +110,8 @@ export const getVoiceAgeBadge = (v) => {
   };
 };
 
-export default function GeneralSettings({ onClose = () => {} }) {
-  const [activeTab, setActiveTab] = useState('prompt');
+export default function GeneralSettings({ onClose = () => {}, initialTab = 'prompt' }) {
+  const [activeTab, setActiveTab] = useState(initialTab);
   const [showMultiAvatarModal, setShowMultiAvatarModal] = useState(false);
   const [idleVideoCount, setIdleVideoCount] = useState(0);
   const [previewingVoiceId, setPreviewingVoiceId] = useState(null);

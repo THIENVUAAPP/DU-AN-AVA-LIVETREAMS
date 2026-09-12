@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.0.5';
+export const APP_VERSION = '1.0.6';
 export const RELEASE_DATE = '12/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🖥️ Khắc Phục Triệt Để Màn Hình Đen Trên Window Capture OBS (100% Sáng Rõ)',
-    description: 'Loại bỏ hoàn toàn cơ chế DirectComposition overlay gây đen màn hình trong OBS; tối ưu hóa chuẩn render 2D siêu tốc kết hợp thuật toán tối ưu tương phản sắc nét, đảm bảo OBS Window Capture bắt hình ảnh video siêu nét chuẩn gốc 60 FPS tức thì.'
+    title: '🛍️ Sửa Dứt Điểm Lỗi Tab "Giọng Bán Hàng & Dịch Vụ" (Mở Mượt Mà 100%)',
+    description: 'Khắc phục hoàn toàn sự cố crash khi bấm vào tab Giọng Bán Hàng; giao diện mở tức thì, hiển thị đầy đủ 30 chất giọng bán hàng chuyên sâu, bộ lọc đa chiều Vùng Miền (Nam/Bắc/Trung/Tây), Độ Tuổi và thanh trượt tốc độ realtime.'
   },
   {
-    title: '🌐 Khắc Phục Triệt Để Mã Lỗi 1033 Trên TikTok Live Studio (Đường Link Online HTTPS)',
-    description: 'Nâng cấp hệ thống giám sát đường truyền Cloudflare Tunnel 24/7 với bộ cảm biến lỗi HTTP 530 (Error 1033); tự động làm sạch tiến trình cũ và cấp đường link Online HTTPS ổn định 100%, bảo đảm không bao giờ báo lỗi 1033 khi dán vào TikTok Live Studio.'
+    title: '🎙️ Độc Bản Hóa Toàn Bộ Kho Giọng Đọc (100% Khác Biệt, Không Trùng Lặp Âm Sắc)',
+    description: 'Giải quyết triệt để vấn đề các giọng phát ra giống nhau; tái hiệu chuẩn dải tần Pitch (-35% đến +32%) và Rate (-20% đến +26%) kết hợp công nghệ Web Audio Detune Cents, đảm bảo mỗi nhân vật sở hữu một màu giọng hoàn toàn riêng biệt.'
   },
   {
-    title: '🔊 Bảo Toàn Tuyệt Đối Âm Thanh Video Cho Khán Giả (Tắt Loa Máy Cá Nhân Không Mất Tiếng Live)',
-    description: 'Sửa dứt điểm lỗi đồng bộ âm thanh gây chập chờn; streamer thoải mái tắt tiếng trên loa máy tính cá nhân để tránh dội mic, luồng phát sóng (Window Capture & TikTok Live Studio) vẫn truyền âm thanh video to rõ, mượt mà đến khán giả.'
+    title: '👵 Phân Tầng Rõ Nét 3 Độ Tuổi: Trẻ Trung, Trưởng Thành & Lão Niên Chân Thật',
+    description: 'Phân loại rõ nét theo từng tầng độ tuổi: Giọng Trẻ (20-28t) cao vút trong trẻo; Giọng Trưởng Thành (28-40t) đĩnh đạc bản lĩnh; Giọng Lão Niên (40-70t) trầm ấm dầy dặn kết hợp hiệu ứng rung giọng tự nhiên (Tremolo LFO 4.8Hz) chuẩn bậc cao niên.'
   },
   {
-    title: '⚡ Tự Động Khôi Phục Video Gốc Từ Server Khi Mở Phát Sóng',
-    description: 'Khắc phục triệt để lỗi mất đường dẫn video khi mở cửa sổ mới; tự động định tuyến đường dẫn video server gốc (/uploads/...) giúp mọi nguồn phát sóng luôn có video chuẩn ngay từ frame đầu tiên.'
+    title: '🗺️ Phân Rõ 4 Vùng Miền: Chuẩn Phương Ngữ Nam, Bắc, Trung, Tây',
+    description: 'Nam Bộ rộn ràng phóng khoáng ("nha cả nhà mình ơi"), Miền Tây sông nước ngọt lịm ("nghen bà con cô bác"), Miền Trung sâu lắng tha thiết ("nì cả nhà ơi"), Miền Bắc sang trọng chuẩn mực ("nhé các bác và anh chị").'
   }
 ];
 
