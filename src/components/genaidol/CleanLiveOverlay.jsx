@@ -2113,7 +2113,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.2.4
+                v1.2.5
               </span>
             </div>
 
@@ -2326,9 +2326,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                                 className="w-full h-full object-cover select-none pointer-events-none transform-gpu"
                                 style={{
                                   backgroundColor: '#000000',
-                                  transform: 'none',
-                                  WebkitTransform: 'none',
-                                  imageRendering: 'auto'
+                                  transform: 'translate3d(0, 0, 0)',
+                                  WebkitTransform: 'translate3d(0, 0, 0)',
+                                  imageRendering: '-webkit-optimize-contrast'
                                 }}
                               />
                             )
@@ -2508,9 +2508,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                                   height: '100%',
                                   objectFit: transform.objectFit || 'cover',
                                   backgroundColor: 'transparent',
-                                  transform: 'none',
-                                  WebkitTransform: 'none',
-                                  imageRendering: 'auto',
+                                  transform: 'translate3d(0, 0, 0)',
+                                  WebkitTransform: 'translate3d(0, 0, 0)',
+                                  imageRendering: '-webkit-optimize-contrast',
                                   ...chromaStyle
                                 }}
                               />
@@ -2556,7 +2556,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     objectFit: objectFitState || 'cover',
                     backgroundColor: 'transparent',
                     display: 'block',
-                    transform: 'translateZ(0)',
+                    transform: 'translate3d(0, 0, 0)',
+                    WebkitTransform: 'translate3d(0, 0, 0)',
+                    backfaceVisibility: 'hidden',
+                    WebkitBackfaceVisibility: 'hidden',
+                    imageRendering: '-webkit-optimize-contrast',
+                    WebkitFontSmoothing: 'antialiased',
                     willChange: 'transform'
                   }}
                   onCanPlay={(e) => {
@@ -2732,7 +2737,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   height: '100%', 
                   objectFit: objectFitState || 'contain',
                   backgroundColor: '#000000',
-                  imageRendering: 'auto',
+                  transform: 'translate3d(0, 0, 0)',
+                  WebkitTransform: 'translate3d(0, 0, 0)',
+                  imageRendering: '-webkit-optimize-contrast',
+                  WebkitFontSmoothing: 'antialiased'
                 }}
               />
             ) : activeMedia.url ? (
@@ -2805,9 +2813,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   width: '100%', 
                   height: '100%', 
                   objectFit: objectFitState || 'cover',
-                  transform: 'none',
-                  WebkitTransform: 'none',
-                  imageRendering: 'auto'
+                  transform: 'translate3d(0, 0, 0)',
+                  WebkitTransform: 'translate3d(0, 0, 0)',
+                  imageRendering: '-webkit-optimize-contrast',
+                  WebkitFontSmoothing: 'antialiased'
                 }}
               />
             ) : hasStudioFrame ? (

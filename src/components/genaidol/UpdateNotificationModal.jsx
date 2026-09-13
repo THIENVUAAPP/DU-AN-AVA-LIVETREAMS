@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.2.4';
+export const APP_VERSION = '1.2.5';
 export const RELEASE_DATE = '13/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '✨ Tối Ưu Bố Cục Trang Quản Trị Hồ Sơ (User Profile)',
-    description: 'Loại bỏ logo trùng lặp ở thanh điều hướng bên trong trang Quản Trị Hồ Sơ, thiết kế lại nút quay lại Trang Chủ tinh gọn, sang trọng và hiện đại.'
+    title: '✨ Tối Ưu Độ Phân Giải Video Window Capture 4K / Full HD Siêu Sắc Nét',
+    description: 'Nâng cấp bộ render đồ họa GPU với bộ lọc tối ưu tương phản (-webkit-optimize-contrast / crisp-edges), tăng cường độ sắc nét 100% gốc chuẩn 4K khi chụp cửa sổ qua OBS và TikTok Live Studio.'
   },
   {
-    title: '👑 Nâng Cấp Toàn Diện Bộ Nhận Diện Logo AVA LIVE 3D Sang Trọng',
-    description: 'Thay mới toàn bộ logo chính thức với phong cách 3D Neon Aura phát sáng cao cấp, hiển thị to rõ, sắc nét chuẩn 4K trên toàn bộ hệ thống.'
+    title: '🚀 Khắc Phục Triệt Để Giật Lag & Đứng Hình Luồng Live Online HTTPS',
+    description: 'Mở rộng bộ đệm stream chunk 4MB siêu tốc, bổ sung cơ chế phục hồi tự động tức thì trên luồng phát Online (TikTok Live Studio Browser Source) đảm bảo phát 60 FPS siêu mượt mà không bao giờ gián đoạn.'
   },
   {
-    title: '⚡ Tối Ưu Hiển Thị Khung Logo Neon 3D Glow',
-    description: 'Bổ sung hiệu ứng viền phát sáng đa sắc (Cyan - Purple - Pink Glow) xung quanh logo, tạo chiều sâu thị giác nổi bật và sang trọng bậc nhất.'
+    title: '👑 Tăng Tốc Phần Cứng & Khử Răng Cưa Toàn Diện',
+    description: 'Kích hoạt tăng tốc phần cứng translate3d toàn phần cho toàn bộ hệ thống video layers, đảm bảo hiệu năng tối đa và chất lượng hình ảnh cao cấp nhất.'
   }
 ];
 

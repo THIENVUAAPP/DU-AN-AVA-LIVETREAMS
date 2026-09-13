@@ -381,8 +381,8 @@ app.all('/uploads/:filename', (req, res, next) => {
         return res.end();
       }
 
-      // ⚡ BUFFER 2MB SIÊU TỐC CHO VIDEO DUNG LƯỢNG LỚN & BITRATE CAO
-      const stream = fs.createReadStream(filePath, { start, end, highWaterMark: 2 * 1024 * 1024 });
+      // ⚡ BUFFER 4MB SIÊU TỐC CHO VIDEO DUNG LƯỢNG LỚN & BITRATE CAO 4K 60FPS
+      const stream = fs.createReadStream(filePath, { start, end, highWaterMark: 4 * 1024 * 1024 });
       req.on('close', () => {
         try { stream.destroy(); } catch (e) {}
       });
@@ -633,11 +633,16 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
     video {
       width: 100vw; height: 100vh;
       object-fit: ${fitParam};
-      background: transparent;
+      background: #000;
       display: block;
       outline: none; border: none;
-      image-rendering: auto;
-      transform: translateZ(0);
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+      transform: translate3d(0, 0, 0);
+      -webkit-transform: translate3d(0, 0, 0);
+      backface-visibility: hidden;
+      -webkit-backface-visibility: hidden;
+      -webkit-font-smoothing: antialiased;
       will-change: transform;
     }
     #controlsDock {
@@ -681,13 +686,15 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       loop 
       preload="auto" 
       muted
+      crossorigin="anonymous"
+      disableRemotePlayback
     ></video>
     <div id="controlsDock">
       <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập">⏸️ Dừng</button>
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v1.2.4</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v1.2.5</div>
   </div>
   <script>
     (function() {
@@ -835,6 +842,28 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         }
       });
 
+      // Tự động khôi phục tức thì khi CEF hoặc TikTok Live Studio bị nghẽn buffer hoặc lag
+      vid.addEventListener('waiting', function() {
+        if (!isStreamUserPaused) {
+          vid.play().catch(function() {});
+        }
+      });
+
+      vid.addEventListener('stalled', function() {
+        if (!isStreamUserPaused) {
+          vid.play().catch(function() {});
+        }
+      });
+
+      vid.addEventListener('error', function() {
+        if (!isStreamUserPaused && currentSrc) {
+          setTimeout(function() {
+            vid.load();
+            vid.play().catch(function() {});
+          }, 300);
+        }
+      });
+
       if (btnPlayPause) {
         btnPlayPause.addEventListener('click', function(e) {
           e.stopPropagation();
@@ -942,7 +971,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         }, 10000);
 
         socket.on('connect', function() {
-          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v1.2.4';
+          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v1.2.5';
           socket.emit('REQUEST_MASTER_LIVE_STATE');
         });
 
@@ -1074,7 +1103,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '1.2.4';
+  let ver = '1.2.5';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1112,7 +1141,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '1.2.4';
+  let ver = '1.2.5';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;

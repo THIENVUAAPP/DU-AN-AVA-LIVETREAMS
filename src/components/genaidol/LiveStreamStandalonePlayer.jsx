@@ -387,6 +387,9 @@ export default function LiveStreamStandalonePlayer() {
         }}
         onWaiting={() => {
           setIsVideoLoading(true);
+          if (videoRef.current && !isExplicitlyPausedRef.current) {
+            videoRef.current.play().catch(() => {});
+          }
         }}
         onCanPlay={(e) => {
           setIsVideoLoading(false);
@@ -412,9 +415,8 @@ export default function LiveStreamStandalonePlayer() {
               }
             }).catch(() => {});
         }}
-        onEnded={() => {
+        onStalled={() => {
           if (videoRef.current && !isExplicitlyPausedRef.current) {
-            videoRef.current.currentTime = 0;
             videoRef.current.play().catch(() => {});
           }
         }}
@@ -422,11 +424,15 @@ export default function LiveStreamStandalonePlayer() {
           width: '100%',
           height: '100%',
           objectFit: fitMode,
-          backgroundColor: 'transparent',
+          backgroundColor: '#000000',
           display: 'block',
           outline: 'none',
           border: 'none',
-          transform: 'translateZ(0)',
+          transform: 'translate3d(0, 0, 0)',
+          WebkitTransform: 'translate3d(0, 0, 0)',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+          WebkitFontSmoothing: 'antialiased',
           willChange: 'transform',
           imageRendering: '-webkit-optimize-contrast'
         }}
@@ -551,7 +557,7 @@ export default function LiveStreamStandalonePlayer() {
           zIndex: 10
         }}
       >
-        🔴 4K 60 FPS REALTIME v1.2.4
+        🔴 4K 60 FPS REALTIME v1.2.5
       </div>
     </div>
   );
