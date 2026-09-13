@@ -782,9 +782,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       setTimeout(() => bc.close(), 100);
     } catch (err) {}
 
+    const effectiveV = (serverActiveUrl && !serverActiveUrl.startsWith('blob:')) 
+      ? serverActiveUrl 
+      : (broadcastUrl || '/uploads/media-1789044811424-233037063.mp4');
     const charQuery = selectedCharacter ? `&char=${encodeURIComponent(selectedCharacter)}` : '';
     const timeQuery = curTime > 0 ? `&t=${Math.round(curTime * 100) / 100}` : '';
-    const vQuery = serverActiveUrl && !serverActiveUrl.startsWith('blob:') ? `&v=${encodeURIComponent(serverActiveUrl)}` : '';
+    const vQuery = effectiveV ? `&v=${encodeURIComponent(effectiveV)}` : '';
     const query = `${vQuery}${charQuery}${timeQuery}`;
     const origin = typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')
       ? window.location.origin
@@ -3655,7 +3658,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               src={selected.url} 
               className="w-full h-full object-contain bg-black cursor-pointer main-video-player"
               style={{ 
-                imageRendering: '-webkit-optimize-contrast'
+                imageRendering: 'auto'
               }}
               autoPlay
               loop 

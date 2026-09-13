@@ -170,8 +170,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     } catch (e) {}
 
     const charQuery = selectedCharId ? `&char=${encodeURIComponent(selectedCharId)}` : '';
-    const timeQuery = curTime > 0 ? `&t=${Math.round(curTime * 100) / 100}` : '';
-    const vQuery = (finalVideoUrl && !finalVideoUrl.startsWith('blob:')) ? `&v=${encodeURIComponent(finalVideoUrl)}` : '';
+    const effectiveV = (finalVideoUrl && !finalVideoUrl.startsWith('blob:')) ? finalVideoUrl : (finalVideoUrl || '/uploads/media-1789044811424-233037063.mp4');
+    const vQuery = effectiveV ? `&v=${encodeURIComponent(effectiveV)}` : '';
     const query = `${vQuery}${charQuery}${timeQuery}`;
     const origin = typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')
       ? window.location.origin
@@ -406,7 +406,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
               <h2 className="text-base font-black text-white tracking-wide flex items-center gap-2">
                 <span>TRUNG TÂM PHÁT SÓNG TIKTOK LIVE STUDIO & OBS</span>
                 <span className="text-[10px] bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-2 py-0.5 rounded-full font-bold">
-                  v1.1.7 ONLINE
+                  v1.1.8 ONLINE
                 </span>
               </h2>
               <p className="text-xs text-gray-400 font-medium">

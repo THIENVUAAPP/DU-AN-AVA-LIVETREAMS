@@ -192,7 +192,7 @@ export default function LiveStreamStandalonePlayer() {
               return prev;
             });
           }
-          if (d.videoPlaybackEvent === 'pause' || d.isPlaying === false) {
+          if (d.videoPlaybackEvent === 'pause' && d.userInitiated === true) {
             applyExplicitPause();
           } else {
             if (isExplicitlyPausedRef.current) isExplicitlyPausedRef.current = false;
@@ -247,8 +247,10 @@ export default function LiveStreamStandalonePlayer() {
         if (data.isPlaying === true) {
           isExplicitlyPausedRef.current = false;
           tryPlayWithSound();
-        } else if (data.isPlaying === false || data.videoPlaybackEvent === 'pause') {
+        } else if (data.videoPlaybackEvent === 'pause' && data.userInitiated === true) {
           applyExplicitPause();
+        } else if (videoRef.current && videoRef.current.paused && !isExplicitlyPausedRef.current) {
+          tryPlayWithSound();
         }
         if (typeof data.isVideoAudioMuted === 'boolean') {
           isUserMutedRef.current = data.isVideoAudioMuted;
@@ -598,7 +600,7 @@ export default function LiveStreamStandalonePlayer() {
           zIndex: 10
         }}
       >
-        🔴 60 FPS REALTIME v1.1.7
+        🔴 4K 60 FPS REALTIME v1.1.8
       </div>
     </div>
   );

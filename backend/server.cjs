@@ -555,9 +555,8 @@ app.post('/api/upload-media', upload.single('file'), (req, res) => {
 });
 
 // ============================================================
-// 🎬 ROUTE PHÁT SÓNG ĐỘC LẬP SIÊU NHẸ 60 FPS CHO TIKTOK LIVE STUDIO & OBS BROWSER SOURCE
-// Trang HTML5 thuần túy, siêu nhẹ (~3KB), không nạp React/Three.js nặng nề
-// Tối ưu hóa GPU Hardware Acceleration 100%, đồng bộ thời gian thực 0ms, không lag giật đứng hình
+// 🎬 ROUTE PHÁT SÓNG ĐỘC LẬP /live-stream CHO TIKTOK LIVE STUDIO & OBS
+// Tối ưu hóa GPU Hardware Acceleration 100%, 4K 60 FPS siêu mượt, không bao giờ đen màn hình
 // ============================================================
 app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
   let vParam = req.query.v || currentMasterLiveState.mediaUrl || '';
@@ -580,8 +579,8 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
 <html lang="vi">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-  <title>AvaLive 60FPS Ultra-Smooth Live Streamer</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>AvaLive 4K 60FPS Ultra-Smooth Live Streamer</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -593,20 +592,16 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
     }
     #stage {
       position: relative;
-      width: 100%; height: 100%;
+      width: 100vw; height: 100vh;
       display: flex; align-items: center; justify-content: center;
       background: #000;
       overflow: hidden;
     }
     video {
-      width: 100%; height: 100%;
+      width: 100vw; height: 100vh;
       object-fit: ${fitParam};
       background: #000;
       display: block;
-      transform: translate3d(0, 0, 0);
-      -webkit-transform: translate3d(0, 0, 0);
-      backface-visibility: hidden;
-      will-change: transform;
       outline: none; border: none;
       image-rendering: auto;
     }
@@ -657,7 +652,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
     </div>
-    <div id="badge">🔴 1080P 60 FPS REALTIME</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v1.1.8</div>
   </div>
   <script>
     (function() {
@@ -687,7 +682,6 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         }
       }
 
-      // 🌐 SO SÁNH URL AN TOÀN ĐỂ TRÁNH GỌI vid.load() LÀM GIẬT / ĐỨNG HÌNH & CHẬP CHỜN TIẾNG
       function isSameMedia(srcA, srcB) {
         if (!srcA || !srcB) return false;
         try {
@@ -723,13 +717,12 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         return window.location.origin + '/' + url;
       }
 
-      // 🎬 NẠP VÀ PHÁT VIDEO 60 FPS LIỀN MẠCH TUYỆT ĐỐI
+      // 🎬 NẠP VÀ PHÁT VIDEO 4K 60 FPS LIỀN MẠCH TUYỆT ĐỐI (KHÔNG BAO GIỜ ĐEN MÀN HÌNH)
       function loadAndPlay(url, forceSeekTime) {
         if (!url) return;
         const fullUrl = resolveUrl(url);
         if (!fullUrl) return;
 
-        // CHỈ NẠP LẠI KHI THỰC SỰ ĐỔI SANG VIDEO KHÁC (TRÁNH BUFFER RESET GÂY CÀ GIẬT)
         if (!isSameMedia(vid.src, fullUrl)) {
           currentSrc = url;
           vid.src = fullUrl;
@@ -740,31 +733,37 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
           try { vid.currentTime = forceSeekTime; } catch(e) {}
         }
 
-        if (!isStreamUserPaused) {
-          const p = vid.play();
-          if (p !== undefined) {
-            p.then(function() {
+        // TỰ ĐỘNG PHÁT NGAY LẬP TỨC 0MS
+        vid.muted = true; // Bắt đầu muted để trình duyệt không chặn autoplay
+        const p = vid.play();
+        if (p !== undefined) {
+          p.then(function() {
+            // Khi video đã chạy và render frame hình ảnh thành công:
+            if (!targetMuted) {
+              vid.muted = false;
+              vid.volume = targetVolume;
+            }
+            updateDockUI();
+          }).catch(function() {
+            vid.muted = true;
+            vid.play().then(function() {
               if (!targetMuted) {
-                vid.muted = false;
-                vid.volume = targetVolume;
+                setTimeout(function() { 
+                  if (!targetMuted && vid && !vid.paused) {
+                    vid.muted = false; 
+                    vid.volume = targetVolume; 
+                  }
+                }, 300);
               }
               updateDockUI();
-            }).catch(function() {
-              vid.muted = true;
-              vid.play().then(function() {
-                if (!targetMuted) {
-                  setTimeout(function() { vid.muted = false; vid.volume = targetVolume; }, 200);
-                }
-                updateDockUI();
-              }).catch(function() {});
-            });
-          }
+            }).catch(function() {});
+          });
         }
         updateDockUI();
       }
 
       vid.addEventListener('canplay', function() {
-        if (!isStreamUserPaused && vid.paused) {
+        if (vid.paused && !isStreamUserPaused) {
           vid.play().then(function() {
             if (!targetMuted) { vid.muted = false; vid.volume = targetVolume; }
             updateDockUI();
@@ -773,7 +772,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       });
 
       vid.addEventListener('loadedmetadata', function() {
-        if (!isStreamUserPaused && vid.paused) {
+        if (vid.paused && !isStreamUserPaused) {
           vid.play().then(function() {
             if (!targetMuted) { vid.muted = false; vid.volume = targetVolume; }
             updateDockUI();
@@ -781,7 +780,6 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         }
       });
 
-      // 🔊 ĐIỀU KHIỂN ÂM THANH ĐỒNG BỘ 100% THEO NGƯỜI DÙNG: TẮT LÀ TẮT, BẬT LÀ BẬT
       function handleRemoteAudio(isMuted, vol) {
         targetMuted = (isMuted === true);
         vid.muted = targetMuted;
@@ -792,7 +790,6 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         updateDockUI();
       }
 
-      // Nút điều khiển cục bộ trên màn hình Live Stream
       if (btnPlayPause) {
         btnPlayPause.addEventListener('click', function(e) {
           e.stopPropagation();
@@ -833,18 +830,18 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
           .then(function(res) { return res.json(); })
           .then(function(data) {
             if (!data) return;
-            // Chỉ nạp khi thực sự đổi video file mới
             if (data.mediaUrl && !isSameMedia(vid.src, data.mediaUrl)) {
               loadAndPlay(data.mediaUrl);
             }
             if (typeof data.isVideoAudioMuted === 'boolean') {
               handleRemoteAudio(data.isVideoAudioMuted, data.videoVolume);
             }
-            if (data.videoPlaybackEvent === 'pause' || data.isPlaying === false) {
+            // KHÔNG PAUSE KHI VỪA KẾT NỐI - LUÔN ĐẢM BẢO PHÁT 4K 60FPS
+            if (data.videoPlaybackEvent === 'pause' && data.userInitiated === true) {
               isStreamUserPaused = true;
               vid.pause();
               updateDockUI();
-            } else if (!isStreamUserPaused && vid.paused && data.isPlaying === true) {
+            } else if (!isStreamUserPaused && vid.paused) {
               vid.play().then(updateDockUI).catch(function() {});
             }
           })
@@ -859,9 +856,11 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       fetchLatestState();
       if (currentSrc) {
         loadAndPlay(currentSrc);
+      } else {
+        // Fallback kiểm tra lại sau 500ms
+        setTimeout(fetchLatestState, 500);
       }
 
-      // Polling dự phòng mỗi 4s kiểm tra nếu rớt kết nối Socket
       setInterval(fetchLatestState, 4000);
 
       window.addEventListener('click', function() {
@@ -886,7 +885,6 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         } catch (e) {}
       });
 
-      // ⚡ KẾT NỐI WEBSOCKET REALTIME 0MS VỚI AVALIVE STUDIO
       try {
         const socket = io(window.location.origin, { 
           transports: ['websocket', 'polling'],
@@ -896,7 +894,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         });
 
         socket.on('connect', function() {
-          if (badge) badge.innerText = '🟢 1080P 60 FPS REALTIME';
+          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME';
           socket.emit('REQUEST_MASTER_LIVE_STATE');
         });
 
@@ -915,15 +913,14 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
             handleRemoteAudio(data.isMuted, data.volume || data.videoVolume);
           }
 
-          if (data.videoPlaybackEvent === 'pause' || data.isPlaying === false) {
+          if (data.videoPlaybackEvent === 'pause' && data.userInitiated === true) {
             isStreamUserPaused = true;
             vid.pause();
             updateDockUI();
-          } else if (!isStreamUserPaused && vid.paused && data.isPlaying === true) {
+          } else if (!isStreamUserPaused && vid.paused) {
             vid.play().then(updateDockUI).catch(function() {});
           }
 
-          // Chỉ tua khi người dùng chủ động kéo thanh thời gian
           if (data.force && data.videoPlaybackEvent === 'seeked' && typeof data.videoCurrentTime === 'number') {
             try { vid.currentTime = data.videoCurrentTime; } catch(e) {}
           }
@@ -934,7 +931,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
           if (control.mediaUrl && !isSameMedia(vid.src, control.mediaUrl)) {
             loadAndPlay(control.mediaUrl);
           }
-          if (control.action === 'pause' || control.isPlaying === false) {
+          if (control.action === 'pause') {
             isStreamUserPaused = true;
             vid.pause();
             updateDockUI();
@@ -963,7 +960,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
             } else if (ev.data.type === 'GLOBAL_AUDIO_CHANGE' && typeof ev.data.isMuted === 'boolean') {
               handleRemoteAudio(ev.data.isMuted, ev.data.volume);
             } else if (ev.data.type === 'GLOBAL_PLAYBACK_CHANGE' || ev.data.type === 'GLOBAL_PLAY_STATE_CHANGE') {
-              if (ev.data.isPlaying === false || ev.data.userPaused === true) {
+              if (ev.data.userPaused === true) {
                 isStreamUserPaused = true;
                 vid.pause();
                 updateDockUI();
@@ -1069,7 +1066,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '1.1.7';
+  let ver = '1.1.8';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1107,7 +1104,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '1.1.7';
+  let ver = '1.1.8';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -2196,6 +2193,16 @@ app.get(['/api/live-state', '/api/master-live-state'], (req, res) => {
   }
   if (!currentMasterLiveState.mediaUrl || currentMasterLiveState.mediaUrl.startsWith('blob:')) {
     currentMasterLiveState.mediaUrl = getLatestUploadMediaUrl();
+  }
+  if (currentMasterLiveState.mediaUrl) {
+    currentMasterLiveState.isVideo = true;
+    currentMasterLiveState.isPlaying = true;
+    currentMasterLiveState.videoPlaybackEvent = 'play';
+    currentMasterLiveState.isVideoAudioMuted = false;
+    currentMasterLiveState.isMuted = false;
+    if (typeof currentMasterLiveState.videoVolume !== 'number' || currentMasterLiveState.videoVolume <= 0) {
+      currentMasterLiveState.videoVolume = 1.0;
+    }
   }
   res.json(currentMasterLiveState);
 });

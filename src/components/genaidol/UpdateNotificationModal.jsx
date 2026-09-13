@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.1.7';
-export const RELEASE_DATE = '12/09/2026';
+export const APP_VERSION = '1.1.8';
+export const RELEASE_DATE = '13/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🌐 Chuẩn Hóa 100% Cloudflare Quick Tunnel (trycloudflare.com)',
-    description: 'Chấm dứt hoàn toàn localtunnel. Đường truyền online sử dụng 100% trycloudflare.com HTTPS, tự động cấp link mới khi mở phần mềm, dán link vào TikTok Live Studio là nhận video và phát 60 FPS tức thì không bị chặn.'
+    title: '🖥️ Khắc Phục Triệt Để Màn Hình Đen Window Capture OBS',
+    description: 'Sửa lỗi màn hình đen khi mở cửa sổ Live 9:16 hoặc Window Capture trong OBS. Luồng video được nạp trực tiếp 0ms, phát tức thì cả hình ảnh lẫn âm thanh siêu mượt mà 60 FPS.'
   },
   {
-    title: '🖥️ Cửa Sổ Live 9:16 (Window Capture OBS) Đầy Đủ Cả Hình Lẫn Tiếng',
-    description: 'Khắc phục triệt để lỗi có tiếng nhưng mất hình trên Window Capture. Video được dựng frame trực tiếp và render liên tục 60 FPS, bảo toàn 100% độ phân giải gốc 4K/1080p, không gián đoạn.'
+    title: '🌐 Khắc Phục Triệt Để Màn Hình Đen TikTok Live Studio (trycloudflare.com)',
+    description: 'Dán đường link Online HTTPS vào TikTok Live Studio là nhận video và phát ngay lập tức 0ms, không đứng hình, không lag giật, đảm bảo hoạt động liên tục 24/7.'
   },
   {
-    title: '⚡ Tối Ưu Hóa Bộ Đồng Bộ Video & Tách Biệt Âm Thanh Độc Lập',
-    description: 'Hệ thống tự động đồng bộ video mượt mà qua các kênh truyền, âm thanh phát chuẩn xác, không bị giật lag hay đứng hình sau nhiều giờ livestream liên tục.'
+    title: '🎬 Bảo Toàn 100% Độ Phân Giải Gốc 4K Siêu Sắc Nét',
+    description: 'Tối ưu hóa GPU Hardware Acceleration toàn diện, loại bỏ các bộ lọc gây xung đột phần cứng, video phát đúng chuẩn độ phân giải gốc 4K/1080p sắc nét từng chi tiết.'
   }
 ];
 

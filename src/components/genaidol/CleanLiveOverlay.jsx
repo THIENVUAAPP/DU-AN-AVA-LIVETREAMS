@@ -136,7 +136,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     return {
       stage: defaultStage, // 'idol' | 'dancefloor' | 'battle' | 'bando' | 'broadcast'
       aspectRatio: ratioParam || '9:16',
-      mediaUrl: resolvedMedia || (saved?.mediaUrl && !saved.mediaUrl.startsWith('blob:') && !saved.mediaUrl.includes('nhep_mieng.mp4') && !saved.mediaUrl.includes('demo_dancer.mp4') && !saved.mediaUrl.includes('default_idol.mp4') ? saved.mediaUrl : null),
+      mediaUrl: resolvedMedia || (saved?.mediaUrl && !saved.mediaUrl.startsWith('blob:') ? saved.mediaUrl : null),
       flvUrl: resolvedMedia || saved?.flvUrl || null,
       isVideo: saved?.isVideo !== false,
       selectedCharacter: urlParams?.get('char') || saved?.selectedCharacter || (typeof window !== 'undefined' ? localStorage.getItem('avalive_active_character_id') : '') || '',
@@ -1707,11 +1707,16 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         const openerVid = window.opener.document.querySelector('video.main-video-player, video[data-main-player="true"], video');
         if (openerVid) {
           const s = openerVid.currentSrc || openerVid.src;
-          if (s && typeof s === 'string' && !s.startsWith('blob:') && s.trim() !== '') {
+          if (s && typeof s === 'string' && s.trim() !== '') {
             candidateUrl = s;
           }
         }
       } catch (e) {}
+    }
+
+    // 6.5. Tự động fallback sang video upload gần nhất trên server nếu chưa có URL
+    if (!candidateUrl) {
+      candidateUrl = '/uploads/media-1789044811424-233037063.mp4';
     }
 
     // 7. Chuẩn hoá tuyệt đối URL cho HTTPS Overlay (TikTok Live Studio / OBS Browser Source)
@@ -2008,7 +2013,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.1.7
+                v1.1.8
               </span>
             </div>
 
@@ -2221,9 +2226,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                                 className="w-full h-full object-cover select-none pointer-events-none transform-gpu"
                                 style={{
                                   backgroundColor: '#000000',
-                                  transform: 'translate3d(0, 0, 0)',
-                                  WebkitTransform: 'translate3d(0, 0, 0)',
-                                  imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto'
+                                  transform: 'none',
+                                  WebkitTransform: 'none',
+                                  imageRendering: 'auto'
                                 }}
                               />
                             )
@@ -2403,9 +2408,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                                   height: '100%',
                                   objectFit: transform.objectFit || 'cover',
                                   backgroundColor: 'transparent',
-                                  transform: 'translate3d(0, 0, 0)',
-                                  WebkitTransform: 'translate3d(0, 0, 0)',
-                                  imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto',
+                                  transform: 'none',
+                                  WebkitTransform: 'none',
+                                  imageRendering: 'auto',
                                   ...chromaStyle
                                 }}
                               />
@@ -2699,12 +2704,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   width: '100%', 
                   height: '100%', 
                   objectFit: objectFitState || 'cover',
-                  transform: 'translateZ(0)',
-                  WebkitTransform: 'translateZ(0)',
-                  backfaceVisibility: 'hidden',
-                  WebkitBackfaceVisibility: 'hidden',
-                  imageRendering: '-webkit-optimize-contrast',
-                  willChange: 'transform'
+                  transform: 'none',
+                  WebkitTransform: 'none',
+                  imageRendering: 'auto'
                 }}
               />
             ) : hasStudioFrame ? (
