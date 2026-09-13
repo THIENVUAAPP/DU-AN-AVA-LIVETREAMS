@@ -2,17 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.2.3';
+export const APP_VERSION = '1.2.4';
 export const RELEASE_DATE = '13/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Nâng Cấp Toàn Diện Bộ Nhận Diện Logo AVA LIVE 3D Sang Trọng',
-    description: 'Thay mới toàn bộ logo chính thức với phong cách 3D Neon Aura phát sáng cao cấp, hiển thị to rõ, sắc nét chuẩn 4K trên toàn bộ hệ thống (Header, Title Bar, Cửa Sổ Live, Modal Đăng Nhập, Quản Trị Hồ Sơ & Landing Page).'
+    title: '✨ Tối Ưu Bố Cục Trang Quản Trị Hồ Sơ (User Profile)',
+    description: 'Loại bỏ logo trùng lặp ở thanh điều hướng bên trong trang Quản Trị Hồ Sơ, thiết kế lại nút quay lại Trang Chủ tinh gọn, sang trọng và hiện đại.'
   },
   {
-    title: '✨ Đồng Bộ Favicon & Biểu Tượng Ứng Dụng Chuẩn HD',
-    description: 'Cập nhật favicon trình duyệt và biểu tượng ứng dụng PWA / Native App với độ phân giải siêu nét, tăng tính chuyên nghiệp và đẳng cấp nhận diện thương hiệu.'
+    title: '👑 Nâng Cấp Toàn Diện Bộ Nhận Diện Logo AVA LIVE 3D Sang Trọng',
+    description: 'Thay mới toàn bộ logo chính thức với phong cách 3D Neon Aura phát sáng cao cấp, hiển thị to rõ, sắc nét chuẩn 4K trên toàn bộ hệ thống.'
   },
   {
     title: '⚡ Tối Ưu Hiển Thị Khung Logo Neon 3D Glow',

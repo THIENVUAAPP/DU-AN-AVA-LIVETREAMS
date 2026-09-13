@@ -106,22 +106,18 @@ export default function UserProfile({ currentUser, setActiveTab }) {
         
         <div 
           onClick={() => setActiveTab && setActiveTab('overview')} 
-          className="p-5 flex items-center justify-between border-b border-white/10 cursor-pointer hover:bg-white/5 transition-colors group"
+          className="p-4 flex items-center justify-between border-b border-white/10 cursor-pointer hover:bg-white/5 transition-colors group"
           title="Về Trang Chủ"
         >
-          <div className="flex items-center gap-3">
-            <div className="relative group/logo">
-              <div className="absolute -inset-1.5 bg-gradient-to-r from-cyan-500 via-purple-600 to-pink-500 rounded-2xl blur-md opacity-80 group-hover/logo:opacity-100 transition animate-pulse" />
-              <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-400 via-purple-500 to-pink-500 p-[2px] shadow-xl group-hover/logo:scale-105 transition-all">
-                <img src="/official_logo.jpg" alt="AVA LIVE" className="w-full h-full object-cover rounded-[14px] border border-white/40 drop-shadow-[0_0_12px_rgba(6,182,212,0.8)]" />
-              </div>
+          <div className="flex items-center gap-2.5">
+            <div className="w-8 h-8 rounded-xl bg-white/5 border border-white/10 flex items-center justify-center text-cyan-400 group-hover:bg-cyan-500/20 group-hover:text-white transition-colors">
+              <ChevronLeft className="w-4 h-4" />
             </div>
             <div>
-              <h2 className="text-white font-black text-lg leading-none tracking-tight">AVA LIVE</h2>
-              <span className="text-[9px] bg-gradient-to-r from-cyan-400 to-pink-400 bg-clip-text text-transparent font-black uppercase tracking-widest block mt-1">QUẢN TRỊ HỒ SƠ</span>
+              <h2 className="text-white font-black text-sm leading-none tracking-tight">QUẢN TRỊ HỒ SƠ</h2>
+              <span className="text-[10px] text-gray-400 font-bold block mt-1">Quay lại Trang Chủ</span>
             </div>
           </div>
-          <ChevronLeft className="w-4 h-4 text-gray-500 group-hover:text-white" />
         </div>
         
         <div className="flex-1 overflow-y-auto p-3 space-y-4 custom-scrollbar text-xs font-semibold">
