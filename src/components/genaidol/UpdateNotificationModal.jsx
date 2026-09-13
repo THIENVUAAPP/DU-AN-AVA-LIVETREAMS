@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.2.1';
+export const APP_VERSION = '1.2.2';
 export const RELEASE_DATE = '13/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '✨ Triệt Tiêu Hoàn Toàn Chớp Nháy (Flicker) Trên Window Capture OBS',
-    description: 'Khắc phục triệt để hiện tượng chớp nháy gián đoạn trên Window Capture OBS. Loại bỏ hoàn toàn cơ chế micro-seeking, giúp video phát siêu mượt mà 60 FPS liên tục nhiều giờ liền không khựng giật.'
+    title: '🎥 Đồng Bộ Video Window Capture OBS & TikTok Live Studio Tuyệt Đối',
+    description: 'Đảm bảo tất cả các luồng Window Capture OBS và đường link Online phát video mượt mà, đồng bộ khung hình 100% với phần mềm chính, phát liên tục nhiều giờ ở độ phân giải cao nhất không đứng hình, không giật lag.'
   },
   {
-    title: '🔊 Nút Tắt/Mở Âm Thanh Độc Lập 100% Cho Window Capture OBS',
-    description: 'Âm thanh video được đồng bộ trọn vẹn nhưng quyền Tắt/Mở âm thanh hoàn toàn độc lập. Streamer tắt loa máy tính trên phần mềm chính thì luồng Window Capture OBS vẫn phát tiếng bình thường cho khán giả.'
+    title: '🔊 Tách Rời Hoàn Toàn Quyền Tắt/Mở Video & Âm Thanh Độc Lập',
+    description: 'Tách biệt độc lập nút Tắt/Mở phát video và Tắt/Mở âm thanh giữa Màn hình điều khiển và Luồng phát Livestream. Streamer tạm dừng xem trước hoặc tắt loa máy tính trên app chính thì OBS và TikTok Live Studio vẫn phát sóng trơn tru cho khán giả.'
   },
   {
-    title: '⚡ Tự Động Dự Phòng Luồng Online HTTPS — 100% Không Lỗi 404 / Đen Hình',
-    description: 'Tự động kiểm tra file media trên server; nếu link yêu cầu không tồn tại sẽ tức thì kích hoạt file video chất lượng cao mới nhất. Phát ngay lập tức 0ms đúng chuẩn TikTok Live Studio & OBS.'
+    title: '⚡ Khắc Phục Màn Hình Đen Trên Link Online TikTok Live Studio',
+    description: 'Tối ưu hóa cơ chế nạp media và khởi tạo luồng độc lập, tự động phát lại vô hạn (infinite loop) 60 FPS, xoá bỏ triệt để hiện tượng đen màn hình khi gắn link vào TikTok Live Studio.'
   }
 ];
 

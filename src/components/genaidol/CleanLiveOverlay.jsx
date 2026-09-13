@@ -1239,6 +1239,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               }
             } else if (event.data.type === 'GLOBAL_PLAYBACK_CHANGE') {
               if (event.data.source === 'overlay') return;
+              if (isWindowCapture) return; // Window Capture OBS duy trì nút Tắt/Mở phát độc lập!
               const shouldPlay = !!event.data.isPlaying;
               isInternalPlaybackChangeRef.current = true;
               setIsPlayingState(shouldPlay);
@@ -1408,6 +1409,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     // 5. LOCAL STORAGE SYNC
     const handleStorage = (e) => {
       if (e.key === 'avalive_user_paused') {
+        if (isWindowCapture) return; // Window Capture OBS có nút tắt mở độc lập với loa/màn hình phần mềm chính
         const isPaused = e.newValue === 'true';
         setIsPlayingState(!isPaused);
         const allMedia = document.querySelectorAll('video, audio');
@@ -2111,7 +2113,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.2.1
+                v1.2.2
               </span>
             </div>
 
@@ -2538,7 +2540,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               <>
                 <video
                   ref={overlayVideoRef}
-                  key={activeMedia.url || 'avalive_overlay_main_video'}
+                  key="avalive_overlay_main_video"
                   src={activeMedia.url}
                   autoPlay={true}
                   loop={true}

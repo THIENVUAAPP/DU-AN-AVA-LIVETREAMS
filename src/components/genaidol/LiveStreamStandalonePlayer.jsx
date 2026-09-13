@@ -17,7 +17,7 @@ export default function LiveStreamStandalonePlayer() {
   });
 
   const [videoSrc, setVideoSrc] = useState(() => {
-    if (typeof window === 'undefined') return '';
+    if (typeof window === 'undefined') return '/uploads/media-1789044811424-233037063.mp4';
     const params = new URLSearchParams(window.location.search);
     const v = params.get('v');
     if (v && !v.startsWith('blob:')) return v;
@@ -27,7 +27,7 @@ export default function LiveStreamStandalonePlayer() {
       const locked = localStorage.getItem('avalive_user_locked_media') || '';
       if (locked && !locked.startsWith('blob:')) return locked;
     } catch (e) {}
-    return '';
+    return '/uploads/media-1789044811424-233037063.mp4';
   });
 
   const [fitMode, setFitMode] = useState(() => {
@@ -192,15 +192,9 @@ export default function LiveStreamStandalonePlayer() {
               return prev;
             });
           }
-          if (d.videoPlaybackEvent === 'pause' && d.userInitiated === true) {
-            applyExplicitPause();
-          } else {
-            if (isExplicitlyPausedRef.current) isExplicitlyPausedRef.current = false;
+          // Luôn duy trì phát sóng liền mạch
+          if (!isExplicitlyPausedRef.current && videoRef.current && videoRef.current.paused) {
             tryPlayWithSound();
-          }
-          if (typeof d.isVideoAudioMuted === 'boolean') {
-            isUserMutedRef.current = d.isVideoAudioMuted;
-            if (videoRef.current) videoRef.current.muted = d.isVideoAudioMuted;
           }
         })
         .catch(() => {});
@@ -241,26 +235,8 @@ export default function LiveStreamStandalonePlayer() {
         if (data.mediaUrl && !data.mediaUrl.startsWith('blob:') && !isSameMedia(videoSrc, data.mediaUrl)) {
           setVideoSrc(data.mediaUrl);
         }
-        if (typeof data.videoCurrentTime === 'number') {
-          applyTimeSync(data.videoCurrentTime, Boolean(data.force));
-        }
-        if (data.isPlaying === true) {
-          isExplicitlyPausedRef.current = false;
+        if (!isExplicitlyPausedRef.current && videoRef.current && videoRef.current.paused) {
           tryPlayWithSound();
-        } else if (data.videoPlaybackEvent === 'pause' && data.userInitiated === true) {
-          applyExplicitPause();
-        } else if (videoRef.current && videoRef.current.paused && !isExplicitlyPausedRef.current) {
-          tryPlayWithSound();
-        }
-        if (typeof data.isVideoAudioMuted === 'boolean') {
-          isUserMutedRef.current = data.isVideoAudioMuted;
-          if (videoRef.current) videoRef.current.muted = data.isVideoAudioMuted;
-        } else if (typeof data.isMuted === 'boolean') {
-          isUserMutedRef.current = data.isMuted;
-          if (videoRef.current) videoRef.current.muted = data.isMuted;
-        }
-        if (typeof data.videoVolume === 'number' && videoRef.current) {
-          try { videoRef.current.volume = data.videoVolume; } catch (e) {}
         }
       });
 
@@ -285,14 +261,8 @@ export default function LiveStreamStandalonePlayer() {
             videoRef.current.muted = false;
             videoRef.current.volume = 1.0;
           }
-        } else if (control.action === 'audio_sync') {
-          if (videoRef.current) {
-            if (typeof control.isMuted === 'boolean') {
-              isUserMutedRef.current = control.isMuted;
-              videoRef.current.muted = control.isMuted;
-            }
-            if (typeof control.volume === 'number') videoRef.current.volume = control.volume;
-          }
+        } else if (control.action === 'unmute') {
+          // Keep independent sound control
         }
 
         if (typeof control.currentTime === 'number') {
@@ -309,29 +279,8 @@ export default function LiveStreamStandalonePlayer() {
           if (!ev.data) return;
           if (ev.data.type === 'MASTER_TIME_SYNC' && typeof ev.data.currentTime === 'number') {
             applyTimeSync(ev.data.currentTime, Boolean(ev.data.force));
-            if (ev.data.isPlaying === true && isExplicitlyPausedRef.current) {
-              isExplicitlyPausedRef.current = false;
-              tryPlayWithSound();
-            } else if (ev.data.isPlaying === false || ev.data.userPaused === true) {
-              applyExplicitPause();
-            }
           } else if ((ev.data.type === 'GLOBAL_MEDIA_CHANGE' || ev.data.type === 'MASTER_MEDIA_CHANGE') && ev.data.mediaUrl && !ev.data.mediaUrl.startsWith('blob:')) {
             setVideoSrc(ev.data.mediaUrl);
-          } else if (ev.data.type === 'GLOBAL_PLAYBACK_CHANGE' || ev.data.type === 'GLOBAL_PLAY_STATE_CHANGE') {
-            if (ev.data.isPlaying === false || ev.data.userPaused === true) {
-              applyExplicitPause();
-            } else {
-              isExplicitlyPausedRef.current = false;
-              tryPlayWithSound();
-            }
-          } else if (ev.data.type === 'GLOBAL_AUDIO_CHANGE') {
-            if (videoRef.current) {
-              if (typeof ev.data.isMuted === 'boolean') {
-                isUserMutedRef.current = ev.data.isMuted;
-                videoRef.current.muted = ev.data.isMuted;
-              }
-              if (typeof ev.data.volume === 'number') videoRef.current.volume = ev.data.volume;
-            }
           }
         };
       } catch (e) {}
@@ -602,7 +551,7 @@ export default function LiveStreamStandalonePlayer() {
           zIndex: 10
         }}
       >
-        🔴 4K 60 FPS REALTIME v1.2.1
+        🔴 4K 60 FPS REALTIME v1.2.2
       </div>
     </div>
   );
