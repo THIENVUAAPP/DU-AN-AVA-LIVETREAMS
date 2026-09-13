@@ -9,7 +9,7 @@
   "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1789280017411,
+  "updatedAt": 1789306490380,
   "flvUrl": null,
   "isConnected": false,
   "type": "MASTER_LIVE_STATE_UPDATE",
@@ -17,9 +17,9 @@
   "selectedCharacter": "custom_1789044810661",
   "isUserExplicitMediaLocked": true,
   "videoCurrentTime": 0,
-  "isVideoAudioMuted": true,
-  "videoVolume": 0,
+  "isVideoAudioMuted": false,
+  "videoVolume": 1,
   "clearMedia": false,
-  "tunnelUrl": "https://roger-trigger-incident-soap.trycloudflare.com",
-  "isMuted": true
+  "tunnelUrl": "https://marvel-tub-car-dvd.trycloudflare.com",
+  "isMuted": false
 }

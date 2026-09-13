@@ -131,9 +131,9 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
         <div className="max-w-7xl mx-auto flex items-center justify-between">
           <div className="flex items-center gap-3 cursor-pointer group" onClick={() => window.scrollTo(0, 0)}>
             <div className="relative">
-              <div className="absolute -inset-1.5 bg-gradient-to-r from-[#00F0FF] via-[#EC4899] to-[#9333EA] rounded-2xl blur-sm opacity-80 group-hover:opacity-100 transition duration-500 animate-pulse"></div>
-              <div className="relative w-11 h-11 rounded-xl bg-[#0F0A20] p-0.5 shadow-2xl group-hover:scale-105 transition-all border border-white/30">
-                <img src="/official_logo.jpg" alt="AvaLive" className="w-full h-full object-cover rounded-[10px]" />
+              <div className="absolute -inset-2 bg-gradient-to-r from-cyan-400 via-purple-600 to-pink-500 rounded-2xl blur-md opacity-85 group-hover:opacity-100 transition duration-500 animate-pulse"></div>
+              <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-400 via-purple-500 to-pink-500 p-[2px] shadow-2xl group-hover:scale-105 transition-all">
+                <img src="/official_logo.jpg" alt="AvaLive" className="w-full h-full object-cover rounded-[14px] border border-white/40 drop-shadow-[0_0_12px_rgba(6,182,212,0.8)]" />
               </div>
             </div>
             <h1 className="text-2xl font-black text-white tracking-tight flex items-center gap-1.5 leading-none">
@@ -857,9 +857,9 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
 
           <div className="grid grid-cols-1 md:grid-cols-4 gap-12 mb-12">
             <div className="space-y-4 md:col-span-1">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-10 h-10 rounded-xl bg-[#111] p-0.5 border border-white/20">
-                  <img src="/official_logo.jpg" alt="AvaLive" className="w-full h-full object-cover rounded-[10px]" />
+              <div className="flex items-center gap-3 mb-4">
+                <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-400 via-purple-500 to-pink-500 p-[2px] shadow-lg">
+                  <img src="/official_logo.jpg" alt="AvaLive" className="w-full h-full object-cover rounded-[14px] border border-white/40" />
                 </div>
                 <h1 className="text-xl font-black text-white tracking-tight flex items-center gap-1.5 leading-none">
                   <span className="text-[#00F0FF] drop-shadow-[0_0_8px_rgba(0,240,255,0.6)]">AVA</span>

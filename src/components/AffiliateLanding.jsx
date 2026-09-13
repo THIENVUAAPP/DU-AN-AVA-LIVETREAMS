@@ -24,11 +24,14 @@ export default function AffiliateLanding({ currentUser, setGoogleLoginModalOpen,
         <header className="fixed top-0 left-0 right-0 z-[100] bg-[#0A0A0A]/80 backdrop-blur-xl border-b border-white/5 py-4 px-6 transition-all">
           <div className="max-w-7xl mx-auto flex items-center justify-between">
             <div className="flex items-center gap-3 cursor-pointer group" onClick={() => setActiveTab('overview')}>
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-tr from-[#EF4444] via-[#8B5CF6] to-[#06B6D4] p-0.5 shadow-2xl group-hover:scale-105 transition-all">
-                <img src="/official_logo.jpg" alt="AvaLive PRO" className="w-full h-full object-cover rounded-[10px] border border-white/40" />
+              <div className="relative">
+                <div className="absolute -inset-1.5 bg-gradient-to-r from-cyan-400 via-purple-600 to-pink-500 rounded-2xl blur-sm opacity-80 group-hover:opacity-100 transition animate-pulse" />
+                <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-400 via-purple-500 to-pink-500 p-[2px] shadow-2xl group-hover:scale-105 transition-all">
+                  <img src="/official_logo.jpg" alt="AvaLive PRO" className="w-full h-full object-cover rounded-[14px] border border-white/40 drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]" />
+                </div>
               </div>
               <h1 className="text-xl font-black text-white tracking-tight">
-                AVA <span className="text-transparent bg-clip-text bg-gradient-to-r from-purple-400 to-pink-500 font-black drop-shadow-[0_0_8px_rgba(168,85,247,0.6)]">LIVESTREAM</span>
+                AVA <span className="text-transparent bg-clip-text bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 font-black drop-shadow-[0_0_12px_rgba(168,85,247,0.8)]">LIVE</span>
               </h1>
             </div>
 

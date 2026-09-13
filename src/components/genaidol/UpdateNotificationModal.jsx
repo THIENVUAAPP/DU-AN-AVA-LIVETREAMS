@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.2.2';
+export const APP_VERSION = '1.2.3';
 export const RELEASE_DATE = '13/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🎥 Đồng Bộ Video Window Capture OBS & TikTok Live Studio Tuyệt Đối',
-    description: 'Đảm bảo tất cả các luồng Window Capture OBS và đường link Online phát video mượt mà, đồng bộ khung hình 100% với phần mềm chính, phát liên tục nhiều giờ ở độ phân giải cao nhất không đứng hình, không giật lag.'
+    title: '👑 Nâng Cấp Toàn Diện Bộ Nhận Diện Logo AVA LIVE 3D Sang Trọng',
+    description: 'Thay mới toàn bộ logo chính thức với phong cách 3D Neon Aura phát sáng cao cấp, hiển thị to rõ, sắc nét chuẩn 4K trên toàn bộ hệ thống (Header, Title Bar, Cửa Sổ Live, Modal Đăng Nhập, Quản Trị Hồ Sơ & Landing Page).'
   },
   {
-    title: '🔊 Tách Rời Hoàn Toàn Quyền Tắt/Mở Video & Âm Thanh Độc Lập',
-    description: 'Tách biệt độc lập nút Tắt/Mở phát video và Tắt/Mở âm thanh giữa Màn hình điều khiển và Luồng phát Livestream. Streamer tạm dừng xem trước hoặc tắt loa máy tính trên app chính thì OBS và TikTok Live Studio vẫn phát sóng trơn tru cho khán giả.'
+    title: '✨ Đồng Bộ Favicon & Biểu Tượng Ứng Dụng Chuẩn HD',
+    description: 'Cập nhật favicon trình duyệt và biểu tượng ứng dụng PWA / Native App với độ phân giải siêu nét, tăng tính chuyên nghiệp và đẳng cấp nhận diện thương hiệu.'
   },
   {
-    title: '⚡ Khắc Phục Màn Hình Đen Trên Link Online TikTok Live Studio',
-    description: 'Tối ưu hóa cơ chế nạp media và khởi tạo luồng độc lập, tự động phát lại vô hạn (infinite loop) 60 FPS, xoá bỏ triệt để hiện tượng đen màn hình khi gắn link vào TikTok Live Studio.'
+    title: '⚡ Tối Ưu Hiển Thị Khung Logo Neon 3D Glow',
+    description: 'Bổ sung hiệu ứng viền phát sáng đa sắc (Cyan - Purple - Pink Glow) xung quanh logo, tạo chiều sâu thị giác nổi bật và sang trọng bậc nhất.'
   }
 ];
 
@@ -57,8 +57,11 @@ export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onCl
           <div className="absolute top-0 right-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -mr-10 -mt-10"></div>
           <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full blur-2xl -ml-10 -mb-10"></div>
           
-          <div className="bg-white/20 p-3 rounded-full mb-2.5 shadow-inner backdrop-blur-md">
-            <Sparkles size={28} className="text-yellow-300 animate-pulse" />
+          <div className="relative mb-2.5 group">
+            <div className="absolute -inset-2 bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 rounded-2xl blur-md opacity-90 group-hover:opacity-100 transition animate-pulse" />
+            <div className="relative w-16 h-16 rounded-2xl overflow-hidden border-2 border-white/50 shadow-[0_0_25px_rgba(255,255,255,0.6)] bg-black flex items-center justify-center p-0.5">
+              <img src="/official_logo.jpg" alt="AvaLive" className="w-full h-full object-cover rounded-xl" />
+            </div>
           </div>
           
           <h2 className="text-2xl font-black text-center tracking-tight text-white drop-shadow-md">

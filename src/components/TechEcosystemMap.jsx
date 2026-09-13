@@ -33,11 +33,11 @@ export default function TechEcosystemMap() {
       {/* Core Center */}
       <div className="absolute z-20 flex flex-col items-center justify-center w-36 h-36 bg-[#05050A]/90 rounded-full border border-cyan-500/50 shadow-[0_0_60px_rgba(6,182,212,0.5)] backdrop-blur-md">
          <div className="absolute inset-0 rounded-full bg-gradient-to-tr from-cyan-500/10 to-purple-500/10 animate-pulse"></div>
-         <div className="relative w-16 h-16 rounded-[14px] bg-gradient-to-tr from-[#EF4444] via-[#8B5CF6] to-[#06B6D4] p-0.5 shadow-2xl mb-2">
+         <div className="relative w-18 h-18 rounded-2xl bg-gradient-to-tr from-cyan-400 via-purple-500 to-pink-500 p-[2px] shadow-[0_0_30px_rgba(6,182,212,0.8)] mb-2">
             <img 
               src="/official_logo.jpg" 
               alt="AvaLive Core" 
-              className="w-full h-full object-cover rounded-[12px]"
+              className="w-full h-full object-cover rounded-[14px] border border-white/40"
             />
          </div>
          <div className="flex items-center gap-1.5 bg-[#111118] border border-white/10 px-2 py-0.5 rounded-full shadow-inner">

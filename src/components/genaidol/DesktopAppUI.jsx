@@ -4225,8 +4225,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
                 {/* Logo AvaLive Duy Nhất */}
                 <div className="flex items-center justify-center">
-                  <div className="w-20 h-20 rounded-3xl overflow-hidden border-2 border-cyan-400/60 shadow-[0_0_30px_rgba(6,182,212,0.4)] bg-black flex items-center justify-center p-1">
-                    <img src="/official_logo.jpg" alt="AvaLive Logo" className="w-full h-full object-cover rounded-2xl" />
+                  <div className="relative group">
+                    <div className="absolute -inset-3 bg-gradient-to-r from-cyan-500 via-purple-600 to-pink-500 rounded-3xl blur-xl opacity-80 group-hover:opacity-100 transition duration-500 animate-pulse" />
+                    <div className="relative w-24 h-24 rounded-3xl overflow-hidden border-2 border-cyan-400/80 shadow-[0_0_40px_rgba(6,182,212,0.6)] bg-black flex items-center justify-center p-1 group-hover:scale-105 transition-all">
+                      <img src="/official_logo.jpg" alt="AvaLive Logo" className="w-full h-full object-cover rounded-2xl drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]" />
+                    </div>
                   </div>
                 </div>
 
@@ -4312,12 +4315,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       
       {/* 1. Fake Window Title Bar (Thu nhỏ ~30% đồng đều tất cả các ô nút bấm) */}
       <div className={`flex items-center justify-between px-2 py-1 ${isDarkMode ? 'bg-[#1c1c23] border-gray-800 text-white' : 'bg-slate-200 border-slate-300 text-slate-800'} select-none z-30 border-b`}>
-        <div className="flex items-center gap-1.5 shrink-0 max-w-[40%]">
-          <div className="w-3.5 h-3.5 rounded bg-blue-500 flex items-center justify-center shrink-0">
-            <Video size={9} className="text-white" />
+        <div className="flex items-center gap-2 shrink-0 max-w-[40%]">
+          <div className="relative flex items-center justify-center shrink-0 group">
+            <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-pink-500 rounded-lg blur-xs opacity-75 group-hover:opacity-100 transition animate-pulse"></div>
+            <div className="relative w-5 h-5 rounded-md overflow-hidden border border-cyan-300/60 shadow-[0_0_10px_rgba(6,182,212,0.5)] bg-black">
+              <img src="/official_logo.jpg" alt="AvaLive Logo" className="w-full h-full object-cover" />
+            </div>
           </div>
           <span 
-            className="text-[11px] font-bold truncate max-w-[130px] sm:max-w-[180px]"
+            className="text-[11px] font-black tracking-tight truncate max-w-[130px] sm:max-w-[180px] bg-gradient-to-r from-white via-cyan-200 to-blue-200 bg-clip-text text-transparent"
             title={CHARACTERS[selectedCharacter]?.name || (Object.keys(CHARACTERS).length > 0 ? Object.values(CHARACTERS)[0]?.name : 'Live Idol Pro')}
           >
             Profile: {CHARACTERS[selectedCharacter]?.name || (Object.keys(CHARACTERS).length > 0 ? Object.values(CHARACTERS)[0]?.name : 'Live Idol Pro (Chưa đặt tên)')}

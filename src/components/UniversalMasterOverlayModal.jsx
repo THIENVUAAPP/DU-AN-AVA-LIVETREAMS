@@ -399,15 +399,18 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
         
         {/* Header */}
         <div className="flex items-center justify-between px-5 py-4 border-b border-white/10 bg-gradient-to-r from-cyan-950/60 via-[#0e1322] to-blue-950/60">
-          <div className="flex items-center gap-3">
-            <div className="p-2 rounded-2xl bg-cyan-500/20 border border-cyan-400/40 text-cyan-400 shadow-lg shadow-cyan-500/30">
-              <Cast className="w-5 h-5 animate-pulse" />
+          <div className="flex items-center gap-3.5">
+            <div className="relative group">
+              <div className="absolute -inset-1 bg-gradient-to-r from-cyan-400 to-pink-500 rounded-xl blur-xs opacity-80 group-hover:opacity-100 transition animate-pulse" />
+              <div className="relative w-11 h-11 rounded-xl overflow-hidden border border-cyan-400/60 shadow-[0_0_20px_rgba(6,182,212,0.5)] bg-black flex items-center justify-center p-0.5 shrink-0">
+                <img src="/official_logo.jpg" alt="AvaLive" className="w-full h-full object-cover rounded-lg" />
+              </div>
             </div>
             <div>
               <h2 className="text-base font-black text-white tracking-wide flex items-center gap-2">
                 <span>TRUNG TÂM PHÁT SÓNG TIKTOK LIVE STUDIO & OBS</span>
                 <span className="text-[10px] bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-2 py-0.5 rounded-full font-bold">
-                  v1.2.2 ONLINE
+                  v1.2.3 ONLINE
                 </span>
               </h2>
               <p className="text-xs text-gray-400 font-medium">

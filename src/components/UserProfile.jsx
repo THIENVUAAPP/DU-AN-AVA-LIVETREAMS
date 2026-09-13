@@ -110,12 +110,15 @@ export default function UserProfile({ currentUser, setActiveTab }) {
           title="Về Trang Chủ"
         >
           <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-2xl bg-gradient-to-tr from-red-600 via-purple-600 to-cyan-500 p-0.5 shadow-lg group-hover:scale-105 transition-all">
-              <img src="/official_logo.jpg" alt="AVA LIVE" className="w-full h-full object-cover rounded-[14px] border border-white/30" />
+            <div className="relative group/logo">
+              <div className="absolute -inset-1.5 bg-gradient-to-r from-cyan-500 via-purple-600 to-pink-500 rounded-2xl blur-md opacity-80 group-hover/logo:opacity-100 transition animate-pulse" />
+              <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-400 via-purple-500 to-pink-500 p-[2px] shadow-xl group-hover/logo:scale-105 transition-all">
+                <img src="/official_logo.jpg" alt="AVA LIVE" className="w-full h-full object-cover rounded-[14px] border border-white/40 drop-shadow-[0_0_12px_rgba(6,182,212,0.8)]" />
+              </div>
             </div>
             <div>
-              <h2 className="text-white font-black text-base leading-none tracking-tight">AVA LIVE</h2>
-              <span className="text-[9px] text-[#EF4444] font-black uppercase tracking-widest block mt-0.5">QUẢN TRỊ HỒ SƠ</span>
+              <h2 className="text-white font-black text-lg leading-none tracking-tight">AVA LIVE</h2>
+              <span className="text-[9px] bg-gradient-to-r from-cyan-400 to-pink-400 bg-clip-text text-transparent font-black uppercase tracking-widest block mt-1">QUẢN TRỊ HỒ SƠ</span>
             </div>
           </div>
           <ChevronLeft className="w-4 h-4 text-gray-500 group-hover:text-white" />

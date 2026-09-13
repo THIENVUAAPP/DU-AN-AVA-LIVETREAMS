@@ -80,19 +80,19 @@ export default function Header({
         >
           <div className="relative">
             {/* Ultra Neon Aura Lighting Ring */}
-            <div className="absolute -inset-2 bg-gradient-to-r from-red-600 via-purple-600 to-cyan-500 rounded-2xl blur-lg opacity-90 group-hover:opacity-100 transition duration-500 animate-pulse" />
-            <div className="relative w-10 h-10 rounded-2xl bg-gradient-to-tr from-[#EF4444] via-[#8B5CF6] to-[#06B6D4] p-0.5 shadow-2xl group-hover:scale-105 transition-all">
+            <div className="absolute -inset-2.5 bg-gradient-to-r from-cyan-500 via-purple-600 to-pink-500 rounded-2xl blur-xl opacity-90 group-hover:opacity-100 transition duration-500 animate-pulse" />
+            <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-400 via-purple-500 to-pink-500 p-[2px] shadow-[0_0_25px_rgba(6,182,212,0.6)] group-hover:scale-105 transition-all">
               <img 
                 src="/official_logo.jpg" 
                 alt="AVA LIVESTREAM Official Logo" 
-                className="w-full h-full object-cover rounded-[14px] border border-white/40 drop-shadow-[0_0_18px_rgba(239,68,68,0.9)]"
+                className="w-full h-full object-cover rounded-[14px] border border-white/50 drop-shadow-[0_0_20px_rgba(6,182,212,0.9)]"
               />
             </div>
           </div>
 
           <div className="flex flex-col">
-            <h1 className="text-xl font-black tracking-tight text-white group-hover:text-red-400 transition-all flex items-center gap-1.5 drop-shadow-[0_0_20px_rgba(239,68,68,0.7)]">
-              AVA <span className="text-[#EF4444] bg-gradient-to-r from-red-500 via-pink-500 to-purple-500 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(239,68,68,1)]">LIVESTREAM</span>
+            <h1 className="text-xl sm:text-2xl font-black tracking-tight text-white group-hover:text-cyan-300 transition-all flex items-center gap-1.5 drop-shadow-[0_0_20px_rgba(6,182,212,0.7)]">
+              AVA <span className="bg-gradient-to-r from-cyan-400 via-purple-400 to-pink-400 bg-clip-text text-transparent drop-shadow-[0_0_25px_rgba(236,72,153,0.9)]">LIVE</span>
             </h1>
           </div>
         </div>

@@ -181,11 +181,14 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
       <header className="h-[72px] border-b border-white/5 flex items-center justify-between px-8 bg-[#111118]/50 backdrop-blur-md shrink-0">
         <div className="flex items-center gap-6">
           <button onClick={handleExit} className="flex items-center gap-3 group cursor-pointer" title="Quay lại">
-             <div className="w-10 h-10 rounded-xl bg-[#111] p-0.5 flex items-center justify-center shadow-[0_0_15px_rgba(239,68,68,0.3)] group-hover:scale-105 transition-transform">
-                <img src="/official_logo.jpg" alt="AVA LIVE" className="w-full h-full object-cover rounded-[10px] border border-white/20" />
+             <div className="relative">
+                <div className="absolute -inset-1.5 bg-gradient-to-r from-cyan-400 via-purple-600 to-pink-500 rounded-2xl blur-sm opacity-80 group-hover:opacity-100 transition animate-pulse" />
+                <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-400 via-purple-500 to-pink-500 p-[2px] shadow-2xl group-hover:scale-105 transition-all">
+                   <img src="/official_logo.jpg" alt="AVA LIVE" className="w-full h-full object-cover rounded-[14px] border border-white/40 drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]" />
+                </div>
              </div>
              <div className="text-left flex flex-col justify-center">
-               <h2 className="text-white font-black text-xl leading-none group-hover:text-red-400 transition-colors">AVA LIVE</h2>
+               <h2 className="text-white font-black text-xl leading-none group-hover:text-cyan-400 transition-colors">AVA LIVE</h2>
              </div>
           </button>
         </div>

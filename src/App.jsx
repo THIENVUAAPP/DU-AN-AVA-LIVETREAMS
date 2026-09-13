@@ -411,8 +411,11 @@ export default function App() {
             
             {/* Logo AvaLive Duy Nhất */}
             <div className="flex items-center justify-center">
-              <div className="w-18 h-18 rounded-3xl overflow-hidden border-2 border-cyan-400/60 shadow-[0_0_30px_rgba(6,182,212,0.4)] bg-black flex items-center justify-center p-1">
-                <img src="/official_logo.jpg" alt="AvaLive Logo" className="w-full h-full object-cover rounded-2xl" />
+              <div className="relative group">
+                <div className="absolute -inset-3 bg-gradient-to-r from-cyan-500 via-purple-600 to-pink-500 rounded-3xl blur-xl opacity-80 group-hover:opacity-100 transition duration-500 animate-pulse" />
+                <div className="relative w-24 h-24 rounded-3xl overflow-hidden border-2 border-cyan-400/80 shadow-[0_0_40px_rgba(6,182,212,0.6)] bg-black flex items-center justify-center p-1 group-hover:scale-105 transition-all">
+                  <img src="/official_logo.jpg" alt="AvaLive Logo" className="w-full h-full object-cover rounded-2xl drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]" />
+                </div>
               </div>
             </div>
 
