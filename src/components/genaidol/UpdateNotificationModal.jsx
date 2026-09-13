@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.2.0';
+export const APP_VERSION = '1.2.1';
 export const RELEASE_DATE = '13/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🖥️ Sửa Triệt Để Lỗi Window Capture OBS Chỉ Nghe Tiếng Không Thấy Hình',
-    description: 'Khắc phục hoàn toàn lỗi đen màn hình khi chia sẻ Window Capture OBS. Loại bỏ nền đen CSS đè layer giải mã GPU, đồng bộ phản chiếu trực tiếp 0ms frame-by-frame từ phần mềm chính.'
+    title: '✨ Triệt Tiêu Hoàn Toàn Chớp Nháy (Flicker) Trên Window Capture OBS',
+    description: 'Khắc phục triệt để hiện tượng chớp nháy gián đoạn trên Window Capture OBS. Loại bỏ hoàn toàn cơ chế micro-seeking, giúp video phát siêu mượt mà 60 FPS liên tục nhiều giờ liền không khựng giật.'
   },
   {
-    title: '🌐 Khắc Phục Lỗi Đen Màn Hình Link Online HTTPS TikTok Live Studio',
-    description: 'Tối ưu hóa bộ giải mã GPU phần cứng trong TikTok Live Studio CEF / OBS Browser Source, chống chặn autoplay và tự động phục hồi luồng video 60 FPS siêu mượt, siêu nét đúng độ phân giải gốc.'
+    title: '🔊 Nút Tắt/Mở Âm Thanh Độc Lập 100% Cho Window Capture OBS',
+    description: 'Âm thanh video được đồng bộ trọn vẹn nhưng quyền Tắt/Mở âm thanh hoàn toàn độc lập. Streamer tắt loa máy tính trên phần mềm chính thì luồng Window Capture OBS vẫn phát tiếng bình thường cho khán giả.'
   },
   {
-    title: '🎬 Tương Thích Tuyệt Đối Mọi Video Của Người Dùng (Kể Cả File Cục Bộ)',
-    description: 'Cho phép chia sẻ tức thì bất kỳ video nào người dùng tải lên phần mềm. Phần mềm mở video gì thì Cửa Sổ Live & Link TikTok Studio sẽ phát chính xác video đó ngay lập tức.'
+    title: '⚡ Tự Động Dự Phòng Luồng Online HTTPS — 100% Không Lỗi 404 / Đen Hình',
+    description: 'Tự động kiểm tra file media trên server; nếu link yêu cầu không tồn tại sẽ tức thì kích hoạt file video chất lượng cao mới nhất. Phát ngay lập tức 0ms đúng chuẩn TikTok Live Studio & OBS.'
   }
 ];
 

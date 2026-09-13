@@ -249,14 +249,47 @@ try {
   }
 } catch (scanErr) {}
 
+// 🎬 TỰ ĐỘNG TÌM FILE VIDEO MỚI NHẤT & CHUẨN XÁC TRONG THƯ MỤC UPLOADS
+function getLatestUploadFilePath() {
+  try {
+    const files = fs.readdirSync(uploadsDir)
+      .filter(f => (f.endsWith('.mp4') || f.endsWith('.webm') || f.endsWith('.mov')) && !f.includes('default_idol'))
+      .map(f => ({ path: path.join(uploadsDir, f), time: fs.statSync(path.join(uploadsDir, f)).mtimeMs }))
+      .sort((a, b) => b.time - a.time);
+    if (files.length > 0) {
+      return files[0].path;
+    }
+  } catch (e) {}
+  return null;
+}
+
+function getLatestUploadMediaUrl() {
+  try {
+    const files = fs.readdirSync(uploadsDir)
+      .filter(f => (f.endsWith('.mp4') || f.endsWith('.webm') || f.endsWith('.mov')) && !f.includes('default_idol'))
+      .map(f => ({ name: f, time: fs.statSync(path.join(uploadsDir, f)).mtimeMs }))
+      .sort((a, b) => b.time - a.time);
+    if (files.length > 0) {
+      return `/uploads/${files[0].name}`;
+    }
+  } catch (e) {}
+  return null;
+}
+
 // ⚡ HIGH-PERFORMANCE VIDEO STREAMING ENGINE (HTTP 206 Byte-Range Partial Content)
 // Giúp video MP4/WebM load ngay lập tức 0ms, không lag, không giật, hỗ trợ video 5-10 tiếng siêu mượt trên TikTok Live Studio & OBS
 app.all('/uploads/:filename', (req, res, next) => {
   if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') return next();
 
-  const filePath = path.join(uploadsDir, req.params.filename);
+  let filePath = path.join(uploadsDir, req.params.filename);
   if (!fs.existsSync(filePath)) {
-    return res.status(404).send('Media not found');
+    // 🛡️ TỰ ĐỘNG DỰ PHÒNG: Nếu file requested không tồn tại (link cũ hoặc bị xóa), phát ngay file video mới nhất trên server
+    const fallbackPath = getLatestUploadFilePath();
+    if (fallbackPath && fs.existsSync(fallbackPath)) {
+      filePath = fallbackPath;
+    } else {
+      return res.status(404).send('Media not found');
+    }
   }
 
   try {
@@ -560,16 +593,16 @@ app.post('/api/upload-media', upload.single('file'), (req, res) => {
 // ============================================================
 app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
   let vParam = req.query.v || currentMasterLiveState.mediaUrl || '';
-  if (!vParam || vParam.startsWith('blob:') || vParam.includes('default_idol.mp4')) {
-    try {
-      const files = fs.readdirSync(uploadsDir)
-        .filter(f => f.endsWith('.mp4') || f.endsWith('.webm') || f.endsWith('.mov'))
-        .map(f => ({ name: f, time: fs.statSync(path.join(uploadsDir, f)).mtimeMs }))
-        .sort((a, b) => b.time - a.time);
-      if (files.length > 0) {
-        vParam = `/uploads/${files[0].name}`;
-      }
-    } catch (e) {}
+  let existsOnDisk = false;
+  if (vParam && typeof vParam === 'string' && vParam.startsWith('/uploads/')) {
+    const checkFile = path.join(uploadsDir, vParam.replace(/^\/uploads\//, ''));
+    if (fs.existsSync(checkFile)) existsOnDisk = true;
+  }
+  if (!vParam || !existsOnDisk || vParam.startsWith('blob:') || vParam.includes('default_idol.mp4')) {
+    const latestUrl = getLatestUploadMediaUrl();
+    if (latestUrl) {
+      vParam = latestUrl;
+    }
   }
   const soundParam = req.query.sound !== '0';
   const ratioParam = req.query.ratio || '9:16';
@@ -654,7 +687,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v1.2.0</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v1.2.1</div>
   </div>
   <script>
     (function() {
@@ -912,7 +945,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         }, 10000);
 
         socket.on('connect', function() {
-          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v1.2.0';
+          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v1.2.1';
           socket.emit('REQUEST_MASTER_LIVE_STATE');
         });
 
@@ -1086,7 +1119,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '1.2.0';
+  let ver = '1.2.1';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1124,7 +1157,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '1.2.0';
+  let ver = '1.2.1';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;

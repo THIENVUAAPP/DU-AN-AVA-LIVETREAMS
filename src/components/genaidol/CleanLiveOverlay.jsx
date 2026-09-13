@@ -224,12 +224,21 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   }, []);
 
   const [liveEvent, setLiveEvent] = useState(null);
+  const isWindowCapture = typeof window !== 'undefined' ? (() => {
+    const params = new URLSearchParams(window.location.search);
+    return params.get('mode') === 'window_capture' || params.get('capture') === '1' || window.location.pathname.includes('/window-capture');
+  })() : false;
+
   const [isVideoAudioMuted, setIsVideoAudioMuted] = useState(() => {
     try {
       if (typeof window !== 'undefined') {
         const params = new URLSearchParams(window.location.search);
-        if (params.get('sound') === '1' || params.get('unmute') === '1' || params.get('mode') === 'window_capture' || params.get('capture') === '1' || window.location.pathname.includes('/window-capture')) {
+        if (params.get('sound') === '1' || params.get('unmute') === '1') {
           return false;
+        }
+        if (isWindowCapture) {
+          const capSaved = localStorage.getItem('avalive_window_capture_audio_muted');
+          return capSaved !== null ? capSaved === 'true' : false; // Mặc định Window Capture mở tiếng độc lập
         }
       }
       const saved = localStorage.getItem('avalive_overlay_audio_muted');
@@ -240,6 +249,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   });
   const [videoVolume, setVideoVolume] = useState(() => {
     try {
+      if (isWindowCapture) {
+        const capVol = localStorage.getItem('avalive_window_capture_volume');
+        if (capVol) return parseFloat(capVol);
+      }
       const v = localStorage.getItem('avalive_overlay_volume');
       return v ? parseFloat(v) : 1.0;
     } catch (e) {
@@ -253,10 +266,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       return true;
     }
   });
-  const isWindowCapture = typeof window !== 'undefined' ? (() => {
-    const params = new URLSearchParams(window.location.search);
-    return params.get('mode') === 'window_capture' || params.get('capture') === '1' || window.location.pathname.includes('/window-capture');
-  })() : false;
 
   // 🎯 LUỒNG LIVE CHO TIKTOK LIVE STUDIO & KHÁN GIẢ: LUÔN PHÁT ÂM THANH 100%, KHÔNG BỊ ÉP MUTE BỞI LOA MÁY TÍNH CỦA STREAMER
   const isLiveStreamAudienceTarget = typeof window !== 'undefined' ? (() => {
@@ -431,17 +440,24 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     }
   };
 
-  // 2. BẬT / TẮT ÂM THANH (Mute / Unmute HD) — Đồng bộ tức thì cả Window Capture và Phần Mềm Chính
+  // 2. BẬT / TẮT ÂM THANH (Mute / Unmute HD) — Độc lập cho Window Capture OBS
   const toggleAudioMute = () => {
     lastUserActionTimeRef.current = Date.now();
     const nextMuted = !isVideoAudioMuted;
     setIsVideoAudioMuted(nextMuted);
-    try { 
-      localStorage.setItem('avalive_audio_muted', String(nextMuted));
-      localStorage.setItem('avalive_overlay_audio_muted', String(nextMuted));
-      localStorage.setItem('avalive_global_audio_muted', String(nextMuted));
-      localStorage.setItem('avalive_local_speaker_muted', String(nextMuted));
-    } catch (e) {}
+
+    if (isWindowCapture) {
+      try {
+        localStorage.setItem('avalive_window_capture_audio_muted', String(nextMuted));
+      } catch (e) {}
+    } else {
+      try { 
+        localStorage.setItem('avalive_audio_muted', String(nextMuted));
+        localStorage.setItem('avalive_overlay_audio_muted', String(nextMuted));
+        localStorage.setItem('avalive_global_audio_muted', String(nextMuted));
+        localStorage.setItem('avalive_local_speaker_muted', String(nextMuted));
+      } catch (e) {}
+    }
 
     const allMedia = document.querySelectorAll('video, audio');
     allMedia.forEach(el => {
@@ -469,37 +485,50 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       }
     } catch (e) {}
 
-    // Bắn tín hiệu sang Phần Mềm Chính để tắt / mở tiếng đồng bộ
-    try {
-      const bc = new BroadcastChannel('avalive_master_live_stream');
-      bc.postMessage({ type: 'GLOBAL_AUDIO_CHANGE', isMuted: nextMuted, volume: videoVolume, source: 'overlay', timestamp: Date.now() });
-      setTimeout(() => bc.close(), 100);
-    } catch (e) {}
+    // Bắn tín hiệu sang Phần Mềm Chính (chỉ khi không phải Window Capture độc lập)
+    if (!isWindowCapture) {
+      try {
+        const bc = new BroadcastChannel('avalive_master_live_stream');
+        bc.postMessage({ type: 'GLOBAL_AUDIO_CHANGE', isMuted: nextMuted, volume: videoVolume, source: 'overlay', timestamp: Date.now() });
+        setTimeout(() => bc.close(), 100);
+      } catch (e) {}
 
-    syncMasterLiveState({
-      isVideoAudioMuted: nextMuted,
-      videoVolume: videoVolume
-    }, socketRef.current);
+      syncMasterLiveState({
+        isVideoAudioMuted: nextMuted,
+        videoVolume: videoVolume
+      }, socketRef.current);
+    }
   };
 
-  // 3. ĐIỀU CHỈNH ÂM LƯỢNG (Volume Slider) — Cập nhật mượt mà 0% -> 100% đồng bộ 2 chiều
+  // 3. ĐIỀU CHỈNH ÂM LƯỢNG (Volume Slider) — Độc lập cho Window Capture OBS
   const handleVolumeChange = (newVol) => {
     lastUserActionTimeRef.current = Date.now();
     setVideoVolume(newVol);
-    try { 
-      localStorage.setItem('avalive_video_volume', String(newVol));
-      localStorage.setItem('avalive_overlay_volume', String(newVol));
-      localStorage.setItem('avalive_global_volume', String(newVol));
-    } catch (e) {}
+
+    if (isWindowCapture) {
+      try {
+        localStorage.setItem('avalive_window_capture_volume', String(newVol));
+      } catch (e) {}
+    } else {
+      try { 
+        localStorage.setItem('avalive_video_volume', String(newVol));
+        localStorage.setItem('avalive_overlay_volume', String(newVol));
+        localStorage.setItem('avalive_global_volume', String(newVol));
+      } catch (e) {}
+    }
 
     const isMutedNow = newVol === 0;
     if (isMutedNow !== isVideoAudioMuted) {
       setIsVideoAudioMuted(isMutedNow);
-      try { 
-        localStorage.setItem('avalive_audio_muted', String(isMutedNow));
-        localStorage.setItem('avalive_overlay_audio_muted', String(isMutedNow));
-        localStorage.setItem('avalive_global_audio_muted', String(isMutedNow));
-      } catch (e) {}
+      if (isWindowCapture) {
+        try { localStorage.setItem('avalive_window_capture_audio_muted', String(isMutedNow)); } catch (e) {}
+      } else {
+        try { 
+          localStorage.setItem('avalive_audio_muted', String(isMutedNow));
+          localStorage.setItem('avalive_overlay_audio_muted', String(isMutedNow));
+          localStorage.setItem('avalive_global_audio_muted', String(isMutedNow));
+        } catch (e) {}
+      }
     }
 
     const allMedia = document.querySelectorAll('video, audio');
@@ -513,17 +542,19 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     bandoAudio.setMasterVolume(newVol);
     bandoAudio.setMuted(isMutedNow);
 
-    // Bắn tín hiệu sang Phần Mềm Chính để chỉnh âm lượng đồng bộ
-    try {
-      const bc = new BroadcastChannel('avalive_master_live_stream');
-      bc.postMessage({ type: 'GLOBAL_AUDIO_CHANGE', isMuted: isMutedNow, volume: newVol, source: 'overlay', timestamp: Date.now() });
-      setTimeout(() => bc.close(), 100);
-    } catch (e) {}
+    // Bắn tín hiệu sang Phần Mềm Chính (chỉ khi không phải Window Capture độc lập)
+    if (!isWindowCapture) {
+      try {
+        const bc = new BroadcastChannel('avalive_master_live_stream');
+        bc.postMessage({ type: 'GLOBAL_AUDIO_CHANGE', isMuted: isMutedNow, volume: newVol, source: 'overlay', timestamp: Date.now() });
+        setTimeout(() => bc.close(), 100);
+      } catch (e) {}
 
-    syncMasterLiveState({
-      videoVolume: newVol,
-      isVideoAudioMuted: isMutedNow
-    }, socketRef.current);
+      syncMasterLiveState({
+        videoVolume: newVol,
+        isVideoAudioMuted: isMutedNow
+      }, socketRef.current);
+    }
   };
 
   // 4. CHUYỂN ĐỔI SÂN KHẤU TỨC THÌ (Idol AI / Bản Đồ / Chiến Đấu / Studio 4K) — 1-Click đồng bộ không giật lag
@@ -689,12 +720,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   }, []);
 
   // ⚡ SIÊU ĐỒNG BỘ 0MS CHO WINDOW CAPTURE OBS:
-  // Luôn phản chiếu 100% video và trạng thái phát từ phần mềm chính (window.opener)
+  // Phát mượt mà 60 FPS liên tục hàng giờ liền (100% không chớp nháy, không giật lag)
   useEffect(() => {
     if (!isWindowCapture && !(typeof window !== 'undefined' && window.opener && !window.opener.closed)) return;
 
-    let syncInterval = null;
-    const syncFromOpener = () => {
+    let lastKnownSrc = '';
+    const syncFromOpener = (eventInfo) => {
       try {
         if (!window.opener || window.opener.closed) return;
         const opDoc = window.opener.document;
@@ -703,55 +734,49 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
         const opSrc = opVid.currentSrc || opVid.src;
         const myVid = overlayVideoRef.current;
+        if (!opSrc || !myVid) return;
 
-        if (opSrc && myVid) {
-          if (!isSameMediaUrl(myVid.src, opSrc) && myVid.src !== opSrc) {
-            myVid.src = opSrc;
-            myVid.load();
-            if (!opVid.paused) {
-              myVid.play().catch(() => {});
-            }
-            setMasterState(prev => ({
-              ...prev,
-              mediaUrl: opSrc,
-              isVideo: true,
-              isPlaying: !opVid.paused
-            }));
-          }
-
-          // Đồng bộ thời gian nếu lệch quá 0.35s
-          if (typeof opVid.currentTime === 'number' && !isNaN(opVid.currentTime) && typeof myVid.currentTime === 'number') {
-            if (Math.abs(myVid.currentTime - opVid.currentTime) > 0.35) {
-              try { myVid.currentTime = opVid.currentTime; } catch (e) {}
-            }
-          }
-
-          // Đồng bộ trạng thái tạm dừng / phát
-          if (opVid.paused && !myVid.paused) {
-            myVid.pause();
-            setIsPlayingState(false);
-          } else if (!opVid.paused && myVid.paused && !checkIfUserPaused()) {
+        // 1. Chỉ đổi nguồn video khi URL thực sự thay đổi sang file khác (0ms switch)
+        if (opSrc !== lastKnownSrc && !isSameMediaUrl(myVid.src, opSrc) && myVid.src !== opSrc) {
+          lastKnownSrc = opSrc;
+          myVid.src = opSrc;
+          myVid.load();
+          if (!opVid.paused) {
             myVid.play().catch(() => {});
-            setIsPlayingState(true);
           }
+        }
+
+        // 2. Chỉ đồng bộ vị trí khi streamer CHỦ ĐỘNG TUA VIDEO (Sự kiện seeked), TUYỆT ĐỐI không seek liên tục gây chớp nháy
+        if (eventInfo && eventInfo.type === 'seeked' && typeof opVid.currentTime === 'number' && !isNaN(opVid.currentTime)) {
+          if (Math.abs(myVid.currentTime - opVid.currentTime) > 1.5) {
+            try { myVid.currentTime = opVid.currentTime; } catch (err) {}
+          }
+        }
+
+        // 3. Đồng bộ trạng thái Tạm dừng / Phát dứt khoát
+        if (opVid.paused && !myVid.paused) {
+          myVid.pause();
+          setIsPlayingState(false);
+        } else if (!opVid.paused && myVid.paused && !checkIfUserPaused()) {
+          myVid.play().catch(() => {});
+          setIsPlayingState(true);
         }
       } catch (e) {}
     };
 
-    // Chạy kiểm tra định kỳ 200ms
-    syncInterval = setInterval(syncFromOpener, 200);
+    // Kiểm tra định kỳ 1000ms chỉ để phát hiện nếu người dùng đổi video mới trong app
+    const syncInterval = setInterval(() => syncFromOpener({ type: 'poll' }), 1000);
 
-    // Lắng nghe trực tiếp các sự kiện từ video phần mềm chính
+    // Lắng nghe trực tiếp các sự kiện play, pause, seeked từ video phần mềm chính (Không nghe timeupdate để không bao giờ bị chớp nháy)
     try {
       if (window.opener && !window.opener.closed) {
         const opDoc = window.opener.document;
         const opVid = opDoc?.querySelector('video[data-main-player="true"]') || opDoc?.querySelector('.main-video-player') || opDoc?.querySelector('video');
         if (opVid) {
-          opVid.addEventListener('play', syncFromOpener);
-          opVid.addEventListener('pause', syncFromOpener);
-          opVid.addEventListener('seeked', syncFromOpener);
-          opVid.addEventListener('timeupdate', syncFromOpener);
-          syncFromOpener();
+          opVid.addEventListener('play', () => syncFromOpener({ type: 'play' }));
+          opVid.addEventListener('pause', () => syncFromOpener({ type: 'pause' }));
+          opVid.addEventListener('seeked', (e) => syncFromOpener({ type: 'seeked' }));
+          syncFromOpener({ type: 'init' });
         }
       }
     } catch (e) {}
@@ -853,14 +878,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         }
       }
 
-      // 3. Đồng bộ Mute & Volume tức thì (Đồng bộ trực tiếp từ phần mềm điều khiển sang Window Capture & Khán giả)
-      if (typeof control.isMuted === 'boolean') {
+      // 3. Đồng bộ Mute & Volume tức thì (Nếu là Window Capture thì giữ âm thanh độc lập)
+      if (typeof control.isMuted === 'boolean' && !isWindowCapture) {
         setIsVideoAudioMuted(control.isMuted);
         if (vid && vid.muted !== control.isMuted) vid.muted = control.isMuted;
         bandoAudio.setLocalSpeakerMute(control.isMuted);
         bandoAudio.setMuted(control.isMuted);
       }
-      if (typeof control.volume === 'number' && !isNaN(control.volume)) {
+      if (typeof control.volume === 'number' && !isNaN(control.volume) && !isWindowCapture) {
         setVideoVolume(control.volume);
         if (vid && !control.isMuted && Math.abs(vid.volume - control.volume) > 0.02) {
           try { vid.volume = control.volume; } catch (e) {}
@@ -907,19 +932,19 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         setIsPlayingState(true);
       }
 
-      // 🔊 ĐIỀU KHIỂN ÂM THANH ĐỘC LẬP: Mở đồng bộ - Tắt độc lập
-      // Khi phần mềm chính MỞ tiếng (isMuted === false): Window Capture tự động mở tiếng đồng bộ
-      if (data.isVideoAudioMuted === false || data.isMuted === false) {
-        setIsVideoAudioMuted(false);
-        if (vid) vid.muted = false;
-        bandoAudio.setLocalSpeakerMute(false);
-        bandoAudio.setMuted(false);
-      }
-      // Khi phần mềm chính TẮT tiếng loa máy: KHÔNG câm tiếng Window Capture (để khán giả livestream vẫn nghe bình thường)!
-      if (typeof data.videoVolume === 'number' && data.videoVolume > 0) {
-        setVideoVolume(data.videoVolume);
-        if (vid && !isVideoAudioMuted) vid.volume = data.videoVolume;
-        bandoAudio.setMasterVolume(data.videoVolume);
+      // 🔊 ĐIỀU KHIỂN ÂM THANH: Mở đồng bộ - Tắt độc lập (Window Capture giữ âm thanh độc lập)
+      if (!isWindowCapture) {
+        if (data.isVideoAudioMuted === false || data.isMuted === false) {
+          setIsVideoAudioMuted(false);
+          if (vid) vid.muted = false;
+          bandoAudio.setLocalSpeakerMute(false);
+          bandoAudio.setMuted(false);
+        }
+        if (typeof data.videoVolume === 'number' && data.videoVolume > 0) {
+          setVideoVolume(data.videoVolume);
+          if (vid && !isVideoAudioMuted) vid.volume = data.videoVolume;
+          bandoAudio.setMasterVolume(data.videoVolume);
+        }
       }
 
       if (data.tunnelUrl) {
@@ -1195,13 +1220,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   setIsPlayingState(false);
                 }
               }
-              if (typeof event.data.isMuted === 'boolean') {
+              if (typeof event.data.isMuted === 'boolean' && !isWindowCapture) {
                 setIsVideoAudioMuted(event.data.isMuted);
                 if (v && v.muted !== event.data.isMuted) v.muted = event.data.isMuted;
                 bandoAudio.setLocalSpeakerMute(event.data.isMuted);
                 bandoAudio.setMuted(event.data.isMuted);
               }
-              if (typeof event.data.volume === 'number' && !isNaN(event.data.volume)) {
+              if (typeof event.data.volume === 'number' && !isNaN(event.data.volume) && !isWindowCapture) {
                 setVideoVolume(event.data.volume);
                 if (v && !event.data.isMuted && Math.abs(v.volume - event.data.volume) > 0.02) {
                   try { v.volume = event.data.volume; } catch (e) {}
@@ -1264,6 +1289,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               setTimeout(() => { isInternalPlaybackChangeRef.current = false; }, 300);
             } else if (event.data.type === 'GLOBAL_AUDIO_CHANGE') {
               if (event.data.source === 'overlay') return;
+              if (isWindowCapture) return; // Window Capture OBS duy trì âm thanh và nút tắt mở 100% độc lập!
               const isMuted = !!event.data.isMuted;
               const vol = typeof event.data.volume === 'number' ? event.data.volume : videoVolume;
               isInternalAudioChangeRef.current = true;
@@ -1398,6 +1424,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         });
         if (isPaused && typeof bandoAudio.pauseAll === 'function') bandoAudio.pauseAll();
       } else if (e.key === 'avalive_audio_muted' || e.key === 'avalive_local_speaker_muted') {
+        if (isWindowCapture) return; // Window Capture OBS có nút tắt mở độc lập với loa phần mềm chính
         const isMuted = e.newValue === 'true';
         setIsVideoAudioMuted(isMuted);
         const allMedia = document.querySelectorAll('video, audio');
@@ -1407,6 +1434,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         bandoAudio.setLocalSpeakerMute(isMuted);
         bandoAudio.setMuted(isMuted);
       } else if (e.key === 'avalive_video_volume') {
+        if (isWindowCapture) return; // Window Capture OBS duy trì âm lượng độc lập
         const vol = parseFloat(e.newValue || '1');
         setVideoVolume(vol);
         const allMedia = document.querySelectorAll('video, audio');
@@ -2083,7 +2111,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.2.0
+                v1.2.1
               </span>
             </div>
 
