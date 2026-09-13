@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.1.8';
+export const APP_VERSION = '1.1.9';
 export const RELEASE_DATE = '13/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🖥️ Khắc Phục Triệt Để Màn Hình Đen Window Capture OBS',
-    description: 'Sửa lỗi màn hình đen khi mở cửa sổ Live 9:16 hoặc Window Capture trong OBS. Luồng video được nạp trực tiếp 0ms, phát tức thì cả hình ảnh lẫn âm thanh siêu mượt mà 60 FPS.'
+    title: '🖥️ Khắc Phục Lỗi Nút Bấm Mở Cửa Sổ Live / Window Capture OBS',
+    description: 'Sửa lỗi bấm nút đơ không phản hồi khi mở Cửa Sổ Live 9:16. Bổ sung nút bấm trực tiếp 1-Click ngay thanh công cụ trên cùng. Luồng video được nạp 0ms, phát tức thì đồng bộ 100% hình ảnh & âm thanh.'
   },
   {
-    title: '🌐 Khắc Phục Triệt Để Màn Hình Đen TikTok Live Studio (trycloudflare.com)',
-    description: 'Dán đường link Online HTTPS vào TikTok Live Studio là nhận video và phát ngay lập tức 0ms, không đứng hình, không lag giật, đảm bảo hoạt động liên tục 24/7.'
+    title: '🌐 Khóa Chặt Đường Link Online TikTok Studio & Tối Ưu Siêu Mượt 60 FPS',
+    description: 'Khóa ổn định đường link Cloudflare Online HTTPS, loại bỏ hoàn toàn hiện tượng giật lắc hay đứng hình khi phát nhiều giờ liên tục. Bộ đệm phần cứng 4K 60 FPS hoạt động mượt mà tuyệt đối.'
   },
   {
-    title: '🎬 Bảo Toàn 100% Độ Phân Giải Gốc 4K Siêu Sắc Nét',
-    description: 'Tối ưu hóa GPU Hardware Acceleration toàn diện, loại bỏ các bộ lọc gây xung đột phần cứng, video phát đúng chuẩn độ phân giải gốc 4K/1080p sắc nét từng chi tiết.'
+    title: '🎬 Đồng Bộ Khung Hình & Âm Thanh Hoàn Hảo',
+    description: 'Loại bỏ xung đột vòng lặp native loop, đảm bảo tiếng và hình chạy khớp từng giây với phần mềm điều khiển AvaLive mà không bao giờ bị ngắt quãng.'
   }
 ];
 

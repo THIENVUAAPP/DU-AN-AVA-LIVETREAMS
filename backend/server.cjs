@@ -646,13 +646,15 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       loop 
       preload="auto" 
       muted
+      disablepictureinpicture
+      disableremoteplayback
     ></video>
     <div id="controlsDock">
       <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập">⏸️ Dừng</button>
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v1.1.8</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v1.1.9</div>
   </div>
   <script>
     (function() {
@@ -848,20 +850,29 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
           .catch(function() {});
       }
 
-      vid.onerror = function() {
+      vid.addEventListener('error', function() {
         console.warn('Video error occurred, attempting state recovery...');
         setTimeout(fetchLatestState, 500);
-      };
+      });
+
+      // Tự động phục hồi nếu luồng mạng bị lag mà không làm giật khung hình
+      vid.addEventListener('waiting', function() {
+        if (!isStreamUserPaused && vid.paused) {
+          vid.play().catch(function() {});
+        }
+      });
+      vid.addEventListener('stalled', function() {
+        if (!isStreamUserPaused && vid.paused) {
+          vid.play().catch(function() {});
+        }
+      });
 
       fetchLatestState();
       if (currentSrc) {
         loadAndPlay(currentSrc);
       } else {
-        // Fallback kiểm tra lại sau 500ms
         setTimeout(fetchLatestState, 500);
       }
-
-      setInterval(fetchLatestState, 4000);
 
       window.addEventListener('click', function() {
         if (!targetMuted) vid.muted = false;
@@ -878,13 +889,6 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         }
       });
 
-      vid.addEventListener('ended', function() {
-        try {
-          vid.currentTime = 0;
-          if (!isStreamUserPaused) vid.play().catch(function() {});
-        } catch (e) {}
-      });
-
       try {
         const socket = io(window.location.origin, { 
           transports: ['websocket', 'polling'],
@@ -893,8 +897,15 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
           reconnectionDelay: 1000
         });
 
+        // Chỉ thăm dò HTTP dự phòng khi Socket mất kết nối, tiết kiệm 100% băng thông cho luồng video
+        setInterval(function() {
+          if (!socket || !socket.connected) {
+            fetchLatestState();
+          }
+        }, 10000);
+
         socket.on('connect', function() {
-          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME';
+          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v1.1.9';
           socket.emit('REQUEST_MASTER_LIVE_STATE');
         });
 
@@ -915,7 +926,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
 
           if (data.videoPlaybackEvent === 'pause' && data.userInitiated === true) {
             isStreamUserPaused = true;
-            vid.pause();
+            if (!vid.paused) vid.pause();
             updateDockUI();
           } else if (!isStreamUserPaused && vid.paused) {
             vid.play().then(updateDockUI).catch(function() {});
@@ -933,11 +944,13 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
           }
           if (control.action === 'pause') {
             isStreamUserPaused = true;
-            vid.pause();
+            if (!vid.paused) vid.pause();
             updateDockUI();
           } else if (control.action === 'play' || control.isPlaying === true) {
             isStreamUserPaused = false;
-            vid.play().then(updateDockUI).catch(function() {});
+            if (vid.paused) {
+              vid.play().then(updateDockUI).catch(function() {});
+            }
           }
           if (typeof control.isMuted === 'boolean') {
             handleRemoteAudio(control.isMuted, control.volume);
@@ -1066,7 +1079,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '1.1.8';
+  let ver = '1.1.9';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1104,7 +1117,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '1.1.8';
+  let ver = '1.1.9';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
