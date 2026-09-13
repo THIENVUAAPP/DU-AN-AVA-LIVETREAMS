@@ -473,10 +473,12 @@ export default function LiveStreamStandalonePlayer() {
           width: '100%',
           height: '100%',
           objectFit: fitMode,
-          backgroundColor: '#000',
+          backgroundColor: 'transparent',
           display: 'block',
           outline: 'none',
           border: 'none',
+          transform: 'translateZ(0)',
+          willChange: 'transform',
           imageRendering: '-webkit-optimize-contrast'
         }}
       />
@@ -600,7 +602,7 @@ export default function LiveStreamStandalonePlayer() {
           zIndex: 10
         }}
       >
-        🔴 4K 60 FPS REALTIME v1.1.9
+        🔴 4K 60 FPS REALTIME v1.2.0
       </div>
     </div>
   );

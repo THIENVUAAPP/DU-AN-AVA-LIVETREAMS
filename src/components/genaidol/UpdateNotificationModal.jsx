@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.1.9';
+export const APP_VERSION = '1.2.0';
 export const RELEASE_DATE = '13/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🖥️ Khắc Phục Lỗi Nút Bấm Mở Cửa Sổ Live / Window Capture OBS',
-    description: 'Sửa lỗi bấm nút đơ không phản hồi khi mở Cửa Sổ Live 9:16. Bổ sung nút bấm trực tiếp 1-Click ngay thanh công cụ trên cùng. Luồng video được nạp 0ms, phát tức thì đồng bộ 100% hình ảnh & âm thanh.'
+    title: '🖥️ Sửa Triệt Để Lỗi Window Capture OBS Chỉ Nghe Tiếng Không Thấy Hình',
+    description: 'Khắc phục hoàn toàn lỗi đen màn hình khi chia sẻ Window Capture OBS. Loại bỏ nền đen CSS đè layer giải mã GPU, đồng bộ phản chiếu trực tiếp 0ms frame-by-frame từ phần mềm chính.'
   },
   {
-    title: '🌐 Khóa Chặt Đường Link Online TikTok Studio & Tối Ưu Siêu Mượt 60 FPS',
-    description: 'Khóa ổn định đường link Cloudflare Online HTTPS, loại bỏ hoàn toàn hiện tượng giật lắc hay đứng hình khi phát nhiều giờ liên tục. Bộ đệm phần cứng 4K 60 FPS hoạt động mượt mà tuyệt đối.'
+    title: '🌐 Khắc Phục Lỗi Đen Màn Hình Link Online HTTPS TikTok Live Studio',
+    description: 'Tối ưu hóa bộ giải mã GPU phần cứng trong TikTok Live Studio CEF / OBS Browser Source, chống chặn autoplay và tự động phục hồi luồng video 60 FPS siêu mượt, siêu nét đúng độ phân giải gốc.'
   },
   {
-    title: '🎬 Đồng Bộ Khung Hình & Âm Thanh Hoàn Hảo',
-    description: 'Loại bỏ xung đột vòng lặp native loop, đảm bảo tiếng và hình chạy khớp từng giây với phần mềm điều khiển AvaLive mà không bao giờ bị ngắt quãng.'
+    title: '🎬 Tương Thích Tuyệt Đối Mọi Video Của Người Dùng (Kể Cả File Cục Bộ)',
+    description: 'Cho phép chia sẻ tức thì bất kỳ video nào người dùng tải lên phần mềm. Phần mềm mở video gì thì Cửa Sổ Live & Link TikTok Studio sẽ phát chính xác video đó ngay lập tức.'
   }
 ];
 

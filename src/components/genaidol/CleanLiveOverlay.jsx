@@ -688,25 +688,77 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     }
   }, []);
 
-  // ⚡ Ghi nhận video từ cửa sổ chính khi khởi động Window Capture
+  // ⚡ SIÊU ĐỒNG BỘ 0MS CHO WINDOW CAPTURE OBS:
+  // Luôn phản chiếu 100% video và trạng thái phát từ phần mềm chính (window.opener)
   useEffect(() => {
-    if (!isWindowCapture) return;
-    if (typeof window === 'undefined' || !window.opener) return;
-    try {
-      const opDoc = window.opener.document;
-      const opVid = opDoc?.querySelector('video[data-main-player="true"]') || opDoc?.querySelector('.main-video-player') || opDoc?.querySelector('video');
-      if (opVid) {
+    if (!isWindowCapture && !(typeof window !== 'undefined' && window.opener && !window.opener.closed)) return;
+
+    let syncInterval = null;
+    const syncFromOpener = () => {
+      try {
+        if (!window.opener || window.opener.closed) return;
+        const opDoc = window.opener.document;
+        const opVid = opDoc?.querySelector('video[data-main-player="true"]') || opDoc?.querySelector('.main-video-player') || opDoc?.querySelector('video');
+        if (!opVid) return;
+
         const opSrc = opVid.currentSrc || opVid.src;
-        if (opSrc && !masterState.mediaUrl) {
-          setMasterState(prev => ({
-            ...prev,
-            mediaUrl: opSrc,
-            isVideo: true,
-            isPlaying: !opVid.paused
-          }));
+        const myVid = overlayVideoRef.current;
+
+        if (opSrc && myVid) {
+          if (!isSameMediaUrl(myVid.src, opSrc) && myVid.src !== opSrc) {
+            myVid.src = opSrc;
+            myVid.load();
+            if (!opVid.paused) {
+              myVid.play().catch(() => {});
+            }
+            setMasterState(prev => ({
+              ...prev,
+              mediaUrl: opSrc,
+              isVideo: true,
+              isPlaying: !opVid.paused
+            }));
+          }
+
+          // Đồng bộ thời gian nếu lệch quá 0.35s
+          if (typeof opVid.currentTime === 'number' && !isNaN(opVid.currentTime) && typeof myVid.currentTime === 'number') {
+            if (Math.abs(myVid.currentTime - opVid.currentTime) > 0.35) {
+              try { myVid.currentTime = opVid.currentTime; } catch (e) {}
+            }
+          }
+
+          // Đồng bộ trạng thái tạm dừng / phát
+          if (opVid.paused && !myVid.paused) {
+            myVid.pause();
+            setIsPlayingState(false);
+          } else if (!opVid.paused && myVid.paused && !checkIfUserPaused()) {
+            myVid.play().catch(() => {});
+            setIsPlayingState(true);
+          }
+        }
+      } catch (e) {}
+    };
+
+    // Chạy kiểm tra định kỳ 200ms
+    syncInterval = setInterval(syncFromOpener, 200);
+
+    // Lắng nghe trực tiếp các sự kiện từ video phần mềm chính
+    try {
+      if (window.opener && !window.opener.closed) {
+        const opDoc = window.opener.document;
+        const opVid = opDoc?.querySelector('video[data-main-player="true"]') || opDoc?.querySelector('.main-video-player') || opDoc?.querySelector('video');
+        if (opVid) {
+          opVid.addEventListener('play', syncFromOpener);
+          opVid.addEventListener('pause', syncFromOpener);
+          opVid.addEventListener('seeked', syncFromOpener);
+          opVid.addEventListener('timeupdate', syncFromOpener);
+          syncFromOpener();
         }
       }
     } catch (e) {}
+
+    return () => {
+      if (syncInterval) clearInterval(syncInterval);
+    };
   }, [isWindowCapture]);
 
   useEffect(() => {
@@ -734,7 +786,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       const isPlaying = control.isPlaying !== undefined ? control.isPlaying : action === 'play';
 
       // 1. Đồng bộ URL media nếu có file mới được chọn trên phần mềm
-      if (control.mediaUrl && typeof control.mediaUrl === 'string' && !control.mediaUrl.startsWith('blob:')) {
+      const isLocalHost = typeof window !== 'undefined' && (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || isWindowCapture);
+      if (control.mediaUrl && typeof control.mediaUrl === 'string' && (!control.mediaUrl.startsWith('blob:') || isLocalHost)) {
         let cleanMediaUrl = control.mediaUrl;
         if (cleanMediaUrl.includes('/uploads/')) {
           cleanMediaUrl = cleanMediaUrl.substring(cleanMediaUrl.indexOf('/uploads/'));
@@ -1618,10 +1671,26 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   const resolveActiveMedia = () => {
     let candidateUrl = null;
     let isVideo = masterState.isVideo !== false;
+    const isLocalOrigin = typeof window !== 'undefined' && (
+      window.location.hostname === 'localhost' || 
+      window.location.hostname === '127.0.0.1' || 
+      window.location.protocol === 'file:' ||
+      isWindowCapture
+    );
 
-    // 0. Ưu tiên số 1: Trực tiếp từ masterState.mediaUrl nếu không phải blob
-    if (masterState.mediaUrl && typeof masterState.mediaUrl === 'string' && !masterState.mediaUrl.startsWith('blob:')) {
-      candidateUrl = masterState.mediaUrl;
+    // 0. ƯU TIÊN SỐ 1 TUYỆT ĐỐI CHO CỬA SỔ WINDOW CAPTURE OBS:
+    // Trực tiếp lấy video đang phát trong phần mềm chính (window.opener)
+    if (typeof window !== 'undefined' && window.opener && !window.opener.closed) {
+      try {
+        const openerVid = window.opener.document.querySelector('video.main-video-player, video[data-main-player="true"], video');
+        if (openerVid) {
+          const s = openerVid.currentSrc || openerVid.src;
+          if (s && typeof s === 'string' && s.trim() !== '') {
+            candidateUrl = s;
+            isVideo = true;
+          }
+        }
+      } catch (e) {}
     }
 
     // 0.5. Ưu tiên tham số URL ?v=... truyền khi mở Cửa sổ Window Capture hoặc Link Live
@@ -1629,33 +1698,46 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       try {
         const urlParams = new URLSearchParams(window.location.search);
         const directV = urlParams.get('v');
-        if (directV && typeof directV === 'string' && !directV.startsWith('blob:') && directV !== 'null' && directV !== 'undefined' && directV.trim() !== '') {
-          candidateUrl = decodeURIComponent(directV);
+        if (directV && typeof directV === 'string' && directV !== 'null' && directV !== 'undefined' && directV.trim() !== '') {
+          if (!directV.startsWith('blob:') || isLocalOrigin) {
+            candidateUrl = decodeURIComponent(directV);
+          }
         }
       } catch (e) {}
     }
 
-    // 1. Kiểm tra video đã được người dùng chọn phát cố định (Persistent Lock)
+    // 1. Trực tiếp từ masterState.mediaUrl
+    if (!candidateUrl && masterState.mediaUrl && typeof masterState.mediaUrl === 'string') {
+      if (!masterState.mediaUrl.startsWith('blob:') || isLocalOrigin) {
+        candidateUrl = masterState.mediaUrl;
+      }
+    }
+
+    // 2. Kiểm tra video đã được người dùng chọn phát cố định (Persistent Lock)
     if (!candidateUrl) {
       try {
         const locked = localStorage.getItem('avalive_user_locked_media');
-        if (locked && typeof locked === 'string' && !locked.startsWith('blob:') && locked !== 'null' && locked !== 'undefined' && locked.trim() !== '') {
-          candidateUrl = locked;
+        if (locked && typeof locked === 'string' && locked !== 'null' && locked !== 'undefined' && locked.trim() !== '') {
+          if (!locked.startsWith('blob:') || isLocalOrigin) {
+            candidateUrl = locked;
+          }
         }
       } catch (e) {}
     }
 
-    // 2. Kiểm tra active video src lưu trong localStorage
+    // 3. Kiểm tra active video src lưu trong localStorage
     if (!candidateUrl) {
       try {
         const activeSrc = localStorage.getItem('avalive_active_video_src');
-        if (activeSrc && typeof activeSrc === 'string' && !activeSrc.startsWith('blob:') && activeSrc.trim() !== '') {
-          candidateUrl = activeSrc;
+        if (activeSrc && typeof activeSrc === 'string' && activeSrc.trim() !== '') {
+          if (!activeSrc.startsWith('blob:') || isLocalOrigin) {
+            candidateUrl = activeSrc;
+          }
         }
       } catch (e) {}
     }
 
-    // 3. Kiểm tra trong danh sách custom characters người dùng đã tải lên
+    // 4. Kiểm tra trong danh sách custom characters người dùng đã tải lên
     if (!candidateUrl) {
       try {
         const customRaw = localStorage.getItem('avalive_custom_characters');
@@ -1663,53 +1745,41 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           const customList = JSON.parse(customRaw);
           const customFound = customList.find(c => c.id === masterState.selectedCharacter);
           if (customFound) {
-            if (customFound.mediaUrl && !customFound.mediaUrl.startsWith('blob:')) {
-              candidateUrl = customFound.mediaUrl;
-            } else if (customFound.url && !customFound.url.startsWith('blob:')) {
-              candidateUrl = customFound.url;
+            const m = customFound.mediaUrl || customFound.url;
+            if (m && (!m.startsWith('blob:') || isLocalOrigin)) {
+              candidateUrl = m;
             }
           }
           if (!candidateUrl && customList.length > 0) {
-            const firstValid = customList.find(c => (c.mediaUrl && !c.mediaUrl.startsWith('blob:')) || (c.url && !c.url.startsWith('blob:')));
+            const firstValid = customList.find(c => {
+              const m = c.mediaUrl || c.url;
+              return m && (!m.startsWith('blob:') || isLocalOrigin);
+            });
             if (firstValid) candidateUrl = firstValid.mediaUrl || firstValid.url;
           }
         }
       } catch (e) {}
     }
 
-    // 4. Kiểm tra trong localDbItems (IndexedDB)
+    // 5. Kiểm tra trong localDbItems (IndexedDB)
     if (!candidateUrl && localDbItems.length > 0) {
       const match = localDbItems.find(i => i.id === masterState.selectedCharacter) || localDbItems[0];
       if (match) {
-        if (match.mediaUrl && !match.mediaUrl.startsWith('blob:')) {
-          candidateUrl = match.mediaUrl;
-        } else if (match.url && !match.url.startsWith('blob:')) {
-          candidateUrl = match.url;
+        const m = match.mediaUrl || match.url;
+        if (m && (!m.startsWith('blob:') || isLocalOrigin)) {
+          candidateUrl = m;
         } else if (match.fileBlob) {
           candidateUrl = getCachedBlobUrl(match.id, match.fileBlob);
         }
       }
     }
 
-    // 5. Kiểm tra state lưu trữ từ phiên trước
+    // 6. Kiểm tra state lưu trữ từ phiên trước
     if (!candidateUrl) {
       try {
         const saved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
-        if (saved.mediaUrl && typeof saved.mediaUrl === 'string' && !saved.mediaUrl.startsWith('blob:')) {
+        if (saved.mediaUrl && typeof saved.mediaUrl === 'string' && (!saved.mediaUrl.startsWith('blob:') || isLocalOrigin)) {
           candidateUrl = saved.mediaUrl;
-        }
-      } catch (e) {}
-    }
-
-    // 6. Kiểm tra trực tiếp từ cửa sổ phần mềm cha (window.opener) nếu mở từ Window Capture
-    if (!candidateUrl && typeof window !== 'undefined' && window.opener && !window.opener.closed) {
-      try {
-        const openerVid = window.opener.document.querySelector('video.main-video-player, video[data-main-player="true"], video');
-        if (openerVid) {
-          const s = openerVid.currentSrc || openerVid.src;
-          if (s && typeof s === 'string' && s.trim() !== '') {
-            candidateUrl = s;
-          }
         }
       } catch (e) {}
     }
@@ -2013,7 +2083,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 LIVE 9:16
               </span>
               <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                v1.1.9
+                v1.2.0
               </span>
             </div>
 
@@ -2449,14 +2519,15 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   webkit-playsinline
                   controls={false}
                   preload="auto"
-                  disableRemotePlayback
                   className="w-full h-full select-none"
                   style={{
                     width: '100%',
                     height: '100%',
                     objectFit: objectFitState || 'cover',
-                    backgroundColor: '#000000',
-                    display: 'block'
+                    backgroundColor: 'transparent',
+                    display: 'block',
+                    transform: 'translateZ(0)',
+                    willChange: 'transform'
                   }}
                   onCanPlay={(e) => {
                     // ⚡ INSTANT 0MS PLAYBACK: Phát ngay lập tức khi frame đầu tiên sẵn sàng

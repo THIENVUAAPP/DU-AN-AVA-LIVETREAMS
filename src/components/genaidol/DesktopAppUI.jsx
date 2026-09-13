@@ -736,7 +736,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       localStorage.removeItem('avalive_user_paused');
       localStorage.removeItem('avalive_window_capture_paused');
       localStorage.setItem('avalive_master_live_running', 'true');
-      if (broadcastUrl && !broadcastUrl.startsWith('blob:')) {
+      if (broadcastUrl) {
         localStorage.setItem('avalive_active_video_src', broadcastUrl);
         localStorage.setItem('avalive_user_locked_media', broadcastUrl);
       }
@@ -782,9 +782,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       setTimeout(() => bc.close(), 100);
     } catch (err) {}
 
-    const effectiveV = (serverActiveUrl && !serverActiveUrl.startsWith('blob:')) 
-      ? serverActiveUrl 
-      : (broadcastUrl || '/uploads/media-1789044811424-233037063.mp4');
+    const effectiveV = serverActiveUrl || activeUrl || broadcastUrl || '';
     const charQuery = selectedCharacter ? `&char=${encodeURIComponent(selectedCharacter)}` : '';
     const timeQuery = curTime > 0 ? `&t=${Math.round(curTime * 100) / 100}` : '';
     const vQuery = effectiveV ? `&v=${encodeURIComponent(effectiveV)}` : '';

@@ -9,7 +9,7 @@
   "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1789265925752,
+  "updatedAt": 1789272971321,
   "flvUrl": null,
   "isConnected": false,
   "type": "MASTER_LIVE_STATE_UPDATE",
@@ -18,8 +18,8 @@
   "isUserExplicitMediaLocked": true,
   "videoCurrentTime": 0,
   "isVideoAudioMuted": false,
-  "videoVolume": 1.0,
+  "videoVolume": 1,
   "clearMedia": false,
-  "tunnelUrl": "https://stainless-truth-restricted-delivery.trycloudflare.com",
+  "tunnelUrl": "https://colon-walnut-dear-lock.trycloudflare.com",
   "isMuted": false
 }

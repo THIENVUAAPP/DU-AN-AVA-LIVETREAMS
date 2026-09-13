@@ -144,10 +144,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
       serverActiveUrl = serverActiveUrl.substring(serverActiveUrl.indexOf('/uploads/'));
     }
 
-    let finalVideoUrl = serverActiveUrl;
-    if (!finalVideoUrl || finalVideoUrl.startsWith('blob:')) {
-      if (activeUrl && !activeUrl.startsWith('blob:')) finalVideoUrl = activeUrl;
-    }
+    let finalVideoUrl = serverActiveUrl || activeUrl;
 
     try {
       localStorage.removeItem('avalive_user_paused');
@@ -170,7 +167,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     } catch (e) {}
 
     const charQuery = selectedCharId ? `&char=${encodeURIComponent(selectedCharId)}` : '';
-    const effectiveV = (finalVideoUrl && !finalVideoUrl.startsWith('blob:')) ? finalVideoUrl : (finalVideoUrl || '/uploads/media-1789044811424-233037063.mp4');
+    const effectiveV = finalVideoUrl || activeUrl || serverActiveUrl || '';
     const vQuery = effectiveV ? `&v=${encodeURIComponent(effectiveV)}` : '';
     const timeQuery = curTime > 0 ? `&t=${Math.round(curTime * 100) / 100}` : '';
     const query = `${vQuery}${charQuery}${timeQuery}`;
@@ -410,7 +407,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
               <h2 className="text-base font-black text-white tracking-wide flex items-center gap-2">
                 <span>TRUNG TÂM PHÁT SÓNG TIKTOK LIVE STUDIO & OBS</span>
                 <span className="text-[10px] bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-2 py-0.5 rounded-full font-bold">
-                  v1.1.9 ONLINE
+                  v1.2.0 ONLINE
                 </span>
               </h2>
               <p className="text-xs text-gray-400 font-medium">

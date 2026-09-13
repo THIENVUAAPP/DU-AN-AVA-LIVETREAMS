@@ -600,10 +600,12 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
     video {
       width: 100vw; height: 100vh;
       object-fit: ${fitParam};
-      background: #000;
+      background: transparent;
       display: block;
       outline: none; border: none;
       image-rendering: auto;
+      transform: translateZ(0);
+      will-change: transform;
     }
     #controlsDock {
       position: absolute; top: 8px; right: 8px; z-index: 50;
@@ -646,15 +648,13 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       loop 
       preload="auto" 
       muted
-      disablepictureinpicture
-      disableremoteplayback
     ></video>
     <div id="controlsDock">
       <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập">⏸️ Dừng</button>
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v1.1.9</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v1.2.0</div>
   </div>
   <script>
     (function() {
@@ -740,34 +740,41 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         const p = vid.play();
         if (p !== undefined) {
           p.then(function() {
-            // Khi video đã chạy và render frame hình ảnh thành công:
-            if (!targetMuted) {
-              vid.muted = false;
-              vid.volume = targetVolume;
-            }
             updateDockUI();
+            if (!targetMuted) {
+              setTimeout(function() {
+                try {
+                  vid.muted = false;
+                  vid.volume = targetVolume;
+                } catch (e) {
+                  vid.muted = true;
+                }
+              }, 400);
+            }
           }).catch(function() {
             vid.muted = true;
-            vid.play().then(function() {
-              if (!targetMuted) {
-                setTimeout(function() { 
-                  if (!targetMuted && vid && !vid.paused) {
-                    vid.muted = false; 
-                    vid.volume = targetVolume; 
-                  }
-                }, 300);
-              }
-              updateDockUI();
-            }).catch(function() {});
+            vid.play().then(updateDockUI).catch(function() {});
           });
         }
         updateDockUI();
       }
 
+      // Tự động bảo vệ chống bị browser pause ngầm khi bật tiếng
+      vid.addEventListener('pause', function() {
+        if (!isStreamUserPaused) {
+          vid.muted = true;
+          vid.play().then(updateDockUI).catch(function() {});
+        }
+      });
+
       vid.addEventListener('canplay', function() {
         if (vid.paused && !isStreamUserPaused) {
           vid.play().then(function() {
-            if (!targetMuted) { vid.muted = false; vid.volume = targetVolume; }
+            if (!targetMuted) {
+              setTimeout(function() {
+                try { vid.muted = false; vid.volume = targetVolume; } catch(e) { vid.muted = true; }
+              }, 300);
+            }
             updateDockUI();
           }).catch(function() {});
         }
@@ -905,7 +912,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         }, 10000);
 
         socket.on('connect', function() {
-          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v1.1.9';
+          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v1.2.0';
           socket.emit('REQUEST_MASTER_LIVE_STATE');
         });
 
@@ -1079,7 +1086,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '1.1.9';
+  let ver = '1.2.0';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1117,7 +1124,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '1.1.9';
+  let ver = '1.2.0';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
