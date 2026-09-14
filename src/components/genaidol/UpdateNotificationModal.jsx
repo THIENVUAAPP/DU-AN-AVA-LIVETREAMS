@@ -2,21 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.3.2';
+export const APP_VERSION = '1.3.3';
 export const RELEASE_DATE = '14/09/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '🛠️ Khắc Phục Triệt Để Lỗi Khởi Động "TemplateLibraryModal is not defined"',
+    description: 'Sửa lỗi thiếu khai báo import của TemplateLibraryModal trong App.jsx, giúp ứng dụng khởi động tức thì, mở giao diện mượt mà không gặp màn hình báo lỗi nâng cấp.'
+  },
+  {
     title: '🖥️ Tách Riêng 2 Tab Code Độc Lập: Window Capture & Đường Link Phát Online',
-    description: 'Tách hoàn toàn Window Capture (/window-capture) và Đường Link Live (/live-stream) thành 2 tab code riêng biệt độc lập 100%, không chồng chéo, không ảnh hưởng lẫn nhau khi nâng cấp.'
+    description: 'Tách hoàn toàn Window Capture (/window-capture) và Đường Link Live (/live-stream) thành 2 tab code riêng biệt độc lập 100%, không chồng chéo, không ảnh hưởng lẫn nhau.'
   },
   {
     title: '✕ Nút Ẩn Toàn Bộ Tab & Nút Trên Giao Diện Video Window Capture (Phím tắt: H)',
-    description: 'Bổ sung nút [✕ Ẩn Toàn Bộ (H)] trên Window Capture, cho phép ẩn sạch 100% tất cả các nút tắt/mở âm thanh, phát/dừng, mang lại khung hình video sạch hoàn toàn cho TikTok Live Studio & OBS.'
+    description: 'Bổ sung nút [✕ Ẩn Toàn Bộ (H)] trên Window Capture, cho phép ẩn sạch 100% tất cả các nút điều khiển, đem lại khung hình video sạch hoàn toàn cho TikTok Live Studio & OBS.'
   },
   {
     title: '🔒 Khóa Chặt Luồng Video 4K 60 FPS & Âm Thanh Siêu Mượt Suốt Nhiều Giờ',
-    description: 'Cả Window Capture và Đường Link Online đều được khóa chặt chuẩn 4K 60 FPS mượt mà, chống đứng hình, chống giật lag, giữ trọn vẹn dữ liệu gốc.'
+    description: 'Cả Window Capture và Đường Link Online đều được khóa chặt chuẩn 4K 60 FPS mượt mà, chống đứng hình, chống giật lag.'
   }
 ];
 

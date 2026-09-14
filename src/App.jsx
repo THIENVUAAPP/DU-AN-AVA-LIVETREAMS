@@ -29,6 +29,7 @@ import AutoCaptchaSolver from "./components/AutoCaptchaSolver";
 import UpdateNotificationModal from "./components/genaidol/UpdateNotificationModal";
 import LiveStreamStandalonePlayer from "./components/genaidol/LiveStreamStandalonePlayer";
 import WindowCapturePlayer from "./components/genaidol/WindowCapturePlayer";
+import TemplateLibraryModal from "./components/genaidol/TemplateLibraryModal";
 import { bootstrapDefaultPresets } from "./utils/defaultPresetsBootstrap";
 import { Lock, Sparkles, ShieldCheck, Mail, LogIn, ArrowRight } from "lucide-react";
 
