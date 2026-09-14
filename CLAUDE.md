@@ -1002,10 +1002,12 @@ Im lặng bỏ qua 3 câu này = vi phạm Mục 0.7 và Mục 1.
 | **2. Khóa Chặt Chuẩn Khung Hình Dọc 1080x1920 (9:16) & Stream 4K 60 FPS Không Giật Lag** | `backend/server.cjs`, `src/components/genaidol/LiveStreamStandalonePlayer.jsx` | ✅ PASS 100% | - Duy trì 100% tỷ lệ khung hình 9:16 chuẩn TikTok Live Studio / OBS.<br>- Bộ đệm 8MB kết hợp TCP NoDelay và GPU Hardware Acceleration đảm bảo video chạy liên tục nhiều giờ liền không bị đứng hình, không giật lag. |
 | **3. Đóng Gói Và Tự Động Phát Hành Release v1.2.9 Standalone Lên GitHub** | `package.json`, `src/components/genaidol/UpdateNotificationModal.jsx`, `src/components/genaidol/LiveStreamStandalonePlayer.jsx`, `src/components/UniversalMasterOverlayModal.jsx`, `src/components/genaidol/CleanLiveOverlay.jsx`, `api/download.js`, `backend/server.cjs`, `CLAUDE.md` | ✅ PASS 100% | - Tăng bậc phiên bản lên v1.2.9 theo đúng Workflow Rule.<br>- Đóng gói bản ZIP độc lập `AvaLive_VIP_PRO_Windows_v1.2.9.zip` và `AvaLive_VIP_PRO_Mac_v1.2.9.zip`.<br>- Tự động tạo GitHub Release `v1.2.9` và tải các file ZIP lên GitHub Releases. |
 
-
-
-
-
+### 🚀 72. Nhật Ký Bản Cập Nhật v1.3.0 (Bổ Sung Nút Ẩn Controls Canvas Tinh Khiết & Khóa Chặt Luồng Phát 4K 60 FPS)
+| Hạng Mục Cải Tiến | File Thay Đổi | Trạng Thái | Chi Tiết Kỹ Thuật |
+| :--- | :--- | :---: | :--- |
+| **1. Bổ Sung Tính Năng Ẩn Toàn Bộ Phím Điều Khiển Cho Window Capture & Online Link** | `backend/server.cjs`, `src/components/genaidol/LiveStreamStandalonePlayer.jsx` | ✅ PASS 100% | - Thêm nút `[✕ Ẩn Nút (H)]` trên dock điều khiển nổi của Window Capture và Route `/live-stream`.<br>- Khi kích hoạt: Toàn bộ dock điều khiển và badge trạng thái được ẩn đi 100%, trả lại khung hình video sạch tinh khiết không bị che khuất khi quay quét cửa sổ trên OBS / TikTok Live Studio.<br>- Bổ sung nút icon mắt nổi `👁️` ở góc trên bên phải màn hình để khôi phục nhanh 1-chạm hoặc bấm phím tắt `H` (hoặc `h`) trên bàn phím.<br>- Tự động lưu trạng thái ẩn/hiện vào `localStorage` (`avalive_dock_hidden`). |
+| **2. Khóa Chặt Tuyệt Đối Cơ Chế Phát Video & Âm Thanh 4K 60 FPS** | `backend/server.cjs`, `src/components/genaidol/LiveStreamStandalonePlayer.jsx` | ✅ PASS 100% | - Khóa chặt toàn bộ luồng phát video và âm thanh trên cả 2 phương thức: Window Capture và Đường link Online HTTPS.<br>- Bảo đảm video chạy siêu mượt 60 FPS, độ phân giải 4K sắc nét cao nhất, chống giật lag, chống đứng hình suốt nhiều giờ stream liên tục. |
+| **3. Đóng Gói Và Tự Động Phát Hành Release v1.3.0 Standalone Lên GitHub** | `package.json`, `src/components/genaidol/UpdateNotificationModal.jsx`, `src/components/genaidol/LiveStreamStandalonePlayer.jsx`, `src/components/UniversalMasterOverlayModal.jsx`, `src/components/genaidol/CleanLiveOverlay.jsx`, `api/download.js`, `backend/server.cjs`, `CLAUDE.md` | ✅ PASS 100% | - Tăng bậc phiên bản lên v1.3.0 theo đúng Workflow Rule.<br>- Đóng gói bản ZIP độc lập `AvaLive_VIP_PRO_Windows_v1.3.0.zip` và `AvaLive_VIP_PRO_Mac_v1.3.0.zip`.<br>- Tự động tạo GitHub Release `v1.3.0` và tải các file ZIP lên GitHub Releases. |
 
 
 

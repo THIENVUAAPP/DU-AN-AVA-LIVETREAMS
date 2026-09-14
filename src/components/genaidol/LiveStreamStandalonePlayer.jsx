@@ -424,72 +424,125 @@ export default function LiveStreamStandalonePlayer() {
       />
 
       {/* Floating Controls Dock */}
-      <div
-        style={{
-          position: 'absolute',
-          top: '10px',
-          right: '10px',
-          zIndex: 50,
-          display: 'flex',
-          alignItems: 'center',
-          gap: '6px',
-          background: 'rgba(0, 0, 0, 0.75)',
-          backdropFilter: 'blur(8px)',
-          padding: '4px 8px',
-          borderRadius: '20px',
-          border: '1px solid rgba(6, 182, 212, 0.4)',
-          opacity: 0.3,
-          transition: 'opacity 0.25s ease'
-        }}
-        onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
-        onMouseLeave={(e) => e.currentTarget.style.opacity = '0.3'}
-      >
-        <button
-          onClick={toggleStandalonePlay}
+      {!isDockHidden && (
+        <div
           style={{
-            background: 'rgba(255, 255, 255, 0.1)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            color: '#fff',
-            fontSize: '11px',
-            fontWeight: 'bold',
+            position: 'absolute',
+            top: '10px',
+            right: '10px',
+            zIndex: 50,
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(8px)',
             padding: '4px 8px',
-            borderRadius: '12px',
-            cursor: 'pointer'
+            borderRadius: '20px',
+            border: '1px solid rgba(6, 182, 212, 0.4)',
+            opacity: 0.35,
+            transition: 'opacity 0.25s ease'
           }}
+          onMouseEnter={(e) => e.currentTarget.style.opacity = '1'}
+          onMouseLeave={(e) => e.currentTarget.style.opacity = '0.35'}
         >
-          {isExplicitlyPausedRef.current ? '▶️ Phát' : '⏸️ Dừng'}
-        </button>
+          <button
+            onClick={toggleStandalonePlay}
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: '#fff',
+              fontSize: '11px',
+              fontWeight: 'bold',
+              padding: '4px 8px',
+              borderRadius: '12px',
+              cursor: 'pointer'
+            }}
+            title="Tạm dừng / Tiếp tục độc lập (Space)"
+          >
+            {isExplicitlyPausedRef.current ? '▶️ Phát' : '⏸️ Dừng'}
+          </button>
+          <button
+            onClick={toggleStandaloneMute}
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: '#fff',
+              fontSize: '11px',
+              fontWeight: 'bold',
+              padding: '4px 8px',
+              borderRadius: '12px',
+              cursor: 'pointer'
+            }}
+            title="Bật / Tắt âm thanh độc lập (M)"
+          >
+            {isUserMutedRef.current ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}
+          </button>
+          <button
+            onClick={toggleStandaloneFit}
+            style={{
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
+              color: '#fff',
+              fontSize: '11px',
+              fontWeight: 'bold',
+              padding: '4px 8px',
+              borderRadius: '12px',
+              cursor: 'pointer'
+            }}
+            title="Chuyển chế độ Khung hình (Tràn / Vừa)"
+          >
+            {fitMode === 'cover' ? '📐 Tràn' : '📐 Vừa'}
+          </button>
+          <button
+            onClick={() => toggleDockHidden(true)}
+            style={{
+              background: 'rgba(239, 68, 68, 0.25)',
+              border: '1px solid rgba(239, 68, 68, 0.4)',
+              color: '#fca5a5',
+              fontSize: '11px',
+              fontWeight: 'bold',
+              padding: '4px 8px',
+              borderRadius: '12px',
+              cursor: 'pointer'
+            }}
+            title="Ẩn toàn bộ nút điều khiển để quay/bắt khung hình sạch 100% (Phím tắt: H)"
+          >
+            ✕ Ẩn Nút (H)
+          </button>
+        </div>
+      )}
+
+      {/* Restore Dock Mini Button */}
+      {isDockHidden && (
         <button
-          onClick={toggleStandaloneMute}
+          onClick={() => toggleDockHidden(false)}
           style={{
-            background: 'rgba(255, 255, 255, 0.1)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            color: '#fff',
-            fontSize: '11px',
-            fontWeight: 'bold',
-            padding: '4px 8px',
-            borderRadius: '12px',
-            cursor: 'pointer'
+            position: 'absolute',
+            top: '8px',
+            right: '8px',
+            zIndex: 50,
+            width: '26px',
+            height: '26px',
+            borderRadius: '50%',
+            background: 'rgba(0, 0, 0, 0.6)',
+            border: '1px solid rgba(6, 182, 212, 0.4)',
+            color: '#06b6d4',
+            fontSize: '12px',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            opacity: 0.25,
+            backdropFilter: 'blur(4px)',
+            transition: 'all 0.25s ease'
           }}
+          onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'scale(1.1)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.25'; e.currentTarget.style.transform = 'scale(1)'; }}
+          title="Hiện lại menu điều khiển (Phím tắt: H)"
         >
-          {isUserMutedRef.current ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}
+          👁️
         </button>
-        <button
-          onClick={toggleStandaloneFit}
-          style={{
-            background: 'rgba(255, 255, 255, 0.1)',
-            border: '1px solid rgba(255, 255, 255, 0.2)',
-            color: '#fff',
-            fontSize: '11px',
-            fontWeight: 'bold',
-            padding: '4px 8px',
-            borderRadius: '12px',
-            cursor: 'pointer'
-          }}
-        >
-          {fitMode === 'cover' ? '📐 Tràn' : '📐 Vừa'}
-        </button>
-      </div>
+      )}
 
       {/* Hiển thị chỉ báo đang tải mượt mà (chống đen màn hình chết nếu mạng lag) */}
       {isVideoLoading && !isPlaybackActive && (
@@ -525,25 +578,27 @@ export default function LiveStreamStandalonePlayer() {
         </div>
       )}
 
-      <div
-        style={{
-          position: 'absolute',
-          bottom: '8px',
-          right: '8px',
-          background: 'rgba(0,0,0,0.6)',
-          color: '#06b6d4',
-          fontFamily: 'monospace',
-          fontSize: '10px',
-          fontWeight: 'bold',
-          padding: '2px 6px',
-          borderRadius: '4px',
-          pointerEvents: 'none',
-          opacity: 0.35,
-          zIndex: 10
-        }}
-      >
-        🔴 4K 60 FPS REALTIME v1.2.9
-      </div>
+      {!isDockHidden && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: '8px',
+            right: '8px',
+            background: 'rgba(0,0,0,0.6)',
+            color: '#06b6d4',
+            fontFamily: 'monospace',
+            fontSize: '10px',
+            fontWeight: 'bold',
+            padding: '2px 6px',
+            borderRadius: '4px',
+            pointerEvents: 'none',
+            opacity: 0.35,
+            zIndex: 10
+          }}
+        >
+          🔴 4K 60 FPS REALTIME v1.3.0
+        </div>
+      )}
     </div>
   );
 }

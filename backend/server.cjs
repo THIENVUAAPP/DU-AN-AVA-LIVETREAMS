@@ -668,9 +668,14 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       backdrop-filter: blur(8px);
       padding: 4px 8px; border-radius: 20px;
       border: 1px solid rgba(6, 182, 212, 0.4);
-      opacity: 0.3; transition: opacity 0.25s ease;
+      opacity: 0.35; transition: all 0.25s ease;
     }
     #controlsDock:hover { opacity: 1; }
+    #controlsDock.is-hidden {
+      display: none !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
+    }
     .dock-btn {
       background: rgba(255, 255, 255, 0.1);
       border: 1px solid rgba(255, 255, 255, 0.2);
@@ -680,12 +685,37 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       transition: all 0.2s;
     }
     .dock-btn:hover { background: rgba(6, 182, 212, 0.4); border-color: #06b6d4; }
+    .dock-btn-hide {
+      background: rgba(239, 68, 68, 0.25);
+      border: 1px solid rgba(239, 68, 68, 0.4);
+      color: #fca5a5;
+    }
+    .dock-btn-hide:hover {
+      background: rgba(239, 68, 68, 0.5);
+      border-color: #ef4444;
+      color: #fff;
+    }
+    #btnRestoreDock {
+      position: absolute; top: 6px; right: 6px; z-index: 50;
+      width: 26px; height: 26px; border-radius: 50%;
+      background: rgba(0, 0, 0, 0.6);
+      border: 1px solid rgba(6, 182, 212, 0.4);
+      color: #06b6d4; font-size: 12px;
+      display: none; align-items: center; justify-content: center;
+      cursor: pointer; opacity: 0.25; transition: all 0.25s ease;
+      backdrop-filter: blur(4px);
+    }
+    #btnRestoreDock:hover { opacity: 1; transform: scale(1.1); background: rgba(0, 0, 0, 0.9); }
     #badge {
       position: absolute; bottom: 8px; right: 8px;
       background: rgba(0,0,0,0.6); color: #06b6d4;
       font-family: monospace; font-size: 10px; font-weight: bold;
       padding: 2px 6px; border-radius: 4px; pointer-events: none;
       opacity: 0.7; z-index: 10;
+      transition: opacity 0.3s ease;
+    }
+    #badge.is-hidden {
+      display: none !important;
     }
   </style>
   <script src="/socket.io/socket.io.js"></script>
@@ -706,25 +736,64 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       disableRemotePlayback
     ></video>
     <div id="controlsDock">
-      <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập">⏸️ Dừng</button>
-      <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
+      <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập (Space)">⏸️ Dừng</button>
+      <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập (M)">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
+      <button id="btnHideControls" class="dock-btn dock-btn-hide" title="Ẩn toàn bộ nút điều khiển để quay/bắt khung hình sạch 100% (Phím tắt: H)">✕ Ẩn Nút (H)</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v1.2.9</div>
+    <button id="btnRestoreDock" title="Hiện lại toàn bộ menu điều khiển (Phím tắt: H)">👁️</button>
+    <div id="badge">🔴 4K 60 FPS REALTIME v1.3.0</div>
   </div>
   <script>
     (function() {
       const vid = document.getElementById('videoPlayer');
       const badge = document.getElementById('badge');
+      const controlsDock = document.getElementById('controlsDock');
       const btnPlayPause = document.getElementById('btnPlayPause');
       const btnMuteUnmute = document.getElementById('btnMuteUnmute');
       const btnFitToggle = document.getElementById('btnFitToggle');
+      const btnHideControls = document.getElementById('btnHideControls');
+      const btnRestoreDock = document.getElementById('btnRestoreDock');
 
       let currentSrc = ${JSON.stringify(vParam)};
       let isStreamUserPaused = false;
       let targetMuted = ${soundParam ? 'false' : 'true'};
       let targetVolume = 1.0;
       let currentFit = ${JSON.stringify(fitParam)};
+      let isDockHidden = false;
+      try {
+        isDockHidden = localStorage.getItem('avalive_stream_dock_hidden') === 'true';
+      } catch(e) {}
+
+      function applyDockVisibility(hidden) {
+        isDockHidden = hidden;
+        if (hidden) {
+          if (controlsDock) controlsDock.classList.add('is-hidden');
+          if (badge) badge.classList.add('is-hidden');
+          if (btnRestoreDock) btnRestoreDock.style.display = 'flex';
+        } else {
+          if (controlsDock) controlsDock.classList.remove('is-hidden');
+          if (badge) badge.classList.remove('is-hidden');
+          if (btnRestoreDock) btnRestoreDock.style.display = 'none';
+        }
+        try { localStorage.setItem('avalive_stream_dock_hidden', String(hidden)); } catch(e) {}
+      }
+
+      applyDockVisibility(isDockHidden);
+
+      if (btnHideControls) {
+        btnHideControls.addEventListener('click', function(e) {
+          e.stopPropagation();
+          applyDockVisibility(true);
+        });
+      }
+
+      if (btnRestoreDock) {
+        btnRestoreDock.addEventListener('click', function(e) {
+          e.stopPropagation();
+          applyDockVisibility(false);
+        });
+      }
 
       setTimeout(function() { if (badge) badge.style.opacity = '0.2'; }, 6000);
 
@@ -963,7 +1032,10 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       });
 
       window.addEventListener('keydown', function(e) {
-        if (e.code === 'Space') {
+        if (e.key === 'h' || e.key === 'H') {
+          e.preventDefault();
+          applyDockVisibility(!isDockHidden);
+        } else if (e.code === 'Space') {
           e.preventDefault();
           if (btnPlayPause) btnPlayPause.click();
         } else if (e.key === 'm' || e.key === 'M') {
@@ -987,7 +1059,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         }, 10000);
 
         socket.on('connect', function() {
-          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v1.2.9';
+          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v1.3.0';
           socket.emit('REQUEST_MASTER_LIVE_STATE');
         });
 
@@ -1133,7 +1205,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '1.2.9';
+  let ver = '1.3.0';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1171,7 +1243,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '1.2.9';
+  let ver = '1.3.0';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;

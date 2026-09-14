@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.2.9';
+export const APP_VERSION = '1.3.0';
 export const RELEASE_DATE = '14/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🛡️ Khắc Phục Triệt Để Màn Hình Màu Đen & Khóa Chặt Luồng Video 4K 60 FPS',
-    description: 'Sửa dứt điểm lỗi màn hình đen khi truyền URL đầy đủ vào route /live-stream, kích hoạt tải và phát video tức thì 0ms ngay khi trang tải xong mà không phụ thuộc độ trễ kết nối.'
+    title: '👁️ Nút Ẩn Toàn Bộ Phím Điều Khiển (Clean Canvas) Trên Window Capture & Online Link',
+    description: 'Bổ sung nút [✕ Ẩn Nút (H)] và phím tắt [H] trên thanh điều khiển. Cho phép ẩn sạch toàn bộ nút bấm và huy hiệu, mang lại khung hình video 100% tinh khiết cho Window Capture và OBS / TikTok Live Studio.'
   },
   {
-    title: '⚡ Stream Siêu Mượt 4K 60 FPS Suốt Nhiều Giờ Liền',
-    description: 'Nâng cấp bộ đệm 8MB, kích hoạt TCP NoDelay và khử trễ phần cứng GPU Hardware Acceleration 100%, bảo đảm phát sóng liên tục không bị giật lag hay đứng hình.'
+    title: '🔒 Khóa Chặt Phát Video & Âm Thanh 4K 60 FPS Siêu Mượt Suốt Nhiều Giờ Liền',
+    description: 'Khóa chặt kiến trúc truyền phát video & âm thanh, nâng cấp bộ đệm 8MB, chống giật lag, chống đứng hình, bảo đảm phát sóng liên tục 4K 60 FPS ổn định tuyệt đối.'
   },
   {
-    title: '📐 Khóa Chặt Khung Hình Dọc 1080x1920 (9:16) Cho TikTok Live Studio',
-    description: 'Chuẩn hóa tỷ lệ khung hình 9:16 vừa khít canvas dọc TikTok Live Studio và OBS, video sắc nét 4K không méo hình, không viền đen.'
+    title: '⚡ Biểu Tượng Phục Hồi Nhanh 1 Chạm (👁️)',
+    description: 'Khi ẩn thanh điều khiển, một nút icon mắt nhỏ gọn (👁️) xuất hiện ở góc trên bên phải giúp dễ dàng bấm mở lại hoặc sử dụng phím tắt H tiện lợi.'
   }
 ];
 
