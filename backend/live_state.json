@@ -9,17 +9,17 @@
   "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1789310660312,
+  "updatedAt": 1789353928570,
   "flvUrl": null,
   "isConnected": false,
   "type": "MASTER_LIVE_STATE_UPDATE",
   "currentLang": "vi",
   "selectedCharacter": "custom_1789044810661",
   "isUserExplicitMediaLocked": true,
-  "videoCurrentTime": 0,
-  "isVideoAudioMuted": true,
-  "videoVolume": 0,
+  "videoCurrentTime": 0.001331,
+  "isVideoAudioMuted": false,
+  "videoVolume": 1,
   "clearMedia": false,
-  "tunnelUrl": "https://happening-ciao-personality-cons.trycloudflare.com",
-  "isMuted": true
+  "tunnelUrl": "https://retired-settle-whether-realm.trycloudflare.com",
+  "isMuted": false
 }

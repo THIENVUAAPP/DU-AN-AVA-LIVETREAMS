@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.2.5';
-export const RELEASE_DATE = '13/09/2026';
+export const APP_VERSION = '1.2.6';
+export const RELEASE_DATE = '14/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '✨ Tối Ưu Độ Phân Giải Video Window Capture 4K / Full HD Siêu Sắc Nét',
-    description: 'Nâng cấp bộ render đồ họa GPU với bộ lọc tối ưu tương phản (-webkit-optimize-contrast / crisp-edges), tăng cường độ sắc nét 100% gốc chuẩn 4K khi chụp cửa sổ qua OBS và TikTok Live Studio.'
+    title: '⚡ Tốc Độ Hiển Thị Video Tức Thì 0MS (Instant Display Zero-Delay)',
+    description: 'Tối ưu hóa toàn diện luồng phát Window Capture và Link Online HTTPS, đồng bộ trực tiếp video từ phần mềm sang OBS & TikTok Live Studio ngay trong 0ms khi chọn hoặc phát video.'
   },
   {
-    title: '🚀 Khắc Phục Triệt Để Giật Lag & Đứng Hình Luồng Live Online HTTPS',
-    description: 'Mở rộng bộ đệm stream chunk 4MB siêu tốc, bổ sung cơ chế phục hồi tự động tức thì trên luồng phát Online (TikTok Live Studio Browser Source) đảm bảo phát 60 FPS siêu mượt mà không bao giờ gián đoạn.'
+    title: '📐 Chuẩn Khung Hình Tỷ Lệ 9:16 (1080 x 1920) Dọc Chuẩn TikTok Live Studio',
+    description: 'Thiết kế chuẩn khung hình 1080x1920 dọc cho luồng Browser Source, hiển thị trọn vẹn 100% diện tích không méo hình, không viền đen, khớp hoàn hảo canvas TikTok Live Studio.'
   },
   {
-    title: '👑 Tăng Tốc Phần Cứng & Khử Răng Cưa Toàn Diện',
-    description: 'Kích hoạt tăng tốc phần cứng translate3d toàn phần cho toàn bộ hệ thống video layers, đảm bảo hiệu năng tối đa và chất lượng hình ảnh cao cấp nhất.'
+    title: '🚀 Khử Triệt Để Giật Lag & Đứng Hình - Stream 4K 60 FPS Siêu Mượt Mà',
+    description: 'Nâng cấp bộ đệm stream chunk 8MB siêu tốc kết hợp TCP setNoDelay, tối ưu hóa phần cứng GPU Hardware Acceleration 100% cho video 4K sắc nét chân thực và chuyển động siêu mượt.'
   }
 ];
 

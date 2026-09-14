@@ -377,12 +377,10 @@ app.all('/uploads/:filename', (req, res, next) => {
         'Access-Control-Expose-Headers': 'Content-Range, Accept-Ranges, Content-Length'
       });
 
-      if (req.method === 'HEAD') {
-        return res.end();
-      }
+      try { req.socket.setNoDelay(true); } catch(e) {}
 
-      // ⚡ BUFFER 4MB SIÊU TỐC CHO VIDEO DUNG LƯỢNG LỚN & BITRATE CAO 4K 60FPS
-      const stream = fs.createReadStream(filePath, { start, end, highWaterMark: 4 * 1024 * 1024 });
+      // ⚡ BUFFER 8MB SIÊU TỐC CHO VIDEO DUNG LƯỢNG LỚN & BITRATE CAO 4K 60FPS
+      const stream = fs.createReadStream(filePath, { start, end, highWaterMark: 8 * 1024 * 1024 });
       req.on('close', () => {
         try { stream.destroy(); } catch (e) {}
       });
@@ -618,6 +616,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
       width: 100vw; height: 100vh;
+      margin: 0; padding: 0;
       overflow: hidden;
       background-color: #000;
       display: flex; align-items: center; justify-content: center;
@@ -625,13 +624,15 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
     }
     #stage {
       position: relative;
-      width: 100vw; height: 100vh;
+      width: 100%; height: 100%;
+      max-width: 100vw; max-height: 100vh;
+      aspect-ratio: 9 / 16;
       display: flex; align-items: center; justify-content: center;
       background: #000;
       overflow: hidden;
     }
     video {
-      width: 100vw; height: 100vh;
+      width: 100%; height: 100%;
       object-fit: ${fitParam};
       background: #000;
       display: block;
@@ -694,7 +695,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v1.2.5</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v1.2.6</div>
   </div>
   <script>
     (function() {
@@ -971,7 +972,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         }, 10000);
 
         socket.on('connect', function() {
-          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v1.2.5';
+          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v1.2.6';
           socket.emit('REQUEST_MASTER_LIVE_STATE');
         });
 
@@ -1008,6 +1009,20 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
             }
           };
         }
+
+        window.addEventListener('storage', function(e) {
+          if (e.key === 'avalive_master_live_state' || e.key === 'avalive_active_video_src') {
+            try {
+              const raw = localStorage.getItem('avalive_master_live_state');
+              if (raw) {
+                const parsed = JSON.parse(raw);
+                if (parsed.mediaUrl && !isSameMedia(vid.src, parsed.mediaUrl)) {
+                  loadAndPlay(parsed.mediaUrl);
+                }
+              }
+            } catch(err) {}
+          }
+        });
       } catch (err) {
         console.warn('Socket connect error:', err);
       }
@@ -1103,7 +1118,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '1.2.5';
+  let ver = '1.2.6';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1141,7 +1156,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '1.2.5';
+  let ver = '1.2.6';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
