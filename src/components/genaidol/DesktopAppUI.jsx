@@ -4217,21 +4217,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             </div>
           ) : (
             <div className="space-y-4">
-              {/* KHỐI KẾT NỐI 1-CHẠM DUY NHẤT VỚI LOGO AVALIVE */}
+              {/* KHỐI KẾT NỐI 1-CHẠM DUY NHẤT */}
               <div className="p-6 rounded-2xl bg-gradient-to-br from-[#121528] via-[#0f111f] to-[#181a32] border border-cyan-500/40 text-center space-y-4 shadow-xl relative overflow-hidden">
                 {/* Glow decor */}
                 <div className="absolute -top-10 -left-10 w-32 h-32 bg-cyan-500/10 rounded-full blur-3xl pointer-events-none" />
                 <div className="absolute -bottom-10 -right-10 w-32 h-32 bg-purple-500/10 rounded-full blur-3xl pointer-events-none" />
-
-                {/* Logo AvaLive Duy Nhất */}
-                <div className="flex items-center justify-center">
-                  <div className="relative group">
-                    <div className="absolute -inset-3 bg-gradient-to-r from-cyan-500 via-purple-600 to-pink-500 rounded-3xl blur-xl opacity-80 group-hover:opacity-100 transition duration-500 animate-pulse" />
-                    <div className="relative w-24 h-24 rounded-3xl overflow-hidden border-2 border-cyan-400/80 shadow-[0_0_40px_rgba(6,182,212,0.6)] bg-black flex items-center justify-center p-1 group-hover:scale-105 transition-all">
-                      <img src="/official_logo.jpg" alt="AvaLive Logo" className="w-full h-full object-cover rounded-2xl drop-shadow-[0_0_15px_rgba(6,182,212,0.8)]" />
-                    </div>
-                  </div>
-                </div>
 
                 <div className="space-y-1">
                   <div className="text-cyan-300 font-black text-sm uppercase tracking-wider flex items-center justify-center gap-1.5">

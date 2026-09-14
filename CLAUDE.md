@@ -983,6 +983,13 @@ Im lặng bỏ qua 3 câu này = vi phạm Mục 0.7 và Mục 1.
 | **3. Nâng Cấp Bộ Đệm Stream Chunk 8MB & Kích Hoạt TCP setNoDelay** | `backend/server.cjs` | ✅ PASS 100% | - Nâng `highWaterMark` lên 8MB (`8 * 1024 * 1024`) và bật `req.socket.setNoDelay(true)` loại bỏ cơ chế gom gói trễ TCP (Nagle algorithm), truyền tải video 4K 60 FPS cực mượt, không giật lag, không đứng hình. |
 | **4. Đóng Gói Và Tự Động Phát Hành Release v1.2.6 Standalone Lên GitHub** | `package.json`, `src/components/genaidol/UpdateNotificationModal.jsx`, `src/components/genaidol/LiveStreamStandalonePlayer.jsx`, `src/components/UniversalMasterOverlayModal.jsx`, `src/components/genaidol/CleanLiveOverlay.jsx`, `api/download.js`, `backend/server.cjs`, `CLAUDE.md` | ✅ PASS 100% | - Tăng bậc phiên bản lên v1.2.6 theo đúng Workflow Rule.<br>- Đóng gói bản ZIP độc lập `AvaLive_VIP_PRO_Windows_v1.2.6.zip` và `AvaLive_VIP_PRO_Mac_v1.2.6.zip`.<br>- Tự động tạo GitHub Release `v1.2.6` và tải các file ZIP lên GitHub Releases. |
 
+### 🚀 69. Nhật Ký Bản Cập Nhật v1.2.7 (Tối Ưu Giao Diện Hồ Sơ Người Dùng, Loại Bỏ Logo Trùng Lặp & Giữ Vững Stream 4K 60 FPS 0MS)
+| Hạng Mục Cải Tiến | File Thay Đổi | Trạng Thái | Chi Tiết Kỹ Thuật |
+| :--- | :--- | :---: | :--- |
+| **1. Loại Bỏ Logo Trùng Lặp Trong Cửa Sổ Hồ Sơ Người Dùng / Đăng Nhập** | `src/components/genaidol/DesktopAppUI.jsx` | ✅ PASS 100% | - Loại bỏ khối logo AvaLive phụ ở phía dưới trong popup Hồ Sơ Người Dùng / Đăng Nhập Google, chỉ giữ lại header nhận diện thương hiệu tinh gọn phía trên.<br>- Giúp bố cục modal thông thoáng, liền mạch, chuyên nghiệp và trực quan hơn cho người dùng. |
+| **2. Đóng Gói Và Tự Động Phát Hành Release v1.2.7 Standalone Lên GitHub** | `package.json`, `src/components/genaidol/UpdateNotificationModal.jsx`, `src/components/genaidol/LiveStreamStandalonePlayer.jsx`, `src/components/UniversalMasterOverlayModal.jsx`, `src/components/genaidol/CleanLiveOverlay.jsx`, `api/download.js`, `backend/server.cjs`, `CLAUDE.md` | ✅ PASS 100% | - Tăng bậc phiên bản lên v1.2.7 theo đúng Workflow Rule.<br>- Đóng gói bản ZIP độc lập `AvaLive_VIP_PRO_Windows_v1.2.7.zip` và `AvaLive_VIP_PRO_Mac_v1.2.7.zip`.<br>- Tự động tạo GitHub Release `v1.2.7` và tải các file ZIP lên GitHub Releases. |
+
+
 
 
 
