@@ -710,7 +710,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v1.3.1</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v1.3.2</div>
   </div>
   <script>
     (function() {
@@ -987,7 +987,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         }, 10000);
 
         socket.on('connect', function() {
-          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v1.3.1';
+          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v1.3.2';
           socket.emit('REQUEST_MASTER_LIVE_STATE');
         });
 
@@ -1051,7 +1051,390 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
   res.send(html);
 });
 
-// 🌐 API KIỂM TRA TRẠNG THÁI SERVER & PHIÊN BẢN ĐỒNG BỘ
+// ============================================================
+// 🖥️ TAB CODE ĐỘC LẬP: CỬA SỔ BẮT HÌNH WINDOW CAPTURE OBS & TIKTOK STUDIO
+// - Tách biệt hoàn toàn 100% với route /live-stream
+// - Khóa chặt luồng video 4K 60 FPS siêu mượt, không giật lag, không đứng hình
+// - Nút [✕ Ẩn Toàn Bộ (H)] cho phép ẩn sạch toàn bộ các nút / tab trên khung hình
+// - Nút icon [👁️] hoặc phím tắt [H] khôi phục lại bảng điều khiển tức thì
+// ============================================================
+app.get(['/window-capture', '/window_capture'], (req, res) => {
+  let vParam = req.query.v || currentMasterLiveState.mediaUrl || '';
+  if (vParam && typeof vParam === 'string') {
+    if (vParam.startsWith('http://') || vParam.startsWith('https://')) {
+      try {
+        const u = new URL(vParam);
+        vParam = u.pathname + u.search;
+      } catch(e) {}
+    }
+    if (!vParam.startsWith('/') && !vParam.startsWith('http')) {
+      vParam = '/' + vParam;
+    }
+  }
+  let existsOnDisk = false;
+  if (vParam && typeof vParam === 'string' && vParam.includes('/uploads/')) {
+    const filename = vParam.substring(vParam.indexOf('/uploads/') + 9).split('?')[0];
+    const checkFile = path.join(uploadsDir, filename);
+    if (fs.existsSync(checkFile)) {
+      existsOnDisk = true;
+      vParam = `/uploads/${filename}`;
+    }
+  }
+  if (!vParam || !existsOnDisk || vParam.startsWith('blob:') || vParam.includes('default_idol.mp4')) {
+    const latestUrl = getLatestUploadMediaUrl();
+    if (latestUrl) {
+      vParam = latestUrl;
+    }
+  }
+  const soundParam = req.query.sound !== '0';
+  const fitParam = req.query.fit || 'cover';
+
+  const html = `<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <title>[AvaLive VIP PRO] - Cửa Sổ Live 9:16 (Window Capture)</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    html, body {
+      width: 100vw; height: 100vh;
+      margin: 0; padding: 0;
+      overflow: hidden;
+      background-color: #000;
+      display: flex; align-items: center; justify-content: center;
+      user-select: none; -webkit-user-select: none;
+      font-family: system-ui, -apple-system, sans-serif;
+    }
+    #stage {
+      position: relative;
+      width: 100%; height: 100%;
+      max-width: 100vw; max-height: 100vh;
+      aspect-ratio: 9 / 16;
+      display: flex; align-items: center; justify-content: center;
+      background: #000;
+      overflow: hidden;
+    }
+    video {
+      width: 100%; height: 100%;
+      object-fit: ${fitParam === 'contain' ? 'contain' : 'cover'};
+      background-color: #000;
+      display: block;
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
+      backface-visibility: hidden;
+      perspective: 1000px;
+    }
+    #controlsDock {
+      position: absolute;
+      top: 8px; left: 50%;
+      transform: translateX(-50%);
+      display: flex; align-items: center; gap: 8px;
+      background: rgba(0, 0, 0, 0.75);
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      padding: 6px 12px;
+      border-radius: 20px;
+      border: 1px solid rgba(6, 182, 212, 0.35);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
+      z-index: 40;
+      opacity: 0.85;
+      transition: opacity 0.25s ease, transform 0.25s ease;
+    }
+    #controlsDock.is-hidden {
+      display: none !important;
+    }
+    #controlsDock:hover { opacity: 1; }
+    .dock-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      font-size: 11px;
+      font-weight: bold;
+      padding: 4px 8px;
+      border-radius: 12px;
+      cursor: pointer;
+      outline: none;
+      transition: all 0.2s;
+    }
+    .dock-btn:hover { background: rgba(6, 182, 212, 0.4); border-color: #06b6d4; }
+    .dock-btn-hide {
+      background: rgba(239, 68, 68, 0.25) !important;
+      border-color: rgba(239, 68, 68, 0.45) !important;
+      color: #fca5a5 !important;
+      padding: 4px 10px !important;
+    }
+    .dock-btn-hide:hover {
+      background: rgba(239, 68, 68, 0.45) !important;
+      color: #fff !important;
+    }
+    #badge {
+      position: absolute; bottom: 8px; right: 8px;
+      background: rgba(0,0,0,0.6); color: #06b6d4;
+      font-family: monospace; font-size: 10px; font-weight: bold;
+      padding: 2px 6px; border-radius: 4px; pointer-events: none;
+      opacity: 0.7; z-index: 10;
+      transition: opacity 0.25s ease;
+    }
+    #badge.is-hidden {
+      display: none !important;
+    }
+    #btnRestoreIcon {
+      position: absolute; top: 8px; right: 8px;
+      z-index: 50; width: 28px; height: 28px;
+      border-radius: 50%;
+      background: rgba(0, 0, 0, 0.55);
+      border: 1px solid rgba(6, 182, 212, 0.4);
+      color: #06b6d4; font-size: 13px;
+      display: none; align-items: center; justify-content: center;
+      cursor: pointer; opacity: 0.25;
+      backdrop-filter: blur(4px);
+      -webkit-backdrop-filter: blur(4px);
+      transition: all 0.25s ease;
+    }
+    #btnRestoreIcon.is-visible {
+      display: flex !important;
+    }
+    #btnRestoreIcon:hover {
+      opacity: 1 !important;
+      transform: scale(1.15);
+    }
+  </style>
+  <script src="/socket.io/socket.io.js"></script>
+</head>
+<body>
+  <div id="stage">
+    <video 
+      id="videoPlayer" 
+      src="${vParam ? (vParam.startsWith('http') || vParam.startsWith('/') ? vParam : '/' + vParam) : ''}"
+      autoplay 
+      playsinline 
+      webkit-playsinline 
+      x5-video-player-type="h5" 
+      loop 
+      preload="auto" 
+      ${soundParam ? '' : 'muted'}
+      crossorigin="anonymous"
+      disableRemotePlayback
+    ></video>
+    
+    <div id="controlsDock">
+      <span style="font-size:10px; color:#10b981; font-weight:bold; display:flex; align-items:center; gap:4px;">
+        <span style="width:6px; height:6px; border-radius:50%; background:#10b981; display:inline-block;"></span>
+        WINDOW CAPTURE
+      </span>
+      <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập (Space)">⏸️ Dừng</button>
+      <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập (M)">${soundParam ? '🔊 Bật Tiếng' : '🔇 Tắt Tiếng'}</button>
+      <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa' : '📐 Tràn'}</button>
+      <button id="btnHideAll" class="dock-btn dock-btn-hide" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn Toàn Bộ (H)</button>
+    </div>
+
+    <button id="btnRestoreIcon" title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)">👁️</button>
+    <div id="badge">🔴 4K 60 FPS REALTIME v1.3.2</div>
+  </div>
+  <script>
+    (function() {
+      const vid = document.getElementById('videoPlayer');
+      const badge = document.getElementById('badge');
+      const dock = document.getElementById('controlsDock');
+      const btnRestore = document.getElementById('btnRestoreIcon');
+      const btnPlayPause = document.getElementById('btnPlayPause');
+      const btnMuteUnmute = document.getElementById('btnMuteUnmute');
+      const btnFitToggle = document.getElementById('btnFitToggle');
+      const btnHideAll = document.getElementById('btnHideAll');
+
+      let currentSrc = ${JSON.stringify(vParam)};
+      let isStreamUserPaused = false;
+      let targetMuted = ${soundParam ? 'false' : 'true'};
+      let currentFit = ${JSON.stringify(fitParam)};
+      let isDockHidden = false;
+
+      try {
+        isDockHidden = localStorage.getItem('avalive_window_capture_dock_hidden') === 'true';
+      } catch (e) {}
+
+      function applyDockVisibility() {
+        if (isDockHidden) {
+          if (dock) dock.classList.add('is-hidden');
+          if (badge) badge.classList.add('is-hidden');
+          if (btnRestore) btnRestore.classList.add('is-visible');
+        } else {
+          if (dock) dock.classList.remove('is-hidden');
+          if (badge) badge.classList.remove('is-hidden');
+          if (btnRestore) btnRestore.classList.remove('is-visible');
+        }
+      }
+      applyDockVisibility();
+
+      function toggleHideAll(forceVal) {
+        isDockHidden = typeof forceVal === 'boolean' ? forceVal : !isDockHidden;
+        try {
+          localStorage.setItem('avalive_window_capture_dock_hidden', String(isDockHidden));
+        } catch(e) {}
+        applyDockVisibility();
+      }
+
+      if (btnHideAll) {
+        btnHideAll.onclick = function() { toggleHideAll(true); };
+      }
+      if (btnRestore) {
+        btnRestore.onclick = function() { toggleHideAll(false); };
+      }
+
+      setTimeout(function() { if (badge) badge.style.opacity = '0.2'; }, 6000);
+
+      function updateDockUI() {
+        if (btnPlayPause) {
+          btnPlayPause.innerHTML = vid.paused ? '▶️ Phát' : '⏸️ Dừng';
+        }
+        if (btnMuteUnmute) {
+          btnMuteUnmute.innerHTML = vid.muted ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng';
+        }
+        if (btnFitToggle) {
+          btnFitToggle.innerHTML = currentFit === 'cover' ? '📐 Tràn' : '📐 Vừa';
+        }
+      }
+
+      if (btnPlayPause) {
+        btnPlayPause.onclick = function() {
+          if (vid.paused) {
+            isStreamUserPaused = false;
+            vid.play().catch(function() {});
+          } else {
+            isStreamUserPaused = true;
+            vid.pause();
+          }
+          updateDockUI();
+        };
+      }
+
+      if (btnMuteUnmute) {
+        btnMuteUnmute.onclick = function() {
+          vid.muted = !vid.muted;
+          targetMuted = vid.muted;
+          updateDockUI();
+        };
+      }
+
+      if (btnFitToggle) {
+        btnFitToggle.onclick = function() {
+          currentFit = currentFit === 'cover' ? 'contain' : 'cover';
+          vid.style.objectFit = currentFit;
+          updateDockUI();
+        };
+      }
+
+      window.addEventListener('keydown', function(e) {
+        if (['input', 'textarea', 'select'].includes(document.activeElement?.tagName?.toLowerCase())) return;
+        if (e.code === 'Space') {
+          e.preventDefault();
+          if (btnPlayPause) btnPlayPause.click();
+        } else if (e.key === 'm' || e.key === 'M') {
+          e.preventDefault();
+          if (btnMuteUnmute) btnMuteUnmute.click();
+        } else if (e.key === 'h' || e.key === 'H') {
+          e.preventDefault();
+          toggleHideAll();
+        }
+      });
+
+      function isSameMedia(a, b) {
+        if (!a || !b) return false;
+        if (a === b) return true;
+        const cleanA = a.split('?')[0].split('#')[0];
+        const cleanB = b.split('?')[0].split('#')[0];
+        return cleanA === cleanB || cleanA.endsWith(cleanB) || cleanB.endsWith(cleanA);
+      }
+
+      function loadAndPlay(src) {
+        if (!src) return;
+        let cleanSrc = src;
+        if (cleanSrc.startsWith('http://') || cleanSrc.startsWith('https://')) {
+          try {
+            const u = new URL(cleanSrc);
+            cleanSrc = u.pathname + u.search;
+          } catch(e) {}
+        }
+        if (!cleanSrc.startsWith('/') && !cleanSrc.startsWith('http')) {
+          cleanSrc = '/' + cleanSrc;
+        }
+
+        if (isSameMedia(vid.src, cleanSrc)) return;
+
+        currentSrc = cleanSrc;
+        vid.src = cleanSrc;
+        vid.load();
+        if (!isStreamUserPaused) {
+          vid.muted = targetMuted;
+          vid.play().catch(function() {
+            vid.muted = true;
+            vid.play().catch(function() {});
+          });
+        }
+        updateDockUI();
+      }
+
+      vid.addEventListener('loadedmetadata', function() {
+        if (!isStreamUserPaused) {
+          vid.muted = targetMuted;
+          vid.play().catch(function() {});
+        }
+        updateDockUI();
+      });
+
+      vid.addEventListener('play', updateDockUI);
+      vid.addEventListener('pause', updateDockUI);
+
+      try {
+        const socket = io(window.location.origin, {
+          transports: ['websocket', 'polling'],
+          reconnection: true
+        });
+
+        socket.on('connect', function() {
+          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v1.3.2';
+          socket.emit('REQUEST_MASTER_LIVE_STATE');
+        });
+
+        socket.on('disconnect', function() {
+          if (badge) badge.innerText = '🟡 RECONNECTING...';
+        });
+
+        socket.on('MASTER_LIVE_STATE_UPDATE', function(data) {
+          if (!data) return;
+          if (data.mediaUrl && !isSameMedia(vid.src, data.mediaUrl)) {
+            loadAndPlay(data.mediaUrl);
+          }
+          if (data.videoPlaybackEvent === 'pause') {
+            isStreamUserPaused = true;
+            vid.pause();
+          } else if (data.videoPlaybackEvent === 'play' && isStreamUserPaused) {
+            isStreamUserPaused = false;
+            vid.play().catch(function() {});
+          }
+        });
+
+        if (typeof BroadcastChannel !== 'undefined') {
+          const bc = new BroadcastChannel('avalive_master_live_stream');
+          bc.onmessage = function(ev) {
+            if (!ev.data) return;
+            if ((ev.data.type === 'GLOBAL_MEDIA_CHANGE' || ev.data.type === 'MASTER_MEDIA_CHANGE') && ev.data.mediaUrl && !isSameMedia(vid.src, ev.data.mediaUrl)) {
+              loadAndPlay(ev.data.mediaUrl);
+            }
+          };
+        }
+      } catch (err) {
+        console.warn('Socket connect error:', err);
+      }
+    })();
+  </script>
+</body>
+</html>`;
+
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.send(html);
+});
 app.get('/api/health', (req, res) => {
   res.json({
     status: 'ok',
@@ -1133,7 +1516,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '1.3.1';
+  let ver = '1.3.2';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1171,7 +1554,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '1.3.1';
+  let ver = '1.3.2';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;

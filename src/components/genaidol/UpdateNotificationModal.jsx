@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.3.1';
+export const APP_VERSION = '1.3.2';
 export const RELEASE_DATE = '14/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🛡️ Khôi Phục Nguyên Bản Cấu Trúc Phát Sóng Chuẩn & Khóa Chặt 4K 60 FPS',
-    description: 'Khôi phục hoàn toàn cấu trúc điều khiển chuẩn ban đầu (commit 1ad7dc4), đảm bảo phát video & âm thanh siêu mượt, không giật lag, không đứng hình.'
+    title: '🖥️ Tách Riêng 2 Tab Code Độc Lập: Window Capture & Đường Link Phát Online',
+    description: 'Tách hoàn toàn Window Capture (/window-capture) và Đường Link Live (/live-stream) thành 2 tab code riêng biệt độc lập 100%, không chồng chéo, không ảnh hưởng lẫn nhau khi nâng cấp.'
   },
   {
-    title: '⚡ Stream Siêu Mượt 4K 60 FPS Suốt Nhiều Giờ Liền',
-    description: 'Nâng cấp bộ đệm 8MB, kích hoạt TCP NoDelay và khử trễ phần cứng GPU Hardware Acceleration 100%, bảo đảm phát sóng liên tục không bị giật lag hay đứng hình.'
+    title: '✕ Nút Ẩn Toàn Bộ Tab & Nút Trên Giao Diện Video Window Capture (Phím tắt: H)',
+    description: 'Bổ sung nút [✕ Ẩn Toàn Bộ (H)] trên Window Capture, cho phép ẩn sạch 100% tất cả các nút tắt/mở âm thanh, phát/dừng, mang lại khung hình video sạch hoàn toàn cho TikTok Live Studio & OBS.'
   },
   {
-    title: '📐 Khóa Chặt Khung Hình Dọc 1080x1920 (9:16) Cho TikTok Live Studio',
-    description: 'Chuẩn hóa tỷ lệ khung hình 9:16 vừa khít canvas dọc TikTok Live Studio và OBS, video sắc nét 4K không méo hình, không viền đen.'
+    title: '🔒 Khóa Chặt Luồng Video 4K 60 FPS & Âm Thanh Siêu Mượt Suốt Nhiều Giờ',
+    description: 'Cả Window Capture và Đường Link Online đều được khóa chặt chuẩn 4K 60 FPS mượt mà, chống đứng hình, chống giật lag, giữ trọn vẹn dữ liệu gốc.'
   }
 ];
 

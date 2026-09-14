@@ -542,7 +542,7 @@ export default function LiveStreamStandalonePlayer() {
           zIndex: 10
         }}
       >
-        🔴 4K 60 FPS REALTIME v1.3.1
+        🔴 4K 60 FPS REALTIME v1.3.2
       </div>
     </div>
   );
