@@ -2,25 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.2.8';
+export const APP_VERSION = '1.2.9';
 export const RELEASE_DATE = '14/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '💎 Bản Cập Nhật v1.2.8 - Khôi Phục & Đồng Bộ Giao Diện Hoàn Chỉnh',
-    description: 'Khôi phục đầy đủ nhận diện logo thương hiệu độc quyền trong cửa sổ Hồ Sơ Người Dùng & Đăng Nhập Google, đồng bộ nhận diện chuẩn xác nhất.'
+    title: '🛡️ Khắc Phục Triệt Để Màn Hình Màu Đen & Khóa Chặt Luồng Video 4K 60 FPS',
+    description: 'Sửa dứt điểm lỗi màn hình đen khi truyền URL đầy đủ vào route /live-stream, kích hoạt tải và phát video tức thì 0ms ngay khi trang tải xong mà không phụ thuộc độ trễ kết nối.'
   },
   {
-    title: '⚡ Tốc Độ Hiển Thị Video Tức Thì 0MS (Instant Display Zero-Delay)',
-    description: 'Tối ưu hóa toàn diện luồng phát Window Capture và Link Online HTTPS, đồng bộ trực tiếp video từ phần mềm sang OBS & TikTok Live Studio ngay trong 0ms khi chọn hoặc phát video.'
+    title: '⚡ Stream Siêu Mượt 4K 60 FPS Suốt Nhiều Giờ Liền',
+    description: 'Nâng cấp bộ đệm 8MB, kích hoạt TCP NoDelay và khử trễ phần cứng GPU Hardware Acceleration 100%, bảo đảm phát sóng liên tục không bị giật lag hay đứng hình.'
   },
   {
-    title: '📐 Chuẩn Khung Hình Tỷ Lệ 9:16 (1080 x 1920) Dọc Chuẩn TikTok Live Studio',
-    description: 'Thiết kế chuẩn khung hình 1080x1920 dọc cho luồng Browser Source, hiển thị trọn vẹn 100% diện tích không méo hình, không viền đen, khớp hoàn hảo canvas TikTok Live Studio.'
-  },
-  {
-    title: '🚀 Khử Triệt Để Giật Lag & Đứng Hình - Stream 4K 60 FPS Siêu Mượt Mà',
-    description: 'Nâng cấp bộ đệm stream chunk 8MB siêu tốc kết hợp TCP setNoDelay, tối ưu hóa phần cứng GPU Hardware Acceleration 100% cho video 4K sắc nét chân thực và chuyển động siêu mượt.'
+    title: '📐 Khóa Chặt Khung Hình Dọc 1080x1920 (9:16) Cho TikTok Live Studio',
+    description: 'Chuẩn hóa tỷ lệ khung hình 9:16 vừa khít canvas dọc TikTok Live Studio và OBS, video sắc nét 4K không méo hình, không viền đen.'
   }
 ];
 

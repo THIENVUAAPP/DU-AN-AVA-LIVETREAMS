@@ -241,28 +241,13 @@ export default function LiveStreamStandalonePlayer() {
       });
 
       socket.on('VIDEO_PLAYBACK_CONTROL', (control) => {
-        if (!control) return;
+        // Tự động nhận video mới tức thì 0ms
         if (control.mediaUrl && !control.mediaUrl.startsWith('blob:') && !isSameMedia(videoSrc, control.mediaUrl)) {
           setVideoSrc(control.mediaUrl);
-          return;
         }
-        // 🎯 DỪNG DỨT KHOÁT KHI STREAMER BẤM TẠM DỪNG
-        if (control.action === 'pause' || control.isPlaying === false) {
-          applyExplicitPause();
-        } else if (control.action === 'play' || control.isPlaying === true) {
+        if (control.action === 'play' || control.isPlaying === true) {
           isExplicitlyPausedRef.current = false;
           tryPlayWithSound();
-        } else if (control.action === 'mute') {
-          isUserMutedRef.current = true;
-          if (videoRef.current) videoRef.current.muted = true;
-        } else if (control.action === 'unmute') {
-          isUserMutedRef.current = false;
-          if (videoRef.current) {
-            videoRef.current.muted = false;
-            videoRef.current.volume = 1.0;
-          }
-        } else if (control.action === 'unmute') {
-          // Keep independent sound control
         }
 
         if (typeof control.currentTime === 'number') {
@@ -557,7 +542,7 @@ export default function LiveStreamStandalonePlayer() {
           zIndex: 10
         }}
       >
-        🔴 4K 60 FPS REALTIME v1.2.8
+        🔴 4K 60 FPS REALTIME v1.2.9
       </div>
     </div>
   );

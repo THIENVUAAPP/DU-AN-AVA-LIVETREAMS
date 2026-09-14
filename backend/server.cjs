@@ -591,10 +591,25 @@ app.post('/api/upload-media', upload.single('file'), (req, res) => {
 // ============================================================
 app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
   let vParam = req.query.v || currentMasterLiveState.mediaUrl || '';
+  if (vParam && typeof vParam === 'string') {
+    if (vParam.startsWith('http://') || vParam.startsWith('https://')) {
+      try {
+        const u = new URL(vParam);
+        vParam = u.pathname + u.search;
+      } catch(e) {}
+    }
+    if (!vParam.startsWith('/') && !vParam.startsWith('http')) {
+      vParam = '/' + vParam;
+    }
+  }
   let existsOnDisk = false;
-  if (vParam && typeof vParam === 'string' && vParam.startsWith('/uploads/')) {
-    const checkFile = path.join(uploadsDir, vParam.replace(/^\/uploads\//, ''));
-    if (fs.existsSync(checkFile)) existsOnDisk = true;
+  if (vParam && typeof vParam === 'string' && vParam.includes('/uploads/')) {
+    const filename = vParam.substring(vParam.indexOf('/uploads/') + 9).split('?')[0];
+    const checkFile = path.join(uploadsDir, filename);
+    if (fs.existsSync(checkFile)) {
+      existsOnDisk = true;
+      vParam = `/uploads/${filename}`;
+    }
   }
   if (!vParam || !existsOnDisk || vParam.startsWith('blob:') || vParam.includes('default_idol.mp4')) {
     const latestUrl = getLatestUploadMediaUrl();
@@ -679,7 +694,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
   <div id="stage">
     <video 
       id="videoPlayer" 
-      src="${vParam ? (vParam.startsWith('/') ? vParam : '/' + vParam) : ''}"
+      src="${vParam ? (vParam.startsWith('http') || vParam.startsWith('/') ? vParam : '/' + vParam) : ''}"
       autoplay 
       playsinline 
       webkit-playsinline 
@@ -695,7 +710,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v1.2.8</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v1.2.9</div>
   </div>
   <script>
     (function() {
@@ -972,7 +987,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         }, 10000);
 
         socket.on('connect', function() {
-          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v1.2.8';
+          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v1.2.9';
           socket.emit('REQUEST_MASTER_LIVE_STATE');
         });
 
@@ -1118,7 +1133,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '1.2.8';
+  let ver = '1.2.9';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1156,7 +1171,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '1.2.8';
+  let ver = '1.2.9';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;

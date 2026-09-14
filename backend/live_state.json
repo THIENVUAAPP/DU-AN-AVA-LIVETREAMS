@@ -9,17 +9,17 @@
   "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1789356641065,
+  "updatedAt": 1789357288574,
   "flvUrl": null,
   "isConnected": false,
   "type": "MASTER_LIVE_STATE_UPDATE",
   "currentLang": "vi",
   "selectedCharacter": "custom_1789044810661",
   "isUserExplicitMediaLocked": true,
-  "videoCurrentTime": 0,
-  "isVideoAudioMuted": true,
-  "videoVolume": 0,
+  "videoCurrentTime": 0.010531,
+  "isVideoAudioMuted": false,
+  "videoVolume": 1,
   "clearMedia": false,
-  "tunnelUrl": "https://expects-circuit-escape-oldest.trycloudflare.com",
-  "isMuted": true
+  "tunnelUrl": "https://edge-theories-wrist-senior.trycloudflare.com",
+  "isMuted": false
 }
