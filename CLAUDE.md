@@ -989,6 +989,13 @@ Im lặng bỏ qua 3 câu này = vi phạm Mục 0.7 và Mục 1.
 | **1. Loại Bỏ Logo Trùng Lặp Trong Cửa Sổ Hồ Sơ Người Dùng / Đăng Nhập** | `src/components/genaidol/DesktopAppUI.jsx` | ✅ PASS 100% | - Loại bỏ khối logo AvaLive phụ ở phía dưới trong popup Hồ Sơ Người Dùng / Đăng Nhập Google, chỉ giữ lại header nhận diện thương hiệu tinh gọn phía trên.<br>- Giúp bố cục modal thông thoáng, liền mạch, chuyên nghiệp và trực quan hơn cho người dùng. |
 | **2. Đóng Gói Và Tự Động Phát Hành Release v1.2.7 Standalone Lên GitHub** | `package.json`, `src/components/genaidol/UpdateNotificationModal.jsx`, `src/components/genaidol/LiveStreamStandalonePlayer.jsx`, `src/components/UniversalMasterOverlayModal.jsx`, `src/components/genaidol/CleanLiveOverlay.jsx`, `api/download.js`, `backend/server.cjs`, `CLAUDE.md` | ✅ PASS 100% | - Tăng bậc phiên bản lên v1.2.7 theo đúng Workflow Rule.<br>- Đóng gói bản ZIP độc lập `AvaLive_VIP_PRO_Windows_v1.2.7.zip` và `AvaLive_VIP_PRO_Mac_v1.2.7.zip`.<br>- Tự động tạo GitHub Release `v1.2.7` và tải các file ZIP lên GitHub Releases. |
 
+### 🚀 70. Nhật Ký Bản Cập Nhật v1.2.8 (Khôi Phục Giao Diện Nhận Diện Logo & Đồng Bộ Toàn Diện v1.2.8)
+| Hạng Mục Cải Tiến | File Thay Đổi | Trạng Thái | Chi Tiết Kỹ Thuật |
+| :--- | :--- | :---: | :--- |
+| **1. Khôi Phục Đầy Đủ Khối Nhận Diện Logo AvaLive Trong Cửa Sổ Hồ Sơ / Đăng Nhập** | `src/components/genaidol/DesktopAppUI.jsx` | ✅ PASS 100% | - Khôi phục toàn bộ khối nhận diện thương hiệu logo AvaLive 3D Neon phát sáng trong modal Đăng Nhập Google / Hồ Sơ Người Dùng theo đúng cấu hình yêu cầu.<br>- Đảm bảo giao diện nhất quán, trực quan, chuyên nghiệp và đầy đủ nhận diện của phần mềm. |
+| **2. Đóng Gói Và Tự Động Phát Hành Release v1.2.8 Standalone Lên GitHub** | `package.json`, `src/components/genaidol/UpdateNotificationModal.jsx`, `src/components/genaidol/LiveStreamStandalonePlayer.jsx`, `src/components/UniversalMasterOverlayModal.jsx`, `src/components/genaidol/CleanLiveOverlay.jsx`, `api/download.js`, `backend/server.cjs`, `CLAUDE.md` | ✅ PASS 100% | - Tăng bậc phiên bản lên v1.2.8 theo đúng Workflow Rule.<br>- Đóng gói bản ZIP độc lập `AvaLive_VIP_PRO_Windows_v1.2.8.zip` và `AvaLive_VIP_PRO_Mac_v1.2.8.zip`.<br>- Tự động tạo GitHub Release `v1.2.8` và tải các file ZIP lên GitHub Releases. |
+
+
 
 
 

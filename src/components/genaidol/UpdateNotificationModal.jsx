@@ -2,21 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.2.7';
+export const APP_VERSION = '1.2.8';
 export const RELEASE_DATE = '14/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '✨ Loại Bỏ Logo Trùng Lặp - Tối Ưu Giao Diện Hồ Sơ Người Dùng',
-    description: 'Loại bỏ hoàn toàn logo trùng lặp bên dưới trong cửa sổ Hồ Sơ Người Dùng / Đăng Nhập Google giúp bố cục thoáng đãng, sang trọng và tinh tế hơn.'
+    title: '💎 Bản Cập Nhật v1.2.8 - Khôi Phục & Đồng Bộ Giao Diện Hoàn Chỉnh',
+    description: 'Khôi phục đầy đủ nhận diện logo thương hiệu độc quyền trong cửa sổ Hồ Sơ Người Dùng & Đăng Nhập Google, đồng bộ nhận diện chuẩn xác nhất.'
   },
   {
-    title: '⚡ Tốc Độ Phát Video Tức Thì 0MS & Chuẩn Khung Hình 9:16',
-    description: 'Giữ vững cơ chế phát Video tức thì 0ms cho Window Capture & Browser Source TikTok Live Studio cùng chuẩn khung hình dọc 1080x1920 sắc nét 4K 60 FPS không giật lag.'
+    title: '⚡ Tốc Độ Hiển Thị Video Tức Thì 0MS (Instant Display Zero-Delay)',
+    description: 'Tối ưu hóa toàn diện luồng phát Window Capture và Link Online HTTPS, đồng bộ trực tiếp video từ phần mềm sang OBS & TikTok Live Studio ngay trong 0ms khi chọn hoặc phát video.'
   },
   {
-    title: '🚀 Nâng Cao Tốc Độ Đồng Bộ & Bảo Mật Phiên Kết Nối',
-    description: 'Tối ưu hóa hiệu suất toàn diện, nâng cao tốc độ đồng bộ dữ liệu tài khoản và bảo mật phiên kết nối mượt mà tuyệt đối.'
+    title: '📐 Chuẩn Khung Hình Tỷ Lệ 9:16 (1080 x 1920) Dọc Chuẩn TikTok Live Studio',
+    description: 'Thiết kế chuẩn khung hình 1080x1920 dọc cho luồng Browser Source, hiển thị trọn vẹn 100% diện tích không méo hình, không viền đen, khớp hoàn hảo canvas TikTok Live Studio.'
+  },
+  {
+    title: '🚀 Khử Triệt Để Giật Lag & Đứng Hình - Stream 4K 60 FPS Siêu Mượt Mà',
+    description: 'Nâng cấp bộ đệm stream chunk 8MB siêu tốc kết hợp TCP setNoDelay, tối ưu hóa phần cứng GPU Hardware Acceleration 100% cho video 4K sắc nét chân thực và chuyển động siêu mượt.'
   }
 ];
 

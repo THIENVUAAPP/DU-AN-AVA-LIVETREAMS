@@ -9,7 +9,7 @@
   "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1789354345409,
+  "updatedAt": 1789356641065,
   "flvUrl": null,
   "isConnected": false,
   "type": "MASTER_LIVE_STATE_UPDATE",
@@ -17,9 +17,9 @@
   "selectedCharacter": "custom_1789044810661",
   "isUserExplicitMediaLocked": true,
   "videoCurrentTime": 0,
-  "isVideoAudioMuted": false,
-  "videoVolume": 1,
+  "isVideoAudioMuted": true,
+  "videoVolume": 0,
   "clearMedia": false,
-  "tunnelUrl": "https://estimate-seems-liverpool-booth.trycloudflare.com",
-  "isMuted": false
+  "tunnelUrl": "https://expects-circuit-escape-oldest.trycloudflare.com",
+  "isMuted": true
 }
