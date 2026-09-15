@@ -110,15 +110,10 @@ for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr ":3001" ^| findstr "LI
     taskkill /F /PID %%a >nul 2>nul
 )
 
-if exist "1_KHOI_DONG_AVALIVE.exe" (
-    start "" "1_KHOI_DONG_AVALIVE.exe"
-    exit /b
-)
-
-if exist "system\\node_portable\\node.exe" (
-    powershell -WindowStyle Hidden -Command "Start-Process -FilePath '%~dp0system\\node_portable\\node.exe' -ArgumentList '%~dp0system\\core.cjs' -WorkingDirectory '%~dp0system'"
+if exist "%~dp0system\\node_portable\\node.exe" (
+    powershell -WindowStyle Hidden -Command "Start-Process -FilePath '%~dp0system\\node_portable\\node.exe' -ArgumentList 'core.cjs' -WorkingDirectory '%~dp0system'"
 ) else (
-    powershell -WindowStyle Hidden -Command "Start-Process -FilePath 'node' -ArgumentList '%~dp0system\\core.cjs' -WorkingDirectory '%~dp0system'"
+    powershell -WindowStyle Hidden -Command "Start-Process -FilePath 'node' -ArgumentList 'core.cjs' -WorkingDirectory '%~dp0system'"
 )
 
 timeout /t 2 /nobreak >nul 2>nul
@@ -139,6 +134,10 @@ if exist "%ProgramFiles%\\Google\\Chrome\\Application\\chrome.exe" (
 )
 if exist "%ProgramFiles(x86)%\\Google\\Chrome\\Application\\chrome.exe" (
     start "" "%ProgramFiles(x86)%\\Google\\Chrome\\Application\\chrome.exe" --app=%URL%
+    exit /b
+)
+if exist "%LOCALAPPDATA%\\Google\\Chrome\\Application\\chrome.exe" (
+    start "" "%LOCALAPPDATA%\\Google\\Chrome\\Application\\chrome.exe" --app=%URL%
     exit /b
 )
 
@@ -180,13 +179,11 @@ if (fs.existsSync(winCloudflaredSrc)) {
 console.log('   -> Đang chuẩn bị Native Windows Launcher (.exe duy nhất)...');
 const cachedExe = path.join(rootDir, 'AvaLive_Studio.exe');
 
-if (!fs.existsSync(cachedExe)) {
-  console.log('   -> Đang biên dịch AvaLive_Studio.exe từ scripts/win_launcher_template.cjs...');
-  execSync(`npx pkg scripts/win_launcher_template.cjs --target node18-win-x64 --output "${cachedExe}"`, {
-    cwd: rootDir,
-    stdio: 'inherit'
-  });
-}
+console.log('   -> Đang biên dịch AvaLive_Studio.exe mới nhất từ scripts/win_launcher_template.cjs...');
+execSync(`npx pkg scripts/win_launcher_template.cjs --target node18-win-x64 --output "${cachedExe}"`, {
+  cwd: rootDir,
+  stdio: 'inherit'
+});
 
 // File EXE bắt đầu bằng 1_ để luôn xuất hiện trên cùng khi giải nén (Chỉ 1 file duy nhất)
 fs.copyFileSync(cachedExe, path.join(winStaging, '1_KHOI_DONG_AVALIVE.exe'));

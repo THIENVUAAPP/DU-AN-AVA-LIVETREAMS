@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.0.3';
+export const APP_VERSION = '3.0.4';
 export const RELEASE_DATE = '15/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật Hotfix v3.0.4 - Tự Động Khởi Động Trực Tiếp & Khắc Phục Triệt Để 100% Khởi Động Giao Diện Windows/Mac',
+    description: 'Nâng cấp toàn diện bộ khởi động 1_CLICK_CHAY_NGAY.bat & AvaLive_Studio.exe trên Windows: khởi động trực tiếp máy chủ Node Portable siêu nhẹ, tự động phát hiện cổng và mở trình duyệt App Mode ngay tức thì 0ms mà không qua trung gian; loại bỏ triệt để lỗi ReferenceError và xung đột module.'
+  },
   {
     title: '⚡ Bản Cập Nhật Hotfix v3.0.3 - Khắc Phục Triệt Để Lỗi Khởi Động Giao Diện & Tối Ưu Tốc Độ 0ms',
     description: 'Chuyển đổi toàn bộ thư viện phân tích tài liệu (PDF & Word Parser) sang cơ chế Lazy-Loading trên nền ES2022 Native, loại bỏ hoàn toàn lỗi ReferenceError khi giải nén mở phần mềm, đảm bảo giao diện chính khởi động tức thì 100% mượt mà.'

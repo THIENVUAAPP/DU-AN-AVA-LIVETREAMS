@@ -14,7 +14,9 @@ class AutoPinProductService {
     this.lastPinnedTime = 0;
     this.rotationTimer = null;
     this.currentRotationIndex = 0;
-    this.init();
+    if (typeof window !== 'undefined') {
+      setTimeout(() => this.init(), 0);
+    }
   }
 
   init() {
