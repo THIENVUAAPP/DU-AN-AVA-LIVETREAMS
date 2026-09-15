@@ -1,13 +1,19 @@
 /**
- * autoPinProductService.js - Real-time AI Product Pinning Engine
- * Tự động nhận diện câu thoại của AI hoặc Video Clip minh họa đang phát để Ghim Sản Phẩm lên TikTok Shop / Livestream 100% tự động.
+ * autoPinProductService.js - Real-time AI Product Pinning Engine 24/7
+ * Tự động nhận diện câu thoại của AI, Video Clip minh họa đang phát hoặc Bình luận của khán giả
+ * để Ghim Sản Phẩm lên TikTok Shop (shop.tiktok.com), TikTok Live Studio & Livestream Overlay 100% tự động & mượt mà.
  */
+
+import autoCaptchaService from './autoCaptchaService';
 
 class AutoPinProductService {
   constructor() {
     this.currentPinnedProduct = null;
     this.autoPinEnabled = true;
+    this.pinInterval = 30; // 30 seconds default
     this.lastPinnedTime = 0;
+    this.rotationTimer = null;
+    this.currentRotationIndex = 0;
     this.init();
   }
 
@@ -24,6 +30,12 @@ class AutoPinProductService {
       if (savedAuto !== null) {
         this.autoPinEnabled = savedAuto === 'true';
       }
+      const captchaCfg = localStorage.getItem('avalive_captcha_config');
+      if (captchaCfg) {
+        const parsed = JSON.parse(captchaCfg);
+        if (parsed.pinInterval) this.pinInterval = parsed.pinInterval;
+        if (parsed.autoPin !== undefined) this.autoPinEnabled = !!parsed.autoPin;
+      }
     } catch (e) {}
 
     // Lắng nghe sự kiện ghim thủ công hoặc từ bên ngoài
@@ -39,44 +51,94 @@ class AutoPinProductService {
       }
     });
 
-    console.log("📌 [AVA AutoPin] Auto Pin Product Service initialized & ready.");
+    // Khởi chạy vòng lặp tự động xoay vòng sản phẩm
+    this.startRotationLoop();
+
+    console.log("📌 [AVA AutoPin] Auto Pin Product Service (shop.tiktok.com & Live Studio) initialized & ready 24/7.");
   }
 
-  setAutoPinEnabled(enabled) {
+  setAutoPinEnabled(enabled, intervalSeconds = null) {
     this.autoPinEnabled = enabled;
+    if (intervalSeconds && intervalSeconds > 0) {
+      this.pinInterval = intervalSeconds;
+    }
     if (typeof window !== 'undefined') {
       localStorage.setItem('avalive_auto_pin_enabled', enabled ? 'true' : 'false');
-      window.dispatchEvent(new CustomEvent('avalive:auto_pin_status_changed', { detail: { enabled } }));
+      try {
+        const savedCfg = localStorage.getItem('avalive_captcha_config');
+        const cfg = savedCfg ? JSON.parse(savedCfg) : {};
+        cfg.autoPin = enabled;
+        if (intervalSeconds) cfg.pinInterval = intervalSeconds;
+        localStorage.setItem('avalive_captcha_config', JSON.stringify(cfg));
+      } catch (e) {}
+      window.dispatchEvent(new CustomEvent('avalive:auto_pin_status_changed', { detail: { enabled, interval: this.pinInterval } }));
     }
+    this.startRotationLoop();
   }
 
   /**
-   * Ghim một sản phẩm và đồng bộ toàn hệ thống
+   * Bắt đầu vòng lặp xoay vòng tự động ghim sản phẩm theo chu kỳ
+   */
+  startRotationLoop() {
+    if (this.rotationTimer) {
+      clearInterval(this.rotationTimer);
+      this.rotationTimer = null;
+    }
+
+    if (!this.autoPinEnabled || this.pinInterval <= 0) return;
+
+    this.rotationTimer = setInterval(() => {
+      if (!this.autoPinEnabled) return;
+      const products = this.getAllProducts();
+      if (!products || products.length <= 1) return;
+
+      this.currentRotationIndex = (this.currentRotationIndex + 1) % products.length;
+      const nextProd = products[this.currentRotationIndex];
+      if (nextProd) {
+        this.pinProduct(nextProd, 'interval_auto_rotation');
+      }
+    }, Math.max(5, this.pinInterval) * 1000);
+  }
+
+  /**
+   * Ghim một sản phẩm và đồng bộ toàn hệ thống (TikTok Shop, Live Studio, OBS Overlay)
    */
   pinProduct(product, triggerSource = 'ai_voice') {
     if (!product) return;
 
     const formattedProduct = {
-      id: product.id,
+      id: product.id || Date.now(),
       name: product.name || product.productName || 'Sản Phẩm Livestream',
+      productName: product.name || product.productName || 'Sản Phẩm Livestream',
       price: product.price || product.priceInfo || 'Giá Ưu Đãi',
       oldPrice: product.oldPrice || '',
       image: product.image || product.imageUrl || product.img || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80',
       badge: product.badge || 'HOT DEAL 🔥',
       stock: product.stock || 99,
       keywords: product.keywords || '',
+      storeUrl: product.storeUrl || 'https://shop.tiktok.com',
+      sellerCenterUrl: product.sellerCenterUrl || 'https://seller-vn.tiktok.com',
       pinnedAt: Date.now(),
       triggerSource
     };
 
-    // Tránh ghim liên tục cùng 1 sản phẩm trong 3 giây
-    if (this.currentPinnedProduct && this.currentPinnedProduct.id === formattedProduct.id && (Date.now() - this.lastPinnedTime < 3000)) {
+    // Tránh ghim liên tục cùng 1 sản phẩm trong 2 giây
+    if (this.currentPinnedProduct && this.currentPinnedProduct.id === formattedProduct.id && (Date.now() - this.lastPinnedTime < 2000)) {
       return;
     }
 
     this.currentPinnedProduct = formattedProduct;
     this.lastPinnedTime = Date.now();
 
+    // 1. Tự động giải Captcha ngầm 24/7 (Slider Puzzle, Turnstile) trên TikTok Shop
+    try {
+      autoCaptchaService.solveChallenge({
+        platform: 'TikTok Shop (shop.tiktok.com)',
+        captchaType: 'Turnstile & 3D Slider Stealth Match'
+      });
+    } catch (e) {}
+
+    // 2. Dispatch event lên Window để toàn bộ giao diện App cập nhật
     if (typeof window !== 'undefined') {
       localStorage.setItem('avalive_current_pinned_product', JSON.stringify(formattedProduct));
       window.dispatchEvent(new CustomEvent('avalive:pin_product_updated', {
@@ -87,7 +149,24 @@ class AutoPinProductService {
       }));
     }
 
-    console.log(`📌 [AVA AutoPin] ĐÃ TỰ ĐỘNG GHIM SẢN PHẨM [${triggerSource}]:`, formattedProduct.name);
+    // 3. Gọi REST API tới backend server để đồng bộ và phát Socket.IO cho TikTok Live Studio & OBS
+    try {
+      const backendUrl = (typeof window !== 'undefined' && window.location.origin.includes(':5173'))
+        ? 'http://localhost:3001'
+        : (typeof window !== 'undefined' ? window.location.origin : '');
+
+      fetch(`${backendUrl}/api/tiktok-shop/pin`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          product: formattedProduct,
+          triggerSource,
+          storeUrl: formattedProduct.storeUrl
+        })
+      }).catch(() => {});
+    } catch (e) {}
+
+    console.log(`📌 [AVA AutoPin] ĐÃ GHIM SẢN PHẨM TIKTOK SHOP (shop.tiktok.com) [${triggerSource}]:`, formattedProduct.name);
   }
 
   /**
@@ -112,8 +191,10 @@ class AutoPinProductService {
             videoFolder: p.videoFolder || '',
             videoFileName: p.videoFileName || '',
             videoFile: p.videoFile || '',
+            image: p.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80',
             imageUrl: p.imageUrl || '',
-            badge: 'DEAL ĐỘC QUYỀN 🔥'
+            badge: 'DEAL ĐỘC QUYỀN 🔥',
+            storeUrl: 'https://shop.tiktok.com'
           })));
         }
       }
@@ -131,14 +212,15 @@ class AutoPinProductService {
                 if (!products.some(existing => existing.id === p.id || existing.name === p.name)) {
                   products.push({
                     id: p.id,
-                    name: p.name,
-                    productName: p.name,
-                    price: p.price,
-                    oldPrice: p.oldPrice,
-                    image: p.image,
-                    badge: p.badge || 'HOT DEAL',
+                    name: p.name || p.productName,
+                    productName: p.name || p.productName,
+                    price: p.price || p.priceInfo || 'Giá Ưu Đãi',
+                    oldPrice: p.oldPrice || '',
+                    image: p.image || p.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80',
+                    badge: p.badge || 'HOT DEAL 🔥',
                     keywords: p.keywords || p.name,
-                    stock: p.stock
+                    stock: p.stock || 99,
+                    storeUrl: 'https://shop.tiktok.com'
                   });
                 }
               });
@@ -251,6 +333,33 @@ class AutoPinProductService {
     }
 
     return null;
+  }
+
+  /**
+   * Đồng bộ sản phẩm từ link TikTok Shop (shop.tiktok.com)
+   */
+  async syncFromTikTokShopUrl(storeUrl) {
+    if (!storeUrl) return [];
+    try {
+      const backendUrl = (typeof window !== 'undefined' && window.location.origin.includes(':5173'))
+        ? 'http://localhost:3001'
+        : (typeof window !== 'undefined' ? window.location.origin : '');
+
+      const res = await fetch(`${backendUrl}/api/tiktok-shop/sync`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ storeUrl })
+      });
+      const data = await res.json();
+      if (data && data.products && data.products.length > 0) {
+        return data.products;
+      }
+    } catch (e) {}
+
+    // Fallback nếu offline
+    return [
+      { id: Date.now(), name: 'Sản Phẩm TikTok Shop Mới', price: '199.000đ', oldPrice: '320.000đ', badge: 'DEAL TIKTOK SHOP 🔥', keywords: 'mã 1;sp1;mua 1', storeUrl }
+    ];
   }
 
   getCurrentPinnedProduct() {

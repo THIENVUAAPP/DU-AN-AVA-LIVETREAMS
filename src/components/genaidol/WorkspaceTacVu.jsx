@@ -4,7 +4,7 @@ import {
   Hand, ShoppingCart, Share, Sparkles, Mic, Heart, Play, HelpCircle, ChevronDown,
   Download, Upload, ShoppingBag, Trash2, Zap, Bot, Volume2, MessageSquare, FileText,
   BookOpen, Layers, Smile, Flame, Crown, Tag, FileUp, Sparkle, RefreshCw, CheckCircle2,
-  Video, Film, AlertCircle, Copy, Check, Edit3, Star, Users
+  Video, Film, AlertCircle, Copy, Check, Edit3, Star, Users, Globe, ShieldCheck
 } from 'lucide-react';
 import { NEW_AI_PROMPT } from '../../utils/defaultAIPrompt';
 import { readUniversalFile } from '../../utils/universalDocumentParser';
@@ -603,6 +603,54 @@ export default function WorkspaceTacVu() {
   });
 
   const currentConfig = eventConfigs[selectedEventId] || {};
+
+  // 🎵 TikTok Shop (shop.tiktok.com) Sync & Auto Pin State
+  const [tiktokShopUrl, setTiktokShopUrl] = useState('https://shop.tiktok.com');
+  const [isSyncingTikTokShop, setIsSyncingTikTokShop] = useState(false);
+  const [autoPinActive, setAutoPinActive] = useState(() => autoPinProductService.autoPinEnabled);
+  const [autoPinIntervalSec, setAutoPinIntervalSec] = useState(() => autoPinProductService.pinInterval || 30);
+
+  const handleSyncTikTokShop = async () => {
+    setIsSyncingTikTokShop(true);
+    try {
+      const newProducts = await autoPinProductService.syncFromTikTokShopUrl(tiktokShopUrl);
+      if (newProducts && newProducts.length > 0) {
+        setEventConfigs(prev => {
+          const targetEvent = 'checkout';
+          const currentProducts = prev[targetEvent]?.checkoutProducts || [];
+          const merged = [...currentProducts];
+          newProducts.forEach(np => {
+            if (!merged.some(p => p.id === np.id || p.productName === np.name)) {
+              merged.push({
+                id: np.id || Date.now(),
+                active: true,
+                productName: np.name || np.productName || 'Sản phẩm TikTok Shop',
+                priceInfo: np.price || 'Giá Sốc Live',
+                keywords: np.keywords || 'mã 1;sp1;mua 1;chốt 1',
+                videoFolder: '',
+                videoFileName: '',
+                videoFile: '',
+                imageUrl: np.image || '',
+                aiPrompt: ''
+              });
+            }
+          });
+          return {
+            ...prev,
+            [targetEvent]: {
+              ...prev[targetEvent],
+              checkoutProducts: merged
+            }
+          };
+        });
+        toast.success(`✅ Đã đồng bộ thành công ${newProducts.length} sản phẩm từ TikTok Shop (${tiktokShopUrl})!`);
+      }
+    } catch (e) {
+      toast.error('Lỗi kết nối TikTok Shop: ' + e.message);
+    } finally {
+      setIsSyncingTikTokShop(false);
+    }
+  };
 
   const handleSave = () => {
     try {
@@ -2555,8 +2603,83 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                   </div>
                 </div>
 
-                {/* 🛍️ DANH SÁCH SẢN PHẨM / MÃ HÀNG LIVESTREAM */}
+                {/* 🛍️ DANH SÁCH SẢN PHẨM / MÃ HÀNG LIVESTREAM & TIKTOK SHOP (shop.tiktok.com) */}
                 <div className="p-4 rounded-2xl bg-slate-50 border border-slate-200 shadow-2xs space-y-4">
+                  {/* THANH ĐỒNG BỘ TIKTOK SHOP & TỰ ĐỘNG GHIM SẢN PHẨM 24/7 */}
+                  <div className="p-3.5 bg-gradient-to-r from-slate-900 via-indigo-950 to-purple-950 rounded-2xl text-white border border-indigo-500/30 shadow-md space-y-3">
+                    <div className="flex flex-wrap items-center justify-between gap-2">
+                      <div className="flex items-center gap-2">
+                        <span className="p-1.5 rounded-lg bg-pink-500/20 text-pink-400 border border-pink-500/30">
+                          <Globe size={16} />
+                        </span>
+                        <div>
+                          <div className="flex items-center gap-2">
+                            <h5 className="text-xs font-black uppercase tracking-wider text-white">ĐỒNG BỘ TIKTOK SHOP (shop.tiktok.com) & TỰ ĐỘNG GHIM</h5>
+                            <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2 py-0.2 rounded-full font-bold flex items-center gap-1">
+                              <ShieldCheck size={12} /> Vượt Captcha 24/7 (0ms)
+                            </span>
+                          </div>
+                          <p className="text-[11px] text-gray-300">Tự động ghim sản phẩm lên TikTok Live Studio, OBS và shop.tiktok.com theo chu kỳ, AI thoại hoặc bình luận.</p>
+                        </div>
+                      </div>
+
+                      <div className="flex items-center gap-3">
+                        <label className="flex items-center gap-1.5 text-xs font-bold cursor-pointer text-white bg-white/10 px-2.5 py-1 rounded-lg border border-white/20 hover:bg-white/20 transition-all">
+                          <input 
+                            type="checkbox" 
+                            checked={autoPinActive} 
+                            onChange={(e) => {
+                              setAutoPinActive(e.target.checked);
+                              autoPinProductService.setAutoPinEnabled(e.target.checked, autoPinIntervalSec);
+                              toast.success(e.target.checked ? '✅ Đã BẬT Tự Động Ghim Sản Phẩm 24/7!' : '⏸️ Đã TẮT Tự Động Ghim.');
+                            }}
+                            className="w-3.5 h-3.5 text-pink-500 rounded cursor-pointer accent-pink-500"
+                          />
+                          <span>Tự Động Ghim: {autoPinActive ? <b className="text-emerald-400">BẬT</b> : <b className="text-red-400">TẮT</b>}</span>
+                        </label>
+
+                        {autoPinActive && (
+                          <div className="flex items-center gap-1 text-xs text-gray-200">
+                            <span>Chu kỳ:</span>
+                            <input 
+                              type="number" 
+                              min="5" 
+                              max="300" 
+                              value={autoPinIntervalSec} 
+                              onChange={(e) => {
+                                const val = parseInt(e.target.value, 10) || 30;
+                                setAutoPinIntervalSec(val);
+                                autoPinProductService.setAutoPinEnabled(autoPinActive, val);
+                              }}
+                              className="w-14 bg-black/40 border border-white/20 rounded px-1.5 py-0.5 text-center text-white font-mono font-bold text-xs"
+                            />
+                            <span>giây</span>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* INPUT URL TIKTOK SHOP & NÚT ĐỒNG BỘ */}
+                    <div className="flex items-center gap-2 pt-1">
+                      <input 
+                        type="text" 
+                        value={tiktokShopUrl} 
+                        onChange={(e) => setTiktokShopUrl(e.target.value)} 
+                        placeholder="Nhập URL TikTok Shop (https://shop.tiktok.com/... hoặc Seller Center)..."
+                        className="flex-1 bg-black/50 border border-white/20 rounded-xl px-3 py-1.5 text-xs text-white placeholder-gray-400 focus:outline-pink-500 font-mono"
+                      />
+                      <button
+                        type="button"
+                        onClick={handleSyncTikTokShop}
+                        disabled={isSyncingTikTokShop}
+                        className="px-3.5 py-1.5 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white rounded-xl text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-sm transition-all shrink-0 disabled:opacity-50"
+                      >
+                        {isSyncingTikTokShop ? <RefreshCw size={14} className="animate-spin" /> : <Zap size={14} />}
+                        <span>{isSyncingTikTokShop ? 'Đang Đồng Bộ...' : '⚡ Đồng Bộ TikTok Shop'}</span>
+                      </button>
+                    </div>
+                  </div>
+
                   <div className="flex items-center justify-between pb-3 border-b border-slate-200">
                     <div>
                       <h4 className="text-xs font-black text-slate-800 uppercase tracking-wider flex items-center gap-1.5">

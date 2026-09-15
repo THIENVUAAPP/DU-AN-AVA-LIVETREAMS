@@ -112,8 +112,8 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
       
     // Real-time live activity simulator interval to keep UI dynamic 24/7
     const liveTicker = setInterval(() => {
-      const platforms = ['TikTok Live', 'TikTok Shop', 'Facebook Live', 'Shopee Live', 'YouTube Studio'];
-      const types = ['Slider Puzzle', '3D Rotate Puzzle', 'Turnstile v3', 'Image CAPTCHA', 'reCAPTCHA Enterprise'];
+      const platforms = ['TikTok Shop (shop.tiktok.com)', 'TikTok Live Studio', 'TikTok Live', 'Shopee Live', 'Facebook Live'];
+      const types = ['Slider Puzzle (Bypass 0ms)', '3D Rotate Puzzle', 'Turnstile v3 Stealth', 'TikTok Seller Auth Challenge', 'reCAPTCHA Enterprise'];
       const randP = platforms[Math.floor(Math.random() * platforms.length)];
       const randT = types[Math.floor(Math.random() * types.length)];
       const randSpeed = Math.floor(8 + Math.random() * 12) + 'ms';

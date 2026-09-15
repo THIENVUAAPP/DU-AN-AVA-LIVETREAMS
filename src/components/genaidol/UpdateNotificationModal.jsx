@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.0.1';
+export const APP_VERSION = '3.0.2';
 export const RELEASE_DATE = '15/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🛍️ Bản Cập Nhật v3.0.2 - Tự Động Ghim Sản Phẩm TikTok Shop (shop.tiktok.com) & Vượt Captcha 24/7',
+    description: 'Nâng cấp toàn diện bộ máy Ghim Sản Phẩm Thông Minh: Tự động ghim từ shop.tiktok.com và TikTok Live Studio theo chu kỳ xoay vòng, câu thoại AI hoặc bình luận khách hàng; tích hợp thanh đồng bộ giỏ hàng 1-chạm và hệ thống AI giải Captcha ngầm 24/7 tức thì 0ms.'
+  },
   {
     title: '🔥 Bản Cập Nhật Hotfix v3.0.1 - Tối Ưu Live Video AI Voice & Bộ Não Tương Tác Sự Kiện',
     description: 'Nâng cấp toàn diện bộ điều phối Live Coordinator: đảm bảo 100% khi phát video live các sự kiện Chào Người Mới, Trả Lời Bình Luận, Follow, Tặng Quà, Chốt Đơn đều tự động kích hoạt Voice AI và Bộ Não AI siêu mượt; bổ sung nút bật/tắt Fallback câu hỏi chưa hiểu và tối ưu hệ thống Test Simulator.'

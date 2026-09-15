@@ -967,6 +967,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         }
       }
 
+      if (data.pinnedProduct !== undefined) {
+        setPinnedProduct(data.pinnedProduct);
+        if (data.pinnedProduct) {
+          try { localStorage.setItem('avalive_current_pinned_product', JSON.stringify(data.pinnedProduct)); } catch (e) {}
+        }
+      }
+
       if (data.tunnelUrl) {
         try { localStorage.setItem('avalive_tunnel_url', data.tunnelUrl); } catch (e) {}
       }
@@ -1100,6 +1107,28 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
       socket.on('MASTER_LIVE_STATE_UPDATE', (data) => {
         if (data) applyMasterState(data);
+      });
+
+      // 📌 Tự động ghim sản phẩm thời gian thực (TikTok Shop shop.tiktok.com & Live Studio)
+      socket.on('pin_product_live', (product) => {
+        if (product) {
+          setPinnedProduct(product);
+          try { localStorage.setItem('avalive_current_pinned_product', JSON.stringify(product)); } catch(e) {}
+        }
+      });
+
+      socket.on('tiktok_shop_pin', (product) => {
+        if (product) {
+          setPinnedProduct(product);
+          try { localStorage.setItem('avalive_current_pinned_product', JSON.stringify(product)); } catch(e) {}
+        }
+      });
+
+      socket.on('PIN_PRODUCT_UPDATE', (product) => {
+        if (product) {
+          setPinnedProduct(product);
+          try { localStorage.setItem('avalive_current_pinned_product', JSON.stringify(product)); } catch(e) {}
+        }
       });
 
       socket.on('LIVE_EVENT', (data) => {
@@ -2867,24 +2896,40 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             )}
           </div>
         )}
-        {/* OVERLAY SẢN PHẨM ĐANG GHIM TỰ ĐỘNG BỞI AI (CHUẨN TIKTOK SHOP / LIVESTREAM) */}
+        {/* OVERLAY SẢN PHẨM ĐANG GHIM TỰ ĐỘNG BỞI AI (CHUẨN TIKTOK SHOP shop.tiktok.com / LIVESTREAM STUDIO) */}
         {pinnedProduct && (
-          <div className="absolute bottom-6 left-6 z-50 pointer-events-auto max-w-[340px] transition-all transform animate-bounce-subtle">
-            <div className="bg-black/90 backdrop-blur-md border border-red-500/80 rounded-2xl p-3 flex items-center gap-3 shadow-[0_10px_25px_rgba(239,68,68,0.5)] text-white">
-              <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0 border border-white/20 bg-black">
+          <div className="absolute bottom-6 left-6 z-50 pointer-events-auto max-w-[360px] transition-all transform animate-bounce-subtle">
+            <div className="bg-slate-950/95 backdrop-blur-md border-2 border-red-500/90 rounded-2xl p-3 flex items-center gap-3.5 shadow-[0_10px_35px_rgba(239,68,68,0.6)] text-white relative overflow-hidden">
+              <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/10 rounded-full blur-xl pointer-events-none"></div>
+              
+              <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-white/30 bg-black shadow-inner">
                 <img src={pinnedProduct.image} alt={pinnedProduct.name} className="w-full h-full object-cover" />
-                <span className="absolute top-0 left-0 bg-red-600 text-white text-[8px] font-black px-1 py-0.5 rounded-br uppercase tracking-wider">📌 GHIM</span>
+                <span className="absolute top-0 left-0 bg-gradient-to-r from-red-600 to-pink-600 text-white text-[8px] font-black px-1.5 py-0.5 rounded-br uppercase tracking-wider shadow-sm flex items-center gap-0.5">
+                  <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+                  📌 GHIM
+                </span>
               </div>
+
               <div className="min-w-0 flex-1 text-left">
-                <h4 className="text-xs font-black text-white truncate">{pinnedProduct.name}</h4>
-                <div className="flex items-baseline gap-1.5 mt-0.5">
-                  <span className="text-sm font-black text-red-400 font-mono">{pinnedProduct.price}</span>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded bg-gradient-to-r from-pink-500 to-red-500 text-white shadow-2xs">
+                    🎵 TikTok Shop
+                  </span>
+                  <span className="text-[9px] text-amber-300 font-extrabold truncate">
+                    🔥 {pinnedProduct.badge || 'DEAL ĐỘC QUYỀN'}
+                  </span>
+                </div>
+
+                <h4 className="text-xs font-black text-white truncate mt-1 drop-shadow-sm">{pinnedProduct.name}</h4>
+
+                <div className="flex items-baseline gap-2 mt-0.5">
+                  <span className="text-sm font-black text-red-400 font-mono tracking-tight">{pinnedProduct.price}</span>
                   {pinnedProduct.oldPrice && (
                     <span className="text-[10px] text-gray-400 line-through font-mono">{pinnedProduct.oldPrice}</span>
                   )}
-                </div>
-                <div className="text-[9px] text-amber-300 font-bold flex items-center gap-1 mt-0.5">
-                  <span>🔥 {pinnedProduct.badge || 'DEAL ĐỘC QUYỀN LIVE'}</span>
+                  {pinnedProduct.stock && (
+                    <span className="text-[9px] text-emerald-400 font-bold ml-auto font-mono">Còn: {pinnedProduct.stock}</span>
+                  )}
                 </div>
               </div>
             </div>
