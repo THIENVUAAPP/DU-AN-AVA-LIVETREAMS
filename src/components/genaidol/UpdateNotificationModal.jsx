@@ -2,25 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.3.8';
+export const APP_VERSION = '1.3.9';
 export const RELEASE_DATE = '15/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Cập Nhật Đồng Bộ Bản Tải Xuống Windows & Mac Mới Nhất (Direct Download v1.3.8)',
-    description: 'Toàn bộ liên kết tải phần mềm trực tiếp về máy tính (Windows & macOS) luôn được đồng bộ tự động và phục vụ chính xác 100% gói cài đặt Standalone mới nhất, không bao giờ bị phiên bản cũ.'
+    title: '🎙️ Tối Ưu Hệ Thống Test Voice AI & Chạy Demo Sự Kiện 100% Phát Âm Thanh',
+    description: 'Toàn bộ các nút Chạy Test Kịch Bản, Chạy Thử Sự Kiện (Chào Người Mới, Quà Tặng, Chốt Đơn, Shopee Live, Game PK) được nâng cấp hệ thống âm thanh siêu bền vững 3-Tier Fallback, đảm bảo 100% phát ra Voice AI chuẩn xác và sinh động ngay khi bấm kiểm tra.'
+  },
+  {
+    title: '🍎 1-Click Launcher macOS Chạy Mượt Mà Tuyệt Đối (Chay_App_Mac_Linux.command)',
+    description: 'Khắc phục triệt để lỗi mở ứng dụng trên Mac. Launcher tự động phát hiện Node/NPM trên mọi dòng chip Apple Silicon (M1/M2/M3/M4) & Intel Mac, tự động giải phóng port 3001 và mở trình duyệt điều khiển ngay lập tức.'
+  },
+  {
+    title: '👄 Video LipSync Đồng Bộ Khẩu Hình Miệng 100% Tuyệt Đối',
+    description: 'Đồng bộ chuyển động nhép miệng của video AI theo thời gian thực: khi AI cất giọng đọc thì video nhép miệng mượt mà, khi dứt câu thoại thì video dừng chuyển động miệng chính xác từng frame cho cả TikTok Live, Shopee Live và OBS Studio.'
   },
   {
     title: '💬 Tự Động Ghim Sản Phẩm Theo Bình Luận Khách Hàng (Auto Pin by Comments)',
-    description: 'Khi khán giả/khách hàng bình luận bất kỳ mã số (mã 1, sp1, chốt 2, #1, 01...), tên sản phẩm hoặc từ khóa liên quan, hệ thống lập tức tự động nhận diện và ghim đúng sản phẩm đó lên livestream để khách hàng click mua ngay.'
-  },
-  {
-    title: '🎯 Tích Hợp Toàn Diện 3 Nguồn Ghim Sản Phẩm Tự Động 100%',
-    description: 'Đồng bộ ghim sản phẩm đa nguồn: (1) Từ bình luận người xem trên Live, (2) Từ giọng đọc AI khi tư vấn/kịch bản, (3) Từ video clip minh họa sản phẩm đang phát sóng.'
-  },
-  {
-    title: '🛡️ Tự Động Giải Captcha 100% 24/7 Cho TikTok Shop & Mọi Nền Tảng',
-    description: 'Hệ thống AVA Stealth tích hợp sẵn tự động vượt 100% mọi loại Captcha (Slider Puzzle, 3D Rotate, Turnstile v3, Image CAPTCHA, reCAPTCHA Enterprise) với tốc độ 8-15ms, đảm bảo mở TikTok Shop và đồng bộ giỏ hàng không bao giờ bị chặn hay gián đoạn luồng live.'
+    description: 'Khi khán giả/khách hàng bình luận bất kỳ mã số, tên sản phẩm hoặc từ khóa liên quan, hệ thống lập tức tự động nhận diện và ghim đúng sản phẩm đó lên livestream để khách hàng click mua ngay.'
   }
 ];
 

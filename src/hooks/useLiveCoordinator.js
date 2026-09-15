@@ -259,8 +259,8 @@ function fillTemplate(template, vars = {}) {
 }
 
   // Hàm kích hoạt xử lý sự kiện Live từ TikTok / Chat / Giả lập (Hỗ trợ AI Brain Bất Đồng Bộ)
-  const handleLiveEvent = async (type, payload) => {
-    if (!isConnected) return;
+  const handleLiveEvent = async (type, payload = {}) => {
+    // Luôn cho phép chạy sự kiện khi đã kết nối Live hoặc khi bấm Chạy Test / Giả lập sự kiện
     resetIdleTimer();
 
     const configs = getSavedEventConfigs();

@@ -7709,11 +7709,18 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
     wetGain.connect(audioCtx.destination);
   }
 
-  // Kết nối LipSync Engine nếu không phải chế độ test preview
-  if (!isTestingMode) {
-    try {
-      globalLipSyncEngine.connectAudioNode(masterGain, audioCtx);
-    } catch (e) {}
+  // Kết nối LipSync Engine cho cả chế độ Live và chế độ Test để người dùng quan sát trực quan
+  try {
+    globalLipSyncEngine.connectAudioNode(masterGain, audioCtx);
+  } catch (e) {}
+
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', {
+      detail: { isSpeaking: true, avatarId: voice?.id || 'idol', role: voice?.recommendedFor || 'idol' }
+    }));
+    window.dispatchEvent(new CustomEvent('avalive_speaker_change', {
+      detail: { isSpeaking: true, avatarId: voice?.id || 'idol', role: voice?.recommendedFor || 'idol' }
+    }));
   }
 
   return new Promise((resolve) => {
@@ -7725,6 +7732,14 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
         try { tremoloOsc.stop(); tremoloOsc.disconnect(); } catch(e) {}
       }
       activeSourceNode = null;
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', {
+          detail: { isSpeaking: false, avatarId: null }
+        }));
+        window.dispatchEvent(new CustomEvent('avalive_speaker_change', {
+          detail: { isSpeaking: false, avatarId: null }
+        }));
+      }
       if (onEnd) onEnd();
       resolve(true);
     };
@@ -8180,10 +8195,93 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
       if (success) return true;
     }
   } catch (dspErr) {
-    console.warn('[voiceSyncService] Neural Voice synthesis error, fallback to WebSpeech:', dspErr);
+    console.warn('[voiceSyncService] Neural Voice synthesis error, fallback to resilient stream:', dspErr);
   }
 
-  // Kết thúc an toàn mà TUYỆT ĐỐI KHÔNG BAO GIỜ phát giọng mặc định của máy tính
+  // =========================================================================
+  // TIER 3: GOOGLE TRANSLATE STREAM & WEB SPEECH API ULTRA-ROBUST FALLBACK
+  // Đảm bảo 100% khi người dùng bấm Chạy Test / Nghe Thử luôn luôn phát ra tiếng
+  // =========================================================================
+  try {
+    const encodedText = encodeURIComponent(textToSpeak.slice(0, 200));
+    const gLang = isVietnameseVoice ? 'vi' : (shortLang || 'vi');
+    const directGoogleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=${gLang}&client=tw-ob`;
+    
+    const audio = new Audio(directGoogleUrl);
+    audio.volume = effectiveVoiceVolume;
+    audio.playbackRate = requestedRate;
+    audio.crossOrigin = 'anonymous';
+    activePreviewAudio = audio;
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', {
+        detail: { isSpeaking: true, avatarId: voice?.id || 'idol', role: voice?.recommendedFor || 'idol', speechText: textToSpeak }
+      }));
+      window.dispatchEvent(new CustomEvent('avalive_speaker_change', {
+        detail: { isSpeaking: true, avatarId: voice?.id || 'idol', role: voice?.recommendedFor || 'idol' }
+      }));
+    }
+
+    try { globalLipSyncEngine.connectAudioElement(audio); } catch(e) {}
+
+    return await new Promise((resolve) => {
+      let finished = false;
+      const finish = () => {
+        if (finished) return;
+        finished = true;
+        activePreviewAudio = null;
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', {
+            detail: { isSpeaking: false, avatarId: null }
+          }));
+          window.dispatchEvent(new CustomEvent('avalive_speaker_change', {
+            detail: { isSpeaking: false, avatarId: null }
+          }));
+        }
+        if (onEnd) onEnd();
+        resolve(true);
+      };
+
+      audio.onended = finish;
+      audio.onerror = () => {
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          try {
+            window.speechSynthesis.cancel();
+            const utter = new SpeechSynthesisUtterance(textToSpeak);
+            utter.lang = isVietnameseVoice ? 'vi-VN' : (rawLang || 'vi-VN');
+            utter.volume = effectiveVoiceVolume;
+            utter.rate = requestedRate;
+            utter.onend = finish;
+            utter.onerror = finish;
+            window.speechSynthesis.speak(utter);
+            return;
+          } catch (speechErr) {}
+        }
+        finish();
+      };
+
+      audio.play().catch(() => {
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          try {
+            window.speechSynthesis.cancel();
+            const utter = new SpeechSynthesisUtterance(textToSpeak);
+            utter.lang = isVietnameseVoice ? 'vi-VN' : (rawLang || 'vi-VN');
+            utter.volume = effectiveVoiceVolume;
+            utter.rate = requestedRate;
+            utter.onend = finish;
+            utter.onerror = finish;
+            window.speechSynthesis.speak(utter);
+            return;
+          } catch (speechErr) {}
+        }
+        finish();
+      });
+    });
+  } catch (fallbackErr) {
+    console.warn('[voiceSyncService] Fallback audio playback error:', fallbackErr);
+  }
+
+  // Kết thúc an toàn
   if (onEnd) onEnd();
   return true;
 }

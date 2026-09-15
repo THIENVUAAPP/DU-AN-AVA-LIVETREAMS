@@ -2366,6 +2366,23 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   const handleLiveEventRef = useRef(handleLiveEvent);
   handleLiveEventRef.current = handleLiveEvent;
 
+  // Lắng nghe sự kiện chạy test trực tiếp từ Shopee Live, Game và các Modal cấu hình
+  useEffect(() => {
+    const handleDirectLiveEvent = (e) => {
+      const { type, data, payload } = e.detail || {};
+      if (type && handleLiveEventRef.current) {
+        unlockAllAudio();
+        handleLiveEventRef.current(type, { ...(data || payload || {}), isTest: true });
+      }
+    };
+    window.addEventListener('avalive_direct_live_event', handleDirectLiveEvent);
+    window.addEventListener('avalive_test_event', handleDirectLiveEvent);
+    return () => {
+      window.removeEventListener('avalive_direct_live_event', handleDirectLiveEvent);
+      window.removeEventListener('avalive_test_event', handleDirectLiveEvent);
+    };
+  }, [unlockAllAudio]);
+
   useEffect(() => {
     let backendUrl = '';
     if (typeof window !== 'undefined') {
