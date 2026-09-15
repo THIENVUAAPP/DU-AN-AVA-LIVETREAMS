@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.3.9';
+export const APP_VERSION = '3.0.0';
 export const RELEASE_DATE = '15/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🌟 Bản Phát Hành Lớn AvaLive Studio VIP PRO v3.0.0 (Đầy Đủ 100% Mọi Chức Năng)',
+    description: 'Bản phát hành chính thức thế hệ mới đồng bộ toàn diện tất cả các công nghệ: Auto Pin Sản Phẩm Đa Nguồn, Vượt Captcha 24/7, Multi-Avatar Studio, Kho 40+ Giọng AI Độc Bản DSP, LipSync Khớp Khẩu Hình, Shopee Live & Game Livestream PK tương tác.'
+  },
   {
     title: '🎙️ Tối Ưu Hệ Thống Test Voice AI & Chạy Demo Sự Kiện 100% Phát Âm Thanh',
     description: 'Toàn bộ các nút Chạy Test Kịch Bản, Chạy Thử Sự Kiện (Chào Người Mới, Quà Tặng, Chốt Đơn, Shopee Live, Game PK) được nâng cấp hệ thống âm thanh siêu bền vững 3-Tier Fallback, đảm bảo 100% phát ra Voice AI chuẩn xác và sinh động ngay khi bấm kiểm tra.'
@@ -17,10 +21,6 @@ export const UPDATE_NOTES = [
   {
     title: '👄 Video LipSync Đồng Bộ Khẩu Hình Miệng 100% Tuyệt Đối',
     description: 'Đồng bộ chuyển động nhép miệng của video AI theo thời gian thực: khi AI cất giọng đọc thì video nhép miệng mượt mà, khi dứt câu thoại thì video dừng chuyển động miệng chính xác từng frame cho cả TikTok Live, Shopee Live và OBS Studio.'
-  },
-  {
-    title: '💬 Tự Động Ghim Sản Phẩm Theo Bình Luận Khách Hàng (Auto Pin by Comments)',
-    description: 'Khi khán giả/khách hàng bình luận bất kỳ mã số, tên sản phẩm hoặc từ khóa liên quan, hệ thống lập tức tự động nhận diện và ghim đúng sản phẩm đó lên livestream để khách hàng click mua ngay.'
   }
 ];
 

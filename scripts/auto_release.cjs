@@ -175,7 +175,8 @@ async function runRelease() {
       name: releaseName,
       body: `🚀 **AvaLive Livestream VIP PRO - ${releaseName}**\n\n- Tự động phát hành từ hệ thống Antigravity AI\n- Bản cài đặt Standalone Windows & Mac tích hợp sẵn Node Portable và Core bảo mật.\n\nNgười dùng có thể tải trực tiếp file ZIP về giải nén và sử dụng ngay lập tức.`,
       draft: false,
-      prerelease: false
+      prerelease: false,
+      make_latest: 'true'
     });
 
     if (createRes.statusCode !== 201) {
