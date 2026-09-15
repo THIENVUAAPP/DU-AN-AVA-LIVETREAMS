@@ -6965,6 +6965,43 @@ export function updateActiveVoiceAudio(role, voiceObj) {
   saveVoiceConfig(current);
 }
 
+/**
+ * ⚡ BỘ PHÂN GIẢI GIỌNG NÓI ĐA TẦNG (VOICE PRIORITY RESOLVER)
+ * - Ưu tiên số 1 (CHÍNH): 3 Cột Giọng Chính trong Tab BỘ NÃO (Giọng AvaLive: idolVoice, managerVoice, commentVoice).
+ * - Ưu tiên số 2 (PHỤ): Giọng cài đặt trong 14 tác vụ (chỉ kích hoạt khi Bộ Não chưa gán).
+ * - Sử dụng thống nhất cho toàn bộ phiên Live, phát video, video AI LipSync nhép miệng, demo, sự kiện.
+ */
+export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId = null) {
+  const dualConfig = getSavedVoiceConfig();
+  const normalizedRole = (roleOrEvent || '').toLowerCase();
+
+  let brainVoice = null;
+  if (normalizedRole === 'comment' || normalizedRole === 'ask_reply' || normalizedRole === 'qna') {
+    brainVoice = dualConfig.commentVoice || dualConfig.idolVoice;
+  } else if (normalizedRole === 'manager' || normalizedRole === 'assistant' || normalizedRole === 'checkout' || normalizedRole === 'purchase') {
+    brainVoice = dualConfig.managerVoice || dualConfig.idolVoice;
+  } else if (normalizedRole === 'game' || normalizedRole === 'battle' || normalizedRole === 'bando') {
+    brainVoice = dualConfig.gameBlvVoice || dualConfig.gameVoice || dualConfig.idolVoice;
+  } else {
+    // idol, welcome, gift, follow, like, script, talking, idle, apology, call_to_action
+    brainVoice = dualConfig.idolVoice;
+  }
+
+  // 1. Nếu Bộ Não đã có cấu hình giọng hợp lệ -> ƯU TIÊN TUYỆT ĐỐI 100%
+  if (brainVoice && brainVoice.id && brainVoice.enabled !== false) {
+    return brainVoice;
+  }
+
+  // 2. Nếu Bộ Não chưa chọn/để trống -> Sử dụng giọng cấu hình riêng trong 14 tác vụ
+  if (taskSpecificVoiceId) {
+    const matchedVoice = ALL_SYSTEM_VOICES.find(v => v.id === taskSpecificVoiceId);
+    if (matchedVoice) return matchedVoice;
+  }
+
+  // 3. Fallback mặc định
+  return dualConfig.idolVoice || DEFAULT_VOICE_CONFIG.idolVoice;
+}
+
 // Global active audio & utterance references
 let activePreviewAudio = null;
 let activeUtterance = null;
@@ -8305,6 +8342,7 @@ export default {
   saveVoiceConfig,
   getDualVoiceConfig,
   saveDualVoiceConfig,
+  resolveEffectiveVoice,
   getElevenLabsApiKey,
   previewVoiceAudio,
   speakVoiceAudio,

@@ -2,6 +2,7 @@ import { useState, useEffect, useRef, useCallback } from 'react';
 import { getAllLiveMedia } from '../lib/liveKhoDB';
 import { askGeminiLiveAi } from '../lib/geminiClient';
 import autoPinProductService from '../utils/autoPinProductService';
+import { resolveEffectiveVoice } from '../utils/voiceSyncService';
 
 export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack = 'talk' }) {
   const [liveMedia, setLiveMedia] = useState([]);
@@ -653,10 +654,10 @@ function fillTemplate(template, vars = {}) {
         setActiveVideoItem(matchedEventVideo);
       }
 
-      // 13. PHÁT GIỌNG NÓI VOICE AI & LIP-SYNC VỚI VOICE ĐỘC LẬP TỪNG TAB
+      // 13. PHÁT GIỌNG NÓI VOICE AI & LIP-SYNC (ƯU TIÊN 100% TAB BỘ NÃO -> FALLBACK 14 TÁC VỤ)
       const shouldSpeakVoice = (currentEvConfig.useVoice !== false) || isTestMode;
-      const targetVoiceId = currentEvConfig.voiceId || 'free_vi_female';
-      const targetVoiceRole = currentEvConfig.ttsVoiceRole || (evKey === 'comment' ? 'comment' : 'idol');
+      const targetVoiceRole = currentEvConfig.ttsVoiceRole || (evKey === 'comment' ? 'comment' : evKey === 'checkout' ? 'manager' : 'idol');
+      const effectiveVoice = resolveEffectiveVoice(targetVoiceRole, currentEvConfig.voiceId);
 
       if (replyText && replyText.trim()) {
         setViewerHistory(prev => [
@@ -676,7 +677,8 @@ function fillTemplate(template, vars = {}) {
             action: shouldAction,
             baseVideoItem: matchedEventVideo || activeVideoItem,
             preRecordedCat: matchedEventVideo ? matchedEventVideo.category : (shouldAction === 'gift_reaction' ? 'reaction' : null),
-            voiceId: targetVoiceId,
+            voiceId: effectiveVoice.id,
+            voiceObj: effectiveVoice,
             voiceChannel: targetVoiceRole,
             isTest: isTestMode
           });

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef, forwardRef, useImperativeHandle } f
 import { Play, Pause, FastForward, Mic, Volume2, Sparkles } from 'lucide-react';
 import { 
   getDualVoiceConfig, 
+  resolveEffectiveVoice,
   previewVoiceAudio, 
   stopVoiceAudio, 
   prefetchTTSAudio,
@@ -293,13 +294,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       if (onAudioPlayStateChange) onAudioPlayStateChange(true);
       
       const channel = item.voiceChannel || (item.type === 'script' ? 'idol' : item.type === 'comment' ? 'comment' : 'manager');
-      const latestDualVoices = getDualVoiceConfig();
-      
-      let activeVoice = item.voiceObj;
+      let activeVoice = item.voiceObj || resolveEffectiveVoice(channel, item.voiceId);
       if (!activeVoice) {
-        activeVoice = channel === 'idol' 
-          ? (latestDualVoices.idolVoice || voiceConfig.idolVoice || { id: 'free_vi_female', lang: 'vi-VN', gender: 'Female' })
-          : (channel === 'comment' ? (latestDualVoices.commentVoice || voiceConfig.commentVoice || latestDualVoices.idolVoice) : (latestDualVoices.managerVoice || voiceConfig.managerVoice));
+        activeVoice = resolveEffectiveVoice(channel, null);
       }
       
       if (activeVoice?.enabled === false) {

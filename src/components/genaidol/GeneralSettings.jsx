@@ -1678,21 +1678,26 @@ IDOL MỈM CƯỜI + GESTURE
     llmChoice: 'gemini', 
     apiModel: 'gemini-1.5-flash',
     mainVoiceFilter: 'all', // 'all' | 'male' | 'female'
-    mainVoiceId: 'el_rachel',
+    mainVoiceId: 'free_vi_female',
     
     // Tab 3: Trợ lý / Quản lý Phiên Live
     assistantEnabled: true,
     assistantVideoFolder: 'im lặng (2 video)',
     assistantVoiceFilter: 'all',
-    assistantVoiceId: 'el_callum',
+    assistantVoiceId: 'vn_nam_quanly_uyquyen',
 
-    // Tab 4: Bình luận Game Live
+    // Tab 4: Bình luận (Trả Lời Bình Luận Live)
+    commentVoiceFilter: 'all',
+    commentVoiceId: 'free_vi_female',
+
+    // Tab 5: Bình luận Game Live
     gameVoiceFilter: 'all',
     gameVoiceId: 'el_josh',
     
     // Voice Configs (Âm lượng, Tốc độ, Độ trầm bổng)
     mainVoiceVolume: 1.0, mainVoiceRate: 1.0, mainVoicePitch: 1.0,
     assistantVoiceVolume: 1.0, assistantVoiceRate: 1.0, assistantVoicePitch: 1.0,
+    commentVoiceVolume: 1.0, commentVoiceRate: 1.0, commentVoicePitch: 1.0,
     gameVoiceVolume: 1.0, gameVoiceRate: 1.0, gameVoicePitch: 1.0,
     salesVoiceVolume: 1.0, salesVoiceRate: 1.0, salesVoicePitch: 1.0,
     
@@ -2006,11 +2011,13 @@ IDOL MỈM CƯỜI + GESTURE
       // Đồng bộ vào hệ thống 3 kênh giọng của AVA Live
       const idolMatch = ALL_SYSTEM_VOICES.find(v => v.id === settings.mainVoiceId);
       const managerMatch = ALL_SYSTEM_VOICES.find(v => v.id === settings.assistantVoiceId);
+      const commentMatch = ALL_SYSTEM_VOICES.find(v => v.id === (settings.commentVoiceId || settings.mainVoiceId));
       const gameMatch = ALL_SYSTEM_VOICES.find(v => v.id === settings.gameVoiceId);
       
       saveDualVoiceConfig({
         idolVoice: idolMatch ? { ...idolMatch, role: 'idol', volume: settings.mainVoiceVolume || 1.0, rate: settings.mainVoiceRate || 1.0, pitch: settings.mainVoicePitch || 1.0 } : undefined,
         managerVoice: managerMatch ? { ...managerMatch, role: 'manager', volume: settings.assistantVoiceVolume || 1.0, rate: settings.assistantVoiceRate || 1.0, pitch: settings.assistantVoicePitch || 1.0 } : undefined,
+        commentVoice: commentMatch ? { ...commentMatch, role: 'comment', volume: settings.commentVoiceVolume || settings.mainVoiceVolume || 1.0, rate: settings.commentVoiceRate || settings.mainVoiceRate || 1.0, pitch: settings.commentVoicePitch || settings.mainVoicePitch || 1.0 } : undefined,
         gameVoice: gameMatch ? { ...gameMatch, role: 'game', volume: settings.gameVoiceVolume || 1.0, rate: settings.gameVoiceRate || 1.0, pitch: settings.gameVoicePitch || 1.0 } : undefined
       });
     } catch(e) {
@@ -2029,11 +2036,11 @@ IDOL MỈM CƯỜI + GESTURE
       const updated = { ...prev, [name]: finalValue };
 
       // Gọi real-time update cho giọng đọc đang phát/test
-      if (['salesVoiceVolume', 'mainVoiceVolume', 'assistantVoiceVolume', 'gameVoiceVolume'].includes(name)) {
+      if (['salesVoiceVolume', 'mainVoiceVolume', 'assistantVoiceVolume', 'commentVoiceVolume', 'gameVoiceVolume'].includes(name)) {
         setRealtimeAudioParams({ volume: Number(finalValue) });
-      } else if (['salesVoiceRate', 'mainVoiceRate', 'assistantVoiceRate', 'gameVoiceRate'].includes(name)) {
+      } else if (['salesVoiceRate', 'mainVoiceRate', 'assistantVoiceRate', 'commentVoiceRate', 'gameVoiceRate'].includes(name)) {
         setRealtimeAudioParams({ rate: Number(finalValue) });
-      } else if (['salesVoicePitch', 'mainVoicePitch', 'assistantVoicePitch', 'gameVoicePitch'].includes(name)) {
+      } else if (['salesVoicePitch', 'mainVoicePitch', 'assistantVoicePitch', 'commentVoicePitch', 'gameVoicePitch'].includes(name)) {
         setRealtimeAudioParams({ pitch: Number(finalValue) });
       }
 
@@ -2999,16 +3006,22 @@ IDOL MỈM CƯỜI + GESTURE
                                 <button
                                   type="button"
                                   onClick={() => {
-                                    setSettings(prev => ({ ...prev, gameVoiceId: v.id }));
-                                    alert(`Đã chọn giọng "${v.name}" làm Giọng BLV Mini-Game!`);
+                                    setSettings(prev => ({ 
+                                      ...prev, 
+                                      commentVoiceId: v.id,
+                                      commentVoiceVolume: settings.salesVoiceVolume !== undefined ? settings.salesVoiceVolume : (v.volume || 1.0),
+                                      commentVoiceRate: v.rate || settings.salesVoiceRate || 1.0,
+                                      commentVoicePitch: v.pitch || settings.salesVoicePitch || 1.0
+                                    }));
+                                    alert(`Đã chọn giọng "${v.name}" làm Giọng Trả Lời Bình Luận!`);
                                   }}
                                   className={`px-2.5 py-1 rounded text-xs font-bold transition-all ${
-                                    isSelectedAsGame 
+                                    settings.commentVoiceId === v.id 
                                       ? 'bg-purple-600 text-white shadow-xs' 
                                       : 'bg-gray-100 hover:bg-purple-50 text-gray-700 hover:text-purple-700 border border-gray-300'
                                   }`}
                                 >
-                                  🎮 BLV Game
+                                  💬 Bình Luận
                                 </button>
                               </div>
                             </td>
@@ -3268,21 +3281,21 @@ IDOL MỈM CƯỜI + GESTURE
                     Kho Giọng Đọc Ava Live: Đa Vai Trò, 20+ Quốc Gia, Đa Vùng Miền & Đa Độ Tuổi
                   </h2>
                   <p className="text-xs sm:text-sm text-blue-100 max-w-3xl leading-relaxed">
-                    Hợp nhất toàn bộ hệ sinh thái âm thanh trong một giao diện duy nhất: <span className="font-bold underline">Giọng Idol Live</span>, <span className="font-bold underline">Giọng Quản Lý / Trợ Lý</span> và <span className="font-bold underline">Giọng BLV Game PK</span>. Dễ dàng tìm kiếm theo Quốc gia, Vùng miền (Bắc/Trung/Nam/Tây), Giới tính, Độ tuổi và gán 1-Click cho từng vai trò!
+                    Hợp nhất 3 Cột Giọng Chính của toàn bộ phiên Live: <span className="font-bold underline">1. Giọng Idol Live</span>, <span className="font-bold underline">2. Giọng Quản Lý / Trợ Lý</span> và <span className="font-bold underline">3. Giọng Trả Lời Bình Luận</span>. Cài đặt tại đây sẽ làm Giọng Chính mặc định cho toàn bộ luồng phát Live, phát video AI nhép miệng, demo và sự kiện!
                   </p>
                 </div>
               </div>
 
-              {/* Status Pills: Kênh Đang Được Gán */}
+              {/* Status Pills: 3 CỘT GIỌNG CHÍNH CỦA BỘ NÃO AVALIVE */}
               <div className="grid grid-cols-1 md:grid-cols-3 gap-3">
-                {/* Idol Status */}
+                {/* 1. Idol Status */}
                 <div className="bg-white border-2 border-blue-200 rounded-xl p-3.5 shadow-xs flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <div className="w-9 h-9 rounded-lg bg-blue-100 text-blue-600 flex items-center justify-center font-bold">
                       <User size={18} />
                     </div>
                     <div>
-                      <div className="text-[11px] font-bold text-blue-600 uppercase tracking-wide">🎤 Giọng Idol Live Chính</div>
+                      <div className="text-[11px] font-bold text-blue-600 uppercase tracking-wide">🎤 1. Giọng Idol Live Chính</div>
                       <div className="text-sm font-bold text-gray-900 truncate max-w-[180px]">
                         {ALL_SYSTEM_VOICES.find(v => v.id === settings.mainVoiceId)?.name || 'Chưa chọn'}
                       </div>
@@ -3293,7 +3306,7 @@ IDOL MỈM CƯỜI + GESTURE
                   </span>
                 </div>
 
-                {/* Assistant Status */}
+                {/* 2. Assistant Status */}
                 <div className="bg-white border-2 border-red-200 rounded-xl p-3.5 shadow-xs flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <div className="w-9 h-9 rounded-lg bg-red-100 text-red-600 flex items-center justify-center font-bold">
@@ -3301,7 +3314,7 @@ IDOL MỈM CƯỜI + GESTURE
                     </div>
                     <div>
                       <div className="text-[11px] font-bold text-red-600 uppercase tracking-wide flex items-center gap-1.5">
-                        💼 Giọng Quản Lý / Trợ Lý
+                        💼 2. Giọng Quản Lý / Trợ Lý
                         <span className={`text-[9px] px-1.5 py-0.2 rounded font-bold ${settings.assistantEnabled ? 'bg-emerald-100 text-emerald-700' : 'bg-gray-100 text-gray-500'}`}>
                           {settings.assistantEnabled ? 'BẬT' : 'TẮT'}
                         </span>
@@ -3316,21 +3329,21 @@ IDOL MỈM CƯỜI + GESTURE
                   </span>
                 </div>
 
-                {/* Game Status */}
+                {/* 3. Comment Status */}
                 <div className="bg-white border-2 border-purple-200 rounded-xl p-3.5 shadow-xs flex items-center justify-between">
                   <div className="flex items-center gap-2.5">
                     <div className="w-9 h-9 rounded-lg bg-purple-100 text-purple-600 flex items-center justify-center font-bold">
                       <Volume2 size={18} />
                     </div>
                     <div>
-                      <div className="text-[11px] font-bold text-purple-600 uppercase tracking-wide">🎮 Giọng BLV Game PK</div>
+                      <div className="text-[11px] font-bold text-purple-600 uppercase tracking-wide">💬 3. Giọng Trả Lời Bình Luận</div>
                       <div className="text-sm font-bold text-gray-900 truncate max-w-[180px]">
-                        {ALL_SYSTEM_VOICES.find(v => v.id === settings.gameVoiceId)?.name || 'Chưa chọn'}
+                        {ALL_SYSTEM_VOICES.find(v => v.id === (settings.commentVoiceId || settings.mainVoiceId))?.name || 'Chưa chọn'}
                       </div>
                     </div>
                   </div>
                   <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-50 text-purple-700 font-mono font-bold border border-purple-200">
-                    {Math.round((settings.gameVoiceVolume !== undefined ? settings.gameVoiceVolume : 1) * 100)}% • {settings.gameVoiceRate || 1}x
+                    {Math.round((settings.commentVoiceVolume !== undefined ? settings.commentVoiceVolume : (settings.mainVoiceVolume || 1)) * 100)}% • {settings.commentVoiceRate || settings.mainVoiceRate || 1}x
                   </span>
                 </div>
               </div>
@@ -3489,7 +3502,7 @@ IDOL MỈM CƯỜI + GESTURE
                         { key: 'all', label: 'Tất cả' },
                         { key: 'idol', label: '🎯 Đang là Idol' },
                         { key: 'manager', label: '💼 Đang là Trợ lý' },
-                        { key: 'game', label: '🎮 Đang là BLV' }
+                        { key: 'comment', label: '💬 Đang là Bình Luận' }
                       ].map(tab => (
                         <button
                           key={tab.key}
@@ -3569,7 +3582,7 @@ IDOL MỈM CƯỜI + GESTURE
                           // 5. Role Active Filter
                           if (avaRoleFilter === 'idol' && settings.mainVoiceId !== v.id) return false;
                           if (avaRoleFilter === 'manager' && settings.assistantVoiceId !== v.id) return false;
-                          if (avaRoleFilter === 'game' && settings.gameVoiceId !== v.id) return false;
+                          if (avaRoleFilter === 'comment' && (settings.commentVoiceId || settings.mainVoiceId) !== v.id) return false;
 
                           // 6. Search Query
                           if (avaSearchQuery.trim()) {
@@ -3587,7 +3600,7 @@ IDOL MỈM CƯỜI + GESTURE
                         .map((v, idx) => {
                           const isSelectedAsIdol = settings.mainVoiceId === v.id;
                           const isSelectedAsAssistant = settings.assistantVoiceId === v.id;
-                          const isSelectedAsGame = settings.gameVoiceId === v.id;
+                          const isSelectedAsComment = settings.commentVoiceId === v.id;
                           const isPlaying = previewingVoiceId === v.id;
                           const isFav = favoriteVoiceIds.includes(v.id);
                           const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
@@ -3625,7 +3638,7 @@ IDOL MỈM CƯỜI + GESTURE
                                   {isFav && <span className="text-[10px] bg-amber-400/20 text-amber-700 px-1.5 py-0.2 rounded font-semibold">⭐ Yêu thích</span>}
                                   {isSelectedAsIdol && <span className="text-[10px] bg-blue-600 text-white px-1.5 py-0.2 rounded font-bold">🎯 Idol Live</span>}
                                   {isSelectedAsAssistant && <span className="text-[10px] bg-red-600 text-white px-1.5 py-0.2 rounded font-bold">💼 Trợ Lý</span>}
-                                  {isSelectedAsGame && <span className="text-[10px] bg-purple-600 text-white px-1.5 py-0.2 rounded font-bold">🎮 BLV Game</span>}
+                                  {isSelectedAsComment && <span className="text-[10px] bg-purple-600 text-white px-1.5 py-0.2 rounded font-bold">💬 Bình Luận</span>}
                                 </div>
                                 <div className="text-[11px] text-gray-500 italic mt-0.5 line-clamp-1">
                                   💬 "{v.sampleText || v.desc}"
@@ -3717,26 +3730,26 @@ IDOL MỈM CƯỜI + GESTURE
                                     💼 Gán Trợ Lý
                                   </button>
 
-                                  {/* Gán Game PK */}
+                                  {/* Gán Bình Luận */}
                                   <button
                                     type="button"
                                     onClick={() => {
                                       setSettings(prev => ({ 
                                         ...prev, 
-                                        gameVoiceId: v.id,
-                                        gameVoiceVolume: v.volume || prev.gameVoiceVolume || 1.0,
-                                        gameVoiceRate: v.rate || prev.gameVoiceRate || 1.0,
-                                        gameVoicePitch: v.pitch || prev.gameVoicePitch || 1.0
+                                        commentVoiceId: v.id,
+                                        commentVoiceVolume: v.volume || prev.commentVoiceVolume || 1.0,
+                                        commentVoiceRate: v.rate || prev.commentVoiceRate || 1.0,
+                                        commentVoicePitch: v.pitch || prev.commentVoicePitch || 1.0
                                       }));
-                                      alert(`Đã gán "${v.name}" làm Giọng BLV Game PK!`);
+                                      alert(`Đã gán "${v.name}" làm Giọng Trả Lời Bình Luận!`);
                                     }}
                                     className={`px-2 py-1 rounded text-xs font-bold transition-all ${
-                                      isSelectedAsGame 
+                                      isSelectedAsComment 
                                         ? 'bg-purple-600 text-white shadow-xs ring-1 ring-purple-400' 
                                         : 'bg-gray-100 hover:bg-purple-50 text-gray-700 hover:text-purple-600 border border-gray-200'
                                     }`}
                                   >
-                                    🎮 Gán Game
+                                    💬 Gán Bình Luận
                                   </button>
                                 </div>
                               </td>
@@ -3754,7 +3767,7 @@ IDOL MỈM CƯỜI + GESTURE
                 <div className="bg-white border border-blue-200 rounded-xl shadow-sm overflow-hidden p-4 space-y-4">
                   <div className="border-b border-gray-200 pb-2 flex items-center justify-between">
                     <h4 className="font-bold text-gray-800 text-sm flex items-center gap-2">
-                      <User size={16} className="text-blue-600" /> Tùy Chỉnh Giọng Idol Live
+                      <User size={16} className="text-blue-600" /> 1. Giọng Idol Live Chính
                     </h4>
                     <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-bold">
                       Kênh Chính
@@ -3802,7 +3815,7 @@ IDOL MỈM CƯỜI + GESTURE
                 <div className="bg-white border border-red-200 rounded-xl shadow-sm overflow-hidden p-4 space-y-4">
                   <div className="border-b border-gray-200 pb-2 flex items-center justify-between">
                     <h4 className="font-bold text-gray-800 text-sm flex items-center gap-2">
-                      <Mic size={16} className="text-red-500" /> Tùy Chỉnh Giọng Trợ Lý
+                      <Mic size={16} className="text-red-500" /> 2. Giọng Quản Lý / Trợ Lý
                     </h4>
                     <label className="flex items-center gap-1.5 cursor-pointer">
                       <input 
@@ -3861,14 +3874,14 @@ IDOL MỈM CƯỜI + GESTURE
                   </div>
                 </div>
 
-                {/* 3. Tùy chỉnh Giọng BLV Game PK */}
+                {/* 3. Tùy chỉnh Giọng Trả Lời Bình Luận */}
                 <div className="bg-white border border-purple-200 rounded-xl shadow-sm overflow-hidden p-4 space-y-4">
                   <div className="border-b border-gray-200 pb-2 flex items-center justify-between">
                     <h4 className="font-bold text-gray-800 text-sm flex items-center gap-2">
-                      <Volume2 size={16} className="text-purple-600" /> Tùy Chỉnh Giọng BLV Game
+                      <Volume2 size={16} className="text-purple-600" /> 3. Giọng Trả Lời Bình Luận
                     </h4>
                     <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded font-bold">
-                      Game Chiến Đấu
+                      Hỏi Đáp & Q&A
                     </span>
                   </div>
 
@@ -3876,26 +3889,26 @@ IDOL MỈM CƯỜI + GESTURE
                     <div className="flex flex-col gap-1">
                       <label className="text-xs font-semibold text-gray-700 flex justify-between">
                         <span>Âm lượng (Volume)</span>
-                        <span className="text-purple-600 font-bold">{Math.round((settings.gameVoiceVolume !== undefined ? settings.gameVoiceVolume : 1) * 100)}%</span>
+                        <span className="text-purple-600 font-bold">{Math.round((settings.commentVoiceVolume !== undefined ? settings.commentVoiceVolume : (settings.mainVoiceVolume || 1)) * 100)}%</span>
                       </label>
-                      <input type="range" min="0" max="2" step="0.1" name="gameVoiceVolume" value={settings.gameVoiceVolume !== undefined ? settings.gameVoiceVolume : 1} onChange={handleChange} className="w-full accent-purple-600" />
+                      <input type="range" min="0" max="2" step="0.1" name="commentVoiceVolume" value={settings.commentVoiceVolume !== undefined ? settings.commentVoiceVolume : (settings.mainVoiceVolume || 1)} onChange={handleChange} className="w-full accent-purple-600" />
                     </div>
                     <div className="flex flex-col gap-1">
                       <label className="text-xs font-semibold text-gray-700 flex justify-between">
                         <span>Tốc độ (Speed)</span>
-                        <span className="text-purple-600 font-bold">{settings.gameVoiceRate !== undefined ? settings.gameVoiceRate : 1}x</span>
+                        <span className="text-purple-600 font-bold">{settings.commentVoiceRate !== undefined ? settings.commentVoiceRate : (settings.mainVoiceRate || 1)}x</span>
                       </label>
-                      <input type="range" min="0.5" max="2" step="0.1" name="gameVoiceRate" value={settings.gameVoiceRate !== undefined ? settings.gameVoiceRate : 1} onChange={handleChange} className="w-full accent-purple-600" />
+                      <input type="range" min="0.5" max="2" step="0.1" name="commentVoiceRate" value={settings.commentVoiceRate !== undefined ? settings.commentVoiceRate : (settings.mainVoiceRate || 1)} onChange={handleChange} className="w-full accent-purple-600" />
                     </div>
                     <div className="flex flex-col gap-1">
                       <label className="text-xs font-semibold text-gray-700 flex justify-between">
                         <span>Độ trầm bổng (Pitch)</span>
-                        <span className="text-purple-600 font-bold">{settings.gameVoicePitch !== undefined ? settings.gameVoicePitch : 1}</span>
+                        <span className="text-purple-600 font-bold">{settings.commentVoicePitch !== undefined ? settings.commentVoicePitch : (settings.mainVoicePitch || 1)}</span>
                       </label>
-                      <input type="range" min="0.5" max="2" step="0.1" name="gameVoicePitch" value={settings.gameVoicePitch !== undefined ? settings.gameVoicePitch : 1} onChange={handleChange} className="w-full accent-purple-600" />
+                      <input type="range" min="0.5" max="2" step="0.1" name="commentVoicePitch" value={settings.commentVoicePitch !== undefined ? settings.commentVoicePitch : (settings.mainVoicePitch || 1)} onChange={handleChange} className="w-full accent-purple-600" />
                     </div>
                     <div className="pt-2 border-t border-gray-100 text-xs text-purple-700 italic">
-                      💡 Tự động hò reo, bình luận trận đấu PK, cảnh báo máu thấp và xướng tên khán giả tặng quà.
+                      💬 Giọng chuyên trách tự động trả lời bình luận khán giả, giải đáp Q&A, tương tác bán hàng trên livestream.
                     </div>
                   </div>
                 </div>
