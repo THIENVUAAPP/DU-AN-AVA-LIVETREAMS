@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.0.5';
+export const APP_VERSION = '3.0.6';
 export const RELEASE_DATE = '15/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật Hotfix v3.0.6 - Khắc Phục Triệt Để 100% Lỗi Render Giao Diện & Mở Phần Mềm Ngay Tức Thì',
+    description: 'Xử lý dứt điểm thứ tự khởi tạo biến trạng thái (TDZ variable initialization) trong bộ điều phối Live Coordinator, loại bỏ hoàn toàn thông báo lỗi ReferenceError khi khởi động, đảm bảo giao diện chính AvaLive Studio mở mượt mà 100% trên Windows và Mac.'
+  },
   {
     title: '⚡ Bản Cập Nhật Hotfix v3.0.5 - Khởi Động Trực Tiếp 100% Native & Sẵn Sàng Trình Duyệt Ngay Tức Thì',
     description: 'Nâng cấp toàn diện cơ chế khởi động Windows (.bat & .exe): Tự động phát hiện UTF-8 đường dẫn tiếng Việt, chuyển sang chạy ngầm Native Node Process kèm bộ ghi log an toàn, tích hợp vòng lặp kiểm tra sẵn sàng cổng 3001 và hỗ trợ toàn bộ trình duyệt Edge, Chrome, Cốc Cốc, Brave.'

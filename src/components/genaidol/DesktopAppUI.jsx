@@ -1378,6 +1378,27 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState('');
 
+  // Trạng thái Chạy Demo / Test Toàn Cục (1 Nút Duy Nhất cho tất cả Game / Idol)
+  const [isGlobalDemoRunning, setIsGlobalDemoRunning] = useState(false);
+  const globalDemoTimerRef = useRef(null);
+
+  // ⚡ TRẠNG THÁI AUTO CHẠY TỰ ĐỘNG 24/24 (Hỗ trợ AI Idol, Game Chiến Đấu, Game Bản Đồ & Tự Vượt Captcha)
+  const [isAuto247Running, setIsAuto247Running] = useState(false);
+  const auto247TimerRef = useRef(null);
+
+  // Mở khóa âm thanh (chỉ unlock AudioContext ngầm, không tự ý phát nhạc khi chưa có lệnh)
+  const unlockAllAudio = useCallback(async () => {
+    try {
+      bandoAudio.unlock();
+      if (bandoAudio.ctx && bandoAudio.ctx.state === 'suspended') {
+        await bandoAudio.ctx.resume();
+      }
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.resume();
+      }
+    } catch (e) {}
+  }, []);
+
   // Tích hợp Live Coordinator (Xử lý AI, Video, Idle Timer)
   const {
     activeVideoItem,
@@ -1594,14 +1615,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
 
 
-  // Trạng thái Chạy Demo / Test Toàn Cục (1 Nút Duy Nhất cho tất cả Game / Idol)
-  const [isGlobalDemoRunning, setIsGlobalDemoRunning] = useState(false);
-  const globalDemoTimerRef = useRef(null);
-
-  // ⚡ TRẠNG THÁI AUTO CHẠY TỰ ĐỘNG 24/24 (Hỗ trợ AI Idol, Game Chiến Đấu, Game Bản Đồ & Tự Vượt Captcha)
-  const [isAuto247Running, setIsAuto247Running] = useState(false);
-  const auto247TimerRef = useRef(null);
-
   const handleGlobalRunDemo = useCallback(() => {
     if (isGlobalDemoRunning) {
       if (globalDemoTimerRef.current) {
@@ -1735,19 +1748,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }
     });
   }
-
-  // Mở khóa âm thanh (chỉ unlock AudioContext ngầm, không tự ý phát nhạc khi chưa có lệnh)
-  const unlockAllAudio = useCallback(async () => {
-    try {
-      bandoAudio.unlock();
-      if (bandoAudio.ctx && bandoAudio.ctx.state === 'suspended') {
-        await bandoAudio.ctx.resume();
-      }
-      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-        window.speechSynthesis.resume();
-      }
-    } catch (e) {}
-  }, []);
 
   const handleAudioTest = useCallback(async (role = 'game') => {
     await unlockAllAudio();
