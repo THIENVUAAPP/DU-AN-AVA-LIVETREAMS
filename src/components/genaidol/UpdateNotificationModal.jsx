@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.3.7';
+export const APP_VERSION = '1.3.8';
 export const RELEASE_DATE = '15/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Cập Nhật Đồng Bộ Bản Tải Xuống Windows & Mac Mới Nhất (Direct Download v1.3.8)',
+    description: 'Toàn bộ liên kết tải phần mềm trực tiếp về máy tính (Windows & macOS) luôn được đồng bộ tự động và phục vụ chính xác 100% gói cài đặt Standalone mới nhất, không bao giờ bị phiên bản cũ.'
+  },
   {
     title: '💬 Tự Động Ghim Sản Phẩm Theo Bình Luận Khách Hàng (Auto Pin by Comments)',
     description: 'Khi khán giả/khách hàng bình luận bất kỳ mã số (mã 1, sp1, chốt 2, #1, 01...), tên sản phẩm hoặc từ khóa liên quan, hệ thống lập tức tự động nhận diện và ghim đúng sản phẩm đó lên livestream để khách hàng click mua ngay.'
@@ -17,10 +21,6 @@ export const UPDATE_NOTES = [
   {
     title: '🛡️ Tự Động Giải Captcha 100% 24/7 Cho TikTok Shop & Mọi Nền Tảng',
     description: 'Hệ thống AVA Stealth tích hợp sẵn tự động vượt 100% mọi loại Captcha (Slider Puzzle, 3D Rotate, Turnstile v3, Image CAPTCHA, reCAPTCHA Enterprise) với tốc độ 8-15ms, đảm bảo mở TikTok Shop và đồng bộ giỏ hàng không bao giờ bị chặn hay gián đoạn luồng live.'
-  },
-  {
-    title: '📺 Đồng Bộ Thẻ Ghim Deal Trực Quan Đa Màn Hình',
-    description: 'Hiển thị thẻ Ghim Deal Hot với hiệu ứng glow, giá sốc, mã giảm giá và hình ảnh sản phẩm đồng bộ tức thì trên Màn hình Live Preview, TikTok Shop Studio, Tab Chốt Đơn và OBS / TikTok Live Studio (CleanLiveOverlay).'
   }
 ];
 

@@ -55,6 +55,7 @@ Nếu task hiện tại không liên quan tới phần nào (vd dự án chưa c
 6. MỌI thay đổi phải có đường lùi (rollback).
 7. Không chắc → hỏi 1 câu duy nhất, không đoán bừa rồi làm sai hướng.
 8. **TUYỆT ĐỐI KHÔNG SỬ DỤNG ĐƯỜNG LINK CHẠY TRÊN LOCAL (`localhost`, `127.0.0.1`) CHO LUỒNG PHÁT LIVESTREAM** (TikTok Live Studio, OBS Browser Source). TikTok Live Studio cấm sandbox hoàn toàn với localhost. Tất cả đường link live overlay, phát video trực tiếp, game 3D, và idol BẮT BUỘC là đường link **ONLINE HTTPS** (`https://...trycloudflare.com/...` hoặc `https://avalivepro.vercel.app/...`), kết nối mượt mà 60 FPS, không giật lag, không đứng hình, không lỗi.
+9. **LUÔN LUÔN ĐẢM BẢO TẤT CẢ CÁC FILE CÀI ĐẶT TẢI VỀ PHẢI LÀ BẢN CẬP NHẬT MỚI NHẤT**: Mọi endpoint tải file (`/api/download-windows`, `/api/download-mac`, `api/download.js`, `backend/server.cjs`, `downloadOS.js`) BẮT BUỘC luôn tự động phân giải và phục vụ đúng gói cài đặt ZIP của phiên bản mới nhất (`package.json` và GitHub Latest Release), tuyệt đối KHÔNG hardcode hoặc phục vụ phiên bản cũ cho người dùng.
 
 ---
 
