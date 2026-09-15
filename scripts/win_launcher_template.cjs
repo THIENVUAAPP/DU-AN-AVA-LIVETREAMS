@@ -38,10 +38,16 @@ try {
 
 // 3. Khởi chạy Backend Core ngầm siêu tốc
 const nodeBin = fs.existsSync(nodeExe) ? nodeExe : 'node';
+const logFile = path.join(systemDir, 'server_log.txt');
+let logFd;
+try {
+  logFd = fs.openSync(logFile, 'a');
+} catch (e) {}
+
 const child = spawn(nodeBin, ['core.cjs'], {
   cwd: systemDir,
   detached: true,
-  stdio: 'ignore',
+  stdio: logFd ? ['ignore', logFd, logFd] : 'ignore',
   windowsHide: true
 });
 child.unref();
@@ -55,6 +61,9 @@ function openBrowser() {
   const chrome = 'C:\\Program Files\\Google\\Chrome\\Application\\chrome.exe';
   const chrome86 = 'C:\\Program Files (x86)\\Google\\Chrome\\Application\\chrome.exe';
   const chromeLocal = path.join(process.env.LOCALAPPDATA || '', 'Google\\Chrome\\Application\\chrome.exe');
+  const coccocLocal = path.join(process.env.LOCALAPPDATA || '', 'CocCoc\\Browser\\Application\\browser.exe');
+  const coccoc64 = 'C:\\Program Files\\CocCoc\\Browser\\Application\\browser.exe';
+  const coccoc86 = 'C:\\Program Files (x86)\\CocCoc\\Browser\\Application\\browser.exe';
 
   if (fs.existsSync(edge)) {
     spawn(edge, [`--app=${targetUrl}`], { detached: true, stdio: 'ignore' }).unref();
@@ -66,6 +75,12 @@ function openBrowser() {
     spawn(chrome86, [`--app=${targetUrl}`], { detached: true, stdio: 'ignore' }).unref();
   } else if (fs.existsSync(chromeLocal)) {
     spawn(chromeLocal, [`--app=${targetUrl}`], { detached: true, stdio: 'ignore' }).unref();
+  } else if (fs.existsSync(coccocLocal)) {
+    spawn(coccocLocal, [`--app=${targetUrl}`], { detached: true, stdio: 'ignore' }).unref();
+  } else if (fs.existsSync(coccoc64)) {
+    spawn(coccoc64, [`--app=${targetUrl}`], { detached: true, stdio: 'ignore' }).unref();
+  } else if (fs.existsSync(coccoc86)) {
+    spawn(coccoc86, [`--app=${targetUrl}`], { detached: true, stdio: 'ignore' }).unref();
   } else {
     try {
       execSync(`start "" "${targetUrl}"`, { shell: 'cmd.exe' });

@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.0.4';
+export const APP_VERSION = '3.0.5';
 export const RELEASE_DATE = '15/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật Hotfix v3.0.5 - Khởi Động Trực Tiếp 100% Native & Sẵn Sàng Trình Duyệt Ngay Tức Thì',
+    description: 'Nâng cấp toàn diện cơ chế khởi động Windows (.bat & .exe): Tự động phát hiện UTF-8 đường dẫn tiếng Việt, chuyển sang chạy ngầm Native Node Process kèm bộ ghi log an toàn, tích hợp vòng lặp kiểm tra sẵn sàng cổng 3001 và hỗ trợ toàn bộ trình duyệt Edge, Chrome, Cốc Cốc, Brave.'
+  },
   {
     title: '⚡ Bản Cập Nhật Hotfix v3.0.4 - Tự Động Khởi Động Trực Tiếp & Khắc Phục Triệt Để 100% Khởi Động Giao Diện Windows/Mac',
     description: 'Nâng cấp toàn diện bộ khởi động 1_CLICK_CHAY_NGAY.bat & AvaLive_Studio.exe trên Windows: khởi động trực tiếp máy chủ Node Portable siêu nhẹ, tự động phát hiện cổng và mở trình duyệt App Mode ngay tức thì 0ms mà không qua trung gian; loại bỏ triệt để lỗi ReferenceError và xung đột module.'

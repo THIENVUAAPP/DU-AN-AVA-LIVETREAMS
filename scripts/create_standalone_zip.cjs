@@ -102,23 +102,43 @@ HỖ TRỢ KỸ THUẬT 24/7: support@avalive.com | Website: https://avalivepro.
 
 // Tạo Batch Launcher 1-Click duy nhất cho Windows (Bao gồm fallback nếu EXE bị chặn)
 const winBatLauncher = `@echo off
+chcp 65001 >nul
 title AvaLive VIP PRO - Livestream Studio AI
 cd /d "%~dp0"
 if exist "system" attrib +h "system" >nul 2>nul
 
+echo =========================================================
+echo    🚀 DANG KHOI DONG AVALIVE STUDIO VIP PRO...
+echo =========================================================
+echo.
+
+:: 1. Dong tien trinh cu dang chiem cong 3001 neu co
 for /f "tokens=5" %%a in ('netstat -aon 2^>nul ^| findstr ":3001" ^| findstr "LISTENING"') do (
     taskkill /F /PID %%a >nul 2>nul
 )
 
-if exist "%~dp0system\\node_portable\\node.exe" (
-    powershell -WindowStyle Hidden -Command "Start-Process -FilePath '%~dp0system\\node_portable\\node.exe' -ArgumentList 'core.cjs' -WorkingDirectory '%~dp0system'"
-) else (
-    powershell -WindowStyle Hidden -Command "Start-Process -FilePath 'node' -ArgumentList 'core.cjs' -WorkingDirectory '%~dp0system'"
-)
+:: 2. Chay Backend Core bang Node Portable hoac Node he thong
+set "NODE_BIN=%~dp0system\\node_portable\\node.exe"
+if not exist "%NODE_BIN%" set "NODE_BIN=node"
 
-timeout /t 2 /nobreak >nul 2>nul
+cd /d "%~dp0system"
+start "" /B "%NODE_BIN%" core.cjs > server_log.txt 2>&1
+cd /d "%~dp0"
 
+:: 3. Cho server san sang tren cong 3001 (Polling kiem tra san sang)
 set "URL=http://localhost:3001/desktop"
+set /a attempts=0
+
+:WAIT_LOOP
+set /a attempts+=1
+timeout /t 1 /nobreak >nul 2>nul
+netstat -aon 2>nul | findstr ":3001" | findstr "LISTENING" >nul 2>nul
+if %ERRORLEVEL% equ 0 goto OPEN_APP
+if %attempts% geq 20 goto OPEN_APP
+goto WAIT_LOOP
+
+:OPEN_APP
+echo ✅ May chu da san sang! Dang mo giao dien ung dung...
 
 if exist "%ProgramFiles(x86)%\\Microsoft\\Edge\\Application\\msedge.exe" (
     start "" "%ProgramFiles(x86)%\\Microsoft\\Edge\\Application\\msedge.exe" --app=%URL%
@@ -138,6 +158,18 @@ if exist "%ProgramFiles(x86)%\\Google\\Chrome\\Application\\chrome.exe" (
 )
 if exist "%LOCALAPPDATA%\\Google\\Chrome\\Application\\chrome.exe" (
     start "" "%LOCALAPPDATA%\\Google\\Chrome\\Application\\chrome.exe" --app=%URL%
+    exit /b
+)
+if exist "%LOCALAPPDATA%\\CocCoc\\Browser\\Application\\browser.exe" (
+    start "" "%LOCALAPPDATA%\\CocCoc\\Browser\\Application\\browser.exe" --app=%URL%
+    exit /b
+)
+if exist "%ProgramFiles%\\CocCoc\\Browser\\Application\\browser.exe" (
+    start "" "%ProgramFiles%\\CocCoc\\Browser\\Application\\browser.exe" --app=%URL%
+    exit /b
+)
+if exist "%ProgramFiles(x86)%\\CocCoc\\Browser\\Application\\browser.exe" (
+    start "" "%ProgramFiles(x86)%\\CocCoc\\Browser\\Application\\browser.exe" --app=%URL%
     exit /b
 )
 

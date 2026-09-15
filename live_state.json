@@ -1,0 +1,14 @@
+{
+  "stage": "idol",
+  "aspectRatio": "9:16",
+  "characterId": "linhanh_4k",
+  "characterName": "AvaLive VIP PRO",
+  "mediaUrl": null,
+  "isVideo": true,
+  "videoPlaybackEvent": "play",
+  "isPlaying": true,
+  "isAudioMuted": false,
+  "isDarkMode": true,
+  "updatedAt": 1789482470075,
+  "tunnelUrl": "https://more-inspired-computer-bench.trycloudflare.com"
+}
