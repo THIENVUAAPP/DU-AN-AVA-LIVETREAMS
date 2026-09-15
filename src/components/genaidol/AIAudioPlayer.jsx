@@ -440,7 +440,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     },
     enqueueItem: (text, action, isImmediate = false, options = {}) => {
       const voiceChannel = options?.voiceChannel || (action?.includes('COMMENT') ? 'comment' : action?.includes('IDOL') ? 'idol' : 'manager');
-      const newItem = { id: `dyn_${Date.now()}`, type: 'dynamic', text, action, voiceChannel };
+      
+      let voiceObj = options?.voiceObj;
+      if (!voiceObj && options?.voiceId) {
+        const found = ALL_SYSTEM_VOICES.find(v => v.id === options.voiceId);
+        if (found) voiceObj = found;
+        else voiceObj = { id: options.voiceId, lang: 'vi-VN', gender: 'Female' };
+      }
+
+      const newItem = { id: `dyn_${Date.now()}`, type: 'dynamic', text, action, voiceChannel, voiceObj };
       
       // Cho vào hàng đợi ưu tiên: Đợi câu hiện tại đọc xong dứt điểm rồi phát ngay, không ngắt giữa chừng
       priorityQueueRef.current.push(newItem);

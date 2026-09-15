@@ -324,9 +324,10 @@ const getDefaultEventConfigs = () => {
   EVENTS.forEach(ev => {
     defaults[ev.id] = {
       priority: ev.id === 'apology' ? 20 : ev.id === 'comment' ? 50 : ev.id === 'follow' ? 70 : ev.id === 'gift' ? 90 : ev.id === 'welcome' ? 60 : ev.id === 'special_gift' ? 999 : ev.id === 'checkout' ? 100 : ev.id === 'script_broadcast' ? 80 : ev.id === 'share' ? 50 : ev.id === 'thanks_heart' ? 15 : 50,
-      active: ev.id !== 'welcome' && ev.id !== 'share' && ev.id !== 'thanks_heart', 
-      useVoice: ev.id !== 'gift' && ev.id !== 'welcome',
-      muteSourceVideo: ev.id !== 'gift' && ev.id !== 'welcome',
+      active: true, 
+      useVoice: true,
+      voiceId: 'free_vi_female',
+      muteSourceVideo: ev.id !== 'gift',
       videoCategory: ev.id === 'welcome' ? 'join' : ev.id === 'call_to_action' ? 'interaction' : ev.id === 'thanks_heart' ? 'thank_for_likes' : ev.id,
       videoFolder: '',
       supportVideoFolder: '',
@@ -1639,7 +1640,8 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                           {/* 4. Event Voice Tester (Đầy đủ Giọng đọc, Tốc độ, Nút Nghe thử giống Ảnh 2) */}
                           <EventVoiceTester 
                             text={slot.sampleAnswers || `Cảm ơn bạn {user} đã tặng ${slot.giftName} cho em nha!`}
-                            defaultVoiceId="free_vi_female"
+                            defaultVoiceId={slot.voiceId || "free_vi_female"}
+                            onVoiceChange={(vid) => handleSlotChange(slot.id, 'voiceId', vid, true)}
                             label={`Nghe thử Voice (${slot.giftName})`}
                             compact={true}
                           />
@@ -1759,7 +1761,8 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
 
                         <EventVoiceTester 
                           text={gSlot.sampleAnswers || 'Cảm ơn bạn {user} đã tặng quà cho em nha!'}
-                          defaultVoiceId="free_vi_female"
+                          defaultVoiceId={gSlot.voiceId || "free_vi_female"}
+                          onVoiceChange={(vid) => handleGiftSlotChange(gSlot.id, 'voiceId', vid)}
                           label={`Nghe thử Voice (${gSlot.name || 'Slot ' + gSlot.id})`}
                           compact={true}
                         />
@@ -2689,7 +2692,8 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                           <div className="mt-3 pt-2.5 border-t border-gray-100">
                             <EventVoiceTester 
                               text={`Dạ em chào bạn {user}! Sản phẩm ${prod.productName || 'này'} đang có ưu đãi cực sốc trong giỏ hàng góc trái màn hình, giá chỉ ${prod.priceInfo || 'rất tốt'}, bạn bấm vào đặt hàng ngay để nhận voucher quà tặng nhé!`}
-                              defaultVoiceId="free_vi_female"
+                              defaultVoiceId={prod.voiceId || "free_vi_female"}
+                              onVoiceChange={(vid) => handleProductChange(prod.id, 'voiceId', vid)}
                               label={`Nghe thử câu chốt đơn: ${prod.productName || `Mã #${prod.id}`}`}
                               compact={true}
                             />
@@ -3123,8 +3127,9 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                         <div className="ml-0 sm:ml-[170px]">
                           <EventVoiceTester 
                             text={currentConfig.sampleAnswers || 'Xin chào và cảm ơn bạn đã tương tác cùng phiên livestream nhé!'}
-                            defaultVoiceId="free_vi_female"
-                            label={`Nghe thử câu thoại mẫu (${selectedEventInfo?.label || 'Sự kiện'})`}
+                            defaultVoiceId={currentConfig.voiceId || "free_vi_female"}
+                            onVoiceChange={(vid) => handleSimpleChange('voiceId', vid)}
+                            label={`Nghe thử & Lưu Giọng đọc (${selectedEventInfo?.label || 'Sự kiện'})`}
                             compact={false}
                           />
                         </div>
@@ -3312,7 +3317,8 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                       />
                       <EventVoiceTester 
                         text={currentConfig.assistantPrompt || 'Dạ vâng, cảm ơn mọi người đã theo dõi live nha!'}
-                        defaultVoiceId="free_vi_female"
+                        defaultVoiceId={currentConfig.assistantVoiceId || "free_vi_female"}
+                        onVoiceChange={(vid) => handleSimpleChange('assistantVoiceId', vid)}
                         label={`Nghe thử câu Trợ lý (${selectedEventInfo?.label || 'Sự kiện'})`}
                         compact={false}
                       />

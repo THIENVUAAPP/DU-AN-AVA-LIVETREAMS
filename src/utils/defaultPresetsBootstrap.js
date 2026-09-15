@@ -770,10 +770,11 @@ Hãy duy trì nhất quán nhân vật Ngọc Nhi trong toàn bộ quá trình t
         welcome: {
           priority: 60,
           active: true,
-          useVoice: false,
+          useVoice: true,
+          voiceId: 'free_vi_female',
           muteSourceVideo: false,
           videoCategory: 'join',
-          sampleAnswers: 'Chào mừng bạn {user} và {count} người mới đã đến với livestream!\nXin chào {user} và mọi người mới vào xem nhé! Chúc mọi người xem live vui vẻ.'
+          sampleAnswers: 'Chào mừng bạn {user} đã đến với livestream!\nXin chào {user} mới vào xem nhé! Chúc bạn xem live vui vẻ.\nHelu {user}! Cảm ơn bạn đã ghé thăm kênh của mình nha.\nDạ em chào bạn {user}! Hôm nay shop có rất nhiều deal hời, bạn ở lại xem cùng em nha.\nChào mừng bạn {user} thân yêu! Rất vui được gặp bạn trong phiên live hôm nay.'
         },
         apology: {
           priority: 20,

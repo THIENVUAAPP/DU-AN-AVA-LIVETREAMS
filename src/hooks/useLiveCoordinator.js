@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getAllLiveMedia } from '../lib/liveKhoDB';
+import { askGeminiLiveAi } from '../lib/geminiClient';
 
 export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack = 'talk' }) {
   const [liveMedia, setLiveMedia] = useState([]);
@@ -12,6 +13,7 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack 
   const [isProcessingEvent, setIsProcessingEvent] = useState(false);
   const idleTimerRef = useRef(null);
   const greetedViewersRef = useRef(new Set());
+  const welcomeIndexRef = useRef(0); // Chỉ mục tuần tự vòng tròn không trùng lặp cho Chào Người Mới
 
   // Load kho video live
   useEffect(() => {
@@ -48,18 +50,29 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack 
   const resetIdleTimer = useCallback(() => {
     if (!isConnected) return;
     clearTimeout(idleTimerRef.current);
+    const configs = getSavedEventConfigs();
+    const idleSeconds = Number(configs.idle?.speakAfterIdleSeconds) || 30;
     idleTimerRef.current = setTimeout(() => {
-      handleLiveEvent('IDLE', { note: 'No user interaction for 45s' });
-    }, 45000); // 45s
+      handleLiveEvent('IDLE', { note: `No user interaction for ${idleSeconds}s` });
+    }, Math.max(10, idleSeconds) * 1000);
   }, [isConnected]);
 
 // Helper đọc cấu hình sự kiện đã lưu từ WorkspaceTacVu
 function getSavedEventConfigs() {
   const defaultEventConfigs = {
+    script_broadcast: {
+      priority: 80,
+      active: true,
+      useVoice: true,
+      voiceId: 'free_vi_female',
+      loopScript: true,
+      videoCategory: 'script_broadcast'
+    },
     checkout: {
       priority: 100,
       active: true,
       useVoice: true,
+      voiceId: 'free_vi_female',
       muteSourceVideo: true,
       videoCategory: 'checkout',
       useAi: true,
@@ -68,11 +81,12 @@ function getSavedEventConfigs() {
           id: 1,
           active: true,
           productName: 'aidol',
-          keywords: 'aidol;phần mềm;giá;liên hệ;bao nhiêu',
+          keywords: 'aidol;phần mềm;giá;liên hệ;bao nhiêu;dùng thử',
           videoFolder: 'bình luận',
           supportVideoFolder: '',
           useAi: true,
           useTTS: true,
+          voiceId: 'free_vi_female',
           ttsVoiceRole: 'idol',
           muteSourceVideo: true,
           aiPrompt: 'Trong vai là một nhân viên sale chuyên nghiệp hãy đọc bình luận và đem ra câu trả lời để chốt đơn, giá phần mềm là 3 triệu rưỡi/1 năm, hoặc gói dùng thử là'
@@ -83,13 +97,14 @@ function getSavedEventConfigs() {
       priority: 50,
       active: true,
       useVoice: true,
+      voiceId: 'free_vi_female',
       muteSourceVideo: true,
       videoCategory: 'comment',
       useAi: true,
       commentReplyMode: 'hybrid',
       repeatCommentFirst: true,
       repeatCommentPrefix: 'Dạ bạn {user} vừa hỏi là: "{comment}". ',
-      unknownFallbackReply: 'Dạ bạn {user} ơi, câu hỏi này em là trợ lý live nên xin phép ghi nhận lại để hỏi lại shop và phản hồi chi tiết cho mình sau nha! Bạn có thể nhắn tin (inbox) trực tiếp cho shop để nhận hỗ trợ nhanh nhất ạ!',
+      unknownFallbackReply: 'Dạ bạn {user} ơi, câu hỏi này em xin phép ghi nhận lại để phản hồi chi tiết cho mình sau nha! Bạn có thể nhắn tin trực tiếp cho shop để nhận hỗ trợ nhanh nhất ạ!',
       appendFollowUpQuestion: true,
       followUpQuestionText: ' Dạ không biết bạn {user} có cần em hỗ trợ thêm điều gì nữa không ạ? Bạn có thể nhắn tin trực tiếp cho shop để nhận tư vấn chi tiết và nhiều ưu đãi nha!',
       aiPrompt: '### NHIỆM VỤ: Trả lời bình luận của người dùng tên {user} ngắn gọn, thông minh, lịch sự và thu hút.',
@@ -100,35 +115,99 @@ function getSavedEventConfigs() {
       priority: 90,
       active: true,
       useVoice: true,
+      voiceId: 'free_vi_female',
       muteSourceVideo: false,
       videoCategory: 'gift',
       useAi: true,
-      aiPrompt: 'Bạn là streamer AI. Hãy viết lời cảm ơn sáng tạo và chân thành tới {user} vì đã tặng {gift_name}.'
+      aiPrompt: 'Bạn là streamer AI. Hãy viết lời cảm ơn sáng tạo và chân thành tới {user} vì đã tặng {gift_name}.',
+      sampleAnswers: 'Ôi em cảm ơn bạn {user} đã gửi tặng {gift_name} x{count} cho em nha! Cảm ơn món quà vô cùng ngọt ngào của bạn!\nCảm ơn bạn {user} rất nhiều vì món quà {gift_name} x{count} tuyệt vời ạ!'
+    },
+    special_gift: {
+      priority: 999,
+      active: true,
+      useVoice: true,
+      voiceId: 'free_vi_female',
+      muteSourceVideo: false,
+      videoCategory: 'special_gift',
+      useAi: true,
+      sampleAnswers: 'Ôi đỉnh quá! Em cảm ơn đại gia {user} vừa tặng siêu phẩm {gift_name} cực khủng cho em nha! Yêu bạn nhiều lắm luôn!\nTrời ơi siêu phẩm {gift_name}! Cảm ơn đại gia {user} đã ưu ái dành tặng em món quà đẳng cấp này ạ!'
     },
     follow: {
       priority: 70,
       active: true,
       useVoice: true,
+      voiceId: 'free_vi_female',
       muteSourceVideo: true,
       videoCategory: 'follow',
       useAi: true,
       aiPrompt: 'Hãy nói một câu cảm ơn bạn {user} đã theo dõi kênh.',
-      sampleAnswers: 'A, cảm ơn bạn {user} đã theo dõi mình. Yêu bạn!\nCảm ơn {user} đã follow kênh của mình nhé!'
+      sampleAnswers: 'A, cảm ơn bạn {user} đã theo dõi mình. Yêu bạn!\nCảm ơn {user} đã follow kênh của mình nhé!\nDạ em cảm ơn {user} đã bấm follow kênh, nhớ bật thông báo đón xem live nha!'
     },
     welcome: {
       priority: 60,
       active: true,
-      useVoice: false,
+      useVoice: true,
+      voiceId: 'free_vi_female',
       muteSourceVideo: false,
       videoCategory: 'join',
-      sampleAnswers: 'Chào mừng bạn {user} và {count} người mới đã đến với livestream!\nXin chào {user} và mọi người mới vào xem nhé! Chúc mọi người xem live vui vẻ.'
+      sampleAnswers: 'Chào mừng bạn {user} đã đến với livestream!\nXin chào {user} mới vào xem nhé! Chúc bạn xem live vui vẻ.\nHelu {user}! Cảm ơn bạn đã ghé thăm kênh của mình nha.\nDạ em chào bạn {user}! Hôm nay shop có rất nhiều deal hời, bạn ở lại xem cùng em nha.\nChào mừng bạn {user} thân yêu! Rất vui được gặp bạn trong phiên live hôm nay.'
+    },
+    share: {
+      priority: 50,
+      active: true,
+      useVoice: true,
+      voiceId: 'free_vi_female',
+      muteSourceVideo: true,
+      videoCategory: 'share',
+      sampleAnswers: 'Em cảm ơn bạn {user} đã chia sẻ phiên livestream này đến bạn bè nha! Yêu bạn nhiều!\nCảm ơn {user} đã nhiệt tình share live giúp em ạ!'
+    },
+    thanks_heart: {
+      priority: 15,
+      active: true,
+      useVoice: true,
+      voiceId: 'free_vi_female',
+      muteSourceVideo: true,
+      videoCategory: 'thank_for_likes',
+      sampleAnswers: 'Em cảm ơn mọi người đã thả tim nhiệt tình cho em nha! Cả nhà bấm liên tục vào màn hình giúp em đẩy tương tác live nhé!\nCảm ơn cả nhà đã thả {milestone} cho em ạ!'
+    },
+    talking: {
+      priority: 40,
+      active: true,
+      useVoice: true,
+      voiceId: 'free_vi_female',
+      muteSourceVideo: true,
+      videoCategory: 'talking',
+      useAi: true,
+      sampleAnswers: 'Chào mọi người, hôm nay thật vui được đồng hành cùng cả nhà! Mọi người có câu hỏi hay muốn giao lưu gì cứ bình luận nhé!\nKhông khí hôm nay thật tuyệt vời, cảm ơn tất cả các bạn đang theo dõi live!'
+    },
+    idle: {
+      priority: 10,
+      active: true,
+      useVoice: true,
+      voiceId: 'free_vi_female',
+      muteSourceVideo: true,
+      videoCategory: 'idle',
+      speakAfterIdleSeconds: 30,
+      useAi: true,
+      sampleAnswers: 'Cả nhà ơi, mọi người bấm liên tục vào màn hình thả tim và để lại bình luận giúp em đẩy tương tác live lên nhé!\nAi đang xem live cho em xin một chấm hoặc một câu chào dưới phần bình luận nha cả nhà!'
     },
     apology: {
       priority: 20,
       active: true,
       useVoice: true,
+      voiceId: 'free_vi_female',
       muteSourceVideo: true,
-      sampleAnswers: 'Cả nhà ơi, đôi khi bình luận đông quá em không chào hết được, có lỡ bỏ sót ai thì mọi người thông cảm cho em nhé. Yêu cả nhà nhiều!'
+      videoCategory: 'apology',
+      sampleAnswers: 'Cả nhà ơi, đôi khi bình luận đông quá em không chào hết được, có lỡ bỏ sót ai thì mọi người thông cảm cho em nhé. Yêu cả nhà nhiều!\nDạ em xin lỗi cả nhà nếu vừa nãy đường truyền có chút chập chờn nhé, em đã quay trở lại rồi đây ạ!'
+    },
+    call_to_action: {
+      priority: 65,
+      active: true,
+      useVoice: true,
+      voiceId: 'free_vi_female',
+      muteSourceVideo: true,
+      videoCategory: 'interaction',
+      sampleAnswers: 'Mọi người ơi, hãy bấm ngay vào giỏ hàng góc trái săn mã giảm giá giờ vàng ngay kẻo hết nhé!\nCả nhà đừng quên bấm theo dõi kênh để không bỏ lỡ những buổi live đầy ưu đãi tiếp theo nha!'
     }
   };
 
@@ -136,6 +215,11 @@ function getSavedEventConfigs() {
     const raw = localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup');
     if (raw) {
       const parsed = JSON.parse(raw);
+      // Đảm bảo tab Chào Người Mới luôn kích hoạt và có âm thanh theo chỉ đạo của người dùng
+      if (parsed.welcome) {
+        if (parsed.welcome.active === undefined) parsed.welcome.active = true;
+        if (parsed.welcome.useVoice === undefined || parsed.welcome.useVoice === false) parsed.welcome.useVoice = true;
+      }
       return { ...defaultEventConfigs, ...parsed };
     }
   } catch (e) {
@@ -151,6 +235,19 @@ function getRandomSample(sampleAnswers, fallback = '') {
   return lines[Math.floor(Math.random() * lines.length)];
 }
 
+// Thuật toán duyệt tuần tự vòng tròn không trùng lặp (Round-Robin) cho Chào Người Mới
+function getSequentialSample(sampleAnswers, indexRef, fallback = '') {
+  if (!sampleAnswers || typeof sampleAnswers !== 'string') return fallback;
+  const lines = sampleAnswers.split('\n').map(l => l.trim()).filter(l => l.length > 0);
+  if (lines.length === 0) return fallback;
+  const currentIdx = Math.abs(indexRef?.current || 0) % lines.length;
+  const chosen = lines[currentIdx];
+  if (indexRef) {
+    indexRef.current = (currentIdx + 1) % lines.length;
+  }
+  return chosen;
+}
+
 function fillTemplate(template, vars = {}) {
   let result = template || '';
   Object.keys(vars).forEach(key => {
@@ -160,8 +257,8 @@ function fillTemplate(template, vars = {}) {
   return result;
 }
 
-  // Hàm kích hoạt xử lý sự kiện Live từ TikTok / Chat / Giả lập
-  const handleLiveEvent = (type, payload) => {
+  // Hàm kích hoạt xử lý sự kiện Live từ TikTok / Chat / Giả lập (Hỗ trợ AI Brain Bất Đồng Bộ)
+  const handleLiveEvent = async (type, payload) => {
     if (!isConnected) return;
     resetIdleTimer();
 
@@ -170,8 +267,28 @@ function fillTemplate(template, vars = {}) {
     let shouldAction = null;
     const userName = (payload?.name || payload?.username || 'Bạn').trim();
 
+    // Xác định tab sự kiện tương ứng để lấy cấu hình và giọng đọc (Voice) riêng biệt
+    const evKey = type === 'GIFT' ? (payload?.isSpecial ? 'special_gift' : 'gift') : 
+                  type === 'VIEWER_JOIN' ? 'welcome' : 
+                  type === 'COMMENT' ? 'comment' : 
+                  type === 'LIKE' ? 'thanks_heart' : 
+                  type === 'FOLLOW' ? 'follow' : 
+                  type === 'PURCHASE' ? 'checkout' : 
+                  type === 'SHARE' ? 'share' : 
+                  type === 'TALKING' || type === 'AI_TALK' ? 'talking' : 
+                  type === 'IDLE' ? 'idle' : 
+                  type === 'APOLOGY' ? 'apology' : 
+                  type === 'CALL_TO_ACTION' ? 'call_to_action' : '';
+
+    const currentEvConfig = evKey ? (configs[evKey] || {}) : {};
+
+    // Nếu sự kiện bị tắt, không xử lý
+    if (currentEvConfig.active === false) {
+      return;
+    }
+
     try {
-      // 1. XỬ LÝ SỰ KIỆN BÌNH LUẬN (COMMENT) - QUY TRÌNH 4 BƯỚC THÔNG MINH
+      // 1. XỬ LÝ SỰ KIỆN BÌNH LUẬN (COMMENT) - BỘ NÃO AI GEMINI FLASH + QUY TRÌNH 4 BƯỚC
       if (type === 'COMMENT') {
         const commentText = (payload?.text || payload?.comment || '').trim();
         const commentConfig = configs.comment || {};
@@ -260,23 +377,42 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // E. BỘ NÃO AI SÁNG TẠO / XỬ LÝ KHÉO LÉO KHI KHÔNG BIẾT CÂU HỎI
+        // E. BỘ NÃO AI SÁNG TẠO / TRẢ LỜI MỌI CÂU HỎI THÔNG MINH KHI KHÔNG KHỚP TỪ KHÓA
         if (!isHandled) {
-          if (lowerComment.includes('xinh') || lowerComment.includes('đẹp') || lowerComment.includes('chào') || lowerComment.includes('dễ thương') || lowerComment.includes('hello') || lowerComment.includes('hi')) {
-            bodyAnswer = `Em cảm ơn bạn rất nhiều nha! Chúc bạn xem livestream thật vui và săn được nhiều deal hời cùng shop ạ!`;
+          if (lowerComment.includes('xinh') || lowerComment.includes('đẹp') || lowerComment.includes('dễ thương')) {
+            bodyAnswer = `Em cảm ơn lời khen cực kỳ ngọt ngào của bạn ${userName} nha! Chúc bạn xem livestream thật vui và săn được nhiều deal hời cùng shop ạ!`;
             isHandled = true;
-          } else if (commentConfig.sampleAnswers && replyMode === 'keywords_only') {
+          } else if (replyMode === 'keywords_only' && commentConfig.sampleAnswers) {
             const rawSample = getRandomSample(commentConfig.sampleAnswers);
             bodyAnswer = fillTemplate(rawSample, { user: userName, comment: commentText });
             isHandled = true;
-          } else if (replyMode === 'keywords_only') {
-            // Chế độ chỉ kịch bản từ khóa mà không khớp -> dùng câu fallback khéo léo
-            const fbTpl = commentConfig.unknownFallbackReply || 'Dạ bạn {user} ơi, câu hỏi này em là trợ lý live nên xin phép ghi nhận lại để hỏi lại shop và phản hồi chi tiết cho mình sau nha! Bạn có thể nhắn tin (inbox) trực tiếp cho shop để nhận hỗ trợ nhanh nhất ạ!';
-            bodyAnswer = fillTemplate(fbTpl, { user: userName, comment: commentText });
-            isHandled = true;
-          } else {
-            // BỘ NÃO AI PHÂN TÍCH THÔNG MINH HOẶC DÙNG Ô XỬ LÝ KHÉO LÉO (FALLBACK)
-            const fbTpl = commentConfig.unknownFallbackReply || 'Dạ bạn {user} ơi, câu hỏi này em là trợ lý live nên xin phép ghi nhận lại để hỏi lại shop và phản hồi chi tiết cho mình sau nha! Bạn có thể nhắn tin (inbox) trực tiếp cho shop để nhận hỗ trợ nhanh nhất ạ!';
+          } else if (commentConfig.useAi !== false) {
+            // GỌI BỘ NÃO AI GEMINI FLASH PHÂN TÍCH & TRẢ LỜI CÂU HỎI THÔNG MINH
+            try {
+              const liveContext = `Livestream bán hàng và tương tác trực tuyến. Sản phẩm chính: ${product}. Giá: ${price}. Ưu đãi: ${promo}. Tính năng: ${features}. Cửa hàng: ${company}.`;
+              const aiPrompt = commentConfig.aiPrompt 
+                ? fillTemplate(commentConfig.aiPrompt, { user: userName, comment: commentText, product })
+                : `Khán giả "${userName}" vừa hỏi trên livestream: "${commentText}". Hãy trả lời ngắn gọn, thông minh, lịch sự, thân thiện trong 1-2 câu ngắn (tối đa 25 từ). Tự xưng là "em" và gọi khán giả là "bạn ${userName}".`;
+
+              const aiRes = await askGeminiLiveAi({
+                question: commentText,
+                username: userName,
+                role: commentConfig.ttsVoiceRole || 'assistant',
+                context: `${liveContext}. Chỉ đạo AI: ${aiPrompt}`
+              });
+
+              if (aiRes && aiRes.text && aiRes.text.trim()) {
+                bodyAnswer = aiRes.text.trim();
+                isHandled = true;
+              }
+            } catch (aiErr) {
+              console.warn('AI Brain call error:', aiErr);
+            }
+          }
+
+          // Fallback khéo léo thông minh nếu AI ngoại tuyến hoặc không trả lời
+          if (!isHandled) {
+            const fbTpl = commentConfig.unknownFallbackReply || 'Dạ bạn {user} ơi, câu hỏi này em xin phép ghi nhận lại để phản hồi chi tiết cho mình sau nha! Bạn có thể nhắn tin trực tiếp cho shop để nhận hỗ trợ nhanh nhất ạ!';
             bodyAnswer = fillTemplate(fbTpl, { user: userName, comment: commentText });
             isHandled = true;
           }
@@ -335,12 +471,12 @@ function fillTemplate(template, vars = {}) {
         }
       }
 
-      // 3. XỬ LÝ CHÀO NGƯỜI MỚI (VIEWER_JOIN / WELCOME)
+      // 3. XỬ LÝ CHÀO NGƯỜI MỚI (VIEWER_JOIN / WELCOME) - DUYỆT TUẦN TỰ VÒNG TRÒN KHÔNG TRÙNG LẶP
       else if (type === 'VIEWER_JOIN') {
         const welcomeConfig = configs.welcome || {};
         if (welcomeConfig.active !== false) {
           if (welcomeConfig.sampleAnswers) {
-            replyText = fillTemplate(getRandomSample(welcomeConfig.sampleAnswers), { user: userName, count: 1 });
+            replyText = fillTemplate(getSequentialSample(welcomeConfig.sampleAnswers, welcomeIndexRef, 'Dạ em chào bạn {user} mới vào xem live nha!'), { user: userName, count: 1 });
           } else {
             replyText = `Dạ em chào bạn ${userName} mới vào xem live nha! Chúc bạn có những phút giây xem live thật vui vẻ ạ!`;
           }
@@ -406,18 +542,70 @@ function fillTemplate(template, vars = {}) {
         }
       }
 
-      // 9. TỰ ĐỘNG TÌM & PHÁT VIDEO CÓ SẴN TRONG KHO MEDIA (PRE-RECORDED VIDEO EVENT)
+      // 9. XỬ LÝ NÓI CHUYỆN AI / DẪN CHUYỆN (TALKING / AI_TALK)
+      else if (type === 'TALKING' || type === 'AI_TALK') {
+        const talkingConfig = configs.talking || {};
+        if (talkingConfig.active !== false) {
+          if (talkingConfig.useAi !== false) {
+            try {
+              const aiRes = await askGeminiLiveAi({
+                question: payload?.topic || 'Hãy chia sẻ một câu chuyện ngắn hài hước hoặc một mẹo hữu ích thu hút người xem livestream',
+                username: userName || 'cả nhà',
+                role: 'idol',
+                context: 'Idol đang livestream nói chuyện giao lưu cùng người xem'
+              });
+              if (aiRes?.text) replyText = aiRes.text;
+            } catch (e) {}
+          }
+          if (!replyText && talkingConfig.sampleAnswers) {
+            replyText = getRandomSample(talkingConfig.sampleAnswers);
+          }
+          if (!replyText) {
+            replyText = payload?.text || 'Chào mọi người, hôm nay thật vui được đồng hành cùng cả nhà! Mọi người có câu hỏi hay muốn giao lưu gì cứ bình luận nhé!';
+          }
+        }
+      }
+
+      // 10. XỬ LÝ IM LẶNG - TỰ ĐỘNG NÓI KHUẤY ĐỘNG PHÒNG LIVE (IDLE)
+      else if (type === 'IDLE') {
+        const idleConfig = configs.idle || {};
+        if (idleConfig.active !== false) {
+          if (idleConfig.sampleAnswers) {
+            replyText = getRandomSample(idleConfig.sampleAnswers);
+          } else if (idleConfig.useAi !== false) {
+            try {
+              const aiRes = await askGeminiLiveAi({
+                question: 'Phòng live đang yên ắng trong vài giây, hãy nói 1 câu ngắn gọn sôi động kêu gọi mọi người tương tác hoặc thả tim',
+                username: 'cả nhà',
+                role: 'idol',
+                context: 'Idol livestream hâm nóng không khí'
+              });
+              if (aiRes?.text) replyText = aiRes.text;
+            } catch (e) {}
+          }
+          if (!replyText) {
+            replyText = 'Cả nhà ơi, mọi người bấm liên tục vào màn hình thả tim và để lại bình luận giúp em đẩy tương tác live lên nhé!';
+          }
+        }
+      }
+
+      // 11. XỬ LÝ XIN LỖI KHI BỎ SÓT COMMENT HOẶC LỖI (APOLOGY)
+      else if (type === 'APOLOGY') {
+        const apologyConfig = configs.apology || {};
+        if (apologyConfig.active !== false) {
+          if (apologyConfig.sampleAnswers) {
+            replyText = getRandomSample(apologyConfig.sampleAnswers);
+          } else {
+            replyText = 'Cả nhà ơi, đôi khi bình luận đông quá em không chào hết được, có lỡ bỏ sót ai thì mọi người thông cảm cho em nhé. Yêu cả nhà nhiều!';
+          }
+        }
+      }
+
+      // 12. TỰ ĐỘNG TÌM & PHÁT VIDEO CÓ SẴN TRONG KHO MEDIA (PRE-RECORDED VIDEO EVENT)
       let matchedEventVideo = null;
       if (Array.isArray(liveMedia) && liveMedia.length > 0) {
-        const evKey = type === 'GIFT' ? 'gift' : 
-                      type === 'VIEWER_JOIN' ? 'welcome' : 
-                      type === 'COMMENT' ? 'comment' : 
-                      type === 'LIKE' ? 'thanks_heart' : 
-                      type === 'FOLLOW' ? 'follow' : 
-                      type === 'PURCHASE' ? 'checkout' : '';
-        const evConf = evKey ? (configs[evKey] || {}) : {};
-        const targetCategory = evConf.videoCategory || (evKey === 'welcome' ? 'join' : evKey);
-        const targetFolder = evConf.videoFolder || '';
+        const targetCategory = currentEvConfig.videoCategory || (evKey === 'welcome' ? 'join' : evKey);
+        const targetFolder = currentEvConfig.videoFolder || '';
 
         // Ưu tiên 1: Khớp folder người dùng chỉ định
         if (targetFolder) {
@@ -440,7 +628,11 @@ function fillTemplate(template, vars = {}) {
         setActiveVideoItem(matchedEventVideo);
       }
 
-      // 10. PHÁT GIỌNG NÓI VOICE AI & LIP-SYNC KHI CÓ CÂU TRẢ LỜI
+      // 13. PHÁT GIỌNG NÓI VOICE AI & LIP-SYNC VỚI VOICE ĐỘC LẬP TỪNG TAB
+      const shouldSpeakVoice = currentEvConfig.useVoice !== false;
+      const targetVoiceId = currentEvConfig.voiceId || 'free_vi_female';
+      const targetVoiceRole = currentEvConfig.ttsVoiceRole || (evKey === 'comment' ? 'comment' : 'idol');
+
       if (replyText && replyText.trim()) {
         setViewerHistory(prev => [
           ...prev, 
@@ -453,12 +645,16 @@ function fillTemplate(template, vars = {}) {
           }
         ].slice(-20));
 
-        onVoiceReply({
-          text: replyText,
-          action: shouldAction,
-          baseVideoItem: matchedEventVideo || activeVideoItem,
-          preRecordedCat: matchedEventVideo ? matchedEventVideo.category : (shouldAction === 'gift_reaction' ? 'reaction' : null)
-        });
+        if (shouldSpeakVoice && onVoiceReply) {
+          onVoiceReply({
+            text: replyText,
+            action: shouldAction,
+            baseVideoItem: matchedEventVideo || activeVideoItem,
+            preRecordedCat: matchedEventVideo ? matchedEventVideo.category : (shouldAction === 'gift_reaction' ? 'reaction' : null),
+            voiceId: targetVoiceId,
+            voiceChannel: targetVoiceRole
+          });
+        }
       } else {
         // Không có cấu hình kịch bản phản hồi -> Bỏ qua và kết thúc sự kiện
         setIsProcessingEvent(false);

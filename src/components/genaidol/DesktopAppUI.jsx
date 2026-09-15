@@ -108,9 +108,9 @@ export default function DesktopAppUI() {
           const { data: dbUser } = await supabase.from('users').select('*').eq('email', emailClean).maybeSingle();
           if (dbUser) {
             if (dbUser.plan) userPlan = dbUser.plan.toUpperCase();
-            if (typeof dbUser.tokens === 'number') userTokens = isSuperAdmin ? Math.max(100000, dbUser.tokens) : dbUser.tokens;
-            if (typeof dbUser.live_minutes === 'number') userLiveMinutes = isSuperAdmin ? Math.max(600000, dbUser.live_minutes) : dbUser.live_minutes;
-            else if (typeof dbUser.liveMinutes === 'number') userLiveMinutes = isSuperAdmin ? Math.max(600000, dbUser.liveMinutes) : dbUser.liveMinutes;
+            if (typeof dbUser.tokens === 'number') userTokens = dbUser.tokens;
+            if (typeof dbUser.live_minutes === 'number') userLiveMinutes = dbUser.live_minutes;
+            else if (typeof dbUser.liveMinutes === 'number') userLiveMinutes = dbUser.liveMinutes;
           }
         } catch (e) {}
 
@@ -177,9 +177,9 @@ export default function DesktopAppUI() {
             avatar: dbUser.avatar_url || currentUser.avatar,
             isAdmin: isSuperAdmin,
             plan: isSuperAdmin ? 'SUPER ADMIN ENTERPRISE VIP' : (dbUser.plan || currentUser.plan || 'VIP PRO'),
-            tokens: isSuperAdmin ? Math.max(100000, typeof dbUser.tokens === 'number' ? dbUser.tokens : 100000) : (typeof dbUser.tokens === 'number' ? dbUser.tokens : (currentUser.tokens || 50000)),
-            liveMinutes: isSuperAdmin ? Math.max(600000, typeof dbUser.live_minutes === 'number' ? dbUser.live_minutes : 600000) : (typeof dbUser.live_minutes === 'number' ? dbUser.live_minutes : (currentUser.liveMinutes || 6000)),
-            liveTimeHours: Math.round((isSuperAdmin ? 600000 : (typeof dbUser.live_minutes === 'number' ? dbUser.live_minutes : (currentUser.liveMinutes || 6000))) / 60)
+            tokens: typeof dbUser.tokens === 'number' ? dbUser.tokens : (currentUser.tokens ?? (isSuperAdmin ? 100000 : 50000)),
+            liveMinutes: typeof dbUser.live_minutes === 'number' ? dbUser.live_minutes : (currentUser.liveMinutes ?? (isSuperAdmin ? 600000 : 6000)),
+            liveTimeHours: Math.round((typeof dbUser.live_minutes === 'number' ? dbUser.live_minutes : (currentUser.liveMinutes ?? (isSuperAdmin ? 600000 : 6000))) / 60)
           };
           setCurrentUser(updatedUser);
           try { localStorage.setItem('avalive_current_user', JSON.stringify(updatedUser)); } catch (e) {}
@@ -322,9 +322,9 @@ export default function DesktopAppUI() {
           if (dbUser.name) nameClean = dbUser.name;
           if (dbUser.avatar_url) avatarUrl = dbUser.avatar_url;
           if (dbUser.plan) userPlan = dbUser.plan.toUpperCase();
-          if (typeof dbUser.tokens === 'number') userTokens = isAdmin ? Math.max(100000, dbUser.tokens) : dbUser.tokens;
-          if (typeof dbUser.live_minutes === 'number') userLiveMinutes = isAdmin ? Math.max(600000, dbUser.live_minutes) : dbUser.live_minutes;
-          else if (typeof dbUser.liveMinutes === 'number') userLiveMinutes = isAdmin ? Math.max(600000, dbUser.liveMinutes) : dbUser.liveMinutes;
+          if (typeof dbUser.tokens === 'number') userTokens = dbUser.tokens;
+          if (typeof dbUser.live_minutes === 'number') userLiveMinutes = dbUser.live_minutes;
+          else if (typeof dbUser.liveMinutes === 'number') userLiveMinutes = dbUser.liveMinutes;
         } else {
           // Tạo mới tài khoản trên Supabase nếu chưa có
           await syncUserToSupabase({
@@ -1392,10 +1392,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   } = useLiveCoordinator({
     isConnected: isConnected || showSimulator || isScriptLiveRunning, // Cho phép Kịch bản Live / Simulator chạy độc lập nền
     activeBrainPack: 'talk', // mặc định
-    onVoiceReply: ({ text, action, baseVideoItem, preRecordedCat }) => {
-      // Gọi AIAudioPlayer để phát giọng nói
+    onVoiceReply: ({ text, action, baseVideoItem, preRecordedCat, voiceId, voiceChannel }) => {
+      // Gọi AIAudioPlayer để phát giọng nói với đúng Voice đã cài đặt cho tab sự kiện
       if (audioPlayerRef.current) {
-        audioPlayerRef.current.enqueueItem(text, action);
+        audioPlayerRef.current.enqueueItem(text, action, false, { voiceId, voiceChannel });
       }
       
       // Nếu có video reaction quay sẵn thì đổi video nền ngay
@@ -1448,23 +1448,20 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
   // ⏱️ QUẢN LÝ THỜI GIAN LIVE VÀ TRỪ ĐIỂM TOKEN REALTIME
   useEffect(() => {
-    if (!isMasterLiveRunning) return;
+    if (!isMasterLiveRunning && !isConnected) return;
 
-    // Định kỳ 60 giây (1 phút) trừ 1 phút phát Live
+    // Định kỳ 60 giây (1 phút) trừ 1 phút phát Live cho toàn bộ tài khoản (kể cả Admin)
     const liveTimer = setInterval(() => {
       setCurrentUser(prevUser => {
         if (!prevUser) return prevUser;
-        // Tài khoản Quản trị viên (Admin) không bao giờ hết hạn
-        if (prevUser.isAdmin || prevUser.email === 'quocthiencr90@gmail.com') {
-          return prevUser;
-        }
 
         const currentMinutes = typeof prevUser.liveMinutes === 'number' ? prevUser.liveMinutes : 60;
         const newMinutes = Math.max(0, currentMinutes - 1);
 
-        if (newMinutes <= 0) {
+        if (newMinutes <= 0 && !prevUser.isAdmin) {
           setIsMasterLiveRunning(false);
-          showToast('🔴 Hết thời gian phát Live dùng thử (1 Giờ)! Vui lòng nâng cấp gói VIP để tiếp tục phát live.', 'error');
+          setIsConnected(false);
+          showToast('🔴 Hết thời gian phát Live! Vui lòng nâng cấp gói VIP hoặc gia hạn thêm giờ live.', 'error');
         }
 
         const updated = {
@@ -1474,13 +1471,17 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         };
         try {
           localStorage.setItem('avalive_current_user', JSON.stringify(updated));
+          if (updated.email && updated.email !== 'khachhang@avalive.com' && supabase) {
+            supabase.from('users').update({ live_minutes: newMinutes }).eq('email', updated.email.toLowerCase().trim()).then(() => {});
+          }
+          window.dispatchEvent(new Event('avalive:user_updated'));
         } catch (e) {}
         return updated;
       });
     }, 60000);
 
     return () => clearInterval(liveTimer);
-  }, [isMasterLiveRunning]);
+  }, [isMasterLiveRunning, isConnected]);
 
   // Auto-deduct tokens when live session is active (AI Brain & Server)
   useEffect(() => {
@@ -4076,15 +4077,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     if (!isGmailLoginModalOpen) return null;
 
     const displayTokens = currentUser 
-      ? (currentUser.isAdmin 
-          ? (currentUser.tokens ? Number(currentUser.tokens).toLocaleString() : '100.000') 
-          : ((currentUser.plan === 'Free' || !currentUser.plan) ? '100' : (currentUser.tokens || 0).toLocaleString())) 
+      ? (typeof currentUser.tokens === 'number' 
+          ? Number(currentUser.tokens).toLocaleString() 
+          : ((currentUser.plan === 'Free' || !currentUser.plan) ? '100' : '100.000')) 
       : '0';
 
     const displayLiveTime = currentUser 
-      ? (currentUser.isAdmin 
-          ? (currentUser.liveMinutes ? `${Math.round(currentUser.liveMinutes / 60).toLocaleString()} Giờ` : '10.000 Giờ') 
-          : ((currentUser.plan === 'Free' || !currentUser.plan) ? '10h' : `${Math.round((currentUser.liveMinutes || 0) / 60)}h`)) 
+      ? (typeof currentUser.liveMinutes === 'number' 
+          ? `${Math.round(currentUser.liveMinutes / 60).toLocaleString()} Giờ` 
+          : ((currentUser.plan === 'Free' || !currentUser.plan) ? '1h' : '10.000 Giờ')) 
       : '0h';
 
     return (
@@ -4641,10 +4642,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
                 {/* 🪙 HIỂN THỊ RÕ RÀNG TOKEN & THỜI GIAN LIVE TRÊN THANH PHẦN MỀM */}
                 <span className="text-[10px] font-black text-amber-300 flex items-center gap-1 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/30">
-                  🪙 {currentUser.isAdmin ? (currentUser.tokens ? currentUser.tokens.toLocaleString() : '100.000') : ((currentUser.tokens || 0).toLocaleString())} Token
+                  🪙 {typeof currentUser.tokens === 'number' ? currentUser.tokens.toLocaleString() : '100.000'} Token
                 </span>
                 <span className="text-[10px] font-black text-cyan-300 flex items-center gap-1 bg-cyan-500/10 px-1.5 py-0.5 rounded border border-cyan-500/30">
-                  ⏱️ {currentUser.isAdmin ? (currentUser.liveMinutes ? `${Math.round(currentUser.liveMinutes / 60).toLocaleString()}h` : '10.000h') : `${Math.round((currentUser.liveMinutes || 0) / 60)}h`} Live
+                  ⏱️ {typeof currentUser.liveMinutes === 'number' ? `${Math.round(currentUser.liveMinutes / 60).toLocaleString()}h` : '10.000h'} Live
                 </span>
               </div>
             ) : (

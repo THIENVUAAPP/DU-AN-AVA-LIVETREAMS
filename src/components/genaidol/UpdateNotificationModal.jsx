@@ -2,29 +2,29 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.3.4';
+export const APP_VERSION = '1.3.5';
 export const RELEASE_DATE = '15/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👁️ Khắc Phục Hoàn Toàn Menu Nút [Theo Dõi]',
-    description: 'Sửa triệt để lỗi cắt xén hiển thị khi bấm mở Theo dõi. Bổ sung giao diện menu trực quan với icon, badge trạng thái và bộ đếm sự kiện realtime.'
+    title: '🪙 Trừ Token & Giờ Live Realtime Cho Mọi Tài Khoản (Kể Cả Super Admin)',
+    description: 'Xóa bỏ miễn trừ của Admin: Mọi tài khoản khi live và sử dụng Voice AI đều được trừ token và trừ giờ live chính xác theo thời gian thực, đồng bộ realtime xuống hệ thống.'
   },
   {
-    title: '🧹 Dọn Dẹp Thanh Header - Xóa Bỏ Ô Nút Dư Thừa [Cửa Sổ Live]',
-    description: 'Xóa hoàn toàn ô nút dư thừa trên thanh header chính của DesktopAppUI, giúp giao diện gọn gàng, tinh tế và tối ưu không gian thao tác.'
+    title: '👋 Chào Người Mới Vòng Tròn Tuần Tự Không Trùng Lặp',
+    description: 'Kích hoạt mặc định sự kiện Chào Người Mới với thuật toán Round-Robin: Mỗi người xem mới vào phòng sẽ được chào bằng 1 câu khác nhau từ danh sách nạp, chỉ lặp lại khi đã chào hết toàn bộ danh sách.'
   },
   {
-    title: '🎙️ Kích Hoạt Giọng Nói & Trả Lời Bình Luận AI Tức Thì',
-    description: 'Nâng cấp hệ thống AI Voice: Tự động trả lời bình luận, cảm ơn quà tặng, chào mừng người xem và phát TTS âm thanh ngay cả khi không bật kịch bản nền.'
+    title: '🧠 Bộ Não AI (Gemini 1.5 Flash) Trả Lời Mọi Câu Hỏi Bình Luận',
+    description: 'Tự động gọi Bộ Não AI phân tích ngữ cảnh phiên live để trả lời trực tiếp mọi câu hỏi bình luận từ khán giả (không cần từ khóa cứng) kèm cơ chế fallback thông minh.'
   },
   {
-    title: '🪙 Hiển Thị Minh Bạch 100.000 Token & 10.000 Giờ Live',
-    description: 'Xóa bỏ chữ "Vô Hạn", hiển thị con số chính xác (100.000 Token & 10.000h Live) trên thanh trạng thái header và modal tài khoản. Đồng bộ realtime từ Admin Dashboard.'
+    title: '🎙️ Cài Đặt & Lưu Vĩnh Viễn Giọng Đọc (Voice) Độc Lập Cho Từng Sự Kiện',
+    description: 'Người dùng có thể chọn giọng đọc riêng cho từng tab (Chào người mới, Bình luận, Chốt đơn, Quà tặng, Xin lỗi...), hệ thống lưu cố định vĩnh viễn và phát chuẩn xác 100% giọng đã chọn.'
   },
   {
-    title: '🔒 Khóa Nguyên Trạng Độc Lập Window Capture & Đường Link Live Online',
-    description: 'Giữ nguyên 100% tính độc lập và ổn định tuyệt đối của 2 tab code phát sóng, duy trì chất lượng 4K 60 FPS mượt mà cho TikTok Live Studio và OBS.'
+    title: '⚡ Kích Hoạt & Hoàn Thiện Toàn Bộ 13 Tab Cài Đặt Sự Kiện',
+    description: 'Khai mở và xử lý trọn vẹn toàn bộ các tab: Kịch bản, Chốt đơn, Quà tặng, Quà đặc biệt, Theo dõi, Chia sẻ, Cảm ơn tim, Chào người mới, Nói chuyện AI, Im lặng, Xin lỗi, Kêu gọi tương tác.'
   }
 ];
 

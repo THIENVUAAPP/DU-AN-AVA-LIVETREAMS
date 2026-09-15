@@ -6,10 +6,10 @@
   "mediaUrl": "/uploads/media-1789044811424-233037063.mp4",
   "isVideo": true,
   "videoPlaybackEvent": "play",
-  "isPlaying": true,
+  "isPlaying": false,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1789442185069,
+  "updatedAt": 1789454429451,
   "flvUrl": null,
   "isConnected": false,
   "type": "MASTER_LIVE_STATE_UPDATE",
@@ -17,9 +17,9 @@
   "selectedCharacter": "custom_1789044810661",
   "isUserExplicitMediaLocked": true,
   "videoCurrentTime": 0,
-  "isVideoAudioMuted": false,
-  "videoVolume": 1,
+  "isVideoAudioMuted": true,
+  "videoVolume": 0,
   "clearMedia": false,
-  "tunnelUrl": "https://barriers-harbour-vanilla-businesses.trycloudflare.com",
-  "isMuted": false
+  "tunnelUrl": "https://entrance-buy-antique-menu.trycloudflare.com",
+  "isMuted": true
 }
