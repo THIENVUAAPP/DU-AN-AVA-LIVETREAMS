@@ -2,29 +2,25 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.3.6';
+export const APP_VERSION = '1.3.7';
 export const RELEASE_DATE = '15/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '💬 Tự Động Ghim Sản Phẩm Theo Bình Luận Khách Hàng (Auto Pin by Comments)',
+    description: 'Khi khán giả/khách hàng bình luận bất kỳ mã số (mã 1, sp1, chốt 2, #1, 01...), tên sản phẩm hoặc từ khóa liên quan, hệ thống lập tức tự động nhận diện và ghim đúng sản phẩm đó lên livestream để khách hàng click mua ngay.'
+  },
+  {
+    title: '🎯 Tích Hợp Toàn Diện 3 Nguồn Ghim Sản Phẩm Tự Động 100%',
+    description: 'Đồng bộ ghim sản phẩm đa nguồn: (1) Từ bình luận người xem trên Live, (2) Từ giọng đọc AI khi tư vấn/kịch bản, (3) Từ video clip minh họa sản phẩm đang phát sóng.'
+  },
   {
     title: '🛡️ Tự Động Giải Captcha 100% 24/7 Cho TikTok Shop & Mọi Nền Tảng',
     description: 'Hệ thống AVA Stealth tích hợp sẵn tự động vượt 100% mọi loại Captcha (Slider Puzzle, 3D Rotate, Turnstile v3, Image CAPTCHA, reCAPTCHA Enterprise) với tốc độ 8-15ms, đảm bảo mở TikTok Shop và đồng bộ giỏ hàng không bao giờ bị chặn hay gián đoạn luồng live.'
   },
   {
-    title: '📌 Ghim Sản Phẩm Tự Động Theo Thời Gian Thực (AI & Video Real-time Auto-Pin)',
-    description: 'Khi AI nhân vật đọc đến tên/từ khóa/mã sản phẩm trong kịch bản thoại hoặc khi video clip minh họa của sản phẩm bắt đầu phát sóng, hệ thống tự động nhận diện và ghim ngay lập tức sản phẩm đó lên livestream & TikTok Shop 100% tự động mà không cần bấm thủ công.'
-  },
-  {
     title: '📺 Đồng Bộ Thẻ Ghim Deal Trực Quan Đa Màn Hình',
     description: 'Hiển thị thẻ Ghim Deal Hot với hiệu ứng glow, giá sốc, mã giảm giá và hình ảnh sản phẩm đồng bộ tức thì trên Màn hình Live Preview, TikTok Shop Studio, Tab Chốt Đơn và OBS / TikTok Live Studio (CleanLiveOverlay).'
-  },
-  {
-    title: '🪙 Trừ Token & Giờ Live Realtime Cho Mọi Tài Khoản (Kể Cả Super Admin)',
-    description: 'Xóa bỏ miễn trừ của Admin: Mọi tài khoản khi live và sử dụng Voice AI đều được trừ token và trừ giờ live chính xác theo thời gian thực, đồng bộ realtime xuống hệ thống.'
-  },
-  {
-    title: '👋 Chào Người Mới Vòng Tròn Tuần Tự & Bộ Não Trả Lời Bình Luận Gemini AI',
-    description: 'Tự động duyệt tuần tự vòng tròn danh sách câu chào không trùng lặp và kích hoạt Gemini 1.5 Flash trả lời mọi câu hỏi của người xem.'
   }
 ];
 

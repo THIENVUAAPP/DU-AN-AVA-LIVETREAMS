@@ -352,6 +352,9 @@ export default function LiveCommerceStudio({ isLive }) {
     e.preventDefault();
     if (!inputMsg.trim()) return;
 
+    // 📌 TỰ ĐỘNG GHIM SẢN PHẨM KHI CÂU TRẢ LỜI CÓ MÃ SP / TÊN SP
+    autoPinProductService.detectAndAutoPinByText(inputMsg.trim(), 'manual_reply');
+
     const newMsg = {
       id: Date.now(),
       user: consultantName,

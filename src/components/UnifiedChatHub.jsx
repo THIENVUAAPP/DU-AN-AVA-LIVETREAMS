@@ -34,6 +34,7 @@ import {
   PlusCircle,
   X
 } from 'lucide-react';
+import autoPinProductService from '../utils/autoPinProductService';
 
 export default function UnifiedChatHub({ isLive }) {
 
@@ -99,6 +100,9 @@ export default function UnifiedChatHub({ isLive }) {
   const handleSimulateCustomComment = (e) => {
     e.preventDefault();
     if (!customSimulateInput.trim()) return;
+
+    // 📌 TỰ ĐỘNG GHIM SẢN PHẨM KHI BÌNH LUẬN CÓ MÃ SP / TÊN SP
+    autoPinProductService.detectAndAutoPinByText(customSimulateInput.trim(), 'viewer_comment');
 
     const isBuy = customSimulateInput.includes("chốt") || customSimulateInput.includes("CHỐT") || customSimulateInput.includes("SĐT") || customSimulateInput.includes("09");
 

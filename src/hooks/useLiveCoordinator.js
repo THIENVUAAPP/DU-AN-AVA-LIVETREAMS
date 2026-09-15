@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from 'react';
 import { getAllLiveMedia } from '../lib/liveKhoDB';
 import { askGeminiLiveAi } from '../lib/geminiClient';
+import autoPinProductService from '../utils/autoPinProductService';
 
 export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack = 'talk' }) {
   const [liveMedia, setLiveMedia] = useState([]);
@@ -291,6 +292,12 @@ function fillTemplate(template, vars = {}) {
       // 1. XỬ LÝ SỰ KIỆN BÌNH LUẬN (COMMENT) - BỘ NÃO AI GEMINI FLASH + QUY TRÌNH 4 BƯỚC
       if (type === 'COMMENT') {
         const commentText = (payload?.text || payload?.comment || '').trim();
+        
+        // 📌 TỰ ĐỘNG GHIM SẢN PHẨM KHI KHÁCH HÀNG COMMENT MÃ SỐ / TÊN SP / TỪ KHÓA
+        if (commentText) {
+          autoPinProductService.detectAndAutoPinByText(commentText, 'viewer_comment');
+        }
+
         const commentConfig = configs.comment || {};
         const scriptConfig = configs.script_broadcast || configs.checkout || {};
         const checkoutConfig = configs.checkout || {};

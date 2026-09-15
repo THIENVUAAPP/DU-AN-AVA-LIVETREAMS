@@ -152,10 +152,11 @@ class AutoPinProductService {
   }
 
   /**
-   * Nhận diện và ghim sản phẩm theo văn bản câu thoại AI đang đọc (Speech / Script / Comment Reply)
-   * @param {string} text - Câu thoại AI đang đọc
+   * Nhận diện và ghim sản phẩm theo văn bản (Bình luận của khách hàng hoặc Giọng đọc AI)
+   * @param {string} text - Nội dung bình luận hoặc câu thoại
+   * @param {string} triggerSource - 'viewer_comment' | 'ai_voice' | 'script'
    */
-  detectAndAutoPinByText(text) {
+  detectAndAutoPinByText(text, triggerSource = 'ai_voice') {
     if (!this.autoPinEnabled || !text || typeof text !== 'string') return null;
 
     const lowerText = text.toLowerCase().trim();
@@ -163,37 +164,60 @@ class AutoPinProductService {
 
     if (products.length === 0) return null;
 
-    for (const prod of products) {
+    for (let index = 0; index < products.length; index++) {
+      const prod = products[index];
+      const prodIndex = index + 1;
+      const idStr = String(prod.id);
+      const indexStr = String(prodIndex);
+
       // 1. Kiểm tra theo Tên Sản Phẩm
       const prodName = (prod.name || prod.productName || '').toLowerCase().trim();
       if (prodName && prodName.length >= 3 && lowerText.includes(prodName)) {
-        this.pinProduct(prod, 'ai_speech_name_match');
+        this.pinProduct(prod, triggerSource === 'viewer_comment' ? 'viewer_comment_name_match' : 'ai_speech_name_match');
         return prod;
       }
 
-      // 2. Kiểm tra theo Từ Khóa Chốt Đơn (phân tách bởi dấu chấm phẩy ;)
+      // 2. Kiểm tra theo Từ Khóa Chốt Đơn (phân tách bởi dấu chấm phẩy hoặc dấu phẩy ;)
       if (prod.keywords) {
-        const keywords = prod.keywords.split(';').map(k => k.trim().toLowerCase()).filter(k => k.length >= 2);
+        const keywords = prod.keywords.split(/[;,]/).map(k => k.trim().toLowerCase()).filter(k => k.length >= 2);
         for (const kw of keywords) {
           if (lowerText.includes(kw)) {
-            this.pinProduct(prod, `ai_speech_keyword_match: ${kw}`);
+            this.pinProduct(prod, triggerSource === 'viewer_comment' ? `viewer_comment_keyword: ${kw}` : `ai_speech_keyword: ${kw}`);
             return prod;
           }
         }
       }
 
-      // 3. Kiểm tra theo số thứ tự / mã sản phẩm (ví dụ: sp1, mã 1, sản phẩm 1, #1)
-      const idStr = String(prod.id);
-      const codePatterns = [
-        `sp ${idStr}`, `sp${idStr}`, 
-        `mã ${idStr}`, `mã số ${idStr}`, `mã hàng ${idStr}`, 
-        `sản phẩm ${idStr}`, `sản phẩm số ${idStr}`, 
-        `#${idStr}`, `số ${idStr}`
-      ];
-      for (const pattern of codePatterns) {
-        if (lowerText.includes(pattern)) {
-          this.pinProduct(prod, `ai_speech_code_match: ${pattern}`);
+      // 3. Kiểm tra theo các dạng mã số sản phẩm (ID, số thứ tự, mã 01, sp1, chốt 1...)
+      const codeVariants = [idStr, indexStr, idStr.padStart(2, '0'), indexStr.padStart(2, '0')];
+      const uniqueVariants = [...new Set(codeVariants)];
+
+      for (const num of uniqueVariants) {
+        const patterns = [
+          `mã ${num}`, `mã số ${num}`, `mã hàng ${num}`, `mã#${num}`, `mã #${num}`,
+          `sp ${num}`, `sp${num}`, `sp #${num}`, `sp#${num}`,
+          `sản phẩm ${num}`, `sản phẩm số ${num}`, `sản phẩm #${num}`,
+          `mẫu ${num}`, `mẫu số ${num}`, `mẫu #${num}`,
+          `chốt ${num}`, `chốt mã ${num}`, `chốt sp ${num}`, `chốt đơn ${num}`,
+          `lấy ${num}`, `lấy mã ${num}`, `lấy sp ${num}`,
+          `mua ${num}`, `mua mã ${num}`, `mua sp ${num}`,
+          `xem ${num}`, `xem mã ${num}`, `xem sp ${num}`,
+          `ghim ${num}`, `ghim mã ${num}`, `ghim sp ${num}`, `ghim deal ${num}`,
+          `bật ${num}`, `bật mã ${num}`, `bật sp ${num}`,
+          `#${num}`, `số ${num}`, `cái số ${num}`, `món số ${num}`
+        ];
+
+        // Nếu bình luận là chuỗi ngắn chỉ chứa mỗi số mã sản phẩm (ví dụ "1", "01", "sp1", "#1")
+        if (lowerText === num || lowerText === `sp${num}` || lowerText === `#${num}` || lowerText === `mã ${num}`) {
+          this.pinProduct(prod, triggerSource === 'viewer_comment' ? `viewer_comment_exact_code: ${num}` : `ai_speech_exact_code: ${num}`);
           return prod;
+        }
+
+        for (const pattern of patterns) {
+          if (lowerText.includes(pattern)) {
+            this.pinProduct(prod, triggerSource === 'viewer_comment' ? `viewer_comment_pattern: ${pattern}` : `ai_speech_pattern: ${pattern}`);
+            return prod;
+          }
         }
       }
     }
