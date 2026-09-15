@@ -1391,12 +1391,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     setActiveVideoItem,
     setViewerHistory
   } = useLiveCoordinator({
-    isConnected: isConnected || showSimulator || isScriptLiveRunning, // Cho phép Kịch bản Live / Simulator chạy độc lập nền
+    isConnected: isConnected || showSimulator || isScriptLiveRunning || isGlobalDemoRunning || isMasterLiveRunning, // Cho phép Kịch bản Live / Simulator chạy độc lập nền
     activeBrainPack: 'talk', // mặc định
-    onVoiceReply: ({ text, action, baseVideoItem, preRecordedCat, voiceId, voiceChannel }) => {
+    onVoiceReply: ({ text, action, baseVideoItem, preRecordedCat, voiceId, voiceChannel, isTest }) => {
+      unlockAllAudio();
       // Gọi AIAudioPlayer để phát giọng nói với đúng Voice đã cài đặt cho tab sự kiện
       if (audioPlayerRef.current) {
-        audioPlayerRef.current.enqueueItem(text, action, false, { voiceId, voiceChannel });
+        audioPlayerRef.current.enqueueItem(text, action, false, { voiceId, voiceChannel, isTest });
       }
       
       // Nếu có video reaction quay sẵn thì đổi video nền ngay
@@ -1644,14 +1645,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }, 1500);
     } else {
       // 3. Kích hoạt Demo AI Idol Live
+      unlockAllAudio();
       const mockEvt = SIMULATION_EVENTS[Math.floor(Math.random() * SIMULATION_EVENTS.length)];
-      handleLiveEvent(mockEvt.type, mockEvt.payload);
+      handleLiveEvent(mockEvt.type, { ...mockEvt.payload, isTest: true });
       globalDemoTimerRef.current = setInterval(() => {
         const rand = SIMULATION_EVENTS[Math.floor(Math.random() * SIMULATION_EVENTS.length)];
-        handleLiveEvent(rand.type, rand.payload);
-      }, 3500);
+        handleLiveEvent(rand.type, { ...rand.payload, isTest: true });
+      }, 4000);
     }
-  }, [isGlobalDemoRunning, isGameBanDoActive, isGameBattleActive, handleLiveEvent, SIMULATION_EVENTS]);
+  }, [isGlobalDemoRunning, isGameBanDoActive, isGameBattleActive, handleLiveEvent, SIMULATION_EVENTS, unlockAllAudio]);
 
   const handleToggleAuto247 = useCallback(() => {
     const nextState = !isAuto247Running;
@@ -1751,17 +1753,19 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     await unlockAllAudio();
     let text = 'Hệ thống âm thanh nhạc nền, hiệu ứng và Voice AI đã kích hoạt sẵn sàng trên livestream!';
     if (role === 'idol') {
-      text = 'Chào mọi người, mình là Idol đây! Các bạn nghe giọng mình có rõ không ạ? Nhớ thả tim ủng hộ mình nha!';
+      text = 'Chào mọi người, em là Idol livestream đây ạ! Các tình yêu nghe giọng em có rõ không? Bấm vào màn hình thả tim ủng hộ em nhé!';
     } else if (role === 'manager') {
-      text = 'Xin chào, tôi là quản lý phiên live. Hệ thống giỏ hàng và chốt đơn đã sẵn sàng!';
+      text = 'Dạ em chào quý khách, em là trợ lý bán hàng trực tuyến! Hệ thống giỏ hàng và ưu đãi giảm giá 50% đã sẵn sàng!';
     } else {
       bandoAudio.playWarHorn({ force: true });
     }
     
-    setTimeout(() => {
+    // Phát âm thanh Voice AI trực tiếp 100%
+    previewVoiceAudio(role, text, { isTest: true, priority: true });
+    try {
       mapVoiceEngine.speak(text, role, true);
-    }, role === 'game' ? 400 : 100);
-    showToast(`🔊 Đang phát kiểm tra âm thanh Giọng ${role === 'idol' ? 'Nhân vật chính' : role === 'manager' ? 'Trợ lý' : 'Game'}!`, 'success');
+    } catch(e) {}
+    showToast(`🔊 Đang phát kiểm tra âm thanh Giọng ${role === 'idol' ? 'Idol' : role === 'manager' ? 'Trợ lý' : 'Game'}!`, 'success');
   }, [unlockAllAudio]);
 
   // 🔇 Xử lý Bật/Tắt Âm Thanh Video & Loa Xem Trước Phần Mềm (Độc Lập 100%, Áp Dụng Ngay Lập Tức Tức Thì 0ms)
@@ -2366,6 +2370,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   const handleLiveEventRef = useRef(handleLiveEvent);
   handleLiveEventRef.current = handleLiveEvent;
 
+  const handleSimEvent = useCallback((type, payload = {}) => {
+    unlockAllAudio();
+    if (handleLiveEventRef.current) {
+      handleLiveEventRef.current(type, { ...payload, isTest: true });
+    }
+  }, [unlockAllAudio]);
+
   // Lắng nghe sự kiện chạy test trực tiếp từ Shopee Live, Game và các Modal cấu hình
   useEffect(() => {
     const handleDirectLiveEvent = (e) => {
@@ -2511,8 +2522,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
     socket.on('tiktok_member', (data) => {
       if (!data) return;
-      // Kiểm tra công tắc Tự Động Chào Khán Giả (Bật/Tắt từ Cài Đặt)
-      if (mapVoiceEngine.isAutoGreetingEnabled === false) return;
+      // Kiểm tra công tắc Tự Động Chào Khán Giả từ Cài Đặt Sự Kiện
+      const rawConf = localStorage.getItem('aidol_event_configs');
+      if (rawConf) {
+        try {
+          const parsedConf = JSON.parse(rawConf);
+          if (parsedConf?.welcome?.active === false) return;
+        } catch (e) {}
+      }
       const author = data.username || data.nickname || '';
       if (!author || author === 'Khách mới' || author === 'Khán Giả') return;
       const key = author.toLowerCase().trim();
@@ -5415,10 +5432,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       <MessageCircle size={11} className="text-blue-500" /> Bình luận cơ bản:
                     </span>
                     <div className="grid grid-cols-1 gap-1.5">
-                      <button onClick={() => handleLiveEvent('COMMENT', { name: 'Khán Giả 1', text: 'Chào idol, hôm nay xinh quá!' })} className={`text-left p-1.5 rounded-lg text-[10px] font-medium transition-all flex justify-between border ${isDarkMode ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border-blue-500/20' : 'bg-blue-50 hover:bg-blue-100 text-blue-800 border-blue-200'}`}>
+                      <button onClick={() => handleSimEvent('COMMENT', { name: 'Khán Giả 1', text: 'Chào idol, hôm nay xinh quá!' })} className={`text-left p-1.5 rounded-lg text-[10px] font-medium transition-all flex justify-between border ${isDarkMode ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border-blue-500/20' : 'bg-blue-50 hover:bg-blue-100 text-blue-800 border-blue-200'}`}>
                         <span>💬 "Chào idol, hôm nay xinh quá!"</span>
                       </button>
-                      <button onClick={() => handleLiveEvent('COMMENT', { name: 'Khán Giả 2', text: 'Live mượt quá shop ơi!' })} className={`text-left p-1.5 rounded-lg text-[10px] font-medium transition-all flex justify-between border ${isDarkMode ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border-blue-500/20' : 'bg-blue-50 hover:bg-blue-100 text-blue-800 border-blue-200'}`}>
+                      <button onClick={() => handleSimEvent('COMMENT', { name: 'Khán Giả 2', text: 'Live mượt quá shop ơi!' })} className={`text-left p-1.5 rounded-lg text-[10px] font-medium transition-all flex justify-between border ${isDarkMode ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border-blue-500/20' : 'bg-blue-50 hover:bg-blue-100 text-blue-800 border-blue-200'}`}>
                         <span>💬 "Live mượt quá shop ơi!"</span>
                       </button>
                     </div>
@@ -5430,10 +5447,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       <Users size={11} className="text-emerald-500" /> Chào hỏi người mới:
                     </span>
                     <div className="grid grid-cols-2 gap-1.5">
-                      <button onClick={() => handleLiveEvent('VIEWER_JOIN', { name: 'Khách Mới 1' })} className={`py-1.5 px-2 rounded-lg text-[10px] font-medium transition-all text-center border ${isDarkMode ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'}`}>
+                      <button onClick={() => handleSimEvent('VIEWER_JOIN', { name: 'Khách Mới 1' })} className={`py-1.5 px-2 rounded-lg text-[10px] font-medium transition-all text-center border ${isDarkMode ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'}`}>
                         👋 Khách mới vào
                       </button>
-                      <button onClick={() => handleLiveEvent('VIEWER_JOIN', { name: 'Fan Cứng 👑' })} className={`py-1.5 px-2 rounded-lg text-[10px] font-medium transition-all text-center border ${isDarkMode ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'}`}>
+                      <button onClick={() => handleSimEvent('VIEWER_JOIN', { name: 'Fan Cứng 👑' })} className={`py-1.5 px-2 rounded-lg text-[10px] font-medium transition-all text-center border ${isDarkMode ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200'}`}>
                         ⭐ Fan Cứng vào
                       </button>
                     </div>
@@ -5445,10 +5462,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       <Gift size={11} className="text-amber-500" /> Cảm ơn Tặng quà:
                     </span>
                     <div className="grid grid-cols-2 gap-1.5">
-                      <button onClick={() => handleLiveEvent('GIFT', { name: 'Người Hâm Mộ', gift: 'Hoa Hồng', count: 1 })} className={`py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg text-[10px] font-medium transition-all text-center`}>
+                      <button onClick={() => handleSimEvent('GIFT', { name: 'Người Hâm Mộ', gift: 'Hoa Hồng', count: 1 })} className={`py-1.5 bg-rose-500/10 hover:bg-rose-500/20 text-rose-400 border border-rose-500/30 rounded-lg text-[10px] font-medium transition-all text-center`}>
                         🌹 Hoa Hồng (1 xu)
                       </button>
-                      <button onClick={() => handleLiveEvent('GIFT', { name: 'Đại Gia', gift: 'Thiết Giáp', count: 50 })} className={`py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded-lg text-[10px] font-medium transition-all text-center`}>
+                      <button onClick={() => handleSimEvent('GIFT', { name: 'Đại Gia', gift: 'Thiết Giáp', count: 50 })} className={`py-1.5 bg-amber-500/10 hover:bg-amber-500/20 text-amber-500 border border-amber-500/30 rounded-lg text-[10px] font-medium transition-all text-center`}>
                         🛡️ Thiết Giáp (50 xu)
                       </button>
                     </div>
@@ -5464,10 +5481,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       <Users size={11} className="text-purple-500" /> Khán giả vào phòng:
                     </span>
                     <div className="grid grid-cols-2 sm:grid-cols-4 gap-1.5">
-                      <button onClick={() => handleLiveEvent('VIEWER_JOIN', { name: 'Thanh Nhàn' })} className={`py-1.5 px-2 rounded-lg text-[10.5px] font-medium transition-all text-center truncate border ${isDarkMode ? 'bg-purple-500/10 hover:bg-purple-500/25 text-purple-300 border-purple-500/30' : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200'}`}>👋 Khách mới</button>
-                      <button onClick={() => handleLiveEvent('VIEWER_JOIN', { name: 'Vip_HoàngNam 👑' })} className={`py-1.5 px-2 rounded-lg text-[10.5px] font-medium transition-all text-center truncate border ${isDarkMode ? 'bg-indigo-500/10 hover:bg-indigo-500/25 text-indigo-300 border-indigo-500/30' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'}`}>⭐ VIP vào</button>
-                      <button onClick={() => handleLiveEvent('VIEWER_JOIN', { name: 'Bảo Trâm ❤️' })} className={`py-1.5 px-2 rounded-lg text-[10.5px] font-medium transition-all text-center truncate border ${isDarkMode ? 'bg-pink-500/10 hover:bg-pink-500/25 text-pink-300 border-pink-500/30' : 'bg-pink-50 hover:bg-pink-100 text-pink-700 border-pink-200'}`}>❤️ Fan cứng</button>
-                      <button onClick={() => handleLiveEvent('VIEWER_JOIN', { name: 'Chủ Tịch Tổng 💎' })} className={`py-1.5 px-2 rounded-lg text-[10.5px] font-medium transition-all text-center truncate border ${isDarkMode ? 'bg-amber-500/10 hover:bg-amber-500/25 text-amber-300 border-amber-500/30' : 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200'}`}>💎 Đại gia</button>
+                      <button onClick={() => handleSimEvent('VIEWER_JOIN', { name: 'Thanh Nhàn' })} className={`py-1.5 px-2 rounded-lg text-[10.5px] font-medium transition-all text-center truncate border ${isDarkMode ? 'bg-purple-500/10 hover:bg-purple-500/25 text-purple-300 border-purple-500/30' : 'bg-purple-50 hover:bg-purple-100 text-purple-700 border-purple-200'}`}>👋 Khách mới</button>
+                      <button onClick={() => handleSimEvent('VIEWER_JOIN', { name: 'Vip_HoàngNam 👑' })} className={`py-1.5 px-2 rounded-lg text-[10.5px] font-medium transition-all text-center truncate border ${isDarkMode ? 'bg-indigo-500/10 hover:bg-indigo-500/25 text-indigo-300 border-indigo-500/30' : 'bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border-indigo-200'}`}>⭐ VIP vào</button>
+                      <button onClick={() => handleSimEvent('VIEWER_JOIN', { name: 'Bảo Trâm ❤️' })} className={`py-1.5 px-2 rounded-lg text-[10.5px] font-medium transition-all text-center truncate border ${isDarkMode ? 'bg-pink-500/10 hover:bg-pink-500/25 text-pink-300 border-pink-500/30' : 'bg-pink-50 hover:bg-pink-100 text-pink-700 border-pink-200'}`}>❤️ Fan cứng</button>
+                      <button onClick={() => handleSimEvent('VIEWER_JOIN', { name: 'Chủ Tịch Tổng 💎' })} className={`py-1.5 px-2 rounded-lg text-[10.5px] font-medium transition-all text-center truncate border ${isDarkMode ? 'bg-amber-500/10 hover:bg-amber-500/25 text-amber-300 border-amber-500/30' : 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200'}`}>💎 Đại gia</button>
                     </div>
                   </div>
 
@@ -5476,13 +5493,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       <Gift size={11} className="text-amber-500" /> Tặng quà TikTok (Tất cả các mức xu):
                     </span>
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
-                      <button onClick={() => handleLiveEvent('GIFT', { name: 'Anh Tuấn', gift: 'Hoa Hồng', count: 1 })} className={`py-1.5 bg-rose-500/10 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate`}>🌹 Hoa Hồng (1 xu)</button>
-                      <button onClick={() => handleLiveEvent('GIFT', { name: 'Hoàng Long VIP', gift: 'Nước Hoa Thiết Giáp', count: 50 })} className={`py-1.5 bg-purple-500/10 hover:bg-purple-500/25 text-purple-400 border border-purple-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate`}>🛡️ Thiết Giáp (50)</button>
-                      <button onClick={() => handleLiveEvent('GIFT', { name: 'Đại Gia Phố Núi', gift: 'Vương Miện Hoàng Kim', count: 200 })} className={`py-1.5 bg-yellow-500/10 hover:bg-yellow-500/25 text-yellow-500 border border-yellow-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate`}>👑 Thần Tướng (200)</button>
-                      <button onClick={() => handleLiveEvent('GIFT', { name: 'Thần Kiếm', gift: 'Kiếm Sấm Sét', count: 500 })} className={`py-1.5 bg-cyan-500/10 hover:bg-cyan-500/25 text-cyan-400 border border-cyan-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate`}>⚔️ Vạn Kiếm (500)</button>
-                      <button onClick={() => handleLiveEvent('GIFT', { name: 'Chủ Tịch Tập Đoàn', gift: 'Thần Long Vũ Trụ', count: 1000 })} className={`py-1.5 bg-red-500/15 hover:bg-red-500/30 text-red-400 border border-red-500/40 rounded-lg text-[10px] font-bold transition-all text-center truncate`}>🐉 Giáng Long (1000)</button>
-                      <button onClick={() => handleLiveEvent('GIFT', { name: 'Tổng Giám Đốc', gift: 'Sư Tử Vàng Vũ Trụ', count: 10000 })} className={`py-1.5 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 hover:from-amber-500/30 hover:to-yellow-500/30 text-yellow-300 border border-yellow-400/50 rounded-lg text-[10px] font-black transition-all text-center truncate shadow-sm`}>🦁 Sư Tử (10k xu)</button>
-                      <button onClick={() => handleLiveEvent('GIFT', { name: 'Đại Tướng Quân', gift: 'Mũ Trụ TikTok Universe', count: 30000 })} className={`col-span-2 py-1.5 bg-gradient-to-r from-purple-600/30 via-pink-600/30 to-amber-600/30 hover:opacity-90 text-pink-300 border border-pink-400/60 rounded-lg text-[10px] font-black transition-all text-center truncate shadow-md animate-pulse`}>🚀 Mũ Trụ Siêu Cấp (30k)</button>
+                      <button onClick={() => handleSimEvent('GIFT', { name: 'Anh Tuấn', gift: 'Hoa Hồng', count: 1 })} className={`py-1.5 bg-rose-500/10 hover:bg-rose-500/25 text-rose-400 border border-rose-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate`}>🌹 Hoa Hồng (1 xu)</button>
+                      <button onClick={() => handleSimEvent('GIFT', { name: 'Hoàng Long VIP', gift: 'Nước Hoa Thiết Giáp', count: 50 })} className={`py-1.5 bg-purple-500/10 hover:bg-purple-500/25 text-purple-400 border border-purple-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate`}>🛡️ Thiết Giáp (50)</button>
+                      <button onClick={() => handleSimEvent('GIFT', { name: 'Đại Gia Phố Núi', gift: 'Vương Miện Hoàng Kim', count: 200 })} className={`py-1.5 bg-yellow-500/10 hover:bg-yellow-500/25 text-yellow-500 border border-yellow-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate`}>👑 Thần Tướng (200)</button>
+                      <button onClick={() => handleSimEvent('GIFT', { name: 'Thần Kiếm', gift: 'Kiếm Sấm Sét', count: 500 })} className={`py-1.5 bg-cyan-500/10 hover:bg-cyan-500/25 text-cyan-400 border border-cyan-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate`}>⚔️ Vạn Kiếm (500)</button>
+                      <button onClick={() => handleSimEvent('GIFT', { name: 'Chủ Tịch Tập Đoàn', gift: 'Thần Long Vũ Trụ', count: 1000 })} className={`py-1.5 bg-red-500/15 hover:bg-red-500/30 text-red-400 border border-red-500/40 rounded-lg text-[10px] font-bold transition-all text-center truncate`}>🐉 Giáng Long (1000)</button>
+                      <button onClick={() => handleSimEvent('GIFT', { name: 'Tổng Giám Đốc', gift: 'Sư Tử Vàng Vũ Trụ', count: 10000 })} className={`py-1.5 bg-gradient-to-r from-amber-500/20 to-yellow-500/20 hover:from-amber-500/30 hover:to-yellow-500/30 text-yellow-300 border border-yellow-400/50 rounded-lg text-[10px] font-black transition-all text-center truncate shadow-sm`}>🦁 Sư Tử (10k xu)</button>
+                      <button onClick={() => handleSimEvent('GIFT', { name: 'Đại Tướng Quân', gift: 'Mũ Trụ TikTok Universe', count: 30000 })} className={`col-span-2 py-1.5 bg-gradient-to-r from-purple-600/30 via-pink-600/30 to-amber-600/30 hover:opacity-90 text-pink-300 border border-pink-400/60 rounded-lg text-[10px] font-black transition-all text-center truncate shadow-md animate-pulse`}>🚀 Mũ Trụ Siêu Cấp (30k)</button>
                     </div>
                   </div>
 
@@ -5491,10 +5508,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       <Heart size={11} className="text-red-500" /> Tương tác kênh & Cột mốc Tim:
                     </span>
                     <div className="grid grid-cols-3 sm:grid-cols-4 gap-1.5">
-                      <button onClick={() => handleLiveEvent('LIKE', { count: '10.000 tim' })} className="py-1.5 bg-red-500/10 hover:bg-red-500/25 text-red-500 border border-red-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate">💖 10k Tim</button>
-                      <button onClick={() => handleLiveEvent('LIKE', { count: '50.000 tim' })} className="py-1.5 bg-pink-500/10 hover:bg-pink-500/25 text-pink-400 border border-pink-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate">💖 50k Tim</button>
-                      <button onClick={() => handleLiveEvent('FOLLOW', { name: 'Khánh Vy' })} className="py-1.5 bg-emerald-500/10 hover:bg-emerald-500/25 text-emerald-500 border border-emerald-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate">➕ Follow Kênh</button>
-                      <button onClick={() => handleLiveEvent('SHARE', { name: 'Minh Trang' })} className="py-1.5 bg-violet-500/10 hover:bg-violet-500/25 text-violet-500 border border-violet-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate">↗️ Chia Sẻ Live</button>
+                      <button onClick={() => handleSimEvent('LIKE', { count: '10.000 tim' })} className="py-1.5 bg-red-500/10 hover:bg-red-500/25 text-red-500 border border-red-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate">💖 10k Tim</button>
+                      <button onClick={() => handleSimEvent('LIKE', { count: '50.000 tim' })} className="py-1.5 bg-pink-500/10 hover:bg-pink-500/25 text-pink-400 border border-pink-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate">💖 50k Tim</button>
+                      <button onClick={() => handleSimEvent('FOLLOW', { name: 'Khánh Vy' })} className="py-1.5 bg-emerald-500/10 hover:bg-emerald-500/25 text-emerald-500 border border-emerald-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate">➕ Follow Kênh</button>
+                      <button onClick={() => handleSimEvent('SHARE', { name: 'Minh Trang' })} className="py-1.5 bg-violet-500/10 hover:bg-violet-500/25 text-violet-500 border border-violet-500/30 rounded-lg text-[10px] font-medium transition-all text-center truncate">↗️ Chia Sẻ Live</button>
                     </div>
                   </div>
                 </div>
@@ -5506,15 +5523,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   <div>
                     <span className={`text-[10px] font-bold uppercase tracking-wider block mb-1.5 ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>Các bình luận hỏi mua hàng:</span>
                     <div className="space-y-1.5">
-                      <button onClick={() => handleLiveEvent('COMMENT', { name: 'Hải Đăng', text: 'Mẫu này chất liệu gì và còn size L không shop?' })} className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border-blue-500/20' : 'bg-blue-50 hover:bg-blue-100 text-blue-800 border-blue-200'}`}>
+                      <button onClick={() => handleSimEvent('COMMENT', { name: 'Hải Đăng', text: 'Mẫu này chất liệu gì và còn size L không shop?' })} className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-blue-500/10 hover:bg-blue-500/20 text-blue-300 border-blue-500/20' : 'bg-blue-50 hover:bg-blue-100 text-blue-800 border-blue-200'}`}>
                         <span>🛒 "Mẫu này chất liệu gì và còn size L không shop?"</span>
                         <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${isDarkMode ? 'bg-blue-500/20 text-white' : 'bg-blue-200 text-blue-900'}`}>Hỏi Size</span>
                       </button>
-                      <button onClick={() => handleLiveEvent('COMMENT', { name: 'Quỳnh Như', text: 'Sản phẩm này giá bao nhiêu và có freeship không ạ?' })} className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/20' : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200'}`}>
+                      <button onClick={() => handleSimEvent('COMMENT', { name: 'Quỳnh Như', text: 'Sản phẩm này giá bao nhiêu và có freeship không ạ?' })} className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/20' : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200'}`}>
                         <span>💰 "Giá bao nhiêu và có freeship không ạ?"</span>
                         <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${isDarkMode ? 'bg-amber-500/20 text-white' : 'bg-amber-200 text-amber-900'}`}>Hỏi Giá</span>
                       </button>
-                      <button onClick={() => handleLiveEvent('COMMENT', { name: 'Bảo Long', text: 'Mình 1m70 nặng 65kg mặc size nào vừa chuẩn bạn ơi?' })} className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border-purple-500/20' : 'bg-purple-50 hover:bg-purple-100 text-purple-800 border-purple-200'}`}>
+                      <button onClick={() => handleSimEvent('COMMENT', { name: 'Bảo Long', text: 'Mình 1m70 nặng 65kg mặc size nào vừa chuẩn bạn ơi?' })} className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border-purple-500/20' : 'bg-purple-50 hover:bg-purple-100 text-purple-800 border-purple-200'}`}>
                         <span>📏 "Mình 1m70 nặng 65kg mặc size nào chuẩn?"</span>
                         <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${isDarkMode ? 'bg-purple-500/20 text-white' : 'bg-purple-200 text-purple-900'}`}>Tư Vấn</span>
                       </button>
@@ -5524,11 +5541,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   <div>
                     <span className={`text-[10px] font-bold uppercase tracking-wider block mb-1.5 mt-2 ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>Sự kiện khách đã chốt đơn:</span>
                     <div className="space-y-1.5">
-                      <button onClick={() => handleLiveEvent('PURCHASE', { name: 'Hoàng Nam', item: '1 Áo Polo Cao Cấp' })} className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200'}`}>
+                      <button onClick={() => handleSimEvent('PURCHASE', { name: 'Hoàng Nam', item: '1 Áo Polo Cao Cấp' })} className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-emerald-500/10 hover:bg-emerald-500/20 text-emerald-300 border-emerald-500/30' : 'bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border-emerald-200'}`}>
                         <span>🎉 Khách Hoàng Nam vừa chốt 1 Áo Polo</span>
                         <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${isDarkMode ? 'bg-emerald-500/30 text-white' : 'bg-emerald-200 text-emerald-900'}`}>1 Đơn</span>
                       </button>
-                      <button onClick={() => handleLiveEvent('PURCHASE', { name: 'Thanh Thảo VIP', item: 'Combo 2 Váy Thiết Kế Dạ Hội' })} className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-purple-50 hover:bg-purple-100 text-purple-800 border-purple-200'}`}>
+                      <button onClick={() => handleSimEvent('PURCHASE', { name: 'Thanh Thảo VIP', item: 'Combo 2 Váy Thiết Kế Dạ Hội' })} className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-purple-500/10 hover:bg-purple-500/20 text-purple-300 border-purple-500/30' : 'bg-purple-50 hover:bg-purple-100 text-purple-800 border-purple-200'}`}>
                         <span>🎁 Khách Thanh Thảo vừa chốt Combo 2 Váy</span>
                         <span className={`text-[9px] px-1.5 py-0.5 rounded font-bold ${isDarkMode ? 'bg-purple-500/30 text-white' : 'bg-purple-200 text-purple-900'}`}>Combo VIP</span>
                       </button>
@@ -5544,16 +5561,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   <div>
                     <span className={`text-[10px] font-bold uppercase tracking-wider block mb-1.5 ${isDarkMode ? 'text-gray-400' : 'text-slate-500'}`}>Bộ não AI & Trợ lý Đạo Diễn:</span>
                     <div className="grid grid-cols-2 gap-1.5">
-                      <button onClick={() => handleLiveEvent('ASSISTANT_PROMPT', { prompt: 'Nói một câu chào mừng hài hước để hâm nóng không khí!' })} className={`p-1.5 rounded-lg text-[10px] font-medium text-left truncate border ${isDarkMode ? 'bg-red-500/10 hover:bg-red-500/20 text-red-300 border-red-500/20' : 'bg-red-50 hover:bg-red-100 text-red-700 border-red-200'}`}>
+                      <button onClick={() => handleSimEvent('ASSISTANT_PROMPT', { prompt: 'Nói một câu chào mừng hài hước để hâm nóng không khí!' })} className={`p-1.5 rounded-lg text-[10px] font-medium text-left truncate border ${isDarkMode ? 'bg-red-500/10 hover:bg-red-500/20 text-red-300 border-red-500/20' : 'bg-red-50 hover:bg-red-100 text-red-700 border-red-200'}`}>
                         🔥 Hâm nóng không khí
                       </button>
-                      <button onClick={() => handleLiveEvent('ASSISTANT_PROMPT', { prompt: 'Nhắc mọi người bấm vào giỏ hàng đang có mã giảm giá!' })} className={`p-1.5 rounded-lg text-[10px] font-medium text-left truncate border ${isDarkMode ? 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'}`}>
+                      <button onClick={() => handleSimEvent('ASSISTANT_PROMPT', { prompt: 'Nhắc mọi người bấm vào giỏ hàng đang có mã giảm giá!' })} className={`p-1.5 rounded-lg text-[10px] font-medium text-left truncate border ${isDarkMode ? 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'}`}>
                         🛒 Nhắc xem giỏ hàng
                       </button>
-                      <button onClick={() => handleLiveEvent('ASSISTANT_PROMPT', { prompt: 'Hãy kể một câu chuyện vui ngắn 10 giây' })} className={`p-1.5 rounded-lg text-[10px] font-medium text-left truncate border ${isDarkMode ? 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'}`}>
+                      <button onClick={() => handleSimEvent('ASSISTANT_PROMPT', { prompt: 'Hãy kể một câu chuyện vui ngắn 10 giây' })} className={`p-1.5 rounded-lg text-[10px] font-medium text-left truncate border ${isDarkMode ? 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'}`}>
                         🎶 Kể chuyện vui
                       </button>
-                      <button onClick={() => handleLiveEvent('CALL_TO_ACTION', { prompt: 'Kêu gọi thả tim để mở khóa quà tặng!' })} className={`p-1.5 rounded-lg text-[10px] font-medium text-left truncate border ${isDarkMode ? 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'}`}>
+                      <button onClick={() => handleSimEvent('CALL_TO_ACTION', { prompt: 'Kêu gọi thả tim để mở khóa quà tặng!' })} className={`p-1.5 rounded-lg text-[10px] font-medium text-left truncate border ${isDarkMode ? 'bg-white/5 hover:bg-white/10 text-gray-300 border-white/10' : 'bg-slate-100 hover:bg-slate-200 text-slate-700 border-slate-200'}`}>
                         🙏 Kêu gọi thả tim
                       </button>
                     </div>
@@ -5563,9 +5580,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                         type="text" value={assistantPrompt} onChange={(e) => setAssistantPrompt(e.target.value)}
                         placeholder="VD: Nhắc idol giới thiệu..."
                         className={`flex-1 rounded-lg px-2 py-1 text-xs outline-none border ${isDarkMode ? 'bg-black/50 border-gray-700 text-white placeholder-gray-500 focus:border-red-500' : 'bg-slate-50 border-slate-300 text-slate-900 placeholder-slate-400 focus:border-red-500'}`}
-                        onKeyDown={(e) => { if (e.key === 'Enter' && assistantPrompt.trim()) { handleLiveEvent('ASSISTANT_PROMPT', { prompt: assistantPrompt.trim() }); setAssistantPrompt(''); } }}
+                        onKeyDown={(e) => { if (e.key === 'Enter' && assistantPrompt.trim()) { handleSimEvent('ASSISTANT_PROMPT', { prompt: assistantPrompt.trim() }); setAssistantPrompt(''); } }}
                       />
-                      <button onClick={() => { if (assistantPrompt.trim()) { handleLiveEvent('ASSISTANT_PROMPT', { prompt: assistantPrompt.trim() }); setAssistantPrompt(''); } }} className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1">
+                      <button onClick={() => { if (assistantPrompt.trim()) { handleSimEvent('ASSISTANT_PROMPT', { prompt: assistantPrompt.trim() }); setAssistantPrompt(''); } }} className="px-3 py-1 bg-red-600 hover:bg-red-500 text-white rounded-lg text-xs font-bold transition-all flex items-center gap-1">
                         <Send size={11} /> Gửi
                       </button>
                     </div>
@@ -5620,21 +5637,21 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                     </span>
                     <div className="space-y-1.5">
                       <button 
-                        onClick={() => handleLiveEvent('PURCHASE', { name: 'Ngọc Mai VIP 🛍️', item: 'Combo 2 Set Váy Thiết Kế Shopee Mall' })} 
+                        onClick={() => handleSimEvent('PURCHASE', { name: 'Ngọc Mai VIP 🛍️', item: 'Combo 2 Set Váy Thiết Kế Shopee Mall' })} 
                         className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 border-orange-500/30' : 'bg-orange-50 hover:bg-orange-100 text-orange-800 border-orange-200'}`}
                       >
                         <span>🛒 Khách Ngọc Mai chốt Combo Váy Shopee Mall</span>
                         <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-[#EE4D2D] text-white">599k</span>
                       </button>
                       <button 
-                        onClick={() => handleLiveEvent('PURCHASE', { name: 'Thanh Hằng 👑', item: 'Áo Thun Polo Shopee Live Hỏa Tốc' })} 
+                        onClick={() => handleSimEvent('PURCHASE', { name: 'Thanh Hằng 👑', item: 'Áo Thun Polo Shopee Live Hỏa Tốc' })} 
                         className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-orange-500/10 hover:bg-orange-500/20 text-orange-300 border-orange-500/30' : 'bg-orange-50 hover:bg-orange-100 text-orange-800 border-orange-200'}`}
                       >
                         <span>🛒 Khách Thanh Hằng chốt Áo Thun Shopee</span>
                         <span className="text-[9px] px-1.5 py-0.5 rounded font-bold bg-[#EE4D2D] text-white">250k</span>
                       </button>
                       <button 
-                        onClick={() => handleLiveEvent('COMMENT', { name: 'Minh Thư', text: 'Shop ơi có voucher giảm 50k của Shopee Live không ạ?' })} 
+                        onClick={() => handleSimEvent('COMMENT', { name: 'Minh Thư', text: 'Shop ơi có voucher giảm 50k của Shopee Live không ạ?' })} 
                         className={`w-full text-left p-2 rounded-lg text-[11px] font-medium transition-all flex items-center justify-between border ${isDarkMode ? 'bg-amber-500/10 hover:bg-amber-500/20 text-amber-300 border-amber-500/20' : 'bg-amber-50 hover:bg-amber-100 text-amber-800 border-amber-200'}`}
                       >
                         <span>🎟️ "Shop ơi có voucher Shopee Live không?"</span>

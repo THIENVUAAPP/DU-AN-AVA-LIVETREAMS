@@ -2856,37 +2856,53 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                           {/* BƯỚC 3: Ô CẤU HÌNH XỬ LÝ KHI AI KHÔNG BIẾT / KHÔNG HIỂU CÂU HỎI (FALLBACK KHÉO LÉO) */}
                           <div className="bg-white/90 p-3 rounded-xl border border-amber-200 shadow-xs space-y-2">
                             <div className="flex items-center justify-between">
-                              <label className="text-xs font-black text-amber-950 flex items-center gap-1.5">
+                              <label className="text-xs font-black text-amber-950 flex items-center gap-1.5 cursor-pointer" htmlFor="useUnknownFallbackReply-toggle">
                                 <span className="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center text-[10px] font-bold">3</span>
                                 <span>XỬ LÝ KHI AI KHÔNG BIẾT / KHÔNG HIỂU CÂU HỎI (KHÉO LÉO & CHUYÊN NGHIỆP)</span>
                               </label>
-                              <UniversalFileUploadButton 
-                                onLoaded={(text) => updateEventConfig('comment', { unknownFallbackReply: text })} 
-                                label="Nạp File" 
-                              />
+                              <div className="flex items-center gap-2">
+                                <input 
+                                  type="checkbox" 
+                                  id="useUnknownFallbackReply-toggle" 
+                                  name="useUnknownFallbackReply" 
+                                  checked={currentConfig.useUnknownFallbackReply !== false} 
+                                  onChange={(e) => updateEventConfig('comment', { useUnknownFallbackReply: e.target.checked })} 
+                                  className="w-4 h-4 text-amber-600 rounded cursor-pointer accent-amber-600" 
+                                />
+                                <span className="text-[11px] font-bold text-amber-700">{currentConfig.useUnknownFallbackReply !== false ? 'Đang Bật' : 'Tắt'}</span>
+                              </div>
                             </div>
-                            <p className="text-[11px] text-amber-800 leading-snug">
-                              Khi khách hỏi câu hỏi nằm ngoài kho tri thức hoặc AI chưa rõ, trợ lý AI sẽ tự động trả lời khéo léo thông báo là trợ lý live, sẽ ghi nhận lại hỏi shop và mời khách inbox trực tiếp:
-                            </p>
-                            <textarea 
-                              name="unknownFallbackReply" 
-                              value={currentConfig.unknownFallbackReply ?? 'Dạ bạn {user} ơi, câu hỏi này em là trợ lý live nên xin phép ghi nhận lại để hỏi lại shop và phản hồi chi tiết cho mình sau nha! Bạn có thể nhắn tin (inbox) trực tiếp cho shop để nhận hỗ trợ nhanh nhất ạ!'} 
-                              onChange={(e) => updateEventConfig('comment', { unknownFallbackReply: e.target.value })} 
-                              placeholder="Dạ bạn {user} ơi, câu hỏi này em là trợ lý live nên xin phép ghi nhận lại để hỏi lại shop..."
-                              className="w-full h-[65px] border border-amber-200 rounded-lg p-2 text-xs resize-none bg-amber-50/30 focus:bg-white focus:outline-amber-500 font-medium text-gray-800" 
-                            />
-                            <div className="flex items-center justify-between text-[10.5px] text-gray-500">
-                              <span>Hỗ trợ biến: <code className="text-amber-700 font-bold">{'{user}'}</code>, <code className="text-amber-700 font-bold">{'{comment}'}</code></span>
-                              <button 
-                                type="button" 
-                                onClick={() => updateEventConfig('comment', { 
-                                  unknownFallbackReply: 'Dạ bạn {user} ơi, câu hỏi này em là trợ lý live nên xin phép ghi nhận lại để hỏi lại shop và phản hồi chi tiết cho mình sau nha! Bạn có thể nhắn tin (inbox) trực tiếp cho shop để nhận hỗ trợ nhanh nhất ạ!' 
-                                })}
-                                className="text-amber-700 hover:text-amber-900 font-bold underline cursor-pointer"
-                              >
-                                Khôi phục câu chuẩn khéo léo
-                              </button>
-                            </div>
+
+                            {currentConfig.useUnknownFallbackReply !== false && (
+                              <div className="space-y-2 pt-1">
+                                <div className="flex items-center justify-between text-[11px] text-amber-800 leading-snug">
+                                  <span>Khi khách hỏi câu ngoài tri thức hoặc AI chưa rõ, tự động phản hồi khéo léo:</span>
+                                  <UniversalFileUploadButton 
+                                    onLoaded={(text) => updateEventConfig('comment', { unknownFallbackReply: text })} 
+                                    label="Nạp File" 
+                                  />
+                                </div>
+                                <textarea 
+                                  name="unknownFallbackReply" 
+                                  value={currentConfig.unknownFallbackReply ?? 'Dạ bạn {user} ơi, câu hỏi này em là trợ lý live nên xin phép ghi nhận lại để hỏi lại shop và phản hồi chi tiết cho mình sau nha! Bạn có thể nhắn tin (inbox) trực tiếp cho shop để nhận hỗ trợ nhanh nhất ạ!'} 
+                                  onChange={(e) => updateEventConfig('comment', { unknownFallbackReply: e.target.value })} 
+                                  placeholder="Dạ bạn {user} ơi, câu hỏi này em là trợ lý live nên xin phép ghi nhận lại để hỏi lại shop..."
+                                  className="w-full h-[65px] border border-amber-200 rounded-lg p-2 text-xs resize-none bg-amber-50/30 focus:bg-white focus:outline-amber-500 font-medium text-gray-800" 
+                                />
+                                <div className="flex items-center justify-between text-[10.5px] text-gray-500">
+                                  <span>Hỗ trợ biến: <code className="text-amber-700 font-bold">{'{user}'}</code>, <code className="text-amber-700 font-bold">{'{comment}'}</code></span>
+                                  <button 
+                                    type="button" 
+                                    onClick={() => updateEventConfig('comment', { 
+                                      unknownFallbackReply: 'Dạ bạn {user} ơi, câu hỏi này em là trợ lý live nên xin phép ghi nhận lại để hỏi lại shop và phản hồi chi tiết cho mình sau nha! Bạn có thể nhắn tin (inbox) trực tiếp cho shop để nhận hỗ trợ nhanh nhất ạ!' 
+                                    })}
+                                    className="text-amber-700 hover:text-amber-900 font-bold underline cursor-pointer"
+                                  >
+                                    Khôi phục câu chuẩn khéo léo
+                                  </button>
+                                </div>
+                              </div>
+                            )}
                           </div>
 
                           {/* BƯỚC 4: THÊM CÂU HỎI GỢI MỞ CHĂM SÓC KHÁCH HÀNG & CẢM ƠN SAU KHI TRẢ LỜI */}
@@ -2947,31 +2963,57 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                         </div>
                       )}
                       
-                      {currentConfig.active !== undefined && (
-                        <div className="flex items-center">
-                          <FieldLabel icon="✅" text="Kích hoạt" helpKey="active" htmlFor={`active-${selectedEventId}`} />
-                          <input type="checkbox" id={`active-${selectedEventId}`} name="active" checked={currentConfig.active} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" />
-                        </div>
-                      )}
+                      <div className="flex items-center">
+                        <FieldLabel icon="✅" text="Kích hoạt" helpKey="active" htmlFor={`active-${selectedEventId}`} />
+                        <input 
+                          type="checkbox" 
+                          id={`active-${selectedEventId}`} 
+                          name="active" 
+                          checked={currentConfig.active !== false} 
+                          onChange={(e) => updateEventConfig(selectedEventId, { active: e.target.checked })} 
+                          className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" 
+                        />
+                      </div>
 
-                      {currentConfig.useVoice !== undefined && selectedEventId !== 'talking' && selectedEventId !== 'idle' && (
+                      {selectedEventId !== 'talking' && selectedEventId !== 'idle' && (
                         <div className="flex items-center">
                           <FieldLabel icon="🗣️" text="Dùng giọng nói" helpKey="useVoice" htmlFor={`useVoice-${selectedEventId}`} />
-                          <input type="checkbox" id={`useVoice-${selectedEventId}`} name="useVoice" checked={currentConfig.useVoice} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" />
+                          <input 
+                            type="checkbox" 
+                            id={`useVoice-${selectedEventId}`} 
+                            name="useVoice" 
+                            checked={currentConfig.useVoice !== false} 
+                            onChange={(e) => updateEventConfig(selectedEventId, { useVoice: e.target.checked })} 
+                            className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" 
+                          />
                         </div>
                       )}
 
-                      {currentConfig.muteSourceVideo !== undefined && selectedEventId !== 'talking' && selectedEventId !== 'idle' && (
+                      {selectedEventId !== 'talking' && selectedEventId !== 'idle' && (
                         <div className="flex items-center">
                           <FieldLabel icon="🔇" text="Tắt âm gốc video" helpKey="muteSourceVideo" htmlFor={`muteSourceVideo-${selectedEventId}`} />
-                          <input type="checkbox" id={`muteSourceVideo-${selectedEventId}`} name="muteSourceVideo" checked={currentConfig.muteSourceVideo} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" />
+                          <input 
+                            type="checkbox" 
+                            id={`muteSourceVideo-${selectedEventId}`} 
+                            name="muteSourceVideo" 
+                            checked={currentConfig.muteSourceVideo !== false} 
+                            onChange={(e) => updateEventConfig(selectedEventId, { muteSourceVideo: e.target.checked })} 
+                            className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" 
+                          />
                         </div>
                       )}
 
-                      {currentConfig.useAi !== undefined && selectedEventId !== 'idle' && selectedEventId !== 'apology' && (
+                      {selectedEventId !== 'idle' && selectedEventId !== 'apology' && (
                         <div className="flex items-center">
                           <FieldLabel icon="🧠" text="Dùng AI trả lời" helpKey="useAi" htmlFor={`useAi-${selectedEventId}`} />
-                          <input type="checkbox" id={`useAi-${selectedEventId}`} name="useAi" checked={currentConfig.useAi} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" />
+                          <input 
+                            type="checkbox" 
+                            id={`useAi-${selectedEventId}`} 
+                            name="useAi" 
+                            checked={currentConfig.useAi !== false} 
+                            onChange={(e) => updateEventConfig(selectedEventId, { useAi: e.target.checked })} 
+                            className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" 
+                          />
                         </div>
                       )}
                       

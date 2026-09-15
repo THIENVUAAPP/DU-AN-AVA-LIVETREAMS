@@ -216,12 +216,20 @@ function getSavedEventConfigs() {
     const raw = localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup');
     if (raw) {
       const parsed = JSON.parse(raw);
-      // Đảm bảo tab Chào Người Mới luôn kích hoạt và có âm thanh theo chỉ đạo của người dùng
-      if (parsed.welcome) {
-        if (parsed.welcome.active === undefined) parsed.welcome.active = true;
-        if (parsed.welcome.useVoice === undefined || parsed.welcome.useVoice === false) parsed.welcome.useVoice = true;
-      }
-      return { ...defaultEventConfigs, ...parsed };
+      const merged = { ...defaultEventConfigs };
+      Object.keys(parsed).forEach(k => {
+        merged[k] = {
+          ...(defaultEventConfigs[k] || {}),
+          ...parsed[k]
+        };
+      });
+      // Đảm bảo active và useVoice luôn mặc định là true
+      Object.keys(merged).forEach(k => {
+        if (merged[k].active === undefined) merged[k].active = true;
+        if (merged[k].useVoice === undefined) merged[k].useVoice = true;
+        if (merged[k].useAi === undefined) merged[k].useAi = true;
+      });
+      return merged;
     }
   } catch (e) {
     console.warn('Lỗi đọc cấu hình live:', e);
@@ -267,6 +275,7 @@ function fillTemplate(template, vars = {}) {
     let replyText = '';
     let shouldAction = null;
     const userName = (payload?.name || payload?.username || 'Bạn').trim();
+    const isTestMode = payload?.isTest === true;
 
     // Xác định tab sự kiện tương ứng để lấy cấu hình và giọng đọc (Voice) riêng biệt
     const evKey = type === 'GIFT' ? (payload?.isSpecial ? 'special_gift' : 'gift') : 
@@ -283,8 +292,8 @@ function fillTemplate(template, vars = {}) {
 
     const currentEvConfig = evKey ? (configs[evKey] || {}) : {};
 
-    // Nếu sự kiện bị tắt, không xử lý
-    if (currentEvConfig.active === false) {
+    // Nếu sự kiện bị tắt và không phải đang test thủ công, không xử lý
+    if (currentEvConfig.active === false && !isTestMode) {
       return;
     }
 
@@ -305,7 +314,7 @@ function fillTemplate(template, vars = {}) {
         const replyMode = commentConfig.commentReplyMode || 'hybrid';
 
         // A. Kiểm tra từ khóa bị cấm (Banned Words)
-        if (commentConfig.bannedWords) {
+        if (commentConfig.bannedWords && !isTestMode) {
           const bannedList = commentConfig.bannedWords.split(/[\n;,]/).map(w => w.trim().toLowerCase()).filter(Boolean);
           if (bannedList.some(b => commentText.toLowerCase().includes(b))) {
             setIsProcessingEvent(false);
@@ -419,13 +428,22 @@ function fillTemplate(template, vars = {}) {
 
           // Fallback khéo léo thông minh nếu AI ngoại tuyến hoặc không trả lời
           if (!isHandled) {
-            const fbTpl = commentConfig.unknownFallbackReply || 'Dạ bạn {user} ơi, câu hỏi này em xin phép ghi nhận lại để phản hồi chi tiết cho mình sau nha! Bạn có thể nhắn tin trực tiếp cho shop để nhận hỗ trợ nhanh nhất ạ!';
-            bodyAnswer = fillTemplate(fbTpl, { user: userName, comment: commentText });
-            isHandled = true;
+            if (commentConfig.useUnknownFallbackReply !== false) {
+              const fbTpl = commentConfig.unknownFallbackReply || 'Dạ bạn {user} ơi, câu hỏi này em xin phép ghi nhận lại để phản hồi chi tiết cho mình sau nha! Bạn có thể nhắn tin trực tiếp cho shop để nhận hỗ trợ nhanh nhất ạ!';
+              bodyAnswer = fillTemplate(fbTpl, { user: userName, comment: commentText });
+              isHandled = true;
+            } else if (commentConfig.sampleAnswers) {
+              const rawSample = getRandomSample(commentConfig.sampleAnswers);
+              bodyAnswer = fillTemplate(rawSample, { user: userName, comment: commentText });
+              isHandled = true;
+            } else {
+              bodyAnswer = `Dạ em cảm ơn câu hỏi của bạn ${userName} nha! Shop đã nhận được và hỗ trợ mình ngay ạ!`;
+              isHandled = true;
+            }
           }
         }
 
-        // BƯỚC 3: HẬU TỐ CÂU HỎI GỢI MỞ CHĂM SÓC KHÁCH HÀNG & CẢM ƠN (INBOX SHOP)
+        // BƯỚC 4: HẬU TỐ CÂU HỎI GỢI MỞ CHĂM SÓC KHÁCH HÀNG & CẢM ƠN (INBOX SHOP)
         let followUpPart = '';
         if (commentConfig.appendFollowUpQuestion !== false) {
           const tpl = commentConfig.followUpQuestionText || ' Dạ không biết bạn {user} có cần em hỗ trợ thêm điều gì nữa không ạ? Bạn có thể nhắn tin trực tiếp cho shop để nhận tư vấn chi tiết và nhiều ưu đãi nha!';
@@ -636,7 +654,7 @@ function fillTemplate(template, vars = {}) {
       }
 
       // 13. PHÁT GIỌNG NÓI VOICE AI & LIP-SYNC VỚI VOICE ĐỘC LẬP TỪNG TAB
-      const shouldSpeakVoice = currentEvConfig.useVoice !== false;
+      const shouldSpeakVoice = (currentEvConfig.useVoice !== false) || isTestMode;
       const targetVoiceId = currentEvConfig.voiceId || 'free_vi_female';
       const targetVoiceRole = currentEvConfig.ttsVoiceRole || (evKey === 'comment' ? 'comment' : 'idol');
 
@@ -659,7 +677,8 @@ function fillTemplate(template, vars = {}) {
             baseVideoItem: matchedEventVideo || activeVideoItem,
             preRecordedCat: matchedEventVideo ? matchedEventVideo.category : (shouldAction === 'gift_reaction' ? 'reaction' : null),
             voiceId: targetVoiceId,
-            voiceChannel: targetVoiceRole
+            voiceChannel: targetVoiceRole,
+            isTest: isTestMode
           });
         }
       } else {

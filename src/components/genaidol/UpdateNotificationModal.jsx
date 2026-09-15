@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.0.0';
+export const APP_VERSION = '3.0.1';
 export const RELEASE_DATE = '15/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🔥 Bản Cập Nhật Hotfix v3.0.1 - Tối Ưu Live Video AI Voice & Bộ Não Tương Tác Sự Kiện',
+    description: 'Nâng cấp toàn diện bộ điều phối Live Coordinator: đảm bảo 100% khi phát video live các sự kiện Chào Người Mới, Trả Lời Bình Luận, Follow, Tặng Quà, Chốt Đơn đều tự động kích hoạt Voice AI và Bộ Não AI siêu mượt; bổ sung nút bật/tắt Fallback câu hỏi chưa hiểu và tối ưu hệ thống Test Simulator.'
+  },
   {
     title: '🌟 Bản Phát Hành Lớn AvaLive Studio VIP PRO v3.0.0 (Đầy Đủ 100% Mọi Chức Năng)',
     description: 'Bản phát hành chính thức thế hệ mới đồng bộ toàn diện tất cả các công nghệ: Auto Pin Sản Phẩm Đa Nguồn, Vượt Captcha 24/7, Multi-Avatar Studio, Kho 40+ Giọng AI Độc Bản DSP, LipSync Khớp Khẩu Hình, Shopee Live & Game Livestream PK tương tác.'

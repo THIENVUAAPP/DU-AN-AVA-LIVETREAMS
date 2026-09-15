@@ -361,12 +361,24 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         if (nextPriVoice) prefetchTTSAudio(nextPri.text, nextPriVoice);
       }
 
+      let watchdogTimer = setTimeout(() => {
+        if (isBusyRef.current) {
+          console.warn('[AIAudioPlayer] Watchdog safety reset busy state');
+          isBusyRef.current = false;
+          if (priorityQueueRef.current.length > 0) {
+            const nextPriority = priorityQueueRef.current.shift();
+            if (nextPriority) playItem(nextPriority, false);
+          }
+        }
+      }, 15000);
+
       await previewVoiceAudio(activeVoice, item.text, {
         priority: true,
-        isTest: false,
+        isTest: !!item.isTest,
         volume: item.volume !== undefined ? item.volume : activeVoice?.volume,
         rate: item.rate !== undefined ? item.rate : activeVoice?.rate,
         onEnd: () => {
+          if (watchdogTimer) clearTimeout(watchdogTimer);
           if (typeof window !== 'undefined') {
             window.dispatchEvent(new CustomEvent('avalive_speaker_change', {
               detail: {
@@ -461,7 +473,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         else voiceObj = { id: options.voiceId, lang: 'vi-VN', gender: 'Female' };
       }
 
-      const newItem = { id: `dyn_${Date.now()}`, type: 'dynamic', text, action, voiceChannel, voiceObj };
+      const newItem = { id: `dyn_${Date.now()}`, type: 'dynamic', text, action, voiceChannel, voiceObj, isTest: !!options?.isTest };
       
       // Cho vào hàng đợi ưu tiên: Đợi câu hiện tại đọc xong dứt điểm rồi phát ngay, không ngắt giữa chừng
       priorityQueueRef.current.push(newItem);
