@@ -72,7 +72,61 @@ export default function AdminDashboard({ currentUser, aiAvatarFeatureEnabled, se
     
     overrides[email] = userOverride;
     localStorage.setItem('avalive_user_overrides', JSON.stringify(overrides));
-    alert(`Đã cập nhật thành công cho ${email}!\nVui lòng yêu cầu người dùng đăng nhập lại hoặc F5 tải lại trang để nhận cấu hình mới.`);
+
+    // ⚡ Đồng bộ tức thì nếu đang đăng nhập tài khoản này trên máy
+    try {
+      const currentSaved = localStorage.getItem('avalive_current_user');
+      if (currentSaved) {
+        const parsedCur = JSON.parse(currentSaved);
+        if (parsedCur.email && parsedCur.email.toLowerCase() === email.toLowerCase()) {
+          if (userOverride.tokens !== undefined) parsedCur.tokens = userOverride.tokens;
+          if (userOverride.liveTime !== undefined) {
+            parsedCur.liveMinutes = userOverride.liveTime;
+            parsedCur.liveTimeHours = Math.round(userOverride.liveTime / 60);
+          }
+          if (userOverride.plan) parsedCur.plan = userOverride.plan;
+          if (userOverride.role) {
+            parsedCur.role = userOverride.role;
+            parsedCur.isAdmin = userOverride.role === 'admin';
+          }
+          localStorage.setItem('avalive_current_user', JSON.stringify(parsedCur));
+          window.dispatchEvent(new Event('avalive:user_updated'));
+        }
+      }
+    } catch (err) {}
+
+    // ⚡ Đồng bộ tức thì lên Supabase Users table
+    try {
+      const updatePayload = {};
+      if (userOverride.tokens !== undefined) updatePayload.tokens = userOverride.tokens;
+      if (userOverride.liveTime !== undefined) {
+        updatePayload.live_minutes = userOverride.liveTime;
+        updatePayload.liveMinutes = userOverride.liveTime;
+      }
+      if (userOverride.plan) updatePayload.plan = userOverride.plan;
+      if (userOverride.role) updatePayload.role = userOverride.role;
+      if (Object.keys(updatePayload).length > 0) {
+        await supabase.from('users').update(updatePayload).eq('email', email);
+      }
+    } catch (err) {
+      console.warn('Supabase permission sync error:', err);
+    }
+
+    // Cập nhật lại danh sách hiển thị trên bảng
+    setUsersList(prev => prev.map(u => {
+      if (u.email && u.email.toLowerCase() === email.toLowerCase()) {
+        return {
+          ...u,
+          tokens: userOverride.tokens !== undefined ? userOverride.tokens : u.tokens,
+          liveTime: userOverride.liveTime !== undefined ? userOverride.liveTime : u.liveTime,
+          plan: userOverride.plan || u.plan,
+          role: userOverride.role || u.role
+        };
+      }
+      return u;
+    }));
+
+    alert(`✅ Đã cập nhật thành công cho ${email}!\nTokens: ${userOverride.tokens ?? 'Giữ nguyên'} | Live: ${userOverride.liveTime ? `${userOverride.liveTime} phút` : 'Giữ nguyên'}`);
     form.reset();
   };
 

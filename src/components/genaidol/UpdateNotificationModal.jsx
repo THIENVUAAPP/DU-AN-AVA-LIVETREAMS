@@ -2,25 +2,29 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.3.3';
-export const RELEASE_DATE = '14/09/2026';
+export const APP_VERSION = '1.3.4';
+export const RELEASE_DATE = '15/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🛠️ Khắc Phục Triệt Để Lỗi Khởi Động "TemplateLibraryModal is not defined"',
-    description: 'Sửa lỗi thiếu khai báo import của TemplateLibraryModal trong App.jsx, giúp ứng dụng khởi động tức thì, mở giao diện mượt mà không gặp màn hình báo lỗi nâng cấp.'
+    title: '👁️ Khắc Phục Hoàn Toàn Menu Nút [Theo Dõi]',
+    description: 'Sửa triệt để lỗi cắt xén hiển thị khi bấm mở Theo dõi. Bổ sung giao diện menu trực quan với icon, badge trạng thái và bộ đếm sự kiện realtime.'
   },
   {
-    title: '🖥️ Tách Riêng 2 Tab Code Độc Lập: Window Capture & Đường Link Phát Online',
-    description: 'Tách hoàn toàn Window Capture (/window-capture) và Đường Link Live (/live-stream) thành 2 tab code riêng biệt độc lập 100%, không chồng chéo, không ảnh hưởng lẫn nhau.'
+    title: '🧹 Dọn Dẹp Thanh Header - Xóa Bỏ Ô Nút Dư Thừa [Cửa Sổ Live]',
+    description: 'Xóa hoàn toàn ô nút dư thừa trên thanh header chính của DesktopAppUI, giúp giao diện gọn gàng, tinh tế và tối ưu không gian thao tác.'
   },
   {
-    title: '✕ Nút Ẩn Toàn Bộ Tab & Nút Trên Giao Diện Video Window Capture (Phím tắt: H)',
-    description: 'Bổ sung nút [✕ Ẩn Toàn Bộ (H)] trên Window Capture, cho phép ẩn sạch 100% tất cả các nút điều khiển, đem lại khung hình video sạch hoàn toàn cho TikTok Live Studio & OBS.'
+    title: '🎙️ Kích Hoạt Giọng Nói & Trả Lời Bình Luận AI Tức Thì',
+    description: 'Nâng cấp hệ thống AI Voice: Tự động trả lời bình luận, cảm ơn quà tặng, chào mừng người xem và phát TTS âm thanh ngay cả khi không bật kịch bản nền.'
   },
   {
-    title: '🔒 Khóa Chặt Luồng Video 4K 60 FPS & Âm Thanh Siêu Mượt Suốt Nhiều Giờ',
-    description: 'Cả Window Capture và Đường Link Online đều được khóa chặt chuẩn 4K 60 FPS mượt mà, chống đứng hình, chống giật lag.'
+    title: '🪙 Hiển Thị Minh Bạch 100.000 Token & 10.000 Giờ Live',
+    description: 'Xóa bỏ chữ "Vô Hạn", hiển thị con số chính xác (100.000 Token & 10.000h Live) trên thanh trạng thái header và modal tài khoản. Đồng bộ realtime từ Admin Dashboard.'
+  },
+  {
+    title: '🔒 Khóa Nguyên Trạng Độc Lập Window Capture & Đường Link Live Online',
+    description: 'Giữ nguyên 100% tính độc lập và ổn định tuyệt đối của 2 tab code phát sóng, duy trì chất lượng 4K 60 FPS mượt mà cho TikTok Live Studio và OBS.'
   }
 ];
 

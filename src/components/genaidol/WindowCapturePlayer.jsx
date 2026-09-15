@@ -550,7 +550,7 @@ export default function WindowCapturePlayer() {
             zIndex: 10
           }}
         >
-          🔴 4K 60 FPS REALTIME v1.3.3
+          🔴 4K 60 FPS REALTIME v1.3.4
         </div>
       )}
     </div>

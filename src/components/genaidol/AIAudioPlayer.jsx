@@ -365,15 +365,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           }
           if (onActionTriggered) onActionTriggered({ type: 'LIPSYNC_ENDED' });
           isBusyRef.current = false;
-          
-          if (!isPlayingRef.current) return;
 
-          // Nếu có sự kiện ưu tiên đang chờ, phát sự kiện ưu tiên
+          // Nếu có sự kiện ưu tiên đang chờ (bình luận AI, quà tặng...), phát sự kiện ưu tiên tiếp theo ngay
           if (priorityQueueRef.current.length > 0) {
             const nextPriority = priorityQueueRef.current.shift();
             playItem(nextPriority, false);
             return;
           }
+
+          if (!isPlayingRef.current) return;
 
           // Tiếp tục đọc câu thoại kịch bản tiếp theo
           if (isScriptItem) {
@@ -445,7 +445,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       // Cho vào hàng đợi ưu tiên: Đợi câu hiện tại đọc xong dứt điểm rồi phát ngay, không ngắt giữa chừng
       priorityQueueRef.current.push(newItem);
       
-      if (!isBusyRef.current && isPlayingRef.current) {
+      // Phát câu thoại ưu tiên ngay nếu audio đang rảnh (kể cả khi không chạy kịch bản nền)
+      if (!isBusyRef.current) {
         const nextPriority = priorityQueueRef.current.shift();
         if (nextPriority) {
           playItem(nextPriority, false);

@@ -102,15 +102,15 @@ export default function DesktopAppUI() {
         
         let userPlan = isSuperAdmin ? 'SUPER ADMIN ENTERPRISE VIP' : 'VIP PRO';
         let userTokens = isSuperAdmin ? 100000 : 50000;
-        let userLiveMinutes = isSuperAdmin ? 6000000 : 6000;
+        let userLiveMinutes = isSuperAdmin ? 600000 : 6000;
 
         try {
           const { data: dbUser } = await supabase.from('users').select('*').eq('email', emailClean).maybeSingle();
           if (dbUser) {
             if (dbUser.plan) userPlan = dbUser.plan.toUpperCase();
             if (typeof dbUser.tokens === 'number') userTokens = isSuperAdmin ? Math.max(100000, dbUser.tokens) : dbUser.tokens;
-            if (typeof dbUser.live_minutes === 'number') userLiveMinutes = isSuperAdmin ? Math.max(6000000, dbUser.live_minutes) : dbUser.live_minutes;
-            else if (typeof dbUser.liveMinutes === 'number') userLiveMinutes = isSuperAdmin ? Math.max(6000000, dbUser.liveMinutes) : dbUser.liveMinutes;
+            if (typeof dbUser.live_minutes === 'number') userLiveMinutes = isSuperAdmin ? Math.max(600000, dbUser.live_minutes) : dbUser.live_minutes;
+            else if (typeof dbUser.liveMinutes === 'number') userLiveMinutes = isSuperAdmin ? Math.max(600000, dbUser.liveMinutes) : dbUser.liveMinutes;
           }
         } catch (e) {}
 
@@ -178,8 +178,8 @@ export default function DesktopAppUI() {
             isAdmin: isSuperAdmin,
             plan: isSuperAdmin ? 'SUPER ADMIN ENTERPRISE VIP' : (dbUser.plan || currentUser.plan || 'VIP PRO'),
             tokens: isSuperAdmin ? Math.max(100000, typeof dbUser.tokens === 'number' ? dbUser.tokens : 100000) : (typeof dbUser.tokens === 'number' ? dbUser.tokens : (currentUser.tokens || 50000)),
-            liveMinutes: isSuperAdmin ? Math.max(6000000, typeof dbUser.live_minutes === 'number' ? dbUser.live_minutes : 6000000) : (typeof dbUser.live_minutes === 'number' ? dbUser.live_minutes : (currentUser.liveMinutes || 6000)),
-            liveTimeHours: Math.round((isSuperAdmin ? 6000000 : (typeof dbUser.live_minutes === 'number' ? dbUser.live_minutes : (currentUser.liveMinutes || 6000))) / 60)
+            liveMinutes: isSuperAdmin ? Math.max(600000, typeof dbUser.live_minutes === 'number' ? dbUser.live_minutes : 600000) : (typeof dbUser.live_minutes === 'number' ? dbUser.live_minutes : (currentUser.liveMinutes || 6000)),
+            liveTimeHours: Math.round((isSuperAdmin ? 600000 : (typeof dbUser.live_minutes === 'number' ? dbUser.live_minutes : (currentUser.liveMinutes || 6000))) / 60)
           };
           setCurrentUser(updatedUser);
           try { localStorage.setItem('avalive_current_user', JSON.stringify(updatedUser)); } catch (e) {}
@@ -206,6 +206,21 @@ export default function DesktopAppUI() {
       if (userChannel) supabase.removeChannel(userChannel);
     };
   }, [currentUser?.email]);
+
+  // 🔄 Lắng nghe sự kiện cập nhật tài khoản (Token, Giờ Live, Quyền Admin) toàn cục
+  useEffect(() => {
+    const handleUserUpdated = () => {
+      try {
+        const saved = localStorage.getItem('avalive_current_user');
+        if (saved) {
+          const parsed = JSON.parse(saved);
+          setCurrentUser(parsed);
+        }
+      } catch (e) {}
+    };
+    window.addEventListener('avalive:user_updated', handleUserUpdated);
+    return () => window.removeEventListener('avalive:user_updated', handleUserUpdated);
+  }, []);
 
   // Tự động đóng popup OAuth sau khi nhận token
   useEffect(() => {
@@ -298,7 +313,7 @@ export default function DesktopAppUI() {
     // Kiểm tra gói bản quyền & Token & Thời gian Live trên Supabase
     let userPlan = isAdmin ? 'SUPER ADMIN ENTERPRISE VIP' : 'VIP PRO';
     let userTokens = isAdmin ? 100000 : 50000;
-    let userLiveMinutes = isAdmin ? 6000000 : 6000;
+    let userLiveMinutes = isAdmin ? 600000 : 6000;
 
     try {
       if (supabase) {
@@ -308,8 +323,8 @@ export default function DesktopAppUI() {
           if (dbUser.avatar_url) avatarUrl = dbUser.avatar_url;
           if (dbUser.plan) userPlan = dbUser.plan.toUpperCase();
           if (typeof dbUser.tokens === 'number') userTokens = isAdmin ? Math.max(100000, dbUser.tokens) : dbUser.tokens;
-          if (typeof dbUser.live_minutes === 'number') userLiveMinutes = isAdmin ? Math.max(6000000, dbUser.live_minutes) : dbUser.live_minutes;
-          else if (typeof dbUser.liveMinutes === 'number') userLiveMinutes = isAdmin ? Math.max(6000000, dbUser.liveMinutes) : dbUser.liveMinutes;
+          if (typeof dbUser.live_minutes === 'number') userLiveMinutes = isAdmin ? Math.max(600000, dbUser.live_minutes) : dbUser.live_minutes;
+          else if (typeof dbUser.liveMinutes === 'number') userLiveMinutes = isAdmin ? Math.max(600000, dbUser.liveMinutes) : dbUser.liveMinutes;
         } else {
           // Tạo mới tài khoản trên Supabase nếu chưa có
           await syncUserToSupabase({
@@ -4061,11 +4076,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     if (!isGmailLoginModalOpen) return null;
 
     const displayTokens = currentUser 
-      ? (currentUser.isAdmin ? 'Vô Hạn' : ((currentUser.plan === 'Free' || !currentUser.plan) ? '100' : (currentUser.tokens || 0).toLocaleString())) 
+      ? (currentUser.isAdmin 
+          ? (currentUser.tokens ? Number(currentUser.tokens).toLocaleString() : '100.000') 
+          : ((currentUser.plan === 'Free' || !currentUser.plan) ? '100' : (currentUser.tokens || 0).toLocaleString())) 
       : '0';
 
     const displayLiveTime = currentUser 
-      ? (currentUser.isAdmin ? 'Vô Hạn' : ((currentUser.plan === 'Free' || !currentUser.plan) ? '10h' : `${Math.round((currentUser.liveMinutes || 0) / 60)}h`)) 
+      ? (currentUser.isAdmin 
+          ? (currentUser.liveMinutes ? `${Math.round(currentUser.liveMinutes / 60).toLocaleString()} Giờ` : '10.000 Giờ') 
+          : ((currentUser.plan === 'Free' || !currentUser.plan) ? '10h' : `${Math.round((currentUser.liveMinutes || 0) / 60)}h`)) 
       : '0h';
 
     return (
@@ -4603,23 +4622,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             <span className="whitespace-nowrap">📡 Link Live</span>
           </button>
 
-          {/* Nút Mở Cửa Sổ Live 9:16 (Window Capture OBS & TikTok Studio) trực tiếp 1-Click */}
-          <button
-            onClick={handleOpenWindowCapture}
-            className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold border shadow-xs transition-all hover:scale-105 cursor-pointer bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white border-blue-400/50"
-            title="Mở Cửa Sổ Live 9:16 độc lập 1080p 60FPS cho OBS / TikTok Live Studio (Window Capture)"
-          >
-            <Monitor size={10} className="text-cyan-300 animate-pulse" />
-            <span className="whitespace-nowrap">🖥️ Cửa Sổ Live</span>
-          </button>
-
-
-          {/* 👑 1 Ô DUY NHẤT: LOGO TÀI KHOẢN + GÓI (GỌN GÀNG) */}
+          {/* 👑 1 Ô DUY NHẤT: LOGO TÀI KHOẢN + GÓI + SỐ DƯ TOKEN & THỜI GIAN LIVE */}
           <div className={`flex items-center gap-1.5 px-2 py-0.5 rounded-lg border text-[9.5px] shadow-xs shrink-0 ${isDarkMode ? 'bg-[#12131d]/90 border-cyan-500/30' : 'bg-white border-gray-300'}`}>
             {currentUser ? (
               <div 
                 onClick={() => setIsGmailLoginModalOpen(true)}
-                className="flex items-center gap-1.5 cursor-pointer hover:opacity-80 transition-opacity"
+                className="flex items-center gap-2 cursor-pointer hover:opacity-90 transition-opacity"
                 title="Bấm để xem chi tiết tài khoản hoặc đổi Gmail"
               >
                 <img 
@@ -4629,6 +4637,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 />
                 <span className="text-[9px] px-1.5 py-0.5 rounded-md font-black bg-gradient-to-r from-amber-400 to-yellow-400 text-black leading-tight shadow-md">
                   {currentUser.isAdmin ? 'SUPER ADMIN' : (currentUser.plan || 'Free')}
+                </span>
+
+                {/* 🪙 HIỂN THỊ RÕ RÀNG TOKEN & THỜI GIAN LIVE TRÊN THANH PHẦN MỀM */}
+                <span className="text-[10px] font-black text-amber-300 flex items-center gap-1 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/30">
+                  🪙 {currentUser.isAdmin ? (currentUser.tokens ? currentUser.tokens.toLocaleString() : '100.000') : ((currentUser.tokens || 0).toLocaleString())} Token
+                </span>
+                <span className="text-[10px] font-black text-cyan-300 flex items-center gap-1 bg-cyan-500/10 px-1.5 py-0.5 rounded border border-cyan-500/30">
+                  ⏱️ {currentUser.isAdmin ? (currentUser.liveMinutes ? `${Math.round(currentUser.liveMinutes / 60).toLocaleString()}h` : '10.000h') : `${Math.round((currentUser.liveMinutes || 0) / 60)}h`} Live
                 </span>
               </div>
             ) : (
@@ -4995,7 +5011,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         <div className="flex-1"></div>
 
         {/* Right Side: Toggles & Stream Window */}
-        <div className="flex items-center gap-1.5 shrink-0 flex-nowrap overflow-x-auto scrollbar-none">
+        <div className="flex items-center gap-1.5 shrink-0 flex-nowrap overflow-visible relative z-40">
 
           {/* Nút ⚡ AUTO 24/7 (Chạy Tự Động 24/24 & Tự Giải Captcha AI) */}
           <button 
@@ -5059,29 +5075,79 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           <div className="relative">
             <button 
               onClick={() => setIsMonitorDropdownOpen(!isMonitorDropdownOpen)} 
-              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${isMonitorDropdownOpen ? 'bg-orange-600 text-white' : (isDarkMode ? 'bg-orange-500/20 text-orange-400 hover:bg-orange-500/30' : 'bg-orange-100 text-orange-700 hover:bg-orange-200')}`}>
-              <Eye size={13} />
+              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold transition-all border shadow-sm ${
+                isMonitorDropdownOpen 
+                  ? 'bg-orange-600 text-white border-orange-400 shadow-orange-500/30 ring-2 ring-orange-400/40' 
+                  : (isDarkMode ? 'bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 border-orange-500/30' : 'bg-orange-100 text-orange-700 hover:bg-orange-200 border-orange-300')
+              }`}
+            >
+              <Eye size={13} className="text-orange-400" />
               <span>{t('monitor', currentLang)}</span>
             </button>
             {isMonitorDropdownOpen && (
-              <div className={`absolute top-full right-0 mt-2 w-56 rounded-xl shadow-2xl border z-50 p-2 overflow-hidden ${isDarkMode ? 'bg-[#1c1c23] border-gray-700 text-white' : 'bg-white border-gray-200 text-slate-800'} animate-in fade-in slide-in-from-top-2 duration-200`}>
-                <button onClick={() => { setActiveMonitorModal('quick_response'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-2.5 py-1.5 mb-1 rounded text-xs font-bold transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-yellow-500/20 text-yellow-400' : 'hover:bg-yellow-100 text-yellow-800'}`}>
-                  <Zap size={13} className="text-yellow-500" /> 
-                  <span>{t('quickResponse', currentLang)}</span>
-                </button>
-                <button onClick={() => { setActiveMonitorModal('timeline'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-2.5 py-1.5 mb-1 rounded text-xs font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
-                  <Clock size={13} className="text-blue-400" /> 
-                  <span>{t('timeline', currentLang)}</span>
-                </button>
-                <button onClick={() => { setActiveMonitorModal('queue'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-2.5 py-1.5 mb-1 rounded text-xs font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
-                  <List size={13} className="text-purple-400" /> 
-                  <span>{t('aiQueue', currentLang)}</span>
-                </button>
-                <button onClick={() => { setActiveMonitorModal('tiktok_log'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-2.5 py-1.5 rounded text-xs font-medium transition-colors flex items-center gap-2 ${isDarkMode ? 'hover:bg-gray-800 text-gray-300' : 'hover:bg-gray-100 text-gray-700'}`}>
-                  <FileText size={13} className="text-pink-400" /> 
-                  <span>{t('tiktokLog', currentLang)}</span>
-                </button>
-    </div>
+              <>
+                {/* Backdrop bắt click bên ngoài để đóng */}
+                <div 
+                  className="fixed inset-0 z-[8999]" 
+                  onClick={() => setIsMonitorDropdownOpen(false)} 
+                />
+                <div className={`absolute top-full right-0 mt-2 w-72 rounded-2xl shadow-2xl border z-[9999] p-2.5 overflow-hidden ${isDarkMode ? 'bg-[#181824]/98 border-orange-500/40 text-white shadow-black/80' : 'bg-white border-gray-200 text-slate-800 shadow-xl'} animate-in fade-in zoom-in-95 duration-150 backdrop-blur-xl`}>
+                  <div className="px-2.5 py-1.5 border-b border-white/10 mb-1.5 flex items-center justify-between text-[11px] font-black text-orange-400">
+                    <span className="flex items-center gap-1"><Eye size={13} /> TRUNG TÂM THEO DÕI LIVE</span>
+                    <span className="text-[10px] bg-orange-500/20 px-2 py-0.5 rounded-full text-orange-300 font-mono">
+                      {viewerHistory.length} Sự kiện
+                    </span>
+                  </div>
+
+                  <button onClick={() => { setActiveMonitorModal('quick_response'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 mb-1 rounded-xl text-xs font-bold transition-all flex items-center justify-between group ${isDarkMode ? 'hover:bg-yellow-500/20 text-yellow-300' : 'hover:bg-yellow-50 text-yellow-800'}`}>
+                    <div className="flex items-center gap-2.5">
+                      <Zap size={16} className="text-yellow-400 group-hover:scale-110 transition-transform shrink-0" /> 
+                      <div>
+                        <div>{t('quickResponse', currentLang)}</div>
+                        <div className="text-[10px] text-gray-400 font-normal">Kích hoạt thoại & video phản hồi 1-chạm</div>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-black bg-yellow-500/20 text-yellow-400 px-1.5 py-0.5 rounded">1-Chạm</span>
+                  </button>
+
+                  <button onClick={() => { setActiveMonitorModal('timeline'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 mb-1 rounded-xl text-xs font-bold transition-all flex items-center justify-between group ${isDarkMode ? 'hover:bg-blue-500/20 text-blue-300' : 'hover:bg-blue-50 text-blue-800'}`}>
+                    <div className="flex items-center gap-2.5">
+                      <Clock size={16} className="text-blue-400 group-hover:scale-110 transition-transform shrink-0" /> 
+                      <div>
+                        <div>{t('timeline', currentLang)}</div>
+                        <div className="text-[10px] text-gray-400 font-normal">Lịch sử bình luận, quà tặng & phản hồi AI</div>
+                      </div>
+                    </div>
+                    <span className="text-[10px] font-bold px-1.5 py-0.5 rounded bg-blue-500/20 text-blue-300 font-mono">{viewerHistory.length}</span>
+                  </button>
+
+                  <button onClick={() => { setActiveMonitorModal('queue'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 mb-1 rounded-xl text-xs font-bold transition-all flex items-center justify-between group ${isDarkMode ? 'hover:bg-purple-500/20 text-purple-300' : 'hover:bg-purple-50 text-purple-800'}`}>
+                    <div className="flex items-center gap-2.5">
+                      <List size={16} className="text-purple-400 group-hover:scale-110 transition-transform shrink-0" /> 
+                      <div>
+                        <div>{t('aiQueue', currentLang)}</div>
+                        <div className="text-[10px] text-gray-400 font-normal">Hàng đợi AI sinh câu thoại & giọng nói</div>
+                      </div>
+                    </div>
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isProcessingEvent ? 'bg-amber-500/20 text-amber-300 animate-pulse' : 'bg-emerald-500/20 text-emerald-300'}`}>
+                      {isProcessingEvent ? 'Đang xử lý...' : 'Sẵn sàng'}
+                    </span>
+                  </button>
+
+                  <button onClick={() => { setActiveMonitorModal('tiktok_log'); setIsMonitorDropdownOpen(false); }} className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between group ${isDarkMode ? 'hover:bg-pink-500/20 text-pink-300' : 'hover:bg-pink-50 text-pink-800'}`}>
+                    <div className="flex items-center gap-2.5">
+                      <FileText size={16} className="text-pink-400 group-hover:scale-110 transition-transform shrink-0" /> 
+                      <div>
+                        <div>{t('tiktokLog', currentLang)}</div>
+                        <div className="text-[10px] text-gray-400 font-normal">Log sự kiện thô từ TikTok Live Connector</div>
+                      </div>
+                    </div>
+                    <span className={`text-[10px] font-bold px-1.5 py-0.5 rounded ${isConnected ? 'bg-emerald-500/20 text-emerald-300' : 'bg-gray-700 text-gray-400'}`}>
+                      {isConnected ? '🟢 Đang Live' : '⚪ Chưa kết nối'}
+                    </span>
+                  </button>
+                </div>
+              </>
             )}
     </div>
 
