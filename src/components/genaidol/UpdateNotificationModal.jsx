@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.0.2';
+export const APP_VERSION = '3.0.3';
 export const RELEASE_DATE = '15/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật Hotfix v3.0.3 - Khắc Phục Triệt Để Lỗi Khởi Động Giao Diện & Tối Ưu Tốc Độ 0ms',
+    description: 'Chuyển đổi toàn bộ thư viện phân tích tài liệu (PDF & Word Parser) sang cơ chế Lazy-Loading trên nền ES2022 Native, loại bỏ hoàn toàn lỗi ReferenceError khi giải nén mở phần mềm, đảm bảo giao diện chính khởi động tức thì 100% mượt mà.'
+  },
   {
     title: '🛍️ Bản Cập Nhật v3.0.2 - Tự Động Ghim Sản Phẩm TikTok Shop (shop.tiktok.com) & Vượt Captcha 24/7',
     description: 'Nâng cấp toàn diện bộ máy Ghim Sản Phẩm Thông Minh: Tự động ghim từ shop.tiktok.com và TikTok Live Studio theo chu kỳ xoay vòng, câu thoại AI hoặc bình luận khách hàng; tích hợp thanh đồng bộ giỏ hàng 1-chạm và hệ thống AI giải Captcha ngầm 24/7 tức thì 0ms.'

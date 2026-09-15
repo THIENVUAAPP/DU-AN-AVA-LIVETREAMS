@@ -5,13 +5,37 @@
  * Guarantees exact sequential ordering (1, 2, 3, 4, 5...) from top to bottom.
  */
 
-import * as pdfjsLib from 'pdfjs-dist';
-import pdfWorkerUrl from 'pdfjs-dist/build/pdf.worker.mjs?url';
-import mammoth from 'mammoth';
+// Lazy loaded libraries to prevent bundle pollution and TDZ class initialization issues
+let cachedPdfjsLib = null;
+let cachedMammoth = null;
 
-// Configure PDF.js worker
-if (typeof window !== 'undefined' && pdfjsLib && pdfjsLib.GlobalWorkerOptions) {
-  pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+async function getPdfjsLib() {
+  if (cachedPdfjsLib) return cachedPdfjsLib;
+  try {
+    const pdfjsLib = await import('pdfjs-dist');
+    const pdfWorkerModule = await import('pdfjs-dist/build/pdf.worker.mjs?url');
+    const pdfWorkerUrl = pdfWorkerModule.default || pdfWorkerModule;
+    if (typeof window !== 'undefined' && pdfjsLib && pdfjsLib.GlobalWorkerOptions) {
+      pdfjsLib.GlobalWorkerOptions.workerSrc = pdfWorkerUrl;
+    }
+    cachedPdfjsLib = pdfjsLib;
+    return cachedPdfjsLib;
+  } catch (err) {
+    console.error('Failed to load pdfjs-dist dynamically:', err);
+    throw err;
+  }
+}
+
+async function getMammoth() {
+  if (cachedMammoth) return cachedMammoth;
+  try {
+    const mod = await import('mammoth');
+    cachedMammoth = mod.default || mod;
+    return cachedMammoth;
+  } catch (err) {
+    console.error('Failed to load mammoth dynamically:', err);
+    throw err;
+  }
 }
 
 // Garbage PDF/Binary tokens to reject
@@ -183,6 +207,7 @@ export function parseTextContent(rawContent, fileExt = 'txt') {
 export async function parseDocxArrayBuffer(arrayBuffer) {
   try {
     // 1. Try Mammoth (works for all .docx and modern Word files)
+    const mammoth = await getMammoth();
     const result = await mammoth.extractRawText({ arrayBuffer });
     if (result && result.value) {
       const rawLines = result.value.split(/\r?\n/).filter(Boolean);
@@ -232,6 +257,7 @@ export async function parseDocxArrayBuffer(arrayBuffer) {
  */
 export async function parsePdfArrayBuffer(arrayBuffer) {
   try {
+    const pdfjsLib = await getPdfjsLib();
     const loadingTask = pdfjsLib.getDocument({
       data: arrayBuffer,
       useSystemFonts: true,
