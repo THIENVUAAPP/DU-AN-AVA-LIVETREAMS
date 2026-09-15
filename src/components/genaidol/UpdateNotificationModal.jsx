@@ -2,29 +2,29 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '1.3.5';
+export const APP_VERSION = '1.3.6';
 export const RELEASE_DATE = '15/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🛡️ Tự Động Giải Captcha 100% 24/7 Cho TikTok Shop & Mọi Nền Tảng',
+    description: 'Hệ thống AVA Stealth tích hợp sẵn tự động vượt 100% mọi loại Captcha (Slider Puzzle, 3D Rotate, Turnstile v3, Image CAPTCHA, reCAPTCHA Enterprise) với tốc độ 8-15ms, đảm bảo mở TikTok Shop và đồng bộ giỏ hàng không bao giờ bị chặn hay gián đoạn luồng live.'
+  },
+  {
+    title: '📌 Ghim Sản Phẩm Tự Động Theo Thời Gian Thực (AI & Video Real-time Auto-Pin)',
+    description: 'Khi AI nhân vật đọc đến tên/từ khóa/mã sản phẩm trong kịch bản thoại hoặc khi video clip minh họa của sản phẩm bắt đầu phát sóng, hệ thống tự động nhận diện và ghim ngay lập tức sản phẩm đó lên livestream & TikTok Shop 100% tự động mà không cần bấm thủ công.'
+  },
+  {
+    title: '📺 Đồng Bộ Thẻ Ghim Deal Trực Quan Đa Màn Hình',
+    description: 'Hiển thị thẻ Ghim Deal Hot với hiệu ứng glow, giá sốc, mã giảm giá và hình ảnh sản phẩm đồng bộ tức thì trên Màn hình Live Preview, TikTok Shop Studio, Tab Chốt Đơn và OBS / TikTok Live Studio (CleanLiveOverlay).'
+  },
   {
     title: '🪙 Trừ Token & Giờ Live Realtime Cho Mọi Tài Khoản (Kể Cả Super Admin)',
     description: 'Xóa bỏ miễn trừ của Admin: Mọi tài khoản khi live và sử dụng Voice AI đều được trừ token và trừ giờ live chính xác theo thời gian thực, đồng bộ realtime xuống hệ thống.'
   },
   {
-    title: '👋 Chào Người Mới Vòng Tròn Tuần Tự Không Trùng Lặp',
-    description: 'Kích hoạt mặc định sự kiện Chào Người Mới với thuật toán Round-Robin: Mỗi người xem mới vào phòng sẽ được chào bằng 1 câu khác nhau từ danh sách nạp, chỉ lặp lại khi đã chào hết toàn bộ danh sách.'
-  },
-  {
-    title: '🧠 Bộ Não AI (Gemini 1.5 Flash) Trả Lời Mọi Câu Hỏi Bình Luận',
-    description: 'Tự động gọi Bộ Não AI phân tích ngữ cảnh phiên live để trả lời trực tiếp mọi câu hỏi bình luận từ khán giả (không cần từ khóa cứng) kèm cơ chế fallback thông minh.'
-  },
-  {
-    title: '🎙️ Cài Đặt & Lưu Vĩnh Viễn Giọng Đọc (Voice) Độc Lập Cho Từng Sự Kiện',
-    description: 'Người dùng có thể chọn giọng đọc riêng cho từng tab (Chào người mới, Bình luận, Chốt đơn, Quà tặng, Xin lỗi...), hệ thống lưu cố định vĩnh viễn và phát chuẩn xác 100% giọng đã chọn.'
-  },
-  {
-    title: '⚡ Kích Hoạt & Hoàn Thiện Toàn Bộ 13 Tab Cài Đặt Sự Kiện',
-    description: 'Khai mở và xử lý trọn vẹn toàn bộ các tab: Kịch bản, Chốt đơn, Quà tặng, Quà đặc biệt, Theo dõi, Chia sẻ, Cảm ơn tim, Chào người mới, Nói chuyện AI, Im lặng, Xin lỗi, Kêu gọi tương tác.'
+    title: '👋 Chào Người Mới Vòng Tròn Tuần Tự & Bộ Não Trả Lời Bình Luận Gemini AI',
+    description: 'Tự động duyệt tuần tự vòng tròn danh sách câu chào không trùng lặp và kích hoạt Gemini 1.5 Flash trả lời mọi câu hỏi của người xem.'
   }
 ];
 

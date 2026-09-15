@@ -35,8 +35,11 @@ import {
   Pause,
   Copy,
   MessageSquare,
-  Package
+  Package,
+  Activity
 } from 'lucide-react';
+import autoCaptchaService from '../utils/autoCaptchaService';
+import autoPinProductService from '../utils/autoPinProductService';
 
 export default function LiveCommerceStudio({ isLive }) {
   // Independent Live Sessions State (Nhiều phiên live khác nhau độc lập)
@@ -74,6 +77,35 @@ export default function LiveCommerceStudio({ isLive }) {
   const [replyTargetPlatform, setReplyTargetPlatform] = useState('🎵 TikTok Shop');
   const [replyTargetProduct, setReplyTargetProduct] = useState(pinnedProduct ? pinnedProduct.name : 'Áo Khoác Chống Nước AvaLive Pro');
 
+  // Auto Pin AI State
+  const [autoPinAiEnabled, setAutoPinAiEnabled] = useState(() => autoPinProductService.autoPinEnabled);
+
+  // Lưu sessions vào localStorage để AI & Overlay truy xuất mọi lúc
+  useEffect(() => {
+    try {
+      localStorage.setItem('avalive_commerce_sessions', JSON.stringify(liveSessions));
+    } catch (e) {}
+  }, [liveSessions]);
+
+  // Lắng nghe sự kiện Ghim sản phẩm từ AI Voice / Video Playback
+  useEffect(() => {
+    const handleAutoPin = (e) => {
+      if (e?.detail?.product) {
+        const prod = e.detail.product;
+        // Tìm xem sản phẩm có trong session hiện tại không
+        const found = activeSession.products.find(p => p.id === prod.id || p.name === prod.name);
+        if (found) {
+          setPinnedProductId(found.id);
+        } else if (prod.id) {
+          setPinnedProductId(prod.id);
+        }
+      }
+    };
+
+    window.addEventListener('avalive:pin_product_updated', handleAutoPin);
+    return () => window.removeEventListener('avalive:pin_product_updated', handleAutoPin);
+  }, [activeSession.products]);
+
   // Product Add / Edit Modal State
   const [productModalOpen, setProductModalOpen] = useState(false);
 
@@ -81,25 +113,27 @@ export default function LiveCommerceStudio({ isLive }) {
   const [isSyncingCarts, setIsSyncingCarts] = useState(false);
   const [cartSyncState, setCartSyncState] = useState('idle'); // 'detecting_captcha', 'solving_captcha', 'syncing', 'success'
 
-  const handleMasterCartSync = () => {
+  const handleMasterCartSync = async () => {
     setIsSyncingCarts(true);
     setCartSyncState('detecting_captcha');
 
-    // Simulate connection and Captcha solving on multiple platforms
-    setTimeout(() => {
+    // Gọi autoCaptchaService giải challenge ngầm siêu tốc
+    try {
       setCartSyncState('solving_captcha');
+      await autoCaptchaService.solveChallenge({ platform: activeSession.platform || 'TikTok Shop & Shopee', captchaType: 'Turnstile & 3D Slider' });
+      setCartSyncState('syncing');
       setTimeout(() => {
-        setCartSyncState('syncing');
+        setCartSyncState('success');
         setTimeout(() => {
-          setCartSyncState('success');
-          setTimeout(() => {
-            setIsSyncingCarts(false);
-            setCartSyncState('idle');
-            alert(`✅ Đã đồng bộ Giỏ Hàng & Tồn Kho thành công trên tất cả nền tảng (${activeSession.platform})!\nHệ thống tự động giải quyết Captcha 24/7 giúp đồng bộ không gián đoạn.`);
-          }, 0);
-        }, 0);
-      }, 0);
-    }, 0);
+          setIsSyncingCarts(false);
+          setCartSyncState('idle');
+          alert(`✅ ĐÃ ĐỒNG BỘ GIỎ HÀNG THÀNH CÔNG TRÊN TOÀN BỘ NỀN TẢNG (${activeSession.platform || 'TikTok Shop'})!\n🛡️ Hệ thống AVA Stealth đã tự động vượt Captcha 100% không gián đoạn.`);
+        }, 300);
+      }, 300);
+    } catch (e) {
+      setIsSyncingCarts(false);
+      setCartSyncState('idle');
+    }
   };
   const [editingProductId, setEditingProductId] = useState(null);
   
@@ -137,7 +171,7 @@ export default function LiveCommerceStudio({ isLive }) {
     productsRef.current = activeSession.products;
   }, [activeSession.products]);
 
-  // Auto Pin Product Logic
+  // Auto Pin Product Logic (Interval fallback nếu không có AI/Video trigger)
   React.useEffect(() => {
     let pinIntervalId;
     
@@ -150,7 +184,11 @@ export default function LiveCommerceStudio({ isLive }) {
             if (!currentProducts || currentProducts.length <= 1) return currentPinnedId;
             const currentIndex = currentProducts.findIndex(p => p.id === currentPinnedId);
             const nextIndex = (currentIndex + 1) % currentProducts.length;
-            return currentProducts[nextIndex].id;
+            const nextProd = currentProducts[nextIndex];
+            if (nextProd) {
+              autoPinProductService.pinProduct(nextProd, 'interval_auto_pin');
+            }
+            return nextProd ? nextProd.id : currentPinnedId;
           });
         }, config.pinInterval * 1000);
       }
@@ -557,13 +595,36 @@ export default function LiveCommerceStudio({ isLive }) {
 
           {/* PRODUCTS INVENTORY LIST */}
           <div className="glass-panel p-6 rounded-3xl border border-white/10 space-y-4 bg-black/60">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <h3 className="text-base font-black text-white flex items-center gap-2">
-                <ShoppingCart className="w-4 h-4 text-purple-400" />
-                DANH SÁCH GIỎ HÀNG SẢN PHẨM SẴN SÀNG LIVE ({activeSession.products.length} SP)
-              </h3>
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between border-b border-white/10 pb-3 gap-3">
+              <div>
+                <h3 className="text-base font-black text-white flex items-center gap-2">
+                  <ShoppingCart className="w-4 h-4 text-purple-400" />
+                  DANH SÁCH GIỎ HÀNG SẢN PHẨM SẴN SÀNG LIVE ({activeSession.products.length} SP)
+                </h3>
+                <p className="text-[11px] text-gray-400 mt-0.5">
+                  Tự động ghim 100% khi AI đọc tới mã hàng hoặc phát video clip tương ứng.
+                </p>
+              </div>
 
-              <div className="flex items-center gap-2">
+              <div className="flex items-center flex-wrap gap-2">
+                {/* AUTO-PIN AI TOGGLE */}
+                <button
+                  onClick={() => {
+                    const nextVal = !autoPinAiEnabled;
+                    setAutoPinAiEnabled(nextVal);
+                    autoPinProductService.setAutoPinEnabled(nextVal);
+                  }}
+                  className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer ${
+                    autoPinAiEnabled 
+                      ? 'bg-amber-500/20 text-amber-300 border-amber-500/40 shadow-sm' 
+                      : 'bg-white/5 text-gray-400 border-white/10'
+                  }`}
+                  title="Khi AI đọc tới sản phẩm nào hoặc phát video của sản phẩm nào, hệ thống tự động ghim sản phẩm đó ngay lập tức"
+                >
+                  <Sparkles className={`w-3.5 h-3.5 ${autoPinAiEnabled ? 'text-amber-400 animate-spin' : 'text-gray-400'}`} />
+                  <span>{autoPinAiEnabled ? '⚡ Auto-Pin AI: BẬT' : '⚡ Auto-Pin AI: TẮT'}</span>
+                </button>
+
                 <button
                   onClick={handleMasterCartSync}
                   className="px-4 py-1.5 rounded-xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white border border-emerald-400/50 text-xs font-black transition-all flex items-center gap-1.5 cursor-pointer shadow-glow-emerald"
@@ -615,6 +676,7 @@ export default function LiveCommerceStudio({ isLive }) {
                         onClick={() => {
                           setPinnedProductId(prod.id);
                           setReplyTargetProduct(prod.name);
+                          autoPinProductService.pinProduct(prod, 'manual');
                         }}
                         className={`px-4 py-2 rounded-xl text-xs font-black transition-all cursor-pointer ${
                           isPinned

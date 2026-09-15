@@ -1,6 +1,8 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { ShieldCheck, Cpu, Terminal, Zap, CheckCircle2, Scan, Activity, ArrowLeft } from 'lucide-react';
+import autoCaptchaService from '../utils/autoCaptchaService';
+import autoPinProductService from '../utils/autoPinProductService';
 
 const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false }) => {
   const [phase, setPhase] = useState('init');
@@ -32,13 +34,16 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
       cloudflareTurnstile: true,
       autoProxy: true,
       autoToken: true,
-      autoPin: false,
+      autoPin: true,
       pinInterval: 30
     };
   });
 
   useEffect(() => {
     localStorage.setItem('avalive_captcha_config', JSON.stringify(captchaConfig));
+    if (captchaConfig.autoPin !== undefined) {
+      autoPinProductService.setAutoPinEnabled(captchaConfig.autoPin);
+    }
   }, [captchaConfig]);
   
   const [captchaStats, setCaptchaStats] = useState({

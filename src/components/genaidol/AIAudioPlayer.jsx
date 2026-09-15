@@ -9,6 +9,7 @@ import {
   parseMultiCharacterScript,
   ALL_SYSTEM_VOICES
 } from '../../utils/voiceSyncService';
+import autoPinProductService from '../../utils/autoPinProductService';
 
 /**
  * AIAudioPlayer - Quản lý hàng đợi phát âm thanh thông minh trong Livestream
@@ -45,6 +46,13 @@ const AIAudioPlayer = forwardRef(({ isLive, isScriptRunning = false, onAudioPlay
   useEffect(() => {
     currentIndexRef.current = currentIndex;
   }, [currentIndex]);
+
+  // Tự động nhận diện và ghim sản phẩm khi video clip minh họa thay đổi
+  useEffect(() => {
+    if (currentVideoUrl) {
+      autoPinProductService.detectAndAutoPinByVideo(currentVideoUrl);
+    }
+  }, [currentVideoUrl]);
 
   // Đồng bộ cấu hình Voice toàn app khi có cập nhật
   useEffect(() => {
@@ -321,6 +329,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           avatarId: speakingAvatarId, 
           role: item.role || channel 
         });
+      }
+
+      // TỰ ĐỘNG GHIM SẢN PHẨM THEO GIỌNG ĐỌC AI & TỪ KHÓA (100% REALTIME)
+      if (item.text) {
+        autoPinProductService.detectAndAutoPinByText(item.text);
       }
 
       // Trừ token trải nghiệm AI

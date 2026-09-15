@@ -13,6 +13,7 @@ import WorkspaceKeywordPanel from './WorkspaceKeywordPanel';
 import EventVoiceTester from './EventVoiceTester';
 import UniversalMediaPicker, { SAMPLE_IDOL_VIDEOS } from './UniversalMediaPicker';
 import MultiAvatarStudioModal, { MultiAvatarStudioPanel } from './MultiAvatarStudioModal';
+import autoPinProductService from '../../utils/autoPinProductService';
 
 const toast = {
   success: (message) => {
@@ -2594,12 +2595,37 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                             <span>Mã Hàng #{prod.id}: <b className="text-blue-700">{prod.productName || 'Chưa đặt tên'}</b></span>
                           </legend>
                           
-                          <button 
-                            onClick={() => handleDeleteProduct(prod.id)}
-                            className="absolute top-2 right-2 text-xs text-red-500 hover:text-white hover:bg-red-500 border border-red-300 px-2 py-0.5 rounded-md transition-colors font-semibold cursor-pointer"
-                          >
-                            Xóa
-                          </button>
+                          <div className="absolute top-2 right-2 flex items-center gap-2">
+                            <button
+                              type="button"
+                              onClick={() => {
+                                autoPinProductService.pinProduct({
+                                  id: prod.id,
+                                  name: prod.productName || `Mã #${prod.id}`,
+                                  productName: prod.productName,
+                                  price: prod.priceInfo || 'Giá Sốc',
+                                  priceInfo: prod.priceInfo,
+                                  keywords: prod.keywords,
+                                  videoFolder: prod.videoFolder,
+                                  videoFileName: prod.videoFileName,
+                                  videoFile: prod.videoFile,
+                                  badge: 'HOT DEAL 🔥'
+                                }, 'manual_workspace');
+                                toast.success(`📌 Đã ghim sản phẩm "${prod.productName || `Mã #${prod.id}`}" lên màn hình Live!`);
+                              }}
+                              className="text-xs bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-0.5 rounded-md transition-colors font-bold cursor-pointer flex items-center gap-1 shadow-2xs"
+                              title="Ghim sản phẩm này lên màn hình Livestream & TikTok Shop ngay lập tức"
+                            >
+                              📌 Ghim Deal Lên Live
+                            </button>
+
+                            <button 
+                              onClick={() => handleDeleteProduct(prod.id)}
+                              className="text-xs text-red-500 hover:text-white hover:bg-red-500 border border-red-300 px-2 py-0.5 rounded-md transition-colors font-semibold cursor-pointer"
+                            >
+                              Xóa
+                            </button>
+                          </div>
 
                           <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 mt-1 text-xs">
                             <div>

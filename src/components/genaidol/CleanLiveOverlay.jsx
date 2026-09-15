@@ -194,6 +194,26 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   const [activeSpeakerId, setActiveSpeakerId] = useState(null);
   const [isSpeakerActive, setIsSpeakerActive] = useState(false);
 
+  // 📌 SẢN PHẨM ĐANG GHIM THEO THỜI GIAN THỰC (ĐỒNG BỘ CHO OBS & TIKTOK LIVE STUDIO)
+  const [pinnedProduct, setPinnedProduct] = useState(() => {
+    try {
+      const saved = localStorage.getItem('avalive_current_pinned_product');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    const handlePinnedProductUpdate = (e) => {
+      if (e?.detail?.product) {
+        setPinnedProduct(e.detail.product);
+      }
+    };
+    window.addEventListener('avalive:pin_product_updated', handlePinnedProductUpdate);
+    return () => window.removeEventListener('avalive:pin_product_updated', handlePinnedProductUpdate);
+  }, []);
+
   useEffect(() => {
     const handleMultiAvatarChange = (e) => {
       if (e.detail) {
@@ -2845,6 +2865,29 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 </div>
               </div>
             )}
+          </div>
+        )}
+        {/* OVERLAY SẢN PHẨM ĐANG GHIM TỰ ĐỘNG BỞI AI (CHUẨN TIKTOK SHOP / LIVESTREAM) */}
+        {pinnedProduct && (
+          <div className="absolute bottom-6 left-6 z-50 pointer-events-auto max-w-[340px] transition-all transform animate-bounce-subtle">
+            <div className="bg-black/90 backdrop-blur-md border border-red-500/80 rounded-2xl p-3 flex items-center gap-3 shadow-[0_10px_25px_rgba(239,68,68,0.5)] text-white">
+              <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0 border border-white/20 bg-black">
+                <img src={pinnedProduct.image} alt={pinnedProduct.name} className="w-full h-full object-cover" />
+                <span className="absolute top-0 left-0 bg-red-600 text-white text-[8px] font-black px-1 py-0.5 rounded-br uppercase tracking-wider">📌 GHIM</span>
+              </div>
+              <div className="min-w-0 flex-1 text-left">
+                <h4 className="text-xs font-black text-white truncate">{pinnedProduct.name}</h4>
+                <div className="flex items-baseline gap-1.5 mt-0.5">
+                  <span className="text-sm font-black text-red-400 font-mono">{pinnedProduct.price}</span>
+                  {pinnedProduct.oldPrice && (
+                    <span className="text-[10px] text-gray-400 line-through font-mono">{pinnedProduct.oldPrice}</span>
+                  )}
+                </div>
+                <div className="text-[9px] text-amber-300 font-bold flex items-center gap-1 mt-0.5">
+                  <span>🔥 {pinnedProduct.badge || 'DEAL ĐỘC QUYỀN LIVE'}</span>
+                </div>
+              </div>
+            </div>
           </div>
         )}
         </div>
