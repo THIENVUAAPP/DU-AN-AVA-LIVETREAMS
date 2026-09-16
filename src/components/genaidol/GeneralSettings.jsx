@@ -2044,6 +2044,21 @@ IDOL MỈM CƯỜI + GESTURE
         setRealtimeAudioParams({ pitch: Number(finalValue) });
       }
 
+      // ⚡ ĐỒNG BỘ NGAY LẬP TỨC VÀO HỆ THỐNG 3 CỘT GIỌNG BỘ NÃO
+      try {
+        const idolMatch = ALL_SYSTEM_VOICES.find(v => v.id === updated.mainVoiceId);
+        const managerMatch = ALL_SYSTEM_VOICES.find(v => v.id === updated.assistantVoiceId);
+        const commentMatch = ALL_SYSTEM_VOICES.find(v => v.id === (updated.commentVoiceId || updated.mainVoiceId));
+        const gameMatch = ALL_SYSTEM_VOICES.find(v => v.id === updated.gameVoiceId);
+        
+        saveDualVoiceConfig({
+          idolVoice: idolMatch ? { ...idolMatch, role: 'idol', volume: updated.mainVoiceVolume !== undefined ? Number(updated.mainVoiceVolume) : 1.0, rate: updated.mainVoiceRate !== undefined ? Number(updated.mainVoiceRate) : 1.0, pitch: updated.mainVoicePitch !== undefined ? Number(updated.mainVoicePitch) : 1.0 } : undefined,
+          managerVoice: managerMatch ? { ...managerMatch, role: 'manager', volume: updated.assistantVoiceVolume !== undefined ? Number(updated.assistantVoiceVolume) : 1.0, rate: updated.assistantVoiceRate !== undefined ? Number(updated.assistantVoiceRate) : 1.0, pitch: updated.assistantVoicePitch !== undefined ? Number(updated.assistantVoicePitch) : 1.0 } : undefined,
+          commentVoice: commentMatch ? { ...commentMatch, role: 'comment', volume: updated.commentVoiceVolume !== undefined ? Number(updated.commentVoiceVolume) : (updated.mainVoiceVolume !== undefined ? Number(updated.mainVoiceVolume) : 1.0), rate: updated.commentVoiceRate !== undefined ? Number(updated.commentVoiceRate) : (updated.mainVoiceRate !== undefined ? Number(updated.mainVoiceRate) : 1.0), pitch: updated.commentVoicePitch !== undefined ? Number(updated.commentVoicePitch) : (updated.mainVoicePitch !== undefined ? Number(updated.mainVoicePitch) : 1.0) } : undefined,
+          gameVoice: gameMatch ? { ...gameMatch, role: 'game', volume: updated.gameVoiceVolume !== undefined ? Number(updated.gameVoiceVolume) : 1.0, rate: updated.gameVoiceRate !== undefined ? Number(updated.gameVoiceRate) : 1.0, pitch: updated.gameVoicePitch !== undefined ? Number(updated.gameVoicePitch) : 1.0 } : undefined
+        });
+      } catch (e) {}
+
       try {
         localStorage.setItem('aidol_general_settings', JSON.stringify(updated));
       } catch (err) {}

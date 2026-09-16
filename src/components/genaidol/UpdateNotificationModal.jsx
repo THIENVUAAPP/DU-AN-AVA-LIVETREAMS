@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.0.7';
-export const RELEASE_DATE = '15/09/2026';
+export const APP_VERSION = '3.0.8';
+export const RELEASE_DATE = '16/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🎙️ Bản Cập Nhật Hotfix v3.0.8 - Kiểm Soát 100% Khởi Động Voice & Tùy Chỉnh Âm Lượng/Tốc Độ/Pitch Thực Tế',
+    description: 'Khắc phục triệt để lỗi tự động phát giọng khi vừa mở ứng dụng: Chế độ Live thực tế hoàn toàn tách biệt với Chạy Demo / Mô hình Live Simulator; 14 tác vụ sự kiện kết nối Idol chạy chuẩn xác; Đồng bộ 100% hiệu lực thực tế cho các thanh trượt Âm lượng (Volume), Tốc độ (Speed) và Độ trầm bổng (Pitch) ngay tức thì.'
+  },
   {
     title: '🎙️ Bản Cập Nhật v3.0.7 - Hệ Thống 3 Cột Giọng Chính Bộ Não AvaLive & Ưu Tiên Tuyệt Đối',
     description: 'Nâng cấp toàn diện cơ chế giọng nói: 3 Cột Giọng Chính trong Tab Bộ Não (1. Giọng Idol Live Chính, 2. Giọng Quản Lý / Trợ Lý, 3. Giọng Trả Lời Bình Luận) được ưu tiên tối cao 100% trên toàn bộ phiên Live (phát video, nhép miệng LipSync, chạy demo, trả lời hỏi đáp & sự kiện). 14 tác vụ sự kiện tự động đồng bộ giọng chính và chỉ dùng giọng phụ khi chưa gán.'

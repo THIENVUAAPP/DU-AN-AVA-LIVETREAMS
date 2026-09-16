@@ -59,7 +59,7 @@ const postMasterBroadcast = (payload) => {
 
 export default function DesktopAppUI() {
   // 🛑/▶️ Trạng thái Tắt / Bật Toàn Bộ Phiên Live Master
-  const [isMasterLiveRunning, setIsMasterLiveRunning] = useState(true);
+  const [isMasterLiveRunning, setIsMasterLiveRunning] = useState(false);
   const isMasterLiveRunningRef = useRef(isMasterLiveRunning);
   useEffect(() => {
     isMasterLiveRunningRef.current = isMasterLiveRunning;
@@ -524,13 +524,7 @@ export default function DesktopAppUI() {
   });
 
   // 📜 Quản lý Phát Kịch Bản Bán Hàng Trực Tiếp Ngoài Giao Diện (Script Broadcast Controller)
-  const [isScriptLiveRunning, setIsScriptLiveRunning] = useState(() => {
-    try {
-      return localStorage.getItem('aidol_is_script_live_running') === 'true';
-    } catch (e) {
-      return false;
-    }
-  });
+  const [isScriptLiveRunning, setIsScriptLiveRunning] = useState(false);
 
   const [scriptTabsList, setScriptTabsList] = useState(() => {
     try {
@@ -1412,7 +1406,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     setActiveVideoItem,
     setViewerHistory
   } = useLiveCoordinator({
-    isConnected: isConnected || showSimulator || isScriptLiveRunning || isGlobalDemoRunning || isMasterLiveRunning, // Cho phép Kịch bản Live / Simulator chạy độc lập nền
+    isConnected: isConnected || isScriptLiveRunning || isGlobalDemoRunning || isMasterLiveRunning, // Chỉ kích hoạt khi Live thực tế, Kịch bản Live hoặc Demo được người dùng chủ động bật
     activeBrainPack: 'talk', // mặc định
     onVoiceReply: ({ text, action, baseVideoItem, preRecordedCat, voiceId, voiceChannel, isTest }) => {
       unlockAllAudio();

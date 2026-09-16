@@ -374,6 +374,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         isTest: !!item.isTest,
         volume: item.volume !== undefined ? item.volume : activeVoice?.volume,
         rate: item.rate !== undefined ? item.rate : activeVoice?.rate,
+        pitch: item.pitch !== undefined ? item.pitch : activeVoice?.pitch,
         onEnd: () => {
           if (watchdogTimer) clearTimeout(watchdogTimer);
           if (typeof window !== 'undefined') {

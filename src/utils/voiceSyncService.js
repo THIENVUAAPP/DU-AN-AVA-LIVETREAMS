@@ -7636,16 +7636,15 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   // 1. ĐẶC TRƯNG ÂM SẮC & CAO ĐỘ FORMANT (TIMBRE DETUNE & PLAYBACK SPEED)
   const isSenior = voice?.ageGroup === 'senior' || voice?.ageGroup === 'elder' || (voice?.category && (voice.category.includes('Lão Niên') || voice.category.includes('40-70t')));
   const semitones = dsp.semitones !== undefined ? dsp.semitones : 0;
-  if (source.detune && semitones !== 0) {
+  const userPitchDiff = (voice?.pitch !== undefined && !isNaN(Number(voice.pitch))) ? (Number(voice.pitch) - 1.0) * 400 : 0;
+  if (source.detune) {
     try {
-      source.detune.value = semitones * 100;
+      source.detune.value = (semitones * 100) + userPitchDiff;
     } catch (e) {}
   }
 
-  // Tốc độ phát mượt mà kết hợp giữa thanh trượt người dùng và tính cách nhân vật
-  const charRate = dsp.rate !== undefined ? dsp.rate : (voice?.rate || 1.0);
-  const userRate = requestedRate !== undefined ? requestedRate : 1.0;
-  source.playbackRate.value = Math.max(0.65, Math.min(1.85, charRate * userRate));
+  // Tốc độ phát chuẩn xác 1:1 vì Edge TTS đã tạo file audio đúng tốc độ mượt mà
+  source.playbackRate.value = 1.0;
 
   // 1b. RUNG GIỌNG LÃO NIÊN TỰ NHIÊN (AUTHENTIC ELDERLY TREMOLO LFO)
   let tremoloGain = null;
@@ -7699,9 +7698,9 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   compressor.attack.value = compConf.attack !== undefined ? compConf.attack : 0.005;
   compressor.release.value = compConf.release !== undefined ? compConf.release : 0.15;
 
-  // 7. MASTER GAIN
+  // 7. MASTER GAIN (Hỗ trợ dải âm lượng 0% đến 200%)
   const masterGain = audioCtx.createGain();
-  masterGain.gain.value = Math.max(0, Math.min(1.0, requestedVolume));
+  masterGain.gain.value = Math.max(0, Math.min(2.0, requestedVolume !== undefined ? Number(requestedVolume) : 1.0));
   activeMasterGainNode = masterGain;
 
   // 8. ACOUSTIC SPACE REVERB CONVOLVER (Tạo độ vang phòng / studio khác biệt)
@@ -7821,33 +7820,29 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
     else neuralVoice = isMale ? 'vi-VN-NamMinhNeural' : 'vi-VN-HoaiMyNeural';
   }
 
-  // 1. TÍNH TOÁN CAO ĐỘ (PITCH) HOÀN TOÀN KHÁC BIỆT DẠNG %
-  let effectivePitch = voice?.edgePitch;
-  if (!effectivePitch) {
-    if (voice?.dspProfile?.semitones !== undefined) {
-      const st = voice.dspProfile.semitones;
-      const pct = Math.round(st * 5);
-      effectivePitch = (pct >= 0 ? '+' : '') + pct + '%';
-    } else if (voice?.pitch !== undefined) {
-      const pDiff = Math.round((Number(voice.pitch) - 1.0) * 100);
-      effectivePitch = (pDiff >= 0 ? '+' : '') + pDiff + '%';
-    } else {
-      effectivePitch = isMale ? '-10%' : '+10%';
-    }
+  // 1. TÍNH TOÁN CAO ĐỘ (PITCH) CÓ HIỆU LỰC 100% THEO THANH TRƯỢT NGƯỜI DÙNG
+  let basePitchNum = 0;
+  if (voice?.edgePitch && voice.edgePitch.includes('%')) {
+    basePitchNum = parseInt(voice.edgePitch.replace('%', ''), 10) || 0;
+  } else if (voice?.dspProfile?.semitones !== undefined) {
+    basePitchNum = Math.round(voice.dspProfile.semitones * 5);
   }
+  let userPitchOffset = 0;
+  if (voice?.pitch !== undefined && !isNaN(Number(voice.pitch))) {
+    userPitchOffset = Math.round((Number(voice.pitch) - 1.0) * 80);
+  }
+  const finalPitchNum = Math.max(-60, Math.min(60, basePitchNum + userPitchOffset));
+  const effectivePitch = (finalPitchNum >= 0 ? '+' : '') + finalPitchNum + '%';
 
-  // 2. TÍNH TOÁN TỐC ĐỘ (RATE) DẠNG % (KẾT HỢP GIỮA TÍNH CÁCH GIỌNG & TÙY CHỈNH TỪ UI)
+  // 2. TÍNH TOÁN TỐC ĐỘ (RATE) DẠNG % CÓ HIỆU LỰC 100% THEO THANH TRƯỢT NGƯỜI DÙNG
   let baseRateNum = 0;
   if (voice?.edgeRate && voice.edgeRate.includes('%')) {
     baseRateNum = parseInt(voice.edgeRate.replace('%', ''), 10) || 0;
   }
-  
-  // Nếu người dùng có thanh trượt tốc độ (voice.rate khác 1.0)
   let userRateOffset = 0;
   if (voice?.rate !== undefined && !isNaN(Number(voice.rate))) {
     userRateOffset = Math.round((Number(voice.rate) - 1.0) * 100);
   }
-
   const finalRateNum = Math.max(-50, Math.min(80, baseRateNum + userRateOffset));
   const effectiveRate = (finalRateNum >= 0 ? '+' : '') + finalRateNum + '%';
 
