@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.1.0';
+export const APP_VERSION = '3.1.1';
 export const RELEASE_DATE = '16/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật Hotfix v3.1.1 - Khắc Phục Triệt Để 100% Lỗi ReferenceError Khởi Động Giao Diện',
+    description: 'Xử lý dứt điểm 100% lỗi isVideoPlaying ReferenceError khi giải nén mở phần mềm, đảm bảo giao diện DesktopAppUI khởi động tức thì 0ms, mượt mà trên Windows & macOS mà không bị kẹt ở màn hình cập nhật.'
+  },
   {
     title: '🎙️ Bản Cập Nhật v3.1.0 - Tách Biệt 100% Nút Video Xem Thử Với Phiên Live & Tinh Chỉnh 3 Cột Giọng Nghe Thử Trực Tiếp',
     description: '1. Tách biệt hoàn toàn nút Bật/Tắt Video xem thử trên giao diện với nút Bật/Tắt Tất Cả phiên Live: Người dùng hoàn toàn tự do xem trước và kiểm tra video mà không ảnh hưởng luồng live chính; 2. Giữ nguyên trạng thái chờ an toàn khi mở phần mềm, không tự ý kích hoạt bất kỳ chức năng live/demo nào; 3. Nâng cấp 3 Cột Giọng trong Tab Bộ Não AI: Bổ sung dấu tích trực quan (✓) khi gán giọng, hiển thị rõ Tên Giọng Đang Gán và tích hợp nút "▶️ Nghe Thử" trực tiếp trên từng cột với đúng âm lượng, tốc độ, pitch vừa tinh chỉnh; Lưu vĩnh viễn và áp dụng ngay 100% cho cả phiên live thật và test demo.'

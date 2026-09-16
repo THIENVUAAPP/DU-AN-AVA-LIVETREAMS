@@ -30,7 +30,7 @@ import bandoEngine from './game/bandoGameEngine';
 import bandoAudio from './game/bandoAudioEngine';
 import { mapVoiceEngine, battleVoiceEngine } from './game/gameVoiceEngine';
 import battleCommentary from './game/battleCommentaryEngine';
-import { clearGlobalSpeechQueue, getMultiAvatarConfig, isImageMedia, getChromaStyle, ALL_SYSTEM_VOICES, previewVoiceAudio, getDualVoiceConfig } from '../../utils/voiceSyncService';
+import { clearGlobalSpeechQueue, getMultiAvatarConfig, isImageMedia, getChromaStyle, ALL_SYSTEM_VOICES, previewVoiceAudio, stopVoiceAudio, getDualVoiceConfig } from '../../utils/voiceSyncService';
 import MultiAvatarStudioModal, { SvgChromaFilters } from './MultiAvatarStudioModal';
 import AutoCaptchaSolver from '../AutoCaptchaSolver';
 import AIVoiceModule from '../kol-live/AIVoiceModule';
@@ -44,6 +44,8 @@ import { bootstrapDefaultPresets } from '../../utils/defaultPresetsBootstrap';
 import { fastStreamUpload } from '../../utils/fastStreamService';
 import ShopeeLiveConnectModal from './ShopeeLiveConnectModal';
 import autoPinProductService from '../../utils/autoPinProductService';
+
+const CHARACTERS = {};
 
 // 📡 SINGLETON BROADCAST CHANNELS (Tái sử dụng vĩnh viễn, chống rò rỉ bộ nhớ khi phát nhiều giờ)
 let globalMasterBc = null;
@@ -64,6 +66,9 @@ export default function DesktopAppUI() {
   useEffect(() => {
     isMasterLiveRunningRef.current = isMasterLiveRunning;
   }, [isMasterLiveRunning]);
+
+  // 📺 Trạng thái Tắt / Bật Video Xem Thử trên màn hình phần mềm
+  const [isVideoPlaying, setIsVideoPlaying] = useState(true);
 
   useEffect(() => {
     bootstrapDefaultPresets();
@@ -2018,7 +2023,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             const curTime = vid ? vid.currentTime : (lastPlaybackTimeRef.current || 0);
             const isPlaying = vid ? !vid.paused : isMasterLiveRunning;
             const charMatch = (customCharacters && Array.isArray(customCharacters)) ? customCharacters.find(c => c.id === selectedCharacter) : null;
-            let playUrl = (charMatch ? (charMatch.mediaUrl || charMatch.url) : null) || userLockedMediaUrl || (selected ? selected.url : null);
+            let playUrl = (charMatch ? (charMatch.mediaUrl || charMatch.url) : null) || userLockedMediaUrl || null;
             if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
               playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
             }
