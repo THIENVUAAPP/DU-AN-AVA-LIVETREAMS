@@ -72,6 +72,17 @@ export default function DesktopAppUI() {
 
   useEffect(() => {
     bootstrapDefaultPresets();
+    try {
+      stopVoiceAudio();
+      clearGlobalSpeechQueue();
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
+        window.speechSynthesis.cancel();
+      }
+      if (mapVoiceEngine?.stopAll) mapVoiceEngine.stopAll();
+      if (battleVoiceEngine?.stopAll) battleVoiceEngine.stopAll();
+      if (battleCommentary?.stopAll) battleCommentary.stopAll();
+      if (bandoAudio?.stopAll) bandoAudio.stopAll();
+    } catch(e) {}
   }, []);
 
   const [currentUser, setCurrentUser] = useState(() => {
@@ -993,6 +1004,22 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }
     }
   }, [selectedCharacter, userLockedMediaUrl]);
+
+  // 🚀 ĐỒNG BỘ VIDEO TỨC THÌ 0MS CHO WINDOW CAPTURE & OBS BROWSER SOURCE
+  useEffect(() => {
+    let resolved = userLockedMediaUrl;
+    if (!resolved || resolved.startsWith('blob:')) {
+      const match = customCharacters?.find(c => c.id === selectedCharacter);
+      if (match?.mediaUrl && !match.mediaUrl.startsWith('blob:')) resolved = match.mediaUrl;
+      else if (match?.url && !match.url.startsWith('blob:')) resolved = match.url;
+    }
+    if (resolved && typeof resolved === 'string') {
+      try {
+        localStorage.setItem('avalive_active_video_src', resolved);
+        localStorage.setItem('avalive_user_locked_media', resolved);
+      } catch (e) {}
+    }
+  }, [selectedCharacter, userLockedMediaUrl, customCharacters]);
 
   // 🔊 ĐỒNG BỘ ÂM LƯỢNG & TẮT/MỞ TIẾNG TỨC THÌ (0MS DELAY - KHÔNG RESTART VIDEO - KHÔNG GIẬT HÌNH)
   useEffect(() => {
@@ -4347,6 +4374,32 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             )}
           </button>
 
+          {/* NÚT LIVE AI IDOL (ĐẶT KẾ BÊN NÚT BẬT TẤT CẢ THEO YÊU CẦU) */}
+          <button 
+            className={`flex items-center gap-1 px-2.5 py-0.5 rounded-md text-[10px] font-black transition-all border shadow-sm cursor-pointer ${
+              !isGameBattleActive && !isGameBanDoActive && !isLiveStudioActive
+                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 text-white border-cyan-300 shadow-cyan-500/40 ring-1 ring-cyan-400/50' 
+                : (isDarkMode ? 'border-cyan-500/40 bg-cyan-950/30 text-cyan-300 hover:bg-cyan-900/50' : 'border-cyan-300 bg-cyan-50 text-cyan-700 hover:bg-cyan-100')
+            }`}
+            onClick={() => {
+              setIsGameBattleActive(false);
+              setIsGameBanDoActive(false);
+              setIsLiveStudioActive(false);
+              try { localStorage.setItem('avalive_active_stage', 'idol'); } catch (e) {}
+              mapVoiceEngine.stopAll();
+              battleVoiceEngine.stopAll();
+              battleCommentary.stopAll();
+              syncMasterLiveState({ stage: 'idol' }, socketRef.current); postMasterBroadcast({ type: 'GLOBAL_STAGE_CHANGE', stage: 'idol' });
+            }}
+            title="Chuyển sang màn hình Livestream AI Idol"
+          >
+            <Video size={11} className={!isGameBattleActive && !isGameBanDoActive && !isLiveStudioActive ? 'text-yellow-300 animate-pulse' : 'text-cyan-400'} />
+            <span className="whitespace-nowrap uppercase tracking-tight">Live AI Idol</span>
+            {!isGameBattleActive && !isGameBanDoActive && !isLiveStudioActive && (
+              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
+            )}
+          </button>
+
           {/* 📜 NÚT GỘP DUY NHẤT: PHÁT KỊCH BẢN LIVE & DROPDOWN CHỌN KỊCH BẢN (NẰM NGAY CẠNH BẬT TẤT CẢ) */}
           <div className="relative inline-flex items-center rounded-md shadow-xs border overflow-hidden transition-all bg-gradient-to-r from-blue-900/80 to-indigo-900/80 border-blue-400/50">
             {/* Nút BẬT / TẮT Phát Kịch Bản */}
@@ -4988,23 +5041,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
         {/* Right Side: Toggles & Stream Window */}
         <div className="flex items-center gap-1.5 shrink-0 flex-nowrap overflow-visible relative z-40">
-
-          {/* NÚT CHẠY DEMO (TEST) */}
-          <button 
-            onClick={() => {
-              setShowSimulator(prev => !prev);
-              unlockAllAudio();
-            }}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black transition-all border shadow-md active:scale-95 cursor-pointer ${
-              showSimulator || isGlobalDemoRunning
-                ? 'bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 text-white border-yellow-300 ring-2 ring-yellow-400 shadow-purple-500/40 animate-pulse'
-                : 'bg-gradient-to-r from-purple-700 via-indigo-600 to-blue-600 hover:from-purple-600 hover:to-indigo-500 text-white border-purple-400/50 shadow-indigo-500/20'
-            }`}
-            title="Mở Bảng Điều Khiển Mô Hình Live & Chạy Demo Test Giả Lập Tương Tác Trực Tuyến"
-          >
-            <Zap size={13} className={(showSimulator || isGlobalDemoRunning) ? 'text-yellow-300 animate-bounce' : 'text-yellow-300'} />
-            <span className="whitespace-nowrap font-black">⚡ CHẠY DEMO</span>
-          </button>
 
           {/* 🔊 NÚT BẬT / TẮT ÂM THANH TOÀN DIỆN (ĐỒNG BỘ CẢ WINDOW CAPTURE & TIKTOK LIVE) */}
           <button 

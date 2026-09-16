@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.1.6';
+export const APP_VERSION = '3.1.7';
 export const RELEASE_DATE = '16/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '👑 Bản Cập Nhật v3.1.7 - Đặt Nút Live AI Idol Ra Ngoài Top Bar, Xóa Nút Chạy Demo & Tối Ưu Window Capture 0ms',
+    description: '1. Đặt nút "🎬 Live AI Idol" ra ngoài Top Bar ngay cạnh nút "BẬT TẤT CẢ", giúp thao tác chuyển đổi kịch bản live nhanh chóng và trực quan nhất; 2. Xóa bỏ hoàn toàn nút ⚡ CHẠY DEMO khỏi thanh điều khiển theo yêu cầu người dùng; 3. Tối ưu hóa cửa sổ Window Capture & OBS Browser Source: Nhận diện và phát video ngay lập tức 0ms, không độ trễ, không chờ đợi; 4. Triệt tiêu 100% tự phát Voice khi khởi động hoặc mở phần mềm: Đảm bảo toàn bộ hệ thống âm thanh ở trạng thái thụ động hoàn toàn cho đến khi người dùng chủ động kích hoạt; 5. Chuẩn hóa trọn bộ 159 Voice trong AvaLive và luồng trả lời bình luận (gửi text trước, phát voice sau với đúng giọng comment đã chọn).'
+  },
   {
     title: '🧠 Bản Cập Nhật v3.1.6 - Tối Ưu Giao Diện Thanh Điều Khiển, Tích Hợp Menu Đa Năng & Khởi Động Thụ Động 100%',
     description: '1. Khởi động thụ động tuyệt đối & kiểm soát nút Bật Tất Cả: Khi mở phần mềm hoặc tải video lên để test xem trước, hệ thống luôn giữ nguyên trạng thái TẮT an toàn (không tự động phát live, không tự kích hoạt Bật Tất Cả). Người dùng chỉ bắt đầu phát live thật khi chủ động bấm "Bật Tất Cả"; 2. Hợp nhất Vận hành Auto 24/24 vào nút "Bật Tất Cả": Xóa nút Auto 24/24 riêng lẻ, toàn bộ cơ chế chạy liên tục 24/24, tự giữ luồng live và tự vượt Captcha được gộp trực tiếp vào nút Bật Tất Cả; 3. Di chuyển Game Chiến Đấu, Bản Đồ Chữ S, Studio 2–4 Avatar vào Menu chính: Giúp thanh tiêu đề rộng thoáng tối đa, dễ dàng truy cập và chuyển đổi stage trực tiếp trong menu dropdown; 4. Khắc phục triệt để lỗi mở Tab Bộ Não AI (useMemo) & Rút gọn nút ⚡ CHẠY DEMO.'
