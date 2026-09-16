@@ -4647,6 +4647,20 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         
         {/* Left Side: Settings & Payment */}
         <div className="flex items-center gap-2 shrink-0">
+          {/* NÚT BỘ NÃO AI 🧠 TRỰC TIẾP TRÊN THANH ĐIỀU KHIỂN */}
+          <button 
+            onClick={() => setActiveSettingsModal('general')}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-black transition-all border shadow-sm cursor-pointer ${
+              activeSettingsModal === 'general'
+                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-400 ring-2 ring-blue-400 shadow-blue-500/30'
+                : (isDarkMode ? 'bg-gradient-to-r from-blue-900/50 to-indigo-900/40 hover:from-blue-600 hover:to-indigo-600 text-blue-100 hover:text-white border-blue-700/60 shadow-xs' : 'bg-blue-50 hover:bg-blue-600 text-blue-900 hover:text-white border-blue-300')
+            }`}
+            title="Mở Bảng Cấu Hình Bộ Não AI Gemini, Kho Tri Thức & Tổng Kho Giọng Đọc"
+          >
+            <Brain size={14} className="text-yellow-300 animate-pulse" />
+            <span>🧠 {t('aiBrain', currentLang)}</span>
+          </button>
+
           <div className="relative shrink-0">
             <button 
               onClick={() => setIsSettingsDropdownOpen(!isSettingsDropdownOpen)}
@@ -4655,6 +4669,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               <Settings size={13} />
               <span>{t('menu', currentLang)}</span>
             </button>
+
             
             {isSettingsDropdownOpen && (
               <div className={`absolute top-full left-0 mt-2 w-64 rounded-xl shadow-2xl border z-50 p-2 overflow-hidden ${isDarkMode ? 'bg-[#1c1c23] border-gray-700' : 'bg-white border-gray-200'} animate-in fade-in slide-in-from-top-2 duration-200`}>

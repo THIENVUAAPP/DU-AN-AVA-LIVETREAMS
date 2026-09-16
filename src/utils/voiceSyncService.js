@@ -13,6 +13,8 @@
  */
 
 import { globalLipSyncEngine } from '../lib/avatar-sync/AvatarLipSyncEngine';
+import { masterNormalizeVietnameseSpeech } from './vietnamesePronunciationMaster';
+
 
 // ==================== 1. 25 GIỌNG NỮ VIỆT NAM CAO CẤP PHÂN THEO 3 ĐỘ TUỔI (20-28t | 28-40t | 40-70t) ====================
 export const VIETNAMESE_FEMALE_VOICES = [
@@ -7180,18 +7182,11 @@ export function stopVoiceAudio() {
 }
 
 /**
- * 🧹 Bộ lọc làm sạch văn bản thông minh trước khi đưa vào Voice Engine / TTS
+ * 🧹 Bộ lọc làm sạch văn bản thông minh trước khi đưa vào Voice Engine / TTS (Master Pronunciation)
  */
 export function cleanTextForVoiceSpeech(rawText) {
   if (!rawText || typeof rawText !== 'string') return '';
-  let cleaned = rawText;
-  // Loại bỏ các chỉ dẫn sân khấu trong ngoặc đơn/vuông như (cười), [hành động], v.v. nhưng GIỮ LẠI các placeholder biến số
-  cleaned = cleaned.replace(/\((?:cười|cười tươi|vỗ tay|hành động|chỉ tay|nháy mắt|nói to|nói nhỏ|thì thầm|hào hứng|nhấn mạnh|chỉ giỏ hàng|chốt đơn|đếm ngược|action|smile|clap)[^\)]*\)/gi, ' ');
-  cleaned = cleaned.replace(/\[(?:cười|cười tươi|vỗ tay|hành động|chỉ tay|nháy mắt|nói to|nói nhỏ|thì thầm|hào hứng|nhấn mạnh|chỉ giỏ hàng|chốt đơn|đếm ngược|action|smile|clap)[^\]]*\]/gi, ' ');
-  cleaned = cleaned.replace(/[#*`_~]/g, '');
-  // Gom khoảng trắng ngang nhưng BẢO TOÀN ký tự xuống dòng \n để phục vụ phân tách kịch bản
-  cleaned = cleaned.replace(/[^\S\r\n]+/g, ' ').trim();
-  return cleaned;
+  return masterNormalizeVietnameseSpeech(rawText);
 }
 
 /**
@@ -7284,20 +7279,18 @@ export function trimAudioBufferSilence(audioBuffer, silenceThreshold = 0.003) {
 /**
  * 🌺 BỘ XỬ LÝ CHUYỂN ĐỔI NGỮ ĐIỆU VÀ CẢM XÚC TIẾNG VIỆT 100% NHƯ NGƯỜI THẬT (EMPATHY & BREATHING PROSODY)
  * - Tự động tạo nhịp thở, lấy hơi tự nhiên, ngữ điệu nhấn nhá, thăng trầm cao trào cuốn hút như một người bạn trò chuyện.
- * - Chuyển đổi chính xác 100% số tiền, số đếm, %, phân số, hotline: 10,000 -> mười nghìn, 890.000đ -> tám trăm chín mươi nghìn đồng, 50k -> năm mươi nghìn đồng...
- * - Phát âm chuẩn xác các thuật ngữ tiếng Anh & livestream: serum, skincare, deal, flash sale, review, combo, freeship, feedback, order, live, video...
- * - Dịch thuật từ viết tắt livestream / mạng xã hội: sp -> sản phẩm, đc -> được, cmt -> bình luận, btv -> biên tập viên, mc -> người dẫn chương trình...
- * - Chuẩn hóa dấu câu (!, ?, ...) không gây ngắt quãng quá lâu, đọc liền mạch dứt khoát.
+ * - Áp dụng Master Vietnamese Pronunciation & Text Normalization Pipeline.
  */
 export function humanizeVoiceSpeechText(rawText, voice = null) {
   if (!rawText || typeof rawText !== 'string') return '';
-  let text = cleanTextForVoiceSpeech(rawText);
+  let text = masterNormalizeVietnameseSpeech(rawText);
   if (!text) return '';
 
   const isVietnamese = !voice || voice?.lang === 'vi-VN' || voice?.region === 'vi' || voice?.id?.startsWith('vn_') || voice?.id === 'free_vi_female' || voice?.id === 'el_adam';
   if (!isVietnamese) return text;
 
   const isFemale = !checkIsMale(voice);
+
 
   // 1. CHUYỂN ĐỔI TIỀN TỆ, SỐ ĐẾM, GIÁ BÁN & ĐƠN VỊ ĐO LƯỜNG CHÍNH XÁC 100%
   text = text

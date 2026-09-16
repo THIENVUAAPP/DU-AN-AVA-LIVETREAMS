@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
-import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen, Brain, Upload, Star, ShoppingBag, Sparkles, Award, Sliders, Flame, Users } from 'lucide-react';
+import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen, Brain, Upload, Star, ShoppingBag, Sparkles, Award, Sliders, Flame, Users, Bot, BookOpen, Send, Zap, Clock, ShieldCheck } from 'lucide-react';
+
 import { getLiveMediaByCategory } from '../../lib/liveKhoDB';
 import { 
   saveDualVoiceConfig, 
@@ -2300,81 +2301,158 @@ IDOL MỈM CƯỜI + GESTURE
       <div className="flex-1 overflow-y-auto p-4 bg-[#f8f9fa] scroll-smooth overscroll-contain" style={{ WebkitOverflowScrolling: 'touch' }}>
         <div className="space-y-4 max-w-7xl mx-auto">
           
-          {/* TAB 1: BỘ NÃO IDOL */}
+          {/* TAB 1: BỘ NÃO IDOL & KHO TRI THỨC AI */}
           {activeTab === 'prompt' && (
-            <>
-              {/* Box 1: API Config */}
-              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
-                <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm">
-                  Cấu hình API TikTok & Server Live
+            <div className="space-y-4">
+              {/* Banner Giới Thiệu Bộ Não AI */}
+              <div className="bg-gradient-to-r from-blue-700 via-indigo-700 to-purple-700 rounded-xl p-5 text-white shadow-md relative overflow-hidden">
+                <div className="absolute right-3 -bottom-4 opacity-15 text-8xl font-black pointer-events-none">
+                  🧠
+                </div>
+                <div className="relative z-10 space-y-2">
+                  <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                    <Sparkles size={14} className="text-yellow-300" /> BỘ NÃO AI GEMINI 1.5 FLASH • KHO TRI THỨC & TƯ VẤN THÔNG MINH
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black">
+                    Bộ Não AI Siêu Tốc & Kho Tri Thức Bán Hàng 24/7
+                  </h2>
+                  <p className="text-xs sm:text-sm text-blue-100 max-w-3xl leading-relaxed">
+                    Hệ thống AI xử lý ngôn ngữ tự nhiên cực nhanh (&lt;500ms), tự động phân tích câu hỏi của khán giả trên livestream, quét kho tri thức doanh nghiệp để trả lời chuẩn xác, thông minh và chốt đơn tự động theo đúng giọng đọc Idol đã cài đặt!
+                  </p>
+                </div>
+              </div>
+
+              {/* Box 1: Thông tin Model AI & Server */}
+              <div className="bg-white border border-gray-300 rounded-xl shadow-xs overflow-hidden">
+                <div className="bg-gray-100 px-4 py-2.5 border-b border-gray-300 font-bold text-gray-800 text-xs flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <Bot size={15} className="text-blue-600" />
+                    MODEL BỘ NÃO AI & KẾT NỐI SERVER LIVE
+                  </span>
+                  <span className="text-[11px] px-2 py-0.5 rounded-full font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                    🟢 Gemini 1.5 Flash (Tự động Fallback 24/7)
+                  </span>
                 </div>
                 <div className="p-4 space-y-4">
-                  <div>
-                    <label className="text-sm font-semibold text-[#a53b3b] block mb-1">Server Backend URL (TikTok Live & TTS Proxy):</label>
-                    <div className="flex gap-2">
-                      <input 
-                        type="text" 
-                        name="backendUrl" 
-                        value={settings.backendUrl || ''} 
-                        onChange={handleChange}
-                        placeholder="http://localhost:3001 hoặc https://domain-backend.com"
-                        className="flex-1 border border-gray-300 rounded px-3 py-1.5 text-sm focus:outline-none focus:border-blue-500"
-                      />
-                      <button 
-                        type="button"
-                        onClick={() => {
-                          try {
-                            const origin = window.location.origin;
-                            if (origin && !origin.includes('localhost') && !origin.includes('127.0.0.1')) {
-                              setSettings(prev => ({ ...prev, backendUrl: origin }));
-                            } else {
-                              setSettings(prev => ({ ...prev, backendUrl: 'http://localhost:3001' }));
-                            }
-                          } catch (err) {}
-                        }}
-                        className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded text-xs font-semibold border border-gray-300"
-                      >
-                        Đặt Tự Động
-                      </button>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-bold text-gray-700 block mb-1">Server Live & TTS Proxy URL:</label>
+                      <div className="flex gap-2">
+                        <input 
+                          type="text" 
+                          name="backendUrl" 
+                          value={settings.backendUrl || ''} 
+                          onChange={handleChange}
+                          placeholder="http://localhost:3001 hoặc https://avalivepro.vercel.app"
+                          className="flex-1 border border-gray-300 rounded-lg px-3 py-1.5 text-xs bg-gray-50 focus:bg-white focus:outline-none focus:border-blue-500 font-mono"
+                        />
+                        <button 
+                          type="button"
+                          onClick={() => {
+                            try {
+                              const origin = window.location.origin;
+                              if (origin && !origin.includes('localhost') && !origin.includes('127.0.0.1')) {
+                                setSettings(prev => ({ ...prev, backendUrl: origin }));
+                              } else {
+                                setSettings(prev => ({ ...prev, backendUrl: 'http://localhost:3001' }));
+                              }
+                            } catch (err) {}
+                          }}
+                          className="px-3 py-1.5 bg-gray-100 hover:bg-gray-200 text-gray-700 rounded-lg text-xs font-semibold border border-gray-300 cursor-pointer"
+                        >
+                          Đặt Tự Động
+                        </button>
+                      </div>
+                    </div>
+
+                    <div>
+                      <label className="text-xs font-bold text-gray-700 block mb-1">Tự động xóa sự kiện chờ sau (phút):</label>
+                      <div className="flex items-center gap-2">
+                        <input 
+                          type="number" 
+                          name="queueTimeout" 
+                          value={settings.queueTimeout} 
+                          onChange={handleChange} 
+                          className="w-24 border border-gray-300 rounded-lg px-3 py-1.5 text-xs focus:outline-none focus:border-blue-500 text-center font-bold text-red-600 bg-gray-50 focus:bg-white" 
+                        />
+                        <span className="text-[11px] text-gray-500">phút (Giúp hàng đợi luôn sạch sẽ, không bị đọng sự kiện cũ)</span>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
 
-              {/* Box 2: Queue Settings */}
-              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden">
-                <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm">
-                  Cài đặt Hàng đợi
+              {/* Box 2: Cấu hình Tính cách AI & Bối Cảnh Bán Hàng */}
+              <div className="bg-white border border-gray-300 rounded-xl shadow-xs overflow-hidden flex flex-col">
+                <div className="bg-gray-100 px-4 py-2.5 border-b border-gray-300 font-bold text-gray-800 text-xs flex items-center justify-between">
+                  <span className="flex items-center gap-1.5">
+                    <BookOpen size={15} className="text-indigo-600" />
+                    CẤU HÌNH TÍNH CÁCH AI (SYSTEM PROMPT) & BỐI CẢNH LIVESTREAM
+                  </span>
+                  <button 
+                    type="button"
+                    onClick={() => {
+                      setSettings(prev => ({
+                        ...prev,
+                        systemPrompt: DEFAULT_SYSTEM_PROMPT
+                      }));
+                    }}
+                    className="text-[11px] text-blue-600 hover:text-blue-800 font-bold underline cursor-pointer"
+                  >
+                    Khôi phục Prompt chuẩn Ngọc Nhi
+                  </button>
                 </div>
-                <div className="p-4 flex items-center gap-4">
-                  <label className="text-sm font-medium text-gray-700">Tự động xóa sự kiện sau (phút):</label>
-                  <input type="number" name="queueTimeout" value={settings.queueTimeout} onChange={handleChange} className="w-24 border border-gray-300 rounded px-3 py-1 text-sm focus:outline-none focus:border-blue-500 text-center text-red-500 font-medium" />
+                <div className="p-4 space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-indigo-900 flex items-center justify-between">
+                        <span>Tính cách & Chỉ đạo AI (System Prompt):</span>
+                        <span className="text-[10px] text-gray-500 font-normal">Chỉ huy phong cách, xưng hô, kỹ năng chốt sale</span>
+                      </label>
+                      <textarea 
+                        name="systemPrompt" 
+                        value={settings.systemPrompt} 
+                        onChange={handleChange}
+                        className="w-full h-[220px] border border-gray-300 rounded-lg p-3 text-xs focus:outline-none focus:border-indigo-500 font-mono resize-none leading-relaxed bg-gray-50/50 focus:bg-white"
+                      />
+                    </div>
+                    <div className="flex flex-col gap-1.5">
+                      <label className="text-xs font-bold text-indigo-900 flex items-center justify-between">
+                        <span>Kiến thức nền / Bối cảnh bán hàng:</span>
+                        <span className="text-[10px] text-gray-500 font-normal">Thông tin doanh nghiệp, sản phẩm, ưu đãi chính</span>
+                      </label>
+                      <textarea 
+                        name="backgroundContext" 
+                        value={settings.backgroundContext} 
+                        onChange={handleChange}
+                        className="w-full h-[220px] border border-gray-300 rounded-lg p-3 text-xs focus:outline-none focus:border-indigo-500 font-mono resize-none leading-relaxed bg-gray-50/50 focus:bg-white"
+                      />
+                    </div>
+                  </div>
                 </div>
               </div>
 
-              {/* Box 3: Prompt Config */}
-              <div className="bg-white border border-gray-300 rounded-lg shadow-sm overflow-hidden flex flex-col min-h-[400px]">
-                <div className="bg-gray-100 px-4 py-2 border-b border-gray-300 font-bold text-gray-800 text-sm">
-                  Cấu hình Prompt
+              {/* Box 3: Quy Chuẩn Phát Âm Master Tiếng Việt */}
+              <div className="bg-gradient-to-br from-emerald-50 to-teal-50 border border-emerald-200 rounded-xl p-4 shadow-xs">
+                <div className="flex items-center gap-2 mb-2">
+                  <ShieldCheck size={18} className="text-emerald-600" />
+                  <h3 className="text-xs font-black text-emerald-950 uppercase tracking-wide">
+                    Quy Chuẩn Master Phát Âm Tiếng Việt & Đọc Kịch Bản Đỉnh Cao (100% Chuẩn Ngữ Nghĩa)
+                  </h3>
                 </div>
-                <div className="p-4 flex-1 flex flex-col gap-4">
-                  <div className="flex flex-col gap-1.5 flex-1">
-                    <label className="text-sm font-semibold text-[#a53b3b]">Tính cách (System Prompt):</label>
-                    <textarea 
-                      name="systemPrompt" value={settings.systemPrompt} onChange={handleChange}
-                      className="w-full flex-1 min-h-[140px] border border-gray-300 rounded p-3 text-sm focus:outline-none focus:border-blue-500 resize-none"
-                    />
+                <div className="grid grid-cols-1 md:grid-cols-3 gap-3 text-[11px] text-emerald-900">
+                  <div className="bg-white/80 p-2.5 rounded-lg border border-emerald-200">
+                    <b>✅ Đọc Đúng 6 Thanh Điệu:</b> Bảo toàn thanh ngang, huyền, sắc, hỏi, ngã, nặng; giữ nguyên 100% âm cuối (m, n, ng, nh, p, t, c, ch), không nuốt âm.
                   </div>
-                  <div className="flex flex-col gap-1.5 flex-1">
-                    <label className="text-sm font-semibold text-[#a53b3b]">Kiến thức nền / Bối cảnh:</label>
-                    <textarea 
-                      name="backgroundContext" value={settings.backgroundContext} onChange={handleChange}
-                      className="w-full flex-1 min-h-[140px] border border-gray-300 rounded p-3 text-sm focus:outline-none focus:border-blue-500 resize-none"
-                    />
+                  <div className="bg-white/80 p-2.5 rounded-lg border border-emerald-200">
+                    <b>✅ Chuẩn Hóa Số & Tiền Tệ:</b> Tự động nhận diện 500k, 1.000.000đ, $, %, số điện thoại 3-3-4, mã OTP từng ký tự; đọc tròn vành rõ chữ.
+                  </div>
+                  <div className="bg-white/80 p-2.5 rounded-lg border border-emerald-200">
+                    <b>✅ Thuật Ngữ & Thương Hiệu:</b> Tự động phát âm chuẩn xác AVA LIVE, TikTok, Facebook, YouTube, AI, KOL, KOC, livestream, serum, freeship...
                   </div>
                 </div>
               </div>
-            </>
+            </div>
           )}
 
           {/* TAB ĐẶC BIỆT: GIỌNG HOT TREND (20 GIỌNG SIÊU CAO CẤP TIKTOK / YOUTUBE / CINEMATIC) */}

@@ -2,14 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.1.4';
+export const APP_VERSION = '3.1.5';
 export const RELEASE_DATE = '16/09/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '🧠 Bản Cập Nhật v3.1.5 - Chuẩn Hóa Master Phát Âm Tiếng Việt, Khôi Phục Tab Bộ Não & Cài Đặt Giãn Cách Trả Lời Bình Luận',
+    description: '1. Tích hợp Động cơ Master Vietnamese Pronunciation & Text Normalization: Đọc chuẩn xác 100% 6 thanh điệu tiếng Việt, bảo toàn âm cuối, tự động chuẩn hóa số tiền (500k, 1.000.000đ, $), số đếm, số điện thoại 3-3-4, mã OTP, thuật ngữ công nghệ và thương hiệu (AvaLive, TikTok, Facebook, YouTube, AI, KOL, KOC...); 2. Nâng cấp Tab Bộ Não AI: Bổ sung nút "🧠 BỘ NÃO AI" trực tiếp trên thanh điều khiển, hiển thị trọn vẹn giao diện cấu hình Kho Tri Thức Doanh Nghiệp, Tính cách AI và Model Gemini 1.5 Flash tự động fallback 24/7; 3. Cài đặt Giãn Cách Trả Lời Bình Luận (10s – 120s): Cho phép tùy chỉnh khoảng nghỉ giữa các lần trả lời, kèm Bộ lọc thông minh tự động bỏ qua spam, ký tự lặp vô nghĩa và từ ngữ thô tục/tiêu cực.'
+  },
+  {
     title: '🎙️ Bản Cập Nhật Hotfix v3.1.4 - Dừng Voice Ngay Tức Thì Khi Tắt Demo & Đồng Bộ 1 Giọng Đọc Test Độc Nhất',
     description: '1. Khắc phục triệt để luồng phát Voice Test/Demo: Khi người dùng bấm Tắt Demo/Test, toàn bộ âm thanh Web Audio, TTS và hàng đợi giọng đọc lập tức dừng dứt điểm trong 0ms; 2. Cố định đúng 1 giọng đọc duy nhất mà người dùng đã cài đặt khi chạy Test/Demo, loại bỏ hoàn toàn việc nhảy nhiều giọng ngẫu nhiên; 3. Đảm bảo toàn bộ hệ thống ở trạng thái thụ động 100% khi khởi động phần mềm, chỉ phát khi người dùng chủ động bấm.'
   },
+
   {
     title: '🍏 Bản Cập Nhật Hotfix v3.1.3 - Khắc Phục Triệt Để 100% Khởi Động Localhost Trên macOS (MacBook)',
     description: '1. Nâng cấp toàn diện bộ khởi động macOS (1_Khoi_Dong_AvaLive_Mac.command): Tự động nạp môi trường Shell profiles, tự động tìm kiếm Node.js trên toàn bộ phân vùng (Homebrew Apple Silicon M1/M2/M3 & Intel, NVM, Volta), tự giải phóng cổng 3001 và kiểm tra sẵn sàng trước khi mở trình duyệt App Mode 0ms; 2. Hỗ trợ fallback thông minh và đồng bộ hóa toàn diện hệ thống Ghim Sản Phẩm Đa Nền Tảng 24/7.'

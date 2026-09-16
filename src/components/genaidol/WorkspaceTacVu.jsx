@@ -2915,6 +2915,78 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                             )}
                           </div>
 
+                          {/* ⏱️ CẤU HÌNH GIÃN CÁCH TRẢ LỜI & LỌC SPAM THÔNG MINH */}
+                          <div className="bg-white/95 p-3 rounded-xl border-2 border-indigo-300 shadow-xs space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="text-xs font-black text-indigo-950 flex items-center gap-1.5">
+                                <Clock size={15} className="text-indigo-600" />
+                                <span>GIÃN CÁCH TRẢ LỜI BÌNH LUẬN & BỘ LỌC SPAM THÔNG MINH</span>
+                              </div>
+                              <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-indigo-100 text-indigo-800 border border-indigo-300">
+                                ⏱️ {currentConfig.commentReplyCooldown ?? 15} Giây / Câu
+                              </span>
+                            </div>
+
+                            {/* Thanh kéo thời gian giãn cách 10s - 120s (2 phút) */}
+                            <div className="bg-indigo-50/50 p-2.5 rounded-lg border border-indigo-200 space-y-2">
+                              <div className="flex items-center justify-between text-xs font-bold text-indigo-900">
+                                <span className="flex items-center gap-1">
+                                  <span>⏳ Thời gian giãn cách giữa các câu trả lời:</span>
+                                </span>
+                                <div className="flex items-center gap-1.5">
+                                  <input 
+                                    type="number" 
+                                    min="10" 
+                                    max="120" 
+                                    value={currentConfig.commentReplyCooldown ?? 15} 
+                                    onChange={(e) => {
+                                      const val = Math.max(10, Math.min(120, parseInt(e.target.value) || 10));
+                                      updateEventConfig('comment', { commentReplyCooldown: val });
+                                    }}
+                                    className="w-16 text-center border border-indigo-300 rounded px-1.5 py-0.5 text-xs font-black text-indigo-900 bg-white"
+                                  />
+                                  <span className="text-[11px] text-indigo-700 font-medium">giây (10s – 120s)</span>
+                                </div>
+                              </div>
+                              <input 
+                                type="range" 
+                                min="10" 
+                                max="120" 
+                                step="5"
+                                value={currentConfig.commentReplyCooldown ?? 15} 
+                                onChange={(e) => updateEventConfig('comment', { commentReplyCooldown: parseInt(e.target.value) })}
+                                className="w-full accent-indigo-600 cursor-pointer h-2 bg-indigo-200 rounded-lg"
+                              />
+                              <div className="flex justify-between text-[10px] text-gray-500 font-medium">
+                                <span>⚡ 10 giây (Nhanh)</span>
+                                <span>🎯 15s - 30s (Khuyên dùng chuẩn tự nhiên)</span>
+                                <span>☕ 120 giây (Chậm rãi)</span>
+                              </div>
+                              <p className="text-[11px] text-gray-600 leading-snug">
+                                💡 <b>Nguyên tắc:</b> Dù bình luận trên phòng Live gửi đến dồn dập bao nhiêu, Idol vẫn từ từ trả lời từng câu một mượt mà theo đúng giãn cách đã chọn, không bao giờ nói dồn dập hay nói đè nhau.
+                              </p>
+                            </div>
+
+                            {/* Toggle Lọc Spam & Thô tục */}
+                            <div className="pt-1 flex items-start gap-2.5">
+                              <input 
+                                type="checkbox" 
+                                id="smartFilterSpam-toggle"
+                                checked={currentConfig.smartFilterSpam !== false} 
+                                onChange={(e) => updateEventConfig('comment', { smartFilterSpam: e.target.checked })} 
+                                className="w-4 h-4 text-indigo-600 rounded cursor-pointer mt-0.5 accent-indigo-600" 
+                              />
+                              <div>
+                                <label htmlFor="smartFilterSpam-toggle" className="text-xs font-black text-gray-800 cursor-pointer flex items-center gap-1.5">
+                                  <span>🛡️ Tự động nhận diện & Bỏ qua Spam, Ký tự lặp vô nghĩa, Từ ngữ Thô tục / Chửi bậy</span>
+                                </label>
+                                <p className="text-[11px] text-gray-500 mt-0.5">
+                                  Hệ thống AI tự động phân tích và loại bỏ các bình luận rác (vd: aaaaa, 11111, ???), câu từ tiêu cực, thô tục; chỉ tập trung trả lời các câu hỏi quan trọng, tư vấn sản phẩm và chăm sóc khách hàng.
+                                </p>
+                              </div>
+                            </div>
+                          </div>
+
                           {/* BƯỚC 2: CHẾ ĐỘ TRẢ LỜI & NGUỒN TRI THỨC AI */}
                           <div className="bg-white/90 p-3 rounded-xl border border-purple-100 shadow-xs space-y-2.5">
                             <div className="text-xs font-black text-purple-950 flex items-center gap-1.5">

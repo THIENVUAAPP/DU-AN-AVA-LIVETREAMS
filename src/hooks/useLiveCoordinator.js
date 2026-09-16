@@ -3,6 +3,7 @@ import { getAllLiveMedia } from '../lib/liveKhoDB';
 import { askGeminiLiveAi } from '../lib/geminiClient';
 import autoPinProductService from '../utils/autoPinProductService';
 import { resolveEffectiveVoice } from '../utils/voiceSyncService';
+import { isSmartSpamOrToxicComment } from '../utils/vietnamesePronunciationMaster';
 
 export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack = 'talk' }) {
   const [liveMedia, setLiveMedia] = useState([]);
@@ -16,6 +17,8 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack 
   const idleTimerRef = useRef(null);
   const greetedViewersRef = useRef(new Set());
   const welcomeIndexRef = useRef(0); // Chỉ mục tuần tự vòng tròn không trùng lặp cho Chào Người Mới
+  const lastCommentReplyTimeRef = useRef(0); // Bộ đếm thời gian giãn cách trả lời bình luận (10s - 120s)
+
 
   // Load kho video live
   useEffect(() => {
@@ -314,7 +317,27 @@ function fillTemplate(template, vars = {}) {
         const replySource = scriptConfig.commentReplySource || checkoutConfig.commentReplySource || 'knowledge_base';
         const replyMode = commentConfig.commentReplyMode || 'hybrid';
 
-        // A. Kiểm tra từ khóa bị cấm (Banned Words)
+        // 🛡️ A1. BỘ LỌC THÔNG MINH AI (SMART SPAM / TOXIC / GIBBERISH FILTER)
+        if (commentConfig.smartFilterSpam !== false && !isTestMode && commentText) {
+          const spamCheck = isSmartSpamOrToxicComment(commentText);
+          if (spamCheck.isFiltered) {
+            console.log('🛡️ [AvaLive AI] Đã lọc và bỏ qua bình luận rác / spam / thô tục:', commentText, spamCheck.reason);
+            setIsProcessingEvent(false);
+            return;
+          }
+        }
+
+        // ⏱️ A2. KIỂM TRA GIÃN CÁCH TRẢ LỜI BÌNH LUẬN (10s – 120s)
+        const cooldownSec = Math.max(10, Math.min(120, parseInt(commentConfig.commentReplyCooldown) || 15));
+        const now = Date.now();
+        if (!isTestMode && (now - lastCommentReplyTimeRef.current < cooldownSec * 1000)) {
+          console.log(`⏱️ [AvaLive AI] Đang trong khoảng giãn cách (${cooldownSec}s), bỏ qua dồn dập.`);
+          setIsProcessingEvent(false);
+          return;
+        }
+        lastCommentReplyTimeRef.current = now;
+
+        // A3. Kiểm tra từ khóa bị cấm (Banned Words)
         if (commentConfig.bannedWords && !isTestMode) {
           const bannedList = commentConfig.bannedWords.split(/[\n;,]/).map(w => w.trim().toLowerCase()).filter(Boolean);
           if (bannedList.some(b => commentText.toLowerCase().includes(b))) {
@@ -322,6 +345,7 @@ function fillTemplate(template, vars = {}) {
             return; // Bỏ qua comment chứa từ cấm
           }
         }
+
 
         // BƯỚC 1: TIỀN TỐ ĐỌC LẠI BÌNH LUẬN / CÂU HỎI CỦA KHÁCH
         let repeatPrefix = '';
