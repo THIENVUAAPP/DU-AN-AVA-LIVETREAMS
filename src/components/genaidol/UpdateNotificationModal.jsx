@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.0.8';
+export const APP_VERSION = '3.0.9';
 export const RELEASE_DATE = '16/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🎙️ Bản Cập Nhật Hotfix v3.0.9 - Giữ Nguyên Tông Giọng Tự Nhiên, Tự Động Ghim Sản Phẩm & Hợp Nhất Nút Demo/Mô Hình Live',
+    description: '1. Khắc phục triệt để âm thanh: Giữ nguyên 100% tông giọng tự nhiên của Voice AI không bị bóp méo hay biến dạng khi chỉnh tốc độ/âm lượng; 2. Tự động Ghim Sản Phẩm 24/7 trên toàn bộ phiên Live (shop.tiktok.com, TikTok Live Studio, OBS Overlay); 3. Hợp nhất nút "Chạy Demo" và "Mô hình live" thành 1 nút DUY NHẤT: ⚡ CHẠY DEMO & MÔ HÌNH LIVE (TEST) kèm hiển thị rõ Giọng Đang Dùng và công tắc Bật/Tắt Voice Test trực tiếp.'
+  },
   {
     title: '🎙️ Bản Cập Nhật Hotfix v3.0.8 - Kiểm Soát 100% Khởi Động Voice & Tùy Chỉnh Âm Lượng/Tốc Độ/Pitch Thực Tế',
     description: 'Khắc phục triệt để lỗi tự động phát giọng khi vừa mở ứng dụng: Chế độ Live thực tế hoàn toàn tách biệt với Chạy Demo / Mô hình Live Simulator; 14 tác vụ sự kiện kết nối Idol chạy chuẩn xác; Đồng bộ 100% hiệu lực thực tế cho các thanh trượt Âm lượng (Volume), Tốc độ (Speed) và Độ trầm bổng (Pitch) ngay tức thì.'

@@ -210,8 +210,33 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         setPinnedProduct(e.detail.product);
       }
     };
+    const handleStorage = (e) => {
+      if (e.key === 'avalive_current_pinned_product' && e.newValue) {
+        try {
+          setPinnedProduct(JSON.parse(e.newValue));
+        } catch (err) {}
+      }
+    };
+
+    let bc = null;
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        bc = new BroadcastChannel('avalive_product_pin_channel');
+        bc.onmessage = (ev) => {
+          if (ev?.data?.product) {
+            setPinnedProduct(ev.data.product);
+          }
+        };
+      }
+    } catch (e) {}
+
     window.addEventListener('avalive:pin_product_updated', handlePinnedProductUpdate);
-    return () => window.removeEventListener('avalive:pin_product_updated', handlePinnedProductUpdate);
+    window.addEventListener('storage', handleStorage);
+    return () => {
+      window.removeEventListener('avalive:pin_product_updated', handlePinnedProductUpdate);
+      window.removeEventListener('storage', handleStorage);
+      if (bc) bc.close();
+    };
   }, []);
 
   useEffect(() => {

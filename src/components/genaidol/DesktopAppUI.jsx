@@ -30,7 +30,7 @@ import bandoEngine from './game/bandoGameEngine';
 import bandoAudio from './game/bandoAudioEngine';
 import { mapVoiceEngine, battleVoiceEngine } from './game/gameVoiceEngine';
 import battleCommentary from './game/battleCommentaryEngine';
-import { clearGlobalSpeechQueue, getMultiAvatarConfig, isImageMedia, getChromaStyle } from '../../utils/voiceSyncService';
+import { clearGlobalSpeechQueue, getMultiAvatarConfig, isImageMedia, getChromaStyle, ALL_SYSTEM_VOICES, previewVoiceAudio, getDualVoiceConfig } from '../../utils/voiceSyncService';
 import MultiAvatarStudioModal, { SvgChromaFilters } from './MultiAvatarStudioModal';
 import AutoCaptchaSolver from '../AutoCaptchaSolver';
 import AIVoiceModule from '../kol-live/AIVoiceModule';
@@ -448,8 +448,48 @@ export default function DesktopAppUI() {
   const [showSimulator, setShowSimulator] = useState(false);
   const [assistantPrompt, setAssistantPrompt] = useState('');
   const [autoSimActive, setAutoSimActive] = useState(false);
+  const [isSimVoiceMuted, setIsSimVoiceMuted] = useState(false);
+  const isSimVoiceMutedRef = useRef(false);
   const [simTab, setSimTab] = useState('video_live');
   const autoSimTimerRef = useRef(null);
+
+  useEffect(() => {
+    isSimVoiceMutedRef.current = isSimVoiceMuted;
+  }, [isSimVoiceMuted]);
+
+  // Lấy cấu hình Giọng đọc thực tế đang áp dụng cho Idol / Live
+  const [currentVoiceConfig, setCurrentVoiceConfig] = useState(() => {
+    try {
+      return getDualVoiceConfig();
+    } catch (e) {
+      return null;
+    }
+  });
+
+  useEffect(() => {
+    const handleVoiceUpdate = (e) => {
+      if (e.detail) {
+        setCurrentVoiceConfig(e.detail);
+      } else {
+        setCurrentVoiceConfig(getDualVoiceConfig());
+      }
+    };
+    window.addEventListener('aidol_voice_sync_updated', handleVoiceUpdate);
+    return () => window.removeEventListener('aidol_voice_sync_updated', handleVoiceUpdate);
+  }, []);
+
+  const currentActiveVoiceObj = (() => {
+    try {
+      const vIdol = currentVoiceConfig?.idolVoice;
+      if (vIdol) {
+        if (typeof vIdol === 'object' && vIdol.name) return vIdol;
+        const found = ALL_SYSTEM_VOICES.find(v => v.id === vIdol);
+        if (found) return found;
+      }
+    } catch (e) {}
+    return ALL_SYSTEM_VOICES[0] || { name: 'Hoài My 👑 (Nữ Chuẩn - Bắc)' };
+  })();
+  const currentActiveVoiceName = currentActiveVoiceObj?.name || 'Hoài My 👑 (Nữ Chuẩn - Bắc)';
 
   // 👥 MULTI-AVATAR STUDIO (2–4 NHÂN VẬT) REALTIME SYNC
   const [multiAvatarConfig, setMultiAvatarConfig] = useState(() => {
@@ -1410,6 +1450,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     activeBrainPack: 'talk', // mặc định
     onVoiceReply: ({ text, action, baseVideoItem, preRecordedCat, voiceId, voiceChannel, isTest }) => {
       unlockAllAudio();
+      // Nếu đang tắt tiếng Voice Test trong Bảng Giả Lập thì không phát âm thanh test
+      if (isTest && isSimVoiceMutedRef.current) return;
       // Gọi AIAudioPlayer để phát giọng nói với đúng Voice đã cài đặt cho tab sự kiện
       if (audioPlayerRef.current) {
         audioPlayerRef.current.enqueueItem(text, action, false, { voiceId, voiceChannel, isTest });
@@ -5121,18 +5163,21 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             )}
           </button>
 
-          {/* 1 Nút Chạy Demo DUY NHẤT dùng chung */}
+          {/* NÚT CHUNG DUY NHẤT: CHẠY DEMO & MÔ HÌNH LIVE (TEST) */}
           <button 
-            onClick={handleGlobalRunDemo}
-            className={`flex items-center gap-1 px-2.5 py-1 rounded-lg text-xs font-black transition-all border shadow-md active:scale-95 ${
-              isGlobalDemoRunning
-                ? 'bg-red-600 text-white border-yellow-300 ring-2 ring-yellow-400 animate-pulse'
-                : 'bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-500 hover:to-teal-500 text-white border-emerald-400/40 shadow-emerald-500/20'
+            onClick={() => {
+              setShowSimulator(prev => !prev);
+              unlockAllAudio();
+            }}
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black transition-all border shadow-md active:scale-95 cursor-pointer ${
+              showSimulator || isGlobalDemoRunning
+                ? 'bg-gradient-to-r from-purple-600 via-indigo-600 to-pink-600 text-white border-yellow-300 ring-2 ring-yellow-400 shadow-purple-500/40 animate-pulse'
+                : 'bg-gradient-to-r from-purple-700 via-indigo-600 to-blue-600 hover:from-purple-600 hover:to-indigo-500 text-white border-purple-400/50 shadow-indigo-500/20'
             }`}
-            title="Chạy Demo / Kiểm thử tự động quà tặng & tương tác"
+            title="Mở Bảng Điều Khiển Mô Hình Live & Chạy Demo Test Giả Lập Tương Tác Trực Tuyến"
           >
-            <Zap size={13} className={isGlobalDemoRunning ? 'text-yellow-300 animate-bounce' : 'text-yellow-300'} />
-            <span>{isGlobalDemoRunning ? t('stopDemo', currentLang) : t('runDemo', currentLang)}</span>
+            <Zap size={13} className={(showSimulator || isGlobalDemoRunning) ? 'text-yellow-300 animate-bounce' : 'text-yellow-300'} />
+            <span className="whitespace-nowrap font-black">⚡ CHẠY DEMO & MÔ HÌNH LIVE (TEST)</span>
           </button>
 
           {/* 🔊 NÚT BẬT / TẮT ÂM THANH TOÀN DIỆN (ĐỒNG BỘ CẢ WINDOW CAPTURE & TIKTOK LIVE) */}
@@ -5242,13 +5287,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             )}
     </div>
 
-          <button 
-            onClick={() => setShowSimulator(!showSimulator)} 
-            className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-medium transition-colors ${showSimulator ? 'bg-purple-600 text-white' : (isDarkMode ? 'bg-purple-500/20 text-purple-400 hover:bg-purple-500/30' : 'bg-purple-100 text-purple-700 hover:bg-purple-200')}`}>
-            <Brain size={13} />
-            <span>{t('testTools', currentLang)}</span>
-          </button>
-
           {/* Nút Âm thanh Live nằm ngoài khung video */}
           {isConnected && flvUrl && (
             <button
@@ -5332,7 +5370,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
         {/* Cửa sổ Nổi: Công cụ Giả lập Live (Pre-Live Simulator) */}
         {showSimulator && (
-          <div className={`absolute right-6 top-4 w-[420px] max-h-[90vh] flex flex-col rounded-2xl shadow-2xl z-40 animate-in fade-in slide-in-from-right-4 overflow-hidden backdrop-blur-md border ${
+          <div className={`absolute right-6 top-4 w-[430px] max-h-[90vh] flex flex-col rounded-2xl shadow-2xl z-40 animate-in fade-in slide-in-from-right-4 overflow-hidden backdrop-blur-md border ${
             isDarkMode ? 'bg-[#16161e] border-purple-500/40 text-white' : 'bg-white border-purple-300 text-slate-800'
           }`}>
             {/* Header */}
@@ -5342,14 +5380,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               <div className="flex items-center gap-2">
                 <div className={`p-1.5 rounded-lg border ${isDarkMode ? 'bg-purple-500/20 border-purple-400/30 text-purple-300' : 'bg-purple-100 border-purple-300 text-purple-700'}`}>
                   <Brain size={16} />
-    </div>
+                </div>
                 <div>
                   <h3 className={`text-xs font-black uppercase tracking-wider flex items-center gap-1.5 ${isDarkMode ? 'text-white' : 'text-purple-950'}`}>
-                    Lựa chọn mô hình phát live
+                    ⚡ Mô Hình Live & Demo (Test)
                   </h3>
-                  <p className={`text-[10px] ${isDarkMode ? 'text-purple-200/70' : 'text-purple-700/80'}`}>Điều phối các kịch bản Live trực tiếp</p>
-    </div>
-    </div>
+                  <p className={`text-[10px] ${isDarkMode ? 'text-purple-200/70' : 'text-purple-700/80'}`}>Chạy test tương tác, bình luận, quà tặng & Voice AI</p>
+                </div>
+              </div>
               <div className="flex items-center gap-2">
                 {/* Nút bật tắt Auto Simulate */}
                 <button
@@ -5367,8 +5405,47 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 <button onClick={() => setShowSimulator(false)} className={`p-1 rounded-lg transition-colors ${isDarkMode ? 'text-gray-400 hover:text-white hover:bg-white/10' : 'text-gray-500 hover:text-slate-900 hover:bg-slate-100'}`}>
                   <X size={15} />
                 </button>
-    </div>
-    </div>
+              </div>
+            </div>
+
+            {/* 🎤 BANNER HIỂN THỊ TÊN VOICE ĐANG DÙNG & NÚT BẬT/TẮT VOICE TEST TRỰC TIẾP */}
+            <div className={`px-3 py-2 border-b flex items-center justify-between gap-2 ${isDarkMode ? 'bg-purple-950/40 border-purple-500/20 text-purple-200' : 'bg-purple-50 border-purple-200 text-purple-900'}`}>
+              <div className="flex items-center gap-1.5 text-xs truncate max-w-[210px]">
+                <Mic size={13} className="text-purple-400 shrink-0" />
+                <div className="truncate">
+                  <div className="text-[9px] text-purple-400 uppercase font-black">Giọng Đang Hoạt Động:</div>
+                  <div className="font-bold text-[11px] truncate text-yellow-400" title={currentActiveVoiceName}>
+                    {currentActiveVoiceName}
+                  </div>
+                </div>
+              </div>
+              <div className="flex items-center gap-1.5 shrink-0">
+                <button
+                  onClick={() => {
+                    unlockAllAudio();
+                    const sampleText = currentActiveVoiceObj?.sampleText || 'Chào mừng các bạn đã đến với phiên livestream hôm nay!';
+                    previewVoiceAudio(currentActiveVoiceObj, sampleText, { isTest: true, priority: true });
+                    showToast(`🔊 Đang phát thử giọng: ${currentActiveVoiceName}`, 'success');
+                  }}
+                  className="px-2 py-1 rounded bg-purple-600 hover:bg-purple-500 text-white text-[10px] font-black transition-all flex items-center gap-1 shadow-sm active:scale-95 cursor-pointer"
+                  title="Phát thử giọng đọc mẫu trực tiếp để kiểm tra độ trong trẻo tự nhiên"
+                >
+                  <Play size={10} /> Thử Giọng
+                </button>
+                <button
+                  onClick={() => setIsSimVoiceMuted(prev => !prev)}
+                  className={`px-2 py-1 rounded text-[10px] font-black transition-all flex items-center gap-1 border shadow-sm active:scale-95 cursor-pointer ${
+                    isSimVoiceMuted
+                      ? 'bg-red-500/20 text-red-400 border-red-500/40 hover:bg-red-500/30 animate-pulse'
+                      : 'bg-emerald-500/20 text-emerald-400 border-emerald-500/40 hover:bg-emerald-500/30'
+                  }`}
+                  title={isSimVoiceMuted ? "Voice Test đang TẮT — Bấm để BẬT tiếng khi test" : "Voice Test đang BẬT — Bấm để TẮT tiếng khi test"}
+                >
+                  {isSimVoiceMuted ? <VolumeX size={11} className="text-red-400" /> : <Volume2 size={11} className="text-emerald-400 animate-pulse" />}
+                  <span>{isSimVoiceMuted ? "Tắt Tiếng" : "Bật Tiếng"}</span>
+                </button>
+              </div>
+            </div>
 
             {/* Navigation Tabs */}
             <div className={`flex border-b p-1 gap-1 text-[11px] font-semibold ${isDarkMode ? 'bg-black/40 border-white/10' : 'bg-slate-100 border-slate-200'}`}>
