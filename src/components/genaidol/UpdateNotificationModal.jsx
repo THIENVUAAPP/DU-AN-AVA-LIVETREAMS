@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.1.8';
+export const APP_VERSION = '3.1.9';
 export const RELEASE_DATE = '16/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Bản Cập Nhật v3.1.8 - Tinh Gọn Thanh Top Bar, Tối Ưu Nút Loa Máy Tính & Chuẩn Hóa Số Dư Tài Khoản Vĩnh Viễn',
-    description: '1. Tinh gọn thanh Top Bar: Xóa bỏ 2 badge số dư Token & Giờ Live ngoài Top Bar (tránh rác giao diện, toàn bộ số dư vẫn quản lý chuẩn xác 100% trong chi tiết tài khoản); 2. Xóa bỏ nút và dropdown chọn kịch bản thừa ngoài Top Bar; 3. Nâng cấp nút Tắt/Mở Loa Máy Tính: Thiết kế nút gọn gàng với trạng thái trực quan [🔊 Loa Máy: Mở / 🔇 Loa Máy: Tắt], khi tắt loa máy tính sẽ chống ồn cho streamer nhưng phiên Live (TikTok Live Studio, OBS Window Capture) vẫn có tiếng 100%; 4. Bảo lưu và đồng bộ vĩnh viễn dữ liệu tài khoản, Token và Thời gian Live xuyên suốt phiên làm việc.'
+    title: '👑 Bản Cập Nhật v3.1.9 - Bổ Sung Nút Phát Kịch Bản Kế Bên Loa Máy, Tối Ưu Window Capture 0ms & Chuẩn Hóa 20 Ngôn Ngữ',
+    description: '1. Bổ sung nút DUY NHẤT "▶️ Phát Kịch Bản" (kèm trạng thái 🟢 Đang Phát) nằm ngay kế bên nút Loa Máy trên thanh điều khiển, tự động phát kịch bản bán hàng đã cài đặt trong Menu Sự Kiện; 2. Tối ưu hóa siêu tốc Window Capture & Link Live OBS: Nhận diện và phát video ngay lập tức 0ms từ cả storage, query và opener, loại bỏ hoàn toàn hiện tượng trễ hình hay chờ đợi; 3. Chuẩn hóa bộ chuyển đổi 20 Ngôn ngữ Quốc Tế trên Top Bar: Tích hợp backdrop đóng mượt mà, chuyển đổi ngôn ngữ giao diện & Voice AI mượt mà 100% không lỗi; 4. Khóa chặt và bảo lưu vĩnh viễn toàn bộ cấu hình hệ thống.'
   }
 ];
 

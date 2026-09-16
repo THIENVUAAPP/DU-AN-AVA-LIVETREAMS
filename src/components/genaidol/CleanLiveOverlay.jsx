@@ -1518,6 +1518,26 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           try { el.volume = vol; } catch (err) {}
         });
         bandoAudio.setMasterVolume(vol);
+      } else if ((e.key === 'avalive_active_video_src' || e.key === 'avalive_user_locked_media') && e.newValue) {
+        let newMedia = e.newValue;
+        if (newMedia && typeof newMedia === 'string' && !newMedia.startsWith('blob:')) {
+          setMasterState(prev => ({
+            ...prev,
+            mediaUrl: newMedia,
+            isVideo: true,
+            isPlaying: true
+          }));
+          const v = overlayVideoRef.current;
+          if (v) {
+            v.dataset.userPaused = 'false';
+            if (!isSameMediaUrl(v.src, newMedia)) {
+              v.src = newMedia;
+            }
+            v.muted = isVideoAudioMuted;
+            if (!isVideoAudioMuted) v.volume = videoVolume;
+            v.play().catch(() => {});
+          }
+        }
       } else if (e.key === 'avalive_master_live_state' && e.newValue) {
         try {
           const parsed = JSON.parse(e.newValue);
@@ -2642,6 +2662,33 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     WebkitFontSmoothing: 'antialiased',
                     willChange: 'transform'
                   }}
+                  onLoadStart={(e) => {
+                    const v = e.currentTarget;
+                    if (!checkIfUserPaused()) {
+                      v.dataset.userPaused = 'false';
+                      v.muted = isVideoAudioMuted;
+                      v.play().catch(() => {});
+                    }
+                  }}
+                  onLoadedMetadata={(e) => {
+                    const v = e.currentTarget;
+                    // ⚡ Khôi phục thời gian đang phát nếu có chuyển stage hoặc reload tab (Không phát lại từ đầu 0:00)
+                    if (lastOverlayTimeRef.current > 0) {
+                      try {
+                        v.currentTime = lastOverlayTimeRef.current;
+                      } catch (err) {}
+                    } else if (initialTimeParamRef.current > 0) {
+                      try {
+                        v.currentTime = initialTimeParamRef.current;
+                      } catch (err) {}
+                    }
+                    if (!checkIfUserPaused()) {
+                      v.dataset.userPaused = 'false';
+                      v.muted = isVideoAudioMuted;
+                      try { v.volume = videoVolume; } catch (err) {}
+                      v.play().catch(() => {});
+                    }
+                  }}
                   onCanPlay={(e) => {
                     // ⚡ INSTANT 0MS PLAYBACK: Phát ngay lập tức khi frame đầu tiên sẵn sàng
                     const v = e.currentTarget;
@@ -2669,43 +2716,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     const ct = e.currentTarget.currentTime;
                     if (ct > 0) {
                       lastOverlayTimeRef.current = ct;
-                    }
-                  }}
-                  onLoadedMetadata={(e) => {
-                    const v = e.currentTarget;
-                    // ⚡ Khôi phục thời gian đang phát nếu có chuyển stage hoặc reload tab (Không phát lại từ đầu 0:00)
-                    if (lastOverlayTimeRef.current > 0) {
-                      try {
-                        v.currentTime = lastOverlayTimeRef.current;
-                      } catch (err) {}
-                    } else if (initialTimeParamRef.current > 0) {
-                      try {
-                        v.currentTime = initialTimeParamRef.current;
-                      } catch (err) {}
-                      initialTimeParamRef.current = 0;
-                    }
-                    const isUserPaused = checkIfUserPaused();
-                    if (!isUserPaused) {
-                      v.dataset.userPaused = 'false';
-                      v.muted = isVideoAudioMuted;
-                      try { v.volume = videoVolume; } catch (err) {}
-                      const p = v.play();
-                      if (p !== undefined) {
-                        p.then(() => {
-                          setIsPlayingState(true);
-                          hasAutoplayStartedRef.current = true;
-                        }).catch(() => {
-                          v.muted = true;
-                          v.play().then(() => {
-                            setIsPlayingState(true);
-                            hasAutoplayStartedRef.current = true;
-                          }).catch(() => {});
-                        });
-                      }
-                    } else {
-                      v.dataset.userPaused = 'true';
-                      v.pause();
-                      setIsPlayingState(false);
                     }
                   }}
                   onPlay={() => {

@@ -4982,6 +4982,21 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         {/* Right Side: Toggles & Stream Window */}
         <div className="flex items-center gap-1.5 shrink-0 flex-nowrap overflow-visible relative z-40">
 
+          {/* 📜 NÚT DUY NHẤT: PHÁT KỊCH BẢN LIVE (NẰM KẾ BÊN NÚT LOA MÁY) */}
+          <button
+            type="button"
+            onClick={() => handleToggleScriptLive()}
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border shadow-sm cursor-pointer active:scale-95 ${
+              isScriptLiveRunning
+                ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 text-white border-emerald-400 shadow-emerald-500/40 animate-pulse'
+                : 'bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 text-white border-blue-400/50 shadow-indigo-500/20'
+            }`}
+            title={isScriptLiveRunning ? "Kịch bản đang phát trực tiếp — Bấm để Tạm Dừng" : "Bắt đầu phát kịch bản bán hàng đã cài đặt trong hệ thống"}
+          >
+            <Play size={12} fill={isScriptLiveRunning ? "currentColor" : "none"} className={isScriptLiveRunning ? "text-yellow-300 animate-spin" : "text-white"} />
+            <span className="whitespace-nowrap font-bold">{isScriptLiveRunning ? '🟢 Đang Phát Kịch Bản' : '▶️ Phát Kịch Bản'}</span>
+          </button>
+
           {/* 🔊 NÚT TẮT / MỞ TIẾNG LOA MÁY TÍNH (PHIÊN LIVE VẪN CÓ TIẾNG 100%) */}
           <button 
             onClick={handleToggleLocalSpeakerMute}
