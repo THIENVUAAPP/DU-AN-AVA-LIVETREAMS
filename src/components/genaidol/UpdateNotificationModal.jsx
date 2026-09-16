@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.1.2';
+export const APP_VERSION = '3.1.3';
 export const RELEASE_DATE = '16/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🍏 Bản Cập Nhật Hotfix v3.1.3 - Khắc Phục Triệt Để 100% Khởi Động Localhost Trên macOS (MacBook)',
+    description: '1. Nâng cấp toàn diện bộ khởi động macOS (1_Khoi_Dong_AvaLive_Mac.command): Tự động nạp môi trường Shell profiles, tự động tìm kiếm Node.js trên toàn bộ phân vùng (Homebrew Apple Silicon M1/M2/M3 & Intel, NVM, Volta), tự giải phóng cổng 3001 và kiểm tra sẵn sàng trước khi mở trình duyệt App Mode 0ms; 2. Hỗ trợ fallback thông minh và đồng bộ hóa toàn diện hệ thống Ghim Sản Phẩm Đa Nền Tảng 24/7.'
+  },
   {
     title: '🎙️ Bản Cập Nhật v3.1.2 - Khởi Động Thụ Động 100%, Khắc Phục Triệt Để Chèn Giọng Lạ & Chuẩn Hóa Model Gemini 1.5 Flash',
     description: '1. Khởi động thụ động tuyệt đối: Khi mở phần mềm giữ nguyên 100% trạng thái chờ an toàn, không tự ý đọc giọng hay tự bật phiên live khi người dùng chưa bấm bắt đầu; Nút xem thử video độc lập 100% với nút Bật Tất Cả; 2. Khắc phục triệt để lỗi chèn giọng: Tuyệt đối CHỈ sử dụng đúng giọng mà người dùng đã cài đặt cho 3 vai trò (Idol, Trợ Lý, Bình Luận), loại bỏ toàn bộ fallback chèn giọng nữ/lạ; 3. Tùy chỉnh Âm lượng, Tốc độ, Pitch lưu chuẩn xác và giữ nguyên 100% cấu trúc tông giọng tự nhiên không méo tiếng; 4. Chuẩn hóa Model AI: Cố định bộ não Gemini 1.5 Flash thông minh, siêu tốc và tiết kiệm chi phí nhất, khóa ẩn chọn model chỉ hiển thị cho tài khoản Admin.'
