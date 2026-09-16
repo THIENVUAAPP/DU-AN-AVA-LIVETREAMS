@@ -1,4 +1,4 @@
-import { ALL_SYSTEM_VOICES, ELEVENLABS_VOICES, getElevenLabsApiKey, previewVoiceAudio, stopVoiceAudio, isSpeechActive } from '../../../utils/voiceSyncService';
+import { ALL_SYSTEM_VOICES, ELEVENLABS_VOICES, getElevenLabsApiKey, previewVoiceAudio, stopVoiceAudio, isSpeechActive, resolveEffectiveVoice } from '../../../utils/voiceSyncService';
 import { askGeminiLiveAi } from '../../../lib/geminiClient';
 
 export const DEFAULT_MAP_PROMPTS = [
@@ -326,19 +326,28 @@ class GameVoiceEngine {
     let effectiveRole = 'game';
 
     if (roleOrVoice === 'assistant') {
-      activeVoice = this.assistantVoice;
       effectiveRole = 'assistant';
+      activeVoice = resolveEffectiveVoice('assistant') || this.assistantVoice;
     } else if (roleOrVoice === 'game') {
-      activeVoice = this.gameVoice;
       effectiveRole = 'game';
+      activeVoice = resolveEffectiveVoice('game') || this.gameVoice;
+    } else if (roleOrVoice === 'comment') {
+      effectiveRole = 'comment';
+      activeVoice = resolveEffectiveVoice('comment');
     } else if (typeof roleOrVoice === 'string') {
-      const foundVoice = ALL_SYSTEM_VOICES.find(v => v.id === roleOrVoice || v.voiceId === roleOrVoice);
-      if (foundVoice) {
-        activeVoice = foundVoice;
-        effectiveRole = foundVoice.gender === 'Female' ? 'assistant' : 'game';
+      const resolved = resolveEffectiveVoice(roleOrVoice);
+      if (resolved) {
+        activeVoice = resolved;
+        effectiveRole = resolved.gender === 'Female' ? 'assistant' : 'game';
       } else {
-        activeVoice = this.assistantVoice;
-        effectiveRole = 'assistant';
+        const foundVoice = ALL_SYSTEM_VOICES.find(v => v.id === roleOrVoice || v.voiceId === roleOrVoice);
+        if (foundVoice) {
+          activeVoice = foundVoice;
+          effectiveRole = foundVoice.gender === 'Female' ? 'assistant' : 'game';
+        } else {
+          activeVoice = resolveEffectiveVoice('assistant') || this.assistantVoice;
+          effectiveRole = 'assistant';
+        }
       }
     } else if (typeof roleOrVoice === 'object' && roleOrVoice !== null) {
       activeVoice = roleOrVoice;
@@ -347,13 +356,7 @@ class GameVoiceEngine {
 
     if (activeVoice?.enabled === false) return;
 
-    const baseVoice = ALL_SYSTEM_VOICES.find(v => v.id === activeVoice?.id || v.voiceId === activeVoice?.voiceId) || activeVoice || {
-      id: effectiveRole === 'assistant' ? 'free_vi_female' : 'el_josh',
-      provider: effectiveRole === 'assistant' ? 'system' : 'elevenlabs',
-      tier: effectiveRole === 'assistant' ? 'free' : 'pro',
-      gender: effectiveRole === 'assistant' ? 'Female' : 'Male',
-      role: effectiveRole
-    };
+    const baseVoice = ALL_SYSTEM_VOICES.find(v => v.id === activeVoice?.id || v.voiceId === activeVoice?.voiceId) || activeVoice;
 
     const voiceObj = {
       ...baseVoice,

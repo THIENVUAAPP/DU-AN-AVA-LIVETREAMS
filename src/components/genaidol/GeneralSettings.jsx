@@ -140,6 +140,17 @@ export default function GeneralSettings({ onClose = () => {}, initialTab = 'prom
   const [assignedToast, setAssignedToast] = useState(null);
   const [previewingRole, setPreviewingRole] = useState(null);
 
+  const isAdmin = useMemo(() => {
+    try {
+      const raw = localStorage.getItem('aidol_user_session') || localStorage.getItem('ava_live_user');
+      if (raw) {
+        const u = JSON.parse(raw);
+        if (u?.isAdmin || u?.role === 'admin' || u?.email === 'quocthiencr90@gmail.com') return true;
+      }
+    } catch (e) {}
+    return false;
+  }, []);
+
   const fileInputRef = useRef(null);
   
   // State for all settings
@@ -3964,18 +3975,17 @@ IDOL MỈM CƯỜI + GESTURE
                           </label>
                           <input type="range" min="0.5" max="2" step="0.1" name="mainVoicePitch" value={settings.mainVoicePitch !== undefined ? settings.mainVoicePitch : 1} onChange={handleChange} className="w-full accent-blue-600" />
                         </div>
-                        <div className="pt-2 border-t border-gray-100">
-                          <label className="text-xs font-semibold text-[#a53b3b] block mb-1">Model AI Trả Lời:</label>
-                          <select 
-                            name="apiModel" value={settings.apiModel} onChange={handleChange}
-                            className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-blue-500 bg-gray-50"
-                          >
-                            <option value="gemini-1.5-flash">🔥 Gemini 1.5 Flash (Siêu tốc & Khuyên dùng)</option>
-                            <option value="gemini-2.0-flash">⚡ Gemini 2.0 Flash (Realtime Next-Gen)</option>
-                            <option value="gemini-1.5-flash-8b">💎 Gemini 1.5 Flash 8B (Tiết kiệm nhất)</option>
-                            <option value="gpt-4o-mini">🤖 OpenAI GPT-4o Mini</option>
-                          </select>
-                        </div>
+                        {isAdmin && (
+                          <div className="pt-2 border-t border-gray-100">
+                            <label className="text-xs font-semibold text-[#a53b3b] block mb-1">Model AI Trả Lời (Admin Only):</label>
+                            <select 
+                              name="apiModel" value={settings.apiModel || 'gemini-1.5-flash'} onChange={handleChange}
+                              className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-blue-500 bg-gray-50 font-bold"
+                            >
+                              <option value="gemini-1.5-flash">🔥 Gemini 1.5 Flash (Siêu tốc & Thông minh nhất - Tiết kiệm chi phí)</option>
+                            </select>
+                          </div>
+                        )}
                       </div>
                     </div>
 

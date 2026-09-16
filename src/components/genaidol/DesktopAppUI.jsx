@@ -1384,9 +1384,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   }, [hiddenBuiltins]);
 
   useEffect(() => {
-    setIsMasterLiveRunning(true);
+    setIsMasterLiveRunning(false);
     try {
-      localStorage.setItem('avalive_master_live_running', 'true');
+      localStorage.setItem('avalive_master_live_running', 'false');
       // Reset cả bản đồ và bảng xếp hạng
       if (bandoEngine && typeof bandoEngine.resetGame === 'function') {
         bandoEngine.resetGame();
@@ -1648,7 +1648,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           const remoteUrl = data.mediaUrl;
           setUserLockedMediaUrl(remoteUrl);
           try { localStorage.setItem('avalive_user_locked_media', remoteUrl); } catch (e) {}
-          setIsMasterLiveRunning(true);
         }
       })
       .catch(() => {});

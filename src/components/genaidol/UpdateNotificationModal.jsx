@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.1.1';
+export const APP_VERSION = '3.1.2';
 export const RELEASE_DATE = '16/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🎙️ Bản Cập Nhật v3.1.2 - Khởi Động Thụ Động 100%, Khắc Phục Triệt Để Chèn Giọng Lạ & Chuẩn Hóa Model Gemini 1.5 Flash',
+    description: '1. Khởi động thụ động tuyệt đối: Khi mở phần mềm giữ nguyên 100% trạng thái chờ an toàn, không tự ý đọc giọng hay tự bật phiên live khi người dùng chưa bấm bắt đầu; Nút xem thử video độc lập 100% với nút Bật Tất Cả; 2. Khắc phục triệt để lỗi chèn giọng: Tuyệt đối CHỈ sử dụng đúng giọng mà người dùng đã cài đặt cho 3 vai trò (Idol, Trợ Lý, Bình Luận), loại bỏ toàn bộ fallback chèn giọng nữ/lạ; 3. Tùy chỉnh Âm lượng, Tốc độ, Pitch lưu chuẩn xác và giữ nguyên 100% cấu trúc tông giọng tự nhiên không méo tiếng; 4. Chuẩn hóa Model AI: Cố định bộ não Gemini 1.5 Flash thông minh, siêu tốc và tiết kiệm chi phí nhất, khóa ẩn chọn model chỉ hiển thị cho tài khoản Admin.'
+  },
   {
     title: '⚡ Bản Cập Nhật Hotfix v3.1.1 - Khắc Phục Triệt Để 100% Lỗi ReferenceError Khởi Động Giao Diện',
     description: 'Xử lý dứt điểm 100% lỗi isVideoPlaying ReferenceError khi giải nén mở phần mềm, đảm bảo giao diện DesktopAppUI khởi động tức thì 0ms, mượt mà trên Windows & macOS mà không bị kẹt ở màn hình cập nhật.'

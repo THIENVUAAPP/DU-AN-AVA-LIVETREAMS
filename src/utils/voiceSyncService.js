@@ -6924,18 +6924,65 @@ export function isVoiceFavorite(voiceId) {
   return getFavoriteVoiceIds().includes(voiceId);
 }
 
-// ==================== STORAGE & CONFIG HELPERS ====================
 export function getSavedVoiceConfig() {
   if (typeof window === 'undefined') return DEFAULT_VOICE_CONFIG;
+  let baseConfig = { ...DEFAULT_VOICE_CONFIG };
   try {
     const saved = localStorage.getItem('ava_live_voice_config_v2');
     if (saved) {
-      return { ...DEFAULT_VOICE_CONFIG, ...JSON.parse(saved) };
+      baseConfig = { ...baseConfig, ...JSON.parse(saved) };
     }
   } catch (e) {
-    console.warn('Lỗi đọc voice config:', e);
+    console.warn('Lỗi đọc voice config v2:', e);
   }
-  return DEFAULT_VOICE_CONFIG;
+
+  try {
+    const generalSaved = localStorage.getItem('aidol_general_settings');
+    if (generalSaved) {
+      const g = JSON.parse(generalSaved);
+      if (g.mainVoiceId) {
+        const idolMatch = ALL_SYSTEM_VOICES.find(v => v.id === g.mainVoiceId);
+        if (idolMatch) {
+          baseConfig.idolVoice = {
+            ...idolMatch,
+            role: 'idol',
+            volume: g.mainVoiceVolume !== undefined ? Number(g.mainVoiceVolume) : (baseConfig.idolVoice?.volume ?? 1.0),
+            rate: g.mainVoiceRate !== undefined ? Number(g.mainVoiceRate) : (baseConfig.idolVoice?.rate ?? 1.0),
+            pitch: g.mainVoicePitch !== undefined ? Number(g.mainVoicePitch) : (baseConfig.idolVoice?.pitch ?? 1.0)
+          };
+        }
+      }
+      if (g.assistantVoiceId) {
+        const asstMatch = ALL_SYSTEM_VOICES.find(v => v.id === g.assistantVoiceId);
+        if (asstMatch) {
+          baseConfig.managerVoice = {
+            ...asstMatch,
+            role: 'manager',
+            enabled: g.assistantEnabled !== false,
+            volume: g.assistantVoiceVolume !== undefined ? Number(g.assistantVoiceVolume) : (baseConfig.managerVoice?.volume ?? 1.0),
+            rate: g.assistantVoiceRate !== undefined ? Number(g.assistantVoiceRate) : (baseConfig.managerVoice?.rate ?? 1.0),
+            pitch: g.assistantVoicePitch !== undefined ? Number(g.assistantVoicePitch) : (baseConfig.managerVoice?.pitch ?? 1.0)
+          };
+        }
+      }
+      if (g.commentVoiceId) {
+        const commMatch = ALL_SYSTEM_VOICES.find(v => v.id === g.commentVoiceId);
+        if (commMatch) {
+          baseConfig.commentVoice = {
+            ...commMatch,
+            role: 'comment',
+            volume: g.commentVoiceVolume !== undefined ? Number(g.commentVoiceVolume) : (baseConfig.commentVoice?.volume ?? 1.0),
+            rate: g.commentVoiceRate !== undefined ? Number(g.commentVoiceRate) : (baseConfig.commentVoice?.rate ?? 1.0),
+            pitch: g.commentVoicePitch !== undefined ? Number(g.commentVoicePitch) : (baseConfig.commentVoice?.pitch ?? 1.0)
+          };
+        }
+      }
+    }
+  } catch (e) {
+    console.warn('Lỗi đồng bộ general settings voice:', e);
+  }
+
+  return baseConfig;
 }
 
 export function saveVoiceConfig(config) {

@@ -1,4 +1,4 @@
-import { ALL_SYSTEM_VOICES, ELEVENLABS_VOICES, getElevenLabsApiKey, previewVoiceAudio, stopVoiceAudio, isSpeechActive } from '../../../utils/voiceSyncService';
+import { ALL_SYSTEM_VOICES, ELEVENLABS_VOICES, getElevenLabsApiKey, previewVoiceAudio, stopVoiceAudio, isSpeechActive, resolveEffectiveVoice } from '../../../utils/voiceSyncService';
 
 export const ELEVENLABS_GAME_VOICES = ALL_SYSTEM_VOICES;
 
@@ -148,7 +148,8 @@ class BattleCommentaryEngine {
 
     // GỌI UNIFIED VOICE ENGINE CHO BÌNH LUẬN VIÊN GAME
     try {
-      const voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === (customVoiceId || this.selectedVoiceId)) || {
+      const activeVoice = resolveEffectiveVoice('game');
+      const baseVoice = activeVoice || ALL_SYSTEM_VOICES.find(v => v.id === this.selectedVoiceId) || {
         id: this.selectedVoiceId || 'el_josh',
         voiceId: this.selectedElevenLabsVoiceId || 'TxGEqnHWrfWFTfGW9XjX',
         provider: 'elevenlabs',
@@ -157,12 +158,19 @@ class BattleCommentaryEngine {
         role: 'game'
       };
 
+      const voiceObj = {
+        ...baseVoice,
+        volume: (activeVoice?.volume !== undefined ? activeVoice.volume : this.volume),
+        rate: (activeVoice?.rate !== undefined ? activeVoice.rate : this.rate),
+        pitch: (activeVoice?.pitch !== undefined ? activeVoice.pitch : this.pitch)
+      };
+
       if (typeof window !== 'undefined') {
         const charCount = (text || '').length || 30;
         window.dispatchEvent(new CustomEvent('avalive:deduct_token', {
           detail: {
             amount: charCount,
-            reason: `ElevenLabs Game PK (${voiceObj.id}): "${(text || '').slice(0, 20)}..."`
+            reason: `Game PK Voice (${voiceObj.id}): "${(text || '').slice(0, 20)}..."`
           }
         }));
       }
