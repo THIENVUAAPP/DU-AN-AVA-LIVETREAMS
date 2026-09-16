@@ -1733,57 +1733,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     if (auto247TimerRef.current) {
       clearInterval(auto247TimerRef.current);
     }
-
-    auto247TimerRef.current = setInterval(() => {
-      // 1. Tự động kiểm tra và giải Captcha định kỳ ngầm để giữ kết nối Live 24/24
-      try {
-        window.dispatchEvent(new CustomEvent('avalive_auto_captcha_heartbeat'));
-      } catch (e) {}
-      // 2. KHÔNG TỰ ĐỘNG CẮM CỜ GIẢ LẬP: Chỉ cắm cờ khi có người xem thật gửi quà thật từ TikTok Live Studio
-    }, 15000);
   }, [isAuto247Running]);
-
-  // Dừng demo và auto 24/7 khi tắt component
-  useEffect(() => {
-    return () => {
-      if (globalDemoTimerRef.current) clearInterval(globalDemoTimerRef.current);
-      if (auto247TimerRef.current) clearInterval(auto247TimerRef.current);
-      try {
-        bandoEngine.stopAutoTestLoop();
-      } catch (e) {}
-    };
-  }, []);
-
-  // Danh mục Nhân Vật AI Idol (Chờ video tải lên từ người dùng, tuyệt đối không tự ý phát video nền)
-  const BUILTIN_CHARACTERS = {
-    'linhanh_4k': {
-      name: 'AI Idol Live PRO',
-      url: '',
-      type: 'video'
-    },
-    'aidol_greenscreen': {
-      name: 'AI Idol Thời Trang (GreenScreen)',
-      url: '',
-      type: 'video'
-    },
-    'aidol_dance_pro': {
-      name: 'AI Idol Vũ Đạo (Dance Pro)',
-      url: '',
-      type: 'video'
-    }
-  };
-  
-  const ALL_CHARACTERS = { ...BUILTIN_CHARACTERS };
-
-  // Gộp nhân vật mặc định và tuỳ chỉnh tải lên bởi người dùng
-  const CHARACTERS = { ...BUILTIN_CHARACTERS };
-  if (Array.isArray(customCharacters)) {
-    customCharacters.forEach(c => {
-      if (c && c.id) {
-        CHARACTERS[c.id] = { name: c.name || 'AI Idol', url: c.url, type: c.type || 'video' };
-      }
-    });
-  }
 
   const handleAudioTest = useCallback(async (role = 'game') => {
     await unlockAllAudio();
@@ -1924,171 +1874,42 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       sendVideoControl({
         action: 'play',
         currentTime: 0,
-        force: true,
         isPlaying: true,
+        force: true,
         mediaUrl: cleanUrl,
         timestamp: Date.now()
-      }, socketRef.current);
-      syncMasterLiveState({
-        stage: 'idol',
-        selectedCharacter: charItem.id,
-        characterName: charItem.name || 'AI Idol',
-        mediaUrl: cleanUrl,
-        isVideo: true,
-        videoPlaybackEvent: 'play',
-        videoCurrentTime: 0,
-        isPlaying: true
       }, socketRef.current);
     }
   }, [customCharacters]);
 
-  // Quản lý trạng thái Play / Pause của video live trên khung hình phần mềm
-  const [isVideoPlaying, setIsVideoPlaying] = useState(() => {
-    try {
-      return localStorage.getItem('avalive_user_paused') !== 'true';
-    } catch (e) {
-      return true;
-    }
-  });
-
-  // ⏯️ HÀM BẬT / TẮT (TẠM DỪNG / TIẾP TỤC) VIDEO TRỰC TIẾP TRÊN KHUNG HÌNH VIDEO
-  const toggleDesktopVideoPlayback = useCallback((e) => {
-    if (e) {
-      if (typeof e.preventDefault === 'function') e.preventDefault();
-      if (typeof e.stopPropagation === 'function') e.stopPropagation();
-    }
+  // Nút Bật/Tắt Video trên màn hình phần mềm: độc lập 100%, dùng để xem thử / kiểm tra video
+  const toggleDesktopVideoPlayback = useCallback(() => {
     const vid = desktopVideoRef.current;
-    isInternalPlaybackChangeRef.current = true;
-    setTimeout(() => { isInternalPlaybackChangeRef.current = false; }, 300);
-
     if (isVideoPlaying) {
-      // ⏸️ ĐANG PHÁT -> BẤM ĐỂ TẠM DỪNG NGAY LẬP TỨC
-      setIsVideoPlaying(false);
-      try {
-        localStorage.setItem('avalive_user_paused', 'true');
-        localStorage.setItem('avalive_window_capture_paused', 'true');
-      } catch (err) {}
       if (vid) {
+        vid.pause();
         vid.dataset.userPaused = 'true';
-        try { vid.pause(); } catch (err) {}
       }
-      document.querySelectorAll('video, audio').forEach(el => {
-        try {
-          el.dataset.userPaused = 'true';
-          el.pause();
-        } catch (e) {}
-      });
-      if (typeof bandoAudio.pauseAll === 'function') bandoAudio.pauseAll();
-
-      showToast('⏸ Đã tạm dừng video Live!', 'info');
-
-      const curTime = vid ? vid.currentTime : 0;
-      const charMatch = customCharacters.find(c => c.id === selectedCharacter);
-      let playUrl = userLockedMediaUrl || (charMatch ? (charMatch.url || charMatch.mediaUrl) : '') || CHARACTERS[selectedCharacter]?.url || '';
-      if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
-        playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
-      }
-      sendVideoControl({
-        action: 'pause',
-        currentTime: curTime,
-        isPlaying: false,
-        force: true,
-        mediaUrl: playUrl,
-        timestamp: Date.now()
-      }, socketRef.current);
-
-      syncMasterLiveState({
-        stage: 'idol',
-        mediaUrl: playUrl,
-        isVideo: true,
-        videoPlaybackEvent: 'pause',
-        videoCurrentTime: curTime,
-        force: true,
-        isPlaying: false
-      }, socketRef.current);
-
-      try {
-        const bc = new BroadcastChannel('avalive_master_live_stream');
-        bc.postMessage({ 
-          type: 'GLOBAL_PLAYBACK_CHANGE', 
-          isPlaying: false, 
-          userPaused: true, 
-          currentTime: curTime, 
-          force: true,
-          source: 'desktop',
-          timestamp: Date.now() 
-        });
-        setTimeout(() => bc.close(), 100);
-      } catch (err) {}
+      setIsVideoPlaying(false);
+      showToast('⏸️ Đã tạm dừng video xem thử trên phần mềm', 'info');
     } else {
-      // ▶️ ĐANG DỪNG -> BẤM ĐỂ TIẾP TỤC PHÁT
-      setIsVideoPlaying(true);
-      try {
-        localStorage.removeItem('avalive_user_paused');
-        localStorage.removeItem('avalive_window_capture_paused');
-        localStorage.setItem('avalive_master_live_running', 'true');
-      } catch (err) {}
-      if (!isMasterLiveRunning) {
-        setIsMasterLiveRunning(true);
-      }
       if (vid) {
         vid.dataset.userPaused = 'false';
-        vid.muted = liveAudioMuted;
-        if (!liveAudioMuted) vid.volume = liveVolume;
+        if (isLocalSpeakerMuted) {
+          vid.muted = true;
+        } else {
+          vid.muted = false;
+          vid.volume = liveVolume;
+        }
         vid.play().catch(() => {
           vid.muted = true;
           vid.play().catch(() => {});
         });
       }
-      document.querySelectorAll('video').forEach(el => {
-        try {
-          el.dataset.userPaused = 'false';
-          el.play().catch(() => {});
-        } catch (e) {}
-      });
-
-      showToast('▶️ Đang tiếp tục phát video Live!', 'success');
-
-      const curTime = vid ? vid.currentTime : 0;
-      const charMatchPlay = customCharacters.find(c => c.id === selectedCharacter);
-      let playUrl = userLockedMediaUrl || (charMatchPlay ? (charMatchPlay.url || charMatchPlay.mediaUrl) : '') || CHARACTERS[selectedCharacter]?.url || '';
-      if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
-        playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
-      }
-      sendVideoControl({
-        action: 'play',
-        currentTime: curTime,
-        isPlaying: true,
-        force: true,
-        mediaUrl: playUrl,
-        timestamp: Date.now()
-      }, socketRef.current);
-
-      syncMasterLiveState({
-        stage: 'idol',
-        mediaUrl: playUrl,
-        isVideo: true,
-        videoPlaybackEvent: 'play',
-        videoCurrentTime: curTime,
-        force: true,
-        isPlaying: true
-      }, socketRef.current);
-
-      try {
-        const bc = new BroadcastChannel('avalive_master_live_stream');
-        bc.postMessage({ 
-          type: 'GLOBAL_PLAYBACK_CHANGE', 
-          isPlaying: true, 
-          userPaused: false, 
-          currentTime: curTime, 
-          force: true,
-          source: 'desktop',
-          timestamp: Date.now() 
-        });
-        setTimeout(() => bc.close(), 100);
-      } catch (err) {}
+      setIsVideoPlaying(true);
+      showToast('▶️ Đang tiếp tục phát video xem thử trên phần mềm', 'success');
     }
-  }, [isVideoPlaying, isMasterLiveRunning, liveAudioMuted, liveVolume, userLockedMediaUrl, customCharacters, selectedCharacter]);
+  }, [isVideoPlaying, isLocalSpeakerMuted, liveVolume]);
 
   // Phím tắt thông minh [Phím Cách / Space] điều khiển Tạm dừng / Tiếp tục Video trên khung hình
   useEffect(() => {

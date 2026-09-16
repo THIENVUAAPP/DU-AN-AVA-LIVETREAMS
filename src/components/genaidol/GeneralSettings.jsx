@@ -137,6 +137,8 @@ export default function GeneralSettings({ onClose = () => {}, initialTab = 'prom
   const [avaGenderFilter, setAvaGenderFilter] = useState('all'); // 'all', 'Female', 'Male'
   const [avaAgeFilter, setAvaAgeFilter] = useState('all'); // 'all', 'young', 'middle', 'senior'
   const [avaSearchQuery, setAvaSearchQuery] = useState('');
+  const [assignedToast, setAssignedToast] = useState(null);
+  const [previewingRole, setPreviewingRole] = useState(null);
 
   const fileInputRef = useRef(null);
   
@@ -2071,6 +2073,110 @@ IDOL MỈM CƯỜI + GESTURE
   const handleAssistantVoiceFilter = (filter) => setSettings(prev => ({ ...prev, assistantVoiceFilter: filter }));
   const handleGameVoiceFilter = (filter) => setSettings(prev => ({ ...prev, gameVoiceFilter: filter }));
 
+  const notifyAssigned = (msg, type = 'success') => {
+    setAssignedToast({ msg, type });
+    setTimeout(() => {
+      setAssignedToast(null);
+    }, 2800);
+  };
+
+  const handleAssignVoice = (role, voice) => {
+    if (!voice) return;
+    setSettings(prev => {
+      let updated = { ...prev };
+      if (role === 'idol') {
+        updated.mainVoiceId = voice.id;
+        updated.mainVoiceVolume = prev.mainVoiceVolume !== undefined ? prev.mainVoiceVolume : (voice.volume || 1.0);
+        updated.mainVoiceRate = prev.mainVoiceRate !== undefined ? prev.mainVoiceRate : (voice.rate || 1.0);
+        updated.mainVoicePitch = prev.mainVoicePitch !== undefined ? prev.mainVoicePitch : (voice.pitch || 1.0);
+        notifyAssigned(`🎯 Đã gán "${voice.name}" làm Giọng Idol Live Chính!`);
+      } else if (role === 'assistant') {
+        updated.assistantVoiceId = voice.id;
+        updated.assistantEnabled = true;
+        updated.assistantVoiceVolume = prev.assistantVoiceVolume !== undefined ? prev.assistantVoiceVolume : (voice.volume || 1.0);
+        updated.assistantVoiceRate = prev.assistantVoiceRate !== undefined ? prev.assistantVoiceRate : (voice.rate || 1.0);
+        updated.assistantVoicePitch = prev.assistantVoicePitch !== undefined ? prev.assistantVoicePitch : (voice.pitch || 1.0);
+        notifyAssigned(`💼 Đã gán "${voice.name}" làm Giọng Quản Lý / Trợ Lý!`);
+      } else if (role === 'comment') {
+        updated.commentVoiceId = voice.id;
+        updated.commentVoiceVolume = prev.commentVoiceVolume !== undefined ? prev.commentVoiceVolume : (voice.volume || 1.0);
+        updated.commentVoiceRate = prev.commentVoiceRate !== undefined ? prev.commentVoiceRate : (voice.rate || 1.0);
+        updated.commentVoicePitch = prev.commentVoicePitch !== undefined ? prev.commentVoicePitch : (voice.pitch || 1.0);
+        notifyAssigned(`💬 Đã gán "${voice.name}" làm Giọng Trả Lời Bình Luận!`);
+      }
+
+      try {
+        const idolMatch = ALL_SYSTEM_VOICES.find(v => v.id === updated.mainVoiceId) || voice;
+        const managerMatch = ALL_SYSTEM_VOICES.find(v => v.id === updated.assistantVoiceId);
+        const commentMatch = ALL_SYSTEM_VOICES.find(v => v.id === (updated.commentVoiceId || updated.mainVoiceId));
+        saveDualVoiceConfig({
+          idolVoice: idolMatch ? { ...idolMatch, role: 'idol', volume: Number(updated.mainVoiceVolume || 1.0), rate: Number(updated.mainVoiceRate || 1.0), pitch: Number(updated.mainVoicePitch || 1.0) } : undefined,
+          managerVoice: managerMatch ? { ...managerMatch, role: 'manager', volume: Number(updated.assistantVoiceVolume || 1.0), rate: Number(updated.assistantVoiceRate || 1.0), pitch: Number(updated.assistantVoicePitch || 1.0) } : undefined,
+          commentVoice: commentMatch ? { ...commentMatch, role: 'comment', volume: Number(updated.commentVoiceVolume || updated.mainVoiceVolume || 1.0), rate: Number(updated.commentVoiceRate || updated.mainVoiceRate || 1.0), pitch: Number(updated.commentVoicePitch || updated.mainVoicePitch || 1.0) } : undefined
+        });
+        localStorage.setItem('aidol_general_settings', JSON.stringify(updated));
+      } catch (e) {}
+
+      return updated;
+    });
+  };
+
+  const handlePreviewRoleVoice = (role) => {
+    if (previewingRole === role) {
+      stopVoiceAudio();
+      setPreviewingRole(null);
+      setPreviewingVoiceId(null);
+      return;
+    }
+
+    const allVoices = [...(settings.customVoices || []), ...ALL_SYSTEM_VOICES];
+    let targetVoice = null;
+    let vol = 1.0;
+    let rate = 1.0;
+    let pitch = 1.0;
+    let sample = '';
+
+    if (role === 'idol') {
+      targetVoice = allVoices.find(v => v.id === settings.mainVoiceId) || ALL_SYSTEM_VOICES[0];
+      vol = settings.mainVoiceVolume !== undefined ? Number(settings.mainVoiceVolume) : 1.0;
+      rate = settings.mainVoiceRate !== undefined ? Number(settings.mainVoiceRate) : 1.0;
+      pitch = settings.mainVoicePitch !== undefined ? Number(settings.mainVoicePitch) : 1.0;
+      sample = 'Xin chào tất cả mọi người! Hôm nay mình sẽ chia sẻ những điều tuyệt vời nhất cùng cả nhà nhé!';
+    } else if (role === 'assistant') {
+      targetVoice = allVoices.find(v => v.id === settings.assistantVoiceId);
+      if (!targetVoice) {
+        notifyAssigned('Vui lòng gán Giọng Trợ Lý ở bảng trên trước khi nghe thử!', 'warning');
+        return;
+      }
+      vol = settings.assistantVoiceVolume !== undefined ? Number(settings.assistantVoiceVolume) : 1.0;
+      rate = settings.assistantVoiceRate !== undefined ? Number(settings.assistantVoiceRate) : 1.0;
+      pitch = settings.assistantVoicePitch !== undefined ? Number(settings.assistantVoicePitch) : 1.0;
+      sample = 'Dạ em chào anh chị! Em là trợ lý phòng live, em đã ghim giỏ hàng và sẵn sàng hỗ trợ ạ!';
+    } else if (role === 'comment') {
+      targetVoice = allVoices.find(v => v.id === (settings.commentVoiceId || settings.mainVoiceId)) || ALL_SYSTEM_VOICES[0];
+      vol = settings.commentVoiceVolume !== undefined ? Number(settings.commentVoiceVolume) : (settings.mainVoiceVolume !== undefined ? Number(settings.mainVoiceVolume) : 1.0);
+      rate = settings.commentVoiceRate !== undefined ? Number(settings.commentVoiceRate) : (settings.mainVoiceRate !== undefined ? Number(settings.mainVoiceRate) : 1.0);
+      pitch = settings.commentVoicePitch !== undefined ? Number(settings.commentVoicePitch) : (settings.mainVoicePitch !== undefined ? Number(settings.mainVoicePitch) : 1.0);
+      sample = 'Cảm ơn câu hỏi của bạn! Sản phẩm này đang có sẵn trong giỏ hàng với ưu đãi đặc biệt hôm nay nha!';
+    }
+
+    if (!targetVoice) return;
+
+    setPreviewingRole(role);
+    setPreviewingVoiceId(targetVoice.id);
+    previewVoiceAudio({
+      ...targetVoice,
+      sampleText: sample || targetVoice.sampleText,
+      volume: vol,
+      rate: rate,
+      pitch: pitch,
+      isTest: true
+    }, null, () => {
+      setPreviewingRole(null);
+      setPreviewingVoiceId(null);
+    });
+  };
+
   const selectFolder = async () => {
     try {
       // Dùng window.showDirectoryPicker nếu hỗ trợ (Chromium)
@@ -3536,8 +3642,18 @@ IDOL MỈM CƯỜI + GESTURE
                   </div>
                 </div>
 
+                {/* THÔNG BÁO GÁN GIỌNG NHANH */}
+                {assignedToast && (
+                  <div className={`p-2.5 rounded-lg text-xs font-bold flex items-center justify-between shadow-sm transition-all animate-fadeIn ${
+                    assignedToast.type === 'warning' ? 'bg-amber-100 text-amber-900 border border-amber-300' : 'bg-emerald-100 text-emerald-900 border border-emerald-300'
+                  }`}>
+                    <span>{assignedToast.msg}</span>
+                    <span className="text-[10px] bg-white/80 px-2 py-0.5 rounded font-bold shadow-xs">✓ Đã kích hoạt</span>
+                  </div>
+                )}
+
                 {/* BẢNG TỔNG HỢP GIỌNG ĐỌC AVA LIVE */}
-                <div className="overflow-x-auto max-h-[520px] border border-gray-200 rounded-lg">
+                <div className="overflow-x-auto max-h-[520px] border border-gray-200 rounded-lg shadow-xs">
                   <table className="w-full text-sm text-left border-collapse">
                     <thead className="bg-gray-100 text-gray-700 font-bold border-b border-gray-300 text-xs sticky top-0 z-10 shadow-xs">
                       <tr>
@@ -3548,7 +3664,7 @@ IDOL MỈM CƯỜI + GESTURE
                         <th className="px-3 py-2.5 text-center">Độ Tuổi & Phong Cách</th>
                         <th className="px-3 py-2.5 w-20 text-center">Giới Tính</th>
                         <th className="px-3 py-2.5 w-28 text-center">Nghe Thử</th>
-                        <th className="px-4 py-2.5 text-center min-w-[280px]">Gán Nhanh Vào Kênh Live</th>
+                        <th className="px-4 py-2.5 text-center min-w-[300px]">Gán Nhanh Vào Kênh Live</th>
                       </tr>
                     </thead>
                     <tbody className="divide-y divide-gray-200">
@@ -3621,15 +3737,44 @@ IDOL MỈM CƯỜI + GESTURE
                           const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
                           const { text: ageBadgeText, color: ageBadgeColor } = getVoiceAgeBadge(v);
 
+                          // Tính thông số âm thanh đang áp dụng cho giọng này
+                          const activeVol = isSelectedAsIdol 
+                            ? (settings.mainVoiceVolume !== undefined ? Number(settings.mainVoiceVolume) : 1.0)
+                            : isSelectedAsAssistant 
+                              ? (settings.assistantVoiceVolume !== undefined ? Number(settings.assistantVoiceVolume) : 1.0)
+                              : isSelectedAsComment 
+                                ? (settings.commentVoiceVolume !== undefined ? Number(settings.commentVoiceVolume) : 1.0)
+                                : 1.0;
+
+                          const activeRate = isSelectedAsIdol 
+                            ? (settings.mainVoiceRate !== undefined ? Number(settings.mainVoiceRate) : 1.0)
+                            : isSelectedAsAssistant 
+                              ? (settings.assistantVoiceRate !== undefined ? Number(settings.assistantVoiceRate) : 1.0)
+                              : isSelectedAsComment 
+                                ? (settings.commentVoiceRate !== undefined ? Number(settings.commentVoiceRate) : 1.0)
+                                : 1.0;
+
+                          const activePitch = isSelectedAsIdol 
+                            ? (settings.mainVoicePitch !== undefined ? Number(settings.mainVoicePitch) : 1.0)
+                            : isSelectedAsAssistant 
+                              ? (settings.assistantVoicePitch !== undefined ? Number(settings.assistantVoicePitch) : 1.0)
+                              : isSelectedAsComment 
+                                ? (settings.commentVoicePitch !== undefined ? Number(settings.commentVoicePitch) : 1.0)
+                                : 1.0;
+
                           return (
                             <tr 
                               key={v.id || idx}
                               className={`transition-colors ${
                                 isSelectedAsIdol 
-                                  ? 'bg-blue-50/80 font-medium' 
-                                  : isPlaying 
-                                    ? 'bg-amber-50' 
-                                    : 'hover:bg-gray-50'
+                                  ? 'bg-blue-50/90 font-medium border-l-4 border-l-blue-600' 
+                                  : isSelectedAsAssistant
+                                    ? 'bg-red-50/90 font-medium border-l-4 border-l-red-600'
+                                    : isSelectedAsComment
+                                      ? 'bg-purple-50/90 font-medium border-l-4 border-l-purple-600'
+                                      : isPlaying 
+                                        ? 'bg-amber-50' 
+                                        : 'hover:bg-gray-50'
                               }`}
                             >
                               <td className="px-2 py-2.5 text-center">
@@ -3651,9 +3796,9 @@ IDOL MỈM CƯỜI + GESTURE
                                 <div className="flex items-center gap-1.5 flex-wrap">
                                   <span className="font-bold text-gray-900">{v.name}</span>
                                   {isFav && <span className="text-[10px] bg-amber-400/20 text-amber-700 px-1.5 py-0.2 rounded font-semibold">⭐ Yêu thích</span>}
-                                  {isSelectedAsIdol && <span className="text-[10px] bg-blue-600 text-white px-1.5 py-0.2 rounded font-bold">🎯 Idol Live</span>}
-                                  {isSelectedAsAssistant && <span className="text-[10px] bg-red-600 text-white px-1.5 py-0.2 rounded font-bold">💼 Trợ Lý</span>}
-                                  {isSelectedAsComment && <span className="text-[10px] bg-purple-600 text-white px-1.5 py-0.2 rounded font-bold">💬 Bình Luận</span>}
+                                  {isSelectedAsIdol && <span className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-md font-bold shadow-xs">✓ Đang Gán Idol</span>}
+                                  {isSelectedAsAssistant && <span className="text-[10px] bg-red-600 text-white px-2 py-0.5 rounded-md font-bold shadow-xs">✓ Đang Gán Trợ Lý</span>}
+                                  {isSelectedAsComment && <span className="text-[10px] bg-purple-600 text-white px-2 py-0.5 rounded-md font-bold shadow-xs">✓ Đang Gán Bình Luận</span>}
                                 </div>
                                 <div className="text-[11px] text-gray-500 italic mt-0.5 line-clamp-1">
                                   💬 "{v.sampleText || v.desc}"
@@ -3681,16 +3826,24 @@ IDOL MỈM CƯỜI + GESTURE
                                     if (isPlaying) {
                                       stopVoiceAudio();
                                       setPreviewingVoiceId(null);
+                                      setPreviewingRole(null);
                                       return;
                                     }
                                     setPreviewingVoiceId(v.id);
-                                    previewVoiceAudio({ ...v, isTest: true }, null, () => {
+                                    previewVoiceAudio({ 
+                                      ...v, 
+                                      volume: activeVol, 
+                                      rate: activeRate, 
+                                      pitch: activePitch, 
+                                      isTest: true 
+                                    }, null, () => {
                                       setPreviewingVoiceId(null);
+                                      setPreviewingRole(null);
                                     });
                                   }}
                                   className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold cursor-pointer active:scale-95 transition-all ${
                                     isPlaying 
-                                      ? 'bg-amber-500 text-white animate-pulse shadow-md ring-2 ring-amber-300' 
+                                      ? 'bg-amber-500 text-white animate-pulse shadow-md ring-2 ring-amber-300 font-bold' 
                                       : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200'
                                   }`}
                                 >
@@ -3703,68 +3856,40 @@ IDOL MỈM CƯỜI + GESTURE
                                   {/* Gán Idol */}
                                   <button
                                     type="button"
-                                    onClick={() => {
-                                      setSettings(prev => ({ 
-                                        ...prev, 
-                                        mainVoiceId: v.id,
-                                        mainVoiceVolume: v.volume || prev.mainVoiceVolume || 1.0,
-                                        mainVoiceRate: v.rate || prev.mainVoiceRate || 1.0,
-                                        mainVoicePitch: v.pitch || prev.mainVoicePitch || 1.0
-                                      }));
-                                      alert(`Đã gán "${v.name}" làm Giọng Idol Live Chính!`);
-                                    }}
-                                    className={`px-2 py-1 rounded text-xs font-bold transition-all ${
+                                    onClick={() => handleAssignVoice('idol', v)}
+                                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                                       isSelectedAsIdol 
-                                        ? 'bg-blue-600 text-white shadow-xs ring-1 ring-blue-400' 
+                                        ? 'bg-blue-600 text-white shadow-md ring-2 ring-blue-300 font-black' 
                                         : 'bg-gray-100 hover:bg-blue-50 text-gray-700 hover:text-blue-600 border border-gray-200'
                                     }`}
                                   >
-                                    🎤 Gán Idol
+                                    {isSelectedAsIdol ? '✓ Đã Gán Idol' : '🎤 Gán Idol'}
                                   </button>
 
                                   {/* Gán Trợ Lý */}
                                   <button
                                     type="button"
-                                    onClick={() => {
-                                      setSettings(prev => ({ 
-                                        ...prev, 
-                                        assistantVoiceId: v.id,
-                                        assistantEnabled: true,
-                                        assistantVoiceVolume: v.volume || prev.assistantVoiceVolume || 1.0,
-                                        assistantVoiceRate: v.rate || prev.assistantVoiceRate || 1.0,
-                                        assistantVoicePitch: v.pitch || prev.assistantVoicePitch || 1.0
-                                      }));
-                                      alert(`Đã gán "${v.name}" làm Giọng Quản Lý / Trợ Lý Hậu Trường!`);
-                                    }}
-                                    className={`px-2 py-1 rounded text-xs font-bold transition-all ${
+                                    onClick={() => handleAssignVoice('assistant', v)}
+                                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                                       isSelectedAsAssistant 
-                                        ? 'bg-red-600 text-white shadow-xs ring-1 ring-red-400' 
+                                        ? 'bg-red-600 text-white shadow-md ring-2 ring-red-300 font-black' 
                                         : 'bg-gray-100 hover:bg-red-50 text-gray-700 hover:text-red-600 border border-gray-200'
                                     }`}
                                   >
-                                    💼 Gán Trợ Lý
+                                    {isSelectedAsAssistant ? '✓ Đã Gán Trợ Lý' : '💼 Gán Trợ Lý'}
                                   </button>
 
                                   {/* Gán Bình Luận */}
                                   <button
                                     type="button"
-                                    onClick={() => {
-                                      setSettings(prev => ({ 
-                                        ...prev, 
-                                        commentVoiceId: v.id,
-                                        commentVoiceVolume: v.volume || prev.commentVoiceVolume || 1.0,
-                                        commentVoiceRate: v.rate || prev.commentVoiceRate || 1.0,
-                                        commentVoicePitch: v.pitch || prev.commentVoicePitch || 1.0
-                                      }));
-                                      alert(`Đã gán "${v.name}" làm Giọng Trả Lời Bình Luận!`);
-                                    }}
-                                    className={`px-2 py-1 rounded text-xs font-bold transition-all ${
+                                    onClick={() => handleAssignVoice('comment', v)}
+                                    className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all ${
                                       isSelectedAsComment 
-                                        ? 'bg-purple-600 text-white shadow-xs ring-1 ring-purple-400' 
+                                        ? 'bg-purple-600 text-white shadow-md ring-2 ring-purple-300 font-black' 
                                         : 'bg-gray-100 hover:bg-purple-50 text-gray-700 hover:text-purple-600 border border-gray-200'
                                     }`}
                                   >
-                                    💬 Gán Bình Luận
+                                    {isSelectedAsComment ? '✓ Đã Gán Bình Luận' : '💬 Gán Bình Luận'}
                                   </button>
                                 </div>
                               </td>
@@ -3777,157 +3902,233 @@ IDOL MỈM CƯỜI + GESTURE
               </div>
 
               {/* KHUNG ĐIỀU CHỈNH ÂM THANH 3 VAI TRÒ & MEDIA TRỢ LÝ */}
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {/* 1. Tùy chỉnh Giọng Idol Live Chính */}
-                <div className="bg-white border border-blue-200 rounded-xl shadow-sm overflow-hidden p-4 space-y-4">
-                  <div className="border-b border-gray-200 pb-2 flex items-center justify-between">
-                    <h4 className="font-bold text-gray-800 text-sm flex items-center gap-2">
-                      <User size={16} className="text-blue-600" /> 1. Giọng Idol Live Chính
-                    </h4>
-                    <span className="text-xs bg-blue-100 text-blue-700 px-2 py-0.5 rounded font-bold">
-                      Kênh Chính
-                    </span>
-                  </div>
+              {(() => {
+                const allAvail = [...(settings.customVoices || []).filter(v => v && v.name), ...ALL_SYSTEM_VOICES];
+                const idolVoiceObj = allAvail.find(v => v.id === settings.mainVoiceId) || ALL_SYSTEM_VOICES[0];
+                const assistantVoiceObj = allAvail.find(v => v.id === settings.assistantVoiceId);
+                const commentVoiceObj = allAvail.find(v => v.id === (settings.commentVoiceId || settings.mainVoiceId)) || idolVoiceObj;
 
-                  <div className="space-y-3">
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-semibold text-gray-700 flex justify-between">
-                        <span>Âm lượng (Volume)</span>
-                        <span className="text-blue-600 font-bold">{Math.round((settings.mainVoiceVolume !== undefined ? settings.mainVoiceVolume : 1) * 100)}%</span>
-                      </label>
-                      <input type="range" min="0" max="2" step="0.1" name="mainVoiceVolume" value={settings.mainVoiceVolume !== undefined ? settings.mainVoiceVolume : 1} onChange={handleChange} className="w-full accent-blue-600" />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-semibold text-gray-700 flex justify-between">
-                        <span>Tốc độ (Speed)</span>
-                        <span className="text-blue-600 font-bold">{settings.mainVoiceRate !== undefined ? settings.mainVoiceRate : 1}x</span>
-                      </label>
-                      <input type="range" min="0.5" max="2" step="0.1" name="mainVoiceRate" value={settings.mainVoiceRate !== undefined ? settings.mainVoiceRate : 1} onChange={handleChange} className="w-full accent-blue-600" />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-semibold text-gray-700 flex justify-between">
-                        <span>Độ trầm bổng (Pitch)</span>
-                        <span className="text-blue-600 font-bold">{settings.mainVoicePitch !== undefined ? settings.mainVoicePitch : 1}</span>
-                      </label>
-                      <input type="range" min="0.5" max="2" step="0.1" name="mainVoicePitch" value={settings.mainVoicePitch !== undefined ? settings.mainVoicePitch : 1} onChange={handleChange} className="w-full accent-blue-600" />
-                    </div>
-                    <div className="pt-2 border-t border-gray-100">
-                      <label className="text-xs font-semibold text-[#a53b3b] block mb-1">Model AI Trả Lời:</label>
-                      <select 
-                        name="apiModel" value={settings.apiModel} onChange={handleChange}
-                        className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-blue-500 bg-gray-50"
-                      >
-                        <option value="gemini-1.5-flash">🔥 Gemini 1.5 Flash (Siêu tốc & Khuyên dùng)</option>
-                        <option value="gemini-2.0-flash">⚡ Gemini 2.0 Flash (Realtime Next-Gen)</option>
-                        <option value="gemini-1.5-flash-8b">💎 Gemini 1.5 Flash 8B (Tiết kiệm nhất)</option>
-                        <option value="gpt-4o-mini">🤖 OpenAI GPT-4o Mini</option>
-                      </select>
-                    </div>
-                  </div>
-                </div>
+                return (
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {/* 1. Tùy chỉnh Giọng Idol Live Chính */}
+                    <div className="bg-white border-2 border-blue-200 rounded-xl shadow-sm overflow-hidden p-4 space-y-4">
+                      <div className="border-b border-gray-200 pb-2 flex items-center justify-between">
+                        <h4 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+                          <User size={16} className="text-blue-600" /> 1. Giọng Idol Live Chính
+                        </h4>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handlePreviewRoleVoice('idol')}
+                            className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${
+                              previewingRole === 'idol'
+                                ? 'bg-amber-500 text-white animate-pulse shadow-sm ring-2 ring-amber-300'
+                                : 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs'
+                            }`}
+                          >
+                            <Volume2 size={12} />
+                            <span>{previewingRole === 'idol' ? '⏹️ Dừng' : '▶️ Nghe Thử'}</span>
+                          </button>
+                          <span className="text-[11px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold">
+                            Kênh Chính
+                          </span>
+                        </div>
+                      </div>
 
-                {/* 2. Tùy chỉnh Giọng Quản Lý / Trợ Lý */}
-                <div className="bg-white border border-red-200 rounded-xl shadow-sm overflow-hidden p-4 space-y-4">
-                  <div className="border-b border-gray-200 pb-2 flex items-center justify-between">
-                    <h4 className="font-bold text-gray-800 text-sm flex items-center gap-2">
-                      <Mic size={16} className="text-red-500" /> 2. Giọng Quản Lý / Trợ Lý
-                    </h4>
-                    <label className="flex items-center gap-1.5 cursor-pointer">
-                      <input 
-                        type="checkbox" name="assistantEnabled" 
-                        checked={settings.assistantEnabled} onChange={handleChange}
-                        className="w-3.5 h-3.5 text-red-600 rounded focus:ring-red-500" 
-                      />
-                      <span className="text-xs font-bold text-gray-800">Bật Kênh</span>
-                    </label>
-                  </div>
+                      {/* Hiển thị Voice Idol đang được gán */}
+                      <div className="bg-blue-50/80 border border-blue-200 rounded-lg p-2.5 flex items-center justify-between text-xs">
+                        <span className="text-blue-900 font-semibold truncate">
+                          🎯 Giọng gán: <b className="font-extrabold text-blue-950">{idolVoiceObj?.name || 'Giọng mặc định'}</b>
+                        </span>
+                      </div>
 
-                  <div className="space-y-3">
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-semibold text-gray-700 flex justify-between">
-                        <span>Âm lượng (Volume)</span>
-                        <span className="text-red-600 font-bold">{Math.round((settings.assistantVoiceVolume !== undefined ? settings.assistantVoiceVolume : 1) * 100)}%</span>
-                      </label>
-                      <input type="range" min="0" max="2" step="0.1" name="assistantVoiceVolume" value={settings.assistantVoiceVolume !== undefined ? settings.assistantVoiceVolume : 1} onChange={handleChange} className="w-full accent-red-600" />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-semibold text-gray-700 flex justify-between">
-                        <span>Tốc độ (Speed)</span>
-                        <span className="text-red-600 font-bold">{settings.assistantVoiceRate !== undefined ? settings.assistantVoiceRate : 1}x</span>
-                      </label>
-                      <input type="range" min="0.5" max="2" step="0.1" name="assistantVoiceRate" value={settings.assistantVoiceRate !== undefined ? settings.assistantVoiceRate : 1} onChange={handleChange} className="w-full accent-red-600" />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-semibold text-gray-700 flex justify-between">
-                        <span>Độ trầm bổng (Pitch)</span>
-                        <span className="text-red-600 font-bold">{settings.assistantVoicePitch !== undefined ? settings.assistantVoicePitch : 1}</span>
-                      </label>
-                      <input type="range" min="0.5" max="2" step="0.1" name="assistantVoicePitch" value={settings.assistantVoicePitch !== undefined ? settings.assistantVoicePitch : 1} onChange={handleChange} className="w-full accent-red-600" />
+                      <div className="space-y-3">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-semibold text-gray-700 flex justify-between">
+                            <span>Âm lượng (Volume)</span>
+                            <span className="text-blue-600 font-bold">{Math.round((settings.mainVoiceVolume !== undefined ? settings.mainVoiceVolume : 1) * 100)}%</span>
+                          </label>
+                          <input type="range" min="0" max="2" step="0.1" name="mainVoiceVolume" value={settings.mainVoiceVolume !== undefined ? settings.mainVoiceVolume : 1} onChange={handleChange} className="w-full accent-blue-600" />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-semibold text-gray-700 flex justify-between">
+                            <span>Tốc độ (Speed)</span>
+                            <span className="text-blue-600 font-bold">{settings.mainVoiceRate !== undefined ? settings.mainVoiceRate : 1}x</span>
+                          </label>
+                          <input type="range" min="0.5" max="2" step="0.1" name="mainVoiceRate" value={settings.mainVoiceRate !== undefined ? settings.mainVoiceRate : 1} onChange={handleChange} className="w-full accent-blue-600" />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-semibold text-gray-700 flex justify-between">
+                            <span>Độ trầm bổng (Pitch)</span>
+                            <span className="text-blue-600 font-bold">{settings.mainVoicePitch !== undefined ? settings.mainVoicePitch : 1}</span>
+                          </label>
+                          <input type="range" min="0.5" max="2" step="0.1" name="mainVoicePitch" value={settings.mainVoicePitch !== undefined ? settings.mainVoicePitch : 1} onChange={handleChange} className="w-full accent-blue-600" />
+                        </div>
+                        <div className="pt-2 border-t border-gray-100">
+                          <label className="text-xs font-semibold text-[#a53b3b] block mb-1">Model AI Trả Lời:</label>
+                          <select 
+                            name="apiModel" value={settings.apiModel} onChange={handleChange}
+                            className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-blue-500 bg-gray-50"
+                          >
+                            <option value="gemini-1.5-flash">🔥 Gemini 1.5 Flash (Siêu tốc & Khuyên dùng)</option>
+                            <option value="gemini-2.0-flash">⚡ Gemini 2.0 Flash (Realtime Next-Gen)</option>
+                            <option value="gemini-1.5-flash-8b">💎 Gemini 1.5 Flash 8B (Tiết kiệm nhất)</option>
+                            <option value="gpt-4o-mini">🤖 OpenAI GPT-4o Mini</option>
+                          </select>
+                        </div>
+                      </div>
                     </div>
 
-                    <div className="pt-2 border-t border-gray-100">
-                      <UniversalMediaPicker 
-                        label="Video Trợ Lý (cho trạng thái lắng nghe):"
-                        currentPath={settings.assistantVideoFolder || (idleVideoCount === 0 ? '' : `im lặng (${idleVideoCount} video)`)}
-                        videoUrl={settings.assistantVideoUrl || ''}
-                        defaultText="Chưa chọn video Trợ Lý"
-                        onSelectFile={(file, objectUrl) => {
-                          setSettings(prev => ({ ...prev, assistantVideoFolder: file.name, assistantVideoUrl: objectUrl }));
-                        }}
-                        onSelectFolder={(folderName) => {
-                          setSettings(prev => ({ ...prev, assistantVideoFolder: folderName, assistantVideoUrl: '' }));
-                        }}
-                        onSelectSample={(sample) => {
-                          setSettings(prev => ({ ...prev, assistantVideoFolder: sample.name, assistantVideoUrl: sample.url }));
-                        }}
-                        onClear={() => {
-                          setSettings(prev => ({ ...prev, assistantVideoFolder: '', assistantVideoUrl: '' }));
-                        }}
-                        inputId="upload-assistant-video-settings"
-                      />
-                    </div>
-                  </div>
-                </div>
+                    {/* 2. Tùy chỉnh Giọng Quản Lý / Trợ Lý */}
+                    <div className="bg-white border-2 border-red-200 rounded-xl shadow-sm overflow-hidden p-4 space-y-4">
+                      <div className="border-b border-gray-200 pb-2 flex items-center justify-between">
+                        <h4 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+                          <Mic size={16} className="text-red-500" /> 2. Giọng Quản Lý / Trợ Lý
+                        </h4>
+                        <div className="flex items-center gap-2">
+                          {assistantVoiceObj && (
+                            <button
+                              type="button"
+                              onClick={() => handlePreviewRoleVoice('assistant')}
+                              className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${
+                                previewingRole === 'assistant'
+                                  ? 'bg-amber-500 text-white animate-pulse shadow-sm ring-2 ring-amber-300'
+                                  : 'bg-red-600 hover:bg-red-700 text-white shadow-xs'
+                              }`}
+                            >
+                              <Volume2 size={12} />
+                              <span>{previewingRole === 'assistant' ? '⏹️ Dừng' : '▶️ Nghe Thử'}</span>
+                            </button>
+                          )}
+                          <label className="flex items-center gap-1.5 cursor-pointer">
+                            <input 
+                              type="checkbox" name="assistantEnabled" 
+                              checked={settings.assistantEnabled} onChange={handleChange}
+                              className="w-3.5 h-3.5 text-red-600 rounded focus:ring-red-500" 
+                            />
+                            <span className="text-xs font-bold text-gray-800">Bật Kênh</span>
+                          </label>
+                        </div>
+                      </div>
 
-                {/* 3. Tùy chỉnh Giọng Trả Lời Bình Luận */}
-                <div className="bg-white border border-purple-200 rounded-xl shadow-sm overflow-hidden p-4 space-y-4">
-                  <div className="border-b border-gray-200 pb-2 flex items-center justify-between">
-                    <h4 className="font-bold text-gray-800 text-sm flex items-center gap-2">
-                      <Volume2 size={16} className="text-purple-600" /> 3. Giọng Trả Lời Bình Luận
-                    </h4>
-                    <span className="text-xs bg-purple-100 text-purple-700 px-2 py-0.5 rounded font-bold">
-                      Hỏi Đáp & Q&A
-                    </span>
-                  </div>
+                      {/* Hiển thị Voice Trợ Lý đang được gán */}
+                      <div className={`p-2.5 rounded-lg border flex items-center justify-between text-xs ${
+                        assistantVoiceObj ? 'bg-red-50/80 border-red-200 text-red-900' : 'bg-gray-50 border-gray-200 text-gray-500'
+                      }`}>
+                        <span className="font-semibold truncate">
+                          💼 Giọng gán: <b className="font-extrabold">{assistantVoiceObj?.name || 'Chưa gán (Bấm "💼 Gán Trợ Lý" ở bảng trên)'}</b>
+                        </span>
+                      </div>
 
-                  <div className="space-y-3">
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-semibold text-gray-700 flex justify-between">
-                        <span>Âm lượng (Volume)</span>
-                        <span className="text-purple-600 font-bold">{Math.round((settings.commentVoiceVolume !== undefined ? settings.commentVoiceVolume : (settings.mainVoiceVolume || 1)) * 100)}%</span>
-                      </label>
-                      <input type="range" min="0" max="2" step="0.1" name="commentVoiceVolume" value={settings.commentVoiceVolume !== undefined ? settings.commentVoiceVolume : (settings.mainVoiceVolume || 1)} onChange={handleChange} className="w-full accent-purple-600" />
+                      <div className="space-y-3">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-semibold text-gray-700 flex justify-between">
+                            <span>Âm lượng (Volume)</span>
+                            <span className="text-red-600 font-bold">{Math.round((settings.assistantVoiceVolume !== undefined ? settings.assistantVoiceVolume : 1) * 100)}%</span>
+                          </label>
+                          <input type="range" min="0" max="2" step="0.1" name="assistantVoiceVolume" value={settings.assistantVoiceVolume !== undefined ? settings.assistantVoiceVolume : 1} onChange={handleChange} className="w-full accent-red-600" />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-semibold text-gray-700 flex justify-between">
+                            <span>Tốc độ (Speed)</span>
+                            <span className="text-red-600 font-bold">{settings.assistantVoiceRate !== undefined ? settings.assistantVoiceRate : 1}x</span>
+                          </label>
+                          <input type="range" min="0.5" max="2" step="0.1" name="assistantVoiceRate" value={settings.assistantVoiceRate !== undefined ? settings.assistantVoiceRate : 1} onChange={handleChange} className="w-full accent-red-600" />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-semibold text-gray-700 flex justify-between">
+                            <span>Độ trầm bổng (Pitch)</span>
+                            <span className="text-red-600 font-bold">{settings.assistantVoicePitch !== undefined ? settings.assistantVoicePitch : 1}</span>
+                          </label>
+                          <input type="range" min="0.5" max="2" step="0.1" name="assistantVoicePitch" value={settings.assistantVoicePitch !== undefined ? settings.assistantVoicePitch : 1} onChange={handleChange} className="w-full accent-red-600" />
+                        </div>
+
+                        <div className="pt-2 border-t border-gray-100">
+                          <UniversalMediaPicker 
+                            label="Video Trợ Lý (cho trạng thái lắng nghe):"
+                            currentPath={settings.assistantVideoFolder || (idleVideoCount === 0 ? '' : `im lặng (${idleVideoCount} video)`)}
+                            videoUrl={settings.assistantVideoUrl || ''}
+                            defaultText="Chưa chọn video Trợ Lý"
+                            onSelectFile={(file, objectUrl) => {
+                              setSettings(prev => ({ ...prev, assistantVideoFolder: file.name, assistantVideoUrl: objectUrl }));
+                            }}
+                            onSelectFolder={(folderName) => {
+                              setSettings(prev => ({ ...prev, assistantVideoFolder: folderName, assistantVideoUrl: '' }));
+                            }}
+                            onSelectSample={(sample) => {
+                              setSettings(prev => ({ ...prev, assistantVideoFolder: sample.name, assistantVideoUrl: sample.url }));
+                            }}
+                            onClear={() => {
+                              setSettings(prev => ({ ...prev, assistantVideoFolder: '', assistantVideoUrl: '' }));
+                            }}
+                            inputId="upload-assistant-video-settings"
+                          />
+                        </div>
+                      </div>
                     </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-semibold text-gray-700 flex justify-between">
-                        <span>Tốc độ (Speed)</span>
-                        <span className="text-purple-600 font-bold">{settings.commentVoiceRate !== undefined ? settings.commentVoiceRate : (settings.mainVoiceRate || 1)}x</span>
-                      </label>
-                      <input type="range" min="0.5" max="2" step="0.1" name="commentVoiceRate" value={settings.commentVoiceRate !== undefined ? settings.commentVoiceRate : (settings.mainVoiceRate || 1)} onChange={handleChange} className="w-full accent-purple-600" />
-                    </div>
-                    <div className="flex flex-col gap-1">
-                      <label className="text-xs font-semibold text-gray-700 flex justify-between">
-                        <span>Độ trầm bổng (Pitch)</span>
-                        <span className="text-purple-600 font-bold">{settings.commentVoicePitch !== undefined ? settings.commentVoicePitch : (settings.mainVoicePitch || 1)}</span>
-                      </label>
-                      <input type="range" min="0.5" max="2" step="0.1" name="commentVoicePitch" value={settings.commentVoicePitch !== undefined ? settings.commentVoicePitch : (settings.mainVoicePitch || 1)} onChange={handleChange} className="w-full accent-purple-600" />
-                    </div>
-                    <div className="pt-2 border-t border-gray-100 text-xs text-purple-700 italic">
-                      💬 Giọng chuyên trách tự động trả lời bình luận khán giả, giải đáp Q&A, tương tác bán hàng trên livestream.
+
+                    {/* 3. Tùy chỉnh Giọng Trả Lời Bình Luận */}
+                    <div className="bg-white border-2 border-purple-200 rounded-xl shadow-sm overflow-hidden p-4 space-y-4">
+                      <div className="border-b border-gray-200 pb-2 flex items-center justify-between">
+                        <h4 className="font-bold text-gray-800 text-sm flex items-center gap-2">
+                          <Volume2 size={16} className="text-purple-600" /> 3. Giọng Trả Lời Bình Luận
+                        </h4>
+                        <div className="flex items-center gap-1.5">
+                          <button
+                            type="button"
+                            onClick={() => handlePreviewRoleVoice('comment')}
+                            className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${
+                              previewingRole === 'comment'
+                                ? 'bg-amber-500 text-white animate-pulse shadow-sm ring-2 ring-amber-300'
+                                : 'bg-purple-600 hover:bg-purple-700 text-white shadow-xs'
+                            }`}
+                          >
+                            <Volume2 size={12} />
+                            <span>{previewingRole === 'comment' ? '⏹️ Dừng' : '▶️ Nghe Thử'}</span>
+                          </button>
+                          <span className="text-[11px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded font-bold">
+                            Hỏi Đáp & Q&A
+                          </span>
+                        </div>
+                      </div>
+
+                      {/* Hiển thị Voice Bình Luận đang được gán */}
+                      <div className="bg-purple-50/80 border border-purple-200 rounded-lg p-2.5 flex items-center justify-between text-xs">
+                        <span className="text-purple-900 font-semibold truncate">
+                          💬 Giọng gán: <b className="font-extrabold text-purple-950">{commentVoiceObj?.name || idolVoiceObj?.name || 'Giọng mặc định'}</b>
+                        </span>
+                      </div>
+
+                      <div className="space-y-3">
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-semibold text-gray-700 flex justify-between">
+                            <span>Âm lượng (Volume)</span>
+                            <span className="text-purple-600 font-bold">{Math.round((settings.commentVoiceVolume !== undefined ? settings.commentVoiceVolume : (settings.mainVoiceVolume || 1)) * 100)}%</span>
+                          </label>
+                          <input type="range" min="0" max="2" step="0.1" name="commentVoiceVolume" value={settings.commentVoiceVolume !== undefined ? settings.commentVoiceVolume : (settings.mainVoiceVolume || 1)} onChange={handleChange} className="w-full accent-purple-600" />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-semibold text-gray-700 flex justify-between">
+                            <span>Tốc độ (Speed)</span>
+                            <span className="text-purple-600 font-bold">{settings.commentVoiceRate !== undefined ? settings.commentVoiceRate : (settings.mainVoiceRate || 1)}x</span>
+                          </label>
+                          <input type="range" min="0.5" max="2" step="0.1" name="commentVoiceRate" value={settings.commentVoiceRate !== undefined ? settings.commentVoiceRate : (settings.mainVoiceRate || 1)} onChange={handleChange} className="w-full accent-purple-600" />
+                        </div>
+                        <div className="flex flex-col gap-1">
+                          <label className="text-xs font-semibold text-gray-700 flex justify-between">
+                            <span>Độ trầm bổng (Pitch)</span>
+                            <span className="text-purple-600 font-bold">{settings.commentVoicePitch !== undefined ? settings.commentVoicePitch : (settings.mainVoicePitch || 1)}</span>
+                          </label>
+                          <input type="range" min="0.5" max="2" step="0.1" name="commentVoicePitch" value={settings.commentVoicePitch !== undefined ? settings.commentVoicePitch : (settings.mainVoicePitch || 1)} onChange={handleChange} className="w-full accent-purple-600" />
+                        </div>
+                        <div className="pt-2 border-t border-gray-100 text-xs text-purple-700 italic">
+                          💬 Giọng chuyên trách tự động trả lời bình luận khán giả, giải đáp Q&A, tương tác bán hàng trên livestream.
+                        </div>
+                      </div>
                     </div>
                   </div>
-                </div>
-              </div>
+                );
+              })()}
             </div>
           )}
 
