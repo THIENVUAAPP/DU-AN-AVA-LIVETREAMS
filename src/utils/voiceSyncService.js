@@ -7140,6 +7140,7 @@ function getOrCreateAudioContext() {
 }
 
 export function stopVoiceAudio() {
+  clearGlobalSpeechQueue();
   if (activeSourceNode) {
     try {
       activeSourceNode.onended = null;
@@ -7168,6 +7169,14 @@ export function stopVoiceAudio() {
   }
   activeUtterance = null;
   isGlobalSpeaking = false;
+  if (typeof window !== 'undefined') {
+    window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', {
+      detail: { isSpeaking: false, avatarId: null }
+    }));
+    window.dispatchEvent(new CustomEvent('avalive_speaker_change', {
+      detail: { isSpeaking: false, avatarId: null }
+    }));
+  }
 }
 
 /**

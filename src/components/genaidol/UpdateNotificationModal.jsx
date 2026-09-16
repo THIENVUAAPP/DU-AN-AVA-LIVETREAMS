@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.1.3';
+export const APP_VERSION = '3.1.4';
 export const RELEASE_DATE = '16/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🎙️ Bản Cập Nhật Hotfix v3.1.4 - Dừng Voice Ngay Tức Thì Khi Tắt Demo & Đồng Bộ 1 Giọng Đọc Test Độc Nhất',
+    description: '1. Khắc phục triệt để luồng phát Voice Test/Demo: Khi người dùng bấm Tắt Demo/Test, toàn bộ âm thanh Web Audio, TTS và hàng đợi giọng đọc lập tức dừng dứt điểm trong 0ms; 2. Cố định đúng 1 giọng đọc duy nhất mà người dùng đã cài đặt khi chạy Test/Demo, loại bỏ hoàn toàn việc nhảy nhiều giọng ngẫu nhiên; 3. Đảm bảo toàn bộ hệ thống ở trạng thái thụ động 100% khi khởi động phần mềm, chỉ phát khi người dùng chủ động bấm.'
+  },
   {
     title: '🍏 Bản Cập Nhật Hotfix v3.1.3 - Khắc Phục Triệt Để 100% Khởi Động Localhost Trên macOS (MacBook)',
     description: '1. Nâng cấp toàn diện bộ khởi động macOS (1_Khoi_Dong_AvaLive_Mac.command): Tự động nạp môi trường Shell profiles, tự động tìm kiếm Node.js trên toàn bộ phân vùng (Homebrew Apple Silicon M1/M2/M3 & Intel, NVM, Volta), tự giải phóng cổng 3001 và kiểm tra sẵn sàng trước khi mở trình duyệt App Mode 0ms; 2. Hỗ trợ fallback thông minh và đồng bộ hóa toàn diện hệ thống Ghim Sản Phẩm Đa Nền Tảng 24/7.'

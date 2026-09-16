@@ -656,8 +656,8 @@ function fillTemplate(template, vars = {}) {
 
       // 13. PHÁT GIỌNG NÓI VOICE AI & LIP-SYNC (ƯU TIÊN 100% TAB BỘ NÃO -> FALLBACK 14 TÁC VỤ)
       const shouldSpeakVoice = (currentEvConfig.useVoice !== false) || isTestMode;
-      const targetVoiceRole = currentEvConfig.ttsVoiceRole || (evKey === 'comment' ? 'comment' : evKey === 'checkout' ? 'manager' : 'idol');
-      const effectiveVoice = resolveEffectiveVoice(targetVoiceRole, currentEvConfig.voiceId);
+      const targetVoiceRole = isTestMode ? 'idol' : (currentEvConfig.ttsVoiceRole || (evKey === 'comment' ? 'comment' : evKey === 'checkout' ? 'manager' : 'idol'));
+      const effectiveVoice = resolveEffectiveVoice(targetVoiceRole, isTestMode ? null : currentEvConfig.voiceId);
 
       if (replyText && replyText.trim()) {
         setViewerHistory(prev => [

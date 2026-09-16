@@ -1665,7 +1665,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         bandoEngine.stopAutoTestLoop();
         bandoEngine.stopAuto247Loop();
       } catch (e) {}
-      window.dispatchEvent(new CustomEvent('global-stop-demo'));
+      try {
+        stopVoiceAudio();
+      } catch (e) {}
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('global-stop-demo'));
+        window.dispatchEvent(new CustomEvent('avalive_emergency_stop_all'));
+      }
       setIsGlobalDemoRunning(false);
       return;
     }
@@ -1695,16 +1701,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         if (socketRef.current && socketRef.current.connected) {
           socketRef.current.emit('battle_trigger_demo');
         }
-      }, 1500);
+      }, 2500);
     } else {
       // 3. Kích hoạt Demo AI Idol Live
       unlockAllAudio();
-      const mockEvt = SIMULATION_EVENTS[Math.floor(Math.random() * SIMULATION_EVENTS.length)];
+      const mockEvt = SIMULATION_EVENTS[0];
       handleLiveEvent(mockEvt.type, { ...mockEvt.payload, isTest: true });
       globalDemoTimerRef.current = setInterval(() => {
         const rand = SIMULATION_EVENTS[Math.floor(Math.random() * SIMULATION_EVENTS.length)];
         handleLiveEvent(rand.type, { ...rand.payload, isTest: true });
-      }, 4000);
+      }, 6000);
     }
   }, [isGlobalDemoRunning, isGameBanDoActive, isGameBattleActive, handleLiveEvent, SIMULATION_EVENTS, unlockAllAudio]);
 
