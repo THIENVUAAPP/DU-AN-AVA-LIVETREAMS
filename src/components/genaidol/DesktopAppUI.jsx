@@ -1791,14 +1791,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     showToast(`🔊 Đang phát kiểm tra âm thanh Giọng ${role === 'idol' ? 'Idol' : role === 'manager' ? 'Trợ lý' : 'Game'}!`, 'success');
   }, [unlockAllAudio]);
 
-  // 🔇 Xử lý Bật/Tắt Âm Thanh Video & Loa Xem Trước Phần Mềm (Độc Lập 100%, Áp Dụng Ngay Lập Tức Tức Thì 0ms)
+  // 🔇 Xử lý Tắt/Mở Tiếng Loa Máy Tính (Độc Lập 100%, Phiên Live & Window Capture vẫn có tiếng bình thường)
   const handleToggleLocalSpeakerMute = useCallback(() => {
     setIsLocalSpeakerMuted(prev => {
       const nextState = !prev;
       isLocalSpeakerMutedRef.current = nextState;
-      setLiveAudioMuted(nextState);
+      try { localStorage.setItem('avalive_local_speaker_muted', nextState.toString()); } catch(e) {}
 
-      // 1. Tắt/Mở tiếng video trên màn hình điều khiển xem trước
+      // 1. Tắt/Mở tiếng video trên màn hình điều khiển xem trước của máy tính
       if (desktopVideoRef.current) {
         desktopVideoRef.current.muted = nextState;
         if (!nextState) {
@@ -1812,7 +1812,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         }
       }
 
-      // 2. Quét và ép buộc 100% tất cả các thẻ <video> & <audio> trong DOM áp dụng trạng thái âm thanh
+      // 2. Quét tất cả thẻ <video> & <audio> trên giao diện để tắt tiếng loa máy tính
       try {
         document.querySelectorAll('video').forEach(v => {
           try {
@@ -1836,33 +1836,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       } catch (err) {}
 
       // 3. Tắt/Mở tiếng Loa xem trước của Audio Engine máy tính
-      bandoAudio.setLocalSpeakerMute(nextState);
+      if (bandoAudio?.setLocalSpeakerMute) bandoAudio.setLocalSpeakerMute(nextState);
 
       try {
         const AudioCtx = window.AudioContext || window.webkitAudioContext;
         if (AudioCtx && window.__avaLiveAudioContext?.state === 'suspended' && !nextState) {
           window.__avaLiveAudioContext.resume().catch(() => {});
         }
-      } catch (e) {}
+      } catch(e) {}
 
-      try {
-        localStorage.setItem('avalive_local_speaker_muted', String(nextState));
-        localStorage.setItem('avalive_audio_muted', String(nextState));
-        localStorage.setItem('avalive_overlay_audio_muted', String(nextState));
-      } catch (e) {}
-
-      if (nextState) {
-        setToast({
-          type: 'info',
-          message: '🔇 Đã TẮT TIẾNG (Mute) — Video và âm thanh xem trước trên phần mềm đã tắt tiếng.'
-        });
-      } else {
-        setToast({
-          type: 'success',
-          message: '🔊 Đã BẬT TIẾNG (Unmute) — Video và âm thanh xem trước trên phần mềm đang phát.'
-        });
-      }
-
+      showToast(nextState ? '🔇 Đã tắt loa máy tính (Phiên Live vẫn phát tiếng 100%)' : '🔊 Đã mở loa máy tính', 'info');
       return nextState;
     });
   }, [liveVolume]);
@@ -4400,42 +4383,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             )}
           </button>
 
-          {/* 📜 NÚT GỘP DUY NHẤT: PHÁT KỊCH BẢN LIVE & DROPDOWN CHỌN KỊCH BẢN (NẰM NGAY CẠNH BẬT TẤT CẢ) */}
-          <div className="relative inline-flex items-center rounded-md shadow-xs border overflow-hidden transition-all bg-gradient-to-r from-blue-900/80 to-indigo-900/80 border-blue-400/50">
-            {/* Nút BẬT / TẮT Phát Kịch Bản */}
-            <button
-              type="button"
-              onClick={() => handleToggleScriptLive()}
-              className={`flex items-center gap-1 px-2 py-0.5 text-[10px] font-black transition-all cursor-pointer active:scale-95 ${
-                isScriptLiveRunning
-                  ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 text-white shadow-emerald-500/40 animate-pulse'
-                  : 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white'
-              }`}
-              title={isScriptLiveRunning ? "Kịch bản đang phát trực tiếp — Bấm để Tạm Dừng" : "Bấm để Bắt Đầu phát sóng kịch bản bán hàng tuần tự"}
-            >
-              <Play size={10} fill={isScriptLiveRunning ? "currentColor" : "none"} className={isScriptLiveRunning ? "text-yellow-300 animate-spin" : "text-white"} />
-              <span className="whitespace-nowrap">{isScriptLiveRunning ? '🟢 ĐANG PHÁT KỊCH BẢN' : '▶️ PHÁT KỊCH BẢN'}</span>
-              {isScriptLiveRunning && (
-                <span className="w-1 h-1 rounded-full bg-yellow-300 animate-ping ml-0.5"></span>
-              )}
-            </button>
 
-            {/* Dropdown Chọn Tab Kịch Bản Liền Khối */}
-            {scriptTabsList && scriptTabsList.length > 0 && (
-              <select
-                value={scriptTabsList.find(t => t.active)?.id || scriptTabsList[0]?.id}
-                onChange={(e) => handleQuickSelectScriptTab(e.target.value)}
-                className="text-[10px] font-bold px-1.5 py-0.5 border-l border-white/20 bg-black/40 text-blue-200 hover:bg-black/60 cursor-pointer outline-none transition-all"
-                title="Chọn kịch bản bạn muốn AI phát sóng trực tiếp"
-              >
-                {scriptTabsList.map((tab, idx) => (
-                  <option key={tab.id} value={tab.id} className="bg-slate-900 text-white">
-                    {tab.active ? '⭐ ' : '📜 '}{tab.name || `Kịch bản ${idx + 1}`}
-                  </option>
-                ))}
-              </select>
-            )}
-          </div>
 
 
 
@@ -4549,14 +4497,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 />
                 <span className="text-[9px] px-1.5 py-0.5 rounded-md font-black bg-gradient-to-r from-amber-400 to-yellow-400 text-black leading-tight shadow-md">
                   {currentUser.isAdmin ? 'SUPER ADMIN' : (currentUser.plan || 'Free')}
-                </span>
-
-                {/* 🪙 HIỂN THỊ RÕ RÀNG TOKEN & THỜI GIAN LIVE TRÊN THANH PHẦN MỀM */}
-                <span className="text-[10px] font-black text-amber-300 flex items-center gap-1 bg-amber-500/10 px-1.5 py-0.5 rounded border border-amber-500/30">
-                  🪙 {typeof currentUser.tokens === 'number' ? currentUser.tokens.toLocaleString() : '100.000'} Token
-                </span>
-                <span className="text-[10px] font-black text-cyan-300 flex items-center gap-1 bg-cyan-500/10 px-1.5 py-0.5 rounded border border-cyan-500/30">
-                  ⏱️ {typeof currentUser.liveMinutes === 'number' ? `${Math.round(currentUser.liveMinutes / 60).toLocaleString()}h` : '10.000h'} Live
                 </span>
               </div>
             ) : (
@@ -5042,29 +4982,29 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         {/* Right Side: Toggles & Stream Window */}
         <div className="flex items-center gap-1.5 shrink-0 flex-nowrap overflow-visible relative z-40">
 
-          {/* 🔊 NÚT BẬT / TẮT ÂM THANH TOÀN DIỆN (ĐỒNG BỘ CẢ WINDOW CAPTURE & TIKTOK LIVE) */}
+          {/* 🔊 NÚT TẮT / MỞ TIẾNG LOA MÁY TÍNH (PHIÊN LIVE VẪN CÓ TIẾNG 100%) */}
           <button 
             onClick={handleToggleLocalSpeakerMute}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-[11px] font-black transition-all border shadow-sm active:scale-95 cursor-pointer ${
+            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border shadow-sm active:scale-95 cursor-pointer ${
               isLocalSpeakerMuted
-                ? 'bg-gradient-to-r from-red-600 via-rose-600 to-pink-600 text-white border-red-300 ring-2 ring-red-400 shadow-red-500/30 animate-pulse'
-                : (isDarkMode ? 'bg-gradient-to-r from-emerald-700 to-teal-700 hover:from-emerald-600 hover:to-teal-600 text-white border-emerald-400/50 shadow-emerald-500/20' : 'bg-emerald-600 text-white hover:bg-emerald-700 border-emerald-400')
+                ? 'bg-rose-950/80 hover:bg-rose-900 text-rose-300 border-rose-500/50'
+                : 'bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border-emerald-500/50'
             }`}
             title={
               isLocalSpeakerMuted
-                ? "ĐANG TẮT TIẾNG TOÀN BỘ (Window Capture & TikTok Live Overlay đều tắt) — Bấm để Mở lại âm thanh."
-                : "ĐANG BẬT TIẾNG TOÀN BỘ (Window Capture & TikTok Live đều có tiếng) — Bấm để Tắt tiếng toàn bộ."
+                ? "Loa máy tính: ĐÃ TẮT (Phiên Live & Window Capture vẫn có tiếng 100%) — Bấm để Mở lại loa máy"
+                : "Loa máy tính: ĐANG BẬT — Bấm để Tắt loa máy tính (chống ồn)"
             }
           >
             {isLocalSpeakerMuted ? (
               <>
-                <VolumeX size={12} className="text-yellow-300" />
-                <span className="whitespace-nowrap font-black">🔇 Đã Tắt Tiếng (Live & Máy)</span>
+                <VolumeX size={13} className="text-rose-400" />
+                <span className="whitespace-nowrap font-bold">Loa Máy: Tắt</span>
               </>
             ) : (
               <>
-                <Volume2 size={12} className="text-white animate-pulse" />
-                <span className="whitespace-nowrap font-black">🔊 Đang Bật Tiếng (Live & Máy)</span>
+                <Volume2 size={13} className="text-emerald-400 animate-pulse" />
+                <span className="whitespace-nowrap font-bold">Loa Máy: Mở</span>
               </>
             )}
           </button>

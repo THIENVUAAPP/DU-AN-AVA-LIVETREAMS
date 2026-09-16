@@ -2,94 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.1.7';
+export const APP_VERSION = '3.1.8';
 export const RELEASE_DATE = '16/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Bản Cập Nhật v3.1.7 - Đặt Nút Live AI Idol Ra Ngoài Top Bar, Xóa Nút Chạy Demo & Tối Ưu Window Capture 0ms',
-    description: '1. Đặt nút "🎬 Live AI Idol" ra ngoài Top Bar ngay cạnh nút "BẬT TẤT CẢ", giúp thao tác chuyển đổi kịch bản live nhanh chóng và trực quan nhất; 2. Xóa bỏ hoàn toàn nút ⚡ CHẠY DEMO khỏi thanh điều khiển theo yêu cầu người dùng; 3. Tối ưu hóa cửa sổ Window Capture & OBS Browser Source: Nhận diện và phát video ngay lập tức 0ms, không độ trễ, không chờ đợi; 4. Triệt tiêu 100% tự phát Voice khi khởi động hoặc mở phần mềm: Đảm bảo toàn bộ hệ thống âm thanh ở trạng thái thụ động hoàn toàn cho đến khi người dùng chủ động kích hoạt; 5. Chuẩn hóa trọn bộ 159 Voice trong AvaLive và luồng trả lời bình luận (gửi text trước, phát voice sau với đúng giọng comment đã chọn).'
-  },
-  {
-    title: '🧠 Bản Cập Nhật v3.1.6 - Tối Ưu Giao Diện Thanh Điều Khiển, Tích Hợp Menu Đa Năng & Khởi Động Thụ Động 100%',
-    description: '1. Khởi động thụ động tuyệt đối & kiểm soát nút Bật Tất Cả: Khi mở phần mềm hoặc tải video lên để test xem trước, hệ thống luôn giữ nguyên trạng thái TẮT an toàn (không tự động phát live, không tự kích hoạt Bật Tất Cả). Người dùng chỉ bắt đầu phát live thật khi chủ động bấm "Bật Tất Cả"; 2. Hợp nhất Vận hành Auto 24/24 vào nút "Bật Tất Cả": Xóa nút Auto 24/24 riêng lẻ, toàn bộ cơ chế chạy liên tục 24/24, tự giữ luồng live và tự vượt Captcha được gộp trực tiếp vào nút Bật Tất Cả; 3. Di chuyển Game Chiến Đấu, Bản Đồ Chữ S, Studio 2–4 Avatar vào Menu chính: Giúp thanh tiêu đề rộng thoáng tối đa, dễ dàng truy cập và chuyển đổi stage trực tiếp trong menu dropdown; 4. Khắc phục triệt để lỗi mở Tab Bộ Não AI (useMemo) & Rút gọn nút ⚡ CHẠY DEMO.'
-  },
-  {
-    title: '🧠 Bản Cập Nhật v3.1.5 - Chuẩn Hóa Master Phát Âm Tiếng Việt, Khôi Phục Tab Bộ Não & Cài Đặt Giãn Cách Trả Lời Bình Luận',
-    description: '1. Tích hợp Động cơ Master Vietnamese Pronunciation & Text Normalization: Đọc chuẩn xác 100% 6 thanh điệu tiếng Việt, bảo toàn âm cuối, tự động chuẩn hóa số tiền (500k, 1.000.000đ, $), số đếm, số điện thoại 3-3-4, mã OTP, thuật ngữ công nghệ và thương hiệu (AvaLive, TikTok, Facebook, YouTube, AI, KOL, KOC...); 2. Nâng cấp Tab Bộ Não AI: Bổ sung nút "🧠 BỘ NÃO AI" trực tiếp trên thanh điều khiển, hiển thị trọn vẹn giao diện cấu hình Kho Tri Thức Doanh Nghiệp, Tính cách AI và Model Gemini 1.5 Flash tự động fallback 24/7; 3. Cài đặt Giãn Cách Trả Lời Bình Luận (10s – 120s): Cho phép tùy chỉnh khoảng nghỉ giữa các lần trả lời, kèm Bộ lọc thông minh tự động bỏ qua spam, ký tự lặp vô nghĩa và từ ngữ thô tục/tiêu cực.'
-  },
-  {
-    title: '🎙️ Bản Cập Nhật Hotfix v3.1.4 - Dừng Voice Ngay Tức Thì Khi Tắt Demo & Đồng Bộ 1 Giọng Đọc Test Độc Nhất',
-    description: '1. Khắc phục triệt để luồng phát Voice Test/Demo: Khi người dùng bấm Tắt Demo/Test, toàn bộ âm thanh Web Audio, TTS và hàng đợi giọng đọc lập tức dừng dứt điểm trong 0ms; 2. Cố định đúng 1 giọng đọc duy nhất mà người dùng đã cài đặt khi chạy Test/Demo, loại bỏ hoàn toàn việc nhảy nhiều giọng ngẫu nhiên; 3. Đảm bảo toàn bộ hệ thống ở trạng thái thụ động 100% khi khởi động phần mềm, chỉ phát khi người dùng chủ động bấm.'
-  },
-
-  {
-    title: '🍏 Bản Cập Nhật Hotfix v3.1.3 - Khắc Phục Triệt Để 100% Khởi Động Localhost Trên macOS (MacBook)',
-    description: '1. Nâng cấp toàn diện bộ khởi động macOS (1_Khoi_Dong_AvaLive_Mac.command): Tự động nạp môi trường Shell profiles, tự động tìm kiếm Node.js trên toàn bộ phân vùng (Homebrew Apple Silicon M1/M2/M3 & Intel, NVM, Volta), tự giải phóng cổng 3001 và kiểm tra sẵn sàng trước khi mở trình duyệt App Mode 0ms; 2. Hỗ trợ fallback thông minh và đồng bộ hóa toàn diện hệ thống Ghim Sản Phẩm Đa Nền Tảng 24/7.'
-  },
-  {
-    title: '🎙️ Bản Cập Nhật v3.1.2 - Khởi Động Thụ Động 100%, Khắc Phục Triệt Để Chèn Giọng Lạ & Chuẩn Hóa Model Gemini 1.5 Flash',
-    description: '1. Khởi động thụ động tuyệt đối: Khi mở phần mềm giữ nguyên 100% trạng thái chờ an toàn, không tự ý đọc giọng hay tự bật phiên live khi người dùng chưa bấm bắt đầu; Nút xem thử video độc lập 100% với nút Bật Tất Cả; 2. Khắc phục triệt để lỗi chèn giọng: Tuyệt đối CHỈ sử dụng đúng giọng mà người dùng đã cài đặt cho 3 vai trò (Idol, Trợ Lý, Bình Luận), loại bỏ toàn bộ fallback chèn giọng nữ/lạ; 3. Tùy chỉnh Âm lượng, Tốc độ, Pitch lưu chuẩn xác và giữ nguyên 100% cấu trúc tông giọng tự nhiên không méo tiếng; 4. Chuẩn hóa Model AI: Cố định bộ não Gemini 1.5 Flash thông minh, siêu tốc và tiết kiệm chi phí nhất, khóa ẩn chọn model chỉ hiển thị cho tài khoản Admin.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật Hotfix v3.1.1 - Khắc Phục Triệt Để 100% Lỗi ReferenceError Khởi Động Giao Diện',
-    description: 'Xử lý dứt điểm 100% lỗi isVideoPlaying ReferenceError khi giải nén mở phần mềm, đảm bảo giao diện DesktopAppUI khởi động tức thì 0ms, mượt mà trên Windows & macOS mà không bị kẹt ở màn hình cập nhật.'
-  },
-  {
-    title: '🎙️ Bản Cập Nhật v3.1.0 - Tách Biệt 100% Nút Video Xem Thử Với Phiên Live & Tinh Chỉnh 3 Cột Giọng Nghe Thử Trực Tiếp',
-    description: '1. Tách biệt hoàn toàn nút Bật/Tắt Video xem thử trên giao diện với nút Bật/Tắt Tất Cả phiên Live: Người dùng hoàn toàn tự do xem trước và kiểm tra video mà không ảnh hưởng luồng live chính; 2. Giữ nguyên trạng thái chờ an toàn khi mở phần mềm, không tự ý kích hoạt bất kỳ chức năng live/demo nào; 3. Nâng cấp 3 Cột Giọng trong Tab Bộ Não AI: Bổ sung dấu tích trực quan (✓) khi gán giọng, hiển thị rõ Tên Giọng Đang Gán và tích hợp nút "▶️ Nghe Thử" trực tiếp trên từng cột với đúng âm lượng, tốc độ, pitch vừa tinh chỉnh; Lưu vĩnh viễn và áp dụng ngay 100% cho cả phiên live thật và test demo.'
-  },
-  {
-    title: '🎙️ Bản Cập Nhật Hotfix v3.0.9 - Giữ Nguyên Tông Giọng Tự Nhiên, Tự Động Ghim Sản Phẩm & Hợp Nhất Nút Demo/Mô Hình Live',
-    description: '1. Khắc phục triệt để âm thanh: Giữ nguyên 100% tông giọng tự nhiên của Voice AI không bị bóp méo hay biến dạng khi chỉnh tốc độ/âm lượng; 2. Tự động Ghim Sản Phẩm 24/7 trên toàn bộ phiên Live (shop.tiktok.com, TikTok Live Studio, OBS Overlay); 3. Hợp nhất nút "Chạy Demo" và "Mô hình live" thành 1 nút DUY NHẤT: ⚡ CHẠY DEMO & MÔ HÌNH LIVE (TEST) kèm hiển thị rõ Giọng Đang Dùng và công tắc Bật/Tắt Voice Test trực tiếp.'
-  },
-  {
-    title: '🎙️ Bản Cập Nhật Hotfix v3.0.8 - Kiểm Soát 100% Khởi Động Voice & Tùy Chỉnh Âm Lượng/Tốc Độ/Pitch Thực Tế',
-    description: 'Khắc phục triệt để lỗi tự động phát giọng khi vừa mở ứng dụng: Chế độ Live thực tế hoàn toàn tách biệt với Chạy Demo / Mô hình Live Simulator; 14 tác vụ sự kiện kết nối Idol chạy chuẩn xác; Đồng bộ 100% hiệu lực thực tế cho các thanh trượt Âm lượng (Volume), Tốc độ (Speed) và Độ trầm bổng (Pitch) ngay tức thì.'
-  },
-  {
-    title: '🎙️ Bản Cập Nhật v3.0.7 - Hệ Thống 3 Cột Giọng Chính Bộ Não AvaLive & Ưu Tiên Tuyệt Đối',
-    description: 'Nâng cấp toàn diện cơ chế giọng nói: 3 Cột Giọng Chính trong Tab Bộ Não (1. Giọng Idol Live Chính, 2. Giọng Quản Lý / Trợ Lý, 3. Giọng Trả Lời Bình Luận) được ưu tiên tối cao 100% trên toàn bộ phiên Live (phát video, nhép miệng LipSync, chạy demo, trả lời hỏi đáp & sự kiện). 14 tác vụ sự kiện tự động đồng bộ giọng chính và chỉ dùng giọng phụ khi chưa gán.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật Hotfix v3.0.6 - Khắc Phục Triệt Để 100% Lỗi Render Giao Diện & Mở Phần Mềm Ngay Tức Thì',
-    description: 'Xử lý dứt điểm thứ tự khởi tạo biến trạng thái (TDZ variable initialization) trong bộ điều phối Live Coordinator, loại bỏ hoàn toàn thông báo lỗi ReferenceError khi khởi động, đảm bảo giao diện chính AvaLive Studio mở mượt mà 100% trên Windows và Mac.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật Hotfix v3.0.5 - Khởi Động Trực Tiếp 100% Native & Sẵn Sàng Trình Duyệt Ngay Tức Thì',
-    description: 'Nâng cấp toàn diện cơ chế khởi động Windows (.bat & .exe): Tự động phát hiện UTF-8 đường dẫn tiếng Việt, chuyển sang chạy ngầm Native Node Process kèm bộ ghi log an toàn, tích hợp vòng lặp kiểm tra sẵn sàng cổng 3001 và hỗ trợ toàn bộ trình duyệt Edge, Chrome, Cốc Cốc, Brave.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật Hotfix v3.0.4 - Tự Động Khởi Động Trực Tiếp & Khắc Phục Triệt Để 100% Khởi Động Giao Diện Windows/Mac',
-    description: 'Nâng cấp toàn diện bộ khởi động 1_CLICK_CHAY_NGAY.bat & AvaLive_Studio.exe trên Windows: khởi động trực tiếp máy chủ Node Portable siêu nhẹ, tự động phát hiện cổng và mở trình duyệt App Mode ngay tức thì 0ms mà không qua trung gian; loại bỏ triệt để lỗi ReferenceError và xung đột module.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật Hotfix v3.0.3 - Khắc Phục Triệt Để Lỗi Khởi Động Giao Diện & Tối Ưu Tốc Độ 0ms',
-    description: 'Chuyển đổi toàn bộ thư viện phân tích tài liệu (PDF & Word Parser) sang cơ chế Lazy-Loading trên nền ES2022 Native, loại bỏ hoàn toàn lỗi ReferenceError khi giải nén mở phần mềm, đảm bảo giao diện chính khởi động tức thì 100% mượt mà.'
-  },
-  {
-    title: '🛍️ Bản Cập Nhật v3.0.2 - Tự Động Ghim Sản Phẩm TikTok Shop (shop.tiktok.com) & Vượt Captcha 24/7',
-    description: 'Nâng cấp toàn diện bộ máy Ghim Sản Phẩm Thông Minh: Tự động ghim từ shop.tiktok.com và TikTok Live Studio theo chu kỳ xoay vòng, câu thoại AI hoặc bình luận khách hàng; tích hợp thanh đồng bộ giỏ hàng 1-chạm và hệ thống AI giải Captcha ngầm 24/7 tức thì 0ms.'
-  },
-  {
-    title: '🔥 Bản Cập Nhật Hotfix v3.0.1 - Tối Ưu Live Video AI Voice & Bộ Não Tương Tác Sự Kiện',
-    description: 'Nâng cấp toàn diện bộ điều phối Live Coordinator: đảm bảo 100% khi phát video live các sự kiện Chào Người Mới, Trả Lời Bình Luận, Follow, Tặng Quà, Chốt Đơn đều tự động kích hoạt Voice AI và Bộ Não AI siêu mượt; bổ sung nút bật/tắt Fallback câu hỏi chưa hiểu và tối ưu hệ thống Test Simulator.'
-  },
-  {
-    title: '🌟 Bản Phát Hành Lớn AvaLive Studio VIP PRO v3.0.0 (Đầy Đủ 100% Mọi Chức Năng)',
-    description: 'Bản phát hành chính thức thế hệ mới đồng bộ toàn diện tất cả các công nghệ: Auto Pin Sản Phẩm Đa Nguồn, Vượt Captcha 24/7, Multi-Avatar Studio, Kho 40+ Giọng AI Độc Bản DSP, LipSync Khớp Khẩu Hình, Shopee Live & Game Livestream PK tương tác.'
-  },
-  {
-    title: '🎙️ Tối Ưu Hệ Thống Test Voice AI & Chạy Demo Sự Kiện 100% Phát Âm Thanh',
-    description: 'Toàn bộ các nút Chạy Test Kịch Bản, Chạy Thử Sự Kiện (Chào Người Mới, Quà Tặng, Chốt Đơn, Shopee Live, Game PK) được nâng cấp hệ thống âm thanh siêu bền vững 3-Tier Fallback, đảm bảo 100% phát ra Voice AI chuẩn xác và sinh động ngay khi bấm kiểm tra.'
-  },
-  {
-    title: '🍎 1-Click Launcher macOS Chạy Mượt Mà Tuyệt Đối (Chay_App_Mac_Linux.command)',
-    description: 'Khắc phục triệt để lỗi mở ứng dụng trên Mac. Launcher tự động phát hiện Node/NPM trên mọi dòng chip Apple Silicon (M1/M2/M3/M4) & Intel Mac, tự động giải phóng port 3001 và mở trình duyệt điều khiển ngay lập tức.'
-  },
-  {
-    title: '👄 Video LipSync Đồng Bộ Khẩu Hình Miệng 100% Tuyệt Đối',
-    description: 'Đồng bộ chuyển động nhép miệng của video AI theo thời gian thực: khi AI cất giọng đọc thì video nhép miệng mượt mà, khi dứt câu thoại thì video dừng chuyển động miệng chính xác từng frame cho cả TikTok Live, Shopee Live và OBS Studio.'
+    title: '👑 Bản Cập Nhật v3.1.8 - Tinh Gọn Thanh Top Bar, Tối Ưu Nút Loa Máy Tính & Chuẩn Hóa Số Dư Tài Khoản Vĩnh Viễn',
+    description: '1. Tinh gọn thanh Top Bar: Xóa bỏ 2 badge số dư Token & Giờ Live ngoài Top Bar (tránh rác giao diện, toàn bộ số dư vẫn quản lý chuẩn xác 100% trong chi tiết tài khoản); 2. Xóa bỏ nút và dropdown chọn kịch bản thừa ngoài Top Bar; 3. Nâng cấp nút Tắt/Mở Loa Máy Tính: Thiết kế nút gọn gàng với trạng thái trực quan [🔊 Loa Máy: Mở / 🔇 Loa Máy: Tắt], khi tắt loa máy tính sẽ chống ồn cho streamer nhưng phiên Live (TikTok Live Studio, OBS Window Capture) vẫn có tiếng 100%; 4. Bảo lưu và đồng bộ vĩnh viễn dữ liệu tài khoản, Token và Thời gian Live xuyên suốt phiên làm việc.'
   }
 ];
 
