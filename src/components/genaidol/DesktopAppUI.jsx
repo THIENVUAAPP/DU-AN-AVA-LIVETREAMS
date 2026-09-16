@@ -2795,6 +2795,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         window.dispatchEvent(new CustomEvent('avalive_resume_all'));
       }
 
+      // 5. Tự động kích hoạt Vận hành Auto 24/7 liên tục
+      setIsAuto247Running(true);
+      try {
+        localStorage.setItem('avalive_auto247', 'true');
+        bandoEngine.stopAutoTestLoop();
+        bandoEngine.startAuto247Loop();
+      } catch (e) {}
+
       if (typeof BroadcastChannel !== 'undefined') {
         try {
           const bc = new BroadcastChannel('avalive_master_live_stream');
@@ -2923,16 +2931,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         };
         setCustomCharacters(prev => [...prev, tempChar]);
         setSelectedCharacter(newCharId);
-        setUserLockedMediaUrl(localUrl);
         setIsVideoPlaying(true);
-        setIsMasterLiveRunning(true);
+        // Không tự ý bật BẬT TẤT CẢ khi người dùng chỉ upload video để test
         lastPlaybackTimeRef.current = 0;
 
         try {
           localStorage.setItem('avalive_selected_char', newCharId);
-          localStorage.removeItem('avalive_user_paused');
-          localStorage.removeItem('avalive_window_capture_paused');
-          localStorage.setItem('avalive_master_live_running', 'true');
         } catch (e) {}
 
         // Kích hoạt ngay lập tức trên phần tử video Desktop trong 0ms
@@ -3741,53 +3745,49 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               }}
               onPlay={(e) => {
                 if (isInternalPlaybackChangeRef.current) return;
-                try {
-                  localStorage.removeItem('avalive_user_paused');
-                  localStorage.removeItem('avalive_window_capture_paused');
-                  localStorage.setItem('avalive_master_live_running', 'true');
-                } catch (err) {}
-                if (!isMasterLiveRunning) {
-                  setIsMasterLiveRunning(true);
-                }
                 e.currentTarget.dataset.userPaused = 'false';
                 setIsVideoPlaying(true);
                 
-                const curTime = e.currentTarget.currentTime;
-                let playUrl = selected.url;
-                if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
-                  playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
-                }
-                sendVideoControl({
-                  action: 'play',
-                  currentTime: curTime,
-                  isPlaying: true,
-                  force: false,
-                  mediaUrl: playUrl,
-                  timestamp: Date.now()
-                }, socketRef.current);
-
-                syncMasterLiveState({
-                  stage: 'idol',
-                  mediaUrl: playUrl,
-                  isVideo: true,
-                  videoPlaybackEvent: 'play',
-                  videoCurrentTime: curTime,
-                  force: false,
-                  isPlaying: true
-                }, socketRef.current);
-                try {
-                  const bc = new BroadcastChannel('avalive_master_live_stream');
-                  bc.postMessage({ 
-                    type: 'GLOBAL_PLAYBACK_CHANGE', 
-                    isPlaying: true, 
-                    userPaused: false, 
-                    currentTime: curTime, 
+                // Đồng bộ playback sang các kênh nếu phiên live đang chạy
+                if (isMasterLiveRunning) {
+                  const curTime = e.currentTarget.currentTime;
+                  let playUrl = selected.url;
+                  if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
+                    playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
+                  }
+                  sendVideoControl({
+                    action: 'play',
+                    currentTime: curTime,
+                    isPlaying: true,
                     force: false,
-                    source: 'desktop',
-                    timestamp: Date.now() 
-                  });
-                  setTimeout(() => bc.close(), 100);
-                } catch (err) {}
+                    mediaUrl: playUrl,
+                    timestamp: Date.now()
+                  }, socketRef.current);
+
+                  syncMasterLiveState({
+                    stage: 'idol',
+                    mediaUrl: playUrl,
+                    isVideo: true,
+                    videoPlaybackEvent: 'play',
+                    videoCurrentTime: curTime,
+                    force: false,
+                    isPlaying: true
+                  }, socketRef.current);
+
+                  try {
+                    const bc = new BroadcastChannel('avalive_master_live_stream');
+                    bc.postMessage({ 
+                      type: 'GLOBAL_PLAYBACK_CHANGE', 
+                      isPlaying: true, 
+                      userPaused: false, 
+                      currentTime: curTime, 
+                      force: false,
+                      source: 'desktop',
+                      timestamp: Date.now() 
+                    });
+                    setTimeout(() => bc.close(), 100);
+                  } catch (err) {}
+                }
               }}
               onPause={(e) => {
                 if (isInternalPlaybackChangeRef.current) return;
@@ -4386,63 +4386,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
 
 
-          {/* Nút Chế độ Live AI Idol */}
-          <button 
-            className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs ${
-              !isGameBattleActive && !isGameBanDoActive && !isLiveStudioActive
-                ? 'bg-gradient-to-r from-blue-600 via-indigo-600 to-cyan-500 text-white border-cyan-300 shadow-cyan-500/40 ring-1 ring-cyan-400/50' 
-                : (isDarkMode ? 'border-cyan-500/40 bg-cyan-950/30 text-cyan-300 hover:bg-cyan-900/50' : 'border-cyan-300 bg-cyan-50 text-cyan-700 hover:bg-cyan-100')
-            }`}
-            onClick={() => {
-              setIsGameBattleActive(false);
-              setIsGameBanDoActive(false);
-              setIsLiveStudioActive(false);
-              try { localStorage.setItem('avalive_active_stage', 'idol'); } catch (e) {}
-              mapVoiceEngine.stopAll();
-              battleVoiceEngine.stopAll();
-              battleCommentary.stopAll();
-              syncMasterLiveState({ stage: 'idol' }, socketRef.current); postMasterBroadcast({ type: 'GLOBAL_STAGE_CHANGE', stage: 'idol' });
-            }}
-            title="Chuyển sang màn hình Livestream AI Idol"
-          >
-            <Video size={10} className={!isGameBattleActive && !isGameBanDoActive && !isLiveStudioActive ? 'text-yellow-300' : 'text-cyan-400'} />
-            <span className="whitespace-nowrap">Live AI Idol</span>
-            {!isGameBattleActive && !isGameBanDoActive && !isLiveStudioActive && (
-              <span className="w-1 h-1 rounded-full bg-emerald-400 animate-ping"></span>
-            )}
-          </button>
-
-
-          {/* Nút Kích hoạt Game Chiến Đấu */}
-          <button 
-            className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs ${
-              isGameBattleActive 
-                ? 'bg-gradient-to-r from-red-600 via-purple-600 to-indigo-600 text-white border-purple-400 shadow-purple-500/40 ring-1 ring-purple-400/50 animate-pulse' 
-                : (isDarkMode ? 'border-indigo-500/50 bg-indigo-950/40 text-indigo-300 hover:bg-indigo-900/60' : 'border-indigo-300 bg-indigo-50 text-indigo-700 hover:bg-indigo-100')
-            }`}
-            onClick={() => {
-              setIsGameBattleActive(true);
-              setIsGameBanDoActive(false);
-              setIsLiveStudioActive(false);
-              try { localStorage.setItem('avalive_active_stage', 'battle'); } catch (e) {}
-              mapVoiceEngine.stopAll();
-              if (isMasterLiveRunning) {
-                bandoAudio.unlock();
-                if (battleCommentary.isEnabled) battleCommentary.startPeriodicCommentary(true);
-                if (battleVoiceEngine.isAutoEnabled) battleVoiceEngine.startPeriodicCommentary(true);
-              }
-              syncMasterLiveState({ stage: 'battle' }, socketRef.current); postMasterBroadcast({ type: 'GLOBAL_STAGE_CHANGE', stage: 'battle' });
-            }}
-            title="Chuyển sang chế độ Game Chiến Đấu (TikTok LIVE Battle Game) trên màn hình chính"
-          >
-            <Swords size={10} className={isGameBattleActive ? 'text-yellow-300' : 'text-indigo-400'} />
-            <span className="whitespace-nowrap">Game Chiến Đấu</span>
-            {isGameBattleActive && (
-              <span className="w-1 h-1 rounded-full bg-emerald-400 animate-ping"></span>
-            )}
-          </button>
-
-          {/* Nút Cài đặt Game Chiến Đấu - Nằm KẾ BÊN Game Chiến Đấu khi đang mở */}
+          {/* Nút Cài đặt Nhanh Game khi Game đang mở trên màn hình */}
           {isGameBattleActive && (
             <button
               onClick={() => setIsGameAdminOpen(true)}
@@ -4450,42 +4394,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               title="Cài đặt Game Chiến Đấu"
             >
               <Settings size={10} className="text-yellow-300" />
-              <span>Game</span>
+              <span>⚙️ Game Chiến Đấu</span>
             </button>
           )}
 
-
-          {/* Nút Kích hoạt Game Ghép Cờ Bản Đồ Việt Nam (Hình Chữ S) */}
-          <button 
-            className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs ${
-              isGameBanDoActive 
-                ? 'bg-gradient-to-r from-red-600 via-amber-600 to-yellow-500 text-white border-yellow-300 shadow-yellow-500/40 ring-1 ring-yellow-400/50 animate-pulse' 
-                : (isDarkMode ? 'border-amber-500/50 bg-amber-950/40 text-amber-300 hover:bg-amber-900/60' : 'border-amber-300 bg-amber-50 text-amber-700 hover:bg-amber-100')
-            }`}
-            onClick={() => {
-              setIsGameBanDoActive(true);
-              setIsGameBattleActive(false);
-              setIsLiveStudioActive(false);
-              try { localStorage.setItem('avalive_active_stage', 'bando'); } catch (e) {}
-              battleVoiceEngine.stopAll();
-              battleCommentary.stopAll();
-              if (isMasterLiveRunning) {
-                bandoAudio.unlock();
-                bandoAudio.playBgmOnLive();
-                mapVoiceEngine.startPeriodicCommentary(true);
-              }
-              syncMasterLiveState({ stage: 'bando' }, socketRef.current); postMasterBroadcast({ type: 'GLOBAL_STAGE_CHANGE', stage: 'bando' });
-            }}
-            title="Chuyển sang Game Ghép Cờ Bản Đồ Việt Nam (Đất Nước Hình Chữ S) trên màn hình chính"
-          >
-            <Flag size={10} className={isGameBanDoActive ? 'text-yellow-200' : 'text-amber-400'} />
-            <span className="whitespace-nowrap">Bản Đồ Chữ S</span>
-            {isGameBanDoActive && (
-              <span className="w-1 h-1 rounded-full bg-emerald-400 animate-ping"></span>
-            )}
-          </button>
-
-          {/* Nút Cài đặt Game Bản Đồ - Nằm KẾ BÊN Game Bản Đồ khi đang mở */}
           {isGameBanDoActive && (
             <button
               onClick={() => setIsGameBanDoAdminOpen(true)}
@@ -4493,26 +4405,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               title="Cài đặt Game Bản Đồ"
             >
               <Settings size={10} className="text-yellow-300" />
-              <span>Game</span>
+              <span>⚙️ Game Bản Đồ</span>
             </button>
           )}
-
-          {/* Nút Cấu Hình & Bật Tắt Studio 2-4 Avatar */}
-          <button 
-            className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs cursor-pointer ${
-              multiAvatarConfig?.enabled
-                ? 'bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 text-white border-purple-300 shadow-purple-500/40 ring-1 ring-purple-400/50' 
-                : (isDarkMode ? 'border-purple-500/30 bg-purple-950/30 text-purple-300 hover:bg-purple-900/40' : 'border-purple-300 bg-purple-50 text-purple-700 hover:bg-purple-100')
-            }`}
-            onClick={() => setShowMultiAvatarStudioModal(true)}
-            title="Mở Studio 2–4 Avatar (Tự do tùy chỉnh, kéo thả, co giãn nhiều nhân vật & kịch bản đối thoại)"
-          >
-            <Users size={10} className={multiAvatarConfig?.enabled ? 'text-yellow-300' : 'text-purple-400'} />
-            <span className="whitespace-nowrap">Studio 2-4 Avatar {multiAvatarConfig?.enabled ? `(${multiAvatarConfig.activeCount || 2})` : ''}</span>
-            {multiAvatarConfig?.enabled && (
-              <span className="w-1 h-1 rounded-full bg-emerald-400 animate-ping"></span>
-            )}
-          </button>
 
           {/* 1 Nút Chuyển Tỷ Lệ Khung Hình Toàn Cục DUY NHẤT CHO TOÀN BỘ HỆ THỐNG: 9:16 (TikTok Dọc) vs 16:9 (OBS Ngang) */}
           <button
@@ -4647,63 +4542,170 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         
         {/* Left Side: Settings & Payment */}
         <div className="flex items-center gap-2 shrink-0">
-          {/* NÚT BỘ NÃO AI 🧠 TRỰC TIẾP TRÊN THANH ĐIỀU KHIỂN */}
-          <button 
-            onClick={() => setActiveSettingsModal('general')}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded text-xs font-black transition-all border shadow-sm cursor-pointer ${
-              activeSettingsModal === 'general'
-                ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white border-blue-400 ring-2 ring-blue-400 shadow-blue-500/30'
-                : (isDarkMode ? 'bg-gradient-to-r from-blue-900/50 to-indigo-900/40 hover:from-blue-600 hover:to-indigo-600 text-blue-100 hover:text-white border-blue-700/60 shadow-xs' : 'bg-blue-50 hover:bg-blue-600 text-blue-900 hover:text-white border-blue-300')
-            }`}
-            title="Mở Bảng Cấu Hình Bộ Não AI Gemini, Kho Tri Thức & Tổng Kho Giọng Đọc"
-          >
-            <Brain size={14} className="text-yellow-300 animate-pulse" />
-            <span>🧠 {t('aiBrain', currentLang)}</span>
-          </button>
-
           <div className="relative shrink-0">
             <button 
               onClick={() => setIsSettingsDropdownOpen(!isSettingsDropdownOpen)}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold transition-colors ${isDarkMode ? 'bg-blue-600 hover:bg-blue-500 text-white' : 'bg-blue-500 hover:bg-blue-600 text-white'}`}
+              className={`flex items-center gap-1 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-sm cursor-pointer ${isDarkMode ? 'bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white' : 'bg-blue-600 hover:bg-blue-700 text-white'}`}
+              title="Mở Bảng Menu Chức Năng Ava Live"
             >
-              <Settings size={13} />
-              <span>{t('menu', currentLang)}</span>
+              <Settings size={14} className="animate-spin-slow" />
+              <span className="tracking-wide font-black uppercase">{t('menu', currentLang)}</span>
             </button>
 
-            
             {isSettingsDropdownOpen && (
-              <div className={`absolute top-full left-0 mt-2 w-64 rounded-xl shadow-2xl border z-50 p-2 overflow-hidden ${isDarkMode ? 'bg-[#1c1c23] border-gray-700' : 'bg-white border-gray-200'} animate-in fade-in slide-in-from-top-2 duration-200`}>
+              <div className={`absolute top-full left-0 mt-2 w-72 rounded-2xl shadow-2xl border z-50 p-2.5 overflow-hidden ${isDarkMode ? 'bg-[#181824]/98 border-gray-700 text-white shadow-black/80' : 'bg-white border-gray-200 text-slate-800 shadow-xl'} animate-in fade-in slide-in-from-top-2 duration-200 backdrop-blur-xl`}>
+                
+                {/* 1. BỘ NÃO AI */}
                 <button 
                   onClick={() => { setActiveSettingsModal('general'); setIsSettingsDropdownOpen(false); }}
-                  className={`w-full text-left px-3 py-2.5 mb-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-blue-900/40 to-blue-800/20 hover:from-blue-600 hover:to-blue-500 text-blue-100 hover:text-white border border-blue-800/50' : 'bg-blue-50 hover:bg-blue-500 text-blue-800 hover:text-white'}`}
+                  className={`w-full text-left px-3 py-2 mb-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-blue-900/40 to-blue-800/20 hover:from-blue-600 hover:to-blue-500 text-blue-100 hover:text-white border border-blue-800/50' : 'bg-blue-50 hover:bg-blue-500 text-blue-800 hover:text-white'}`}
                 >
-                  <Brain size={16} />
-                  <span>{t('aiBrain', currentLang)}</span>
+                  <Brain size={16} className="text-yellow-300 animate-pulse shrink-0" />
+                  <span>🧠 {t('aiBrain', currentLang)}</span>
                 </button>
+
+                {/* 2. KẾT NỐI IDOL */}
                 <button 
                   onClick={() => { setActiveSettingsModal('workspace'); setIsSettingsDropdownOpen(false); }}
-                  className={`w-full text-left px-3 py-2.5 mb-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-purple-900/40 to-purple-800/20 hover:from-purple-600 hover:to-purple-500 text-purple-100 hover:text-white border border-purple-800/50' : 'bg-purple-50 hover:bg-purple-500 text-purple-800 hover:text-white'}`}
+                  className={`w-full text-left px-3 py-2 mb-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-purple-900/40 to-purple-800/20 hover:from-purple-600 hover:to-purple-500 text-purple-100 hover:text-white border border-purple-800/50' : 'bg-purple-50 hover:bg-purple-500 text-purple-800 hover:text-white'}`}
                 >
-                  <Radio size={16} />
+                  <Radio size={16} className="text-purple-400 shrink-0" />
                   <span>{t('idolConnect', currentLang)}</span>
                 </button>
-                {/* 🟠 KẾT NỐI SHOPEE LIVE (URL & KEY) - NẰM NGAY BÊN DƯỚI IDOL / SỰ KIỆN IDOL THEO YÊU CẦU */}
+
+                {/* 3. KẾT NỐI SHOPEE LIVE */}
                 <button 
                   onClick={() => { setActiveSettingsModal('shopee_live'); setIsSettingsDropdownOpen(false); }}
-                  className={`w-full text-left px-3 py-2.5 mb-1.5 rounded-lg text-xs font-bold transition-all flex items-center justify-between gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-orange-950/60 to-amber-900/40 hover:from-orange-600 hover:to-amber-600 text-orange-200 hover:text-white border border-orange-700/60 shadow-md' : 'bg-orange-50 hover:bg-orange-500 text-orange-800 hover:text-white border border-orange-200'}`}
+                  className={`w-full text-left px-3 py-2 mb-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-orange-950/60 to-amber-900/40 hover:from-orange-600 hover:to-amber-600 text-orange-200 hover:text-white border border-orange-700/60 shadow-md' : 'bg-orange-50 hover:bg-orange-500 text-orange-800 hover:text-white border border-orange-200'}`}
                 >
                   <div className="flex items-center gap-2.5">
-                    <ShoppingBag size={16} className="text-[#EE4D2D]" />
+                    <ShoppingBag size={16} className="text-[#EE4D2D] shrink-0" />
                     <span>KẾT NỐI SHOPEE LIVE (URL & KEY)</span>
                   </div>
                   <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-[#EE4D2D] text-white shadow-xs">MỚI</span>
                 </button>
+
+                {/* 4. VƯỢT CAPTCHA */}
                 <button 
                   onClick={() => { setActiveSettingsModal('captcha'); setIsSettingsDropdownOpen(false); }}
-                  className={`w-full text-left px-3 py-2.5 mb-2 rounded-lg text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-emerald-900/50 to-teal-800/30 hover:from-emerald-600 hover:to-teal-500 text-emerald-200 hover:text-white border border-emerald-700/60 shadow-lg' : 'bg-emerald-50 hover:bg-emerald-500 text-emerald-800 hover:text-white'}`}
+                  className={`w-full text-left px-3 py-2 mb-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-emerald-900/50 to-teal-800/30 hover:from-emerald-600 hover:to-teal-500 text-emerald-200 hover:text-white border border-emerald-700/60 shadow-lg' : 'bg-emerald-50 hover:bg-emerald-500 text-emerald-800 hover:text-white'}`}
                 >
-                  <Shield size={16} className="text-emerald-400" />
+                  <Shield size={16} className="text-emerald-400 shrink-0" />
                   <span>{t('captchaBypass', currentLang)}</span>
+                </button>
+
+                {/* Đường phân cách */}
+                <div className={`my-1.5 border-t ${isDarkMode ? 'border-gray-700/60' : 'border-gray-200'}`} />
+
+                {/* 5. GAME CHIẾN ĐẤU */}
+                <button 
+                  onClick={() => {
+                    setIsGameBattleActive(true);
+                    setIsGameBanDoActive(false);
+                    setIsLiveStudioActive(false);
+                    try { localStorage.setItem('avalive_active_stage', 'battle'); } catch (e) {}
+                    mapVoiceEngine.stopAll();
+                    if (isMasterLiveRunning) {
+                      bandoAudio.unlock();
+                      if (battleCommentary.isEnabled) battleCommentary.startPeriodicCommentary(true);
+                      if (battleVoiceEngine.isAutoEnabled) battleVoiceEngine.startPeriodicCommentary(true);
+                    }
+                    syncMasterLiveState({ stage: 'battle' }, socketRef.current); 
+                    postMasterBroadcast({ type: 'GLOBAL_STAGE_CHANGE', stage: 'battle' });
+                    setIsSettingsDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 mb-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2.5 ${
+                    isGameBattleActive 
+                      ? (isDarkMode ? 'bg-gradient-to-r from-purple-900/60 to-indigo-900/60 text-yellow-300 border border-purple-400' : 'bg-purple-100 text-purple-900 border border-purple-300')
+                      : (isDarkMode ? 'bg-purple-950/40 hover:bg-purple-900/60 text-purple-200 border border-purple-800/40' : 'bg-purple-50 hover:bg-purple-500 text-purple-800 hover:text-white')
+                  }`}
+                  title="Chuyển sang chế độ Game Chiến Đấu (TikTok LIVE Battle Game)"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Swords size={16} className="text-purple-400 shrink-0" />
+                    <span>Game Chiến Đấu (PK TikTok Live)</span>
+                  </div>
+                  {isGameBattleActive && <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-emerald-500 text-white">ĐANG CHẠY</span>}
+                </button>
+
+                {/* 6. BẢN ĐỒ CHỮ S */}
+                <button 
+                  onClick={() => {
+                    setIsGameBanDoActive(true);
+                    setIsGameBattleActive(false);
+                    setIsLiveStudioActive(false);
+                    try { localStorage.setItem('avalive_active_stage', 'bando'); } catch (e) {}
+                    battleVoiceEngine.stopAll();
+                    battleCommentary.stopAll();
+                    if (isMasterLiveRunning) {
+                      bandoAudio.unlock();
+                      bandoAudio.playBgmOnLive();
+                      mapVoiceEngine.startPeriodicCommentary(true);
+                    }
+                    syncMasterLiveState({ stage: 'bando' }, socketRef.current); 
+                    postMasterBroadcast({ type: 'GLOBAL_STAGE_CHANGE', stage: 'bando' });
+                    setIsSettingsDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 mb-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2.5 ${
+                    isGameBanDoActive 
+                      ? (isDarkMode ? 'bg-gradient-to-r from-amber-900/60 to-red-900/60 text-yellow-300 border border-yellow-400' : 'bg-amber-100 text-amber-900 border border-amber-300')
+                      : (isDarkMode ? 'bg-amber-950/40 hover:bg-amber-900/60 text-amber-200 border border-amber-800/40' : 'bg-amber-50 hover:bg-amber-500 text-amber-800 hover:text-white')
+                  }`}
+                  title="Chuyển sang Game Ghép Cờ Bản Đồ Việt Nam (Đất Nước Hình Chữ S)"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Flag size={16} className="text-amber-400 shrink-0" />
+                    <span>Bản Đồ Chữ S (Ghép Cờ Việt Nam)</span>
+                  </div>
+                  {isGameBanDoActive && <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-emerald-500 text-white">ĐANG CHẠY</span>}
+                </button>
+
+                {/* 7. STUDIO 2–4 AVATAR */}
+                <button 
+                  onClick={() => {
+                    setShowMultiAvatarStudioModal(true);
+                    setIsSettingsDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 mb-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2.5 ${
+                    multiAvatarConfig?.enabled 
+                      ? (isDarkMode ? 'bg-gradient-to-r from-cyan-900/60 to-blue-900/60 text-cyan-200 border border-cyan-400' : 'bg-cyan-100 text-cyan-900 border border-cyan-300')
+                      : (isDarkMode ? 'bg-cyan-950/40 hover:bg-cyan-900/60 text-cyan-200 border border-cyan-800/40' : 'bg-cyan-50 hover:bg-cyan-500 text-cyan-800 hover:text-white')
+                  }`}
+                  title="Mở Studio 2–4 Avatar (Đối thoại nhiều nhân vật)"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Users size={16} className="text-cyan-400 shrink-0" />
+                    <span>Studio 2–4 Avatar (Đối Thoại AI)</span>
+                  </div>
+                  {multiAvatarConfig?.enabled && <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-cyan-500 text-white">{multiAvatarConfig.activeCount || 2} Avatar</span>}
+                </button>
+
+                {/* 8. LIVE AI IDOL (MÀN HÌNH ĐƠN) */}
+                <button 
+                  onClick={() => {
+                    setIsGameBattleActive(false);
+                    setIsGameBanDoActive(false);
+                    setIsLiveStudioActive(false);
+                    try { localStorage.setItem('avalive_active_stage', 'idol'); } catch (e) {}
+                    mapVoiceEngine.stopAll();
+                    battleVoiceEngine.stopAll();
+                    battleCommentary.stopAll();
+                    syncMasterLiveState({ stage: 'idol' }, socketRef.current); 
+                    postMasterBroadcast({ type: 'GLOBAL_STAGE_CHANGE', stage: 'idol' });
+                    setIsSettingsDropdownOpen(false);
+                  }}
+                  className={`w-full text-left px-3 py-2 mb-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2.5 ${
+                    !isGameBattleActive && !isGameBanDoActive && !isLiveStudioActive 
+                      ? (isDarkMode ? 'bg-gradient-to-r from-blue-900/60 to-indigo-900/60 text-cyan-300 border border-blue-400' : 'bg-blue-100 text-blue-900 border border-blue-300')
+                      : (isDarkMode ? 'bg-blue-950/40 hover:bg-blue-900/60 text-blue-200 border border-blue-800/40' : 'bg-blue-50 hover:bg-blue-500 text-blue-800 hover:text-white')
+                  }`}
+                  title="Chuyển về màn hình Livestream AI Idol Đơn"
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Video size={16} className="text-blue-400 shrink-0" />
+                    <span>Live AI Idol (Màn Hình Đơn)</span>
+                  </div>
+                  {!isGameBattleActive && !isGameBanDoActive && !isLiveStudioActive && <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-blue-500 text-white">CHÍNH</span>}
                 </button>
 
                 {/* Đường phân cách */}
@@ -4857,12 +4859,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                           desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
                         }
                         setIsVideoPlaying(true);
-                        setIsMasterLiveRunning(true);
-                        try {
-                          localStorage.removeItem('avalive_user_paused');
-                          localStorage.removeItem('avalive_window_capture_paused');
-                          localStorage.setItem('avalive_master_live_running', 'true');
-                        } catch (e) {}
+                        // Giữ nguyên trạng thái phiên Live hiện tại, không tự động kích hoạt BẬT TẤT CẢ khi streamer chỉ chọn xem trước nhân vật
 
                         // ⚡ 2. PHÁT SÓNG REALTIME BROADCAST CHANNEL ĐỒNG BỘ 100% CỬA SỔ LIVE / TIKTOK STUDIO
                         try {
@@ -4992,24 +4989,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         {/* Right Side: Toggles & Stream Window */}
         <div className="flex items-center gap-1.5 shrink-0 flex-nowrap overflow-visible relative z-40">
 
-          {/* Nút ⚡ AUTO 24/7 (Chạy Tự Động 24/24 & Tự Giải Captcha AI) */}
-          <button 
-            onClick={handleToggleAuto247}
-            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-black transition-all border shadow-md active:scale-95 ${
-              isAuto247Running
-                ? 'bg-gradient-to-r from-red-600 via-rose-600 to-amber-500 text-white border-yellow-300 ring-2 ring-yellow-400 shadow-red-500/50 animate-pulse'
-                : (isDarkMode ? 'bg-white/10 hover:bg-white/20 text-gray-200 border-white/20' : 'bg-slate-200 hover:bg-slate-300 text-slate-800 border-slate-300')
-            }`}
-            title="Kích hoạt chế độ Chạy Tự Động 24/24 liên tục cho tất cả Game, Live Idol & Tự Động Giải Captcha"
-          >
-            <Zap size={13} className={isAuto247Running ? 'text-yellow-300 animate-spin' : 'text-amber-400'} />
-            <span>{isAuto247Running ? t('auto247On', currentLang) : t('auto247Off', currentLang)}</span>
-            {isAuto247Running && (
-              <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></span>
-            )}
-          </button>
-
-          {/* NÚT CHUNG DUY NHẤT: CHẠY DEMO & MÔ HÌNH LIVE (TEST) */}
+          {/* NÚT CHẠY DEMO (TEST) */}
           <button 
             onClick={() => {
               setShowSimulator(prev => !prev);
@@ -5023,7 +5003,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             title="Mở Bảng Điều Khiển Mô Hình Live & Chạy Demo Test Giả Lập Tương Tác Trực Tuyến"
           >
             <Zap size={13} className={(showSimulator || isGlobalDemoRunning) ? 'text-yellow-300 animate-bounce' : 'text-yellow-300'} />
-            <span className="whitespace-nowrap font-black">⚡ CHẠY DEMO & MÔ HÌNH LIVE (TEST)</span>
+            <span className="whitespace-nowrap font-black">⚡ CHẠY DEMO</span>
           </button>
 
           {/* 🔊 NÚT BẬT / TẮT ÂM THANH TOÀN DIỆN (ĐỒNG BỘ CẢ WINDOW CAPTURE & TIKTOK LIVE) */}

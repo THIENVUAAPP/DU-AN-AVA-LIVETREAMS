@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.1.5';
+export const APP_VERSION = '3.1.6';
 export const RELEASE_DATE = '16/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🧠 Bản Cập Nhật v3.1.6 - Tối Ưu Giao Diện Thanh Điều Khiển, Tích Hợp Menu Đa Năng & Khởi Động Thụ Động 100%',
+    description: '1. Khởi động thụ động tuyệt đối & kiểm soát nút Bật Tất Cả: Khi mở phần mềm hoặc tải video lên để test xem trước, hệ thống luôn giữ nguyên trạng thái TẮT an toàn (không tự động phát live, không tự kích hoạt Bật Tất Cả). Người dùng chỉ bắt đầu phát live thật khi chủ động bấm "Bật Tất Cả"; 2. Hợp nhất Vận hành Auto 24/24 vào nút "Bật Tất Cả": Xóa nút Auto 24/24 riêng lẻ, toàn bộ cơ chế chạy liên tục 24/24, tự giữ luồng live và tự vượt Captcha được gộp trực tiếp vào nút Bật Tất Cả; 3. Di chuyển Game Chiến Đấu, Bản Đồ Chữ S, Studio 2–4 Avatar vào Menu chính: Giúp thanh tiêu đề rộng thoáng tối đa, dễ dàng truy cập và chuyển đổi stage trực tiếp trong menu dropdown; 4. Khắc phục triệt để lỗi mở Tab Bộ Não AI (useMemo) & Rút gọn nút ⚡ CHẠY DEMO.'
+  },
   {
     title: '🧠 Bản Cập Nhật v3.1.5 - Chuẩn Hóa Master Phát Âm Tiếng Việt, Khôi Phục Tab Bộ Não & Cài Đặt Giãn Cách Trả Lời Bình Luận',
     description: '1. Tích hợp Động cơ Master Vietnamese Pronunciation & Text Normalization: Đọc chuẩn xác 100% 6 thanh điệu tiếng Việt, bảo toàn âm cuối, tự động chuẩn hóa số tiền (500k, 1.000.000đ, $), số đếm, số điện thoại 3-3-4, mã OTP, thuật ngữ công nghệ và thương hiệu (AvaLive, TikTok, Facebook, YouTube, AI, KOL, KOC...); 2. Nâng cấp Tab Bộ Não AI: Bổ sung nút "🧠 BỘ NÃO AI" trực tiếp trên thanh điều khiển, hiển thị trọn vẹn giao diện cấu hình Kho Tri Thức Doanh Nghiệp, Tính cách AI và Model Gemini 1.5 Flash tự động fallback 24/7; 3. Cài đặt Giãn Cách Trả Lời Bình Luận (10s – 120s): Cho phép tùy chỉnh khoảng nghỉ giữa các lần trả lời, kèm Bộ lọc thông minh tự động bỏ qua spam, ký tự lặp vô nghĩa và từ ngữ thô tục/tiêu cực.'
