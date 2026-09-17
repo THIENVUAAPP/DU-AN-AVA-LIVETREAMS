@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.4.8';
+export const APP_VERSION = '3.4.9';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v3.4.8 - Chuẩn Hóa 100% Chính Tả Tiếng Việt & Phát Âm Chuẩn Xác "Bánh Gạo Lứt"',
-    description: '1. Chuẩn Hóa Phát Âm "Bánh Gạo Lứt": Tự động xử lý và phát âm chuẩn xác 100% từ khóa "Bánh gạo lứt", "Gạo lứt" (khắc phục hoàn toàn lỗi sai chính tả gạ o, lức); 2. Tự Động Sửa Lỗi Chính Tả & Giữ Trọn Nghĩa Câu: Tối ưu từ điển phát âm tiếng Việt, bảo toàn trọn vẹn ngữ nghĩa từng câu từng chữ; 3. Khóa Chống Trùng Lặp Luồng Kịch Bản: Phát đơn luồng mượt mà, không bẻ nhỏ câu.'
+    title: '⚡ Bản Cập Nhật v3.4.9 - Tối Ưu Giọng Đọc Liền Mạch Tự Nhiên & Chuẩn Hóa Khẩu Lệnh, Bánh Gạo Lứt, Ăn Nhạt',
+    description: '1. Chuẩn Hóa Chuỗi Từ Khóa Trọng Tâm: Phát âm chuẩn xác "dừng lại đây một chút thôi", "bánh gạo lứt", "hiện tại", "nhắc lại", "ăn nhạt" với đầy đủ âm tiết và ngữ điệu tự nhiên; 2. Đọc Liền Mạch Cả Câu, Không Tách Vụn Từng Chữ: Tối ưu nhịp thở và luồng âm thanh, phát âm trôi chảy và truyền cảm; 3. Tự Động Sửa Lỗi Chính Tả Toàn Diện: Loại bỏ triệt để các lỗi gõ sai chính tả trên sóng livestream.'
   }
 ];
 

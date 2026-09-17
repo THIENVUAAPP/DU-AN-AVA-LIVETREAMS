@@ -15,6 +15,16 @@
 // 1. TỪ ĐIỂN PHÁT ÂM THƯƠNG HIỆU & THUẬT NGỮ CÔNG NGHỆ (PRONUNCIATION DICTIONARY)
 export const PRONUNCIATION_DICTIONARY = [
   // 🛡️ BẢO VỆ TUYỆT ĐỐI CÁC TỪ KHÓA TIẾNG VIỆT GỐC & TỰ ĐỘNG CHỮA LỖI CHÍNH TẢ
+  { pattern: /(?<![\p{L}\p{N}_])dừng\s*lại\s*đây\s*một\s*chút\s*thôi(?![\p{L}\p{N}_])/giu, replacement: 'dừng lại đây một chút thôi' },
+  { pattern: /(?<![\p{L}\p{N}_])dừng\s*lại\s*đây\s*một\s*chút(?![\p{L}\p{N}_])/giu, replacement: 'dừng lại đây một chút' },
+  { pattern: /(?<![\p{L}\p{N}_])dừng\s*lại\s*đây(?![\p{L}\p{N}_])/giu, replacement: 'dừng lại đây' },
+  { pattern: /(?<![\p{L}\p{N}_])dừng\s*lại\s*một\s*chút\s*thôi(?![\p{L}\p{N}_])/giu, replacement: 'dừng lại một chút thôi' },
+  { pattern: /(?<![\p{L}\p{N}_])dừng\s*lại\s*một\s*chút(?![\p{L}\p{N}_])/giu, replacement: 'dừng lại một chút' },
+  { pattern: /(?<![\p{L}\p{N}_])hiện\s*tại(?![\p{L}\p{N}_])/giu, replacement: 'hiện tại' },
+  { pattern: /(?<![\p{L}\p{N}_])nhắc\s*lại(?![\p{L}\p{N}_])/giu, replacement: 'nhắc lại' },
+  { pattern: /(?<![\p{L}\p{N}_])nhắt\s*lại(?![\p{L}\p{N}_])/giu, replacement: 'nhắc lại' },
+  { pattern: /(?<![\p{L}\p{N}_])ăn\s*nhạt(?![\p{L}\p{N}_])/giu, replacement: 'ăn nhạt' },
+  { pattern: /(?<![\p{L}\p{N}_])ăn\s*nhạc(?![\p{L}\p{N}_])/giu, replacement: 'ăn nhạt' },
   { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạ\s*o\s*lức(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo lứt' },
   { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạ\s*o\s*lứt(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo lứt' },
   { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo\s*lức(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo lứt' },
@@ -35,6 +45,8 @@ export const PRONUNCIATION_DICTIONARY = [
   { pattern: /(?<![\p{L}\p{N}_])gạo(?![\p{L}\p{N}_])/giu, replacement: 'gạo' },
   { pattern: /(?<![\p{L}\p{N}_])không(?![\p{L}\p{N}_])/giu, replacement: 'không' },
   { pattern: /(?<![\p{L}\p{N}_])khoong6(?![\p{L}\p{N}_])/giu, replacement: 'không' },
+  { pattern: /(?<![\p{L}\p{N}_])đôc(?![\p{L}\p{N}_])/giu, replacement: 'đọc' },
+  { pattern: /(?<![\p{L}\p{N}_])đoc(?![\p{L}\p{N}_])/giu, replacement: 'đọc' },
   { pattern: /(?<![\p{L}\p{N}_])bạn(?![\p{L}\p{N}_])/giu, replacement: 'bạn' },
   { pattern: /(?<![\p{L}\p{N}_])kịch\s*bản(?![\p{L}\p{N}_])/giu, replacement: 'kịch bản' },
   { pattern: /(?<![\p{L}\p{N}_])khách\s*hàng(?![\p{L}\p{N}_])/giu, replacement: 'khách hàng' },

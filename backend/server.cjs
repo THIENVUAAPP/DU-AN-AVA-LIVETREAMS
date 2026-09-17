@@ -1550,7 +1550,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '3.4.8';
+  let ver = '3.4.9';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1588,7 +1588,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '3.4.8';
+  let ver = '3.4.9';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -3041,19 +3041,35 @@ function humanizeTextForBackendTTS(rawText, gender, lang) {
     .replace(/(?<![\p{L}\p{N}_])cod(?![\p{L}\p{N}_])/giu, 'nhận hàng thanh toán')
     .replace(/(?<![\p{L}\p{N}_])stk(?![\p{L}\p{N}_])/giu, 'số tài khoản')
     .replace(/(?<![\p{L}\p{N}_])combo(?![\p{L}\p{N}_])/giu, 'gói combo')
-    // Bảo vệ tuyệt đối các từ khóa nông sản, bánh kẹo thực phẩm
-    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo\s*lứt\s*(?:huyết\s*rồng|đỏ|đen|hữu\s*cơ)?(?![\p{L}\p{N}_])/giu, 'bánh gạo lứt')
+    // Bảo vệ tuyệt đối các từ khóa tiếng Việt, khẩu lệnh và thực phẩm
+    .replace(/(?<![\p{L}\p{N}_])dừng\s*lại\s*đây\s*một\s*chút\s*thôi(?![\p{L}\p{N}_])/giu, 'dừng lại đây một chút thôi')
+    .replace(/(?<![\p{L}\p{N}_])dừng\s*lại\s*đây\s*một\s*chút(?![\p{L}\p{N}_])/giu, 'dừng lại đây một chút')
+    .replace(/(?<![\p{L}\p{N}_])dừng\s*lại\s*đây(?![\p{L}\p{N}_])/giu, 'dừng lại đây')
+    .replace(/(?<![\p{L}\p{N}_])dừng\s*lại\s*một\s*chút\s*thôi(?![\p{L}\p{N}_])/giu, 'dừng lại một chút thôi')
+    .replace(/(?<![\p{L}\p{N}_])dừng\s*lại\s*một\s*chút(?![\p{L}\p{N}_])/giu, 'dừng lại một chút')
+    .replace(/(?<![\p{L}\p{N}_])hiện\s*tại(?![\p{L}\p{N}_])/giu, 'hiện tại')
+    .replace(/(?<![\p{L}\p{N}_])nhắc\s*lại(?![\p{L}\p{N}_])/giu, 'nhắc lại')
+    .replace(/(?<![\p{L}\p{N}_])nhắt\s*lại(?![\p{L}\p{N}_])/giu, 'nhắc lại')
+    .replace(/(?<![\p{L}\p{N}_])ăn\s*nhạt(?![\p{L}\p{N}_])/giu, 'ăn nhạt')
+    .replace(/(?<![\p{L}\p{N}_])ăn\s*nhạc(?![\p{L}\p{N}_])/giu, 'ăn nhạt')
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạ\s*o\s*lức(?![\p{L}\p{N}_])/giu, 'bánh gạo lứt')
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạ\s*o\s*lứt(?![\p{L}\p{N}_])/giu, 'bánh gạo lứt')
     .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo\s*lức(?![\p{L}\p{N}_])/giu, 'bánh gạo lứt')
-    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo\s*nướng(?![\p{L}\p{N}_])/giu, 'bánh gạo nướng')
-    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo\s*rong\s*biển(?![\p{L}\p{N}_])/giu, 'bánh gạo rong biển')
-    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo\s*phô\s*mai(?![\p{L}\p{N}_])/giu, 'bánh gạo phô mai')
-    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo\s*ăn\s*kiêng(?![\p{L}\p{N}_])/giu, 'bánh gạo ăn kiêng')
-    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo\s*giòn\s*rụm(?![\p{L}\p{N}_])/giu, 'bánh gạo giòn rụm')
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạ\s*o(?![\p{L}\p{N}_])/giu, 'bánh gạo')
+    .replace(/(?<![\p{L}\p{N}_])gạ\s*o\s*lức(?![\p{L}\p{N}_])/giu, 'gạo lứt')
+    .replace(/(?<![\p{L}\p{N}_])gạ\s*o\s*lứt(?![\p{L}\p{N}_])/giu, 'gạo lứt')
+    .replace(/(?<![\p{L}\p{N}_])gạo\s*lức(?![\p{L}\p{N}_])/giu, 'gạo lứt')
+    .replace(/(?<![\p{L}\p{N}_])gạ\s*o(?![\p{L}\p{N}_])/giu, 'gạo')
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo\s*lứt(?![\p{L}\p{N}_])/giu, 'bánh gạo lứt')
     .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo(?![\p{L}\p{N}_])/giu, 'bánh gạo')
     .replace(/(?<![\p{L}\p{N}_])gạo\s*lứt(?![\p{L}\p{N}_])/giu, 'gạo lứt')
+    .replace(/(?<![\p{L}\p{N}_])lức(?![\p{L}\p{N}_])/giu, 'lứt')
     .replace(/(?<![\p{L}\p{N}_])gạo\s*st25(?![\p{L}\p{N}_])/giu, 'gạo ST25')
     .replace(/(?<![\p{L}\p{N}_])gạo\s*st-?25(?![\p{L}\p{N}_])/giu, 'gạo ST25')
-    .replace(/(?<![\p{L}\p{N}_])lúa\s*gạo(?![\p{L}\p{N}_])/giu, 'lúa gạo');
+    .replace(/(?<![\p{L}\p{N}_])lúa\s*gạo(?![\p{L}\p{N}_])/giu, 'lúa gạo')
+    .replace(/(?<![\p{L}\p{N}_])khoong6(?![\p{L}\p{N}_])/giu, 'không')
+    .replace(/(?<![\p{L}\p{N}_])đôc(?![\p{L}\p{N}_])/giu, 'đọc')
+    .replace(/(?<![\p{L}\p{N}_])đoc(?![\p{L}\p{N}_])/giu, 'đọc');
 
   // Giữ nguyên câu từ kịch bản đọc liền mạch, mượt mà, loại bỏ triệt để dấu chấm lửng
   let cleaned = text
