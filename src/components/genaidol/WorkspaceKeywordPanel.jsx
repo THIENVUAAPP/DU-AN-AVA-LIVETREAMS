@@ -270,6 +270,125 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
         )}
       </div>
 
+      {/* QUICK TOGGLES CHO CHẾ ĐỘ TRẢ LỜI & HÌNH THỨC PHẢN HỒI */}
+      <div className="p-3 bg-black/60 rounded-xl border border-white/10 flex flex-wrap items-center justify-between gap-3">
+        {/* 2 Nút chọn nguồn trả lời */}
+        <div className="flex flex-wrap items-center gap-3">
+          <label 
+            onClick={(e) => {
+              e.preventDefault();
+              const isKw = currentConfig.useKeywords !== false && currentConfig.commentReplyMode !== 'ai_only';
+              const isAi = currentConfig.useAiBrain !== false && currentConfig.commentReplyMode !== 'keywords_only';
+              const nextKw = !isKw;
+              if (!nextKw && !isAi) return;
+              const nextMode = nextKw && isAi ? 'hybrid' : nextKw ? 'keywords_only' : 'ai_only';
+              syncConfig({ useKeywords: nextKw, commentReplyMode: nextMode });
+            }}
+            className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center gap-2 select-none ${
+              (currentConfig.useKeywords !== false && currentConfig.commentReplyMode !== 'ai_only')
+                ? 'bg-amber-500/20 border-amber-500 text-amber-300 shadow-sm'
+                : 'bg-white/5 border-white/10 text-gray-500 hover:text-gray-300'
+            }`}
+          >
+            <input 
+              type="checkbox" 
+              checked={currentConfig.useKeywords !== false && currentConfig.commentReplyMode !== 'ai_only'}
+              onChange={() => {}}
+              className="w-3.5 h-3.5 accent-amber-500 rounded cursor-pointer"
+            />
+            <span>🎯 1. Trả Lời Theo Từ Khóa</span>
+            <span className={`text-[9px] px-1.5 py-0.2 rounded font-black ${
+              (currentConfig.useKeywords !== false && currentConfig.commentReplyMode !== 'ai_only') ? 'bg-amber-500 text-black' : 'bg-white/10 text-gray-400'
+            }`}>
+              {(currentConfig.useKeywords !== false && currentConfig.commentReplyMode !== 'ai_only') ? 'BẬT' : 'TẮT'}
+            </span>
+          </label>
+
+          <label 
+            onClick={(e) => {
+              e.preventDefault();
+              const isKw = currentConfig.useKeywords !== false && currentConfig.commentReplyMode !== 'ai_only';
+              const isAi = currentConfig.useAiBrain !== false && currentConfig.commentReplyMode !== 'keywords_only';
+              const nextAi = !isAi;
+              if (!nextAi && !isKw) return;
+              const nextMode = isKw && nextAi ? 'hybrid' : nextAi ? 'ai_only' : 'keywords_only';
+              syncConfig({ useAiBrain: nextAi, commentReplyMode: nextMode });
+            }}
+            className={`px-3 py-1.5 rounded-xl border text-xs font-bold transition-all cursor-pointer flex items-center gap-2 select-none ${
+              (currentConfig.useAiBrain !== false && currentConfig.commentReplyMode !== 'keywords_only')
+                ? 'bg-purple-600/30 border-purple-500 text-purple-300 shadow-sm'
+                : 'bg-white/5 border-white/10 text-gray-500 hover:text-gray-300'
+            }`}
+          >
+            <input 
+              type="checkbox" 
+              checked={currentConfig.useAiBrain !== false && currentConfig.commentReplyMode !== 'keywords_only'}
+              onChange={() => {}}
+              className="w-3.5 h-3.5 accent-purple-500 rounded cursor-pointer"
+            />
+            <span>🧠 2. Trả Lời Bằng Bộ Não AI (Gemini)</span>
+            <span className={`text-[9px] px-1.5 py-0.2 rounded font-black ${
+              (currentConfig.useAiBrain !== false && currentConfig.commentReplyMode !== 'keywords_only') ? 'bg-purple-600 text-white' : 'bg-white/10 text-gray-400'
+            }`}>
+              {(currentConfig.useAiBrain !== false && currentConfig.commentReplyMode !== 'keywords_only') ? 'BẬT' : 'TẮT'}
+            </span>
+          </label>
+        </div>
+
+        {/* 2 Nút chọn hình thức phát */}
+        <div className="flex items-center gap-2">
+          <label 
+            onClick={(e) => {
+              e.preventDefault();
+              const isText = currentConfig.sendChatText !== false && currentConfig.commentResponseFormat !== 'voice_only';
+              const isVoice = currentConfig.speakVoice !== false && currentConfig.commentResponseFormat !== 'text_only';
+              const nextText = !isText;
+              if (!nextText && !isVoice) return;
+              const nextFmt = nextText && isVoice ? 'both' : nextText ? 'text_only' : 'voice_only';
+              syncConfig({ sendChatText: nextText, commentResponseFormat: nextFmt });
+            }}
+            className={`px-2.5 py-1 rounded-lg border text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 select-none ${
+              (currentConfig.sendChatText !== false && currentConfig.commentResponseFormat !== 'voice_only')
+                ? 'bg-blue-600/30 border-blue-500 text-blue-300'
+                : 'bg-white/5 border-white/10 text-gray-500'
+            }`}
+          >
+            <input 
+              type="checkbox" 
+              checked={currentConfig.sendChatText !== false && currentConfig.commentResponseFormat !== 'voice_only'}
+              onChange={() => {}}
+              className="w-3 h-3 accent-blue-500 rounded cursor-pointer"
+            />
+            <span>💬 Chat Text</span>
+          </label>
+
+          <label 
+            onClick={(e) => {
+              e.preventDefault();
+              const isText = currentConfig.sendChatText !== false && currentConfig.commentResponseFormat !== 'voice_only';
+              const isVoice = currentConfig.speakVoice !== false && currentConfig.commentResponseFormat !== 'text_only';
+              const nextVoice = !isVoice;
+              if (!nextVoice && !isText) return;
+              const nextFmt = isText && nextVoice ? 'both' : nextVoice ? 'voice_only' : 'text_only';
+              syncConfig({ speakVoice: nextVoice, commentResponseFormat: nextFmt });
+            }}
+            className={`px-2.5 py-1 rounded-lg border text-[11px] font-bold transition-all cursor-pointer flex items-center gap-1.5 select-none ${
+              (currentConfig.speakVoice !== false && currentConfig.commentResponseFormat !== 'text_only')
+                ? 'bg-purple-600/30 border-purple-500 text-purple-300'
+                : 'bg-white/5 border-white/10 text-gray-500'
+            }`}
+          >
+            <input 
+              type="checkbox" 
+              checked={currentConfig.speakVoice !== false && currentConfig.commentResponseFormat !== 'text_only'}
+              onChange={() => {}}
+              className="w-3 h-3 accent-purple-500 rounded cursor-pointer"
+            />
+            <span>🗣️ Voice AI</span>
+          </label>
+        </div>
+      </div>
+
       {/* ========================================================================= */}
       {/* TAB 1: TỪ KHÓA & TRẢ LỜI TỰ ĐỘNG (CHUẨN THIẾT KẾ ẢNH 4) */}
       {/* ========================================================================= */}

@@ -44,6 +44,7 @@ import { bootstrapDefaultPresets } from '../../utils/defaultPresetsBootstrap';
 import { fastStreamUpload } from '../../utils/fastStreamService';
 import ShopeeLiveConnectModal from './ShopeeLiveConnectModal';
 import autoPinProductService from '../../utils/autoPinProductService';
+import { generateAiKnowledgeScript } from '../../utils/aiScriptGenerator';
 
 const CHARACTERS = {};
 
@@ -627,24 +628,47 @@ export default function DesktopAppUI() {
     if (next) {
       const chosen = scriptTabsList.find(t => t.active) || scriptTabsList[0];
       let scriptText = chosen?.fixedScriptText || '';
+      let scriptName = chosen?.name || 'Kịch bản Idol';
       
-      if (!scriptText || !scriptText.trim()) {
-        try {
-          const pTabs = JSON.parse(localStorage.getItem('aidol_user_script_tabs_persistent') || '[]');
-          const activePTab = pTabs.find(t => t.id === chosen?.id) || pTabs.find(t => t.active) || pTabs[0];
-          if (activePTab?.fixedScriptText && activePTab.fixedScriptText.trim()) {
-            scriptText = activePTab.fixedScriptText;
-          }
-        } catch (e) {}
-      }
+      // Đọc cấu hình từ aidol_event_configs
+      let evConf = {};
+      try {
+        evConf = JSON.parse(localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup') || '{}');
+      } catch (e) {}
 
-      if (!scriptText || !scriptText.trim()) {
-        try {
-          const evConf = JSON.parse(localStorage.getItem('aidol_event_configs') || '{}');
-          if (evConf.script_broadcast?.fixedScriptText) {
-            scriptText = evConf.script_broadcast.fixedScriptText;
-          }
-        } catch (e) {}
+      const isAiPromptMode = evConf.script_broadcast?.broadcastMode === 'ai_prompt';
+
+      if (isAiPromptMode) {
+        scriptName = 'Bộ Não AI Tri Thức Doanh Nghiệp';
+        if (!scriptText || !scriptText.trim()) {
+          scriptText = generateAiKnowledgeScript({
+            companyName: evConf.script_broadcast?.companyName || 'Cửa Hàng Trực Tuyến Chính Hãng',
+            productName: evConf.script_broadcast?.productName || 'Bộ Đôi Serum Tế Bào Gốc & Nước Hoa Pháp',
+            productPrice: evConf.script_broadcast?.productPrice || '1.850.000đ - Flash Sale chỉ còn 890.000đ',
+            promotions: evConf.script_broadcast?.promotions || 'Tặng kèm kem dưỡng mini + Freeship toàn quốc',
+            keyFeatures: evConf.script_broadcast?.keyFeatures || 'Dưỡng da căng bóng mịn màng sau 7 ngày, nước hoa lưu hương 12 giờ',
+            warrantyPolicy: evConf.script_broadcast?.warrantyPolicy || 'Bảo hành 1 đổi 1 trong 30 ngày, hoàn tiền 200% nếu hàng không chuẩn',
+            companyKnowledgeText: evConf.script_broadcast?.companyKnowledgeText || '',
+            aiLiveStyle: evConf.script_broadcast?.aiLiveStyle || 'sales_fast',
+            scriptDurationMinutes: evConf.script_broadcast?.scriptDurationMinutes || evConf.script_broadcast?.aiLiveDuration || 60,
+            livePlatform: evConf.script_broadcast?.livePlatform || 'tiktok'
+          });
+        }
+      } else {
+        // Chế độ Kịch bản Cố định / Nhập tay
+        if (!scriptText || !scriptText.trim()) {
+          try {
+            const pTabs = JSON.parse(localStorage.getItem('aidol_user_script_tabs_persistent') || '[]');
+            const activePTab = pTabs.find(t => t.id === chosen?.id) || pTabs.find(t => t.active) || pTabs[0];
+            if (activePTab?.fixedScriptText && activePTab.fixedScriptText.trim()) {
+              scriptText = activePTab.fixedScriptText;
+            }
+          } catch (e) {}
+        }
+
+        if (!scriptText || !scriptText.trim() && evConf.script_broadcast?.fixedScriptText) {
+          scriptText = evConf.script_broadcast.fixedScriptText;
+        }
       }
 
       if (!scriptText || !scriptText.trim()) {
@@ -667,7 +691,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }));
       
       const count = scriptText.split(/\r?\n/).filter(Boolean).length;
-      showToast(`▶️ Đang phát kịch bản: "${chosen?.name || 'Kịch bản 1'}" (${count} câu thoại)`, 'success');
+      showToast(`▶️ Đang phát kịch bản: "${scriptName}" (${count} câu thoại)`, 'success');
     } else {
       if (audioPlayerRef.current) {
         audioPlayerRef.current.stopScript();

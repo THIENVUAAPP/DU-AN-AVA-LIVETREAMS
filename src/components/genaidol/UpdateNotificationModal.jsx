@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.1.9';
-export const RELEASE_DATE = '16/09/2026';
+export const APP_VERSION = '3.2.0';
+export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Bản Cập Nhật v3.1.9 - Bổ Sung Nút Phát Kịch Bản Kế Bên Loa Máy, Tối Ưu Window Capture 0ms & Chuẩn Hóa 20 Ngôn Ngữ',
-    description: '1. Bổ sung nút DUY NHẤT "▶️ Phát Kịch Bản" (kèm trạng thái 🟢 Đang Phát) nằm ngay kế bên nút Loa Máy trên thanh điều khiển, tự động phát kịch bản bán hàng đã cài đặt trong Menu Sự Kiện; 2. Tối ưu hóa siêu tốc Window Capture & Link Live OBS: Nhận diện và phát video ngay lập tức 0ms từ cả storage, query và opener, loại bỏ hoàn toàn hiện tượng trễ hình hay chờ đợi; 3. Chuẩn hóa bộ chuyển đổi 20 Ngôn ngữ Quốc Tế trên Top Bar: Tích hợp backdrop đóng mượt mà, chuyển đổi ngôn ngữ giao diện & Voice AI mượt mà 100% không lỗi; 4. Khóa chặt và bảo lưu vĩnh viễn toàn bộ cấu hình hệ thống.'
+    title: '👑 Bản Cập Nhật v3.2.0 - Bổ Sung 2 Checkbox Chọn Trả Lời Bình Luận (Từ Khóa / Bộ Não AI), Phát Kịch Bản Trọn Vẹn 100% & Kịch Bản AI Theo Số Phút',
+    description: '1. Đồng bộ hoàn hảo Nút "▶️ Phát Kịch Bản" trên thanh Top Bar: Chạy CHÍNH XÁC 100% kịch bản đã setup trong "Kết Nối Idol" (Tab "📜 Kịch bản Idol"), đọc đầy đủ tuần tự toàn bộ câu thoại mà không bị ngắt quãng hay bỏ sót; 2. Nâng cấp Bộ Não AI Sáng Tạo Kịch Bản Theo Số Phút: Bóc tách toàn bộ thông tin Doanh Nghiệp, Sản Phẩm, Giá Bán, Khuyến Mãi, Tính Năng, Bảo Hành & Kho Tri Thức để tự động tạo kịch bản bán hàng hấp dẫn theo đúng số phút (1p, 2p, 3p, 5p, 10p, 15p, 30p, 60p...) tối ưu hóa cho TikTok Live & Shopee Live; 3. Cấu hình Trả Lời Bình Luận Đột Phá: Bổ sung 2 nút checkbox lựa chọn độc lập "[x] Trả lời theo Từ Khóa Huấn Luyện Sẵn" và "[x] Trả lời bằng Bộ Não AI Tri Thức (Gemini Flash)", kèm 2 checkbox tùy chọn "[x] Gửi Tin Nhắn Chat" và "[x] Phát Giọng Đọc Voice AI (TTS)"; 4. Tối ưu hóa hiệu năng, giảm độ trễ 0ms và bảo lưu an toàn dữ liệu.'
   }
 ];
 

@@ -9,6 +9,7 @@ import {
 import { NEW_AI_PROMPT } from '../../utils/defaultAIPrompt';
 import { readUniversalFile } from '../../utils/universalDocumentParser';
 import { polishAndOptimizeScript } from '../../utils/voiceSyncService';
+import { generateAiKnowledgeScript, LIVE_STYLES, DURATION_OPTIONS } from '../../utils/aiScriptGenerator';
 import WorkspaceKeywordPanel from './WorkspaceKeywordPanel';
 import EventVoiceTester from './EventVoiceTester';
 import UniversalMediaPicker, { SAMPLE_IDOL_VIDEOS } from './UniversalMediaPicker';
@@ -339,7 +340,11 @@ const getDefaultEventConfigs = () => {
       useAssistant: true,
       assistantUseMainVoice: false,
       
-      // Comment Mode & Response Format
+      // Comment Mode & Response Format (2 Toggles Độc Lập Theo Yêu Cầu)
+      useKeywords: ev.id === 'comment' ? true : undefined,
+      useAiBrain: ev.id === 'comment' ? true : undefined,
+      sendChatText: ev.id === 'comment' ? true : undefined,
+      speakVoice: ev.id === 'comment' ? true : undefined,
       commentReplyMode: 'hybrid', // 'keywords_only' | 'ai_only' | 'hybrid'
       commentResponseFormat: 'both', // 'voice_only' | 'text_only' | 'both'
 
@@ -365,6 +370,7 @@ const getDefaultEventConfigs = () => {
       
       // Script Broadcast settings & Multiple Script Tabs
       broadcastMode: ev.id === 'script_broadcast' ? 'fixed_script' : undefined,
+      livePlatform: ev.id === 'script_broadcast' ? 'tiktok' : undefined,
       interruptOnComment: ev.id === 'script_broadcast' ? true : undefined,
       commentReplySource: ev.id === 'script_broadcast' ? 'knowledge_base' : undefined,
       activeScriptTabId: ev.id === 'script_broadcast' ? 'tab_1' : undefined,
@@ -1317,97 +1323,50 @@ export default function WorkspaceTacVu() {
   };
 
   const handleGenerateAiScript = () => {
-    const company = currentConfig.companyName || 'Shop Mỹ Phẩm & Làm Đẹp Cao Cấp';
+    const company = currentConfig.companyName || 'Cửa Hàng Trực Tuyến Chính Hãng';
     const product = currentConfig.productName || 'Bộ Đôi Serum Tế Bào Gốc & Nước Hoa Pháp';
     const price = currentConfig.productPrice || '1.850.000đ - Flash Sale chỉ còn 890.000đ';
     const promo = currentConfig.promotions || 'Tặng kèm kem dưỡng mini + Freeship toàn quốc';
     const features = currentConfig.keyFeatures || 'Dưỡng da căng bóng mịn màng sau 7 ngày, nước hoa lưu hương 12 giờ';
     const warranty = currentConfig.warrantyPolicy || 'Bảo hành 1 đổi 1 trong 30 ngày, hoàn tiền 200% nếu hàng không chuẩn';
+    const knowledge = currentConfig.companyKnowledgeText || '';
     const style = currentConfig.aiLiveStyle || 'sales_fast';
-    
-    let generated = '';
-    if (style === 'skincare_expert') {
-      generated = `[Cười tươi dịu dàng, chắp tay chào người xem] Dạ em xin kính chào tất cả các chị em đang theo dõi phiên tư vấn chăm sóc da chuyên sâu hôm nay của ${company} ạ!
-Các chị có biết tại sao dù mình dưỡng kem rất đắt tiền nhưng làn da vẫn bị sạm và khô ráp không ạ? Đó là vì tầng biểu bì thiếu ẩm sâu và chưa được tái sinh từ gốc rễ tế bào!
-[Giơ sản phẩm lên trước camera, ánh mắt chân thành] Và giải pháp phục hồi da chuẩn y khoa hôm nay em mang đến chính là siêu phẩm ${product}!
-Sản phẩm với ưu điểm nổi bật: ${features.split('\n')[0] || features}!
-[Nhấn mạnh, hạ giọng chia sẻ bí quyết] Tinh chất thẩm thấu cực nhanh, chỉ sau đúng 7 ngày là các chị sẽ cảm nhận làn da căng bóng mịn màng và mướt mát rõ rệt!
-[Vỗ tay nhẹ, hào hứng giới thiệu ưu đãi] Duy nhất trong phiên live hôm nay, ${company} trợ giá đặc quyền: ${price}, kèm theo phần quà tri ân thượng hạng: ${promo}!
-[Chỉ tay vào góc trái màn hình] Bên em cam kết vàng: ${warranty}!
-Chỉ có 15 suất quà tặng giới hạn, các chị hãy nhanh tay chạm vào Giỏ Hàng góc trái màn hình, chọn mã 01 để làn da được tái sinh ngay hôm nay nhé!`;
-    } else if (style === 'tiktok_funny') {
-      generated = `[Mở to mắt ngạc nhiên, vẫy tay cực kỳ hào hứng] Ú òa! Em chào 500 anh chị em đang lướt TikTok lọt ngay vào phiên live siêu cấp vũ trụ của ${company} nha!
-Ai mà đi ngang lướt qua không dừng lại thả tim là tí nữa tiếc hùi hụi đứt ruột luôn á, vì hôm nay có cơn bão deal sốc chấn động địa cầu!
-[Cầm sản phẩm lên lắc nhẹ, cười tươi rạng rỡ] Em lên sàn ngay siêu phẩm ${product} đang làm mưa làm gió khắp cõi mạng đây ạ!
-Công dụng xịn mịn hết nước chấm: ${features.split('\n')[0] || features}!
-[Hạ giọng bí mật, ghé sát camera] Bình thường giá tiền triệu ngoài store, duy nhất trên live hôm nay giảm chạm đáy chỉ còn: ${price}! Lại còn được tặng kèm: ${promo}!
-[Vỗ tay giục giã, chỉ tay liên tục vào giỏ hàng] Cam kết uy tín 100 điểm không có nhưng: ${warranty}!
-Tay đâu tay đâu cả nhà ơi! Nhấp liền tay vào Giỏ Hàng góc trái góc phải để săn deal kẻo hết hàng là em không chịu trách nhiệm đâu nha!`;
-    } else if (style === 'luxury_elegant') {
-      generated = `[Nụ cười quý phái, phong thái sang trọng điềm tĩnh] Kính chào quý khách hàng thượng lưu đang hiện diện trong không gian livestream độc quyền của thương hiệu ${company}.
-Đẳng cấp và khí chất của người phụ nữ hiện đại luôn được tôn vinh qua diện mạo rạng ngời và mùi hương tinh tế, quyến rũ.
-[Nâng sản phẩm bằng hai tay trân trọng] Hôm nay, chúng tôi vinh dự giới thiệu kiệt tác nghệ thuật ${product} - sự giao thoa hoàn hảo giữa công nghệ sinh học đỉnh cao và hương sắc quý tộc.
-Giá trị vượt trội: ${features.split('\n')[0] || features}.
-[Ánh mắt tự tin, ngữ điệu truyền cảm] Đặc quyền tri ân dành riêng cho quý khách trong khung giờ vàng hôm nay: ${price}, cùng gói quà tặng cao cấp: ${promo}.
-Chính sách bảo chứng chất lượng hoàng gia: ${warranty}.
-[Đưa tay nhẹ nhàng hướng về giỏ hàng] Kính mời quý khách chạm vào Giỏ Hàng góc trái màn hình để sở hữu ngay trải nghiệm làm đẹp đẳng cấp này.`;
-    } else if (style === 'tech_expert') {
-      generated = `[Phong thái chuyên gia tự tin, ánh mắt quyết đoán] Chào mừng toàn thể các anh chị em doanh chủ và nhà sáng tạo nội dung đang theo dõi buổi chia sẻ công nghệ đột phá của ${company}!
-Trong kỷ nguyên trí tuệ nhân tạo, việc tối ưu hóa quy trình và tự động hóa bán hàng 24/7 chính là chìa khóa then chốt để nhân bản doanh thu vượt bậc!
-[Trình chiếu tính năng sản phẩm] Hôm nay ${company} trân trọng giới thiệu siêu phẩm ${product} - giải pháp tiên phong dẫn đầu thị trường!
-Tính năng công nghệ vượt trội: ${features.split('\n')[0] || features}!
-[Nhấn mạnh hiệu quả đầu tư ROI] Mức chi phí đầu tư cực kỳ ưu đãi chỉ có trên phiên live: ${price}, tặng kèm gói tài nguyên đặc quyền: ${promo}!
-Cam kết đồng hành kỹ thuật và bảo hành trọn đời: ${warranty}!
-[Chỉ tay vào nút đặt hàng] Anh chị hãy nhấp ngay vào Giỏ Hàng bên dưới để nắm bắt công nghệ dẫn đầu ngay hôm nay!`;
-    } else if (style === 'countdown_urgent') {
-      generated = `[Giọng dồn dập, đếm ngược khẩn cấp] KHẨN CẤP KHẨN CẤP CẢ NHÀ ƠI! Đồng hồ đếm ngược Flash Sale của ${company} chỉ còn đúng 3 phút cuối cùng!
-[Giơ sản phẩm lên lắc mạnh, ánh mắt gấp gáp] Siêu phẩm ${product} đang cháy hàng liên tục, hệ thống báo chỉ còn 5 suất cuối cùng!
-Giá gốc tiền triệu ngoài showroom, duy nhất trên live hôm nay giảm kịch sàn chỉ còn: ${price}!
-[Vỗ tay đếm 3 2 1] Tặng ngay bộ quà tặng độc quyền cho ai bấm chốt nhanh nhất: ${promo}!
-Cam kết vàng chính hãng 100%: ${warranty}!
-Nhanh tay các bác ơi, nhìn ngay xuống Giỏ Hàng góc trái màn hình, bấm Chọn Mã và bấm Đặt Hàng trước khi đồng hồ về số 0 và hệ thống đóng cổng ưu đãi nhé!`;
-    } else if (style === 'emotional_story') {
-      generated = `[Ánh mắt ấm áp, giọng nói nhẹ nhàng truyền cảm] Dạ em xin chào mọi người. Hôm nay ngồi lại trên phiên live này, em muốn tâm sự chân thành với cả nhà một chút.
-Là phụ nữ, ai trong chúng ta cũng xứng đáng được yêu thương, tự tin và rạng rỡ mỗi khi bước ra ngoài.
-[Đặt tay lên ngực áo, nhìn vào sản phẩm] Và đó cũng chính là tất cả tâm huyết mà ${company} gửi gắm vào từng sản phẩm ${product}.
-Không chỉ là ${features.split('\n')[0] || features}, mà đây là món quà nuôi dưỡng sự tự tin và hạnh phúc cho chính bạn.
-[Nụ cười ấm áp, hạ giọng yêu thương] Hôm nay em xin phép tri ân mức giá yêu thương nhất: ${price}, cùng món quà chăm sóc: ${promo}.
-Cam kết đổi trả và bảo hành chân tình: ${warranty}.
-Hãy yêu thương và trân quý bản thân mình bằng cách bấm vào Giỏ Hàng và mang món quà này về nhà nhé!`;
-    } else if (style === 'motivational_fire') {
-      generated = `[Nắm chặt tay truyền năng lượng, giọng nói vang dội hùng biện] CHÀO TẤT CẢ CÁC CHIẾN BINH NĂNG LƯỢNG ĐỈNH CAO CỦA PHIÊN LIVE ${company}!
-Hôm nay chúng ta hội tụ ở đây để cùng nhau bứt phá mọi rào cản và chinh phục những đỉnh cao thành công mới!
-[Giơ cao sản phẩm, ánh mắt bừng sáng] Siêu phẩm ${product} chính là vũ khí chiến lược giúp bạn nâng tầm vị thế và tỏa sáng rực rỡ!
-Sức mạnh vượt trội đã được chứng minh: ${features.split('\n')[0] || features}!
-[Vỗ tay mạnh mẽ dứt khoát] Cơ hội duy nhất trong năm được trợ giá kỷ lục: ${price}, đi kèm gói quà tặng đỉnh chóp: ${promo}!
-Cam kết vững chắc như kiềng ba chân: ${warranty}!
-Hành động tạo nên kết quả! Hãy chạm ngay vào Giỏ Hàng và bứt phá thành công ngay bây giờ nào!`;
-    } else if (style === 'gen_z_vibes') {
-      generated = `[Nháy mắt tinh nghịch, tạo dáng vui nhộn] Hế lô các keo lì, các đồng boi đang lướt trúng live của ${company} nha!
-Hôm nay shop em drop một siêu phẩm đỉnh nóc kịch trần bay phấp phới luôn á cả nhà ơi!
-[Cầm sản phẩm tạo dáng cute] Đó chính là em ${product} bao mượt mà bao cháy phố!
-Công dụng xịn mịn hết nước chấm: ${features.split('\n')[0] || features}!
-[Cười tươi, chỉ tay vào giỏ hàng] Giá rẻ hú hồn chim én: ${price}, lại còn được tặng kèm thêm: ${promo}!
-Bảo hành uy tín 100 điểm không có nhưng: ${warranty}!
-Mấy bồ nhấp liền tay vào Giỏ Hàng góc trái góc phải để múc liền tay kẻo sold out là tiếc xỉu up xỉu down nha!`;
-    } else if (style === 'vip_master') {
-      generated = `[Tác phong chuyên nghiệp đỉnh cao, giọng điệu cuốn hút đầy thuyết phục] Chào mừng quý khách hàng VIP đã tham gia phiên trình diễn và mở bán đặc quyền của thương hiệu ${company}.
-Chúng tôi tự hào là đơn vị tiên phong kiến tạo nên chuẩn mực hoàn mỹ với siêu phẩm ${product}.
-[Phân tích chuyên sâu từng chi tiết sản phẩm] Sản phẩm hội tụ tinh hoa công nghệ và giá trị thực chứng: ${features.split('\n')[0] || features}.
-Trong khung giờ vàng hôm nay, chúng tôi dành tặng mức trợ giá độc quyền: ${price}, cùng bộ quà tặng thượng lưu: ${promo}.
-Chính sách bảo chứng chất lượng và chăm sóc khách hàng trọn đời: ${warranty}.
-[Nụ cười tự tin, cúi chào lịch thiệp] Kính mời quý vị bấm vào Giỏ Hàng để hoàn tất đăng ký đặc quyền ngay hôm nay.`;
-    } else {
-      generated = `[Cười tươi rạng rỡ, vẫy tay chào người xem] Dạ em chào toàn thể các tình yêu đã có mặt trong phiên livestream săn deal cực khủng của ${company} hôm nay nha!
-Các chị em nhanh tay thả tim và chia sẻ live để em mở bát tung quà tặng siêu to khổng lồ nào!
-[Giơ sản phẩm lên trước camera] Hôm nay em mang đến siêu phẩm vạn người mê: ${product}!
-Tính năng và công dụng vượt trội: ${features.split('\n')[0] || features}!
-[Nhấn mạnh ưu đãi, vỗ tay hào hứng] Giá niêm yết tiền triệu, hôm nay giảm 50% chỉ còn: ${price}! Đặc biệt tặng kèm: ${promo} cho 20 chị chốt nhanh nhất!
-Chính sách cam kết vàng: ${warranty}!
-Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trái màn hình bấm vào Giỏ Hàng để chốt đơn ngay nhé!`;
-    }
-    
+    const duration = currentConfig.scriptDurationMinutes || currentConfig.aiLiveDuration || 60;
+    const platform = currentConfig.livePlatform || 'tiktok';
+
+    const generated = generateAiKnowledgeScript({
+      companyName: company,
+      productName: product,
+      productPrice: price,
+      promotions: promo,
+      keyFeatures: features,
+      warrantyPolicy: warranty,
+      companyKnowledgeText: knowledge,
+      aiLiveStyle: style,
+      scriptDurationMinutes: duration,
+      livePlatform: platform
+    });
+
     handleSimpleChange('fixedScriptText', generated);
+    if (activeEditingTab) {
+      handleUpdateActiveScriptTab('fixedScriptText', generated);
+      handleUpdateActiveScriptTab('scriptDurationMinutes', duration);
+      handleUpdateActiveScriptTab('aiLiveStyle', style);
+    }
+
+    // Đồng bộ tức thì ra các kênh lưu trữ và Desktop Top Bar
+    try {
+      const pTabs = JSON.parse(localStorage.getItem('aidol_user_script_tabs_persistent') || '[]');
+      const updatedPTabs = pTabs.map(t => t.id === (activeEditingTab?.id || 'tab_1') ? { ...t, fixedScriptText: generated, scriptDurationMinutes: duration, aiLiveStyle: style } : t);
+      localStorage.setItem('aidol_user_script_tabs_persistent', JSON.stringify(updatedPTabs));
+      
+      window.dispatchEvent(new CustomEvent('aidol_script_updated', {
+        detail: { activeScriptTabId: activeEditingTab?.id || 'tab_1', fixedScriptText: generated, scriptTabs: updatedPTabs }
+      }));
+    } catch (e) {}
+
+    const count = generated.split(/\r?\n/).filter(Boolean).length;
+    toast.success(`✨ Bộ Não AI đã tạo thành công kịch bản ${duration} phút (${count} câu thoại) theo đúng tri thức doanh nghiệp!`);
   };
 
   const selectedEventInfo = EVENTS.find(e => e.id === selectedEventId);
@@ -2472,9 +2431,25 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                           </div>
                         </div>
 
-                        {/* 10 PHONG CÁCH LIVESTREAM AI & THỜI LƯỢNG */}
+                        {/* NỀN TẢNG, PHONG CÁCH LIVESTREAM AI & THỜI LƯỢNG SỐ PHÚT */}
                         <div className="p-3.5 bg-white rounded-xl border border-purple-200 space-y-3 shadow-2xs">
-                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+                            {/* NỀN TẢNG LIVE */}
+                            <div>
+                              <div className="flex items-center text-xs font-bold text-purple-900 mb-1">
+                                <span>📱 Nền Tảng Livestream:</span>
+                              </div>
+                              <select
+                                value={currentConfig.livePlatform || 'tiktok'}
+                                onChange={(e) => handleSimpleChange('livePlatform', e.target.value)}
+                                className="w-full border border-purple-300 rounded-lg px-2.5 py-1.5 text-xs bg-white font-bold text-purple-900 focus:outline-purple-500 cursor-pointer"
+                              >
+                                <option value="tiktok">🎵 TikTok Live (Ghim Giỏ Hàng Vàng)</option>
+                                <option value="shopee">🛍️ Shopee Live (Voucher & Freeship Extra)</option>
+                              </select>
+                            </div>
+
+                            {/* 10 PHONG CÁCH LIVE */}
                             <div>
                               <div className="flex items-center text-xs font-bold text-purple-900 mb-1">
                                 <span>🎭 10 Phong Cách Livestream Của AI:</span>
@@ -2485,42 +2460,38 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                                 onChange={(e) => handleStyleChange(e.target.value)}
                                 className="w-full border border-purple-300 rounded-lg px-2.5 py-1.5 text-xs bg-white font-bold text-purple-900 focus:outline-purple-500 cursor-pointer"
                               >
-                                <option value="sales_fast">🔥 1. Hào Hứng - Năng Động - Chốt Sale Thần Tốc</option>
-                                <option value="skincare_expert">🌸 2. Thân Thiện - Dịu Dàng - Chuyên Gia Da Liễu</option>
-                                <option value="tiktok_funny">😂 3. Hài Hước - Duyên Dáng - Bắt Trend TikTok</option>
-                                <option value="luxury_elegant">💎 4. Sang Trọng - Quyến Rũ - Đẳng Cấp Thượng Lưu</option>
-                                <option value="tech_expert">🎓 5. Giáo Dục - Chia Sẻ Giá Trị - Chuyên Gia Công Nghệ</option>
-                                <option value="countdown_urgent">⏳ 6. Giục Giã - Đếm Ngược Khẩn Cấp - Flash Sale</option>
-                                <option value="emotional_story">💖 7. Tâm Sự - Chân Thành - Chia Sẻ Cảm Xúc</option>
-                                <option value="motivational_fire">📢 8. Hùng Biện - Năng Lượng Đỉnh Cao - Truyền Lửa</option>
-                                <option value="gen_z_vibes">🛹 9. Gen Z Năng Động - Trẻ Trung - Phá Cách</option>
-                                <option value="vip_master">👑 10. VIP Master Streamer - Đỉnh Cao Thuyết Phục</option>
+                                {LIVE_STYLES.map(st => (
+                                  <option key={st.id} value={st.id}>{st.label}</option>
+                                ))}
                               </select>
                             </div>
 
+                            {/* THỜI LƯỢNG SỐ PHÚT */}
                             <div>
                               <div className="flex items-center text-xs font-bold text-purple-900 mb-1">
-                                <span>⏳ Thời Lượng Phiên Live AI:</span>
+                                <span>⏳ Thời Lượng Kịch Bản (Số Phút):</span>
                                 <HelpTooltip helpKey="aiLiveDuration" />
                               </div>
                               <div className="flex items-center gap-2">
                                 <select
-                                  value={currentConfig.aiLiveDuration || 60}
-                                  onChange={(e) => handleSimpleChange('aiLiveDuration', Number(e.target.value) || 60)}
+                                  value={currentConfig.scriptDurationMinutes || currentConfig.aiLiveDuration || 60}
+                                  onChange={(e) => {
+                                    const val = Number(e.target.value) || 60;
+                                    handleSimpleChange('scriptDurationMinutes', val);
+                                    handleSimpleChange('aiLiveDuration', val);
+                                  }}
                                   className="flex-1 border border-purple-300 rounded-lg px-2.5 py-1.5 text-xs bg-white font-bold text-purple-900 focus:outline-purple-500 cursor-pointer"
                                 >
-                                  <option value="30">30 phút</option>
-                                  <option value="45">45 phút</option>
-                                  <option value="60">60 phút (1 tiếng)</option>
-                                  <option value="90">90 phút (1.5 tiếng)</option>
-                                  <option value="120">120 phút (2 tiếng)</option>
-                                  <option value="180">180 phút (3 tiếng)</option>
+                                  {DURATION_OPTIONS.map(d => (
+                                    <option key={d.value} value={d.value}>{d.label}</option>
+                                  ))}
                                 </select>
 
                                 <button
                                   type="button"
                                   onClick={handleGenerateAiScript}
-                                  className="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs rounded-lg shadow-sm flex items-center gap-1.5 transition-all shrink-0 cursor-pointer"
+                                  className="px-3.5 py-1.5 bg-gradient-to-r from-purple-600 to-indigo-600 hover:from-purple-700 hover:to-indigo-700 text-white font-bold text-xs rounded-lg shadow-sm flex items-center gap-1.5 transition-all shrink-0 cursor-pointer active:scale-95"
+                                  title="Bộ não AI bóc tách toàn bộ thông tin tri thức doanh nghiệp để tự động tạo kịch bản theo đúng số phút"
                                 >
                                   <Sparkles size={14} /> Tạo Kịch Bản Bằng AI
                                 </button>
@@ -2987,63 +2958,190 @@ Chỉ còn đúng 5 suất cuối cùng, các chị nhìn ngay xuống góc trá
                             </div>
                           </div>
 
-                          {/* BƯỚC 2: CHẾ ĐỘ TRẢ LỜI & NGUỒN TRI THỨC AI */}
-                          <div className="bg-white/90 p-3 rounded-xl border border-purple-100 shadow-xs space-y-2.5">
-                            <div className="text-xs font-black text-purple-950 flex items-center gap-1.5">
-                              <span className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-bold">2</span>
-                              <span>CHẾ ĐỘ TRẢ LỜI & BỘ NÃO AI SÁNG TẠO</span>
-                            </div>
-                            <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
-                              {[
-                                { id: 'keywords_only', label: '1. Chỉ Kịch Bản Từ Khóa', desc: 'Chỉ trả lời khi khớp từ khóa cài sẵn, bỏ qua câu khác' },
-                                { id: 'ai_only', label: '2. Chỉ Bộ Não AI', desc: 'AI tự động đọc thông tin sản phẩm / hồ sơ & sáng tạo câu trả lời' },
-                                { id: 'hybrid', label: '3. Kết Hợp Thông Minh', desc: 'Ưu tiên kịch bản từ khóa, nếu không khớp AI sẽ phân tích trả lời' },
-                              ].map(mode => (
-                                <button
-                                  key={mode.id}
-                                  type="button"
-                                  onClick={() => updateEventConfig('comment', { commentReplyMode: mode.id })}
-                                  className={`p-2 rounded-xl border text-left transition-all cursor-pointer ${
-                                    (currentConfig.commentReplyMode || 'hybrid') === mode.id
-                                      ? 'bg-purple-600 text-white border-purple-700 shadow-md font-bold'
-                                      : 'bg-white text-gray-700 border-gray-300 hover:bg-purple-50/50'
-                                  }`}
-                                >
-                                  <div className="text-xs font-black flex items-center justify-between">
-                                    <span>{mode.label}</span>
-                                    {(currentConfig.commentReplyMode || 'hybrid') === mode.id && <CheckSquare size={13} />}
-                                  </div>
-                                  <div className={`text-[10.5px] mt-0.5 line-clamp-2 ${(currentConfig.commentReplyMode || 'hybrid') === mode.id ? 'text-purple-100' : 'text-gray-500'}`}>
-                                    {mode.desc}
-                                  </div>
-                                </button>
-                              ))}
+                          {/* BƯỚC 2: CHẾ ĐỘ TRẢ LỜI & HÌNH THỨC PHẢN HỒI (2 NÚT CHỌN ĐỘC LẬP) */}
+                          <div className="bg-white/90 p-3.5 rounded-xl border-2 border-purple-200 shadow-xs space-y-3">
+                            <div className="flex items-center justify-between">
+                              <div className="text-xs font-black text-purple-950 flex items-center gap-1.5">
+                                <span className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-bold">2</span>
+                                <span>CHẾ ĐỘ TRẢ LỜI BÌNH LUẬN & HÌNH THỨC PHẢN HỒI</span>
+                              </div>
+                              <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-purple-100 text-purple-800 border border-purple-300">
+                                {((currentConfig.useKeywords !== false && currentConfig.commentReplyMode !== 'ai_only') && (currentConfig.useAiBrain !== false && currentConfig.commentReplyMode !== 'keywords_only'))
+                                  ? '🌟 Chế Độ Kết Hợp: Từ Khóa + Bộ Não AI'
+                                  : (currentConfig.useKeywords !== false && currentConfig.commentReplyMode !== 'ai_only')
+                                    ? '🎯 Đang Bật: Chỉ Theo Từ Khóa'
+                                    : (currentConfig.useAiBrain !== false && currentConfig.commentReplyMode !== 'keywords_only')
+                                      ? '🧠 Đang Bật: Chỉ Bộ Não AI'
+                                      : '⚠️ Chưa Chọn Chế Độ'}
+                              </span>
                             </div>
 
-                            {/* HÌNH THỨC PHẢN HỒI */}
-                            <div className="pt-2 border-t border-purple-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2">
-                              <span className="text-[11.5px] font-bold text-gray-700 flex items-center gap-1">
-                                <Volume2 size={13} className="text-purple-600" /> Hình thức phát:
+                            {/* 2 NÚT CHECKBOX LỰA CHỌN NGUỒN TRẢ LỜI */}
+                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                              {/* 1. Nút chọn Trả lời theo Từ Khóa */}
+                              {(() => {
+                                const isKwActive = currentConfig.useKeywords !== false && currentConfig.commentReplyMode !== 'ai_only';
+                                const isAiActive = currentConfig.useAiBrain !== false && currentConfig.commentReplyMode !== 'keywords_only';
+                                return (
+                                  <>
+                                    <div 
+                                      onClick={() => {
+                                        const nextKw = !isKwActive;
+                                        if (!nextKw && !isAiActive) {
+                                          toast.error('Vui lòng chọn ít nhất 1 chế độ trả lời!');
+                                          return;
+                                        }
+                                        const nextMode = nextKw && isAiActive ? 'hybrid' : nextKw ? 'keywords_only' : 'ai_only';
+                                        updateEventConfig('comment', { 
+                                          useKeywords: nextKw, 
+                                          commentReplyMode: nextMode 
+                                        });
+                                      }}
+                                      className={`p-3 rounded-xl border-2 transition-all cursor-pointer select-none flex flex-col justify-between ${
+                                        isKwActive 
+                                          ? 'bg-amber-500/10 border-amber-500 text-amber-950 shadow-sm' 
+                                          : 'bg-white border-gray-200 text-gray-400 opacity-60 hover:opacity-90'
+                                      }`}
+                                    >
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                          <input 
+                                            type="checkbox"
+                                            checked={isKwActive}
+                                            onChange={() => {}} // onClick handled by parent div
+                                            className="w-4 h-4 text-amber-600 rounded cursor-pointer accent-amber-600"
+                                          />
+                                          <span className="text-xs font-black text-amber-900">
+                                            🎯 1. Trả Lời Theo Từ Khóa Huấn Luyện Sẵn
+                                          </span>
+                                        </div>
+                                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${isKwActive ? 'bg-amber-500 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                                          {isKwActive ? 'ĐANG BẬT' : 'TẮT'}
+                                        </span>
+                                      </div>
+                                      <p className="text-[11px] text-gray-600 mt-1.5 leading-relaxed">
+                                        Khớp chính xác các từ khóa đã cài đặt (giá, ship, quà, bảo hành...) để trả lời tức thì câu trả lời chuẩn xác.
+                                      </p>
+                                    </div>
+
+                                    {/* 2. Nút chọn Trả lời bằng Bộ Não AI Tri Thức */}
+                                    <div 
+                                      onClick={() => {
+                                        const nextAi = !isAiActive;
+                                        if (!nextAi && !isKwActive) {
+                                          toast.error('Vui lòng chọn ít nhất 1 chế độ trả lời!');
+                                          return;
+                                        }
+                                        const nextMode = isKwActive && nextAi ? 'hybrid' : nextAi ? 'ai_only' : 'keywords_only';
+                                        updateEventConfig('comment', { 
+                                          useAiBrain: nextAi, 
+                                          commentReplyMode: nextMode 
+                                        });
+                                      }}
+                                      className={`p-3 rounded-xl border-2 transition-all cursor-pointer select-none flex flex-col justify-between ${
+                                        isAiActive 
+                                          ? 'bg-purple-600/10 border-purple-600 text-purple-950 shadow-sm' 
+                                          : 'bg-white border-gray-200 text-gray-400 opacity-60 hover:opacity-90'
+                                      }`}
+                                    >
+                                      <div className="flex items-center justify-between">
+                                        <div className="flex items-center gap-2">
+                                          <input 
+                                            type="checkbox"
+                                            checked={isAiActive}
+                                            onChange={() => {}} // onClick handled by parent div
+                                            className="w-4 h-4 text-purple-600 rounded cursor-pointer accent-purple-600"
+                                          />
+                                          <span className="text-xs font-black text-purple-900">
+                                            🧠 2. Trả Lời Bằng Bộ Não AI Tri Thức (Gemini)
+                                          </span>
+                                        </div>
+                                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${isAiActive ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
+                                          {isAiActive ? 'ĐANG BẬT' : 'TẮT'}
+                                        </span>
+                                      </div>
+                                      <p className="text-[11px] text-gray-600 mt-1.5 leading-relaxed">
+                                        AI tự động đọc câu hỏi của người xem, phân tích hồ sơ sản phẩm & kho tri thức doanh nghiệp để trả lời linh hoạt, thông minh.
+                                      </p>
+                                    </div>
+                                  </>
+                                );
+                              })()}
+                            </div>
+
+                            {/* 2 NÚT CHECKBOX LỰA CHỌN HÌNH THỨC PHÁT (TEXT VÀ VOICE) */}
+                            <div className="pt-2.5 border-t border-purple-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
+                              <span className="text-[11.5px] font-bold text-gray-800 flex items-center gap-1.5">
+                                <Volume2 size={14} className="text-purple-600" /> Hình Thức Phản Hồi:
                               </span>
-                              <div className="flex items-center gap-1.5">
-                                {[
-                                  { id: 'voice_only', label: '🗣️ Giọng Đọc Voice' },
-                                  { id: 'text_only', label: '💬 Chat Text' },
-                                  { id: 'both', label: '🔄 Voice + Chat' },
-                                ].map(fmt => (
-                                  <button
-                                    key={fmt.id}
-                                    type="button"
-                                    onClick={() => updateEventConfig('comment', { commentResponseFormat: fmt.id })}
-                                    className={`px-2.5 py-1 rounded-lg border text-[11px] font-bold transition-all cursor-pointer ${
-                                      (currentConfig.commentResponseFormat || 'both') === fmt.id
-                                        ? 'bg-purple-700 text-white border-purple-800 shadow-xs'
-                                        : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-100'
-                                    }`}
-                                  >
-                                    {fmt.label}
-                                  </button>
-                                ))}
+                              
+                              <div className="flex items-center gap-3">
+                                {(() => {
+                                  const isTextActive = currentConfig.sendChatText !== false && currentConfig.commentResponseFormat !== 'voice_only';
+                                  const isVoiceActive = currentConfig.speakVoice !== false && currentConfig.commentResponseFormat !== 'text_only';
+
+                                  return (
+                                    <>
+                                      <label 
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          const nextText = !isTextActive;
+                                          if (!nextText && !isVoiceActive) {
+                                            toast.error('Vui lòng bật ít nhất 1 hình thức phát (Text hoặc Voice)!');
+                                            return;
+                                          }
+                                          const nextFmt = nextText && isVoiceActive ? 'both' : nextText ? 'text_only' : 'voice_only';
+                                          updateEventConfig('comment', { 
+                                            sendChatText: nextText, 
+                                            commentResponseFormat: nextFmt 
+                                          });
+                                        }}
+                                        className={`px-3 py-1.5 rounded-xl border-2 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 select-none ${
+                                          isTextActive 
+                                            ? 'bg-blue-600 text-white border-blue-700 shadow-xs' 
+                                            : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                                        }`}
+                                      >
+                                        <input 
+                                          type="checkbox" 
+                                          checked={isTextActive} 
+                                          onChange={() => {}} 
+                                          className="w-3.5 h-3.5 accent-blue-600 rounded cursor-pointer"
+                                        />
+                                        <span>💬 Gửi Tin Nhắn Chat (Text)</span>
+                                      </label>
+
+                                      <label 
+                                        onClick={(e) => {
+                                          e.preventDefault();
+                                          const nextVoice = !isVoiceActive;
+                                          if (!nextVoice && !isTextActive) {
+                                            toast.error('Vui lòng bật ít nhất 1 hình thức phát (Text hoặc Voice)!');
+                                            return;
+                                          }
+                                          const nextFmt = isTextActive && nextVoice ? 'both' : nextVoice ? 'voice_only' : 'text_only';
+                                          updateEventConfig('comment', { 
+                                            speakVoice: nextVoice, 
+                                            commentResponseFormat: nextFmt 
+                                          });
+                                        }}
+                                        className={`px-3 py-1.5 rounded-xl border-2 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 select-none ${
+                                          isVoiceActive 
+                                            ? 'bg-purple-700 text-white border-purple-800 shadow-xs' 
+                                            : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
+                                        }`}
+                                      >
+                                        <input 
+                                          type="checkbox" 
+                                          checked={isVoiceActive} 
+                                          onChange={() => {}} 
+                                          className="w-3.5 h-3.5 accent-purple-600 rounded cursor-pointer"
+                                        />
+                                        <span>🗣️ Phát Giọng Đọc Voice AI (TTS)</span>
+                                      </label>
+                                    </>
+                                  );
+                                })()}
                               </div>
                             </div>
                           </div>

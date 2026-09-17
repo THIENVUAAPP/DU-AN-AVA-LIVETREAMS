@@ -316,6 +316,8 @@ function fillTemplate(template, vars = {}) {
         const checkoutConfig = configs.checkout || {};
         const replySource = scriptConfig.commentReplySource || checkoutConfig.commentReplySource || 'knowledge_base';
         const replyMode = commentConfig.commentReplyMode || 'hybrid';
+        const useKw = commentConfig.useKeywords !== false && replyMode !== 'ai_only';
+        const useAi = commentConfig.useAiBrain !== false && replyMode !== 'keywords_only';
 
         // 🛡️ A1. BỘ LỌC THÔNG MINH AI (SMART SPAM / TOXIC / GIBBERISH FILTER)
         if (commentConfig.smartFilterSpam !== false && !isTestMode && commentText) {
@@ -346,7 +348,6 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-
         // BƯỚC 1: TIỀN TỐ ĐỌC LẠI BÌNH LUẬN / CÂU HỎI CỦA KHÁCH
         let repeatPrefix = '';
         if (commentConfig.repeatCommentFirst !== false && commentText) {
@@ -366,7 +367,7 @@ function fillTemplate(template, vars = {}) {
         const features = scriptConfig.keyFeatures || checkoutConfig.keyFeatures || 'chất lượng cao, cam kết chính hãng';
         const warranty = scriptConfig.warrantyPolicy || checkoutConfig.warrantyPolicy || 'bảo hành đổi trả uy tín';
 
-        if (replyMode !== 'ai_only' || replySource === 'knowledge_base' || replySource === 'both') {
+        if (useKw && (replySource === 'knowledge_base' || replySource === 'both')) {
           if (lowerComment.includes('giá') || lowerComment.includes('bao nhiêu') || lowerComment.includes('tiền') || lowerComment.includes('chi phí') || lowerComment.includes('sale')) {
             bodyAnswer = `Sản phẩm ${product} của ${company} đang có giá ${price} kèm khuyến mãi: ${promo}. Bạn bấm ngay vào giỏ hàng góc trái màn hình để nhận ưu đãi nha!`;
             isHandled = true;
@@ -402,7 +403,7 @@ function fillTemplate(template, vars = {}) {
         }
 
         // D. Kiểm tra bộ quy tắc từ khóa (Keyword Rules)
-        if (!isHandled && commentConfig.active !== false && replyMode !== 'ai_only') {
+        if (!isHandled && commentConfig.active !== false && useKw) {
           if (Array.isArray(commentConfig.keywordRules) && commentConfig.keywordRules.length > 0) {
             for (const rule of commentConfig.keywordRules) {
               if (rule.enabled !== false && rule.keywords) {
@@ -423,11 +424,11 @@ function fillTemplate(template, vars = {}) {
           if (lowerComment.includes('xinh') || lowerComment.includes('đẹp') || lowerComment.includes('dễ thương')) {
             bodyAnswer = `Em cảm ơn lời khen cực kỳ ngọt ngào của bạn ${userName} nha! Chúc bạn xem livestream thật vui và săn được nhiều deal hời cùng shop ạ!`;
             isHandled = true;
-          } else if (replyMode === 'keywords_only' && commentConfig.sampleAnswers) {
+          } else if (replyMode === 'keywords_only' && !useAi && commentConfig.sampleAnswers) {
             const rawSample = getRandomSample(commentConfig.sampleAnswers);
             bodyAnswer = fillTemplate(rawSample, { user: userName, comment: commentText });
             isHandled = true;
-          } else if (commentConfig.useAi !== false) {
+          } else if (useAi && commentConfig.useAi !== false) {
             // GỌI BỘ NÃO AI GEMINI FLASH PHÂN TÍCH & TRẢ LỜI CÂU HỎI THÔNG MINH
             try {
               const liveContext = `Livestream bán hàng và tương tác trực tuyến. Sản phẩm chính: ${product}. Giá: ${price}. Ưu đãi: ${promo}. Tính năng: ${features}. Cửa hàng: ${company}.`;
@@ -679,21 +680,27 @@ function fillTemplate(template, vars = {}) {
       }
 
       // 13. PHÁT GIỌNG NÓI VOICE AI & LIP-SYNC (ƯU TIÊN 100% TAB BỘ NÃO -> FALLBACK 14 TÁC VỤ)
-      const shouldSpeakVoice = (currentEvConfig.useVoice !== false) || isTestMode;
+      const isCommentVoiceDisabled = evKey === 'comment' && (currentEvConfig.speakVoice === false || currentEvConfig.commentResponseFormat === 'text_only');
+      const isCommentTextDisabled = evKey === 'comment' && (currentEvConfig.sendChatText === false || currentEvConfig.commentResponseFormat === 'voice_only');
+
+      const shouldSpeakVoice = !isCommentVoiceDisabled && ((currentEvConfig.useVoice !== false) || isTestMode);
+      const shouldSendChat = !isCommentTextDisabled;
       const targetVoiceRole = isTestMode ? 'idol' : (currentEvConfig.ttsVoiceRole || (evKey === 'comment' ? 'comment' : evKey === 'checkout' ? 'manager' : 'idol'));
       const effectiveVoice = resolveEffectiveVoice(targetVoiceRole, isTestMode ? null : currentEvConfig.voiceId);
 
       if (replyText && replyText.trim()) {
-        setViewerHistory(prev => [
-          ...prev, 
-          { 
-            time: new Date().toLocaleTimeString(), 
-            type, 
-            payload, 
-            ai_intent: 'STRUCTURED_CONFIG', 
-            ai_reply: replyText 
-          }
-        ].slice(-20));
+        if (shouldSendChat) {
+          setViewerHistory(prev => [
+            ...prev, 
+            { 
+              time: new Date().toLocaleTimeString(), 
+              type, 
+              payload, 
+              ai_intent: 'STRUCTURED_CONFIG', 
+              ai_reply: replyText 
+            }
+          ].slice(-20));
+        }
 
         if (shouldSpeakVoice && onVoiceReply) {
           onVoiceReply({
