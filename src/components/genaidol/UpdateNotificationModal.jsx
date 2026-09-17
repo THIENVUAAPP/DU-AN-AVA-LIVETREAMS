@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.3.5';
+export const APP_VERSION = '3.3.6';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Bản Cập Nhật v3.3.5 - Kịch Bản Đọc Liên Tục 0ms, Đột Phá Video Nặng 1GB-20GB 2K-8K & Đầy Đủ 20 Ngôn Ngữ',
-    description: '1. Voice Đọc Kịch Bản Liên Tục Không Dừng: Đột phá cơ chế Lookahead Pipeline bóc tách speaker tag chuẩn xác, nạp trước âm thanh vào RAM với độ trễ 0ms; khi không cài đặt khoảng dừng, AI đọc xuyên suốt liên tục từ đầu đến cuối không khựng, không chờ mạng; 2. Video Nặng 1GB Đến 20GB, Độ Phân Giải 2K Đến 8K: Hiển thị ngay lập tức trên Cửa Sổ Window Capture và link TikTok Live Studio; bảo vệ nguồn phát Hardware Local Blob trực tiếp từ GPU không bị ghi đè, phát siêu mượt 60 FPS không đứng hình, không giật lag; 3. Đồng Bộ Toàn Diện Đầy Đủ 20 Ngôn Ngữ Toàn Cầu: Khôi phục danh sách hiển thị đầy đủ 20 ngôn ngữ quốc tế ở mọi giao diện, tự động đồng bộ giọng đọc AI bản xứ theo từng ngôn ngữ giống như Tiếng Việt.'
+    title: '👑 Bản Cập Nhật v3.3.6 - Kịch Bản Đọc Liên Tục 0ms, Đột Phá Video Nặng 1GB-20GB 2K-8K & Đầy Đủ 20 Ngôn Ngữ',
+    description: '1. Voice Đọc Kịch Bản Liên Tục Không Dừng: Đột phá cơ chế Lookahead Pipeline bóc tách speaker tag chuẩn xác, nạp trước âm thanh vào RAM với độ trễ 0ms; khi không cài đặt khoảng dừng, AI đọc xuyên suốt liên tục từ đầu đến cuối không khựng, không chờ mạng; 2. Video Nặng 1GB Đến 20GB, Độ Phân Giải 2K Đến 8K: Hiển thị ngay lập tức trên Cửa Sổ Window Capture và link TikTok Live Studio; bảo vệ nguồn phát Hardware Local Blob trực tiếp từ GPU không bị ghi đè, phát siêu mượt 60 FPS không đứng hình, không giật lag; 3. Đồng Bộ Toàn Diện Đầy Đủ 20 Ngôn Ngữ Toàn Cầu: Khôi phục danh sách hiển thị đầy đủ 20 ngôn ngữ quốc tế ở mọi giao diện, tự động đồng bộ giọng đọc AI bản xứ theo từng ngôn ngữ giống như Tiếng Việt. Đã đồng bộ Voice BLV & Trợ Lý tự động nhận diện thay đổi toàn cục.'
   }
 ];
 

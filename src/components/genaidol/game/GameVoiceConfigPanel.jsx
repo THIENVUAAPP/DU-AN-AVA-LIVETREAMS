@@ -123,6 +123,45 @@ export default function GameVoiceConfigPanel({
     } catch (e) {}
   };
 
+  // Listen to global voice change (e.g. from language switch)
+  useEffect(() => {
+    const handleGlobalVoiceChange = (e) => {
+      const { voiceId } = e.detail || {};
+      if (voiceId) {
+        const found = ALL_SYSTEM_VOICES.find(v => v.id === voiceId || v.voiceId === voiceId);
+        if (found) {
+          // Update gameVoice (BLV) and assistantVoice (Trợ lý) automatically based on global voice
+          const updatedAssistant = {
+            ...assistantVoice,
+            id: found.id,
+            name: found.name,
+            voiceId: found.voiceId || found.id,
+            provider: found.provider || 'elevenlabs',
+            gender: found.gender || 'Female',
+            lang: found.lang || 'vi-VN'
+          };
+          const updatedGame = {
+            ...gameVoice,
+            id: found.id,
+            name: found.name,
+            voiceId: found.voiceId || found.id,
+            provider: found.provider || 'elevenlabs',
+            gender: found.gender || 'Male',
+            lang: found.lang || 'vi-VN'
+          };
+          
+          setAssistantVoice(updatedAssistant);
+          setGameVoice(updatedGame);
+          syncToEngine({ assistantVoice: updatedAssistant, gameVoice: updatedGame });
+          showToast(`🌐 Đã đồng bộ giọng đọc toàn cục: ${found.name}`);
+        }
+      }
+    };
+
+    window.addEventListener('avalive_default_voice_changed', handleGlobalVoiceChange);
+    return () => window.removeEventListener('avalive_default_voice_changed', handleGlobalVoiceChange);
+  }, [assistantVoice, gameVoice]);
+
   // Manual permanent save across all tabs
   const handleSaveAllConfigPermanently = () => {
     const fullData = {
