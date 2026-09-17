@@ -7225,25 +7225,25 @@ export function cleanTextForVoiceSpeech(rawText) {
 
 /**
  * ✂️ BỘ CẮT TỈA KHOẢNG LẶNG ĐẦU & CUỐI AUDIO BUFFER (SILENCE TRIMMER)
- * Loại bỏ triệt để khoảng lặng chết (400ms - 1500ms) do TTS tự sinh ra sau các dấu !, ?, ...
- * Giúp âm thanh bắt đầu phát ngay tức thì và kết thúc dứt điểm đúng miligiây, chuyển câu 0ms liền mạch!
+ * Bảo toàn 100% âm đuôi, phụ âm cuối (-n, -ng, -nh, -m, -p, -t, -c) và ngữ điệu tự nhiên.
+ * Tuyệt đối không cắt cụt đuôi âm khiến "bạn" bị đọc thành "bạ", "nhà" thành "nh..."!
  */
-export function trimAudioBufferSilence(audioBuffer, silenceThreshold = 0.003) {
+export function trimAudioBufferSilence(audioBuffer, silenceThreshold = 0.0003) {
   if (!audioBuffer) return audioBuffer;
   const numChannels = audioBuffer.numberOfChannels;
   const sampleRate = audioBuffer.sampleRate;
   const length = audioBuffer.length;
   
-  if (length <= 1000) return audioBuffer;
+  if (length <= 2000) return audioBuffer;
   
   const channelData = [];
   for (let c = 0; c < numChannels; c++) {
     channelData.push(audioBuffer.getChannelData(c));
   }
   
-  // 1. Tìm vị trí âm thanh bắt đầu (Trim Leading Silence)
+  // 1. Tìm vị trí âm thanh bắt đầu (Trim Leading Silence nhẹ nhàng)
   let startIdx = 0;
-  const maxLeadingScan = Math.min(length, Math.floor(sampleRate * 0.5)); // scan tối đa 0.5s đầu
+  const maxLeadingScan = Math.min(length, Math.floor(sampleRate * 0.3)); // scan tối đa 0.3s đầu
   for (let i = 0; i < maxLeadingScan; i++) {
     let hasSound = false;
     for (let c = 0; c < numChannels; c++) {
@@ -7253,15 +7253,15 @@ export function trimAudioBufferSilence(audioBuffer, silenceThreshold = 0.003) {
       }
     }
     if (hasSound) {
-      // Giữ lại 10ms đệm trước âm thanh để tránh bị giật hoặc cụt âm đầu
-      startIdx = Math.max(0, i - Math.floor(sampleRate * 0.01));
+      // Giữ lại 30ms đệm trước âm thanh để không bao giờ bị cụt âm đầu
+      startIdx = Math.max(0, i - Math.floor(sampleRate * 0.03));
       break;
     }
   }
 
-  // 2. Tìm vị trí âm thanh kết thúc (Trim Trailing Silence)
+  // 2. Tìm vị trí âm thanh kết thúc (Bảo toàn 100% âm đuôi với 150ms đệm an toàn)
   let endIdx = length - 1;
-  const maxTrailingScan = Math.min(length, Math.floor(sampleRate * 2.5)); // scan tối đa 2.5s cuối
+  const maxTrailingScan = Math.min(length, Math.floor(sampleRate * 1.5));
   const scanLimit = Math.max(startIdx + 100, length - maxTrailingScan);
   for (let i = length - 1; i >= scanLimit; i--) {
     let hasSound = false;
@@ -7272,8 +7272,8 @@ export function trimAudioBufferSilence(audioBuffer, silenceThreshold = 0.003) {
       }
     }
     if (hasSound) {
-      // Giữ lại 25ms đệm sau âm thanh để dứt câu tự nhiên, không bị khựng
-      endIdx = Math.min(length - 1, i + Math.floor(sampleRate * 0.025));
+      // Giữ lại ít nhất 180ms đệm sau âm thanh để phụ âm cuối (như -n trong "bạn") vang tự nhiên và trọn vẹn 100%
+      endIdx = Math.min(length - 1, i + Math.floor(sampleRate * 0.18));
       break;
     }
   }
@@ -7282,7 +7282,7 @@ export function trimAudioBufferSilence(audioBuffer, silenceThreshold = 0.003) {
   if (trimmedLength <= 100) return audioBuffer;
 
   // Nếu không có khoảng lặng thừa đáng kể thì giữ nguyên buffer
-  if (startIdx === 0 && endIdx >= length - 100) {
+  if (startIdx === 0 && endIdx >= length - 50) {
     return audioBuffer;
   }
 
@@ -7291,18 +7291,10 @@ export function trimAudioBufferSilence(audioBuffer, silenceThreshold = 0.003) {
 
   try {
     const trimmedBuffer = audioCtx.createBuffer(numChannels, trimmedLength, sampleRate);
-    const fadeLen = Math.min(trimmedLength, Math.floor(sampleRate * 0.015)); // 15ms fade out
-
     for (let c = 0; c < numChannels; c++) {
       const src = channelData[c];
       const dest = trimmedBuffer.getChannelData(c);
       dest.set(src.subarray(startIdx, endIdx + 1));
-
-      // Áp dụng fade-out 15ms siêu êm ở cuối để không bao giờ bị tiếng lách cách (anti-pop)
-      for (let f = 0; f < fadeLen; f++) {
-        const factor = (fadeLen - f) / fadeLen;
-        dest[trimmedLength - 1 - f] *= factor;
-      }
     }
     return trimmedBuffer;
   } catch (e) {

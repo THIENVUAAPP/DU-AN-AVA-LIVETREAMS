@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.2.9';
+export const APP_VERSION = '3.3.0';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Bản Cập Nhật v3.2.9 - Phát Kịch Bản Liền Mạch 100% & Chuẩn Hóa Phát Âm',
-    description: '1. Đọc Kịch Bản Không Gián Đoạn: Khắc phục triệt để vấn đề dừng sau câu 1, bảo đảm đọc trọn vẹn từ câu 1 đến câu cuối cùng và tự động lặp lại kịch bản tuần hoàn; 2. Chuẩn Hóa Phát Âm & Đọc Bình Luận: Đọc chính xác 100% ngữ nghĩa, chính tả từng câu từng chữ, giữ nguyên tên thương hiệu gốc (TikTok, Facebook, Shopee, Lazada...); 3. Tối Ưu Nạp Video 2K/4K/8K: Đồng bộ 0ms cho Window Capture và TikTok Live Studio.'
+    title: '👑 Bản Cập Nhật v3.3.0 - Phát Kịch Bản Chuẩn 100% & Bảo Toàn Âm Đuôi Hoàn Hảo',
+    description: '1. Nút Phát Kịch Bản Top Bar: Bấm là phát trọn vẹn 100% kịch bản từ câu đầu đến câu cuối, tự động lặp lại tuần hoàn mượt mà; 2. Chuẩn Hóa Phát Âm & Bảo Toàn Âm Cuối: Khắc phục triệt để lỗi nuốt âm cuối (đọc chuẩn "bạn", không bị ngắt thành "bạ"); 3. Sàng Lọc Bình Luận Thông Minh: Chỉ AI Voice trả lời các câu hỏi về sản phẩm/ưu đãi thật, không ngắt quãng kịch bản bởi comment rác; 4. Nâng Cấp Nạp Video Siêu Tốc: Đồng bộ tức thì 0ms cho Window Capture và TikTok Live Studio.'
   }
 ];
 

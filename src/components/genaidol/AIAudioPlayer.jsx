@@ -212,6 +212,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   // Khởi động khi isScriptRunning được kích hoạt
   useEffect(() => {
     if (isScriptRunning) {
+      if (isPlayingRef.current && queueRef.current && queueRef.current.length > 0) {
+        // Đã được khởi động bởi startScript, không reset lại
+        return;
+      }
       try {
         const scriptItems = loadScriptFromStorage();
         setQueue(scriptItems);
