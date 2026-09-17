@@ -277,8 +277,8 @@ export default function EventVoiceTester({
       .replace(/\{gift_name\}|\[gift_name\]/gi, 'Cờ Tổ Quốc')
       .replace(/\{count\}|\[count\]/gi, '5')
       .replace(/\{milestone\}|\[milestone\]/gi, '10,000')
-      .replace(/\{item\}|\[item\]/gi, 'Bánh gạo')
-      .replace(/\{product\}|\[product\]/gi, 'Bánh gạo')
+      .replace(/\{item\}|\[item\]/gi, 'Bánh gạo lứt')
+      .replace(/\{product\}|\[product\]/gi, 'Bánh gạo lứt')
       .replace(/\{price\}|\[price\]/gi, '89.000đ');
 
     // Tách theo từng dòng kịch bản gốc của người dùng TRƯỚC HẾT (1 DÒNG = 1 CÂU THOẠI NGUYÊN VẸN, KHÔNG TÁCH CÂU)

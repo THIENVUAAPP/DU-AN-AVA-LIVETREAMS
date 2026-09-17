@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.4.7';
+export const APP_VERSION = '3.4.8';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v3.4.7 - Khóa Chống Phát Trùng Lặp 2 Lớp Âm Thanh & Giữ Nguyên Vẹn Từng Câu Thoại',
-    description: '1. Khóa Chống Phát Trùng Lớp Kịch Bản: Khi bấm nút Phát Kịch Bản Live, hệ thống tự động khóa đơn luồng 1 lớp âm thanh duy nhất, loại bỏ hoàn toàn hiện tượng đọc chồng chéo 2 lớp; 2. Đọc Trọn Vẹn Từng Câu - Không Tách Vụn: Giữ nguyên vẹn từng dòng thoại kịch bản, không bẻ nhỏ câu; 3. Chuẩn Hóa Phát Âm & Chính Tả Tiếng Việt: Đọc chính xác 100% "Bánh gạo" và toàn bộ chính tả, ngữ điệu mượt mà, sống động.'
+    title: '⚡ Bản Cập Nhật v3.4.8 - Chuẩn Hóa 100% Chính Tả Tiếng Việt & Phát Âm Chuẩn Xác "Bánh Gạo Lứt"',
+    description: '1. Chuẩn Hóa Phát Âm "Bánh Gạo Lứt": Tự động xử lý và phát âm chuẩn xác 100% từ khóa "Bánh gạo lứt", "Gạo lứt" (khắc phục hoàn toàn lỗi sai chính tả gạ o, lức); 2. Tự Động Sửa Lỗi Chính Tả & Giữ Trọn Nghĩa Câu: Tối ưu từ điển phát âm tiếng Việt, bảo toàn trọn vẹn ngữ nghĩa từng câu từng chữ; 3. Khóa Chống Trùng Lặp Luồng Kịch Bản: Phát đơn luồng mượt mà, không bẻ nhỏ câu.'
   }
 ];
 

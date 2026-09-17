@@ -14,17 +14,19 @@
 
 // 1. TỪ ĐIỂN PHÁT ÂM THƯƠNG HIỆU & THUẬT NGỮ CÔNG NGHỆ (PRONUNCIATION DICTIONARY)
 export const PRONUNCIATION_DICTIONARY = [
-  // 🛡️ BẢO VỆ TUYỆT ĐỐI CÁC TỪ KHÓA TIẾNG VIỆT GỐC (TUYỆT ĐỐI KHÔNG TÁCH CHỮ, KHÔNG LỖI CHÍNH TẢ, KHÔNG CỤT ĐUÔI ÂM)
-  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo\s*lứt\s*(?:huyết\s*rồng|đỏ|đen|hữu\s*cơ)?(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo lứt' },
+  // 🛡️ BẢO VỆ TUYỆT ĐỐI CÁC TỪ KHÓA TIẾNG VIỆT GỐC & TỰ ĐỘNG CHỮA LỖI CHÍNH TẢ
+  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạ\s*o\s*lức(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo lứt' },
+  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạ\s*o\s*lứt(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo lứt' },
   { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo\s*lức(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo lứt' },
-  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo\s*nướng(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo nướng' },
-  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo\s*rong\s*biển(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo rong biển' },
-  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo\s*phô\s*mai(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo phô mai' },
-  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo\s*ăn\s*kiêng(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo ăn kiêng' },
-  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo\s*giòn\s*rụm(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo giòn rụm' },
+  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạ\s*o(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo' },
+  { pattern: /(?<![\p{L}\p{N}_])gạ\s*o\s*lức(?![\p{L}\p{N}_])/giu, replacement: 'gạo lứt' },
+  { pattern: /(?<![\p{L}\p{N}_])gạ\s*o\s*lứt(?![\p{L}\p{N}_])/giu, replacement: 'gạo lứt' },
+  { pattern: /(?<![\p{L}\p{N}_])gạo\s*lức(?![\p{L}\p{N}_])/giu, replacement: 'gạo lứt' },
+  { pattern: /(?<![\p{L}\p{N}_])gạ\s*o(?![\p{L}\p{N}_])/giu, replacement: 'gạo' },
+  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo\s*lứt(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo lứt' },
   { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo' },
   { pattern: /(?<![\p{L}\p{N}_])gạo\s*lứt(?![\p{L}\p{N}_])/giu, replacement: 'gạo lứt' },
-  { pattern: /(?<![\p{L}\p{N}_])gạo\s*lức(?![\p{L}\p{N}_])/giu, replacement: 'gạo lứt' },
+  { pattern: /(?<![\p{L}\p{N}_])lức(?![\p{L}\p{N}_])/giu, replacement: 'lứt' },
   { pattern: /(?<![\p{L}\p{N}_])gạo\s*st25(?![\p{L}\p{N}_])/giu, replacement: 'gạo ST25' },
   { pattern: /(?<![\p{L}\p{N}_])gạo\s*st-?25(?![\p{L}\p{N}_])/giu, replacement: 'gạo ST25' },
   { pattern: /(?<![\p{L}\p{N}_])gạo\s*thơm(?![\p{L}\p{N}_])/giu, replacement: 'gạo thơm' },
@@ -32,6 +34,7 @@ export const PRONUNCIATION_DICTIONARY = [
   { pattern: /(?<![\p{L}\p{N}_])lúa\s*gạo(?![\p{L}\p{N}_])/giu, replacement: 'lúa gạo' },
   { pattern: /(?<![\p{L}\p{N}_])gạo(?![\p{L}\p{N}_])/giu, replacement: 'gạo' },
   { pattern: /(?<![\p{L}\p{N}_])không(?![\p{L}\p{N}_])/giu, replacement: 'không' },
+  { pattern: /(?<![\p{L}\p{N}_])khoong6(?![\p{L}\p{N}_])/giu, replacement: 'không' },
   { pattern: /(?<![\p{L}\p{N}_])bạn(?![\p{L}\p{N}_])/giu, replacement: 'bạn' },
   { pattern: /(?<![\p{L}\p{N}_])kịch\s*bản(?![\p{L}\p{N}_])/giu, replacement: 'kịch bản' },
   { pattern: /(?<![\p{L}\p{N}_])khách\s*hàng(?![\p{L}\p{N}_])/giu, replacement: 'khách hàng' },
