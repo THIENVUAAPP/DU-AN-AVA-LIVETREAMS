@@ -67,6 +67,80 @@ function normalizeViteTtsRate(r) {
   return '+0%';
 }
 
+function humanizeTextForViteTTS(rawText, lang) {
+  if (!rawText || typeof rawText !== 'string') return '';
+  let text = rawText
+    .replace(/\[[^\]]*\]/g, ' ')
+    .replace(/\((?:cười|cười tươi|vỗ tay|hành động|chỉ tay|nháy mắt|nói to|nói nhỏ|thì thầm|hào hứng|nhấn mạnh|chỉ giỏ hàng|chốt đơn|đếm ngược|action|smile|clap)[^\)]*\)/gi, ' ')
+    .replace(/[#*`_~"'“”„«»‘’]/g, '')
+    .replace(/\p{Extended_Pictographic}/gu, '')
+    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{1FA00}-\u{1FAFF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, '')
+    .replace(/[^\S\r\n]+/g, ' ')
+    .trim();
+
+  const isVi = !lang || lang.toLowerCase().startsWith('vi');
+  if (!isVi) return text;
+
+  text = text
+    .replace(/(?<![\p{L}\p{N}_])dừng\s*lại\s*đây\s*một\s*chút\s*thôi(?![\p{L}\p{N}_])/giu, 'dừng lại đây một chút thôi')
+    .replace(/(?<![\p{L}\p{N}_])dừng\s*lại\s*đây\s*một\s*chút(?![\p{L}\p{N}_])/giu, 'dừng lại đây một chút')
+    .replace(/(?<![\p{L}\p{N}_])dừng\s*lại\s*đây(?![\p{L}\p{N}_])/giu, 'dừng lại đây')
+    .replace(/(?<![\p{L}\p{N}_])dừng\s*lại\s*một\s*chút\s*thôi(?![\p{L}\p{N}_])/giu, 'dừng lại một chút thôi')
+    .replace(/(?<![\p{L}\p{N}_])dừng\s*lại\s*một\s*chút(?![\p{L}\p{N}_])/giu, 'dừng lại một chút')
+    .replace(/(?<![\p{L}\p{N}_])hiện\s*tại(?![\p{L}\p{N}_])/giu, 'hiện tại')
+    .replace(/(?<![\p{L}\p{N}_])nhắc\s*lại(?![\p{L}\p{N}_])/giu, 'nhắc lại')
+    .replace(/(?<![\p{L}\p{N}_])nhắt\s*lại(?![\p{L}\p{N}_])/giu, 'nhắc lại')
+    .replace(/(?<![\p{L}\p{N}_])ăn\s*nhạt(?![\p{L}\p{N}_])/giu, 'ăn nhạt')
+    .replace(/(?<![\p{L}\p{N}_])ăn\s*nhạc(?![\p{L}\p{N}_])/giu, 'ăn nhạt')
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạ\s*o\s*lức(?![\p{L}\p{N}_])/giu, 'bánh gạo lứt')
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạ\s*o\s*lứt(?![\p{L}\p{N}_])/giu, 'bánh gạo lứt')
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo\s*lức(?![\p{L}\p{N}_])/giu, 'bánh gạo lứt')
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạ\s*o(?![\p{L}\p{N}_])/giu, 'bánh gạo')
+    .replace(/(?<![\p{L}\p{N}_])gạ\s*o\s*lức(?![\p{L}\p{N}_])/giu, 'gạo lứt')
+    .replace(/(?<![\p{L}\p{N}_])gạ\s*o\s*lứt(?![\p{L}\p{N}_])/giu, 'gạo lứt')
+    .replace(/(?<![\p{L}\p{N}_])gạo\s*lức(?![\p{L}\p{N}_])/giu, 'gạo lứt')
+    .replace(/(?<![\p{L}\p{N}_])gạ\s*o(?![\p{L}\p{N}_])/giu, 'gạo')
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo\s*lứt(?![\p{L}\p{N}_])/giu, 'bánh gạo lứt')
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo(?![\p{L}\p{N}_])/giu, 'bánh gạo')
+    .replace(/(?<![\p{L}\p{N}_])gạo\s*lứt(?![\p{L}\p{N}_])/giu, 'gạo lứt')
+    .replace(/(?<![\p{L}\p{N}_])lức(?![\p{L}\p{N}_])/giu, 'lứt')
+    .replace(/(?<![\p{L}\p{N}_])gạo\s*st25(?![\p{L}\p{N}_])/giu, 'gạo ST25')
+    .replace(/(?<![\p{L}\p{N}_])gạo\s*st-?25(?![\p{L}\p{N}_])/giu, 'gạo ST25')
+    .replace(/(?<![\p{L}\p{N}_])lúa\s*gạo(?![\p{L}\p{N}_])/giu, 'lúa gạo')
+    .replace(/(?<![\p{L}\p{N}_])khoong6(?![\p{L}\p{N}_])/giu, 'không')
+    .replace(/(?<![\p{L}\p{N}_])đôc(?![\p{L}\p{N}_])/giu, 'đọc')
+    .replace(/(?<![\p{L}\p{N}_])đoc(?![\p{L}\p{N}_])/giu, 'đọc')
+    .replace(/(?<![\p{L}\p{N}_])sp(?![\p{L}\p{N}_])/giu, 'sản phẩm')
+    .replace(/(?<![\p{L}\p{N}_])đc(?![\p{L}\p{N}_])/giu, 'được')
+    .replace(/(?<![\p{L}\p{N}_])dc(?![\p{L}\p{N}_])/giu, 'được')
+    .replace(/(?<![\p{L}\p{N}_])ko(?![\p{L}\p{N}_])/giu, 'không')
+    .replace(/(?<![\p{L}\p{N}_])khg(?![\p{L}\p{N}_])/giu, 'không')
+    .replace(/(?<![\p{L}\p{N}_])mn(?![\p{L}\p{N}_])/giu, 'mọi người')
+    .replace(/(?<![\p{L}\p{N}_])mng(?![\p{L}\p{N}_])/giu, 'mọi người')
+    .replace(/(?<![\p{L}\p{N}_])ib(?![\p{L}\p{N}_])/giu, 'nhắn tin')
+    .replace(/(?<![\p{L}\p{N}_])inbox(?![\p{L}\p{N}_])/giu, 'nhắn tin trực tiếp')
+    .replace(/(?<![\p{L}\p{N}_])cmt(?![\p{L}\p{N}_])/giu, 'bình luận')
+    .replace(/(?<![\p{L}\p{N}_])comment(?![\p{L}\p{N}_])/giu, 'bình luận')
+    .replace(/(?<![\p{L}\p{N}_])freeship(?![\p{L}\p{N}_])/giu, 'miễn phí giao hàng')
+    .replace(/(?<![\p{L}\p{N}_])free\s*ship(?![\p{L}\p{N}_])/giu, 'miễn phí giao hàng');
+
+  let cleaned = text
+    .replace(/[…]+/g, ', ')
+    .replace(/\.{2,}/g, ', ')
+    .replace(/!{2,}/g, '! ')
+    .replace(/\?{2,}/g, '? ')
+    .replace(/,\s*,+/g, ', ')
+    .replace(/[;:]+/g, ' ')
+    .replace(/[^\S\r\n]+/g, ' ')
+    .trim();
+
+  if (cleaned && !/[.!?]$/.test(cleaned)) {
+    cleaned += '.';
+  }
+
+  return cleaned;
+}
+
 function resolveViteNeuralVoice(voice, gender, lang) {
   if (voice && typeof voice === 'string' && voice.includes('Neural')) {
     return voice;
@@ -174,10 +248,11 @@ export default defineConfig({
               return;
             }
 
+            const processedText = humanizeTextForViteTTS(text, lang) || text;
             const neuralVoice = resolveViteNeuralVoice(voice, gender, lang);
             const safePitch = normalizeViteTtsPitch(pitch);
             const safeRate = normalizeViteTtsRate(rate);
-            const cacheKey = `${voiceId || neuralVoice}_${neuralVoice}_${safePitch}_${safeRate}_${text}`;
+            const cacheKey = `${voiceId || neuralVoice}_${neuralVoice}_${safePitch}_${safeRate}_${processedText}`;
 
             if (viteTtsCache.has(cacheKey)) {
               const cached = viteTtsCache.get(cacheKey);
@@ -210,7 +285,7 @@ export default defineConfig({
                       outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
                       timeout: 8000
                     });
-                    await tts.ttsPromise(text, tmpFile);
+                    await tts.ttsPromise(processedText, tmpFile);
                     if (fs.existsSync(tmpFile)) {
                       const buf = fs.readFileSync(tmpFile);
                       try { fs.unlinkSync(tmpFile); } catch (e) {}

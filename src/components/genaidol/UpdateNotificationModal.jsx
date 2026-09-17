@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.5.0';
+export const APP_VERSION = '3.5.1';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v3.5.0 - Khóa Chặt Đọc Nguyên Khối Toàn Bộ Dòng Kịch Bản & Bảo Toàn Âm Đuôi 100%',
-    description: '1. Khóa Chặt Đọc Nguyên Khối Từng Câu Thoại: Tuyệt đối không xé lẻ câu thành từng từ rời rạc, kịch bản đọc liền một mạch mượt mà, tự nhiên như người thật; 2. Bảo Toàn 100% Âm Đuôi & Dấu Thanh: Tăng cường bộ đệm âm thanh, phát âm chuẩn xác trọn vẹn "dừng lại đây một chút thôi", "bánh gạo lứt", "ăn nhạt", "hiện tại", "nhắc lại"; 3. Tự Động Chuẩn Hóa Chính Tả Toàn Diện.'
+    title: '⚡ Bản Cập Nhật v3.5.1 - Đồng Bộ Hóa Toàn Diện Bộ Chuẩn Hóa Phát Âm Tiếng Việt Trên Cả Dev Server & Backend',
+    description: '1. Đồng Bộ Hóa TTS Engine Giữa Frontend Dev Server & Backend: Áp dụng trọn vẹn bộ chuẩn hóa phát âm tiếng Việt chống nuốt âm, không tách chữ; 2. Phát Âm Chuẩn Xác 100% Khẩu Lệnh & Thực Phẩm: "dừng lại đây một chút thôi", "bánh gạo lứt", "ăn nhạt", "hiện tại", "nhắc lại"; 3. Xóa Bỏ Cache Âm Cũ, Kích Hoạt Luồng Âm Thanh Tự Nhiên Mới Nhất.'
   }
 ];
 
