@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.2.6';
+export const APP_VERSION = '3.2.7';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Bản Cập Nhật v3.2.6 - Chuẩn Hóa Tên User, Đồng Bộ Khẩu Hình Miệng Video & Ưu Tiên Kịch Bản Tuần Hoàn',
-    description: '1. Chuẩn Hóa Danh Xưng & Tên Người Dùng: Loại bỏ hoàn toàn lỗi đọc ký tự đơn như "Bạn N", "Anh T", "Bạn En-nờ", tự động chuẩn hóa xưng hô lịch sự, chuẩn xác 100% tiếng Việt; 2. Ưu Tiên Kịch Bản Phát Sóng: Kịch bản được đọc tuần tự từ đầu đến đuôi, chỉ trả lời bình luận khi có tương tác thực tế và tự động nối mạch kịch bản liền mạch; 3. Đồng Bộ Khẩu Hình Miệng Video Chuẩn 100%: Video chuyển sang trạng thái nhép miệng khi voice phát và dừng dứt điểm về trạng thái tĩnh/thở tự nhiên khi ngưng nói; 4. Phân Bổ Voice Đúng Vai Trò: Voice Idol, Trợ lý, Bình luận được gán chính xác theo cấu hình Tab Bộ Não AI.'
+    title: '👑 Bản Cập Nhật v3.2.7 - Bộ Chọn Kịch Bản Live Thật 100% & Tối Ưu Phát Video 2K/4K/8K Siêu Nét',
+    description: '1. Phát Kịch Bản Live Thật 100%: Tích hợp bộ chọn nhanh Kịch Bản 1, 2, 3... trực tiếp ngoài thanh công cụ giao diện chính, phát trực tiếp kịch bản bán hàng lên livestream thật (OBS/TikTok Live Studio) tuần tự từ đầu đến đuôi; 2. Tối Ưu Phát Video Nặng 2K/4K/8K: Nâng cấp luồng Fast-Stream và bộ đệm Header/Moov Atom giúp video siêu phân giải 2K, 4K, 8K đồng bộ tức thì sang Window Capture và link chia sẻ TikTok Live Studio, phát siêu mượt 60 FPS không đứng hình; 3. Chuẩn Hóa Voice & Ngữ Nghĩa: Đảm bảo voice đọc chuyên nghiệp, truyền cảm và chuẩn xác 100% tiếng Việt.'
   }
 ];
 

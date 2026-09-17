@@ -8,8 +8,13 @@
 
 export async function fastStreamUpload(file, options = {}) {
   const { onInit, onProgress, onError } = options;
-  const HEAD_CHUNK_SIZE = 2 * 1024 * 1024; // 2MB Header & Frame đầu tiên nạp trong 30-50ms
-  const BODY_CHUNK_SIZE = 16 * 1024 * 1024; // 16MB cho các khối tiếp theo
+  
+  // Tối ưu chunk size cho video nặng 2K, 4K, 8K (lên tới nhiều GB)
+  const isUltraHd = file.size > 100 * 1024 * 1024;
+  const isSuperLarge = file.size > 500 * 1024 * 1024;
+  
+  const HEAD_CHUNK_SIZE = isSuperLarge ? 16 * 1024 * 1024 : (isUltraHd ? 8 * 1024 * 1024 : 4 * 1024 * 1024);
+  const BODY_CHUNK_SIZE = isSuperLarge ? 32 * 1024 * 1024 : (isUltraHd ? 20 * 1024 * 1024 : 16 * 1024 * 1024);
   
   const getBackendUrl = () => {
     if (typeof window === 'undefined') return 'http://127.0.0.1:3001';
@@ -47,7 +52,7 @@ export async function fastStreamUpload(file, options = {}) {
       return { success: true, fileUrl };
     }
 
-    // BƯỚC 2: Nạp khối đầu tiên siêu nhỏ 2MB (HEAD_CHUNK) để lấy trọn vẹn moov/header và những giây đầu
+    // BƯỚC 2: Nạp khối đầu tiên (HEAD_CHUNK) để lấy trọn vẹn moov/header và những giây đầu
     const headSize = Math.min(HEAD_CHUNK_SIZE, file.size);
     const chunk0 = file.slice(0, headSize);
     

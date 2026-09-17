@@ -4,7 +4,7 @@ import { io } from 'socket.io-client';
 import { 
   Settings, CreditCard, Video, Moon, Sun, 
   MessageCircle, Play, Pause, Mic, MicOff, X, Download, Plus,
-  Brain, Radio, Coins, AlertTriangle, Eye, Clock, List, Zap, AlertCircle, FileText, CheckSquare, CheckCircle,
+  Brain, Radio, Coins, AlertTriangle, Eye, Clock, List, Zap, AlertCircle, FileText, CheckSquare, CheckCircle, Layers,
   Gift, ShoppingBag, ShoppingCart, Sparkles, RotateCcw, Send, Trash2, Heart, Share2, UserPlus, Users, Swords, Shield, Gamepad2, Flag, MapPin,
   Smartphone, MonitorPlay, Monitor, Globe, StopCircle, Power, Volume2, VolumeX, Volume1, Music, Tv,
   User, LogOut, Mail, Lock, Check
@@ -5036,19 +5036,36 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         {/* Right Side: Toggles & Stream Window */}
         <div className="flex items-center gap-1.5 shrink-0 flex-nowrap overflow-visible relative z-40">
 
-          {/* 📜 NÚT DUY NHẤT: PHÁT KỊCH BẢN LIVE (NẰM KẾ BÊN NÚT LOA MÁY) */}
+          {/* 📜 CHỌN KỊCH BẢN IDOL PHÁT SÓNG TRỰC TIẾP (KỊCH BẢN 1, 2, 3...) */}
+          <div className="flex items-center gap-1.5 bg-gradient-to-r from-slate-900 via-blue-950 to-slate-900 border border-blue-500/40 rounded-lg px-2 py-1 shadow-sm">
+            <Layers size={13} className="text-blue-400 shrink-0" />
+            <select
+              value={scriptTabsList.find(t => t.active)?.id || scriptTabsList[0]?.id || 'tab_1'}
+              onChange={(e) => handleQuickSelectScriptTab(e.target.value)}
+              className="bg-transparent text-xs font-bold text-blue-200 outline-none cursor-pointer max-w-[130px] truncate"
+              title="Chọn kịch bản Idol phát sóng trực tiếp trên livestream thật 100% (Không phải demo)"
+            >
+              {scriptTabsList.map((tab, idx) => (
+                <option key={tab.id} value={tab.id} className="bg-slate-900 text-white font-medium">
+                  {tab.name || `Kịch bản ${idx + 1}`}
+                </option>
+              ))}
+            </select>
+          </div>
+
+          {/* 📜 NÚT PHÁT KỊCH BẢN LIVE THẬT 100% (KHÔNG PHẢI DEMO) */}
           <button
             type="button"
             onClick={() => handleToggleScriptLive()}
-            className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border shadow-sm cursor-pointer active:scale-95 ${
+            className={`flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold transition-all border shadow-sm cursor-pointer active:scale-95 ${
               isScriptLiveRunning
                 ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-blue-600 text-white border-emerald-400 shadow-emerald-500/40 animate-pulse'
                 : 'bg-gradient-to-r from-blue-700 to-indigo-700 hover:from-blue-600 hover:to-indigo-600 text-white border-blue-400/50 shadow-indigo-500/20'
             }`}
-            title={isScriptLiveRunning ? "Kịch bản đang phát trực tiếp — Bấm để Tạm Dừng" : "Bắt đầu phát kịch bản bán hàng đã cài đặt trong hệ thống"}
+            title={isScriptLiveRunning ? "Kịch bản đang phát sóng trực tiếp trên Live thật 100% — Bấm để Tạm Dừng" : "Bắt đầu phát kịch bản bán hàng đã chọn lên Livestream thật 100% (OBS / TikTok Live Studio), đọc lần lượt từ câu đầu đến câu cuối"}
           >
             <Play size={12} fill={isScriptLiveRunning ? "currentColor" : "none"} className={isScriptLiveRunning ? "text-yellow-300 animate-spin" : "text-white"} />
-            <span className="whitespace-nowrap font-bold">{isScriptLiveRunning ? '🟢 Đang Phát Kịch Bản' : '▶️ Phát Kịch Bản'}</span>
+            <span className="whitespace-nowrap font-bold">{isScriptLiveRunning ? '🟢 Đang Phát Kịch Bản Live' : '▶️ Phát Kịch Bản Live'}</span>
           </button>
 
           {/* 🔊 NÚT TẮT / MỞ TIẾNG LOA MÁY TÍNH (PHIÊN LIVE VẪN CÓ TIẾNG 100%) */}
