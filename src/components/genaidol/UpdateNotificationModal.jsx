@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.5.1';
+export const APP_VERSION = '3.5.2';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v3.5.1 - Đồng Bộ Hóa Toàn Diện Bộ Chuẩn Hóa Phát Âm Tiếng Việt Trên Cả Dev Server & Backend',
-    description: '1. Đồng Bộ Hóa TTS Engine Giữa Frontend Dev Server & Backend: Áp dụng trọn vẹn bộ chuẩn hóa phát âm tiếng Việt chống nuốt âm, không tách chữ; 2. Phát Âm Chuẩn Xác 100% Khẩu Lệnh & Thực Phẩm: "dừng lại đây một chút thôi", "bánh gạo lứt", "ăn nhạt", "hiện tại", "nhắc lại"; 3. Xóa Bỏ Cache Âm Cũ, Kích Hoạt Luồng Âm Thanh Tự Nhiên Mới Nhất.'
+    title: '⚡ Bản Cập Nhật v3.5.2 - Cập Nhật Bộ Cài Đặt ZIP Mới Nhất Trực Tiếp Trên Website',
+    description: '1. Cập Nhật Toàn Bộ Gói Cài Đặt ZIP Mới Nhất: Đóng gói và cập nhật trực tiếp file ZIP độc lập Windows & Mac v3.5.2 mới nhất; 2. Tải Trực Tiếp 1-Click Tốc Độ Cao: Tự động phân giải file ZIP bản mới nhất không qua trung gian; 3. Đồng Bộ Hóa Toàn Diện Bộ Phát Âm Chuẩn Tiếng Việt.'
   }
 ];
 
