@@ -4482,43 +4482,57 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           <div className="relative">
             <button
               onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
-              className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold transition-all border shadow-xs ${
-                isDarkMode ? 'bg-white/10 hover:bg-white/20 text-yellow-300 border-white/10' : 'bg-gray-200 hover:bg-gray-300 text-slate-900 border-gray-300'
+              className={`flex items-center gap-1.5 px-2 py-1 rounded-lg text-xs font-bold transition-all border shadow-xs cursor-pointer active:scale-95 ${
+                isLangDropdownOpen
+                  ? 'bg-amber-600 text-white border-amber-400 ring-2 ring-amber-400/40'
+                  : (isDarkMode ? 'bg-white/10 hover:bg-white/20 text-yellow-300 border-white/20' : 'bg-gray-100 hover:bg-gray-200 text-slate-800 border-gray-300')
               }`}
               title="Chuyển đổi ngôn ngữ hệ thống & Giọng đọc AI (20 Quốc Gia)"
             >
-              <Globe size={11} className="text-amber-400" />
-              <span className="whitespace-nowrap">{SUPPORTED_LANGUAGES.find(l => l.code === currentLang)?.flag || '🌐'} {SUPPORTED_LANGUAGES.find(l => l.code === currentLang)?.name || 'Ngôn ngữ'}</span>
+              <Globe size={13} className="text-amber-400 shrink-0" />
+              <span className="whitespace-nowrap font-bold">
+                {SUPPORTED_LANGUAGES.find(l => l.code === currentLang)?.flag || '🌐'} {SUPPORTED_LANGUAGES.find(l => l.code === currentLang)?.name || 'Ngôn ngữ'}
+              </span>
             </button>
             {isLangDropdownOpen && (
-              <div className={`absolute top-full right-0 mt-2 w-64 max-h-80 overflow-y-auto rounded-xl shadow-2xl border z-50 p-1.5 ${isDarkMode ? 'bg-[#1c1c23] border-gray-700 text-white' : 'bg-white border-gray-200 text-slate-800'} animate-in fade-in slide-in-from-top-2 duration-200`}>
-                <div className="px-2 py-1 text-[10px] font-black uppercase text-gray-400 border-b border-gray-500/20 mb-1">
-                  20 Ngôn Ngữ Quốc Tế (Đồng Bộ Giao Diện & Voice)
-    </div>
-                {SUPPORTED_LANGUAGES.map(lang => (
-                  <button
-                    key={lang.code}
-                    onClick={() => {
-                      setCurrentLanguage(lang.code);
-                      setCurrentLangState(lang.code);
-                      setIsLangDropdownOpen(false);
-                    }}
-                    className={`w-full text-left px-2 py-1 rounded-md text-xs font-bold transition-all flex items-center justify-between gap-2 ${
-                      currentLang === lang.code
-                        ? 'bg-blue-600 text-white'
-                        : (isDarkMode ? 'hover:bg-white/10 text-gray-200' : 'hover:bg-gray-100 text-gray-800')
-                    }`}
-                  >
-                    <span className="flex items-center gap-2">
-                      <span className="text-base">{lang.flag}</span>
-                      <span>{lang.name}</span>
-                    </span>
-                    <span className="text-[10px] opacity-75">{lang.code.toUpperCase()}</span>
-                  </button>
-                ))}
-    </div>
+              <>
+                <div 
+                  className="fixed inset-0 z-[8999]" 
+                  onClick={() => setIsLangDropdownOpen(false)} 
+                />
+                <div className={`absolute top-full right-0 mt-2 w-72 max-h-96 overflow-y-auto rounded-2xl shadow-2xl border z-[9999] p-2 ${
+                  isDarkMode ? 'bg-[#181824]/98 border-amber-500/40 text-white shadow-black/80' : 'bg-white border-gray-300 text-slate-800 shadow-xl'
+                } animate-in fade-in zoom-in-95 duration-150 backdrop-blur-xl`}>
+                  <div className="px-2.5 py-1.5 text-[11px] font-black uppercase text-amber-400 border-b border-white/10 mb-1 flex items-center justify-between">
+                    <span>🌐 20 NGÔN NGỮ QUỐC TẾ</span>
+                    <span className="text-[9px] opacity-75 font-normal">Đồng bộ toàn phần mềm</span>
+                  </div>
+                  {SUPPORTED_LANGUAGES.map(lang => (
+                    <button
+                      key={lang.code}
+                      onClick={() => {
+                        setCurrentLanguage(lang.code);
+                        setCurrentLangState(lang.code);
+                        setIsLangDropdownOpen(false);
+                        showToast(`🌐 Đã chuyển ngôn ngữ sang: ${lang.name} (${lang.flag})`, 'success');
+                      }}
+                      className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 mb-0.5 cursor-pointer ${
+                        currentLang === lang.code
+                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm'
+                          : (isDarkMode ? 'hover:bg-white/10 text-gray-200' : 'hover:bg-gray-100 text-gray-800')
+                      }`}
+                    >
+                      <span className="flex items-center gap-2">
+                        <span className="text-base">{lang.flag}</span>
+                        <span>{lang.name}</span>
+                      </span>
+                      <span className="text-[10px] opacity-75 font-mono px-1.5 py-0.5 rounded bg-black/20">{lang.code.toUpperCase()}</span>
+                    </button>
+                  ))}
+                </div>
+              </>
             )}
-    </div>
+          </div>
 
           <button onClick={() => setIsDarkMode(!isDarkMode)} className={`p-0.5 rounded transition-colors ${isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-400 text-gray-800 hover:bg-gray-500'}`}>
             {isDarkMode ? <Sun size={10} /> : <Moon size={10} />}

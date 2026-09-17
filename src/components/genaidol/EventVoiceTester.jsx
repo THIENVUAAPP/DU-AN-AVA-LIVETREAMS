@@ -205,10 +205,23 @@ export default function EventVoiceTester({
    * Phân tách kịch bản dài thành các câu thoại hoàn chỉnh chuẩn ngữ nghĩa (theo từng dòng)
    * Tự động thay thế placeholder và ngắt câu thông minh để TTS phản hồi ngay lập tức
    */
+  /**
+   * Phân tách kịch bản dài thành các câu thoại hoàn chỉnh chuẩn ngữ nghĩa (theo từng dòng)
+   * Tự động thay thế placeholder, giải mã HTML entity và ngắt câu thông minh
+   */
   const splitIntoSentences = (raw) => {
     if (!raw || !raw.trim()) return [];
     
     let processed = String(raw)
+      .replace(/&nbsp;/gi, ' ')
+      .replace(/&amp;/gi, '&')
+      .replace(/&quot;/gi, '"')
+      .replace(/&apos;/gi, "'")
+      .replace(/&lt;/gi, '<')
+      .replace(/&gt;/gi, '>')
+      .replace(/\\"/g, '"')
+      .replace(/\\'/g, "'")
+      .replace(/\\n/g, '\n')
       .replace(/\[user\]|\{user\}/gi, 'Quốc Thiện')
       .replace(/\{comment\}|\[comment\]/gi, 'Sản phẩm này giá bao nhiêu shop?')
       .replace(/\{gift_name\}|\[gift_name\]/gi, 'Cờ Tổ Quốc')
@@ -335,16 +348,20 @@ export default function EventVoiceTester({
       }));
     } catch (e) {}
 
-    // 🚀 LOOKAHEAD PIPELINE: Ngay khi câu hiện tại bắt đầu phát, nạp trước câu N+1 và N+2
+    // 🚀 LOOKAHEAD PIPELINE: Ngay khi câu hiện tại bắt đầu phát, nạp trước câu N+1 (duy nhất 1 câu để không nghẽn mạng)
     if (index + 1 < sentences.length) {
       prefetchTTSAudio(sentences[index + 1], voiceObj, { rate: speedRef.current });
-    }
-    if (index + 2 < sentences.length) {
-      prefetchTTSAudio(sentences[index + 2], voiceObj, { rate: speedRef.current });
     }
 
     const speakerRate = (matchedSpeakerAvatar?.rate ?? 1.0) * (speedRef.current || 1.0);
     const speakerVolume = (matchedSpeakerAvatar?.volume ?? 1.0) * (volumeRef.current || 1.0);
+
+    let watchdogTimer = setTimeout(() => {
+      if (isPlayingRef.current && currentSentenceIdxRef.current === index) {
+        console.warn(`[EventVoiceTester] Watchdog triggered for sentence ${index}, advancing to next sentence.`);
+        playSentenceAtIndex(index + 1, null);
+      }
+    }, 18000);
 
     previewVoiceAudio(
       voiceObj,
@@ -355,6 +372,7 @@ export default function EventVoiceTester({
         volume: speakerVolume,
         rate: speakerRate,
         onEnd: () => {
+          if (watchdogTimer) clearTimeout(watchdogTimer);
           if (!isPlayingRef.current) return;
           if (queueTimeoutRef.current) {
             clearTimeout(queueTimeoutRef.current);
@@ -457,10 +475,10 @@ export default function EventVoiceTester({
     const curVoiceId = selectedVoiceRef.current || defaultVoiceId || 'free_vi_female';
     const voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === curVoiceId) || { id: curVoiceId, lang: 'vi-VN', gender: 'Female' };
 
-    // 🚀 PIPELINE PRE-FETCH: Ngay khi bấm Play, nạp trước toàn bộ kịch bản vào RAM cache ở chế độ nền
-    sentences.forEach((s) => {
-      prefetchTTSAudio(s, voiceObj, { rate: speedRef.current });
-    });
+    // Lookahead thông minh: Chỉ nạp câu 0 và câu 1 (không nạp 300 câu cùng lúc gây nghẽn mạng)
+    if (sentences.length > 1) {
+      prefetchTTSAudio(sentences[1], voiceObj, { rate: speedRef.current });
+    }
 
     playSentenceAtIndex(0, voiceObj);
   };

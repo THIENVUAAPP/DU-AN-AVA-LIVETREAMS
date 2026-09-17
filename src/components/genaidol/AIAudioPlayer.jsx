@@ -159,6 +159,18 @@ Duy nhất trong phiên livestream ngày hôm nay, giảm sốc 50% chỉ còn 8
 Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày, bấm vào Giỏ Hàng góc trái săn ngay nhé!`;
     }
 
+    if (scriptRaw) {
+      scriptRaw = scriptRaw
+        .replace(/&nbsp;/gi, ' ')
+        .replace(/&amp;/gi, '&')
+        .replace(/&quot;/gi, '"')
+        .replace(/&apos;/gi, "'")
+        .replace(/&lt;/gi, '<')
+        .replace(/&gt;/gi, '>')
+        .replace(/\\"/g, '"')
+        .replace(/\\'/g, "'");
+    }
+
     const multiConf = getMultiAvatarConfig();
     const hasRoleTags = /\[([^\]]+)\]\s*:/i.test(scriptRaw) || /^(Idol|Trợ Lý|Quản Lý|BLV|Game|Khách Mời|Host)\s*:/im.test(scriptRaw);
 

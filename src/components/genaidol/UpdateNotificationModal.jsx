@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.2.7';
+export const APP_VERSION = '3.2.8';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Bản Cập Nhật v3.2.7 - Bộ Chọn Kịch Bản Live Thật 100% & Tối Ưu Phát Video 2K/4K/8K Siêu Nét',
-    description: '1. Phát Kịch Bản Live Thật 100%: Tích hợp bộ chọn nhanh Kịch Bản 1, 2, 3... trực tiếp ngoài thanh công cụ giao diện chính, phát trực tiếp kịch bản bán hàng lên livestream thật (OBS/TikTok Live Studio) tuần tự từ đầu đến đuôi; 2. Tối Ưu Phát Video Nặng 2K/4K/8K: Nâng cấp luồng Fast-Stream và bộ đệm Header/Moov Atom giúp video siêu phân giải 2K, 4K, 8K đồng bộ tức thì sang Window Capture và link chia sẻ TikTok Live Studio, phát siêu mượt 60 FPS không đứng hình; 3. Chuẩn Hóa Voice & Ngữ Nghĩa: Đảm bảo voice đọc chuyên nghiệp, truyền cảm và chuẩn xác 100% tiếng Việt.'
+    title: '👑 Bản Cập Nhật v3.2.8 - Đọc Kịch Bản Liền Mạch 300+ Câu & Tối Ưu Toàn Diện',
+    description: '1. Sửa Triệt Để Lỗi Đọc Kịch Bản: Đọc trọn vẹn từ câu 1 đến 302+ câu thoại, tự động chuyển câu tuần hoàn siêu mượt, xử lý sạch toàn bộ ký tự đặc biệt & HTML entities (&nbsp;, &amp;, &quot;); 2. Menu 20 Ngôn Ngữ Chuẩn Toàn Cầu: Khắc phục lỗi chọn ngôn ngữ, đồng bộ tức thì toàn bộ phần mềm; 3. Nâng Cấp Luồng Video 2K/4K/8K: Phát mượt mà 60 FPS sang Window Capture và TikTok Live Studio không giật lag.'
   }
 ];
 
