@@ -319,19 +319,19 @@ export default function EventVoiceTester({
    * ⚡ TẢI TRƯỚC TOÀN BỘ KỊCH BẢN VÀO RAM AUDIOBUFFER (PARALLEL PREFETCH 0MS DELAY)
    * Nạp ngầm toàn bộ các câu thoại vào RAM cache để khi đọc đến câu nào là có sẵn buffer ngay lập tức 0ms
    */
-  const prefetchAllSentences = (sentenceList, customVoice = null) => {
+  const prefetchAllSentences = async (sentenceList, customVoice = null) => {
     if (!sentenceList || sentenceList.length === 0) return;
     const curVoice = customVoice || selectedVoiceRef.current || defaultVoiceId || 'free_vi_female';
-    sentenceList.forEach((s) => {
+    for (let i = 0; i < sentenceList.length; i++) {
       try {
-        const parsed = parseScriptSentence(s, curVoice);
+        const parsed = parseScriptSentence(sentenceList[i], curVoice);
         if (parsed.cleanText) {
           const rate = (parsed.matchedSpeakerAvatar?.rate ?? 1.0) * (speedRef.current || 1.0);
           const pitch = parsed.matchedSpeakerAvatar?.pitch;
-          prefetchTTSAudio(parsed.cleanText, parsed.voiceObj, { rate, pitch });
+          await prefetchTTSAudio(parsed.cleanText, parsed.voiceObj, { rate, pitch });
         }
       } catch (e) {}
-    });
+    }
   };
 
   // Đổi giọng: Ngay lập tức lưu và PHÁT NGAY LẬP TỨC kịch bản với giọng mới được chọn (0ms)

@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.4.4';
+export const APP_VERSION = '3.4.5';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v3.4.4 - Nạp Trước Toàn Bộ Kịch Bản Vào RAM Cache 0ms & Loại Bỏ Triệt Để 2-4 Giây Chờ Khoảng Lặng Thừa',
-    description: '1. Tải Trước Toàn Bộ Kịch Bản Vào RAM Cache (Parallel Pre-fetch 0ms): Toàn bộ các câu thoại trong kịch bản bán hàng, kịch bản Idol và phòng Live được tổng hợp song song ngầm ngay từ đầu; phát câu nào có ngay AudioBuffer trong RAM 0ms không phải chờ mạng; 2. Cắt Gọt Khoảng Lặng Chuẩn Xác Từng Mili-giây: Cắt triệt để 250-500ms khoảng lặng vô hình ở đầu/đuôi file EdgeTTS, chỉ giữ đúng 10ms mở đầu và 60ms an toàn đuôi câu (bảo toàn nguyên vẹn phụ âm c, t, p, ch, ng và từ ngữ như bánh gạo lứt); kịch bản đọc liền mạch thông suốt như người thật; 3. Giữ Trọn Ngữ Điệu Cảm Xúc & Nhấn Nhá: Giọng đọc tự nhiên, cuốn hút, giàu năng lượng chốt đơn; khi có bình luận khách hàng thì trả lời xong tự động nối tiếp kịch bản mượt mà.'
+    title: '⚡ Bản Cập Nhật v3.4.5 - Tối Ưu Triệt Để Luồng Đọc Kịch Bản Liền Mạch Tuyệt Đối 0ms, Loại Bỏ Mọi Nguy Cơ Nghẽn Socket & Chờ Đợi',
+    description: '1. Đọc Kịch Bản Liền Mạch Tuyệt Đối 0.0s: Nạp ngầm tuần tự thông minh toàn bộ kịch bản vào RAM AudioBuffer; loại bỏ 100% tình trạng nghẽn socket và chờ mạng 3-5s hay 10-20s; 2. Cân Bằng Tải Kết Nối Neural TTS: Nâng cấp định dạng audio 48kbps siêu nhẹ và cơ chế Timeout an toàn 8s chống hủy sớm; 3. Giọng Đọc Cuốn Hút, Có Cảm Xúc Nhấn Nhá: Đọc liền mạch như người thật không gián đoạn, tự động trả lời bình luận khán giả rồi tiếp tục kịch bản mượt mà.'
   }
 ];
 

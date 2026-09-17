@@ -255,19 +255,20 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   };
 
   // ⚡ TẢI TRƯỚC TOÀN BỘ KỊCH BẢN VÀO RAM CACHE (PARALLEL PRE-FETCH 0MS DELAY)
-  const prefetchAllScriptItems = (items) => {
+  const prefetchAllScriptItems = async (items) => {
     if (!items || !items.length) return;
-    items.forEach((item) => {
-      if (!item?.text) return;
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      if (!item?.text) continue;
       const v = item.voiceObj || resolveEffectiveVoice(item.role || item.voiceChannel || 'idol', item.voiceId, item.avatarId);
       if (v) {
-        prefetchTTSAudio(item.text, v, {
+        await prefetchTTSAudio(item.text, v, {
           rate: item.rate !== undefined ? item.rate : v.rate,
           pitch: item.pitch !== undefined ? item.pitch : v.pitch,
           volume: item.volume !== undefined ? item.volume : v.volume
         });
       }
-    });
+    }
   };
 
   // Pre-warm RAM cache ngay khi AIAudioPlayer mount để khi bấm Live là phát 0ms ngay

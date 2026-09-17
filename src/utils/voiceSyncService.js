@@ -7998,10 +7998,9 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
   const doFetch = async () => {
     for (let attempt = 0; attempt < 2; attempt++) {
       for (const endpoint of endpointCandidates) {
+        let controller = new AbortController();
+        let timeoutId = setTimeout(() => controller.abort(), 8000);
         try {
-          const controller = new AbortController();
-          const timeoutId = setTimeout(() => controller.abort(), 2500);
-
           let res = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -8010,6 +8009,9 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
           }).catch(() => null);
 
           if (!res || !res.ok) {
+            clearTimeout(timeoutId);
+            controller = new AbortController();
+            timeoutId = setTimeout(() => controller.abort(), 8000);
             const getUrl = endpoint.includes('?') ? `${endpoint}&${ttsQuery}` : `${endpoint}?${ttsQuery}`;
             res = await fetch(getUrl, { signal: controller.signal }).catch(() => null);
           }
@@ -8038,7 +8040,7 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
               const rawAudioBuffer = await audioCtx.decodeAudioData(arrayBuf);
               if (rawAudioBuffer) {
                 const audioBuffer = trimAudioBufferSilence(rawAudioBuffer);
-                if (audioBufferMemoryCache.size > 250) {
+                if (audioBufferMemoryCache.size > 300) {
                   const firstKey = audioBufferMemoryCache.keys().next().value;
                   audioBufferMemoryCache.delete(firstKey);
                 }
@@ -8047,10 +8049,12 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
               }
             }
           }
-        } catch (e) {}
+        } catch (e) {
+          clearTimeout(timeoutId);
+        }
       }
       if (attempt === 0) {
-        await new Promise(r => setTimeout(r, 100));
+        await new Promise(r => setTimeout(r, 60));
       }
     }
     return null;

@@ -1550,7 +1550,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '3.4.4';
+  let ver = '3.4.5';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1588,7 +1588,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '3.4.4';
+  let ver = '3.4.5';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -3076,7 +3076,7 @@ function humanizeTextForBackendTTS(rawText, gender, lang) {
 
 // Concurrency pool for high-throughput parallel EdgeTTS processing
 let activeEdgeTtsCount = 0;
-const MAX_CONCURRENT_EDGE_TTS = 6;
+const MAX_CONCURRENT_EDGE_TTS = 4;
 const edgeTtsWaiters = [];
 
 async function acquireEdgeTtsSlot() {
@@ -3113,7 +3113,7 @@ async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+
           lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
           pitch: safePitch,
           rate: safeRate,
-          outputFormat: 'audio-24khz-96kbitrate-mono-mp3',
+          outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
           timeout: 8000
         });
         await tts.ttsPromise(processedText, tmpFile);
@@ -3126,7 +3126,7 @@ async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+
         if (fs.existsSync(tmpFile)) {
           try { fs.unlinkSync(tmpFile); } catch (e) {}
         }
-        if (attempt === 0) await new Promise(r => setTimeout(r, 80));
+        if (attempt === 0) await new Promise(r => setTimeout(r, 60));
       }
     }
   } finally {

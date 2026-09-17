@@ -14,7 +14,7 @@ try {
 } catch (e) {}
 
 let activeViteEdgeTtsCount = 0;
-const MAX_CONCURRENT_VITE_EDGE_TTS = 6;
+const MAX_CONCURRENT_VITE_EDGE_TTS = 4;
 const viteEdgeTtsWaiters = [];
 
 async function acquireViteEdgeTtsSlot() {
