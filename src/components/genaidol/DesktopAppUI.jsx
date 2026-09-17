@@ -731,7 +731,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }
       
       window.dispatchEvent(new CustomEvent('aidol_script_updated', {
-        detail: { activeScriptTabId: chosen?.id, scriptTabs: scriptTabsList, fixedScriptText: scriptText, isPlaying: true }
+        detail: { activeScriptTabId: chosen?.id, scriptTabs: scriptTabsList, fixedScriptText: scriptText, isPlaying: true, forceRestart: false }
       }));
       
       const count = scriptText.split(/\r?\n/).filter(Boolean).length;

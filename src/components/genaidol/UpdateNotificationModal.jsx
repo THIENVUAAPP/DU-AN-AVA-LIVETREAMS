@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.4.6';
+export const APP_VERSION = '3.4.7';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v3.4.6 - Khắc Phục Triệt Để Lỗi Treo Finish Callback, Kích Hoạt Luồng Phát Âm Thanh 0ms Siêu Mượt',
-    description: '1. Khắc Phục Lỗi Treo Callback Finish: Loại bỏ biến tham chiếu không hợp lệ trong Web Audio finish callback, giải phóng hoàn toàn tiến trình phát audio giúp kịch bản đọc liền mạch 100% không bao giờ bị đơ; 2. Đọc Kịch Bản Tuần Hoàn Liền Mạch 0ms: Luồng tải ngầm thông minh kết hợp RAM Cache, đọc xuyên suốt từ câu đầu đến câu cuối; 3. Giọng Đọc Cuốn Hút, Truyền Cảm: Tự nhiên, có lên có xuống, giàu năng lượng chốt đơn.'
+    title: '⚡ Bản Cập Nhật v3.4.7 - Khóa Chống Phát Trùng Lặp 2 Lớp Âm Thanh & Giữ Nguyên Vẹn Từng Câu Thoại',
+    description: '1. Khóa Chống Phát Trùng Lớp Kịch Bản: Khi bấm nút Phát Kịch Bản Live, hệ thống tự động khóa đơn luồng 1 lớp âm thanh duy nhất, loại bỏ hoàn toàn hiện tượng đọc chồng chéo 2 lớp; 2. Đọc Trọn Vẹn Từng Câu - Không Tách Vụn: Giữ nguyên vẹn từng dòng thoại kịch bản, không bẻ nhỏ câu; 3. Chuẩn Hóa Phát Âm & Chính Tả Tiếng Việt: Đọc chính xác 100% "Bánh gạo" và toàn bộ chính tả, ngữ điệu mượt mà, sống động.'
   }
 ];
 

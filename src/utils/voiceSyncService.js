@@ -7077,24 +7077,20 @@ export function parseMultiCharacterScript(text, config = null) {
     rawLines.forEach((line) => {
       let cleanText = line.replace(/^\[([^\]]+)\]\s*:\s*/i, '').replace(/^([a-zA-Z0-9_\u00C0-\u1EF9\s]{2,20})\s*:\s*/i, '').trim();
       if (!cleanText) cleanText = line;
-      const sentenceParts = cleanText.match(/[^.!?\n]+[.!?]+|[^.!?\n]+$/g) || [cleanText];
-      sentenceParts.forEach((part) => {
-        const trimmed = part.trim();
-        if (trimmed) {
-          result.push({
-            index: currentIdx++,
-            rawLine: line,
-            text: trimmed,
-            avatarId: idolAvatar.id || 'avatar_1',
-            avatarName: idolAvatar.name || 'Idol',
-            role: idolAvatar.role || 'idol',
-            voiceId: voiceObj.id,
-            voiceObj,
-            volume: voiceObj.volume ?? idolAvatar.volume ?? 1.0,
-            rate: voiceObj.rate ?? idolAvatar.rate ?? 1.0
-          });
-        }
-      });
+      if (cleanText) {
+        result.push({
+          index: currentIdx++,
+          rawLine: line,
+          text: cleanText,
+          avatarId: idolAvatar.id || 'avatar_1',
+          avatarName: idolAvatar.name || 'Idol',
+          role: idolAvatar.role || 'idol',
+          voiceId: voiceObj.id,
+          voiceObj,
+          volume: voiceObj.volume ?? idolAvatar.volume ?? 1.0,
+          rate: voiceObj.rate ?? idolAvatar.rate ?? 1.0
+        });
+      }
     });
     return result;
   }
@@ -7138,27 +7134,23 @@ export function parseMultiCharacterScript(text, config = null) {
     // ⚡ Lấy voice chuẩn xác 100% từ Tab Bộ Não AI tương ứng với từng nhân vật
     const voiceObj = resolveEffectiveVoice(matchedAvatar.role || 'idol', matchedAvatar.voiceId, matchedAvatar.id);
 
-    const sentenceParts = cleanText.match(/[^.!?\n]+[.!?]+|[^.!?\n]+$/g) || [cleanText];
-    sentenceParts.forEach((part) => {
-      const trimmed = part.trim();
-      if (trimmed) {
-        result.push({
-          index: currentIdx++,
-          rawLine: line,
-          text: trimmed,
-          avatarId: matchedAvatar.id,
-          avatarName: matchedAvatar.name,
-          avatarRole: matchedAvatar.role,
-          avatarTag: matchedAvatar.tag,
-          voiceId: voiceObj.id,
-          voiceObj,
-          idleVideo: matchedAvatar.idleVideo,
-          talkVideo: matchedAvatar.talkVideo,
-          volume: voiceObj.volume ?? matchedAvatar.volume ?? 1.0,
-          rate: voiceObj.rate ?? matchedAvatar.rate ?? 1.0
-        });
-      }
-    });
+    if (cleanText) {
+      result.push({
+        index: currentIdx++,
+        rawLine: line,
+        text: cleanText,
+        avatarId: matchedAvatar.id,
+        avatarName: matchedAvatar.name,
+        avatarRole: matchedAvatar.role,
+        avatarTag: matchedAvatar.tag,
+        voiceId: voiceObj.id,
+        voiceObj,
+        idleVideo: matchedAvatar.idleVideo,
+        talkVideo: matchedAvatar.talkVideo,
+        volume: voiceObj.volume ?? matchedAvatar.volume ?? 1.0,
+        rate: voiceObj.rate ?? matchedAvatar.rate ?? 1.0
+      });
+    }
   });
 
   return result;

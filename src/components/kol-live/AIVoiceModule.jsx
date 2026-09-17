@@ -127,11 +127,8 @@ export default function AIVoiceModule() {
       const rawLines = scriptText.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
       const splitSentences = [];
       rawLines.forEach(line => {
-        const parts = line.match(/[^.!?\n]+[.!?]+|[^.!?\n]+$/g) || [line];
-        parts.forEach(p => {
-          const clean = p.trim();
-          if (clean) splitSentences.push(clean);
-        });
+        const clean = line.trim();
+        if (clean) splitSentences.push(clean);
       });
       const playList = splitSentences.length > 0 ? splitSentences : [scriptText.trim()];
 

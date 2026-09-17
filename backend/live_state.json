@@ -9,14 +9,14 @@
   "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1789647952841,
+  "updatedAt": 1789653794489,
   "flvUrl": null,
   "isConnected": false,
   "type": "MASTER_LIVE_STATE_UPDATE",
   "currentLang": "vi",
   "selectedCharacter": "custom_1789637569175",
   "isUserExplicitMediaLocked": true,
-  "videoCurrentTime": 0.040889,
+  "videoCurrentTime": 104.665633,
   "isVideoAudioMuted": false,
   "videoVolume": 1,
   "clearMedia": false,
@@ -33,7 +33,7 @@
     "stock": 99,
     "keywords": "ava live;ava;phần mềm ava live;phần mềm livestream ai;livestream ai;livestream bằng ai;nhân vật",
     "storeUrl": "https://shop.tiktok.com",
-    "pinnedAt": 1789647856761,
+    "pinnedAt": 1789653794489,
     "triggerSource": "ai_speech_keyword: nhân vật"
   }
 }

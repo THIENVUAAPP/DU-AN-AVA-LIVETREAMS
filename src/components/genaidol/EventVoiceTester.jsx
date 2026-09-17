@@ -277,11 +277,11 @@ export default function EventVoiceTester({
       .replace(/\{gift_name\}|\[gift_name\]/gi, 'Cờ Tổ Quốc')
       .replace(/\{count\}|\[count\]/gi, '5')
       .replace(/\{milestone\}|\[milestone\]/gi, '10,000')
-      .replace(/\{item\}|\[item\]/gi, 'Bánh gạo lứt')
-      .replace(/\{product\}|\[product\]/gi, 'Bánh gạo lứt')
+      .replace(/\{item\}|\[item\]/gi, 'Bánh gạo')
+      .replace(/\{product\}|\[product\]/gi, 'Bánh gạo')
       .replace(/\{price\}|\[price\]/gi, '89.000đ');
 
-    // Tách theo từng dòng kịch bản gốc của người dùng TRƯỚC HẾT
+    // Tách theo từng dòng kịch bản gốc của người dùng TRƯỚC HẾT (1 DÒNG = 1 CÂU THOẠI NGUYÊN VẸN, KHÔNG TÁCH CÂU)
     const rawLines = decoded.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
     const finalSentences = [];
 
@@ -298,18 +298,8 @@ export default function EventVoiceTester({
       const cleanBody = cleanTextForVoiceSpeech(body);
       if (!cleanBody || !cleanBody.trim()) continue;
 
-      // Chỉ tách nhỏ nếu một dòng quá dài (> 280 ký tự) để tối ưu tải lượng TTS
-      if (cleanBody.length > 280) {
-        const parts = cleanBody.match(/[^.!?\n]+[.!?]+|[^.!?\n]+$/g) || [cleanBody];
-        for (const part of parts) {
-          const s = part.trim();
-          if (s && s.length > 0) {
-            finalSentences.push(speakerPrefix ? `${speakerPrefix}${s}` : s);
-          }
-        }
-      } else {
-        finalSentences.push(speakerPrefix ? `${speakerPrefix}${cleanBody}` : cleanBody);
-      }
+      // Giữ trọn vẹn 100% dòng kịch bản làm một câu thoại duy nhất, tuyệt đối không tách câu
+      finalSentences.push(speakerPrefix ? `${speakerPrefix}${cleanBody}` : cleanBody);
     }
 
     return finalSentences.length > 0 ? finalSentences : [decoded];

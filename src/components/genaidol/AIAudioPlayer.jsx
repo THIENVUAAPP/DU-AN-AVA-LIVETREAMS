@@ -232,17 +232,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     rawLines.forEach(line => {
       const cleanLine = cleanTextForVoiceSpeech(line);
       if (!cleanLine || !cleanLine.trim()) return;
-
-      // Chỉ tách nhỏ nếu một dòng quá dài (> 280 ký tự) để tối ưu payload TTS
-      if (cleanLine.length > 280) {
-        const parts = cleanLine.match(/[^.!?\n]+[.!?]+|[^.!?\n]+$/g) || [cleanLine];
-        parts.forEach(p => {
-          const clean = p.trim();
-          if (clean) splitSentences.push(clean);
-        });
-      } else {
-        splitSentences.push(cleanLine);
-      }
+      splitSentences.push(cleanLine);
     });
 
     return splitSentences.map((s, idx) => ({
@@ -284,8 +274,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   // Khởi động khi isScriptRunning được kích hoạt
   useEffect(() => {
     if (isScriptRunning) {
+      // 🛡️ KHÓA CHẶT: Nếu kịch bản đã được khởi động (ví dụ qua startScript), KHÔNG BAO GIỜ khởi động lại lần 2 tránh đọc chồng 2 lớp âm thanh
       if (isPlayingRef.current && queueRef.current && queueRef.current.length > 0) {
-        // Đã được khởi động bởi startScript, không reset lại
         return;
       }
       try {
@@ -323,11 +313,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         const scriptItems = loadScriptFromStorage(customText);
         setQueue(scriptItems);
         queueRef.current = scriptItems;
-        setCurrentIndex(0);
-        currentIndexRef.current = 0;
-        priorityQueueRef.current = [];
         prefetchAllScriptItems(scriptItems);
-        if (isScriptRunning || isPlayingRef.current) {
+
+        // 🛡️ CHỈ restart nếu có yêu cầu forceRestart đích thực, TUYỆT ĐỐI không restart khi bấm nút Play thanh công cụ
+        if (e?.detail?.forceRestart === true && (isScriptRunning || isPlayingRef.current)) {
+          setCurrentIndex(0);
+          currentIndexRef.current = 0;
+          priorityQueueRef.current = [];
           setIsPlaying(true);
           isPlayingRef.current = true;
           isBusyRef.current = false;
