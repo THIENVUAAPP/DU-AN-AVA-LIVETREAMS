@@ -651,6 +651,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         return;
       }
 
+      // 🛡️ BẢO VỆ TUYỆT ĐỐI KHI ĐANG PHÁT KỊCH BẢN BÁN HÀNG (Script Live):
+      // Tuyệt đối không cho phép sự kiện IDLE hoặc APOLOGY chen ngang làm gián đoạn kịch bản 30-40 giây
+      const isLiveScriptActive = isScriptRunning || (typeof window !== 'undefined' && window.__isScriptLiveRunning) || (typeof localStorage !== 'undefined' && localStorage.getItem('aidol_is_script_live_running') === 'true');
+      if (isLiveScriptActive && (action === 'IDLE' || action === 'APOLOGY')) {
+        console.log('[AIAudioPlayer] Đang phát kịch bản, chặn triệt để sự kiện IDLE/APOLOGY chen ngang');
+        return;
+      }
+
       const voiceChannel = options?.voiceChannel || (action?.includes('COMMENT') ? 'comment' : action?.includes('IDOL') ? 'idol' : 'manager');
       
       let voiceObj = options?.voiceObj;

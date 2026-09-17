@@ -7870,6 +7870,8 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
 
 // Bộ nhớ đệm các Promise fetch đang chạy ngầm để chống trùng lặp (Deduplication)
 const activeFetchPromises = new Map();
+// Module-level bộ nhớ đệm endpoint TTS đang hoạt động mượt mà nhất để tái sử dụng ngay lập tức
+let cachedWorkingTtsEndpoint = null;
 
 /**
  * ⚡ TẢI VÀ GIẢI MÃ ÂM THANH MICROSOFT NEURAL TTS (CÓ BỘ NHỚ ĐỆM TỰ ĐỘNG & HỖ TRỢ POST/GET)
@@ -7987,29 +7989,40 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
 
   const ttsQuery = `text=${encodeURIComponent(ttsText)}&voice=${encodeURIComponent(neuralVoice)}&voiceId=${encodeURIComponent(voice?.id || '')}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(effectivePitch)}&rate=${encodeURIComponent(effectiveRate)}&lang=${encodeURIComponent(shortLang)}`;
 
-  const endpointCandidates = Array.from(new Set([
+  const baseCandidates = [
     ...(currentOrigin ? [`${currentOrigin}/api/tts`] : []),
     `/api/tts`,
     `http://127.0.0.1:3001/api/tts`,
     `http://localhost:3001/api/tts`
+  ];
+
+  const endpointCandidates = Array.from(new Set([
+    ...(cachedWorkingTtsEndpoint ? [cachedWorkingTtsEndpoint] : []),
+    ...baseCandidates
   ]));
 
   const doFetch = async () => {
     for (let attempt = 0; attempt < 2; attempt++) {
       for (const endpoint of endpointCandidates) {
         try {
+          const controller = new AbortController();
+          const timeoutId = setTimeout(() => controller.abort(), 2500);
+
           let res = await fetch(endpoint, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: postPayload
+            body: postPayload,
+            signal: controller.signal
           }).catch(() => null);
 
           if (!res || !res.ok) {
             const getUrl = endpoint.includes('?') ? `${endpoint}&${ttsQuery}` : `${endpoint}?${ttsQuery}`;
-            res = await fetch(getUrl).catch(() => null);
+            res = await fetch(getUrl, { signal: controller.signal }).catch(() => null);
           }
+          clearTimeout(timeoutId);
 
           if (res && res.ok) {
+            cachedWorkingTtsEndpoint = endpoint;
             const contentType = res.headers.get('content-type') || '';
             let arrayBuf = null;
 
@@ -8043,7 +8056,7 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
         } catch (e) {}
       }
       if (attempt === 0) {
-        await new Promise(r => setTimeout(r, 150));
+        await new Promise(r => setTimeout(r, 100));
       }
     }
     return null;

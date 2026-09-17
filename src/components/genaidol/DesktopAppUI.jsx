@@ -620,9 +620,23 @@ export default function DesktopAppUI() {
     };
   }, []);
 
+  // Đảm bảo tất cả các chế độ chờ kịch bản mặc định về 0.0s (Liền mạch 0ms không ngắt quãng)
+  useEffect(() => {
+    try {
+      const currentPause = localStorage.getItem('avalive_pause_between_sentences');
+      if (currentPause === null || currentPause === '0.1' || currentPause === '0.25' || currentPause === '0.5') {
+        localStorage.setItem('avalive_pause_between_sentences', '0.0');
+        window.dispatchEvent(new CustomEvent('avalive_pause_between_sentences_updated', { detail: { pause: 0.0 } }));
+      }
+      localStorage.setItem('aidol_is_script_live_running', 'false');
+      if (typeof window !== 'undefined') window.__isScriptLiveRunning = false;
+    } catch (e) {}
+  }, []);
+
   const handleToggleScriptLive = (forceState = null) => {
     const next = forceState !== null ? forceState : !isScriptLiveRunning;
     setIsScriptLiveRunning(next);
+    if (typeof window !== 'undefined') window.__isScriptLiveRunning = next;
     try { localStorage.setItem('aidol_is_script_live_running', String(next)); } catch (e) {}
     
     if (next) {
@@ -723,6 +737,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       const count = scriptText.split(/\r?\n/).filter(Boolean).length;
       showToast(`▶️ Đang phát kịch bản: "${scriptName}" (${count} câu thoại)`, 'success');
     } else {
+      if (typeof window !== 'undefined') window.__isScriptLiveRunning = false;
+      try { localStorage.setItem('aidol_is_script_live_running', 'false'); } catch (e) {}
       if (audioPlayerRef.current) {
         audioPlayerRef.current.stopScript();
       }

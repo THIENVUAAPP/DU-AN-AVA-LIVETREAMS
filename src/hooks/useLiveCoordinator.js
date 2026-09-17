@@ -55,9 +55,19 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack 
   const resetIdleTimer = useCallback(() => {
     if (!isConnected) return;
     clearTimeout(idleTimerRef.current);
+    // 🛡️ BẢO VỆ TUYỆT ĐỐI: Nếu đang phát kịch bản bán hàng (Script Live) hoặc test kịch bản,
+    // HỦY BỎ 100% IDLE TIMER để kịch bản đọc liên tục không bao giờ bị dừng 30-40 giây
+    const isScriptActive = (typeof localStorage !== 'undefined' && localStorage.getItem('aidol_is_script_live_running') === 'true') ||
+                           (typeof window !== 'undefined' && (window.__isScriptTestingRunning || window.__isScriptLiveRunning));
+    if (isScriptActive) {
+      return;
+    }
     const configs = getSavedEventConfigs();
     const idleSeconds = Number(configs.idle?.speakAfterIdleSeconds) || 30;
     idleTimerRef.current = setTimeout(() => {
+      const stillScriptActive = (typeof localStorage !== 'undefined' && localStorage.getItem('aidol_is_script_live_running') === 'true') ||
+                                (typeof window !== 'undefined' && (window.__isScriptTestingRunning || window.__isScriptLiveRunning));
+      if (stillScriptActive) return;
       handleLiveEvent('IDLE', { note: `No user interaction for ${idleSeconds}s` });
     }, Math.max(10, idleSeconds) * 1000);
   }, [isConnected]);
@@ -644,6 +654,12 @@ function fillTemplate(template, vars = {}) {
 
       // 10. XỬ LÝ IM LẶNG - TỰ ĐỘNG NÓI KHUẤY ĐỘNG PHÒNG LIVE (IDLE)
       else if (type === 'IDLE') {
+        const isScriptActive = (typeof localStorage !== 'undefined' && localStorage.getItem('aidol_is_script_live_running') === 'true') ||
+                               (typeof window !== 'undefined' && (window.__isScriptTestingRunning || window.__isScriptLiveRunning));
+        if (isScriptActive) {
+          console.log('[useLiveCoordinator] Đang phát kịch bản live, hủy hoàn toàn sự kiện IDLE');
+          return;
+        }
         const idleConfig = configs.idle || {};
         if (idleConfig.active !== false) {
           if (idleConfig.sampleAnswers) {

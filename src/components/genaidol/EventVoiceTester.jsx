@@ -36,7 +36,7 @@ export const SPEED_OPTIONS = [
 ];
 
 export const PAUSE_OPTIONS = [
-  { value: 0.00, label: '0.0s (Liền mạch)' },
+  { value: 0.00, label: '0.0s (Liền mạch 0ms - Không dừng)' },
   { value: 0.05, label: '0.05s' },
   { value: 0.10, label: '0.1s (Siêu ngắn)' },
   { value: 0.15, label: '0.15s' },
