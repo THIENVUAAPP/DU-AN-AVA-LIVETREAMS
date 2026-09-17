@@ -15,14 +15,18 @@
 // 1. TỪ ĐIỂN PHÁT ÂM THƯƠNG HIỆU & THUẬT NGỮ CÔNG NGHỆ (PRONUNCIATION DICTIONARY)
 export const PRONUNCIATION_DICTIONARY = [
   // 🛡️ BẢO VỆ TUYỆT ĐỐI CÁC TỪ KHÓA TIẾNG VIỆT GỐC (TUYỆT ĐỐI KHÔNG TÁCH CHỮ, KHÔNG LỖI CHÍNH TẢ)
-  { pattern: /(?<![\p{L}\p{N}_])không(?![\p{L}\p{N}_])/giu, replacement: 'không' },
+  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo\s*lứt(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo lứt' },
+  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo\s*lức(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo lứt' },
+  { pattern: /(?<![\p{L}\p{N}_])gạo\s*lứt(?![\p{L}\p{N}_])/giu, replacement: 'gạo lứt' },
+  { pattern: /(?<![\p{L}\p{N}_])gạo\s*lức(?![\p{L}\p{N}_])/giu, replacement: 'gạo lứt' },
+  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo' },
+  { pattern: /(?<![\p{L}\p{N}_])gạo\s*st25(?![\p{L}\p{N}_])/giu, replacement: 'gạo ST25' },
   { pattern: /(?<![\p{L}\p{N}_])gạo(?![\p{L}\p{N}_])/giu, replacement: 'gạo' },
+  { pattern: /(?<![\p{L}\p{N}_])không(?![\p{L}\p{N}_])/giu, replacement: 'không' },
   { pattern: /(?<![\p{L}\p{N}_])bạn(?![\p{L}\p{N}_])/giu, replacement: 'bạn' },
   { pattern: /(?<![\p{L}\p{N}_])kịch\s*bản(?![\p{L}\p{N}_])/giu, replacement: 'kịch bản' },
   { pattern: /(?<![\p{L}\p{N}_])khách\s*hàng(?![\p{L}\p{N}_])/giu, replacement: 'khách hàng' },
   { pattern: /(?<![\p{L}\p{N}_])khách(?![\p{L}\p{N}_])/giu, replacement: 'khách' },
-  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo' },
-  { pattern: /(?<![\p{L}\p{N}_])gạo\s*st25(?![\p{L}\p{N}_])/giu, replacement: 'gạo ST25' },
   { pattern: /(?<![\p{L}\p{N}_])chào\s*bạn(?![\p{L}\p{N}_])/giu, replacement: 'chào bạn' },
   { pattern: /(?<![\p{L}\p{N}_])cảm\s*ơn\s*bạn(?![\p{L}\p{N}_])/giu, replacement: 'cảm ơn bạn' },
   { pattern: /(?<![\p{L}\p{N}_])bạn\s*ơi(?![\p{L}\p{N}_])/giu, replacement: 'bạn ơi' },
@@ -339,8 +343,8 @@ export function cleanSpokenPunctuation(text) {
     return cleaned === 'bạn' ? 'bạn' : `bạn ${cleaned}`;
   });
 
-  // Loại bỏ các ký tự Markdown
-  s = s.replace(/[*_~`]/g, '');
+  // Loại bỏ các ký tự Markdown & dấu ngoặc kép trích dẫn làm ngập ngừng voice
+  s = s.replace(/[*_~`"'\u201C\u201D\u2018\u2019\u00AB\u00BB\u201E]/g, '');
 
   // Loại bỏ emoji để không đọc thành tên emoji (vd: 'mặt cười', 'ngọn lửa')
   s = s.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');

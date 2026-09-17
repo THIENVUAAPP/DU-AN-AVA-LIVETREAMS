@@ -1550,7 +1550,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '3.3.3';
+  let ver = '3.3.4';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1588,7 +1588,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '3.3.3';
+  let ver = '3.3.4';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -2987,7 +2987,7 @@ function humanizeTextForBackendTTS(rawText, gender, lang) {
   let text = rawText
     .replace(/\[[^\]]*\]/g, ' ')
     .replace(/\((?:cười|cười tươi|vỗ tay|hành động|chỉ tay|nháy mắt|nói to|nói nhỏ|thì thầm|hào hứng|nhấn mạnh|chỉ giỏ hàng|chốt đơn|đếm ngược|action|smile|clap)[^\)]*\)/gi, ' ')
-    .replace(/[#*`_~]/g, '')
+    .replace(/[#*`_~"'“”„«»]/g, '')
     .replace(/\s+/g, ' ')
     .trim();
 
@@ -3073,7 +3073,7 @@ async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+
           lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
           pitch: safePitch,
           rate: safeRate,
-          outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
+          outputFormat: 'audio-24khz-96kbitrate-mono-mp3',
           timeout: 8000
         });
         await tts.ttsPromise(processedText, tmpFile);

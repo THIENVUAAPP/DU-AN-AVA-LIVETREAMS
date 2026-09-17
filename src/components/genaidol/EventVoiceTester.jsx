@@ -60,6 +60,8 @@ export const PAUSE_OPTIONS = [
 export default function EventVoiceTester({
   text = '',
   defaultVoiceId = 'free_vi_female',
+  pauseBetweenSentences = 0.0,
+  onPauseChange = null,
   onVoiceChange = null,
   onScriptOptimized = null,
   label = 'Nghe thử câu thoại',
@@ -79,6 +81,9 @@ export default function EventVoiceTester({
   };
 
   const getInitialPause = () => {
+    if (pauseBetweenSentences !== undefined && !isNaN(Number(pauseBetweenSentences))) {
+      return Number(pauseBetweenSentences);
+    }
     try {
       const saved = localStorage.getItem('avalive_pause_between_sentences');
       if (saved !== null && !isNaN(Number(saved))) return Number(saved);
@@ -115,6 +120,28 @@ export default function EventVoiceTester({
   useEffect(() => {
     pauseDurationRef.current = pauseDuration;
   }, [pauseDuration]);
+
+  // Đồng bộ pause từ prop từ tab kịch bản
+  useEffect(() => {
+    if (pauseBetweenSentences !== undefined && !isNaN(Number(pauseBetweenSentences))) {
+      const p = Number(pauseBetweenSentences);
+      setPauseDuration(p);
+      pauseDurationRef.current = p;
+    }
+  }, [pauseBetweenSentences]);
+
+  // Lắng nghe sự kiện toàn cục khi người dùng đổi khoảng dừng ở bất kỳ nơi nào
+  useEffect(() => {
+    const handleGlobalPause = (e) => {
+      const p = e.detail?.pause;
+      if (p !== undefined && !isNaN(Number(p))) {
+        setPauseDuration(Number(p));
+        pauseDurationRef.current = Number(p);
+      }
+    };
+    window.addEventListener('avalive_pause_between_sentences_updated', handleGlobalPause);
+    return () => window.removeEventListener('avalive_pause_between_sentences_updated', handleGlobalPause);
+  }, []);
 
   useEffect(() => {
     if (defaultVoiceId) {
@@ -299,11 +326,13 @@ export default function EventVoiceTester({
       if (sentences && sentences.length > 0 && isPlayingRef.current) {
         setCurrentSentenceIdx(0);
         currentSentenceIdxRef.current = 0;
+        const pauseSec = pauseDurationRef.current !== undefined ? Number(pauseDurationRef.current) : 0.0;
+        const loopPauseMs = pauseSec <= 0.02 ? 20 : Math.max(20, Math.round(pauseSec * 1000));
         setTimeout(() => {
           if (isPlayingRef.current) {
             playSentenceAtIndex(0, customVoice);
           }
-        }, 50);
+        }, loopPauseMs);
       } else {
         handleStop();
       }
@@ -390,12 +419,15 @@ export default function EventVoiceTester({
     const speakerRate = (matchedSpeakerAvatar?.rate ?? 1.0) * (speedRef.current || 1.0);
     const speakerVolume = (matchedSpeakerAvatar?.volume ?? 1.0) * (volumeRef.current || 1.0);
 
+    // Watchdog an toàn: Tối thiểu 60s hoặc 450ms/ký tự để câu dài đọc trọn vẹn TUYỆT ĐỐI KHÔNG BỊ BỎ DÒNG
+    const cleanLen = (cleanSentenceText || '').length;
+    const dynamicTimeoutMs = Math.max(60000, cleanLen * 450);
     let watchdogTimer = setTimeout(() => {
       if (isPlayingRef.current && currentSentenceIdxRef.current === index) {
-        console.warn(`[EventVoiceTester] Watchdog triggered for sentence ${index}, advancing to next sentence.`);
+        console.warn(`[EventVoiceTester] Watchdog safety timeout for sentence ${index} (len: ${cleanLen}), advancing.`);
         playSentenceAtIndex(index + 1, customVoice);
       }
-    }, 12000);
+    }, dynamicTimeoutMs);
 
     previewVoiceAudio(
       voiceObj,
@@ -422,11 +454,11 @@ export default function EventVoiceTester({
 
           const pauseSec = pauseDurationRef.current !== undefined ? Number(pauseDurationRef.current) : 0.0;
           
-          // Phát câu tiếp theo liền mạch 20ms
+          // Phát câu tiếp theo: nếu người dùng setup liền mạch (<= 0.02s) thì phát sau 15ms cực mượt
           if (pauseSec <= 0.02) {
-            setTimeout(() => {
+            queueTimeoutRef.current = setTimeout(() => {
               if (isPlayingRef.current) playSentenceAtIndex(index + 1, customVoice);
-            }, 20);
+            }, 15);
           } else {
             const pauseMs = Math.max(20, Math.round(pauseSec * 1000));
             queueTimeoutRef.current = setTimeout(() => {
@@ -446,7 +478,11 @@ export default function EventVoiceTester({
     pauseDurationRef.current = val;
     try {
       localStorage.setItem('avalive_pause_between_sentences', String(val));
+      window.dispatchEvent(new CustomEvent('avalive_pause_between_sentences_updated', { detail: { pause: val } }));
     } catch (e) {}
+    if (onPauseChange) {
+      onPauseChange(val);
+    }
   };
 
   const handleOptimizeClick = () => {

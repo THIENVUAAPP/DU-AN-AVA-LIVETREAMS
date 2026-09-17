@@ -56,6 +56,32 @@ const AIAudioPlayer = forwardRef(({ isLive, isScriptRunning = false, onAudioPlay
     }
   }, [currentVideoUrl]);
 
+  const [userPauseDuration, setUserPauseDuration] = useState(() => {
+    try {
+      const saved = localStorage.getItem('avalive_pause_between_sentences');
+      if (saved !== null && !isNaN(Number(saved))) return Number(saved);
+    } catch (e) {}
+    return 0.0;
+  });
+  const userPauseDurationRef = useRef(userPauseDuration);
+
+  useEffect(() => {
+    userPauseDurationRef.current = userPauseDuration;
+  }, [userPauseDuration]);
+
+  // Lắng nghe sự kiện cập nhật khoảng dừng kịch bản từ người dùng setup
+  useEffect(() => {
+    const handlePauseUpdate = (e) => {
+      const p = e.detail?.pause;
+      if (p !== undefined && !isNaN(Number(p))) {
+        setUserPauseDuration(Number(p));
+        userPauseDurationRef.current = Number(p);
+      }
+    };
+    window.addEventListener('avalive_pause_between_sentences_updated', handlePauseUpdate);
+    return () => window.removeEventListener('avalive_pause_between_sentences_updated', handlePauseUpdate);
+  }, []);
+
   // Đồng bộ cấu hình Voice toàn app khi có cập nhật
   useEffect(() => {
     const handleVoiceUpdate = (e) => {
@@ -396,9 +422,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         if (nextPriVoice) prefetchTTSAudio(nextPri.text, nextPriVoice);
       }
 
+      // Watchdog an toàn: Thời gian tối đa cho 1 câu đọc (tối thiểu 60s hoặc 450ms/ký tự) để TUYỆT ĐỐI KHÔNG BỎ DÒNG
+      const cleanLen = (item.text || '').length;
+      const dynamicTimeoutMs = Math.max(60000, cleanLen * 450);
       let watchdogTimer = setTimeout(() => {
         if (isBusyRef.current) {
-          console.warn('[AIAudioPlayer] Watchdog safety reset busy state');
+          console.warn('[AIAudioPlayer] Watchdog safety reset busy state after timeout (length:', cleanLen, ')');
           isBusyRef.current = false;
           if (priorityQueueRef.current.length > 0) {
             const nextPriority = priorityQueueRef.current.shift();
@@ -411,7 +440,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             if (nextItem) playItem(nextItem, true);
           }
         }
-      }, 12000);
+      }, dynamicTimeoutMs);
 
       await previewVoiceAudio(activeVoice, item.text, {
         priority: true,
@@ -465,9 +494,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 setCurrentIndex(0);
                 const firstItem = queueRef.current[0];
                 if (firstItem) {
+                  const pauseSec = userPauseDurationRef.current !== undefined ? Number(userPauseDurationRef.current) : 0.0;
+                  const loopDelayMs = pauseSec <= 0.02 ? 20 : Math.max(20, Math.round(pauseSec * 1000));
                   setTimeout(() => {
                     if (isPlayingRef.current) playItem(firstItem, true);
-                  }, 60);
+                  }, loopDelayMs);
                 }
               } else {
                 setIsPlaying(false);
@@ -475,14 +506,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 if (onAudioPlayStateChange) onAudioPlayStateChange(false);
               }
             } else {
-              // Đọc câu tiếp theo trong kịch bản: Liền mạch 20ms, không ngắt nghỉ cà nhấp
+              // Đọc câu tiếp theo trong kịch bản: Liền mạch hoặc theo đúng thiết lập khoảng dừng của người dùng
               currentIndexRef.current = nextIdx;
               setCurrentIndex(nextIdx);
               const nextItem = queueRef.current[nextIdx];
               if (nextItem && isPlayingRef.current) {
+                const pauseSec = userPauseDurationRef.current !== undefined ? Number(userPauseDurationRef.current) : 0.0;
+                const delayMs = pauseSec <= 0.02 ? 15 : Math.max(15, Math.round(pauseSec * 1000));
                 setTimeout(() => {
                   if (isPlayingRef.current) playItem(nextItem, true);
-                }, 20);
+                }, delayMs);
               }
             }
           } else {

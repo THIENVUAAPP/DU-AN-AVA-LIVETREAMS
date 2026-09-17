@@ -875,6 +875,12 @@ export default function WorkspaceTacVu() {
     if (activeEditingTab.active) {
       partial[field] = value;
     }
+    if (field === 'pauseBetweenSentences') {
+      try {
+        localStorage.setItem('avalive_pause_between_sentences', String(value));
+        window.dispatchEvent(new CustomEvent('avalive_pause_between_sentences_updated', { detail: value }));
+      } catch (e) {}
+    }
     updateEventConfig('script_broadcast', partial);
     localStorage.setItem('aidol_user_script_tabs_persistent', JSON.stringify(updated));
     window.dispatchEvent(new CustomEvent('aidol_script_updated', {
@@ -2272,6 +2278,8 @@ export default function WorkspaceTacVu() {
                           <EventVoiceTester 
                             text={activeEditingTab.fixedScriptText || MASTER_SCRIPTS.cosmetics}
                             defaultVoiceId={activeEditingTab.voiceId || currentConfig.voiceId || "free_vi_female"}
+                            pauseBetweenSentences={activeEditingTab.pauseBetweenSentences !== undefined ? activeEditingTab.pauseBetweenSentences : 0.0}
+                            onPauseChange={(val) => handleUpdateActiveScriptTab('pauseBetweenSentences', val)}
                             onVoiceChange={(vid) => {
                               handleUpdateActiveScriptTab('voiceId', vid);
                               handleSimpleChange('voiceId', vid);

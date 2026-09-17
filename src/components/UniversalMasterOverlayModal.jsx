@@ -168,6 +168,13 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
 
     const charQuery = selectedCharId ? `&char=${encodeURIComponent(selectedCharId)}` : '';
     const effectiveV = finalVideoUrl || activeUrl || serverActiveUrl || '';
+
+    if (typeof window !== 'undefined' && window.__activeMediaBlob) {
+      window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+      if (selectedCharId) window.__activeMediaBlobMap.set(selectedCharId, window.__activeMediaBlob);
+      if (effectiveV) window.__activeMediaBlobMap.set(effectiveV, window.__activeMediaBlob);
+    }
+
     const vQuery = effectiveV ? `&v=${encodeURIComponent(effectiveV)}` : '';
     const timeQuery = curTime > 0 ? `&t=${Math.round(curTime * 100) / 100}` : '';
     const query = `${vQuery}${charQuery}${timeQuery}`;

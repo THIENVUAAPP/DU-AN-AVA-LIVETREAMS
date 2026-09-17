@@ -903,6 +903,24 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     } catch (err) {}
 
     const effectiveV = serverActiveUrl || activeUrl || broadcastUrl || '';
+
+    // ⚡ LƯU TRỰC TIẾP BLOB VÀ BLOB URL TRÊN WINDOW CHO CỬA SỔ WINDOW CAPTURE MỞ 0MS KHÔNG GIẬT LAG
+    if (typeof window !== 'undefined') {
+      const activeBlob = currentFileBlobRef.current;
+      if (activeBlob) {
+        window.__activeMediaBlob = activeBlob;
+        window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+        if (selectedCharacter) window.__activeMediaBlobMap.set(selectedCharacter, activeBlob);
+        if (effectiveV) window.__activeMediaBlobMap.set(effectiveV, activeBlob);
+        if (broadcastUrl) window.__activeMediaBlobMap.set(broadcastUrl, activeBlob);
+      }
+      if (currentBlobUrlRef.current) {
+        window.__activeMediaBlobUrl = currentBlobUrlRef.current;
+        window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+        window.__activeMediaBlobMap.set(currentBlobUrlRef.current, activeBlob || currentBlobUrlRef.current);
+      }
+    }
+
     const charQuery = selectedCharacter ? `&char=${encodeURIComponent(selectedCharacter)}` : '';
     const timeQuery = curTime > 0 ? `&t=${Math.round(curTime * 100) / 100}` : '';
     const vQuery = effectiveV ? `&v=${encodeURIComponent(effectiveV)}` : '';
@@ -1928,6 +1946,19 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       const fileBlob = charItem.fileData || null;
       if (fileBlob) currentFileBlobRef.current = fileBlob;
       if (blobUrl) currentBlobUrlRef.current = blobUrl;
+
+      if (typeof window !== 'undefined') {
+        if (fileBlob) {
+          window.__activeMediaBlob = fileBlob;
+          window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+          window.__activeMediaBlobMap.set(charItem.id, fileBlob);
+          window.__activeMediaBlobMap.set(cleanUrl, fileBlob);
+          if (blobUrl) window.__activeMediaBlobMap.set(blobUrl, fileBlob);
+        }
+        if (blobUrl) {
+          window.__activeMediaBlobUrl = blobUrl;
+        }
+      }
 
       if (desktopVideoRef.current) {
         desktopVideoRef.current.src = blobUrl || cleanUrl;
@@ -3089,6 +3120,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             // 🔒 KHOÁ CỐ ĐỊNH VIDEO CỦA NGƯỜI DÙNG: Cập nhật đường dẫn server vĩnh viễn
             setUserLockedMediaUrl(fileUrl);
             try { localStorage.setItem('avalive_user_locked_media', fileUrl); } catch (e) {}
+
+            if (typeof window !== 'undefined') {
+              window.__activeMediaBlob = file;
+              window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+              window.__activeMediaBlobMap.set(fileUrl, file);
+              window.__activeMediaBlobMap.set(newCharId, file);
+              window.__activeMediaBlobMap.set(localUrl, file);
+            }
 
             setCustomCharacters(prev => {
               const updatedList = prev.map(c => c.id === newCharId ? updatedChar : c);

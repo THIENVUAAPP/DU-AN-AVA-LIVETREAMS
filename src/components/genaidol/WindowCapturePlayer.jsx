@@ -21,10 +21,18 @@ export default function WindowCapturePlayer() {
 
   const [videoSrc, setVideoSrc] = useState(() => {
     if (typeof window === 'undefined') return '/uploads/media-1789044811424-233037063.mp4';
-    // ⚡ ƯU TIÊN 1: Lấy ngay blob: URL từ cửa sổ chính (0ms không cần mạng, không cần tải lại file 20GB)
+    // ⚡ ƯU TIÊN 0 (CAO NHẤT): Lấy trực tiếp fileBlob hoặc Blob URL từ opener hoặc window hiện tại (0ms nạp tức thì)
     try {
-      if (window.opener && window.opener.__activeMediaBlobUrl) {
-        return window.opener.__activeMediaBlobUrl;
+      if (window.opener) {
+        if (window.opener.__activeMediaBlob && (window.opener.__activeMediaBlob instanceof Blob || window.opener.__activeMediaBlob instanceof File)) {
+          return URL.createObjectURL(window.opener.__activeMediaBlob);
+        }
+        if (window.opener.__activeMediaBlobUrl) {
+          return window.opener.__activeMediaBlobUrl;
+        }
+      }
+      if (window.__activeMediaBlob && (window.__activeMediaBlob instanceof Blob || window.__activeMediaBlob instanceof File)) {
+        return URL.createObjectURL(window.__activeMediaBlob);
       }
       if (window.__activeMediaBlobUrl) {
         return window.__activeMediaBlobUrl;
@@ -76,18 +84,38 @@ export default function WindowCapturePlayer() {
 
   // ⚡ Tự động tìm kiếm fileBlob gốc trong Memory Cache / Opener / IndexedDB để phát 0ms không cần chờ upload/mạng
   const tryLoadFromLocalDB = useCallback(async (targetUrlOrCharId) => {
-    if (!targetUrlOrCharId || typeof window === 'undefined') return null;
+    if (typeof window === 'undefined') return null;
     try {
-      // 1. Kiểm tra RAM Blob Map trực tiếp từ Opener hoặc Window hiện tại (0ms)
-      const memBlob = (window.opener && window.opener.__activeMediaBlobMap && window.opener.__activeMediaBlobMap.get(targetUrlOrCharId)) ||
-                      (window.__activeMediaBlobMap && window.__activeMediaBlobMap.get(targetUrlOrCharId));
-      if (memBlob) {
+      // 0. Ưu tiên số 0: Lấy trực tiếp __activeMediaBlob từ opener (0ms)
+      if (window.opener && window.opener.__activeMediaBlob && (window.opener.__activeMediaBlob instanceof Blob || window.opener.__activeMediaBlob instanceof File)) {
         if (activeBlobUrlRef.current) {
           try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
         }
-        const bUrl = URL.createObjectURL(memBlob);
+        const bUrl = URL.createObjectURL(window.opener.__activeMediaBlob);
         activeBlobUrlRef.current = bUrl;
         return bUrl;
+      }
+      if (window.__activeMediaBlob && (window.__activeMediaBlob instanceof Blob || window.__activeMediaBlob instanceof File)) {
+        if (activeBlobUrlRef.current) {
+          try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
+        }
+        const bUrl = URL.createObjectURL(window.__activeMediaBlob);
+        activeBlobUrlRef.current = bUrl;
+        return bUrl;
+      }
+
+      // 1. Kiểm tra RAM Blob Map trực tiếp từ Opener hoặc Window hiện tại (0ms)
+      if (targetUrlOrCharId) {
+        const memBlob = (window.opener && window.opener.__activeMediaBlobMap && window.opener.__activeMediaBlobMap.get(targetUrlOrCharId)) ||
+                        (window.__activeMediaBlobMap && window.__activeMediaBlobMap.get(targetUrlOrCharId));
+        if (memBlob) {
+          if (activeBlobUrlRef.current) {
+            try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
+          }
+          const bUrl = URL.createObjectURL(memBlob);
+          activeBlobUrlRef.current = bUrl;
+          return bUrl;
+        }
       }
 
       // 2. Kiểm tra IndexedDB
@@ -98,7 +126,7 @@ export default function WindowCapturePlayer() {
         (it.id && it.id === targetUrlOrCharId) ||
         (it.url && it.url === targetUrlOrCharId) ||
         (it.mediaUrl && it.mediaUrl === targetUrlOrCharId) ||
-        (it.mediaUrl && targetUrlOrCharId.includes(it.mediaUrl)) ||
+        (it.mediaUrl && targetUrlOrCharId && targetUrlOrCharId.includes(it.mediaUrl)) ||
         (targetUrlOrCharId && it.mediaUrl && it.mediaUrl.includes(targetUrlOrCharId))
       );
 
