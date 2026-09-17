@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.5.2';
+export const APP_VERSION = '3.5.3';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v3.5.2 - Cập Nhật Bộ Cài Đặt ZIP Mới Nhất Trực Tiếp Trên Website',
-    description: '1. Cập Nhật Toàn Bộ Gói Cài Đặt ZIP Mới Nhất: Đóng gói và cập nhật trực tiếp file ZIP độc lập Windows & Mac v3.5.2 mới nhất; 2. Tải Trực Tiếp 1-Click Tốc Độ Cao: Tự động phân giải file ZIP bản mới nhất không qua trung gian; 3. Đồng Bộ Hóa Toàn Diện Bộ Phát Âm Chuẩn Tiếng Việt.'
+    title: '⚡ Bản Cập Nhật v3.5.3 - Phát Hành Trực Tiếp Gói Cài Đặt ZIP v3.5.3 Mới Nhất Lên GitHub Releases & Website',
+    description: '1. Tự Động Phân Giải & Tải Đúng Gói ZIP v3.5.3: Đã xuất bản và đính kèm trực tiếp file cài đặt ZIP v3.5.3 mới nhất lên GitHub Release và website; 2. Đọc Chuẩn Xác Từng Câu Từng Chữ: Phát âm tự nhiên 100% tiếng Việt, giữ nguyên vẹn khối thoại; 3. Mở Ứng Dụng 1-Click Tốc Độ Cao.'
   }
 ];
 
