@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.4.9';
+export const APP_VERSION = '3.5.0';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v3.4.9 - Tối Ưu Giọng Đọc Liền Mạch Tự Nhiên & Chuẩn Hóa Khẩu Lệnh, Bánh Gạo Lứt, Ăn Nhạt',
-    description: '1. Chuẩn Hóa Chuỗi Từ Khóa Trọng Tâm: Phát âm chuẩn xác "dừng lại đây một chút thôi", "bánh gạo lứt", "hiện tại", "nhắc lại", "ăn nhạt" với đầy đủ âm tiết và ngữ điệu tự nhiên; 2. Đọc Liền Mạch Cả Câu, Không Tách Vụn Từng Chữ: Tối ưu nhịp thở và luồng âm thanh, phát âm trôi chảy và truyền cảm; 3. Tự Động Sửa Lỗi Chính Tả Toàn Diện: Loại bỏ triệt để các lỗi gõ sai chính tả trên sóng livestream.'
+    title: '⚡ Bản Cập Nhật v3.5.0 - Khóa Chặt Đọc Nguyên Khối Toàn Bộ Dòng Kịch Bản & Bảo Toàn Âm Đuôi 100%',
+    description: '1. Khóa Chặt Đọc Nguyên Khối Từng Câu Thoại: Tuyệt đối không xé lẻ câu thành từng từ rời rạc, kịch bản đọc liền một mạch mượt mà, tự nhiên như người thật; 2. Bảo Toàn 100% Âm Đuôi & Dấu Thanh: Tăng cường bộ đệm âm thanh, phát âm chuẩn xác trọn vẹn "dừng lại đây một chút thôi", "bánh gạo lứt", "ăn nhạt", "hiện tại", "nhắc lại"; 3. Tự Động Chuẩn Hóa Chính Tả Toàn Diện.'
   }
 ];
 

@@ -7507,10 +7507,10 @@ export function trimAudioBufferSilence(audioBuffer) {
     // Cửa sổ trượt 15ms tính năng lượng RMS và biên độ đỉnh Peak
     const windowSize = Math.max(16, Math.floor(sampleRate * 0.015)); // 15ms window
     const hopSize = Math.max(8, Math.floor(sampleRate * 0.003));     // 3ms hop step
-    const rmsThreshold = 0.0003; // Ngưỡng nhạy cao bắt trọn vẹn âm thì thầm và dấu nặng
-    const peakThreshold = 0.0015;
-    const leadPadding = Math.floor(sampleRate * 0.010);              // 10ms lead-in chống click
-    const safetyPadding = Math.floor(sampleRate * 0.060);            // 60ms safety padding bảo toàn 100% âm đuôi (-n, -ng, -nh, -t, -c, 'gạo') nhưng loại bỏ hoàn toàn khoảng lặng thừa
+    const rmsThreshold = 0.0001; // Ngưỡng siêu nhạy bảo toàn trọn vẹn âm thì thầm, dấu nặng và âm đuôi
+    const peakThreshold = 0.0008;
+    const leadPadding = Math.floor(sampleRate * 0.015);              // 15ms lead-in chống click
+    const safetyPadding = Math.floor(sampleRate * 0.120);            // 120ms safety padding bảo toàn 100% âm đuôi (-t, -c, -n, -ng, -nh, 'lứt', 'nhạt', 'một chút')
 
     // 1. Quét tìm vị trí bắt đầu có âm thanh (Start Index)
     let startIndex = 0;
