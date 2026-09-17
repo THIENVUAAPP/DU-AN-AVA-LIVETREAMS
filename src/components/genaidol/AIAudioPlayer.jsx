@@ -404,23 +404,91 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           if (onActionTriggered) onActionTriggered({ type: 'LIPSYNC_ENDED' });
           isBusyRef.current = false;
 
-          // Nếu có sự kiện ưu tiên đang chờ (bình luận AI, quà tặng...), phát sự kiện ưu tiên tiếp theo ngay
+          // 1. Nếu có bình luận ưu tiên đang chờ (bình luận AI, quà tặng...), phát dứt điểm từng bình luận một
           if (priorityQueueRef.current.length > 0) {
             const nextPriority = priorityQueueRef.current.shift();
-            playItem(nextPriority, false);
+            setTimeout(() => {
+              playItem(nextPriority, false);
+            }, 100);
             return;
           }
 
           if (!isPlayingRef.current) return;
 
-          // Tiếp tục đọc câu thoại kịch bản tiếp theo
+          // 2. Chuyển sang câu kịch bản tiếp theo tuần tự từ đầu đến đuôi
           if (isScriptItem) {
-            setCurrentIndex(prev => prev + 1);
+            const nextIdx = currentIndexRef.current + 1;
+            if (nextIdx >= queueRef.current.length) {
+              // Đã đọc hết câu cuối cùng: Tự động lặp lại từ câu đầu tiên (Infinite Loop)
+              const savedConfig = localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup');
+              let shouldLoop = true;
+              try {
+                if (savedConfig) {
+                  const parsed = JSON.parse(savedConfig);
+                  if (parsed.script_broadcast && parsed.script_broadcast.loopScript === false) {
+                    shouldLoop = false;
+                  }
+                }
+              } catch (e) {}
+
+              if (shouldLoop && queueRef.current.length > 0) {
+                currentIndexRef.current = 0;
+                setCurrentIndex(0);
+                const firstItem = queueRef.current[0];
+                if (firstItem) {
+                  setTimeout(() => {
+                    if (isPlayingRef.current) playItem(firstItem, true);
+                  }, 250);
+                }
+              } else {
+                setIsPlaying(false);
+                isPlayingRef.current = false;
+                if (onAudioPlayStateChange) onAudioPlayStateChange(false);
+              }
+            } else {
+              // Đọc câu tiếp theo trong kịch bản
+              currentIndexRef.current = nextIdx;
+              setCurrentIndex(nextIdx);
+              const nextItem = queueRef.current[nextIdx];
+              if (nextItem) {
+                setTimeout(() => {
+                  if (isPlayingRef.current) playItem(nextItem, true);
+                }, 150);
+              }
+            }
           } else {
-            // Sau khi phát xong sự kiện ưu tiên, tiếp tục kịch bản tại vị trí hiện tại
-            const curIdx = currentIndexRef.current;
-            if (curIdx < queueRef.current.length) {
-              playItem(queueRef.current[curIdx], true);
+            // 3. SAU KHI VỪA TRẢ LỜI XONG BÌNH LUẬN CỦA KHÁCH HÀNG (isScriptItem === false):
+            // Nhắc lại ngữ cảnh / dẫn nối thông minh để tiếp tục phát kịch bản tại vị trí hiện tại
+            if (priorityQueueRef.current.length > 0) {
+              const nextPri = priorityQueueRef.current.shift();
+              setTimeout(() => {
+                playItem(nextPri, false);
+              }, 100);
+              return;
+            }
+
+            if (isPlayingRef.current && queueRef.current.length > 0) {
+              const curIdx = currentIndexRef.current;
+              const targetItem = queueRef.current[curIdx] || queueRef.current[0];
+              if (targetItem) {
+                const bridgePhrases = [
+                  "Dạ tiếp tục với siêu phẩm ngày hôm nay của shop em nha cả nhà,",
+                  "Dạ quay trở lại với chia sẻ về ưu đãi lúc nãy,",
+                  "Dạ như em vừa chia sẻ với cả nhà thì,",
+                  "Dạ tiếp tục với chương trình livestream hôm nay nha quý vị,"
+                ];
+                const randomBridge = bridgePhrases[Math.floor(Math.random() * bridgePhrases.length)];
+                
+                const bridgedItem = {
+                  ...targetItem,
+                  id: `resumed_${targetItem.id}_${Date.now()}`,
+                  text: `${randomBridge} ${targetItem.text}`
+                };
+                
+                setTimeout(() => {
+                  if (isPlayingRef.current) playItem(bridgedItem, true);
+                }, 250);
+              }
             }
           }
         }
@@ -434,7 +502,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }
       isBusyRef.current = false;
       if (isPlayingRef.current && isScriptItem) {
-        setCurrentIndex(prev => prev + 1);
+        const nextIdx = currentIndexRef.current + 1;
+        if (nextIdx < queueRef.current.length) {
+          currentIndexRef.current = nextIdx;
+          setCurrentIndex(nextIdx);
+          const nextItem = queueRef.current[nextIdx];
+          if (nextItem) setTimeout(() => { if (isPlayingRef.current) playItem(nextItem, true); }, 200);
+        }
       }
     }
   };

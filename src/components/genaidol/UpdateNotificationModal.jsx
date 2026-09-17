@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.2.2';
+export const APP_VERSION = '3.2.3';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Bản Cập Nhật v3.2.2 - Chuẩn Hóa Phát Kịch Bản Trọn Vẹn 100% Cho Cả 2 Chế Độ & Phát Âm Voice AI Chuẩn Tuyệt Đối',
-    description: '1. Đồng bộ hoàn hảo Nút "▶️ Phát Kịch Bản" trên thanh Top Bar: Tự động nhận diện và phát CHÍNH XÁC 100% kịch bản theo đúng 2 chế độ đã cài đặt trong "Kết Nối Idol" (Tab "📜 Kịch bản Idol"): Chế độ 1 (Kịch bản có sẵn theo từng tab) và Chế độ 2 (Bộ Não AI & Kho Tri Thức Doanh Nghiệp theo đúng số phút); 2. Nâng cấp Phát Âm Voice AI Chuẩn Tuyệt Đối: Bảo toàn 100% câu từ của người dùng, loại bỏ hoàn toàn hiện tượng tự biến đổi từ ngữ sai lệch, xử lý hoàn hảo cách đọc số tiền (vd: 890.000đ, 1.850.000đ, 50k, 50%), đơn vị, thuật ngữ bán hàng mượt mà, đúng chuẩn chính tả tiếng Việt; 3. Tối ưu hóa chuỗi phát tuần tự và lặp lại kịch bản mượt mà, chuyên nghiệp không khựng nghỉ.'
+    title: '👑 Bản Cập Nhật v3.2.3 - Phát Kịch Bản Tuần Tự Từ Đầu Đến Đuôi Xuyên Suốt Phiên Live & Dẫn Nối Thông Minh Sau Bình Luận',
+    description: '1. Phát Kịch Bản Tuần Tự Từ Đầu Đến Đuôi Xuyên Suốt: Tự động chạy tuần tự từng câu thoại trong kịch bản từ đầu đến cuối 100%, tự động lặp lại tuần hoàn (Infinite Loop) cho đến khi kết thúc phiên Live mà không bao giờ bị dừng hay kẹt câu thoại; 2. Cơ Chế Dẫn Nối Ngữ Cảnh Thông Minh Sau Bình Luận: Khi có bình luận từ khán giả, AI đọc dứt điểm câu thoại hiện tại (không chồng chéo giọng nói), trả lời bình luận của khán giả, sau đó tự động nhắc lại ngữ cảnh và dẫn nối thông minh trước khi đọc tiếp câu kịch bản tiếp theo; 3. Chuẩn Hóa Phát Âm Tên Riêng & Ký Tự Viết Tắt: Xử lý phát âm tự nhiên cho tên viết tắt 1 chữ cái (Bạn N, Anh T, Chị H...), tên tiếng Anh, số tiền và thuật ngữ bán hàng mượt mà, đúng chuẩn chính tả tiếng Việt.'
   }
 ];
 

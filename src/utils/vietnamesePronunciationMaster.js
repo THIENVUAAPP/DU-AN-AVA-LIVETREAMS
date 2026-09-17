@@ -130,7 +130,31 @@ export const VIETNAMESE_ABBREVIATIONS = [
   { pattern: /\bpgs\.ts\.\b/gi, replacement: 'Phó Giáo sư Tiến sĩ ' },
   { pattern: /\bthcs\b/gi, replacement: 'trung học cơ sở' },
   { pattern: /\bthpt\b/gi, replacement: 'trung học phổ thông' },
-  { pattern: /\bđh\b/gi, replacement: 'đại học' }
+  { pattern: /\bđh\b/gi, replacement: 'đại học' },
+
+  // Danh xưng kèm chữ cái viết tắt (vd: Bạn N, Bạn A, Anh T, Chị M, Bác K,...)
+  { pattern: /\b(bạn|anh|chị|em|cô|chú|bác|khách|viewer)\s+A\b/gi, replacement: '$1 A' },
+  { pattern: /\b(bạn|anh|chị|em|cô|chú|bác|khách|viewer)\s+B\b/gi, replacement: '$1 Bê' },
+  { pattern: /\b(bạn|anh|chị|em|cô|chú|bác|khách|viewer)\s+C\b/gi, replacement: '$1 Xê' },
+  { pattern: /\b(bạn|anh|chị|em|cô|chú|bác|khách|viewer)\s+D\b/gi, replacement: '$1 Đê' },
+  { pattern: /\b(bạn|anh|chị|em|cô|chú|bác|khách|viewer)\s+E\b/gi, replacement: '$1 E' },
+  { pattern: /\b(bạn|anh|chị|em|cô|chú|bác|khách|viewer)\s+F\b/gi, replacement: '$1 Ép' },
+  { pattern: /\b(bạn|anh|chị|em|cô|chú|bác|khách|viewer)\s+G\b/gi, replacement: '$1 Gờ' },
+  { pattern: /\b(bạn|anh|chị|em|cô|chú|bác|khách|viewer)\s+H\b/gi, replacement: '$1 Hát' },
+  { pattern: /\b(bạn|anh|chị|em|cô|chú|bác|khách|viewer)\s+K\b/gi, replacement: '$1 Ca' },
+  { pattern: /\b(bạn|anh|chị|em|cô|chú|bác|khách|viewer)\s+L\b/gi, replacement: '$1 Lờ' },
+  { pattern: /\b(bạn|anh|chị|em|cô|chú|bác|khách|viewer)\s+M\b/gi, replacement: '$1 Em-mờ' },
+  { pattern: /\b(bạn|anh|chị|em|cô|chú|bác|khách|viewer)\s+N\b/gi, replacement: '$1 En-nờ' },
+  { pattern: /\b(bạn|anh|chị|em|cô|chú|bác|khách|viewer)\s+P\b/gi, replacement: '$1 Pê' },
+  { pattern: /\b(bạn|anh|chị|em|cô|chú|bác|khách|viewer)\s+Q\b/gi, replacement: '$1 Quy' },
+  { pattern: /\b(bạn|anh|chị|em|cô|chú|bác|khách|viewer)\s+R\b/gi, replacement: '$1 Rờ' },
+  { pattern: /\b(bạn|anh|chị|em|cô|chú|bác|khách|viewer)\s+S\b/gi, replacement: '$1 Ét' },
+  { pattern: /\b(bạn|anh|chị|em|cô|chú|bác|khách|viewer)\s+T\b/gi, replacement: '$1 Tê' },
+  { pattern: /\b(bạn|anh|chị|em|cô|chú|bác|khách|viewer)\s+U\b/gi, replacement: '$1 U' },
+  { pattern: /\b(bạn|anh|chị|em|cô|chú|bác|khách|viewer)\s+V\b/gi, replacement: '$1 Vê' },
+  { pattern: /\b(bạn|anh|chị|em|cô|chú|bác|khách|viewer)\s+X\b/gi, replacement: '$1 Ích' },
+  { pattern: /\b(bạn|anh|chị|em|cô|chú|bác|khách|viewer)\s+Y\b/gi, replacement: '$1 I dài' },
+  { pattern: /\b(bạn|anh|chị|em|cô|chú|bác|khách|viewer)\s+Z\b/gi, replacement: '$1 Dét' }
 ];
 
 // 3. CHUYỂN ĐỔI SỐ NGUYÊN TIẾNG VIỆT THÀNH CHỮ CHUẨN XÁC
