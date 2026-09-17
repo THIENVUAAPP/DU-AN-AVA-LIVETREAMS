@@ -244,8 +244,11 @@ export default function EventVoiceTester({
        activeVoiceId === 'game' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'game') :
        ALL_SYSTEM_VOICES.find(v => v.id === 'free_vi_female')) || { id: 'free_vi_female', lang: 'vi-VN', provider: 'system', gender: 'Female' };
 
+    // Chuẩn hóa phát âm và làm sạch emoji/ký tự đặc biệt cho câu thoại để khớp 100% cache key
+    const normalizedText = cleanTextForVoiceSpeech(cleanSentenceText);
+
     return {
-      cleanText: cleanSentenceText,
+      cleanText: normalizedText,
       voiceObj,
       activeSpeakerId,
       matchedSpeakerAvatar
@@ -303,17 +306,13 @@ export default function EventVoiceTester({
   };
 
   /**
-   * Phân tách kịch bản dài thành các câu thoại hoàn chỉnh chuẩn ngữ nghĩa (theo từng dòng)
-   * Tự động thay thế placeholder và ngắt câu thông minh để TTS phản hồi ngay lập tức
-   */
-  /**
-   * Phân tách kịch bản dài thành các câu thoại hoàn chỉnh chuẩn ngữ nghĩa (theo từng dòng)
-   * Tự động thay thế placeholder, giải mã HTML entity và ngắt câu thông minh
+   * Phân tách kịch bản dài thành các câu thoại hoàn chỉnh chuẩn ngữ nghĩa (theo từng dòng riêng biệt)
+   * Giữ trọn vẹn 100% cấu trúc các dòng kịch bản của người dùng, không bao giờ gộp hay xé nát câu
    */
   const splitIntoSentences = (raw) => {
     if (!raw || !raw.trim()) return [];
     
-    let processed = String(raw)
+    let decoded = String(raw)
       .replace(/&nbsp;/gi, ' ')
       .replace(/&amp;/gi, '&')
       .replace(/&quot;/gi, '"')
@@ -328,16 +327,15 @@ export default function EventVoiceTester({
       .replace(/\{gift_name\}|\[gift_name\]/gi, 'Cờ Tổ Quốc')
       .replace(/\{count\}|\[count\]/gi, '5')
       .replace(/\{milestone\}|\[milestone\]/gi, '10,000')
-      .replace(/\{item\}|\[item\]/gi, 'Bộ Đôi Serum Tế Bào Gốc')
-      .replace(/\{product\}|\[product\]/gi, 'Bộ Đôi Serum Tế Bào Gốc')
-      .replace(/\{price\}|\[price\]/gi, '890.000đ');
+      .replace(/\{item\}|\[item\]/gi, 'Bánh gạo lứt')
+      .replace(/\{product\}|\[product\]/gi, 'Bánh gạo lứt')
+      .replace(/\{price\}|\[price\]/gi, '89.000đ');
 
-    processed = cleanTextForVoiceSpeech(processed);
-
-    // Tách theo dòng tự nhiên của kịch bản để mọi câu thoại được đọc liền mạch, mượt mà không ngắt quãng
-    const lines = processed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
+    // Tách theo từng dòng kịch bản gốc của người dùng TRƯỚC HẾT
+    const rawLines = decoded.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
     const finalSentences = [];
-    for (const line of lines) {
+
+    for (const line of rawLines) {
       let speakerPrefix = '';
       let body = line;
       const tagMatch = line.match(/^(\[?[a-zA-Z0-9_\u00C0-\u1EF9\s]+\]?\s*:\s*)(.*)$/);
@@ -345,9 +343,14 @@ export default function EventVoiceTester({
         speakerPrefix = tagMatch[1];
         body = tagMatch[2];
       }
+
+      // Làm sạch ký tự lạ, emoji, ngoặc kép trên từng dòng
+      const cleanBody = cleanTextForVoiceSpeech(body);
+      if (!cleanBody || !cleanBody.trim()) continue;
+
       // Chỉ tách nhỏ nếu một dòng quá dài (> 280 ký tự) để tối ưu tải lượng TTS
-      if (body.length > 280) {
-        const parts = body.match(/[^.!?\n]+[.!?]+|[^.!?\n]+$/g) || [body];
+      if (cleanBody.length > 280) {
+        const parts = cleanBody.match(/[^.!?\n]+[.!?]+|[^.!?\n]+$/g) || [cleanBody];
         for (const part of parts) {
           const s = part.trim();
           if (s && s.length > 0) {
@@ -355,11 +358,11 @@ export default function EventVoiceTester({
           }
         }
       } else {
-        finalSentences.push(speakerPrefix ? `${speakerPrefix}${body}` : body);
+        finalSentences.push(speakerPrefix ? `${speakerPrefix}${cleanBody}` : cleanBody);
       }
     }
 
-    return finalSentences.length > 0 ? finalSentences : [processed];
+    return finalSentences.length > 0 ? finalSentences : [decoded];
   };
 
   const handleStop = () => {

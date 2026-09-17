@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.4.1';
+export const APP_VERSION = '3.4.2';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Bản Cập Nhật v3.4.1 - Đọc Kịch Bản Liền Mạch 0ms Không Ngắt Quãng & Chuẩn Hóa Phát Âm Tiếng Việt Đỉnh Cao',
-    description: '1. Đọc Kịch Bản Liền Mạch 0ms: Loại bỏ triệt để hiện tượng dừng ngắt quãng giữa các câu trong cả Tab Kịch bản Idol lẫn thanh taskbar phát kịch bản Live; thuật toán RMS cửa sổ trượt 20ms cắt sạch 1.1s im lặng MP3 và prefetch 3 câu vào RAM giúp chuyển câu tức thì 0ms; 2. Chuẩn Hóa Phát Âm Từ Khóa Tuyệt Đối: Khắc phục lỗi nuốt âm đuôi biến "bánh gạo" thành "bánh gạ", bảo toàn 100% âm đuôi (-n, -ng, -nh, -m, -p, -t, -c), không chia chữ hay tách chữ; 3. Tự Động Lặp Lại Tuần Hoàn (Loop): Hết kịch bản tự động quay lại đầu đọc tiếp ngay lập tức, chỉ dừng khi người dùng chủ động cài đặt số giây nghỉ.'
+    title: '👑 Bản Cập Nhật v3.4.2 - Đọc Kịch Bản Xuyên Suốt 100%, Chuẩn Hóa Phát Âm "Bánh Gạo" & Bộ Chọn 20 Ngôn Ngữ Quốc Tế Toàn Diện',
+    description: '1. Đọc Kịch Bản Xuyên Suốt 100%: Bảo toàn tuyệt đối ngắt dòng từng câu thoại trong kịch bản; loại bỏ triệt để lỗi gộp dính câu hoặc xé nát câu do dấu ba chấm và emoji; pre-fetch đồng bộ cache RAM giúp đọc liên tục không dừng, không chờ, không chậm lại và tự động lặp lại tuần hoàn (loop) trọn vẹn; 2. Chuẩn Hóa Tuyệt Đối Phát Âm Từ Khóa & Âm Đuôi: Khắc phục triệt để hiện tượng đọc nhầm "bánh gạo" thành "bánh gạ", bảo toàn 100% âm đuôi (-o, -n, -ng, -nh, -m, -p, -t, -c) với đệm an toàn 200ms và không cắt cụt audio; loại bỏ toàn bộ emoji khỏi luồng TTS; 3. Bộ Chọn 20 Ngôn Ngữ Quốc Tế Toàn Diện: Thiết kế menu popover nổi chống tràn giao diện (anti-clipping), hiển thị đầy đủ 20 quốc gia và đồng bộ ngay lập tức toàn bộ phần mềm, web và giọng đọc AI.'
   }
 ];
 

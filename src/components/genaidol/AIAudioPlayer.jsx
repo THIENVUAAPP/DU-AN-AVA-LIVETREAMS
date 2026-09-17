@@ -8,6 +8,7 @@ import {
   prefetchTTSAudio,
   getMultiAvatarConfig,
   parseMultiCharacterScript,
+  cleanTextForVoiceSpeech,
   ALL_SYSTEM_VOICES
 } from '../../utils/voiceSyncService';
 import autoPinProductService from '../../utils/autoPinProductService';
@@ -229,16 +230,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
     const splitSentences = [];
     rawLines.forEach(line => {
+      const cleanLine = cleanTextForVoiceSpeech(line);
+      if (!cleanLine || !cleanLine.trim()) return;
+
       // Chỉ tách nhỏ nếu một dòng quá dài (> 280 ký tự) để tối ưu payload TTS
-      // Các câu thông thường trong dòng được giữ trọn vẹn để đọc tự nhiên qua dấu chấm, dấu phẩy
-      if (line.length > 280) {
-        const parts = line.match(/[^.!?\n]+[.!?]+|[^.!?\n]+$/g) || [line];
+      if (cleanLine.length > 280) {
+        const parts = cleanLine.match(/[^.!?\n]+[.!?]+|[^.!?\n]+$/g) || [cleanLine];
         parts.forEach(p => {
           const clean = p.trim();
           if (clean) splitSentences.push(clean);
         });
       } else {
-        splitSentences.push(line);
+        splitSentences.push(cleanLine);
       }
     });
 

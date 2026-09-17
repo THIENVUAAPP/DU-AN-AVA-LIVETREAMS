@@ -355,17 +355,19 @@ export function cleanSpokenPunctuation(text) {
   // Loại bỏ các ký tự Markdown & dấu ngoặc kép trích dẫn làm ngập ngừng voice
   s = s.replace(/[*_~`"'\u201C\u201D\u2018\u2019\u00AB\u00BB\u201E]/g, '');
 
-  // Loại bỏ emoji để không đọc thành tên emoji (vd: 'mặt cười', 'ngọn lửa')
-  s = s.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}]/gu, '');
+  // Loại bỏ hoàn toàn emoji để không đọc thành tên emoji (vd: 'mặt cười', 'ngọn lửa', 'mặt thèm ăn')
+  s = s.replace(/\p{Extended_Pictographic}/gu, '');
+  s = s.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{1FA00}-\u{1FAFF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, '');
 
-  // Chuẩn hóa dấu câu: loại bỏ hoàn toàn dấu chấm lửng ..., dấu than lặp, dấu hỏi lặp để không gây khựng ngắt khoảng lặng
-  s = s.replace(/[…]+/g, ' ');
-  s = s.replace(/\.{2,}/g, ' ');
-  s = s.replace(/!{2,}/g, ' ');
-  s = s.replace(/\?{2,}/g, ' ');
+  // Chuẩn hóa dấu câu: thay thế dấu chấm lửng ..., … bằng dấu phẩy tự nhiên để lấy hơi mềm mại
+  s = s.replace(/[…]+/g, ', ');
+  s = s.replace(/\.{2,}/g, ', ');
+  s = s.replace(/!{2,}/g, '! ');
+  s = s.replace(/\?{2,}/g, '? ');
   s = s.replace(/[;:]+/g, ' ');
   s = s.replace(/,\s*,+/g, ', ');
-  s = s.replace(/\s+/g, ' ');
+  // Chuẩn hóa khoảng trắng nhưng bảo toàn tuyệt đối ngắt dòng (\r, \n) cho kịch bản nhiều câu
+  s = s.replace(/[^\S\r\n]+/g, ' ');
 
   return s;
 }

@@ -2996,8 +2996,11 @@ function humanizeTextForBackendTTS(rawText, gender, lang) {
   let text = rawText
     .replace(/\[[^\]]*\]/g, ' ')
     .replace(/\((?:cười|cười tươi|vỗ tay|hành động|chỉ tay|nháy mắt|nói to|nói nhỏ|thì thầm|hào hứng|nhấn mạnh|chỉ giỏ hàng|chốt đơn|đếm ngược|action|smile|clap)[^\)]*\)/gi, ' ')
-    .replace(/[#*`_~"'“”„«»]/g, '')
-    .replace(/\s+/g, ' ')
+    .replace(/[#*`_~"'“”„«»‘’]/g, '')
+    // Loại bỏ hoàn toàn emojis để TTS không đọc tên emoji
+    .replace(/\p{Extended_Pictographic}/gu, '')
+    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{1FA00}-\u{1FAFF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, '')
+    .replace(/[^\S\r\n]+/g, ' ')
     .trim();
 
   const isVi = !lang || lang.toLowerCase().startsWith('vi');
@@ -3052,16 +3055,23 @@ function humanizeTextForBackendTTS(rawText, gender, lang) {
     .replace(/(?<![\p{L}\p{N}_])gạo\s*st-?25(?![\p{L}\p{N}_])/giu, 'gạo ST25')
     .replace(/(?<![\p{L}\p{N}_])lúa\s*gạo(?![\p{L}\p{N}_])/giu, 'lúa gạo');
 
-  // Giữ nguyên câu từ kịch bản đọc liền mạch, mượt mà, loại bỏ triệt để dấu chấm lửng và dấu ngắt nghỉ dài
-  return text
-    .replace(/[…]+/g, ' ')
-    .replace(/\.{2,}/g, ' ')
-    .replace(/!{2,}/g, ' ')
-    .replace(/\?{2,}/g, ' ')
+  // Giữ nguyên câu từ kịch bản đọc liền mạch, mượt mà, loại bỏ triệt để dấu chấm lửng
+  let cleaned = text
+    .replace(/[…]+/g, ', ')
+    .replace(/\.{2,}/g, ', ')
+    .replace(/!{2,}/g, '! ')
+    .replace(/\?{2,}/g, '? ')
     .replace(/,\s*,+/g, ', ')
     .replace(/[;:]+/g, ' ')
-    .replace(/\s+/g, ' ')
+    .replace(/[^\S\r\n]+/g, ' ')
     .trim();
+
+  // Đảm bảo câu có dấu kết thúc (. hoặc !) để EdgeTTS không nuốt âm đuôi
+  if (cleaned && !/[.!?]$/.test(cleaned)) {
+    cleaned += '.';
+  }
+
+  return cleaned;
 }
 
 // Concurrency pool for high-throughput parallel EdgeTTS processing

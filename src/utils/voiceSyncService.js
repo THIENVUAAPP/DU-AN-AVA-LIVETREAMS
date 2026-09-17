@@ -7515,10 +7515,10 @@ export function trimAudioBufferSilence(audioBuffer) {
     // Cửa sổ trượt 20ms tính năng lượng RMS và biên độ đỉnh Peak
     const windowSize = Math.max(16, Math.floor(sampleRate * 0.02)); // 20ms window
     const hopSize = Math.max(8, Math.floor(sampleRate * 0.005));   // 5ms hop step
-    const rmsThreshold = 0.0006;
-    const peakThreshold = 0.0025;
-    const leadPadding = Math.floor(sampleRate * 0.02);    // 20ms lead-in
-    const safetyPadding = Math.floor(sampleRate * 0.085); // 85ms safety padding bảo toàn 100% âm đuôi
+    const rmsThreshold = 0.0004; // Ngưỡng nhạy cao bắt trọn vẹn âm thì thầm và dấu nặng
+    const peakThreshold = 0.0018;
+    const leadPadding = Math.floor(sampleRate * 0.025);    // 25ms lead-in
+    const safetyPadding = Math.floor(sampleRate * 0.20);   // 200ms safety padding bảo toàn 100% âm đuôi, âm 'gạo', '-n', '-ng', '-t', '-c', '-nh'
 
     // 1. Quét tìm vị trí bắt đầu có âm thanh (Start Index)
     let startIndex = 0;
@@ -7557,15 +7557,21 @@ export function trimAudioBufferSilence(audioBuffer) {
       }
       const rms = Math.sqrt(sumSq / windowSize);
       if (rms > rmsThreshold || maxP > peakThreshold) {
-        // Cộng 85ms safety padding: bảo toàn tuyệt đối âm đuôi ("gạo", "-n", "-ng", "-t", "-c", "-nh")
+        // Cộng 200ms safety padding: bảo toàn tuyệt đối âm đuôi ("bánh gạo", "-n", "-ng", "-t", "-c", "-nh")
         endIndex = Math.min(length - 1, i + windowSize + safetyPadding);
         break;
       }
     }
 
+    // Bảo vệ tuyệt đối: Nếu khoảng lặng ở đuôi file âm thanh ngắn hơn 280ms thì giữ nguyên vẹn 100%, không cắt cụt
+    const tailSilenceSec = (length - endIndex) / sampleRate;
+    if (tailSilenceSec < 0.28 && startIndex < Math.floor(sampleRate * 0.04)) {
+      return audioBuffer;
+    }
+
     const trimmedLength = endIndex - startIndex + 1;
-    // Nếu chỉ cắt được dưới 40ms thì giữ nguyên
-    if (trimmedLength <= 0 || trimmedLength >= length - Math.floor(sampleRate * 0.04)) {
+    // Nếu chỉ cắt được dưới 60ms thì giữ nguyên
+    if (trimmedLength <= 0 || trimmedLength >= length - Math.floor(sampleRate * 0.06)) {
       return audioBuffer;
     }
 
@@ -7599,14 +7605,14 @@ export function humanizeVoiceSpeechText(rawText, voice = null) {
   const isVietnamese = !voice || voice?.lang === 'vi-VN' || voice?.region === 'vi' || voice?.id?.startsWith('vn_') || voice?.id === 'free_vi_female' || voice?.id === 'el_adam';
   if (!isVietnamese) return text;
 
-  // Dọn dẹp khoảng trắng và dấu câu thừa để âm thanh mượt mà không khựng ngắt dài
+  // Dọn dẹp khoảng trắng và dấu câu thừa để âm thanh mượt mà không khựng ngắt dài nhưng giữ nguyên dòng
   text = text
     .replace(/[…]+/g, ', ')
     .replace(/\.{2,}/g, ', ')
     .replace(/!{2,}/g, '! ')
     .replace(/\?{2,}/g, '? ')
     .replace(/,\s*,+/g, ', ')
-    .replace(/\s+/g, ' ')
+    .replace(/[^\S\r\n]+/g, ' ')
     .trim();
 
   return text;

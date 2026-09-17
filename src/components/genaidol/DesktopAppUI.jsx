@@ -4591,72 +4591,83 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               </span>
             </button>
             {isLangDropdownOpen && (
-              <>
+              <div className="fixed inset-0 z-[999999] flex items-start justify-end p-2 sm:p-4 pt-12 pointer-events-none">
                 <div 
-                  className="fixed inset-0 z-[8999]" 
+                  className="fixed inset-0 bg-black/40 backdrop-blur-xs pointer-events-auto" 
                   onClick={() => setIsLangDropdownOpen(false)} 
                 />
-                <div className={`absolute top-full right-0 mt-2 w-72 max-h-96 overflow-y-auto rounded-2xl shadow-2xl border z-[9999] p-2 ${
-                  isDarkMode ? 'bg-[#181824]/98 border-amber-500/40 text-white shadow-black/80' : 'bg-white border-gray-300 text-slate-800 shadow-xl'
-                } animate-in fade-in zoom-in-95 duration-150 backdrop-blur-xl`}>
-                  <div className="px-2.5 py-1.5 text-[11px] font-black uppercase text-amber-400 border-b border-white/10 mb-1 flex items-center justify-between">
-                    <span>🌐 20 NGÔN NGỮ QUỐC TẾ</span>
-                    <span className="text-[9px] opacity-75 font-normal">Đồng bộ toàn phần mềm</span>
+                <div className={`relative pointer-events-auto w-84 max-h-[85vh] overflow-y-auto rounded-2xl shadow-2xl border p-3 ${
+                  isDarkMode ? 'bg-[#181824] border-amber-500/50 text-white shadow-black/90' : 'bg-white border-gray-300 text-slate-800 shadow-2xl'
+                } animate-in fade-in zoom-in-95 duration-150`}>
+                  <div className="px-2.5 py-1.5 text-xs font-black uppercase text-amber-400 border-b border-white/10 mb-2 flex items-center justify-between">
+                    <span className="flex items-center gap-1.5">🌐 20 NGÔN NGỮ QUỐC TẾ</span>
+                    <span className="text-[10px] text-emerald-400 font-normal">Đồng bộ toàn hệ thống</span>
                   </div>
-                  {SUPPORTED_LANGUAGES.map(lang => (
-                    <button
-                      key={lang.code}
-                      onClick={() => {
-                        setCurrentLanguage(lang.code);
-                        setCurrentLangState(lang.code);
-                        setIsLangDropdownOpen(false);
+                  <div className="space-y-1">
+                    {SUPPORTED_LANGUAGES.map(lang => (
+                      <button
+                        key={lang.code}
+                        type="button"
+                        onClick={() => {
+                          setCurrentLanguage(lang.code);
+                          setCurrentLangState(lang.code);
+                          setIsLangDropdownOpen(false);
 
-                        // Đồng bộ giọng đọc AI mặc định theo ngôn ngữ mới
-                        const voiceMap = {
-                          vi: 'free_vi_female',
-                          en: 'en-US-JennyNeural',
-                          zh: 'zh-CN-XiaoxiaoNeural',
-                          ja: 'ja-JP-NanamiNeural',
-                          ko: 'ko-KR-SunHiNeural',
-                          fr: 'fr-FR-DeniseNeural',
-                          es: 'es-ES-ElviraNeural',
-                          th: 'th-TH-PremwadeeNeural',
-                          pt: 'pt-BR-FranciscaNeural',
-                          de: 'de-DE-KatjaNeural',
-                          it: 'it-IT-ElsaNeural',
-                          ru: 'ru-RU-SvetlanaNeural',
-                          ar: 'ar-SA-ZariyahNeural',
-                          id: 'id-ID-GadisNeural',
-                          hi: 'hi-IN-SwaraNeural',
-                          tr: 'tr-TR-EmelNeural',
-                          pl: 'pl-PL-ZofiaNeural',
-                          nl: 'nl-NL-FennaNeural',
-                          tl: 'fil-PH-AngeloNeural',
-                          ms: 'ms-MY-YasminNeural'
-                        };
-                        const targetVoice = voiceMap[lang.code] || 'free_vi_female';
-                        try {
-                          localStorage.setItem('avalive_default_voice_id', targetVoice);
-                          window.dispatchEvent(new CustomEvent('avalive_default_voice_changed', { detail: { voiceId: targetVoice } }));
-                        } catch (e) {}
+                          // Đồng bộ giọng đọc AI mặc định theo ngôn ngữ mới
+                          const voiceMap = {
+                            vi: 'free_vi_female',
+                            en: 'en-US-JennyNeural',
+                            zh: 'zh-CN-XiaoxiaoNeural',
+                            ja: 'ja-JP-NanamiNeural',
+                            ko: 'ko-KR-SunHiNeural',
+                            fr: 'fr-FR-DeniseNeural',
+                            es: 'es-ES-ElviraNeural',
+                            th: 'th-TH-PremwadeeNeural',
+                            pt: 'pt-BR-FranciscaNeural',
+                            de: 'de-DE-KatjaNeural',
+                            it: 'it-IT-ElsaNeural',
+                            ru: 'ru-RU-SvetlanaNeural',
+                            ar: 'ar-SA-ZariyahNeural',
+                            id: 'id-ID-GadisNeural',
+                            hi: 'hi-IN-SwaraNeural',
+                            tr: 'tr-TR-EmelNeural',
+                            pl: 'pl-PL-ZofiaNeural',
+                            nl: 'nl-NL-FennaNeural',
+                            tl: 'fil-PH-AngeloNeural',
+                            ms: 'ms-MY-YasminNeural'
+                          };
+                          const targetVoice = voiceMap[lang.code] || 'free_vi_female';
+                          try {
+                            localStorage.setItem('avalive_default_voice_id', targetVoice);
+                            window.dispatchEvent(new CustomEvent('avalive_default_voice_changed', { detail: { voiceId: targetVoice } }));
+                            postMasterBroadcast({ type: 'GLOBAL_LANGUAGE_CHANGE', language: lang.code });
+                          } catch (e) {}
 
-                        showToast(`🌐 Đã chuyển sang ${lang.name} (${lang.flag}) & Đồng bộ giọng đọc AI`, 'success');
-                      }}
-                      className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 mb-0.5 cursor-pointer ${
-                        currentLang === lang.code
-                          ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-sm'
-                          : (isDarkMode ? 'hover:bg-white/10 text-gray-200' : 'hover:bg-gray-100 text-gray-800')
-                      }`}
-                    >
-                      <span className="flex items-center gap-2">
-                        <span className="text-base">{lang.flag}</span>
-                        <span>{lang.name}</span>
-                      </span>
-                      <span className="text-[10px] opacity-75 font-mono px-1.5 py-0.5 rounded bg-black/20">{lang.code.toUpperCase()}</span>
-                    </button>
-                  ))}
+                          showToast(`🌐 Đã chuyển sang ${lang.name} (${lang.flag}) & Đồng bộ giọng đọc AI`, 'success');
+                        }}
+                        className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 cursor-pointer ${
+                          currentLang === lang.code
+                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md ring-1 ring-white/20'
+                            : (isDarkMode ? 'hover:bg-white/10 text-gray-200' : 'hover:bg-gray-100 text-gray-800')
+                        }`}
+                      >
+                        <span className="flex items-center gap-2.5">
+                          <span className="text-xl">{lang.flag}</span>
+                          <span className="flex flex-col">
+                            <span className="font-bold leading-tight">{lang.name}</span>
+                            <span className="text-[10px] opacity-65 font-normal">{lang.country}</span>
+                          </span>
+                        </span>
+                        <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${
+                          currentLang === lang.code ? 'bg-white/20 text-white' : 'bg-black/20 text-gray-400'
+                        }`}>
+                          {lang.code.toUpperCase()}
+                        </span>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-              </>
+              </div>
             )}
           </div>
 
