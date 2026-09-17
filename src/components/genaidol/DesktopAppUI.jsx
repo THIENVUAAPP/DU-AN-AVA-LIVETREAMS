@@ -636,38 +636,68 @@ export default function DesktopAppUI() {
         evConf = JSON.parse(localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup') || '{}');
       } catch (e) {}
 
-      const isAiPromptMode = evConf.script_broadcast?.broadcastMode === 'ai_prompt';
+      const broadcastMode = evConf.script_broadcast?.broadcastMode || 'fixed_script';
+      const isAiBrainMode = broadcastMode === 'ai_brain' || broadcastMode === 'ai_prompt';
 
-      if (isAiPromptMode) {
-        scriptName = 'Bộ Não AI Tri Thức Doanh Nghiệp';
-        if (!scriptText || !scriptText.trim()) {
-          scriptText = generateAiKnowledgeScript({
-            companyName: evConf.script_broadcast?.companyName || 'Cửa Hàng Trực Tuyến Chính Hãng',
-            productName: evConf.script_broadcast?.productName || 'Bộ Đôi Serum Tế Bào Gốc & Nước Hoa Pháp',
-            productPrice: evConf.script_broadcast?.productPrice || '1.850.000đ - Flash Sale chỉ còn 890.000đ',
-            promotions: evConf.script_broadcast?.promotions || 'Tặng kèm kem dưỡng mini + Freeship toàn quốc',
-            keyFeatures: evConf.script_broadcast?.keyFeatures || 'Dưỡng da căng bóng mịn màng sau 7 ngày, nước hoa lưu hương 12 giờ',
-            warrantyPolicy: evConf.script_broadcast?.warrantyPolicy || 'Bảo hành 1 đổi 1 trong 30 ngày, hoàn tiền 200% nếu hàng không chuẩn',
-            companyKnowledgeText: evConf.script_broadcast?.companyKnowledgeText || '',
-            aiLiveStyle: evConf.script_broadcast?.aiLiveStyle || 'sales_fast',
-            scriptDurationMinutes: evConf.script_broadcast?.scriptDurationMinutes || evConf.script_broadcast?.aiLiveDuration || 60,
-            livePlatform: evConf.script_broadcast?.livePlatform || 'tiktok'
-          });
-        }
+      if (isAiBrainMode) {
+        // =========================================================================
+        // CHẾ ĐỘ 2: BỘ NÃO AI & TRI THỨC DOANH NGHIỆP TỰ ĐỘNG TẠO KỊCH BẢN
+        // =========================================================================
+        const durMin = evConf.script_broadcast?.scriptDurationMinutes || evConf.script_broadcast?.aiLiveDuration || 60;
+        scriptName = `Bộ Não AI Tri Thức (${durMin} phút)`;
+        scriptText = generateAiKnowledgeScript({
+          companyName: evConf.script_broadcast?.companyName || 'Cửa Hàng Trực Tuyến Chính Hãng',
+          productName: evConf.script_broadcast?.productName || 'Bộ Đôi Serum Tế Bào Gốc & Nước Hoa Pháp',
+          productPrice: evConf.script_broadcast?.productPrice || '1.850.000đ - Flash Sale chỉ còn 890.000đ',
+          promotions: evConf.script_broadcast?.promotions || 'Tặng kèm kem dưỡng mini + Freeship toàn quốc',
+          keyFeatures: evConf.script_broadcast?.keyFeatures || 'Dưỡng da căng bóng mịn màng sau 7 ngày, nước hoa lưu hương 12 giờ',
+          warrantyPolicy: evConf.script_broadcast?.warrantyPolicy || 'Bảo hành 1 đổi 1 trong 30 ngày, hoàn tiền 200% nếu hàng không chuẩn',
+          companyKnowledgeText: evConf.script_broadcast?.companyKnowledgeText || '',
+          aiLiveStyle: evConf.script_broadcast?.aiLiveStyle || 'sales_fast',
+          scriptDurationMinutes: durMin,
+          livePlatform: evConf.script_broadcast?.livePlatform || 'tiktok'
+        });
       } else {
-        // Chế độ Kịch bản Cố định / Nhập tay
+        // =========================================================================
+        // CHẾ ĐỘ 1: KỊCH BẢN CÓ SẴN (FIXED SCRIPT - ĐỌC ĐÚNG 100% KỊCH BẢN ĐÃ CÀI ĐẶT)
+        // =========================================================================
+        // 1. Tìm tab kịch bản đang active trong event configs
+        const confTabs = evConf.script_broadcast?.scriptTabs;
+        if (Array.isArray(confTabs) && confTabs.length > 0) {
+          const activeConfTab = confTabs.find(t => t.active === true) || 
+            confTabs.find(t => t.id === evConf.script_broadcast?.activeScriptTabId) || 
+            confTabs[0];
+          if (activeConfTab) {
+            scriptName = activeConfTab.name || scriptName;
+            if (activeConfTab.fixedScriptText && activeConfTab.fixedScriptText.trim()) {
+              scriptText = activeConfTab.fixedScriptText;
+            }
+          }
+        }
+
+        // 2. Tìm tab kịch bản trong persistent tabs
         if (!scriptText || !scriptText.trim()) {
           try {
             const pTabs = JSON.parse(localStorage.getItem('aidol_user_script_tabs_persistent') || '[]');
             const activePTab = pTabs.find(t => t.id === chosen?.id) || pTabs.find(t => t.active) || pTabs[0];
-            if (activePTab?.fixedScriptText && activePTab.fixedScriptText.trim()) {
-              scriptText = activePTab.fixedScriptText;
+            if (activePTab) {
+              scriptName = activePTab.name || scriptName;
+              if (activePTab.fixedScriptText && activePTab.fixedScriptText.trim()) {
+                scriptText = activePTab.fixedScriptText;
+              }
             }
           } catch (e) {}
         }
 
-        if (!scriptText || !scriptText.trim() && evConf.script_broadcast?.fixedScriptText) {
+        // 3. Dự phòng fixedScriptText trong evConf
+        if ((!scriptText || !scriptText.trim()) && evConf.script_broadcast?.fixedScriptText) {
           scriptText = evConf.script_broadcast.fixedScriptText;
+        }
+
+        // 4. Dự phòng chosen từ state
+        if ((!scriptText || !scriptText.trim()) && chosen?.fixedScriptText) {
+          scriptText = chosen.fixedScriptText;
+          scriptName = chosen.name || scriptName;
         }
       }
 

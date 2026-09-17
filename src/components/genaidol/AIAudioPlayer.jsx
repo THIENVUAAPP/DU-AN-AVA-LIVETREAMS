@@ -11,6 +11,7 @@ import {
   ALL_SYSTEM_VOICES
 } from '../../utils/voiceSyncService';
 import autoPinProductService from '../../utils/autoPinProductService';
+import { generateAiKnowledgeScript } from '../../utils/aiScriptGenerator';
 
 /**
  * AIAudioPlayer - Quản lý hàng đợi phát âm thanh thông minh trong Livestream
@@ -79,7 +80,44 @@ const AIAudioPlayer = forwardRef(({ isLive, isScriptRunning = false, onAudioPlay
   const loadScriptFromStorage = (customText = null) => {
     let scriptRaw = typeof customText === 'string' && customText.trim() ? customText : '';
     
-    // Ưu tiên 1: Kịch bản persistent của người dùng
+    // Ưu tiên 1: Đọc từ aidol_event_configs để kiểm tra chế độ phát sóng
+    if (!scriptRaw) {
+      const eventConfigsRaw = localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup');
+      if (eventConfigsRaw) {
+        try {
+          const evConf = JSON.parse(eventConfigsRaw);
+          if (evConf.script_broadcast) {
+            const bMode = evConf.script_broadcast.broadcastMode || 'fixed_script';
+            if (bMode === 'ai_brain' || bMode === 'ai_prompt') {
+              const durMin = evConf.script_broadcast.scriptDurationMinutes || evConf.script_broadcast.aiLiveDuration || 60;
+              scriptRaw = generateAiKnowledgeScript({
+                companyName: evConf.script_broadcast.companyName || 'Cửa Hàng Trực Tuyến Chính Hãng',
+                productName: evConf.script_broadcast.productName || 'Bộ Đôi Serum Tế Bào Gốc & Nước Hoa Pháp',
+                productPrice: evConf.script_broadcast.productPrice || '1.850.000đ - Flash Sale chỉ còn 890.000đ',
+                promotions: evConf.script_broadcast.promotions || 'Tặng kèm kem dưỡng mini + Freeship toàn quốc',
+                keyFeatures: evConf.script_broadcast.keyFeatures || 'Dưỡng da căng bóng mịn màng sau 7 ngày, nước hoa lưu hương 12 giờ',
+                warrantyPolicy: evConf.script_broadcast.warrantyPolicy || 'Bảo hành 1 đổi 1 trong 30 ngày, hoàn tiền 200% nếu hàng không chuẩn',
+                companyKnowledgeText: evConf.script_broadcast.companyKnowledgeText || '',
+                aiLiveStyle: evConf.script_broadcast.aiLiveStyle || 'sales_fast',
+                scriptDurationMinutes: durMin,
+                livePlatform: evConf.script_broadcast.livePlatform || 'tiktok'
+              });
+            } else if (Array.isArray(evConf.script_broadcast.scriptTabs) && evConf.script_broadcast.scriptTabs.length > 0) {
+              const activeTab = evConf.script_broadcast.scriptTabs.find(t => t.active === true) || 
+                evConf.script_broadcast.scriptTabs.find(t => t.id === evConf.script_broadcast.activeScriptTabId) || 
+                evConf.script_broadcast.scriptTabs[0];
+              if (activeTab && activeTab.fixedScriptText) {
+                scriptRaw = activeTab.fixedScriptText;
+              }
+            } else if (evConf.script_broadcast.fixedScriptText) {
+              scriptRaw = evConf.script_broadcast.fixedScriptText;
+            }
+          }
+        } catch (e) {}
+      }
+    }
+
+    // Ưu tiên 2: Kịch bản persistent của người dùng
     if (!scriptRaw) {
       const persistentTabsRaw = localStorage.getItem('aidol_user_script_tabs_persistent');
       if (persistentTabsRaw) {
@@ -89,29 +127,6 @@ const AIAudioPlayer = forwardRef(({ isLive, isScriptRunning = false, onAudioPlay
             const activeTab = pTabs.find(t => t.active) || pTabs[0];
             if (activeTab && activeTab.fixedScriptText) {
               scriptRaw = activeTab.fixedScriptText;
-            }
-          }
-        } catch (e) {}
-      }
-    }
-
-    // Ưu tiên 2: Kịch bản trong aidol_event_configs
-    if (!scriptRaw) {
-      const eventConfigsRaw = localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup');
-      if (eventConfigsRaw) {
-        try {
-          const evConf = JSON.parse(eventConfigsRaw);
-          if (evConf.script_broadcast) {
-            if (Array.isArray(evConf.script_broadcast.scriptTabs) && evConf.script_broadcast.scriptTabs.length > 0) {
-              const activeTab = evConf.script_broadcast.scriptTabs.find(t => t.active) || 
-                evConf.script_broadcast.scriptTabs.find(t => t.id === evConf.script_broadcast.activeScriptTabId) || 
-                evConf.script_broadcast.scriptTabs[0];
-              if (activeTab && activeTab.fixedScriptText) {
-                scriptRaw = activeTab.fixedScriptText;
-              }
-            }
-            if (!scriptRaw && evConf.script_broadcast.fixedScriptText) {
-              scriptRaw = evConf.script_broadcast.fixedScriptText;
             }
           }
         } catch (e) {}

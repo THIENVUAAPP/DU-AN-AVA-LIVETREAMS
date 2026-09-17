@@ -7297,9 +7297,13 @@ export function humanizeVoiceSpeechText(rawText, voice = null) {
     // Số tiền định dạng hàng triệu có dấu chấm: 1.000.000đ / 1,000,000đ
     .replace(/\b(\d+)[,\.]000[,\.]000\s*(đ|vnd|vnđ|đồng)?\b/gi, '$1 triệu đồng')
     .replace(/\b(\d+)[,\.](\d{3})[,\.]000\s*(đ|vnd|vnđ|đồng)?\b/gi, '$1 triệu $2 nghìn đồng')
-    // Số tiền định dạng hàng trăm nghìn có dấu chấm: 890.000đ / 890,000đ / 50.000đ
-    .replace(/\b(\d+)[,\.](\d{3})\s*(đ|vnd|vnđ|đồng)\b/gi, '$1 nghìn $2 đồng')
+    // Số tiền định dạng hàng trăm nghìn có dấu chấm: 890.000đ / 50.000đ
     .replace(/\b(\d+)[,\.]000\s*(đ|vnd|vnđ|đồng)?\b/gi, '$1 nghìn đồng')
+    .replace(/\b(\d+)[,\.](\d{3})\s*(đ|vnd|vnđ|đồng)\b/gi, (match, p1, p2) => {
+      const p2Num = parseInt(p2, 10);
+      if (p2Num === 0) return `${p1} nghìn đồng`;
+      return `${p1} nghìn ${p2Num} đồng`;
+    })
     // Số đếm có dấu phẩy/chấm hàng nghìn: 10,000 / 10.000
     .replace(/\b10[,\.]000\b/g, 'mười nghìn')
     .replace(/\b20[,\.]000\b/g, 'hai mươi nghìn')
@@ -7325,41 +7329,38 @@ export function humanizeVoiceSpeechText(rawText, voice = null) {
     .replace(/\b2nd\b/gi, 'thứ hai')
     .replace(/\b3rd\b/gi, 'thứ ba');
 
-  // 2. PHÁT ÂM TIẾNG ANH & THUẬT NGỮ LIVESTREAM / THƯƠNG MẠI CHUẨN XÁC
+  // 2. PHÁT ÂM TIẾNG ANH & THUẬT NGỮ LIVESTREAM / THƯƠNG MẠI CHUẨN XÁC, TỰ NHIÊN
   text = text
     .replace(/\bserum\b/gi, 'sê-rum')
-    .replace(/\bskincare\b/gi, 'xkin-ke')
-    .replace(/\bbody\b/gi, 'bo-đi')
-    .replace(/\bfeedback\b/gi, 'phít-bách')
-    .replace(/\bflash\s*sale\b/gi, 'flát seo ưu đãi chớp nhoáng')
-    .replace(/\bsale\b/gi, 'seo giảm giá')
-    .replace(/\bdeal\b/gi, 'điu ưu đãi')
-    .replace(/\bhot\s*trend\b/gi, 'hót tren xu hướng')
-    .replace(/\btrend\b/gi, 'tren xu hướng')
+    .replace(/\bskincare\b/gi, 'chăm sóc da')
+    .replace(/\bbody\b/gi, 'toàn thân')
+    .replace(/\bfeedback\b/gi, 'phản hồi')
+    .replace(/\bflash\s*sale\b/gi, 'flát seo')
+    .replace(/\bsale\b/gi, 'seo')
+    .replace(/\bdeal\b/gi, 'điu')
+    .replace(/\bhot\s*trend\b/gi, 'hót tren')
+    .replace(/\btrend\b/gi, 'xu hướng')
     .replace(/\breview\b/gi, 'ri-viu')
-    .replace(/\bfreeship\b/gi, 'phi-síp miễn phí vận chuyển')
-    .replace(/\bfree\s*ship\b/gi, 'phi-síp miễn phí vận chuyển')
-    .replace(/\bvoucher\b/gi, 'vâu-chờ mã giảm giá')
-    .replace(/\border\b/gi, 'ót-đờ đặt hàng')
+    .replace(/\bfreeship\b/gi, 'miễn phí giao hàng')
+    .replace(/\bfree\s*ship\b/gi, 'miễn phí giao hàng')
+    .replace(/\bvoucher\b/gi, 'vâu-chờ')
+    .replace(/\border\b/gi, 'đặt hàng')
     .replace(/\bcombo\b/gi, 'com-bo')
-    .replace(/\blivestream\b/gi, 'lai-chim phát trực tiếp')
-    .replace(/\blive\s*stream\b/gi, 'lai-chim phát trực tiếp')
-    .replace(/\blive\b/gi, 'lai')
+    .replace(/\blivestream\b/gi, 'lai-chim')
+    .replace(/\blive\s*stream\b/gi, 'lai-chim')
     .replace(/\bvideo\b/gi, 'vi-đê-ô')
-    .replace(/\baudio\b/gi, 'ô-đi-ô')
+    .replace(/\baudio\b/gi, 'âm thanh')
     .replace(/\bviewer\b/gi, 'người xem')
     .replace(/\bview\b/gi, 'lượt xem')
-    .replace(/\bstream\b/gi, 'chim')
-    .replace(/\bapp\b/gi, 'áp ứng dụng')
+    .replace(/\bapp\b/gi, 'ứng dụng')
     .replace(/\bgame\b/gi, 'gêm')
-    .replace(/\bpk\b/gi, 'p-k thi đấu')
-    .replace(/\bidol\b/gi, 'ai-đồ thần tượng')
+    .replace(/\bpk\b/gi, 'p-k')
+    .replace(/\bidol\b/gi, 'ai-đồ')
     .replace(/\bkoc\b/gi, 'k-o-c')
     .replace(/\bkol\b/gi, 'k-o-l')
-    .replace(/\blink\b/gi, 'đường linh')
-    .replace(/\bpro\b/gi, 'pờ-rô chuyên nghiệp')
-    .replace(/\bvip\b/gi, 'víp cao cấp')
-    .replace(/\bshop\b/gi, 'shop')
+    .replace(/\blink\b/gi, 'đường link')
+    .replace(/\bpro\b/gi, 'pờ-rô')
+    .replace(/\bvip\b/gi, 'víp')
     .replace(/\bgift\b/gi, 'quà tặng')
     .replace(/\bfollow\b/gi, 'theo dõi')
     .replace(/\bfl\b/gi, 'theo dõi')
@@ -7382,11 +7383,10 @@ export function humanizeVoiceSpeechText(rawText, voice = null) {
     .replace(/\bmng\b/gi, 'mọi người')
     .replace(/\bsz\b/gi, 'size')
     .replace(/\bstk\b/gi, 'số tài khoản')
-    .replace(/\bcod\b/gi, 'nhận hàng thanh toán')
+    .replace(/\bcod\b/gi, 'thanh toán khi nhận hàng')
     .replace(/\bbtv\b/gi, 'biên tập viên')
     .replace(/\bmc\b/gi, 'người dẫn chương trình')
     .replace(/\bvtv\b/gi, 'đài truyền hình')
-    .replace(/\bcta\b/gi, 'kêu gọi hành động')
     .replace(/\bkm\b/gi, 'khuyến mãi')
     .replace(/\bkg\b/gi, 'ki-lô-gam')
     .replace(/\bml\b/gi, 'mi-li-lít')
@@ -7398,7 +7398,7 @@ export function humanizeVoiceSpeechText(rawText, voice = null) {
     .replace(/\bhcm\b/gi, 'Hồ Chí Minh')
     .replace(/\bhn\b/gi, 'Hà Nội')
     .replace(/\bib\b/gi, 'nhắn tin')
-    .replace(/\binbox\b/gi, 'nhắn tin trực tiếp')
+    .replace(/\binbox\b/gi, 'nhắn tin')
     .replace(/\bcmt\b/gi, 'bình luận')
     .replace(/\bcomment\b/gi, 'bình luận')
     .replace(/\bauth\b/gi, 'chính hãng')
@@ -7406,18 +7406,7 @@ export function humanizeVoiceSpeechText(rawText, voice = null) {
     .replace(/\bsetup\b/gi, 'cài đặt')
     .replace(/\bok\b/gi, 'dạ vâng được ạ');
 
-  // 4. TINH CHỈNH CẢM XÚC, THĂNG TRẦM & NGẮT NHỊP TỰ NHIÊN
-  if (isFemale) {
-    text = text
-      .replace(/\b(Hello cả nhà|Chào cả nhà|Cả nhà ơi|Mọi người ơi|Quý vị ơi|Các bạn ơi|Bà con ơi|Chị em ơi|Các mẹ ơi|Ai đang lướt qua)(?!\s*[,!?:])/gi, '$1, ')
-      .replace(/\b(Dạ|Vâng|Em xin chào|Em cam kết|Đặc biệt là|Hơn thế nữa|Thật sự luôn|Tin em đi|Nhanh tay lên nào|Đúng rồi ạ|Chính xác luôn|Tuyệt vời luôn|Quá đã luôn|Trời ơi)(?!\s*[,!?:])/gi, '$1, ');
-  } else {
-    text = text
-      .replace(/\b(Hello cả nhà|Xin chào tất cả các bạn|Chào anh em|Anh em ơi|Mọi người ơi|Cả nhà ơi|Bà con ơi)(?!\s*[,!?:])/gi, '$1, ')
-      .replace(/\b(Đặc biệt là|Cực kỳ hấp dẫn|Chú ý chú ý|Duy nhất hôm nay|Cam kết 100%|Chính hãng 100%|Anh em nhớ lưu ý|Tin mình đi)(?!\s*[,!?:])/gi, '$1, ');
-  }
-
-  // 5. DỌN DẸP DẤU CÂU TRÙNG LẶP ĐỂ KHÔNG GÂY KHỰNG / TREO KHOẢNG LẶNG
+  // 4. DỌN DẸP DẤU CÂU TRÙNG LẶP ĐỂ KHÔNG GÂY KHỰNG / TREO KHOẢNG LẶNG
   text = text
     .replace(/!{2,}/g, '!')
     .replace(/\?{2,}/g, '?')
@@ -7425,6 +7414,8 @@ export function humanizeVoiceSpeechText(rawText, voice = null) {
     .replace(/,\s*,+/g, ', ')
     .replace(/\s+/g, ' ')
     .trim();
+
+  return text;
 
   return text;
 }
@@ -7482,82 +7473,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành một đổi một trong 
 export function formatTextForRegionalSpeech(rawText, voice) {
   if (!rawText || typeof rawText !== 'string') return '';
   let text = humanizeVoiceSpeechText(rawText, voice);
-  if (!text) return '';
-
-  const isVietnameseVoice = voice?.lang === 'vi-VN' || voice?.region === 'vi' || voice?.id?.startsWith('vn_') || voice?.id === 'free_vi_female' || voice?.id === 'el_adam';
-  if (!isVietnameseVoice) return text;
-
-  // Xác định phương ngữ (dialect)
-  let dialect = voice?.dialect;
-  if (!dialect) {
-    const vName = (voice?.name || '').toLowerCase();
-    const vCat = (voice?.category || '').toLowerCase();
-    const vDesc = (voice?.desc || '').toLowerCase();
-    const vId = (voice?.id || '').toLowerCase();
-
-    if (vName.includes('miền tây') || vCat.includes('miền tây') || vDesc.includes('miền tây') || vName.includes('sông nước') || vId.includes('_tay_') || vId.includes('_taynambo') || vName.includes('cần thơ') || vName.includes('út mai')) {
-      dialect = 'tay';
-    } else if (vName.includes('miền trung') || vCat.includes('miền trung') || vDesc.includes('miền trung') || vName.includes('huế') || vName.includes('đà nẵng') || vName.includes('nghệ an') || vName.includes('nghệ tĩnh') || vId.includes('_trung_') || vId.includes('hue') || vId.includes('danang') || vId.includes('nghean')) {
-      dialect = 'trung';
-    } else if (vName.includes('miền bắc') || vCat.includes('miền bắc') || vDesc.includes('miền bắc') || vName.includes('hà nội') || vId.includes('_bac_') || vName.includes('vtv') || vName.includes('thời sự')) {
-      dialect = 'bac';
-    } else if (vName.includes('miền nam') || vCat.includes('miền nam') || vDesc.includes('miền nam') || vName.includes('sài gòn') || vId.includes('_nam_') || vId.includes('koc') || vId.includes('idol_live') || vId.includes('giucdon')) {
-      dialect = 'nam';
-    } else {
-      dialect = 'standard';
-    }
-  }
-
-  // 1. PHƯƠNG NGỮ MIỀN TÂY (Sông Nước Nam Bộ - Ngọt ngào, mộc mạc, tha thiết)
-  if (dialect === 'tay') {
-    text = text
-      .replace(/\b(nhé|nhé bạn|nhé mọi người|nha các bạn|nhé các bạn|nhe các bạn)\b/gi, 'nghen bà con cô bác')
-      .replace(/\b(nha bạn|nha bạn ơi|nhé bạn ơi)\b/gi, 'nhen cô chú anh chị')
-      .replace(/\b(rất ngon|quá ngon)\b/gi, 'ngon hết sảy con bà bảy luôn')
-      .replace(/\b(rất đẹp|quá đẹp)\b/gi, 'đẹp mê ly dữ dằn')
-      .replace(/\b(rất tốt|tuyệt vời)\b/gi, 'tốt dữ dằn à nghen')
-      .replace(/\b(thật sự|thật đấy|thật mà)\b/gi, 'thiệt tình á bà con')
-      .replace(/\b(chắc chắn)\b/gi, 'chắc ăn một trăm phần trăm luôn')
-      .replace(/\b(nhiều lắm|rất nhiều)\b/gi, 'quá trời quá đất luôn nghen')
-      .replace(/\b(không ạ|không bạn)\b/gi, 'hông nè nghen')
-      .replace(/\b(được không)\b/gi, 'được hông nè bà con')
-      .replace(/\b(mua ngay|đặt ngay)\b/gi, 'chốt liền tay kẻo lỡ nghen');
-  } 
-  // 2. PHƯƠNG NGỮ MIỀN TRUNG (Huế, Đà Nẵng, Quảng Nam, Nghệ An - Dịu dàng, sâu lắng, đậm tình)
-  else if (dialect === 'trung') {
-    text = text
-      .replace(/\b(nhé|nhé bạn|nhé mọi người|nhé cả nhà)\b/gi, 'nì cả nhà ơi')
-      .replace(/\b(nha bạn|nha các bạn|nha mọi người)\b/gi, 'nè quý anh chị nì')
-      .replace(/\b(rất ngon|quá ngon)\b/gi, 'ngon xuất sắc nì')
-      .replace(/\b(rất đẹp|quá đẹp)\b/gi, 'đẹp sắc sảo mười phân vẹn mười nì')
-      .replace(/\b(thật sự|thật đấy|thật mà)\b/gi, 'thiệt luôn nì')
-      .replace(/\b(tuyệt vời)\b/gi, 'tuyệt cú mèo lắm nì')
-      .replace(/\b(chắc chắn)\b/gi, 'chuẩn chỉ một trăm phần trăm nì')
-      .replace(/\b(mua ngay|đặt ngay)\b/gi, 'ủng hộ em liền tay nì')
-      .replace(/\b(xin chào)\b/gi, 'dạ em kính chào');
-  } 
-  // 3. PHƯƠNG NGỮ MIỀN NAM (Sài Gòn Phồn Hoa - Năng Động & Chốt Deal Cuốn Hút)
-  else if (dialect === 'nam') {
-    text = text
-      .replace(/\b(nhé|nhé bạn)\b/gi, 'nha mọi người ơi')
-      .replace(/\b(nhé cả nhà)\b/gi, 'nha cả nhà mình ơi')
-      .replace(/\b(rất đẹp|quá đẹp)\b/gi, 'siêu đẹp xịn sò')
-      .replace(/\b(rất tốt|tuyệt vời)\b/gi, 'cực kì đỉnh chóp luôn')
-      .replace(/\b(mua ngay|đặt ngay)\b/gi, 'chốt liền tay kẻo lỡ nha cả nhà')
-      .replace(/\b(không ạ)\b/gi, 'hổng có đâu nè')
-      .replace(/\b(cảm ơn bạn)\b/gi, 'cảm ơn bạn iu nhiều nha');
-  } 
-  // 4. PHƯƠNG NGỮ MIỀN BẮC (Hà Nội - Thanh Lịch, Đĩnh Đạc & Sang Trọng Chuẩn Mực)
-  else if (dialect === 'bac') {
-    text = text
-      .replace(/\b(nha bạn|nha cả nhà|nha mọi người)\b/gi, 'nhé các bác và anh chị')
-      .replace(/\b(hông|hổng)\b/gi, 'không')
-      .replace(/\b(xịn xò|xịn sò)\b/gi, 'cao cấp chuẩn chỉ')
-      .replace(/\b(chắc ăn)\b/gi, 'chắc chắn một trăm phần trăm')
-      .replace(/\b(ngon hết sảy)\b/gi, 'ngon tuyệt đỉnh');
-  }
-
-  return text;
+  return text || '';
 }
 
 /**
