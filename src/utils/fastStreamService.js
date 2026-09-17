@@ -29,6 +29,17 @@ export async function fastStreamUpload(file, options = {}) {
   const backendBase = getBackendUrl();
 
   try {
+    // ⚡ KIỂM TRA ĐƯỜNG DẪN NATIVE CỤC BỘ TRONG ELECTRON (0MS FAST-START)
+    let nativeFilePath = null;
+    try {
+      if (typeof window !== 'undefined' && window.electronAPI && typeof window.electronAPI.getPathForFile === 'function') {
+        nativeFilePath = window.electronAPI.getPathForFile(file);
+      }
+    } catch (e) {}
+    if (!nativeFilePath && file.path) {
+      nativeFilePath = file.path;
+    }
+
     // BƯỚC 1: Khởi tạo phiên stream tức thì (10-30ms)
     const initRes = await fetch(`${backendBase}/api/upload-stream-init`, {
       method: 'POST',
@@ -37,7 +48,7 @@ export async function fastStreamUpload(file, options = {}) {
         originalName: file.name,
         fileSize: file.size,
         fileType: file.type,
-        filePath: file.path || null // Bypass copy 0ms nếu chạy native app
+        filePath: nativeFilePath || null // Hardlink instant 0ms nếu chạy native app
       })
     });
 
@@ -47,7 +58,7 @@ export async function fastStreamUpload(file, options = {}) {
     const uploadId = initData.uploadId;
 
     if (initData.instant || !uploadId) {
-      if (onInit) onInit({ fileUrl, uploadId, totalChunks: 1 });
+      if (onInit) onInit({ fileUrl, uploadId, totalChunks: 1, instant: true });
       if (onProgress) onProgress(100);
       return { success: true, fileUrl };
     }
@@ -79,23 +90,7 @@ export async function fastStreamUpload(file, options = {}) {
     // Gửi chunk 0 (Head) siêu tốc
     await sendChunk(chunk0, 0, 0);
 
-    // ⚡ BƯỚC 2.5: NẾU LÀ VIDEO LỚN (>50MB ĐẾN 20GB), GỬI NGAY TAIL CHUNK (16MB CUỐI CHỨA MOOV ATOM)
-    // Giúp trình duyệt / TikTok Live Studio đọc được atom moov ở cuối file và phát ngay lập tức 0ms!
-    const isBigVideo = file.size > 50 * 1024 * 1024;
-    if (isBigVideo) {
-      const TAIL_SIZE = Math.min(16 * 1024 * 1024, Math.floor(file.size / 2));
-      const tailOffset = file.size - TAIL_SIZE;
-      if (tailOffset > headSize) {
-        try {
-          const tailChunkBlob = file.slice(tailOffset, file.size);
-          await sendChunk(tailChunkBlob, tailOffset, 99999);
-        } catch (e) {
-          console.warn('[FastStream TailChunk warning]', e);
-        }
-      }
-    }
-
-    // 🚀 BÁO PHÁT NGAY LẬP TỨC 0MS: Server đã có cả Head và Moov atom, Window Capture & TikTok Live phát ngay!
+    // 🚀 BÁO SẴN SÀNG PHÁT NGAY: Khối đầu tiên đã nạp vào server, các trình phát Range có thể bắt đầu đọc
     if (onInit) {
       onInit({ fileUrl, uploadId, totalChunks });
     }
@@ -107,10 +102,10 @@ export async function fastStreamUpload(file, options = {}) {
 
     if (onProgress) onProgress(Math.round((1 / totalChunks) * 100) || 5);
 
-    // BƯỚC 3: Nạp các khối còn lại (1, 2, 3...) VỚI 4 LUỒNG SONG SONG SIÊU TỐC
+    // BƯỚC 3: Nạp các khối tiếp theo tuần tự / song song liền kề, không tạo sparse hole
     (async () => {
       let uploaded = 1;
-      const CONCURRENCY = 4;
+      const CONCURRENCY = 3;
       let currentIndex = 1;
 
       const worker = async () => {

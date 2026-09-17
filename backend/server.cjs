@@ -550,8 +550,11 @@ app.post('/api/upload-chunk', (req, res) => {
       session.writtenBytes += buffer.length;
       session.chunksCount++;
 
-      // Nếu đã ghi đủ tất cả các chunks
-      if (!isNaN(totalChunks) && totalChunks > 0 && session.chunksCount >= totalChunks) {
+      // Nếu đã ghi đủ tất cả các chunks và dung lượng
+      const isComplete = (session.fileSize > 0 && session.writtenBytes >= session.fileSize) ||
+                         (!isNaN(totalChunks) && totalChunks > 0 && session.chunksCount >= totalChunks && session.writtenBytes >= (session.fileSize || 0) * 0.999);
+
+      if (isComplete) {
         if (session.timer) clearTimeout(session.timer);
         try { fs.closeSync(session.fd); } catch(e) {}
         session.fd = null;
@@ -1547,7 +1550,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '3.3.2';
+  let ver = '3.3.3';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1585,7 +1588,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '3.3.2';
+  let ver = '3.3.3';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -2991,41 +2994,41 @@ function humanizeTextForBackendTTS(rawText, gender, lang) {
   const isVi = !lang || lang.toLowerCase().startsWith('vi');
   if (!isVi) return text;
 
-  // Chuyển đổi số đếm & tiền tệ chuẩn xác
+  // Chuyển đổi số đếm & tiền tệ chuẩn xác (chỉ sau số đếm)
   text = text
-    .replace(/\b(\d+)\s*k\b/gi, '$1 nghìn đồng')
-    .replace(/\b(\d+)\s*cành\b/gi, '$1 nghìn đồng')
-    .replace(/\b(\d+)[,\.](\d+)\s*(tr|triệu)\b/gi, '$1 triệu $2 trăm nghìn đồng')
-    .replace(/\b(\d+)\s*(tr|triệu)\b/gi, '$1 triệu đồng')
-    .replace(/\b(\d+)\s*%\b/g, '$1 phần trăm')
-    .replace(/\b(\d+)\s*(đ|vnd|vnđ)\b/gi, '$1 đồng')
-    .replace(/\b(\d+)\s*lít\b/gi, '$1 trăm nghìn đồng')
-    .replace(/\b(\d+)\s*củ\b/gi, '$1 triệu đồng');
+    .replace(/(?<![\p{L}\p{N}_])(\d+)\s*k(?![\p{L}\p{N}_])/giu, '$1 nghìn đồng')
+    .replace(/(?<![\p{L}\p{N}_])(\d+)\s*cành(?![\p{L}\p{N}_])/giu, '$1 nghìn đồng')
+    .replace(/(?<![\p{L}\p{N}_])(\d+)[,\.](\d+)\s*(tr|triệu)(?![\p{L}\p{N}_])/giu, '$1 triệu $2 trăm nghìn đồng')
+    .replace(/(?<![\p{L}\p{N}_])(\d+)\s*(tr|triệu)(?![\p{L}\p{N}_])/giu, '$1 triệu đồng')
+    .replace(/(?<![\p{L}\p{N}_])(\d+)\s*%(?![\p{L}\p{N}_])/gu, '$1 phần trăm')
+    .replace(/(?<![\p{L}\p{N}_])(\d+)\s*(đ|vnd|vnđ)(?![\p{L}\p{N}_])/giu, '$1 đồng')
+    .replace(/(?<![\p{L}\p{N}_])(\d+)\s*lít(?![\p{L}\p{N}_])/giu, '$1 trăm nghìn đồng')
+    .replace(/(?<![\p{L}\p{N}_])(\d+)\s*củ(?![\p{L}\p{N}_])/giu, '$1 triệu đồng');
 
-  // Viết tắt livestream thông dụng
+  // Viết tắt livestream thông dụng (Unicode-aware boundary)
   text = text
-    .replace(/\bsp\b/gi, 'sản phẩm')
-    .replace(/\bđc\b/gi, 'được')
-    .replace(/\bdc\b/gi, 'được')
-    .replace(/\bko\b/gi, 'không')
-    .replace(/\bkhg\b/gi, 'không')
-    .replace(/\bmn\b/gi, 'mọi người')
-    .replace(/\bmng\b/gi, 'mọi người')
-    .replace(/\bsz\b/gi, 'size')
-    .replace(/\bib\b/gi, 'nhắn tin')
-    .replace(/\binbox\b/gi, 'nhắn tin trực tiếp')
-    .replace(/\bcmt\b/gi, 'bình luận')
-    .replace(/\bcomment\b/gi, 'bình luận')
-    .replace(/\bdeal\b/gi, 'ưu đãi')
-    .replace(/\bfreeship\b/gi, 'miễn phí giao hàng')
-    .replace(/\bfree ship\b/gi, 'miễn phí giao hàng')
-    .replace(/\bvoucher\b/gi, 'mã giảm giá')
-    .replace(/\bflash\s*sale\b/gi, 'ưu đãi chớp nhoáng')
-    .replace(/\bfollow\b/gi, 'theo dõi')
-    .replace(/\bfl\b/gi, 'theo dõi')
-    .replace(/\bcod\b/gi, 'nhận hàng thanh toán')
-    .replace(/\bstk\b/gi, 'số tài khoản')
-    .replace(/\bcombo\b/gi, 'gói combo');
+    .replace(/(?<![\p{L}\p{N}_])sp(?![\p{L}\p{N}_])/giu, 'sản phẩm')
+    .replace(/(?<![\p{L}\p{N}_])đc(?![\p{L}\p{N}_])/giu, 'được')
+    .replace(/(?<![\p{L}\p{N}_])dc(?![\p{L}\p{N}_])/giu, 'được')
+    .replace(/(?<![\p{L}\p{N}_])ko(?![\p{L}\p{N}_])/giu, 'không')
+    .replace(/(?<![\p{L}\p{N}_])khg(?![\p{L}\p{N}_])/giu, 'không')
+    .replace(/(?<![\p{L}\p{N}_])mn(?![\p{L}\p{N}_])/giu, 'mọi người')
+    .replace(/(?<![\p{L}\p{N}_])mng(?![\p{L}\p{N}_])/giu, 'mọi người')
+    .replace(/(?<![\p{L}\p{N}_])sz(?![\p{L}\p{N}_])/giu, 'size')
+    .replace(/(?<![\p{L}\p{N}_])ib(?![\p{L}\p{N}_])/giu, 'nhắn tin')
+    .replace(/(?<![\p{L}\p{N}_])inbox(?![\p{L}\p{N}_])/giu, 'nhắn tin trực tiếp')
+    .replace(/(?<![\p{L}\p{N}_])cmt(?![\p{L}\p{N}_])/giu, 'bình luận')
+    .replace(/(?<![\p{L}\p{N}_])comment(?![\p{L}\p{N}_])/giu, 'bình luận')
+    .replace(/(?<![\p{L}\p{N}_])deal(?![\p{L}\p{N}_])/giu, 'ưu đãi')
+    .replace(/(?<![\p{L}\p{N}_])freeship(?![\p{L}\p{N}_])/giu, 'miễn phí giao hàng')
+    .replace(/(?<![\p{L}\p{N}_])free\s*ship(?![\p{L}\p{N}_])/giu, 'miễn phí giao hàng')
+    .replace(/(?<![\p{L}\p{N}_])voucher(?![\p{L}\p{N}_])/giu, 'mã giảm giá')
+    .replace(/(?<![\p{L}\p{N}_])flash\s*sale(?![\p{L}\p{N}_])/giu, 'ưu đãi chớp nhoáng')
+    .replace(/(?<![\p{L}\p{N}_])follow(?![\p{L}\p{N}_])/giu, 'theo dõi')
+    .replace(/(?<![\p{L}\p{N}_])fl(?![\p{L}\p{N}_])/giu, 'theo dõi')
+    .replace(/(?<![\p{L}\p{N}_])cod(?![\p{L}\p{N}_])/giu, 'nhận hàng thanh toán')
+    .replace(/(?<![\p{L}\p{N}_])stk(?![\p{L}\p{N}_])/giu, 'số tài khoản')
+    .replace(/(?<![\p{L}\p{N}_])combo(?![\p{L}\p{N}_])/giu, 'gói combo');
 
   // Giữ nguyên câu từ kịch bản đọc liền mạch, mượt mà, không chèn ngắt nghỉ cà nhấp
   return text.replace(/,\s*,+/g, ', ').replace(/\.\s*\.+/g, '. ').replace(/!\s*!+/g, '! ').replace(/\s+/g, ' ').trim();

@@ -7590,16 +7590,19 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
     ? window.location.origin
     : '';
 
-  // Chuẩn hóa văn bản gửi đến TTS engine: Loại bỏ việc Azure TTS tự động chèn khoảng lặng 1-2s sau các dấu !, ?, :, ;, ...
+  // Chuẩn hóa văn bản gửi đến TTS engine: Giữ nguyên cấu trúc ngữ âm và dấu ngắt cuối câu để bảo toàn trọn vẹn âm đuôi (-n, -ng, -nh, -m, -p, -t, -c)
   let ttsText = text.trim();
   ttsText = ttsText
-    .replace(/[!?]+/g, ' ')
     .replace(/[;:]+/g, ', ')
     .replace(/\.{2,}/g, '. ')
     .replace(/,\s*,+/g, ', ')
     .replace(/\s+/g, ' ')
     .trim();
-  ttsText = ttsText.replace(/[,.]\s*$/, '').trim() || text.trim();
+
+  // Đảm bảo câu có dấu kết thúc (. hoặc !) để EdgeTTS không nuốt âm đuôi "bạn", "gạo", "không"
+  if (ttsText && !/[.!?]$/.test(ttsText)) {
+    ttsText += '.';
+  }
 
   const postPayload = JSON.stringify({
     text: ttsText,

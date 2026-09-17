@@ -295,22 +295,15 @@ export default function EventVoiceTester({
 
     const sentences = sentencesRef.current;
     if (!sentences || index >= sentences.length) {
-      // Đã đọc hết kịch bản: Tự động lặp lại kịch bản nếu người dùng bật lặp lại
-      const savedConfig = typeof localStorage !== 'undefined' ? (localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup')) : null;
-      let shouldLoop = true;
-      try {
-        if (savedConfig) {
-          const parsed = JSON.parse(savedConfig);
-          if (parsed.script_broadcast && parsed.script_broadcast.loopScript === false) {
-            shouldLoop = false;
-          }
-        }
-      } catch (e) {}
-
-      if (shouldLoop && sentences && sentences.length > 0 && isPlayingRef.current) {
+      // 🔄 ĐÃ ĐỌC HẾT KỊCH BẢN: TỰ ĐỘNG LẶP LẠI TUẦN HOÀN LIÊN TỤC TỪ ĐẦU (LOOP) CHO ĐẾN KHI NGƯỜI DÙNG BẤM DỪNG
+      if (sentences && sentences.length > 0 && isPlayingRef.current) {
         setCurrentSentenceIdx(0);
         currentSentenceIdxRef.current = 0;
-        playSentenceAtIndex(0, customVoice);
+        setTimeout(() => {
+          if (isPlayingRef.current) {
+            playSentenceAtIndex(0, customVoice);
+          }
+        }, 50);
       } else {
         handleStop();
       }
@@ -386,9 +379,12 @@ export default function EventVoiceTester({
       }));
     } catch (e) {}
 
-    // 🚀 LOOKAHEAD PIPELINE: Ngay khi câu hiện tại bắt đầu phát, nạp trước câu N+1
+    // 🚀 LOOKAHEAD PIPELINE: Ngay khi câu hiện tại bắt đầu phát, nạp trước câu N+1 và N+2 vào RAM
     if (index + 1 < sentences.length) {
       prefetchTTSAudio(sentences[index + 1], voiceObj, { rate: speedRef.current });
+    }
+    if (index + 2 < sentences.length) {
+      prefetchTTSAudio(sentences[index + 2], voiceObj, { rate: speedRef.current });
     }
 
     const speakerRate = (matchedSpeakerAvatar?.rate ?? 1.0) * (speedRef.current || 1.0);
@@ -424,13 +420,15 @@ export default function EventVoiceTester({
             }));
           } catch (e) {}
 
-          const pauseSec = pauseDurationRef.current !== undefined ? Number(pauseDurationRef.current) : 0.1;
+          const pauseSec = pauseDurationRef.current !== undefined ? Number(pauseDurationRef.current) : 0.0;
           
-          // Nếu chọn 0.0s (Liền mạch): Phát câu tiếp theo NGAY LẬP TỨC 0ms không qua bất kỳ timer delay nào!
+          // Phát câu tiếp theo liền mạch 20ms
           if (pauseSec <= 0.02) {
-            playSentenceAtIndex(index + 1, customVoice);
+            setTimeout(() => {
+              if (isPlayingRef.current) playSentenceAtIndex(index + 1, customVoice);
+            }, 20);
           } else {
-            const pauseMs = Math.max(0, Math.round(pauseSec * 1000));
+            const pauseMs = Math.max(20, Math.round(pauseSec * 1000));
             queueTimeoutRef.current = setTimeout(() => {
               if (isPlayingRef.current) {
                 playSentenceAtIndex(index + 1, customVoice);

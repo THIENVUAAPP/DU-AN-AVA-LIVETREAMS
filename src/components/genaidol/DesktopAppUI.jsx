@@ -978,6 +978,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   const lastTimeBroadcastRef = useRef(0);
   const isInternalAudioChangeRef = useRef(false);
   const isInternalPlaybackChangeRef = useRef(false);
+  const currentFileBlobRef = useRef(null);
+  const currentBlobUrlRef = useRef(null);
 
   useEffect(() => {
     let animId;
@@ -1922,8 +1924,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         localStorage.setItem('avalive_user_locked_media', cleanUrl);
         localStorage.setItem('avalive_active_video_src', cleanUrl);
       } catch (e) {}
+      const blobUrl = (charItem.url && charItem.url.startsWith('blob:')) ? charItem.url : null;
+      const fileBlob = charItem.fileData || null;
+      if (fileBlob) currentFileBlobRef.current = fileBlob;
+      if (blobUrl) currentBlobUrlRef.current = blobUrl;
+
       if (desktopVideoRef.current) {
-        desktopVideoRef.current.src = cleanUrl;
+        desktopVideoRef.current.src = blobUrl || cleanUrl;
         desktopVideoRef.current.currentTime = 0;
         desktopVideoRef.current.dataset.userPaused = 'false';
         desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
@@ -1934,6 +1941,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         bc.postMessage({
           type: 'GLOBAL_MEDIA_CHANGE',
           mediaUrl: cleanUrl,
+          blobUrl: blobUrl,
+          fileBlob: fileBlob,
           characterId: charItem.id,
           characterName: charItem.name || 'AI Idol',
           isVideo: true,
@@ -2086,23 +2095,42 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         bc.onmessage = (event) => {
           if (!event.data) return;
 
-          // 0. Phản hồi yêu cầu lấy mốc thời gian & trạng thái gốc từ Window Capture OBS vừa mở
-          if (event.data.type === 'REQUEST_MASTER_LIVE_STATE') {
+          // 0. Phản hồi yêu cầu lấy Video, mốc thời gian & trạng thái gốc từ Window Capture OBS vừa mở
+          if (event.data.type === 'REQUEST_MASTER_LIVE_STATE' || event.data.type === 'REQUEST_CURRENT_MEDIA') {
             const vid = desktopVideoRef.current;
             const curTime = vid ? vid.currentTime : (lastPlaybackTimeRef.current || 0);
             const isPlaying = vid ? !vid.paused : isMasterLiveRunning;
             const charMatch = (customCharacters && Array.isArray(customCharacters)) ? customCharacters.find(c => c.id === selectedCharacter) : null;
             let playUrl = (charMatch ? (charMatch.mediaUrl || charMatch.url) : null) || userLockedMediaUrl || null;
+            const blobUrl = (charMatch && charMatch.url && charMatch.url.startsWith('blob:')) ? charMatch.url : (currentBlobUrlRef.current || null);
+            const fileBlob = (charMatch && charMatch.fileData) || currentFileBlobRef.current || null;
+
             if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
               playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
             }
             try {
+              bc.postMessage({
+                type: 'RESPONSE_CURRENT_MEDIA',
+                mediaUrl: playUrl,
+                blobUrl: blobUrl,
+                fileBlob: fileBlob,
+                selectedCharacter: selectedCharacter,
+                characterId: selectedCharacter,
+                characterName: charMatch ? charMatch.name : '',
+                currentTime: curTime,
+                isPlaying: isPlaying,
+                isVideo: true,
+                force: true,
+                timestamp: Date.now()
+              });
               bc.postMessage({
                 type: 'MASTER_TIME_SYNC',
                 currentTime: curTime,
                 isPlaying: isPlaying,
                 selectedCharacter: selectedCharacter,
                 mediaUrl: playUrl,
+                blobUrl: blobUrl,
+                fileBlob: fileBlob,
                 force: true,
                 isMuted: isLocalSpeakerMuted,
                 timestamp: Date.now()
@@ -3013,6 +3041,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         setSelectedCharacter(newCharId);
         setIsVideoPlaying(true);
         lastPlaybackTimeRef.current = 0;
+        currentFileBlobRef.current = file;
+        currentBlobUrlRef.current = localUrl;
 
         // Kích hoạt ngay lập tức trên phần tử video Desktop trong 0ms
         if (desktopVideoRef.current) {
@@ -3029,6 +3059,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             type: 'GLOBAL_MEDIA_CHANGE',
             mediaUrl: localUrl,
             blobUrl: localUrl,
+            fileBlob: file,
             characterId: newCharId,
             characterName: charName,
             isVideo: true,
@@ -3079,6 +3110,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               bc.postMessage({
                 type: 'GLOBAL_MEDIA_CHANGE',
                 mediaUrl: fileUrl,
+                blobUrl: localUrl,
+                fileBlob: file,
                 characterId: newCharId,
                 characterName: charName,
                 isVideo: true,
@@ -3133,6 +3166,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                     bc.postMessage({
                       type: 'GLOBAL_MEDIA_CHANGE',
                       mediaUrl: fallbackUrl,
+                      blobUrl: localUrl,
+                      fileBlob: file,
                       characterId: newCharId,
                       characterName: charName,
                       isVideo: true,

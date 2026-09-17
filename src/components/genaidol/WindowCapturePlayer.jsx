@@ -203,13 +203,26 @@ export default function WindowCapturePlayer() {
     let bc = null;
     try {
       bc = new BroadcastChannel('avalive_master_live_stream');
+
+      // ⚡ Yêu cầu lấy ngay Video và trạng thái hiện tại từ phần mềm chính (0ms)
+      try {
+        bc.postMessage({ type: 'REQUEST_CURRENT_MEDIA', timestamp: Date.now() });
+        bc.postMessage({ type: 'REQUEST_MASTER_LIVE_STATE', timestamp: Date.now() });
+      } catch (e) {}
+
       bc.onmessage = async (event) => {
         const msg = event.data;
         if (!msg) return;
 
-        if (msg.type === 'GLOBAL_MEDIA_CHANGE' && (msg.mediaUrl || msg.blobUrl || msg.characterId)) {
-          // ⚡ ƯU TIÊN 1: Dùng ngay blobUrl trực tiếp được gửi qua Broadcast (0ms)
-          if (msg.blobUrl) {
+        if ((msg.type === 'GLOBAL_MEDIA_CHANGE' || msg.type === 'RESPONSE_CURRENT_MEDIA') && (msg.fileBlob || msg.mediaUrl || msg.blobUrl || msg.characterId)) {
+          // ⚡ ƯU TIÊN 1: File/Blob object trực tiếp qua Structured Clone (0ms, 60 FPS chuẩn GPU)
+          if (msg.fileBlob && (msg.fileBlob instanceof Blob || msg.fileBlob instanceof File)) {
+            try {
+              const url = URL.createObjectURL(msg.fileBlob);
+              setVideoSrc(url);
+              setIsVideoLoading(false);
+            } catch (e) {}
+          } else if (msg.blobUrl) {
             setVideoSrc(msg.blobUrl);
             setIsVideoLoading(false);
           } else {

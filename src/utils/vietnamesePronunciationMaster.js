@@ -14,114 +14,126 @@
 
 // 1. TỪ ĐIỂN PHÁT ÂM THƯƠNG HIỆU & THUẬT NGỮ CÔNG NGHỆ (PRONUNCIATION DICTIONARY)
 export const PRONUNCIATION_DICTIONARY = [
+  // 🛡️ BẢO VỆ TUYỆT ĐỐI CÁC TỪ KHÓA TIẾNG VIỆT GỐC (TUYỆT ĐỐI KHÔNG TÁCH CHỮ, KHÔNG LỖI CHÍNH TẢ)
+  { pattern: /(?<![\p{L}\p{N}_])không(?![\p{L}\p{N}_])/giu, replacement: 'không' },
+  { pattern: /(?<![\p{L}\p{N}_])gạo(?![\p{L}\p{N}_])/giu, replacement: 'gạo' },
+  { pattern: /(?<![\p{L}\p{N}_])bạn(?![\p{L}\p{N}_])/giu, replacement: 'bạn' },
+  { pattern: /(?<![\p{L}\p{N}_])kịch\s*bản(?![\p{L}\p{N}_])/giu, replacement: 'kịch bản' },
+  { pattern: /(?<![\p{L}\p{N}_])khách\s*hàng(?![\p{L}\p{N}_])/giu, replacement: 'khách hàng' },
+  { pattern: /(?<![\p{L}\p{N}_])khách(?![\p{L}\p{N}_])/giu, replacement: 'khách' },
+  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo' },
+  { pattern: /(?<![\p{L}\p{N}_])gạo\s*st25(?![\p{L}\p{N}_])/giu, replacement: 'gạo ST25' },
+  { pattern: /(?<![\p{L}\p{N}_])chào\s*bạn(?![\p{L}\p{N}_])/giu, replacement: 'chào bạn' },
+  { pattern: /(?<![\p{L}\p{N}_])cảm\s*ơn\s*bạn(?![\p{L}\p{N}_])/giu, replacement: 'cảm ơn bạn' },
+  { pattern: /(?<![\p{L}\p{N}_])bạn\s*ơi(?![\p{L}\p{N}_])/giu, replacement: 'bạn ơi' },
+
   // Thương hiệu độc quyền AvaLive
-  { pattern: /\b(AVA\s*LIVE\s*PRO|AVALIVEPRO)\b/gi, replacement: 'Ava Live Pro' },
-  { pattern: /\b(AVA\s*LIVE|AVALIVE)\b/gi, replacement: 'Ava Live' },
-  { pattern: /\b(THIEN\s*VUA\s*APP|THIENVUAAPP)\b/gi, replacement: 'Thiên Vua App' },
+  { pattern: /(?<![\p{L}\p{N}_])(AVA\s*LIVE\s*PRO|AVALIVEPRO)(?![\p{L}\p{N}_])/giu, replacement: 'Ava Live Pro' },
+  { pattern: /(?<![\p{L}\p{N}_])(AVA\s*LIVE|AVALIVE)(?![\p{L}\p{N}_])/giu, replacement: 'Ava Live' },
+  { pattern: /(?<![\p{L}\p{N}_])(THIEN\s*VUA\s*APP|THIENVUAAPP)(?![\p{L}\p{N}_])/giu, replacement: 'Thiên Vua App' },
   
   // Nền tảng mạng xã hội & Livestream (Phát âm chuẩn xác, không dùng tiếng lóng làm sai lệch từ ngữ)
-  { pattern: /\b(TikTok\s*Live\s*Studio|Tik\s*Tok\s*Live\s*Studio)\b/gi, replacement: 'TikTok Live Studio' },
-  { pattern: /\b(TikTok\s*Shop|Tik\s*Tok\s*Shop)\b/gi, replacement: 'TikTok Shop' },
-  { pattern: /\b(TikTok|Tik\s*Tok)\b/gi, replacement: 'TikTok' },
-  { pattern: /\b(Facebook\s*Live|FB\s*Live)\b/gi, replacement: 'Facebook Live' },
-  { pattern: /\b(Facebook|FB)\b/gi, replacement: 'Facebook' },
-  { pattern: /\b(YouTube|Youtube|YT)\b/gi, replacement: 'YouTube' },
-  { pattern: /\b(Shopee\s*Live)\b/gi, replacement: 'Shopee Live' },
-  { pattern: /\b(Shopee)\b/gi, replacement: 'Shopee' },
-  { pattern: /\b(Lazada)\b/gi, replacement: 'Lazada' },
-  { pattern: /\b(Zalo)\b/gi, replacement: 'Zalo' },
-  { pattern: /\b(OBS\s*Studio|OBS)\b/gi, replacement: 'OBS Studio' },
+  { pattern: /(?<![\p{L}\p{N}_])(TikTok\s*Live\s*Studio|Tik\s*Tok\s*Live\s*Studio)(?![\p{L}\p{N}_])/giu, replacement: 'TikTok Live Studio' },
+  { pattern: /(?<![\p{L}\p{N}_])(TikTok\s*Shop|Tik\s*Tok\s*Shop)(?![\p{L}\p{N}_])/giu, replacement: 'TikTok Shop' },
+  { pattern: /(?<![\p{L}\p{N}_])(TikTok|Tik\s*Tok)(?![\p{L}\p{N}_])/giu, replacement: 'TikTok' },
+  { pattern: /(?<![\p{L}\p{N}_])(Facebook\s*Live|FB\s*Live)(?![\p{L}\p{N}_])/giu, replacement: 'Facebook Live' },
+  { pattern: /(?<![\p{L}\p{N}_])(Facebook|FB)(?![\p{L}\p{N}_])/giu, replacement: 'Facebook' },
+  { pattern: /(?<![\p{L}\p{N}_])(YouTube|Youtube|YT)(?![\p{L}\p{N}_])/giu, replacement: 'YouTube' },
+  { pattern: /(?<![\p{L}\p{N}_])(Shopee\s*Live)(?![\p{L}\p{N}_])/giu, replacement: 'Shopee Live' },
+  { pattern: /(?<![\p{L}\p{N}_])(Shopee)(?![\p{L}\p{N}_])/giu, replacement: 'Shopee' },
+  { pattern: /(?<![\p{L}\p{N}_])(Lazada)(?![\p{L}\p{N}_])/giu, replacement: 'Lazada' },
+  { pattern: /(?<![\p{L}\p{N}_])(Zalo)(?![\p{L}\p{N}_])/giu, replacement: 'Zalo' },
+  { pattern: /(?<![\p{L}\p{N}_])(OBS\s*Studio|OBS)(?![\p{L}\p{N}_])/giu, replacement: 'OBS Studio' },
 
   // Thuật ngữ AI & Công nghệ
-  { pattern: /\bAI\b/g, replacement: 'AI' },
-  { pattern: /\bTTS\b/g, replacement: 'TTS' },
-  { pattern: /\bAPI\b/g, replacement: 'API' },
-  { pattern: /\bUI\b/g, replacement: 'giao diện' },
-  { pattern: /\bUX\b/g, replacement: 'trải nghiệm' },
-  { pattern: /\bCRM\b/g, replacement: 'CRM' },
-  { pattern: /\bERP\b/g, replacement: 'ERP' },
-  { pattern: /\bSaaS\b/gi, replacement: 'phần mềm dịch vụ' },
-  { pattern: /\bKOL\b/g, replacement: 'KOL' },
-  { pattern: /\bKOC\b/g, replacement: 'KOC' },
-  { pattern: /\bCEO\b/g, replacement: 'CEO' },
-  { pattern: /\bCTO\b/g, replacement: 'CTO' },
-  { pattern: /\bOTP\b/gi, replacement: 'OTP' },
-  { pattern: /\bSKU\b/gi, replacement: 'mã sản phẩm' },
-  { pattern: /\bID\b/g, replacement: 'mã số' },
-  { pattern: /\bPK\b/g, replacement: 'PK' },
-  { pattern: /\bPRO\b/gi, replacement: 'Pro' },
-  { pattern: /\bVIP\b/gi, replacement: 'VIP' },
-  { pattern: /\bLIP-?SYNC\b/gi, replacement: 'khớp khẩu hình' },
-  { pattern: /\bAVATAR\b/gi, replacement: 'Avatar' },
-  { pattern: /\bLIVESTREAM\b/gi, replacement: 'livestream' },
-  { pattern: /\bLIVE\s*STREAM\b/gi, replacement: 'livestream' },
-  { pattern: /\bSTREAM\b/gi, replacement: 'stream' },
-  { pattern: /\bSTREAMER\b/gi, replacement: 'streamer' },
-  { pattern: /\bFEEDBACK\b/gi, replacement: 'phản hồi' },
-  { pattern: /\bREVIEW\b/gi, replacement: 'đánh giá' },
-  { pattern: /\bFREESHIP\b/gi, replacement: 'miễn phí giao hàng' },
-  { pattern: /\bFREE\s*SHIP\b/gi, replacement: 'miễn phí giao hàng' },
-  { pattern: /\bFLASH\s*SALE\b/gi, replacement: 'giảm giá chớp nhoáng' },
-  { pattern: /\bSALE\b/gi, replacement: 'giảm giá' },
-  { pattern: /\bDEAL\b/gi, replacement: 'ưu đãi' },
-  { pattern: /\bCOMBO\b/gi, replacement: 'combo' },
-  { pattern: /\bHOT\s*TREND\b/gi, replacement: 'xu hướng' },
-  { pattern: /\bTREND\b/gi, replacement: 'xu hướng' },
-  { pattern: /\bVOUCHER\b/gi, replacement: 'phiếu giảm giá' },
-  { pattern: /\bORDER\b/gi, replacement: 'đặt hàng' },
-  { pattern: /\bSERUM\b/gi, replacement: 'serum' },
-  { pattern: /\bSKINCARE\b/gi, replacement: 'chăm sóc da' },
-  { pattern: /\bAPP\b/gi, replacement: 'ứng dụng' },
-  { pattern: /\bWEBSITE\b/gi, replacement: 'trang web' },
-  { pattern: /\bWEB\b/gi, replacement: 'trang web' },
-  { pattern: /\bLINK\b/gi, replacement: 'đường link' },
-  { pattern: /\bFPS\b/gi, replacement: 'khung hình trên giây' },
-  { pattern: /\b4K\b/gi, replacement: 'bốn ca siêu nét' },
-  { pattern: /\b8K\b/gi, replacement: 'tám ca siêu nét' },
-  { pattern: /\b1080P\b/gi, replacement: 'full HD 1080p' },
-  { pattern: /\b720P\b/gi, replacement: '720p' }
+  { pattern: /(?<![\p{L}\p{N}_])AI(?![\p{L}\p{N}_])/gu, replacement: 'AI' },
+  { pattern: /(?<![\p{L}\p{N}_])TTS(?![\p{L}\p{N}_])/gu, replacement: 'TTS' },
+  { pattern: /(?<![\p{L}\p{N}_])API(?![\p{L}\p{N}_])/gu, replacement: 'API' },
+  { pattern: /(?<![\p{L}\p{N}_])UI(?![\p{L}\p{N}_])/gu, replacement: 'giao diện' },
+  { pattern: /(?<![\p{L}\p{N}_])UX(?![\p{L}\p{N}_])/gu, replacement: 'trải nghiệm' },
+  { pattern: /(?<![\p{L}\p{N}_])CRM(?![\p{L}\p{N}_])/gu, replacement: 'CRM' },
+  { pattern: /(?<![\p{L}\p{N}_])ERP(?![\p{L}\p{N}_])/gu, replacement: 'ERP' },
+  { pattern: /(?<![\p{L}\p{N}_])SaaS(?![\p{L}\p{N}_])/giu, replacement: 'phần mềm dịch vụ' },
+  { pattern: /(?<![\p{L}\p{N}_])KOL(?![\p{L}\p{N}_])/gu, replacement: 'KOL' },
+  { pattern: /(?<![\p{L}\p{N}_])KOC(?![\p{L}\p{N}_])/gu, replacement: 'KOC' },
+  { pattern: /(?<![\p{L}\p{N}_])CEO(?![\p{L}\p{N}_])/gu, replacement: 'CEO' },
+  { pattern: /(?<![\p{L}\p{N}_])CTO(?![\p{L}\p{N}_])/gu, replacement: 'CTO' },
+  { pattern: /(?<![\p{L}\p{N}_])OTP(?![\p{L}\p{N}_])/giu, replacement: 'OTP' },
+  { pattern: /(?<![\p{L}\p{N}_])SKU(?![\p{L}\p{N}_])/giu, replacement: 'mã sản phẩm' },
+  { pattern: /(?<![\p{L}\p{N}_])ID(?![\p{L}\p{N}_])/gu, replacement: 'mã số' },
+  { pattern: /(?<![\p{L}\p{N}_])PK(?![\p{L}\p{N}_])/gu, replacement: 'PK' },
+  { pattern: /(?<![\p{L}\p{N}_])PRO(?![\p{L}\p{N}_])/giu, replacement: 'Pro' },
+  { pattern: /(?<![\p{L}\p{N}_])VIP(?![\p{L}\p{N}_])/giu, replacement: 'VIP' },
+  { pattern: /(?<![\p{L}\p{N}_])LIP-?SYNC(?![\p{L}\p{N}_])/giu, replacement: 'khớp khẩu hình' },
+  { pattern: /(?<![\p{L}\p{N}_])AVATAR(?![\p{L}\p{N}_])/giu, replacement: 'Avatar' },
+  { pattern: /(?<![\p{L}\p{N}_])LIVESTREAM(?![\p{L}\p{N}_])/giu, replacement: 'livestream' },
+  { pattern: /(?<![\p{L}\p{N}_])LIVE\s*STREAM(?![\p{L}\p{N}_])/giu, replacement: 'livestream' },
+  { pattern: /(?<![\p{L}\p{N}_])STREAM(?![\p{L}\p{N}_])/giu, replacement: 'stream' },
+  { pattern: /(?<![\p{L}\p{N}_])STREAMER(?![\p{L}\p{N}_])/giu, replacement: 'streamer' },
+  { pattern: /(?<![\p{L}\p{N}_])FEEDBACK(?![\p{L}\p{N}_])/giu, replacement: 'phản hồi' },
+  { pattern: /(?<![\p{L}\p{N}_])REVIEW(?![\p{L}\p{N}_])/giu, replacement: 'đánh giá' },
+  { pattern: /(?<![\p{L}\p{N}_])FREESHIP(?![\p{L}\p{N}_])/giu, replacement: 'miễn phí giao hàng' },
+  { pattern: /(?<![\p{L}\p{N}_])FREE\s*SHIP(?![\p{L}\p{N}_])/giu, replacement: 'miễn phí giao hàng' },
+  { pattern: /(?<![\p{L}\p{N}_])FLASH\s*SALE(?![\p{L}\p{N}_])/giu, replacement: 'giảm giá chớp nhoáng' },
+  { pattern: /(?<![\p{L}\p{N}_])SALE(?![\p{L}\p{N}_])/giu, replacement: 'giảm giá' },
+  { pattern: /(?<![\p{L}\p{N}_])DEAL(?![\p{L}\p{N}_])/giu, replacement: 'ưu đãi' },
+  { pattern: /(?<![\p{L}\p{N}_])COMBO(?![\p{L}\p{N}_])/giu, replacement: 'combo' },
+  { pattern: /(?<![\p{L}\p{N}_])HOT\s*TREND(?![\p{L}\p{N}_])/giu, replacement: 'xu hướng' },
+  { pattern: /(?<![\p{L}\p{N}_])TREND(?![\p{L}\p{N}_])/giu, replacement: 'xu hướng' },
+  { pattern: /(?<![\p{L}\p{N}_])VOUCHER(?![\p{L}\p{N}_])/giu, replacement: 'phiếu giảm giá' },
+  { pattern: /(?<![\p{L}\p{N}_])ORDER(?![\p{L}\p{N}_])/giu, replacement: 'đặt hàng' },
+  { pattern: /(?<![\p{L}\p{N}_])SERUM(?![\p{L}\p{N}_])/giu, replacement: 'serum' },
+  { pattern: /(?<![\p{L}\p{N}_])SKINCARE(?![\p{L}\p{N}_])/giu, replacement: 'chăm sóc da' },
+  { pattern: /(?<![\p{L}\p{N}_])APP(?![\p{L}\p{N}_])/giu, replacement: 'ứng dụng' },
+  { pattern: /(?<![\p{L}\p{N}_])WEBSITE(?![\p{L}\p{N}_])/giu, replacement: 'trang web' },
+  { pattern: /(?<![\p{L}\p{N}_])WEB(?![\p{L}\p{N}_])/giu, replacement: 'trang web' },
+  { pattern: /(?<![\p{L}\p{N}_])LINK(?![\p{L}\p{N}_])/giu, replacement: 'đường link' },
+  { pattern: /(?<![\p{L}\p{N}_])FPS(?![\p{L}\p{N}_])/giu, replacement: 'khung hình trên giây' },
+  { pattern: /(?<![\p{L}\p{N}_])2K(?![\p{L}\p{N}_])/giu, replacement: 'hai ca siêu nét' },
+  { pattern: /(?<![\p{L}\p{N}_])4K(?![\p{L}\p{N}_])/giu, replacement: 'bốn ca siêu nét' },
+  { pattern: /(?<![\p{L}\p{N}_])8K(?![\p{L}\p{N}_])/giu, replacement: 'tám ca siêu nét' },
+  { pattern: /(?<![\p{L}\p{N}_])1080P(?![\p{L}\p{N}_])/giu, replacement: 'full HD 1080p' },
+  { pattern: /(?<![\p{L}\p{N}_])720P(?![\p{L}\p{N}_])/giu, replacement: '720p' }
 ];
 
-// 2. TỪ ĐIỂN TỪ VIẾT TẮT TIẾNG VIỆT
+// 2. TỪ ĐIỂN TỪ VIẾT TẮT TIẾNG VIỆT (UNICODE-AWARE BOUNDARIES)
 export const VIETNAMESE_ABBREVIATIONS = [
-  { pattern: /\bsp\b/gi, replacement: 'sản phẩm' },
-  { pattern: /\bđc\b/gi, replacement: 'được' },
-  { pattern: /\bdc\b/gi, replacement: 'được' },
-  { pattern: /\bko\b/gi, replacement: 'không' },
-  { pattern: /\bk\b/gi, replacement: 'không' },
-  { pattern: /\bkhg\b/gi, replacement: 'không' },
-  { pattern: /\bkh\b/gi, replacement: 'không' },
-  { pattern: /\bmn\b/gi, replacement: 'mọi người' },
-  { pattern: /\bmng\b/gi, replacement: 'mọi người' },
-  { pattern: /\bsz\b/gi, replacement: 'size' },
-  { pattern: /\bstk\b/gi, replacement: 'số tài khoản' },
-  { pattern: /\bcod\b/gi, replacement: 'nhận hàng thanh toán C-O-D' },
-  { pattern: /\bbtv\b/gi, replacement: 'biên tập viên' },
-  { pattern: /\bmc\b/gi, replacement: 'người dẫn chương trình' },
-  { pattern: /\bvtv\b/gi, replacement: 'đài truyền hình' },
-  { pattern: /\bkm\b/gi, replacement: 'khuyến mãi' },
-  { pattern: /\bhsd\b/gi, replacement: 'hạn sử dụng' },
-  { pattern: /\bnsx\b/gi, replacement: 'ngày sản xuất' },
-  { pattern: /\bnv\b/gi, replacement: 'nhân viên' },
-  { pattern: /\blh\b/gi, replacement: 'liên hệ' },
-  { pattern: /\btp\b/gi, replacement: 'thành phố' },
-  { pattern: /\bhcm\b/gi, replacement: 'Hồ Chí Minh' },
-  { pattern: /\bhn\b/gi, replacement: 'Hà Nội' },
-  { pattern: /\bib\b/gi, replacement: 'nhắn tin trực tiếp' },
-  { pattern: /\binbox\b/gi, replacement: 'nhắn tin trực tiếp' },
-  { pattern: /\bcmt\b/gi, replacement: 'bình luận' },
-  { pattern: /\bcomment\b/gi, replacement: 'bình luận' },
-  { pattern: /\bauth\b/gi, replacement: 'chính hãng chuẩn gốc' },
-  { pattern: /\breal\b/gi, replacement: 'hàng thật chính hãng' },
-  { pattern: /\bsetup\b/gi, replacement: 'cài đặt' },
-  { pattern: /\bok\b/gi, replacement: 'dạ vâng được ạ' },
-  { pattern: /\bokay\b/gi, replacement: 'dạ vâng được ạ' },
-  { pattern: /\bts\.\b/gi, replacement: 'Tiến sĩ ' },
-  { pattern: /\bbs\.\b/gi, replacement: 'Bác sĩ ' },
-  { pattern: /\bpgs\.ts\.\b/gi, replacement: 'Phó Giáo sư Tiến sĩ ' },
-  { pattern: /\bthcs\b/gi, replacement: 'trung học cơ sở' },
-  { pattern: /\bthpt\b/gi, replacement: 'trung học phổ thông' },
-  { pattern: /\bđh\b/gi, replacement: 'đại học' }
+  { pattern: /(?<![\p{L}\p{N}_])sp(?![\p{L}\p{N}_])/giu, replacement: 'sản phẩm' },
+  { pattern: /(?<![\p{L}\p{N}_])đc(?![\p{L}\p{N}_])/giu, replacement: 'được' },
+  { pattern: /(?<![\p{L}\p{N}_])dc(?![\p{L}\p{N}_])/giu, replacement: 'được' },
+  { pattern: /(?<![\p{L}\p{N}_])ko(?![\p{L}\p{N}_])/giu, replacement: 'không' },
+  { pattern: /(?<![\p{L}\p{N}_])khg(?![\p{L}\p{N}_])/giu, replacement: 'không' },
+  { pattern: /(?<![\p{L}\p{N}_])mn(?![\p{L}\p{N}_])/giu, replacement: 'mọi người' },
+  { pattern: /(?<![\p{L}\p{N}_])mng(?![\p{L}\p{N}_])/giu, replacement: 'mọi người' },
+  { pattern: /(?<![\p{L}\p{N}_])sz(?![\p{L}\p{N}_])/giu, replacement: 'size' },
+  { pattern: /(?<![\p{L}\p{N}_])stk(?![\p{L}\p{N}_])/giu, replacement: 'số tài khoản' },
+  { pattern: /(?<![\p{L}\p{N}_])cod(?![\p{L}\p{N}_])/giu, replacement: 'nhận hàng thanh toán' },
+  { pattern: /(?<![\p{L}\p{N}_])btv(?![\p{L}\p{N}_])/giu, replacement: 'biên tập viên' },
+  { pattern: /(?<![\p{L}\p{N}_])mc(?![\p{L}\p{N}_])/giu, replacement: 'người dẫn chương trình' },
+  { pattern: /(?<![\p{L}\p{N}_])vtv(?![\p{L}\p{N}_])/giu, replacement: 'đài truyền hình' },
+  { pattern: /(?<![\p{L}\p{N}_])km(?![\p{L}\p{N}_])/giu, replacement: 'khuyến mãi' },
+  { pattern: /(?<![\p{L}\p{N}_])hsd(?![\p{L}\p{N}_])/giu, replacement: 'hạn sử dụng' },
+  { pattern: /(?<![\p{L}\p{N}_])nsx(?![\p{L}\p{N}_])/giu, replacement: 'ngày sản xuất' },
+  { pattern: /(?<![\p{L}\p{N}_])nv(?![\p{L}\p{N}_])/giu, replacement: 'nhân viên' },
+  { pattern: /(?<![\p{L}\p{N}_])lh(?![\p{L}\p{N}_])/giu, replacement: 'liên hệ' },
+  { pattern: /(?<![\p{L}\p{N}_])tp(?![\p{L}\p{N}_])/giu, replacement: 'thành phố' },
+  { pattern: /(?<![\p{L}\p{N}_])hcm(?![\p{L}\p{N}_])/giu, replacement: 'Hồ Chí Minh' },
+  { pattern: /(?<![\p{L}\p{N}_])hn(?![\p{L}\p{N}_])/giu, replacement: 'Hà Nội' },
+  { pattern: /(?<![\p{L}\p{N}_])ib(?![\p{L}\p{N}_])/giu, replacement: 'nhắn tin trực tiếp' },
+  { pattern: /(?<![\p{L}\p{N}_])inbox(?![\p{L}\p{N}_])/giu, replacement: 'nhắn tin trực tiếp' },
+  { pattern: /(?<![\p{L}\p{N}_])cmt(?![\p{L}\p{N}_])/giu, replacement: 'bình luận' },
+  { pattern: /(?<![\p{L}\p{N}_])comment(?![\p{L}\p{N}_])/giu, replacement: 'bình luận' },
+  { pattern: /(?<![\p{L}\p{N}_])auth(?![\p{L}\p{N}_])/giu, replacement: 'chính hãng chuẩn gốc' },
+  { pattern: /(?<![\p{L}\p{N}_])real(?![\p{L}\p{N}_])/giu, replacement: 'hàng thật chính hãng' },
+  { pattern: /(?<![\p{L}\p{N}_])setup(?![\p{L}\p{N}_])/giu, replacement: 'cài đặt' },
+  { pattern: /(?<![\p{L}\p{N}_])ok(?![\p{L}\p{N}_])/giu, replacement: 'dạ vâng được ạ' },
+  { pattern: /(?<![\p{L}\p{N}_])okay(?![\p{L}\p{N}_])/giu, replacement: 'dạ vâng được ạ' },
+  { pattern: /(?<![\p{L}\p{N}_])ts\.(?![\p{L}\p{N}_])/giu, replacement: 'Tiến sĩ ' },
+  { pattern: /(?<![\p{L}\p{N}_])bs\.(?![\p{L}\p{N}_])/giu, replacement: 'Bác sĩ ' },
+  { pattern: /(?<![\p{L}\p{N}_])pgs\.ts\.(?![\p{L}\p{N}_])/giu, replacement: 'Phó Giáo sư Tiến sĩ ' },
+  { pattern: /(?<![\p{L}\p{N}_])thcs(?![\p{L}\p{N}_])/giu, replacement: 'trung học cơ sở' },
+  { pattern: /(?<![\p{L}\p{N}_])thpt(?![\p{L}\p{N}_])/giu, replacement: 'trung học phổ thông' },
+  { pattern: /(?<![\p{L}\p{N}_])đh(?![\p{L}\p{N}_])/giu, replacement: 'đại học' }
 ];
 
 // 3. CHUYỂN ĐỔI SỐ NGUYÊN TIẾNG VIỆT THÀNH CHỮ CHUẨN XÁC
@@ -205,70 +217,70 @@ export function normalizePhoneNumber(phoneStr) {
   return digits.split('').map(d => DIGIT_WORDS[d] || d).join(' ');
 }
 
-// 5. CHUẨN HÓA TIỀN TỆ & ĐƠN VỊ ĐO LƯỜNG
+// 5. CHUẨN HÓA TIỀN TỆ & ĐƠN VỊ ĐO LƯỜNG (UNICODE-AWARE BOUNDARIES)
 export function normalizeCurrenciesAndUnits(text) {
   if (!text) return '';
   let s = text;
 
   // Tiền tệ có dấu chấm phân cách hàng nghìn/triệu
-  s = s.replace(/\b(\d{1,3}(?:\.\d{3})+)\s*(?:đ|vnd|vnđ|đồng)\b/gi, (match, p1) => {
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d{1,3}(?:\.\d{3})+)\s*(?:đ|vnd|vnđ|đồng)(?![\p{L}\p{N}_])/giu, (match, p1) => {
     const rawNum = parseInt(p1.replace(/\./g, ''), 10);
     return `${numberToVietnameseWords(rawNum)} đồng`;
   });
 
   // Tiền tệ có dấu phẩy: 1,000,000đ
-  s = s.replace(/\b(\d{1,3}(?:,\d{3})+)\s*(?:đ|vnd|vnđ|đồng)\b/gi, (match, p1) => {
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d{1,3}(?:,\d{3})+)\s*(?:đ|vnd|vnđ|đồng)(?![\p{L}\p{N}_])/giu, (match, p1) => {
     const rawNum = parseInt(p1.replace(/,/g, ''), 10);
     return `${numberToVietnameseWords(rawNum)} đồng`;
   });
 
-  // Số k / cành / củ / tr / triệu
-  s = s.replace(/\b(\d+)\s*k\b/gi, (m, p1) => `${numberToVietnameseWords(parseInt(p1, 10))} nghìn đồng`);
-  s = s.replace(/\b(\d+)\s*cành\b/gi, (m, p1) => `${numberToVietnameseWords(parseInt(p1, 10))} nghìn đồng`);
-  s = s.replace(/\b(\d+)\s*củ\b/gi, (m, p1) => `${numberToVietnameseWords(parseInt(p1, 10))} triệu đồng`);
-  s = s.replace(/\b(\d+)\s*(?:tr|triệu)\b/gi, (m, p1) => `${numberToVietnameseWords(parseInt(p1, 10))} triệu đồng`);
-  s = s.replace(/\b(\d+)[,\.](\d+)\s*(?:tr|triệu)\b/gi, (m, p1, p2) => `${numberToVietnameseWords(parseInt(p1, 10))} triệu ${numberToVietnameseWords(parseInt(p2, 10))} trăm nghìn đồng`);
+  // Số k / cành / củ / tr / triệu (chỉ sau số đếm)
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+)\s*k(?![\p{L}\p{N}_])/giu, (m, p1) => `${numberToVietnameseWords(parseInt(p1, 10))} nghìn đồng`);
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+)\s*cành(?![\p{L}\p{N}_])/giu, (m, p1) => `${numberToVietnameseWords(parseInt(p1, 10))} nghìn đồng`);
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+)\s*củ(?![\p{L}\p{N}_])/giu, (m, p1) => `${numberToVietnameseWords(parseInt(p1, 10))} triệu đồng`);
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+)\s*(?:tr|triệu)(?![\p{L}\p{N}_])/giu, (m, p1) => `${numberToVietnameseWords(parseInt(p1, 10))} triệu đồng`);
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+)[,\.](\d+)\s*(?:tr|triệu)(?![\p{L}\p{N}_])/giu, (m, p1, p2) => `${numberToVietnameseWords(parseInt(p1, 10))} triệu ${numberToVietnameseWords(parseInt(p2, 10))} trăm nghìn đồng`);
 
   // Tiền tệ quốc tế
   s = s.replace(/\$(\d+(?:\.\d+)?)/g, (m, p1) => `${p1} đô la`);
-  s = s.replace(/(\d+(?:\.\d+)?)\s*(?:usd|\$)/gi, (m, p1) => `${p1} đô la`);
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:\.\d+)?)\s*(?:usd|\$)(?![\p{L}\p{N}_])/giu, (m, p1) => `${p1} đô la`);
   s = s.replace(/€(\d+(?:\.\d+)?)/g, (m, p1) => `${p1} ơ-rô`);
-  s = s.replace(/(\d+(?:\.\d+)?)\s*(?:eur|€)/gi, (m, p1) => `${p1} ơ-rô`);
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:\.\d+)?)\s*(?:eur|€)(?![\p{L}\p{N}_])/giu, (m, p1) => `${p1} ơ-rô`);
 
-  // Đơn vị đo lường
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*kg\b/gi, '$1 ki-lô-gam');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*g\b/gi, '$1 gam');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*mg\b/gi, '$1 mi-li-gam');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*km\b/gi, '$1 ki-lô-mét');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*m\b/gi, '$1 mét');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*cm\b/gi, '$1 xen-ti-mét');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*mm\b/gi, '$1 mi-li-mét');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*ml\b/gi, '$1 mi-li-lít');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*l\b/gi, '$1 lít');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*°C\b/gi, '$1 độ C');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*°F\b/gi, '$1 độ F');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*inch\b/gi, '$1 inch');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*%\b/g, '$1 phần trăm');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*GB\b/gi, '$1 gi-ga-bai');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*MB\b/gi, '$1 mê-ga-bai');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*KB\b/gi, '$1 ki-lô-bai');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*TB\b/gi, '$1 tê-ra-bai');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*GHz\b/gi, '$1 gi-ga-héc');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*MHz\b/gi, '$1 mê-ga-héc');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*kHz\b/gi, '$1 ki-lô-héc');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*Hz\b/gi, '$1 héc');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*W\b/g, '$1 oát');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*kW\b/gi, '$1 ki-lô-oát');
-  s = s.replace(/\b(\d+(?:[,\.]\d+)?)\s*V\b/g, '$1 vôn');
+  // Đơn vị đo lường (chỉ sau số đếm)
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*kg(?![\p{L}\p{N}_])/giu, '$1 ki-lô-gam');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*g(?![\p{L}\p{N}_])/giu, '$1 gam');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*mg(?![\p{L}\p{N}_])/giu, '$1 mi-li-gam');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*km(?![\p{L}\p{N}_])/giu, '$1 ki-lô-mét');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*m(?![\p{L}\p{N}_])/giu, '$1 mét');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*cm(?![\p{L}\p{N}_])/giu, '$1 xen-ti-mét');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*mm(?![\p{L}\p{N}_])/giu, '$1 mi-li-mét');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*ml(?![\p{L}\p{N}_])/giu, '$1 mi-li-lít');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*l(?![\p{L}\p{N}_])/giu, '$1 lít');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*°C(?![\p{L}\p{N}_])/giu, '$1 độ C');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*°F(?![\p{L}\p{N}_])/giu, '$1 độ F');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*inch(?![\p{L}\p{N}_])/giu, '$1 inch');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*%(?![\p{L}\p{N}_])/gu, '$1 phần trăm');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*GB(?![\p{L}\p{N}_])/giu, '$1 gi-ga-bai');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*MB(?![\p{L}\p{N}_])/giu, '$1 mê-ga-bai');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*KB(?![\p{L}\p{N}_])/giu, '$1 ki-lô-bai');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*TB(?![\p{L}\p{N}_])/giu, '$1 tê-ra-bai');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*GHz(?![\p{L}\p{N}_])/giu, '$1 gi-ga-héc');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*MHz(?![\p{L}\p{N}_])/giu, '$1 mê-ga-héc');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*kHz(?![\p{L}\p{N}_])/giu, '$1 ki-lô-héc');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*Hz(?![\p{L}\p{N}_])/giu, '$1 héc');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*W(?![\p{L}\p{N}_])/gu, '$1 oát');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*kW(?![\p{L}\p{N}_])/giu, '$1 ki-lô-oát');
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d+(?:[,\.]\d+)?)\s*V(?![\p{L}\p{N}_])/gu, '$1 vôn');
 
   // Tỷ lệ / Đổi trả / Giờ
-  s = s.replace(/\b1\/1\b/g, 'một đổi một');
-  s = s.replace(/\b1-1\b/g, 'một đổi một');
-  s = s.replace(/\b24\/7\b/g, 'hai mươi tư trên bảy phục vụ suốt ngày đêm');
-  s = s.replace(/\b24\/24\b/g, 'hai mươi tư trên hai mươi tư');
+  s = s.replace(/(?<![\p{L}\p{N}_])1\/1(?![\p{L}\p{N}_])/gu, 'một đổi một');
+  s = s.replace(/(?<![\p{L}\p{N}_])1-1(?![\p{L}\p{N}_])/gu, 'một đổi một');
+  s = s.replace(/(?<![\p{L}\p{N}_])24\/7(?![\p{L}\p{N}_])/gu, 'hai mươi tư trên bảy phục vụ suốt ngày đêm');
+  s = s.replace(/(?<![\p{L}\p{N}_])24\/24(?![\p{L}\p{N}_])/gu, 'hai mươi tư trên hai mươi tư');
 
   // Ngày tháng năm: 16/09/2026 -> ngày 16 tháng 9 năm 2026
-  s = s.replace(/\b(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})\b/g, (m, d, mo, y) => {
+  s = s.replace(/(?<![\p{L}\p{N}_])(\d{1,2})[\/\-](\d{1,2})[\/\-](\d{4})(?![\p{L}\p{N}_])/gu, (m, d, mo, y) => {
     return `ngày ${d} tháng ${mo} năm ${y}`;
   });
 
