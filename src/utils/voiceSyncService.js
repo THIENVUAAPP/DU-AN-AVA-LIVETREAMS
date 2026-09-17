@@ -7830,9 +7830,6 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
         clearTimeout(safetyTimer);
         safetyTimer = null;
       }
-      if (tremoloOsc) {
-        try { tremoloOsc.stop(); tremoloOsc.disconnect(); } catch(e) {}
-      }
       activeSourceNode = null;
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', {
