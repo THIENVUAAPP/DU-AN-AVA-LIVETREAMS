@@ -21,6 +21,16 @@ export default function WindowCapturePlayer() {
 
   const [videoSrc, setVideoSrc] = useState(() => {
     if (typeof window === 'undefined') return '/uploads/media-1789044811424-233037063.mp4';
+    // ⚡ ƯU TIÊN 1: Lấy ngay blob: URL từ cửa sổ chính (0ms không cần mạng, không cần tải lại file 20GB)
+    try {
+      if (window.opener && window.opener.__activeMediaBlobUrl) {
+        return window.opener.__activeMediaBlobUrl;
+      }
+      if (window.__activeMediaBlobUrl) {
+        return window.__activeMediaBlobUrl;
+      }
+    } catch (e) {}
+
     const params = new URLSearchParams(window.location.search);
     const v = params.get('v');
     if (v) return v;
@@ -64,10 +74,23 @@ export default function WindowCapturePlayer() {
     }
   }, []);
 
-  // ⚡ Tự động tìm kiếm fileBlob gốc trong IndexedDB để phát 0ms không cần chờ upload/mạng
+  // ⚡ Tự động tìm kiếm fileBlob gốc trong Memory Cache / Opener / IndexedDB để phát 0ms không cần chờ upload/mạng
   const tryLoadFromLocalDB = useCallback(async (targetUrlOrCharId) => {
     if (!targetUrlOrCharId || typeof window === 'undefined') return null;
     try {
+      // 1. Kiểm tra RAM Blob Map trực tiếp từ Opener hoặc Window hiện tại (0ms)
+      const memBlob = (window.opener && window.opener.__activeMediaBlobMap && window.opener.__activeMediaBlobMap.get(targetUrlOrCharId)) ||
+                      (window.__activeMediaBlobMap && window.__activeMediaBlobMap.get(targetUrlOrCharId));
+      if (memBlob) {
+        if (activeBlobUrlRef.current) {
+          try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
+        }
+        const bUrl = URL.createObjectURL(memBlob);
+        activeBlobUrlRef.current = bUrl;
+        return bUrl;
+      }
+
+      // 2. Kiểm tra IndexedDB
       const items = await loadAllAidolItems();
       if (!items || !items.length) return null;
       
@@ -184,17 +207,27 @@ export default function WindowCapturePlayer() {
         const msg = event.data;
         if (!msg) return;
 
-        if (msg.type === 'GLOBAL_MEDIA_CHANGE' && (msg.mediaUrl || msg.characterId)) {
-          // Thử nạp tức thì 0ms từ IndexedDB trước nếu có file gốc
-          const localBlob = await tryLoadFromLocalDB(msg.characterId || msg.mediaUrl);
-          if (localBlob) {
-            setVideoSrc(localBlob);
+        if (msg.type === 'GLOBAL_MEDIA_CHANGE' && (msg.mediaUrl || msg.blobUrl || msg.characterId)) {
+          // ⚡ ƯU TIÊN 1: Dùng ngay blobUrl trực tiếp được gửi qua Broadcast (0ms)
+          if (msg.blobUrl) {
+            setVideoSrc(msg.blobUrl);
             setIsVideoLoading(false);
-          } else if (msg.mediaUrl) {
-            const resolved = resolveUrl(msg.mediaUrl);
-            if (resolved && !isSameMedia(resolved, videoSrc)) {
-              setVideoSrc(resolved);
-              setIsVideoLoading(true);
+          } else {
+            // Thử nạp tức thì 0ms từ Memory Cache / Opener / IndexedDB trước nếu có file gốc
+            const localBlob = await tryLoadFromLocalDB(msg.characterId || msg.mediaUrl);
+            if (localBlob) {
+              setVideoSrc(localBlob);
+              setIsVideoLoading(false);
+            } else if (msg.mediaUrl) {
+              // Nếu đang phát blob mượt mà cùng máy, không hạ cấp về đường dẫn uploads server dở dang
+              const isCurrentlyBlob = videoSrc && String(videoSrc).startsWith('blob:');
+              if (!isCurrentlyBlob) {
+                const resolved = resolveUrl(msg.mediaUrl);
+                if (resolved && !isSameMedia(resolved, videoSrc)) {
+                  setVideoSrc(resolved);
+                  setIsVideoLoading(true);
+                }
+              }
             }
           }
           if (typeof msg.currentTime === 'number' && msg.currentTime >= 0) {

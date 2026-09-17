@@ -83,7 +83,7 @@ export default function EventVoiceTester({
       const saved = localStorage.getItem('avalive_pause_between_sentences');
       if (saved !== null && !isNaN(Number(saved))) return Number(saved);
     } catch (e) {}
-    return 0.10;
+    return 0.0; // Mặc định 0.0s đọc liên tục, không ngắt quãng kiểu cà nhấp
   };
 
   const [selectedVoiceId, setSelectedVoiceId] = useState(getInitialVoice);
@@ -192,6 +192,13 @@ export default function EventVoiceTester({
     setCurrentSentenceIdx(0);
     currentSentenceIdxRef.current = 0;
 
+    // Bật cờ chạy thử kịch bản
+    if (typeof window !== 'undefined') {
+      window.__isScriptTestingRunning = true;
+      try { localStorage.setItem('avalive_script_testing_active', 'true'); } catch(e) {}
+      window.dispatchEvent(new CustomEvent('avalive_script_testing_state_change', { detail: { isTesting: true } }));
+    }
+
     // Lookahead prefetch chỉ câu tiếp theo (câu 1) để không làm nghẽn băng thông của câu 0
     if (sentences.length > 1) {
       prefetchTTSAudio(sentences[1], newVoiceObj, { rate: speedRef.current });
@@ -263,6 +270,14 @@ export default function EventVoiceTester({
     setIsPlaying(false);
     setCurrentSentenceIdx(0);
     currentSentenceIdxRef.current = 0;
+
+    // Tắt cờ chạy thử kịch bản
+    if (typeof window !== 'undefined') {
+      window.__isScriptTestingRunning = false;
+      try { localStorage.removeItem('avalive_script_testing_active'); } catch(e) {}
+      window.dispatchEvent(new CustomEvent('avalive_script_testing_state_change', { detail: { isTesting: false } }));
+    }
+
     try {
       window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', {
         detail: { isSpeaking: false }
@@ -494,6 +509,13 @@ export default function EventVoiceTester({
     setTotalSentences(sentences.length);
     setCurrentSentenceIdx(0);
     currentSentenceIdxRef.current = 0;
+
+    // Bật cờ chạy thử kịch bản: KHÔNG ĐƯỢC LỒNG BÌNH LUẬN VÀO TRONG LÚC CHẠY THỬ
+    if (typeof window !== 'undefined') {
+      window.__isScriptTestingRunning = true;
+      try { localStorage.setItem('avalive_script_testing_active', 'true'); } catch(e) {}
+      window.dispatchEvent(new CustomEvent('avalive_script_testing_state_change', { detail: { isTesting: true } }));
+    }
 
     const curVoiceId = selectedVoiceRef.current || defaultVoiceId || 'free_vi_female';
     const voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === curVoiceId) || { id: curVoiceId, lang: 'vi-VN', gender: 'Female' };

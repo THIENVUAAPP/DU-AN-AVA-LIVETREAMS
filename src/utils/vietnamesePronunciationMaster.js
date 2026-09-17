@@ -376,12 +376,7 @@ export function masterNormalizeVietnameseSpeech(rawText, options = {}) {
     return `mã O-T-P là ${spelled}`;
   });
 
-  // 8. LOẠI BỎ TRIỆT ĐỂ LỖI XƯNG HÔ CHỮ CÁI ĐƠN KIỂU "Bạn N", "Bạn En-nờ", "Anh T", "Chị H"
-  text = text.replace(/\b(bạn|anh|chị|em|cô|chú|bác|đại gia|khách hàng)\s+[A-Za-z]\b/gi, '$1');
-  text = text.replace(/\b(bạn|anh|chị|em|cô|chú|bác|đại gia|khách hàng)\s+(?:En-nờ|Tê|Hát|Vê|Xê|Đê|Ít|Y-dài|Dê|Ca|Em-mờ|Quy)\b/gi, '$1');
-  text = text.replace(/\b(bạn)\s+bạn\b/gi, 'bạn');
-
-  // 9. Định dạng dấu câu và khoảng trắng
+  // 8. Định dạng dấu câu và khoảng trắng
   text = text.replace(/[^\S\r\n]+/g, ' ');
   text = text.replace(/\s+([,\.!?:;])/g, '$1');
   text = text.replace(/([,\.!?:;])(?!\s|$)/g, '$1 ');

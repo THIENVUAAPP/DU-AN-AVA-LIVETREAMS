@@ -434,7 +434,21 @@ app.post('/api/upload-stream-init', (req, res) => {
       const targetPath = path.join(uploadsDir, targetFilename);
       
       try {
-        fs.copyFileSync(clientFilePath, targetPath);
+        let isLinked = false;
+        // ⚡ CHIẾN THUẬT 1: Hardlink siêu tốc 0.001ms (Zero-Copy) - Video 20GB xuất hiện ngay lập tức 0ms!
+        try {
+          fs.linkSync(clientFilePath, targetPath);
+          isLinked = true;
+          console.log(`[FastStream] ⚡ Hardlink thành công video nặng 0ms: ${targetFilename}`);
+        } catch (linkErr) {
+          // ⚡ CHIẾN THUẬT 2: Symlink nếu khác ổ đĩa
+          try {
+            fs.symlinkSync(clientFilePath, targetPath);
+            isLinked = true;
+            console.log(`[FastStream] ⚡ Symlink thành công video: ${targetFilename}`);
+          } catch (symErr) {}
+        }
+
         const fileUrl = `/uploads/${targetFilename}`;
         currentMasterLiveState = {
           ...currentMasterLiveState,
@@ -443,12 +457,29 @@ app.post('/api/upload-stream-init', (req, res) => {
           isVideo: true,
           videoPlaybackEvent: 'play',
           isPlaying: true,
+          isUserExplicitMediaLocked: true,
           updatedAt: Date.now()
         };
         io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
         saveLiveStateToFile();
-        return res.json({ success: true, instant: true, fileUrl });
-      } catch (copyErr) {}
+
+        if (isLinked) {
+          if (targetFilename.endsWith('.mp4') || targetFilename.endsWith('.mov')) {
+            ensureMp4FastStart(targetPath);
+          }
+          return res.json({ success: true, instant: true, fileUrl });
+        } else {
+          // ⚡ CHIẾN THUẬT 3: Async Copy không block Node.js event loop
+          fs.copyFile(clientFilePath, targetPath, (copyErr) => {
+            if (!copyErr && (targetFilename.endsWith('.mp4') || targetFilename.endsWith('.mov'))) {
+              ensureMp4FastStart(targetPath);
+            }
+          });
+          return res.json({ success: true, instant: true, fileUrl });
+        }
+      } catch (copyErr) {
+        console.error('[FastStream instant error]', copyErr);
+      }
     }
 
     const ext = path.extname(originalName || '') || '.mp4';
@@ -1516,7 +1547,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '3.3.1';
+  let ver = '3.3.2';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1554,7 +1585,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '3.3.1';
+  let ver = '3.3.2';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -2960,9 +2991,7 @@ function humanizeTextForBackendTTS(rawText, gender, lang) {
   const isVi = !lang || lang.toLowerCase().startsWith('vi');
   if (!isVi) return text;
 
-  const isFemale = (gender || '').toLowerCase() !== 'male' && (gender || '').toLowerCase() !== 'nam';
-
-  // Chuyển đổi số đếm & tiền tệ
+  // Chuyển đổi số đếm & tiền tệ chuẩn xác
   text = text
     .replace(/\b(\d+)\s*k\b/gi, '$1 nghìn đồng')
     .replace(/\b(\d+)\s*cành\b/gi, '$1 nghìn đồng')
@@ -2973,13 +3002,12 @@ function humanizeTextForBackendTTS(rawText, gender, lang) {
     .replace(/\b(\d+)\s*lít\b/gi, '$1 trăm nghìn đồng')
     .replace(/\b(\d+)\s*củ\b/gi, '$1 triệu đồng');
 
-  // Viết tắt livestream
+  // Viết tắt livestream thông dụng
   text = text
     .replace(/\bsp\b/gi, 'sản phẩm')
     .replace(/\bđc\b/gi, 'được')
     .replace(/\bdc\b/gi, 'được')
     .replace(/\bko\b/gi, 'không')
-    .replace(/\bk\b/gi, 'không')
     .replace(/\bkhg\b/gi, 'không')
     .replace(/\bmn\b/gi, 'mọi người')
     .replace(/\bmng\b/gi, 'mọi người')
@@ -2995,27 +3023,11 @@ function humanizeTextForBackendTTS(rawText, gender, lang) {
     .replace(/\bflash\s*sale\b/gi, 'ưu đãi chớp nhoáng')
     .replace(/\bfollow\b/gi, 'theo dõi')
     .replace(/\bfl\b/gi, 'theo dõi')
-    .replace(/\btiktok\b/gi, 'Tóp Tóp')
-    .replace(/\btik tok\b/gi, 'Tóp Tóp')
-    .replace(/\bzalo\b/gi, 'Da-lô')
-    .replace(/\bfb\b/gi, 'Phây Búc')
-    .replace(/\bfacebook\b/gi, 'Phây Búc')
     .replace(/\bcod\b/gi, 'nhận hàng thanh toán')
     .replace(/\bstk\b/gi, 'số tài khoản')
     .replace(/\bcombo\b/gi, 'gói combo');
 
-  if (isFemale) {
-    text = text
-      .replace(/\b(Dạ|Vâng|Chào cả nhà|Cả nhà ơi|Mọi người ơi|Quý vị ơi|Các bạn ơi|Bà con ơi|Em xin chào|Em cam kết|Đặc biệt là|Hơn thế nữa|Thật sự là|Nhanh tay lên nào|Đúng rồi ạ|Chính xác luôn)(?!\s*[,!?:])/gi, '$1, ')
-      .replace(/\b(ạ)\b(?!\s*[,.!?])/gi, 'ạ.')
-      .replace(/\b(nha cả nhà|nha mọi người|nha các bạn)(?!\s*[,.!?])/gi, '$1!')
-      .replace(/\b(nè nghen|nè bà con)(?!\s*[,.!?])/gi, '$1!')
-      .replace(/\b(ạ nghen|ạ nhen)(?!\s*[,.!?])/gi, '$1!');
-  } else {
-    text = text
-      .replace(/\b(Xin chào tất cả các bạn|Chào anh em|Anh em ơi|Mọi người ơi|Đặc biệt là|Cực kỳ hấp dẫn|Chú ý chú ý)(?!\s*[,!?:])/gi, '$1, ');
-  }
-
+  // Giữ nguyên câu từ kịch bản đọc liền mạch, mượt mà, không chèn ngắt nghỉ cà nhấp
   return text.replace(/,\s*,+/g, ', ').replace(/\.\s*\.+/g, '. ').replace(/!\s*!+/g, '! ').replace(/\s+/g, ' ').trim();
 }
 

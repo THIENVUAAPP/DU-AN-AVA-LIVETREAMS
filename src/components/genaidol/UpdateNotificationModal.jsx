@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.3.1';
+export const APP_VERSION = '3.3.2';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Bản Cập Nhật v3.3.0 - Phát Kịch Bản Chuẩn 100% & Bảo Toàn Âm Đuôi Hoàn Hảo',
-    description: '1. Nút Phát Kịch Bản Top Bar: Bấm là phát trọn vẹn 100% kịch bản từ câu đầu đến câu cuối, tự động lặp lại tuần hoàn mượt mà; 2. Chuẩn Hóa Phát Âm & Bảo Toàn Âm Cuối: Khắc phục triệt để lỗi nuốt âm cuối (đọc chuẩn "bạn", không bị ngắt thành "bạ"); 3. Sàng Lọc Bình Luận Thông Minh: Chỉ AI Voice trả lời các câu hỏi về sản phẩm/ưu đãi thật, không ngắt quãng kịch bản bởi comment rác; 4. Nâng Cấp Nạp Video Siêu Tốc: Đồng bộ tức thì 0ms cho Window Capture và TikTok Live Studio.'
+    title: '👑 Bản Cập Nhật v3.3.2 - Đọc Kịch Bản Liền Mạch 100% & Đột Phá Nạp Video Nặng 1GB - 20GB (2K/4K/8K)',
+    description: '1. Chuẩn Hóa Phát Âm 100%: Bảo tồn trọn vẹn âm đuôi (đọc chuẩn xác "bạn", không bị ngắt thành "bạ rồi n", đọc chuẩn "không", "bánh gạo", "cả nhà", "tôi", "em", "cảm ơn bạn"); 2. Đọc Kịch Bản Liền Mạch: Phát liên tục không ngắt quãng giữa các câu (độ trễ 0ms), ngắt câu tự nhiên theo phong cách chuyên gia livestream; 3. Chặn 100% Bình Luận Khi Chạy Thử Kịch Bản: Đọc trọn vẹn kịch bản nghe thử từ đầu đến cuối không bị chen ngang; 4. Đột Phá Nạp Video Nặng 1GB - 20GB (2K/4K/8K): Cơ chế Zero-Copy Hardlink và Memory Cache giúp Window Capture và TikTok Live link mở và phát tức thì 0ms, không lag, không sập bộ nhớ.'
   }
 ];
 

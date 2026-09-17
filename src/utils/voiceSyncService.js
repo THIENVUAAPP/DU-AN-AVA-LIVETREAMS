@@ -7229,77 +7229,9 @@ export function cleanTextForVoiceSpeech(rawText) {
  * Tuyệt đối không cắt cụt đuôi âm khiến "bạn" bị đọc thành "bạ", "nhà" thành "nh..."!
  */
 export function trimAudioBufferSilence(audioBuffer, silenceThreshold = 0.0003) {
-  if (!audioBuffer) return audioBuffer;
-  const numChannels = audioBuffer.numberOfChannels;
-  const sampleRate = audioBuffer.sampleRate;
-  const length = audioBuffer.length;
-  
-  if (length <= 2000) return audioBuffer;
-  
-  const channelData = [];
-  for (let c = 0; c < numChannels; c++) {
-    channelData.push(audioBuffer.getChannelData(c));
-  }
-  
-  // 1. Tìm vị trí âm thanh bắt đầu (Trim Leading Silence nhẹ nhàng)
-  let startIdx = 0;
-  const maxLeadingScan = Math.min(length, Math.floor(sampleRate * 0.3)); // scan tối đa 0.3s đầu
-  for (let i = 0; i < maxLeadingScan; i++) {
-    let hasSound = false;
-    for (let c = 0; c < numChannels; c++) {
-      if (Math.abs(channelData[c][i]) > silenceThreshold) {
-        hasSound = true;
-        break;
-      }
-    }
-    if (hasSound) {
-      // Giữ lại 30ms đệm trước âm thanh để không bao giờ bị cụt âm đầu
-      startIdx = Math.max(0, i - Math.floor(sampleRate * 0.03));
-      break;
-    }
-  }
-
-  // 2. Tìm vị trí âm thanh kết thúc (Bảo toàn 100% âm đuôi với 150ms đệm an toàn)
-  let endIdx = length - 1;
-  const maxTrailingScan = Math.min(length, Math.floor(sampleRate * 1.5));
-  const scanLimit = Math.max(startIdx + 100, length - maxTrailingScan);
-  for (let i = length - 1; i >= scanLimit; i--) {
-    let hasSound = false;
-    for (let c = 0; c < numChannels; c++) {
-      if (Math.abs(channelData[c][i]) > silenceThreshold) {
-        hasSound = true;
-        break;
-      }
-    }
-    if (hasSound) {
-      // Giữ lại ít nhất 180ms đệm sau âm thanh để phụ âm cuối (như -n trong "bạn") vang tự nhiên và trọn vẹn 100%
-      endIdx = Math.min(length - 1, i + Math.floor(sampleRate * 0.18));
-      break;
-    }
-  }
-
-  const trimmedLength = endIdx - startIdx + 1;
-  if (trimmedLength <= 100) return audioBuffer;
-
-  // Nếu không có khoảng lặng thừa đáng kể thì giữ nguyên buffer
-  if (startIdx === 0 && endIdx >= length - 50) {
-    return audioBuffer;
-  }
-
-  const audioCtx = getOrCreateAudioContext();
-  if (!audioCtx) return audioBuffer;
-
-  try {
-    const trimmedBuffer = audioCtx.createBuffer(numChannels, trimmedLength, sampleRate);
-    for (let c = 0; c < numChannels; c++) {
-      const src = channelData[c];
-      const dest = trimmedBuffer.getChannelData(c);
-      dest.set(src.subarray(startIdx, endIdx + 1));
-    }
-    return trimmedBuffer;
-  } catch (e) {
-    return audioBuffer;
-  }
+  // ⚡ BẢO TOÀN 100% BIT-FOR-BIT NGUYÊN BẢN CỦA MICROSOFT AZURE NEURAL TTS:
+  // Tuyệt đối không can thiệp cắt tỉa buffer làm mất âm đuôi ("bạn", "bánh", "không", "em")
+  return audioBuffer;
 }
 
 /**

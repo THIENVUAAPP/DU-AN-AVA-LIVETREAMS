@@ -469,14 +469,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 if (onAudioPlayStateChange) onAudioPlayStateChange(false);
               }
             } else {
-              // Đọc câu tiếp theo trong kịch bản
+              // Đọc câu tiếp theo trong kịch bản: Liền mạch 0ms, không ngắt nghỉ kiểu cà nhấp
               currentIndexRef.current = nextIdx;
               setCurrentIndex(nextIdx);
               const nextItem = queueRef.current[nextIdx];
-              if (nextItem) {
-                setTimeout(() => {
-                  if (isPlayingRef.current) playItem(nextItem, true);
-                }, 150);
+              if (nextItem && isPlayingRef.current) {
+                playItem(nextItem, true);
               }
             }
           } else {
@@ -574,6 +572,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       queueRef.current = scriptItems;
     },
     enqueueItem: (text, action, isImmediate = false, options = {}) => {
+      // 🛡️ CHẶN 100% BÌNH LUẬN XEN VÀO KHI ĐANG PHÁT CHẠY THỬ KỊCH BẢN (TESTER MODE)
+      const isScriptTestingActive = typeof window !== 'undefined' && (
+        window.__isScriptTestingRunning === true || 
+        localStorage.getItem('avalive_script_testing_active') === 'true'
+      );
+      if (isScriptTestingActive && !options?.isTest) {
+        return;
+      }
+
       const voiceChannel = options?.voiceChannel || (action?.includes('COMMENT') ? 'comment' : action?.includes('IDOL') ? 'idol' : 'manager');
       
       let voiceObj = options?.voiceObj;

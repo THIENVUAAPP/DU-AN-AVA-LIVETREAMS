@@ -76,10 +76,26 @@ export async function fastStreamUpload(file, options = {}) {
       });
     };
 
-    // Gửi chunk 0 (2MB) siêu tốc
+    // Gửi chunk 0 (Head) siêu tốc
     await sendChunk(chunk0, 0, 0);
 
-    // 🚀 BÁO PHÁT NGAY LẬP TỨC 0MS: Server đã có header hợp lệ, Window Capture & OBS phát ngay!
+    // ⚡ BƯỚC 2.5: NẾU LÀ VIDEO LỚN (>50MB ĐẾN 20GB), GỬI NGAY TAIL CHUNK (16MB CUỐI CHỨA MOOV ATOM)
+    // Giúp trình duyệt / TikTok Live Studio đọc được atom moov ở cuối file và phát ngay lập tức 0ms!
+    const isBigVideo = file.size > 50 * 1024 * 1024;
+    if (isBigVideo) {
+      const TAIL_SIZE = Math.min(16 * 1024 * 1024, Math.floor(file.size / 2));
+      const tailOffset = file.size - TAIL_SIZE;
+      if (tailOffset > headSize) {
+        try {
+          const tailChunkBlob = file.slice(tailOffset, file.size);
+          await sendChunk(tailChunkBlob, tailOffset, 99999);
+        } catch (e) {
+          console.warn('[FastStream TailChunk warning]', e);
+        }
+      }
+    }
+
+    // 🚀 BÁO PHÁT NGAY LẬP TỨC 0MS: Server đã có cả Head và Moov atom, Window Capture & TikTok Live phát ngay!
     if (onInit) {
       onInit({ fileUrl, uploadId, totalChunks });
     }

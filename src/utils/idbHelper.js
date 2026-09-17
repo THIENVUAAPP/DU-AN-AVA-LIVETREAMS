@@ -42,21 +42,51 @@ export const initAidolDB = () => {
   return dbPromise;
 };
 
+// Bộ nhớ đệm RAM toàn cục cho Blob video lớn (tránh làm sập IndexedDB và tràn bộ nhớ)
+if (typeof window !== 'undefined') {
+  window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+}
+const getBlobMemoryCache = () => {
+  if (typeof window !== 'undefined') {
+    window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+    return window.__activeMediaBlobMap;
+  }
+  return new Map();
+};
+
 // --- CRUD Operations trên Unified Store ---
 export const saveAidolItem = async (item) => {
   try {
     const db = await initAidolDB();
     if (!db) return null;
+
+    const rawBlob = item.fileBlob || item.fileData || null;
+    const isLargeBlob = rawBlob && typeof rawBlob.size === 'number' && rawBlob.size > 50 * 1024 * 1024; // > 50MB (1GB - 20GB)
+    const itemId = item.id || `aidol_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
+
+    // Nếu là file dung lượng lớn (>50MB đến 20GB), TUYỆT ĐỐI KHÔNG ghi vào IndexedDB để tránh treo trình duyệt / OOM Crash
+    if (isLargeBlob && rawBlob) {
+      try {
+        const memCache = getBlobMemoryCache();
+        memCache.set(itemId, rawBlob);
+        if (item.url) memCache.set(item.url, rawBlob);
+        if (item.mediaUrl) memCache.set(item.mediaUrl, rawBlob);
+      } catch (e) {}
+    }
+
     return new Promise((resolve, reject) => {
       try {
         const transaction = db.transaction([STORE_NAME], 'readwrite');
         const store = transaction.objectStore(STORE_NAME);
         
         const record = {
-          id: item.id || `aidol_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`,
+          id: itemId,
           name: item.name || 'Chưa đặt tên',
           type: item.type || 'image',
-          fileBlob: item.fileBlob || item.fileData || null,
+          // File lớn chỉ lưu metadata, không lưu binary để IndexedDB đọc siêu tốc 0ms
+          fileBlob: isLargeBlob ? null : rawBlob,
+          isLargeFile: isLargeBlob,
+          fileSize: rawBlob ? rawBlob.size : 0,
           mediaUrl: item.mediaUrl || item.url || '',
           url: item.url || item.mediaUrl || '',
           tags: item.tags || [],
@@ -95,15 +125,24 @@ export const loadAllAidolItems = async () => {
 
         request.onsuccess = () => {
           const rawItems = request.result || [];
+          const memCache = getBlobMemoryCache();
+          const openerCache = (typeof window !== 'undefined' && window.opener && window.opener.__activeMediaBlobMap) ? window.opener.__activeMediaBlobMap : null;
+
           const items = rawItems.map(item => {
             let finalUrl = item.mediaUrl || item.url;
-            if (!finalUrl && item.fileBlob) {
+            let finalBlob = item.fileBlob || memCache.get(item.id) || memCache.get(item.url) || memCache.get(item.mediaUrl);
+            if (!finalBlob && openerCache) {
+              finalBlob = openerCache.get(item.id) || openerCache.get(item.url) || openerCache.get(item.mediaUrl);
+            }
+
+            if (!finalUrl && finalBlob) {
                try {
-                 finalUrl = URL.createObjectURL(item.fileBlob);
+                 finalUrl = URL.createObjectURL(finalBlob);
                } catch(e) {}
             }
             return {
               ...item,
+              fileBlob: finalBlob || null,
               url: finalUrl,
               mediaUrl: finalUrl,
               isPersonal: true

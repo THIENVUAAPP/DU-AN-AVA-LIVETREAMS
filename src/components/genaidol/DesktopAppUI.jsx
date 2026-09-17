@@ -2995,6 +2995,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           fileBlob: file
         };
 
+        // Lưu tham chiếu Blob toàn cục cho Window Capture & popup con nạp tức thì 0ms
+        if (typeof window !== 'undefined') {
+          window.__activeMediaBlobUrl = localUrl;
+          window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+          window.__activeMediaBlobMap.set(newCharId, file);
+          window.__activeMediaBlobMap.set(localUrl, file);
+        }
+
         // Lưu ngay lập tức vào IndexedDB để Window Capture & OBS nhận fileBlob 0ms
         try {
           await saveCharacterToIDB(tempChar);
@@ -3020,6 +3028,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           bc.postMessage({
             type: 'GLOBAL_MEDIA_CHANGE',
             mediaUrl: localUrl,
+            blobUrl: localUrl,
             characterId: newCharId,
             characterName: charName,
             isVideo: true,

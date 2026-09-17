@@ -311,6 +311,16 @@ function fillTemplate(template, vars = {}) {
 
     const currentEvConfig = evKey ? (configs[evKey] || {}) : {};
 
+    // 🛡️ CHẶN 100% BÌNH LUẬN VÀ SỰ KIỆN XEN VÀO KHI ĐANG CHẠY THỬ KỊCH BẢN (SCRIPT PREVIEW / TESTER)
+    // Đảm bảo kịch bản chạy thử được đọc liên tục, trọn vẹn, không ngắt quãng
+    const isScriptTestingActive = typeof window !== 'undefined' && (
+      window.__isScriptTestingRunning === true || 
+      localStorage.getItem('avalive_script_testing_active') === 'true'
+    );
+    if (isScriptTestingActive && !isTestMode) {
+      return;
+    }
+
     // Nếu sự kiện bị tắt và không phải đang test thủ công, không xử lý
     if (currentEvConfig.active === false && !isTestMode) {
       return;
