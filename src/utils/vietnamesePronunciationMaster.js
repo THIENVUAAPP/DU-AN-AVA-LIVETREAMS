@@ -425,3 +425,43 @@ export function isSmartSpamOrToxicComment(commentText) {
 
   return { isFiltered: false, cleanText: text };
 }
+
+/**
+ * 🎯 NHẬN DIỆN BÌNH LUẬN THỰC SỰ CÓ Ý NGHĨA / LIÊN QUAN ĐẾN SẢN PHẨM & BÁN HÀNG
+ * - Bỏ qua các câu sáo rỗng vô thưởng vô phạt ("hi", "hello", "123", "chấm", "ok"...)
+ * - Chỉ ưu tiên ngắt kịch bản để trả lời khi có câu hỏi về: giá cả, tư vấn, đặt hàng, khuyến mãi, chất lượng, bảo hành.
+ */
+export function isMeaningfulCommercialOrEngagingComment(commentText) {
+  if (!commentText || typeof commentText !== 'string') return false;
+  const clean = commentText.trim().toLowerCase();
+  if (clean.length < 2) return false;
+
+  // 1. Bình luận sáo rỗng / spam đơn thuần
+  const shallowPatterns = [
+    /^(hi|hello|helo|chào|chao|alo|xin chào|2|hí|hii|hiii|chấm|\.|\.\.|\.\.\.|1|123|ok|oke|okee|oki|hay|xinh|đẹp|quá|tuyệt|tuyệt vời|thả tim|tym|top|fl|follow|haha|huhu|kkk|kkkk)$/i
+  ];
+  for (const p of shallowPatterns) {
+    if (p.test(clean)) return false;
+  }
+
+  // 2. Bình luận chứa từ khóa thương mại, sản phẩm, bán hàng, bảo hành, giá cả
+  const commercialPatterns = [
+    /giá|bao nhiêu|nhiêu|tiền|chi phí|cost|price|sale|ưu đãi|khuyến mãi|km|voucher|mã giảm/,
+    /mua|đặt|chốt|order|ship|giao hàng|vận chuyển|freeship|lấy|gửi/,
+    /bảo hành|đổi trả|chính hãng|auth|real|xuất xứ|nguồn gốc|ở đâu|địa chỉ/,
+    /tính năng|chức năng|cách dùng|sử dụng|công dụng|hiệu quả|thành phần|chất liệu|bánh|bánh gạo/,
+    /size|kích thước|màu|mẫu|loại|còn không|còn hàng|hết hàng|hết chưa/,
+    /tư vấn|hỗ trợ|shop ơi|shop cho mình hỏi|cho hỏi|\?|được không|có không|như thế nào/
+  ];
+
+  for (const p of commercialPatterns) {
+    if (p.test(clean)) return true;
+  }
+
+  // 3. Câu hỏi hoặc tương tác thật có độ dài đủ lớn
+  if (clean.length >= 12 && !/^[\d\W_]+$/.test(clean)) {
+    return true;
+  }
+
+  return false;
+}

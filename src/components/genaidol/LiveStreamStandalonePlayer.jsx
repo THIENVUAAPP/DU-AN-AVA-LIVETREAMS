@@ -1,5 +1,6 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
+import { loadAllAidolItems } from '../../utils/idbHelper';
 
 /**
  * 🎬 SIÊU PLAYER LIVESTREAM 60 FPS ĐỘC LẬP CHO TIKTOK LIVE STUDIO & OBS BROWSER SOURCE
@@ -42,6 +43,34 @@ export default function LiveStreamStandalonePlayer() {
   const isExplicitlyPausedRef = useRef(false);
   const isUserMutedRef = useRef(false);
   const lastReportedTimeRef = useRef(0);
+  const activeBlobUrlRef = useRef(null);
+
+  // ⚡ Tự động tìm kiếm fileBlob gốc trong IndexedDB để phát 0ms nếu cùng máy
+  const tryLoadFromLocalDB = useCallback(async (targetUrlOrCharId) => {
+    if (!targetUrlOrCharId || typeof window === 'undefined') return null;
+    try {
+      const items = await loadAllAidolItems();
+      if (!items || !items.length) return null;
+      
+      const found = items.find(it => 
+        (it.id && it.id === targetUrlOrCharId) ||
+        (it.url && it.url === targetUrlOrCharId) ||
+        (it.mediaUrl && it.mediaUrl === targetUrlOrCharId) ||
+        (it.mediaUrl && targetUrlOrCharId.includes(it.mediaUrl)) ||
+        (targetUrlOrCharId && it.mediaUrl && it.mediaUrl.includes(targetUrlOrCharId))
+      );
+
+      if (found && found.fileBlob) {
+        if (activeBlobUrlRef.current) {
+          try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
+        }
+        const blobUrl = URL.createObjectURL(found.fileBlob);
+        activeBlobUrlRef.current = blobUrl;
+        return blobUrl;
+      }
+    } catch (e) {}
+    return null;
+  }, []);
 
   // 🌐 Chuyển đổi URL thông minh cho cả local, Cloudflare Tunnel HTTPS và Vercel
   const resolveUrl = useCallback((url) => {
@@ -227,13 +256,19 @@ export default function LiveStreamStandalonePlayer() {
         }
       });
 
-      socket.on('MASTER_LIVE_STATE_UPDATE', (data) => {
+      socket.on('MASTER_LIVE_STATE_UPDATE', async (data) => {
         if (!data) return;
         if (data.tunnelUrl && data.tunnelUrl !== tunnelUrl) {
           setTunnelUrl(data.tunnelUrl);
         }
-        if (data.mediaUrl && !data.mediaUrl.startsWith('blob:') && !isSameMedia(videoSrc, data.mediaUrl)) {
-          setVideoSrc(data.mediaUrl);
+        if (data.mediaUrl || data.selectedCharacter) {
+          const localBlob = await tryLoadFromLocalDB(data.selectedCharacter || data.mediaUrl);
+          if (localBlob) {
+            setVideoSrc(localBlob);
+            setIsVideoLoading(false);
+          } else if (data.mediaUrl && !data.mediaUrl.startsWith('blob:') && !isSameMedia(videoSrc, data.mediaUrl)) {
+            setVideoSrc(data.mediaUrl);
+          }
         }
         if (!isExplicitlyPausedRef.current && videoRef.current && videoRef.current.paused) {
           tryPlayWithSound();
@@ -260,12 +295,18 @@ export default function LiveStreamStandalonePlayer() {
     if (typeof BroadcastChannel !== 'undefined') {
       try {
         bc = new BroadcastChannel('avalive_master_live_stream');
-        bc.onmessage = (ev) => {
+        bc.onmessage = async (ev) => {
           if (!ev.data) return;
           if (ev.data.type === 'MASTER_TIME_SYNC' && typeof ev.data.currentTime === 'number') {
             applyTimeSync(ev.data.currentTime, Boolean(ev.data.force));
-          } else if ((ev.data.type === 'GLOBAL_MEDIA_CHANGE' || ev.data.type === 'MASTER_MEDIA_CHANGE') && ev.data.mediaUrl && !ev.data.mediaUrl.startsWith('blob:')) {
-            setVideoSrc(ev.data.mediaUrl);
+          } else if (ev.data.type === 'GLOBAL_MEDIA_CHANGE' || ev.data.type === 'MASTER_MEDIA_CHANGE') {
+            const localBlob = await tryLoadFromLocalDB(ev.data.characterId || ev.data.mediaUrl);
+            if (localBlob) {
+              setVideoSrc(localBlob);
+              setIsVideoLoading(false);
+            } else if (ev.data.mediaUrl && !ev.data.mediaUrl.startsWith('blob:')) {
+              setVideoSrc(ev.data.mediaUrl);
+            }
           }
         };
       } catch (e) {}

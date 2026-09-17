@@ -2991,17 +2991,20 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           url: localUrl,
           mediaUrl: localUrl,
           type: 'video',
-          fileData: file
+          fileData: file,
+          fileBlob: file
         };
+
+        // Lưu ngay lập tức vào IndexedDB để Window Capture & OBS nhận fileBlob 0ms
+        try {
+          await saveCharacterToIDB(tempChar);
+          localStorage.setItem('avalive_selected_char', newCharId);
+        } catch (e) {}
+
         setCustomCharacters(prev => [...prev, tempChar]);
         setSelectedCharacter(newCharId);
         setIsVideoPlaying(true);
-        // Không tự ý bật BẬT TẤT CẢ khi người dùng chỉ upload video để test
         lastPlaybackTimeRef.current = 0;
-
-        try {
-          localStorage.setItem('avalive_selected_char', newCharId);
-        } catch (e) {}
 
         // Kích hoạt ngay lập tức trên phần tử video Desktop trong 0ms
         if (desktopVideoRef.current) {

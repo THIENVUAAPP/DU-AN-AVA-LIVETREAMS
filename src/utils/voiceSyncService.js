@@ -7315,124 +7315,7 @@ export function humanizeVoiceSpeechText(rawText, voice = null) {
   const isVietnamese = !voice || voice?.lang === 'vi-VN' || voice?.region === 'vi' || voice?.id?.startsWith('vn_') || voice?.id === 'free_vi_female' || voice?.id === 'el_adam';
   if (!isVietnamese) return text;
 
-  const isFemale = !checkIsMale(voice);
-
-
-  // 1. CHUYỂN ĐỔI TIỀN TỆ, SỐ ĐẾM, GIÁ BÁN & ĐƠN VỊ ĐO LƯỜNG CHÍNH XÁC 100%
-  text = text
-    // Số tiền định dạng hàng triệu có dấu chấm: 1.000.000đ / 1,000,000đ
-    .replace(/\b(\d+)[,\.]000[,\.]000\s*(đ|vnd|vnđ|đồng)?\b/gi, '$1 triệu đồng')
-    .replace(/\b(\d+)[,\.](\d{3})[,\.]000\s*(đ|vnd|vnđ|đồng)?\b/gi, '$1 triệu $2 nghìn đồng')
-    // Số tiền định dạng hàng trăm nghìn có dấu chấm: 890.000đ / 50.000đ
-    .replace(/\b(\d+)[,\.]000\s*(đ|vnd|vnđ|đồng)?\b/gi, '$1 nghìn đồng')
-    .replace(/\b(\d+)[,\.](\d{3})\s*(đ|vnd|vnđ|đồng)\b/gi, (match, p1, p2) => {
-      const p2Num = parseInt(p2, 10);
-      if (p2Num === 0) return `${p1} nghìn đồng`;
-      return `${p1} nghìn ${p2Num} đồng`;
-    })
-    // Số đếm có dấu phẩy/chấm hàng nghìn: 10,000 / 10.000
-    .replace(/\b10[,\.]000\b/g, 'mười nghìn')
-    .replace(/\b20[,\.]000\b/g, 'hai mươi nghìn')
-    .replace(/\b50[,\.]000\b/g, 'năm mươi nghìn')
-    .replace(/\b100[,\.]000\b/g, 'một trăm nghìn')
-    .replace(/\b500[,\.]000\b/g, 'năm trăm nghìn')
-    .replace(/\b1[,\.]000[,\.]000\b/g, 'một triệu')
-    // Đơn vị k, cành, lít, củ, chai
-    .replace(/\b(\d+)\s*k\b/gi, '$1 nghìn đồng')
-    .replace(/\b(\d+)\s*cành\b/gi, '$1 nghìn đồng')
-    .replace(/\b(\d+)[,\.](\d+)\s*(tr|triệu)\b/gi, '$1 triệu $2 trăm nghìn đồng')
-    .replace(/\b(\d+)\s*(tr|triệu)\b/gi, '$1 triệu đồng')
-    .replace(/\b(\d+)\s*%\b/g, '$1 phần trăm')
-    .replace(/\b(\d+)\s*(đ|vnd|vnđ)\b/gi, '$1 đồng')
-    .replace(/\b(\d+)\s*lít\b/gi, '$1 trăm nghìn đồng')
-    .replace(/\b(\d+)\s*củ\b/gi, '$1 triệu đồng')
-    .replace(/\b(\d+)\s*chai\b/gi, '$1 triệu đồng')
-    .replace(/\b(\d+)\s*(sao|\*)\b/g, '$1 sao')
-    .replace(/\b1\/1\b/g, 'một đổi một')
-    .replace(/\b1-1\b/g, 'một đổi một')
-    .replace(/\b24\/7\b/g, 'hai mươi tư trên bảy')
-    .replace(/\b1st\b/gi, 'thứ nhất')
-    .replace(/\b2nd\b/gi, 'thứ hai')
-    .replace(/\b3rd\b/gi, 'thứ ba');
-
-  // 2. PHÁT ÂM TIẾNG ANH & THUẬT NGỮ LIVESTREAM / THƯƠNG MẠI CHUẨN XÁC, TỰ NHIÊN
-  text = text
-    .replace(/\bserum\b/gi, 'sê-rum')
-    .replace(/\bskincare\b/gi, 'chăm sóc da')
-    .replace(/\bbody\b/gi, 'toàn thân')
-    .replace(/\bfeedback\b/gi, 'phản hồi')
-    .replace(/\bflash\s*sale\b/gi, 'flát seo')
-    .replace(/\bsale\b/gi, 'seo')
-    .replace(/\bdeal\b/gi, 'điu')
-    .replace(/\bhot\s*trend\b/gi, 'hót tren')
-    .replace(/\btrend\b/gi, 'xu hướng')
-    .replace(/\breview\b/gi, 'ri-viu')
-    .replace(/\bfreeship\b/gi, 'miễn phí giao hàng')
-    .replace(/\bfree\s*ship\b/gi, 'miễn phí giao hàng')
-    .replace(/\bvoucher\b/gi, 'vâu-chờ')
-    .replace(/\border\b/gi, 'đặt hàng')
-    .replace(/\bcombo\b/gi, 'com-bo')
-    .replace(/\blivestream\b/gi, 'lai-chim')
-    .replace(/\blive\s*stream\b/gi, 'lai-chim')
-    .replace(/\bvideo\b/gi, 'vi-đê-ô')
-    .replace(/\baudio\b/gi, 'âm thanh')
-    .replace(/\bviewer\b/gi, 'người xem')
-    .replace(/\bview\b/gi, 'lượt xem')
-    .replace(/\bapp\b/gi, 'ứng dụng')
-    .replace(/\bgame\b/gi, 'gêm')
-    .replace(/\bpk\b/gi, 'p-k')
-    .replace(/\bidol\b/gi, 'ai-đồ')
-    .replace(/\bkoc\b/gi, 'k-o-c')
-    .replace(/\bkol\b/gi, 'k-o-l')
-    .replace(/\blink\b/gi, 'đường link')
-    .replace(/\bpro\b/gi, 'pờ-rô')
-    .replace(/\bvip\b/gi, 'víp')
-    .replace(/\bgift\b/gi, 'quà tặng')
-    .replace(/\bfollow\b/gi, 'theo dõi')
-    .replace(/\bfl\b/gi, 'theo dõi')
-    .replace(/\btiktok\b/gi, 'Tóp Tóp')
-    .replace(/\btik\s*tok\b/gi, 'Tóp Tóp')
-    .replace(/\bzalo\b/gi, 'Da-lô')
-    .replace(/\bfb\b/gi, 'Phây Búc')
-    .replace(/\bfacebook\b/gi, 'Phây Búc');
-
-  // 3. CHUYỂN ĐỔI TỪ VIẾT TẮT TIẾNG VIỆT CHÍNH XÁC 100%
-  text = text
-    .replace(/\bsp\b/gi, 'sản phẩm')
-    .replace(/\bđc\b/gi, 'được')
-    .replace(/\bdc\b/gi, 'được')
-    .replace(/\bko\b/gi, 'không')
-    .replace(/\bk\b/gi, 'không')
-    .replace(/\bkhg\b/gi, 'không')
-    .replace(/\bkh\b/gi, 'không')
-    .replace(/\bmn\b/gi, 'mọi người')
-    .replace(/\bmng\b/gi, 'mọi người')
-    .replace(/\bsz\b/gi, 'size')
-    .replace(/\bstk\b/gi, 'số tài khoản')
-    .replace(/\bcod\b/gi, 'thanh toán khi nhận hàng')
-    .replace(/\bbtv\b/gi, 'biên tập viên')
-    .replace(/\bmc\b/gi, 'người dẫn chương trình')
-    .replace(/\bvtv\b/gi, 'đài truyền hình')
-    .replace(/\bkm\b/gi, 'khuyến mãi')
-    .replace(/\bkg\b/gi, 'ki-lô-gam')
-    .replace(/\bml\b/gi, 'mi-li-lít')
-    .replace(/\bhsd\b/gi, 'hạn sử dụng')
-    .replace(/\bnsx\b/gi, 'ngày sản xuất')
-    .replace(/\bnv\b/gi, 'nhân viên')
-    .replace(/\blh\b/gi, 'liên hệ')
-    .replace(/\btp\b/gi, 'thành phố')
-    .replace(/\bhcm\b/gi, 'Hồ Chí Minh')
-    .replace(/\bhn\b/gi, 'Hà Nội')
-    .replace(/\bib\b/gi, 'nhắn tin')
-    .replace(/\binbox\b/gi, 'nhắn tin')
-    .replace(/\bcmt\b/gi, 'bình luận')
-    .replace(/\bcomment\b/gi, 'bình luận')
-    .replace(/\bauth\b/gi, 'chính hãng')
-    .replace(/\breal\b/gi, 'hàng thật chính hãng')
-    .replace(/\bsetup\b/gi, 'cài đặt')
-    .replace(/\bok\b/gi, 'dạ vâng được ạ');
-
-  // 4. DỌN DẸP DẤU CÂU TRÙNG LẶP ĐỂ KHÔNG GÂY KHỰNG / TREO KHOẢNG LẶNG
+  // Dọn dẹp khoảng trắng và dấu câu thừa để âm thanh mượt mà không khựng
   text = text
     .replace(/!{2,}/g, '!')
     .replace(/\?{2,}/g, '?')
@@ -7440,8 +7323,6 @@ export function humanizeVoiceSpeechText(rawText, voice = null) {
     .replace(/,\s*,+/g, ', ')
     .replace(/\s+/g, ' ')
     .trim();
-
-  return text;
 
   return text;
 }

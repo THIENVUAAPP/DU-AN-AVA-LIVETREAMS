@@ -3,7 +3,7 @@ import { getAllLiveMedia } from '../lib/liveKhoDB';
 import { askGeminiLiveAi } from '../lib/geminiClient';
 import autoPinProductService from '../utils/autoPinProductService';
 import { resolveEffectiveVoice } from '../utils/voiceSyncService';
-import { isSmartSpamOrToxicComment, cleanUserNameForSpeech } from '../utils/vietnamesePronunciationMaster';
+import { isSmartSpamOrToxicComment, cleanUserNameForSpeech, isMeaningfulCommercialOrEngagingComment } from '../utils/vietnamesePronunciationMaster';
 
 export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack = 'talk' }) {
   const [liveMedia, setLiveMedia] = useState([]);
@@ -698,7 +698,11 @@ function fillTemplate(template, vars = {}) {
       const isCommentVoiceDisabled = evKey === 'comment' && (currentEvConfig.speakVoice === false || currentEvConfig.commentResponseFormat === 'text_only');
       const isCommentTextDisabled = evKey === 'comment' && (currentEvConfig.sendChatText === false || currentEvConfig.commentResponseFormat === 'voice_only');
 
-      const shouldSpeakVoice = !isCommentVoiceDisabled && ((currentEvConfig.useVoice !== false) || isTestMode);
+      // 🛡️ SÀNG LỌC BÌNH LUẬN: Bình luận sáo rỗng ("hi", "123", "chấm"...) chỉ trả lời bằng chữ, KHÔNG dừng giọng đọc kịch bản AI
+      const isCommentType = type === 'COMMENT';
+      const isCommentMeaningful = isCommentType ? isMeaningfulCommercialOrEngagingComment(payload?.text || payload?.comment || '') : true;
+
+      const shouldSpeakVoice = !isCommentVoiceDisabled && (isTestMode || (isCommentType ? isCommentMeaningful : true)) && ((currentEvConfig.useVoice !== false) || isTestMode);
       const shouldSendChat = !isCommentTextDisabled;
       const targetVoiceRole = isTestMode ? 'idol' : (currentEvConfig.ttsVoiceRole || (evKey === 'comment' ? 'comment' : evKey === 'checkout' ? 'manager' : 'idol'));
       const effectiveVoice = resolveEffectiveVoice(targetVoiceRole, isTestMode ? null : currentEvConfig.voiceId, currentEvConfig.avatarId);
