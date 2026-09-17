@@ -280,7 +280,25 @@ export default function EventVoiceTester({
 
     const sentences = sentencesRef.current;
     if (!sentences || index >= sentences.length) {
-      handleStop();
+      // Đã đọc hết kịch bản: Tự động lặp lại kịch bản nếu người dùng bật lặp lại
+      const savedConfig = typeof localStorage !== 'undefined' ? (localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup')) : null;
+      let shouldLoop = true;
+      try {
+        if (savedConfig) {
+          const parsed = JSON.parse(savedConfig);
+          if (parsed.script_broadcast && parsed.script_broadcast.loopScript === false) {
+            shouldLoop = false;
+          }
+        }
+      } catch (e) {}
+
+      if (shouldLoop && sentences && sentences.length > 0 && isPlayingRef.current) {
+        setCurrentSentenceIdx(0);
+        currentSentenceIdxRef.current = 0;
+        playSentenceAtIndex(0, customVoice);
+      } else {
+        handleStop();
+      }
       return;
     }
 
@@ -325,6 +343,11 @@ export default function EventVoiceTester({
       }
     }
 
+    if (!cleanSentenceText || !cleanSentenceText.trim()) {
+      playSentenceAtIndex(index + 1, customVoice);
+      return;
+    }
+
     const activeSpeakerId = matchedSpeakerAvatar ? matchedSpeakerAvatar.id : 'idol';
     const activeVoiceId = matchedSpeakerAvatar 
       ? (matchedSpeakerAvatar.voiceId || selectedVoiceRef.current) 
@@ -348,7 +371,7 @@ export default function EventVoiceTester({
       }));
     } catch (e) {}
 
-    // 🚀 LOOKAHEAD PIPELINE: Ngay khi câu hiện tại bắt đầu phát, nạp trước câu N+1 (duy nhất 1 câu để không nghẽn mạng)
+    // 🚀 LOOKAHEAD PIPELINE: Ngay khi câu hiện tại bắt đầu phát, nạp trước câu N+1
     if (index + 1 < sentences.length) {
       prefetchTTSAudio(sentences[index + 1], voiceObj, { rate: speedRef.current });
     }
@@ -359,9 +382,9 @@ export default function EventVoiceTester({
     let watchdogTimer = setTimeout(() => {
       if (isPlayingRef.current && currentSentenceIdxRef.current === index) {
         console.warn(`[EventVoiceTester] Watchdog triggered for sentence ${index}, advancing to next sentence.`);
-        playSentenceAtIndex(index + 1, null);
+        playSentenceAtIndex(index + 1, customVoice);
       }
-    }, 18000);
+    }, 12000);
 
     previewVoiceAudio(
       voiceObj,
@@ -390,12 +413,12 @@ export default function EventVoiceTester({
           
           // Nếu chọn 0.0s (Liền mạch): Phát câu tiếp theo NGAY LẬP TỨC 0ms không qua bất kỳ timer delay nào!
           if (pauseSec <= 0.02) {
-            playSentenceAtIndex(index + 1, null);
+            playSentenceAtIndex(index + 1, customVoice);
           } else {
             const pauseMs = Math.max(0, Math.round(pauseSec * 1000));
             queueTimeoutRef.current = setTimeout(() => {
               if (isPlayingRef.current) {
-                playSentenceAtIndex(index + 1, null);
+                playSentenceAtIndex(index + 1, customVoice);
               }
             }, pauseMs);
           }

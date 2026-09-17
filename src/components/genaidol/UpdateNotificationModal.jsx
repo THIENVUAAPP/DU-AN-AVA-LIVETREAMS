@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.2.8';
+export const APP_VERSION = '3.2.9';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Bản Cập Nhật v3.2.8 - Đọc Kịch Bản Liền Mạch 300+ Câu & Tối Ưu Toàn Diện',
-    description: '1. Sửa Triệt Để Lỗi Đọc Kịch Bản: Đọc trọn vẹn từ câu 1 đến 302+ câu thoại, tự động chuyển câu tuần hoàn siêu mượt, xử lý sạch toàn bộ ký tự đặc biệt & HTML entities (&nbsp;, &amp;, &quot;); 2. Menu 20 Ngôn Ngữ Chuẩn Toàn Cầu: Khắc phục lỗi chọn ngôn ngữ, đồng bộ tức thì toàn bộ phần mềm; 3. Nâng Cấp Luồng Video 2K/4K/8K: Phát mượt mà 60 FPS sang Window Capture và TikTok Live Studio không giật lag.'
+    title: '👑 Bản Cập Nhật v3.2.9 - Phát Kịch Bản Liền Mạch 100% & Chuẩn Hóa Phát Âm',
+    description: '1. Đọc Kịch Bản Không Gián Đoạn: Khắc phục triệt để vấn đề dừng sau câu 1, bảo đảm đọc trọn vẹn từ câu 1 đến câu cuối cùng và tự động lặp lại kịch bản tuần hoàn; 2. Chuẩn Hóa Phát Âm & Đọc Bình Luận: Đọc chính xác 100% ngữ nghĩa, chính tả từng câu từng chữ, giữ nguyên tên thương hiệu gốc (TikTok, Facebook, Shopee, Lazada...); 3. Tối Ưu Nạp Video 2K/4K/8K: Đồng bộ 0ms cho Window Capture và TikTok Live Studio.'
   }
 ];
 

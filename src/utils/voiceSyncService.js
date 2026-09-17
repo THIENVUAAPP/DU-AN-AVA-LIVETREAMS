@@ -7664,9 +7664,14 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
 
   return new Promise((resolve) => {
     let hasEnded = false;
+    let safetyTimer = null;
     const finish = () => {
       if (hasEnded) return;
       hasEnded = true;
+      if (safetyTimer) {
+        clearTimeout(safetyTimer);
+        safetyTimer = null;
+      }
       if (tremoloOsc) {
         try { tremoloOsc.stop(); tremoloOsc.disconnect(); } catch(e) {}
       }
@@ -7679,11 +7684,18 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
           detail: { isSpeaking: false, avatarId: null }
         }));
       }
-      if (onEnd) onEnd();
+      if (onEnd) {
+        try { onEnd(); } catch(e) { console.warn('onEnd callback error:', e); }
+      }
       resolve(true);
     };
 
     source.onended = finish;
+    
+    // Safety watchdog: Tự động kết thúc nếu Web Audio API bỏ lỡ sự kiện onended do GC
+    const durMs = Math.max(300, Math.ceil(((audioBuffer.duration || 1) / (requestedRate || 1)) * 1000) + 350);
+    safetyTimer = setTimeout(finish, durMs);
+
     try {
       source.start(0);
     } catch (e) {

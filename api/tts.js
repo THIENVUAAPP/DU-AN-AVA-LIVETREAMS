@@ -94,8 +94,53 @@ export default async function handler(req, res) {
 
     let audioBase64 = null;
 
-    // 1. FREE TTS PROXY (Google / Edge Free)
-    if (!platform || platform === 'free' || platform === 'google' || platform === 'edge') {
+    // 1. NEURAL EDGE TTS & FREE TTS PROXY
+    if (!platform || platform === 'free' || platform === 'google' || platform === 'edge' || platform === 'neural') {
+      const voice = req.body.voice || req.body.voiceId || '';
+      const gender = req.body.gender || '';
+      const pitch = req.body.pitch || '+0Hz';
+      const rate = req.body.rate || '+0%';
+
+      if (EdgeTTS) {
+        let neuralVoice = voice;
+        if (!neuralVoice || !neuralVoice.includes('Neural')) {
+          const isMale = (gender || '').toLowerCase() === 'male' || (gender || '').toLowerCase() === 'nam';
+          const shortLang = (lang || 'vi').split('-')[0].toLowerCase();
+          if (shortLang === 'vi') neuralVoice = isMale ? 'vi-VN-NamMinhNeural' : 'vi-VN-HoaiMyNeural';
+          else if (shortLang === 'en') neuralVoice = isMale ? 'en-US-GuyNeural' : 'en-US-JennyNeural';
+          else if (shortLang === 'ja') neuralVoice = isMale ? 'ja-JP-KeitaNeural' : 'ja-JP-NanamiNeural';
+          else if (shortLang === 'zh') neuralVoice = isMale ? 'zh-CN-YunxiNeural' : 'zh-CN-XiaoxiaoNeural';
+          else if (shortLang === 'ko') neuralVoice = isMale ? 'ko-KR-InJoonNeural' : 'ko-KR-SunHiNeural';
+          else if (shortLang === 'fr') neuralVoice = isMale ? 'fr-FR-HenriNeural' : 'fr-FR-DeniseNeural';
+          else if (shortLang === 'de') neuralVoice = isMale ? 'de-DE-ConradNeural' : 'de-DE-KatjaNeural';
+          else if (shortLang === 'es') neuralVoice = isMale ? 'es-ES-AlvaroNeural' : 'es-ES-ElviraNeural';
+          else if (shortLang === 'ru') neuralVoice = isMale ? 'ru-RU-DmitryNeural' : 'ru-RU-SvetlanaNeural';
+          else if (shortLang === 'it') neuralVoice = isMale ? 'it-IT-DiegoNeural' : 'it-IT-ElsaNeural';
+          else if (shortLang === 'th') neuralVoice = isMale ? 'th-TH-NiwatNeural' : 'th-TH-PremwadeeNeural';
+          else neuralVoice = isMale ? 'vi-VN-NamMinhNeural' : 'vi-VN-HoaiMyNeural';
+        }
+
+        const tmpFile = path.resolve(os.tmpdir(), `tts_post_${Date.now()}_${Math.random().toString(36).slice(2)}.mp3`);
+        try {
+          const tts = new EdgeTTS({
+            voice: neuralVoice,
+            lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
+            pitch,
+            rate,
+            outputFormat: 'audio-24khz-48kbitrate-mono-mp3'
+          });
+          await tts.ttsPromise(text, tmpFile);
+          if (fs.existsSync(tmpFile)) {
+            const buf = fs.readFileSync(tmpFile);
+            try { fs.unlinkSync(tmpFile); } catch (e) {}
+            audioBase64 = buf.toString('base64');
+            return res.status(200).json({ success: true, audioBase64, format: 'audio/mpeg' });
+          }
+        } catch (e) {
+          if (fs.existsSync(tmpFile)) try { fs.unlinkSync(tmpFile); } catch(err) {}
+        }
+      }
+
       try {
         const url = `https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl=${encodeURIComponent(lang)}&q=${encodeURIComponent(text.slice(0, 200))}`;
         const response = await fetch(url, {
@@ -107,7 +152,7 @@ export default async function handler(req, res) {
         if (response.ok) {
           const buffer = await response.arrayBuffer();
           audioBase64 = Buffer.from(buffer).toString('base64');
-          return res.status(200).json({ audioBase64, format: 'audio/mpeg' });
+          return res.status(200).json({ success: true, audioBase64, format: 'audio/mpeg' });
         }
       } catch (err) {
         console.warn('Free TTS fetch warning:', err);

@@ -393,9 +393,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           if (priorityQueueRef.current.length > 0) {
             const nextPriority = priorityQueueRef.current.shift();
             if (nextPriority) playItem(nextPriority, false);
+          } else if (isScriptItem && isPlayingRef.current && queueRef.current && queueRef.current.length > 0) {
+            const nextIdx = (currentIndexRef.current + 1) % queueRef.current.length;
+            currentIndexRef.current = nextIdx;
+            setCurrentIndex(nextIdx);
+            const nextItem = queueRef.current[nextIdx];
+            if (nextItem) playItem(nextItem, true);
           }
         }
-      }, 15000);
+      }, 12000);
 
       await previewVoiceAudio(activeVoice, item.text, {
         priority: true,
