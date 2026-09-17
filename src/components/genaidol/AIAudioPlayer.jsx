@@ -495,10 +495,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 const firstItem = queueRef.current[0];
                 if (firstItem) {
                   const pauseSec = userPauseDurationRef.current !== undefined ? Number(userPauseDurationRef.current) : 0.0;
-                  const loopDelayMs = pauseSec <= 0.02 ? 20 : Math.max(20, Math.round(pauseSec * 1000));
-                  setTimeout(() => {
+                  const loopDelayMs = pauseSec <= 0.01 ? 0 : Math.round(pauseSec * 1000);
+                  if (loopDelayMs <= 0) {
                     if (isPlayingRef.current) playItem(firstItem, true);
-                  }, loopDelayMs);
+                  } else {
+                    setTimeout(() => {
+                      if (isPlayingRef.current) playItem(firstItem, true);
+                    }, loopDelayMs);
+                  }
                 }
               } else {
                 setIsPlaying(false);
@@ -506,16 +510,20 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 if (onAudioPlayStateChange) onAudioPlayStateChange(false);
               }
             } else {
-              // Đọc câu tiếp theo trong kịch bản: Liền mạch hoặc theo đúng thiết lập khoảng dừng của người dùng
+              // Đọc câu tiếp theo trong kịch bản: Liền mạch 0ms hoặc theo đúng thiết lập khoảng dừng của người dùng
               currentIndexRef.current = nextIdx;
               setCurrentIndex(nextIdx);
               const nextItem = queueRef.current[nextIdx];
               if (nextItem && isPlayingRef.current) {
                 const pauseSec = userPauseDurationRef.current !== undefined ? Number(userPauseDurationRef.current) : 0.0;
-                const delayMs = pauseSec <= 0.02 ? 15 : Math.max(15, Math.round(pauseSec * 1000));
-                setTimeout(() => {
+                const delayMs = pauseSec <= 0.01 ? 0 : Math.round(pauseSec * 1000);
+                if (delayMs <= 0) {
                   if (isPlayingRef.current) playItem(nextItem, true);
-                }, delayMs);
+                } else {
+                  setTimeout(() => {
+                    if (isPlayingRef.current) playItem(nextItem, true);
+                  }, delayMs);
+                }
               }
             }
           } else {

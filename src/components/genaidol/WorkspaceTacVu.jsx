@@ -382,13 +382,13 @@ const getDefaultEventConfigs = () => {
           fixedScriptText: MASTER_SCRIPTS.cosmetics,
           aiLiveStyle: 'sales_fast',
           scriptDurationMinutes: 60,
-          pauseBetweenSentences: 0.1,
+          pauseBetweenSentences: 0.0,
           loopScript: true,
           voiceId: 'free_vi_female'
         }
       ] : undefined,
       fixedScriptText: ev.id === 'script_broadcast' ? MASTER_SCRIPTS.cosmetics : undefined,
-      pauseBetweenSentences: ev.id === 'script_broadcast' ? 0.1 : undefined,
+      pauseBetweenSentences: ev.id === 'script_broadcast' ? 0.0 : undefined,
       scriptDurationMinutes: ev.id === 'script_broadcast' ? 60 : undefined,
       loopScript: ev.id === 'script_broadcast' ? true : undefined,
       aiLiveStyle: ev.id === 'script_broadcast' ? 'sales_fast' : undefined,
@@ -587,7 +587,7 @@ export default function WorkspaceTacVu() {
                             fixedScriptText: parsed[key]?.fixedScriptText || defaults[key]?.fixedScriptText || MASTER_SCRIPTS.cosmetics,
                             aiLiveStyle: parsed[key]?.aiLiveStyle || defaults[key]?.aiLiveStyle || 'sales_fast',
                             scriptDurationMinutes: parsed[key]?.scriptDurationMinutes || defaults[key]?.scriptDurationMinutes || 60,
-                            pauseBetweenSentences: parsed[key]?.pauseBetweenSentences !== undefined ? parsed[key].pauseBetweenSentences : 0.1,
+                            pauseBetweenSentences: parsed[key]?.pauseBetweenSentences !== undefined ? parsed[key].pauseBetweenSentences : 0.0,
                             loopScript: parsed[key]?.loopScript !== false,
                             voiceId: parsed[key]?.voiceId || 'free_vi_female'
                           }
@@ -732,7 +732,7 @@ export default function WorkspaceTacVu() {
           fixedScriptText: scriptBroadcastConfig.fixedScriptText || MASTER_SCRIPTS.cosmetics,
           aiLiveStyle: scriptBroadcastConfig.aiLiveStyle || 'sales_fast',
           scriptDurationMinutes: scriptBroadcastConfig.scriptDurationMinutes || 60,
-          pauseBetweenSentences: scriptBroadcastConfig.pauseBetweenSentences !== undefined ? scriptBroadcastConfig.pauseBetweenSentences : 0.1,
+          pauseBetweenSentences: scriptBroadcastConfig.pauseBetweenSentences !== undefined ? scriptBroadcastConfig.pauseBetweenSentences : 0.0,
           loopScript: scriptBroadcastConfig.loopScript !== false,
           voiceId: scriptBroadcastConfig.voiceId || 'free_vi_female'
         }
@@ -750,7 +750,7 @@ export default function WorkspaceTacVu() {
     fixedScriptText: MASTER_SCRIPTS.cosmetics,
     aiLiveStyle: 'sales_fast',
     scriptDurationMinutes: 60,
-    pauseBetweenSentences: 0.1,
+    pauseBetweenSentences: 0.0,
     loopScript: true,
     voiceId: 'free_vi_female'
   };
@@ -765,7 +765,7 @@ export default function WorkspaceTacVu() {
       fixedScriptText: '',
       aiLiveStyle: 'sales_fast',
       scriptDurationMinutes: 60,
-      pauseBetweenSentences: 0.1,
+      pauseBetweenSentences: 0.0,
       loopScript: true,
       voiceId: scriptBroadcastConfig.voiceId || 'free_vi_female'
     };
@@ -2184,38 +2184,11 @@ export default function WorkspaceTacVu() {
                               </div>
                             </div>
 
-                            {/* MULTI-AVATAR SPEAKER TAG QUICK-INSERT BAR */}
-                            <div className="flex items-center gap-1.5 flex-wrap bg-slate-100/90 p-1.5 rounded-lg border border-slate-200">
-                              <span className="text-[10px] font-black text-slate-500 uppercase tracking-wider pl-1 flex items-center gap-1">
-                                <Tag size={11} className="text-indigo-600" /> Chèn vai đọc:
-                              </span>
-                              {[
-                                { tag: '[Idol]: ', label: '+ [Idol]', color: 'bg-rose-50 hover:bg-rose-100 text-rose-700 border-rose-200' },
-                                { tag: '[Trợ Lý]: ', label: '+ [Trợ Lý]', color: 'bg-blue-50 hover:bg-blue-100 text-blue-700 border-blue-200' },
-                                { tag: '[BLV Game]: ', label: '+ [BLV Game]', color: 'bg-amber-50 hover:bg-amber-100 text-amber-700 border-amber-200' },
-                                { tag: '[Khách Mời]: ', label: '+ [Khách Mời]', color: 'bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border-emerald-200' },
-                              ].map((chip) => (
-                                <button
-                                  key={chip.tag}
-                                  type="button"
-                                  onClick={() => {
-                                    const currentText = activeEditingTab.fixedScriptText !== undefined ? activeEditingTab.fixedScriptText : MASTER_SCRIPTS.cosmetics;
-                                    const newText = currentText ? `${currentText.trimEnd()}\n${chip.tag}` : chip.tag;
-                                    handleUpdateActiveScriptTab('fixedScriptText', newText);
-                                    toast.success(`Đã thêm ${chip.label}`);
-                                  }}
-                                  className={`px-2 py-0.5 rounded-md border text-[11px] font-bold cursor-pointer transition-all active:scale-95 shadow-2xs ${chip.color}`}
-                                >
-                                  {chip.label}
-                                </button>
-                              ))}
-                            </div>
-
                             <div className="relative">
                               <textarea 
                                 value={activeEditingTab.fixedScriptText !== undefined ? activeEditingTab.fixedScriptText : MASTER_SCRIPTS.cosmetics} 
                                 onChange={(e) => handleUpdateActiveScriptTab('fixedScriptText', e.target.value)} 
-                                placeholder="Nhập hoặc dán chuỗi các câu thoại kịch bản (ví dụ: [Idol]: Chào các tình yêu! \n[Trợ Lý]: Dạ đúng rồi chốt đơn liền nha!)..."
+                                placeholder="Nhập hoặc dán chuỗi các câu thoại kịch bản..."
                                 className="w-full h-[240px] border border-gray-300 rounded-xl p-3.5 text-xs resize-y bg-white focus:outline-blue-500 font-sans leading-relaxed shadow-inner" 
                               />
                               <div className="absolute bottom-3 right-3 text-[11px] text-gray-500 bg-white/90 px-2 py-0.5 rounded-md border border-gray-200 font-bold shadow-2xs">
@@ -2232,9 +2205,9 @@ export default function WorkspaceTacVu() {
                                 <input 
                                   type="number" 
                                   min="0" 
-                                  max="30"
-                                  step="0.1"
-                                  value={activeEditingTab.pauseBetweenSentences !== undefined ? activeEditingTab.pauseBetweenSentences : 0.1} 
+                                  max="30" 
+                                  step="0.1" 
+                                  value={activeEditingTab.pauseBetweenSentences !== undefined ? activeEditingTab.pauseBetweenSentences : 0.0} 
                                   onChange={(e) => handleUpdateActiveScriptTab('pauseBetweenSentences', Number(e.target.value))}
                                   className="w-16 border border-gray-300 rounded-lg px-2 py-1 text-center font-bold bg-white" 
                                 />

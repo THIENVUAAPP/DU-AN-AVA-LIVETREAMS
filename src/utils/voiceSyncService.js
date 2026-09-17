@@ -8084,7 +8084,7 @@ async function processGlobalSpeechQueue() {
       isGlobalSpeaking = false;
     }
 
-    await new Promise((r) => setTimeout(r, 400));
+    // Đọc liên tục 0ms không độ trễ
   }
 
   isProcessingGlobalQueue = false;

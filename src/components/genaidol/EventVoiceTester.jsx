@@ -393,12 +393,18 @@ export default function EventVoiceTester({
         setCurrentSentenceIdx(0);
         currentSentenceIdxRef.current = 0;
         const pauseSec = pauseDurationRef.current !== undefined ? Number(pauseDurationRef.current) : 0.0;
-        const loopPauseMs = pauseSec <= 0.02 ? 0 : Math.max(20, Math.round(pauseSec * 1000));
-        setTimeout(() => {
+        const loopPauseMs = pauseSec <= 0.01 ? 0 : Math.round(pauseSec * 1000);
+        if (loopPauseMs <= 0) {
           if (isPlayingRef.current) {
             playSentenceAtIndex(0, customVoice);
           }
-        }, loopPauseMs);
+        } else {
+          setTimeout(() => {
+            if (isPlayingRef.current) {
+              playSentenceAtIndex(0, customVoice);
+            }
+          }, loopPauseMs);
+        }
       } else {
         handleStop();
       }
@@ -479,13 +485,11 @@ export default function EventVoiceTester({
 
           const pauseSec = pauseDurationRef.current !== undefined ? Number(pauseDurationRef.current) : 0.0;
           
-          // Phát câu tiếp theo: nếu người dùng không cài khoảng dừng (<= 0.02s) thì ĐỌC LIÊN TỤC KHÔNG DỪNG (0ms)
-          if (pauseSec <= 0.02) {
-            queueTimeoutRef.current = setTimeout(() => {
-              if (isPlayingRef.current) playSentenceAtIndex(index + 1, customVoice);
-            }, 0);
+          // Phát câu tiếp theo: nếu người dùng không cài khoảng dừng (<= 0.01s) thì ĐỌC LIÊN TỤC KHÔNG DỪNG (0ms)
+          if (pauseSec <= 0.01) {
+            if (isPlayingRef.current) playSentenceAtIndex(index + 1, customVoice);
           } else {
-            const pauseMs = Math.max(20, Math.round(pauseSec * 1000));
+            const pauseMs = Math.round(pauseSec * 1000);
             queueTimeoutRef.current = setTimeout(() => {
               if (isPlayingRef.current) {
                 playSentenceAtIndex(index + 1, customVoice);
