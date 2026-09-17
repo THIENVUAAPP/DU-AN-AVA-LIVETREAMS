@@ -1,10 +1,13 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 
+import { loadAllAidolItems } from '../../utils/idbHelper';
+
 /**
  * 🖥️ TAB CODE ĐỘC LẬP: CỬA SỔ BẮT HÌNH WINDOW CAPTURE 4K 60 FPS CHO OBS & TIKTOK LIVE STUDIO
  * - Tách biệt hoàn toàn 100% với đường link Online Live Stream (/live-stream)
  * - Khóa chặt luồng video 4K 60 FPS siêu mượt, không giật lag, không đứng hình
+ * - Tối ưu nạp video dung lượng nặng 0ms từ bộ nhớ đệm / IndexedDB / Instant Chunks
  * - Nút [✕ Ẩn Toàn Bộ (H)] cho phép ẩn sạch 100% các nút và tab điều khiển trên video
  * - Biểu tượng mắt nổi [👁️] hoặc phím tắt [H] giúp hiện lại nhanh chóng bất kỳ lúc nào
  */
@@ -20,12 +23,12 @@ export default function WindowCapturePlayer() {
     if (typeof window === 'undefined') return '/uploads/media-1789044811424-233037063.mp4';
     const params = new URLSearchParams(window.location.search);
     const v = params.get('v');
-    if (v && !v.startsWith('blob:')) return v;
+    if (v) return v;
     try {
       const saved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
-      if (saved.mediaUrl && !saved.mediaUrl.startsWith('blob:')) return saved.mediaUrl;
+      if (saved.mediaUrl) return saved.mediaUrl;
       const locked = localStorage.getItem('avalive_user_locked_media') || '';
-      if (locked && !locked.startsWith('blob:')) return locked;
+      if (locked) return locked;
     } catch (e) {}
     return '/uploads/media-1789044811424-233037063.mp4';
   });
@@ -52,12 +55,40 @@ export default function WindowCapturePlayer() {
   const isExplicitlyPausedRef = useRef(false);
   const isUserMutedRef = useRef(false);
   const lastReportedTimeRef = useRef(0);
+  const activeBlobUrlRef = useRef(null);
 
   // Cập nhật tiêu đề cửa sổ cho OBS & TikTok Studio dễ nhận diện
   useEffect(() => {
     if (typeof document !== 'undefined') {
       document.title = '[AvaLive VIP PRO] - Cửa Sổ Live 9:16 (Window Capture)';
     }
+  }, []);
+
+  // ⚡ Tự động tìm kiếm fileBlob gốc trong IndexedDB để phát 0ms không cần chờ upload/mạng
+  const tryLoadFromLocalDB = useCallback(async (targetUrlOrCharId) => {
+    if (!targetUrlOrCharId || typeof window === 'undefined') return null;
+    try {
+      const items = await loadAllAidolItems();
+      if (!items || !items.length) return null;
+      
+      const found = items.find(it => 
+        (it.id && it.id === targetUrlOrCharId) ||
+        (it.url && it.url === targetUrlOrCharId) ||
+        (it.mediaUrl && it.mediaUrl === targetUrlOrCharId) ||
+        (it.mediaUrl && targetUrlOrCharId.includes(it.mediaUrl)) ||
+        (targetUrlOrCharId && it.mediaUrl && it.mediaUrl.includes(targetUrlOrCharId))
+      );
+
+      if (found && found.fileBlob) {
+        if (activeBlobUrlRef.current) {
+          try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
+        }
+        const blobUrl = URL.createObjectURL(found.fileBlob);
+        activeBlobUrlRef.current = blobUrl;
+        return blobUrl;
+      }
+    } catch (e) {}
+    return null;
   }, []);
 
   const toggleControlsHidden = (val) => {
@@ -71,7 +102,7 @@ export default function WindowCapturePlayer() {
   // 🌐 Chuyển đổi URL thông minh cho Window Capture
   const resolveUrl = useCallback((url) => {
     if (!url || typeof url !== 'string') return '';
-    if (url.startsWith('blob:')) return '';
+    if (url.startsWith('blob:')) return url; // Giữ nguyên blob url local nếu hợp lệ
 
     if (url.startsWith('http://') || url.startsWith('https://')) {
       if (url.includes('localhost:') || url.includes('127.0.0.1:')) {
@@ -133,18 +164,38 @@ export default function WindowCapturePlayer() {
 
   // 1. Đồng bộ qua BroadcastChannel nội bộ cùng máy
   useEffect(() => {
+    // Khởi tạo kiểm tra ngay từ IndexedDB khi mở cửa sổ
+    const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
+    const charParam = params ? params.get('char') : null;
+    const vParam = params ? params.get('v') : null;
+    if (charParam || vParam) {
+      tryLoadFromLocalDB(charParam || vParam).then(localBlob => {
+        if (localBlob) {
+          setVideoSrc(localBlob);
+          setIsVideoLoading(false);
+        }
+      });
+    }
+
     let bc = null;
     try {
       bc = new BroadcastChannel('avalive_master_live_stream');
-      bc.onmessage = (event) => {
+      bc.onmessage = async (event) => {
         const msg = event.data;
         if (!msg) return;
 
-        if (msg.type === 'GLOBAL_MEDIA_CHANGE' && msg.mediaUrl) {
-          const resolved = resolveUrl(msg.mediaUrl);
-          if (resolved && !isSameMedia(resolved, videoSrc)) {
-            setVideoSrc(resolved);
-            setIsVideoLoading(true);
+        if (msg.type === 'GLOBAL_MEDIA_CHANGE' && (msg.mediaUrl || msg.characterId)) {
+          // Thử nạp tức thì 0ms từ IndexedDB trước nếu có file gốc
+          const localBlob = await tryLoadFromLocalDB(msg.characterId || msg.mediaUrl);
+          if (localBlob) {
+            setVideoSrc(localBlob);
+            setIsVideoLoading(false);
+          } else if (msg.mediaUrl) {
+            const resolved = resolveUrl(msg.mediaUrl);
+            if (resolved && !isSameMedia(resolved, videoSrc)) {
+              setVideoSrc(resolved);
+              setIsVideoLoading(true);
+            }
           }
           if (typeof msg.currentTime === 'number' && msg.currentTime >= 0) {
             setTimeout(() => applyTimeSync(msg.currentTime, true), 100);
@@ -173,7 +224,7 @@ export default function WindowCapturePlayer() {
         try { bc.close(); } catch (e) {}
       }
     };
-  }, [videoSrc, resolveUrl]);
+  }, [videoSrc, resolveUrl, tryLoadFromLocalDB]);
 
   // 2. Đồng bộ qua Socket.io Realtime Server
   useEffect(() => {
@@ -191,16 +242,22 @@ export default function WindowCapturePlayer() {
         socket.emit('REQUEST_MASTER_LIVE_STATE');
       });
 
-      socket.on('MASTER_LIVE_STATE_UPDATE', (state) => {
+      socket.on('MASTER_LIVE_STATE_UPDATE', async (state) => {
         if (!state) return;
         if (state.tunnelUrl && state.tunnelUrl !== tunnelUrl) {
           setTunnelUrl(state.tunnelUrl);
         }
-        if (state.mediaUrl) {
-          const resolved = resolveUrl(state.mediaUrl);
-          if (resolved && !isSameMedia(resolved, videoSrc)) {
-            setVideoSrc(resolved);
-            setIsVideoLoading(true);
+        if (state.mediaUrl || state.selectedCharacter) {
+          const localBlob = await tryLoadFromLocalDB(state.selectedCharacter || state.mediaUrl);
+          if (localBlob) {
+            setVideoSrc(localBlob);
+            setIsVideoLoading(false);
+          } else if (state.mediaUrl) {
+            const resolved = resolveUrl(state.mediaUrl);
+            if (resolved && !isSameMedia(resolved, videoSrc)) {
+              setVideoSrc(resolved);
+              setIsVideoLoading(true);
+            }
           }
         }
         if (state.videoPlaybackEvent === 'pause') {
@@ -354,13 +411,22 @@ export default function WindowCapturePlayer() {
         src={resolvedFinalSrc}
         autoPlay
         playsInline
+        webkit-playsinline="true"
         loop
+        preload="auto"
+        crossOrigin="anonymous"
         style={{
           width: '100%',
           height: '100%',
           objectFit: fitMode,
           display: 'block',
-          backgroundColor: '#000'
+          backgroundColor: '#000',
+          transform: 'translate3d(0, 0, 0)',
+          WebkitTransform: 'translate3d(0, 0, 0)',
+          backfaceVisibility: 'hidden',
+          WebkitBackfaceVisibility: 'hidden',
+          imageRendering: '-webkit-optimize-contrast',
+          willChange: 'transform'
         }}
       />
 

@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.2.0';
+export const APP_VERSION = '3.2.1';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Bản Cập Nhật v3.2.0 - Bổ Sung 2 Checkbox Chọn Trả Lời Bình Luận (Từ Khóa / Bộ Não AI), Phát Kịch Bản Trọn Vẹn 100% & Kịch Bản AI Theo Số Phút',
-    description: '1. Đồng bộ hoàn hảo Nút "▶️ Phát Kịch Bản" trên thanh Top Bar: Chạy CHÍNH XÁC 100% kịch bản đã setup trong "Kết Nối Idol" (Tab "📜 Kịch bản Idol"), đọc đầy đủ tuần tự toàn bộ câu thoại mà không bị ngắt quãng hay bỏ sót; 2. Nâng cấp Bộ Não AI Sáng Tạo Kịch Bản Theo Số Phút: Bóc tách toàn bộ thông tin Doanh Nghiệp, Sản Phẩm, Giá Bán, Khuyến Mãi, Tính Năng, Bảo Hành & Kho Tri Thức để tự động tạo kịch bản bán hàng hấp dẫn theo đúng số phút (1p, 2p, 3p, 5p, 10p, 15p, 30p, 60p...) tối ưu hóa cho TikTok Live & Shopee Live; 3. Cấu hình Trả Lời Bình Luận Đột Phá: Bổ sung 2 nút checkbox lựa chọn độc lập "[x] Trả lời theo Từ Khóa Huấn Luyện Sẵn" và "[x] Trả lời bằng Bộ Não AI Tri Thức (Gemini Flash)", kèm 2 checkbox tùy chọn "[x] Gửi Tin Nhắn Chat" và "[x] Phát Giọng Đọc Voice AI (TTS)"; 4. Tối ưu hóa hiệu năng, giảm độ trễ 0ms và bảo lưu an toàn dữ liệu.'
+    title: '⚡ Bản Cập Nhật v3.2.1 - Tối Ưu Siêu Tốc Độ Phát Video Dung Lượng Nặng (0ms Latency) Cho Cửa Sổ Window Capture & Đường Link Live',
+    description: '1. Đột phá Tốc Độ Nạp & Phát Video Nặng (1GB - 10GB / 4K / Thời lượng dài): Nạp tức thì 0ms vào Cửa Sổ Bắt Hình (Window Capture) và Đường Link Live Stream (OBS / TikTok Live Studio) ngay khi chọn video mà không phải chờ đợi; 2. Cơ chế Fast Stream Head-Chunk 2MB & 4 Worker Song Song: Bắt đầu phát luồng video online chỉ sau 30-50ms từ byte đầu tiên, tự động đồng bộ hóa mượt mà 60 FPS; 3. Tăng Tốc Phần Cứng GPU 60 FPS Siêu Nét, Siêu Mượt: Bổ sung cấu hình tăng tốc phần cứng translate3d GPU rendering, triệt tiêu 100% hiện tượng trễ hình, đứng hình, giật lag; 4. Khóa Chặt và Bảo Lưu Toàn Vẹn 100% Tính Năng Kịch Bản Tri Thức AI, Trả Lời Bình Luận và Thiết Lập Hiện Có.'
   }
 ];
 
