@@ -178,6 +178,11 @@ export default function AIAvatarStudio({ isLive, aiAvatarFeatureEnabled }) {
 
   const handleSpeakScript = async () => {
     if (!scriptText.trim()) return;
+    if (isSpeaking) {
+      stopVoiceAudio();
+      setIsSpeaking(false);
+      return;
+    }
     setIsSpeaking(true);
 
     try {
@@ -185,11 +190,37 @@ export default function AIAvatarStudio({ isLive, aiAvatarFeatureEnabled }) {
         ALL_SYSTEM_VOICES.find(v => v.id === 'free_vi_female') || 
         ALL_SYSTEM_VOICES[0];
 
-      await previewVoiceAudio(activeVoice, scriptText.trim(), {
-        priority: true,
-        isTest: true,
-        onEnd: () => setIsSpeaking(false)
+      const rawLines = scriptText.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      const splitSentences = [];
+      rawLines.forEach(line => {
+        const parts = line.match(/[^.!?\n]+[.!?]+|[^.!?\n]+$/g) || [line];
+        parts.forEach(p => {
+          const clean = p.trim();
+          if (clean) splitSentences.push(clean);
+        });
       });
+      const playList = splitSentences.length > 0 ? splitSentences : [scriptText.trim()];
+
+      let curIdx = 0;
+      const playNext = async () => {
+        if (curIdx >= playList.length) {
+          setIsSpeaking(false);
+          return;
+        }
+        const textToPlay = playList[curIdx];
+        curIdx++;
+        if (curIdx < playList.length) {
+          prefetchTTSAudio(playList[curIdx], activeVoice);
+        }
+        await previewVoiceAudio(activeVoice, textToPlay, {
+          priority: true,
+          isTest: true,
+          onEnd: () => {
+            playNext();
+          }
+        });
+      };
+      playNext();
     } catch (e) {
       console.warn('Lỗi đọc kịch bản Avatar:', e);
       setIsSpeaking(false);

@@ -7935,14 +7935,14 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
     ? window.location.origin
     : '';
 
-  // Chuẩn hóa văn bản gửi đến TTS engine: Loại bỏ dấu ba chấm ..., dấu than lặp gây khựng ngắt dài
+  // Chuẩn hóa văn bản gửi đến TTS engine: Loại bỏ hoàn toàn dấu ba chấm ..., dấu ngắt nghỉ dài
   let ttsText = text.trim();
   ttsText = ttsText
-    .replace(/[…]+/g, ', ')
-    .replace(/\.{2,}/g, ', ')
-    .replace(/!{2,}/g, '! ')
-    .replace(/\?{2,}/g, '? ')
-    .replace(/[;:]+/g, ', ')
+    .replace(/[…]+/g, ' ')
+    .replace(/\.{2,}/g, ' ')
+    .replace(/!{2,}/g, ' ')
+    .replace(/\?{2,}/g, ' ')
+    .replace(/[;:]+/g, ' ')
     .replace(/,\s*,+/g, ', ')
     .replace(/\s+/g, ' ')
     .trim();

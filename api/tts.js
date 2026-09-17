@@ -49,10 +49,11 @@ export default async function handler(req, res) {
         const tmpFile = path.resolve(os.tmpdir(), `tts_vercel_${Date.now()}_${Math.random().toString(36).slice(2)}.mp3`);
         try {
           const cleanText = String(text || '')
-            .replace(/[…]+/g, ', ')
-            .replace(/\.{2,}/g, ', ')
-            .replace(/!{2,}/g, '! ')
-            .replace(/\?{2,}/g, '? ')
+            .replace(/[…]+/g, ' ')
+            .replace(/\.{2,}/g, ' ')
+            .replace(/!{2,}/g, ' ')
+            .replace(/\?{2,}/g, ' ')
+            .replace(/[;:]+/g, ' ')
             .replace(/,\s*,+/g, ', ')
             .replace(/\s+/g, ' ')
             .trim();
@@ -131,10 +132,11 @@ export default async function handler(req, res) {
         const tmpFile = path.resolve(os.tmpdir(), `tts_post_${Date.now()}_${Math.random().toString(36).slice(2)}.mp3`);
         try {
           const cleanText = String(text || '')
-            .replace(/[…]+/g, ', ')
-            .replace(/\.{2,}/g, ', ')
-            .replace(/!{2,}/g, '! ')
-            .replace(/\?{2,}/g, '? ')
+            .replace(/[…]+/g, ' ')
+            .replace(/\.{2,}/g, ' ')
+            .replace(/!{2,}/g, ' ')
+            .replace(/\?{2,}/g, ' ')
+            .replace(/[;:]+/g, ' ')
             .replace(/,\s*,+/g, ', ')
             .replace(/\s+/g, ' ')
             .trim();

@@ -116,22 +116,53 @@ export default function AIVoiceModule() {
 
   const handlePlayVoice = async () => {
     if (!scriptText || !scriptText.trim()) return;
+    if (isPlaying) {
+      stopVoiceAudio();
+      setIsPlaying(false);
+      return;
+    }
     setIsPlaying(true);
     try {
       const activeFullVoice = ALL_SYSTEM_VOICES.find(v => v.id === selectedVoiceId) || selectedVoice.rawVoice || selectedVoice;
-      await previewVoiceAudio(activeFullVoice, scriptText.trim(), {
-        rate: speed,
-        pitch: pitch,
-        emotion: selectedEmotion,
-        emotionIntensity,
-        stability,
-        styleExaggeration,
-        clarity,
-        warmth,
-        studioAcoustics,
-        isTest: true,
-        onEnd: () => setIsPlaying(false)
+      const rawLines = scriptText.split(/\r?\n/).map(s => s.trim()).filter(Boolean);
+      const splitSentences = [];
+      rawLines.forEach(line => {
+        const parts = line.match(/[^.!?\n]+[.!?]+|[^.!?\n]+$/g) || [line];
+        parts.forEach(p => {
+          const clean = p.trim();
+          if (clean) splitSentences.push(clean);
+        });
       });
+      const playList = splitSentences.length > 0 ? splitSentences : [scriptText.trim()];
+
+      let curIdx = 0;
+      const playNext = async () => {
+        if (curIdx >= playList.length) {
+          setIsPlaying(false);
+          return;
+        }
+        const textToPlay = playList[curIdx];
+        curIdx++;
+        if (curIdx < playList.length) {
+          prefetchTTSAudio(playList[curIdx], activeFullVoice, { rate: speed });
+        }
+        await previewVoiceAudio(activeFullVoice, textToPlay, {
+          rate: speed,
+          pitch: pitch,
+          emotion: selectedEmotion,
+          emotionIntensity,
+          stability,
+          styleExaggeration,
+          clarity,
+          warmth,
+          studioAcoustics,
+          isTest: true,
+          onEnd: () => {
+            playNext();
+          }
+        });
+      };
+      playNext();
     } catch (e) {
       console.warn('Lỗi phát giọng đọc:', e);
       setIsPlaying(false);

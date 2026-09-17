@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.3.9';
+export const APP_VERSION = '3.4.0';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Bản Cập Nhật v3.3.9 - Tối Ưu Đọc Kịch Bản Liên Tục Tuyệt Đối, Chia Câu Thông Minh & Tốc Độ Siêu Tốc',
-    description: '1. Đọc Kịch Bản Xuyên Suốt Không Dừng: Phân tích và chia câu chính xác theo ngữ nghĩa và dấu câu, giúp AI đọc liên tục trôi chảy không bị ngắt quãng bất kể cấu trúc đoạn văn bản; 2. Triệt Tiêu Độ Trễ 0ms Giữa Các Câu: Cắt tỉa khoảng lặng đuôi âm thanh và tải trước dữ liệu giọng đọc vào bộ nhớ đệm giúp chuyển câu tức thì; 3. Watchdog Phản Hồi Tức Thì: Cơ chế bảo vệ và chống kẹt luồng thông minh, cam kết kịch bản livestream luôn phát mượt mà 24/7.'
+    title: '👑 Bản Cập Nhật v3.4.0 - Xóa Bỏ Hoàn Toàn Khoảng Lặng Dấu Câu, Đọc Kịch Bản Xuyên Suốt Mượt Mà 24/7',
+    description: '1. Triệt Tiêu Toàn Diện Khoảng Lặng Dấu Câu: Toàn bộ dấu chấm lửng (...), dấu than (!), dấu hỏi (?) và dấu câu phức tạp được xử lý mượt mà, loại bỏ triệt để khoảng lặng/khựng nghỉ không mong muốn; 2. Đọc Xuyên Suốt Toàn Bộ Kịch Bản: Mọi phòng thu giọng nói (Kịch Bản Live, VoiceStudio, AIAvatarStudio, EventVoiceTester) tự động đọc liên tục từ câu đầu đến câu cuối không bị dừng ngắt quãng; 3. Khoảng Dừng Linh Hoạt 100% Theo Người Dùng: AI đọc liền mạch 0ms (khi cài 0s) hoặc nghỉ đúng số giây người dùng thiết lập.'
   }
 ];
 
