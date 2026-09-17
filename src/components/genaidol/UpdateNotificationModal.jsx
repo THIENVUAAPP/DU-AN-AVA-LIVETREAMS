@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.3.8';
+export const APP_VERSION = '3.3.9';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Bản Cập Nhật v3.3.8 - Đột Phá Đọc Xuyên Suốt Không Dừng, Triệt Tiêu Độ Trễ Dấu Câu & Cắt Tỉa Khoảng Lặng Chuẩn Phòng Thu',
-    description: '1. Triệt Tiêu Độ Trễ Tại Dấu Chấm & Dấu Chấm Than: Chuẩn hoá toàn bộ ký tự chấm lửng (...), chấm than (!) và chấm (.) thành nhịp ngắt hơi tự nhiên, loại bỏ hoàn toàn hiện tượng khựng dừng lâu giữa các câu; 2. Cắt Tỉa Khoảng Lặng Đuôi Âm Thông Minh: Tự động phát hiện và loại bỏ khoảng lặng đuôi sau khi đọc xong, kích hoạt câu tiếp theo ngay lập tức 0ms; 3. Giữ Trọn Cảm Xúc & Ngữ Điệu Tự Nhiên: Giọng đọc chân thực, truyền cảm, cuốn hút và chuyên nghiệp như MC truyền hình.'
+    title: '👑 Bản Cập Nhật v3.3.9 - Tối Ưu Đọc Kịch Bản Liên Tục Tuyệt Đối, Chia Câu Thông Minh & Tốc Độ Siêu Tốc',
+    description: '1. Đọc Kịch Bản Xuyên Suốt Không Dừng: Phân tích và chia câu chính xác theo ngữ nghĩa và dấu câu, giúp AI đọc liên tục trôi chảy không bị ngắt quãng bất kể cấu trúc đoạn văn bản; 2. Triệt Tiêu Độ Trễ 0ms Giữa Các Câu: Cắt tỉa khoảng lặng đuôi âm thanh và tải trước dữ liệu giọng đọc vào bộ nhớ đệm giúp chuyển câu tức thì; 3. Watchdog Phản Hồi Tức Thì: Cơ chế bảo vệ và chống kẹt luồng thông minh, cam kết kịch bản livestream luôn phát mượt mà 24/7.'
   }
 ];
 

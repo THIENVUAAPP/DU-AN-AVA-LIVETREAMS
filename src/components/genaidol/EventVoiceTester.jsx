@@ -333,20 +333,23 @@ export default function EventVoiceTester({
 
     processed = cleanTextForVoiceSpeech(processed);
 
-    // Tách theo từng dòng (mỗi dòng là một đoạn/câu thoại hoàn chỉnh)
+    // Tách theo dòng hoặc câu độc lập để mọi cấu trúc văn bản đều được đọc mạch lạc, liên tục
     const lines = processed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
-    
-    // Nếu có dòng nào quá dài (>250 ký tự), tự động phân tách thêm theo dấu chấm ngắt câu
     const finalSentences = [];
     for (const line of lines) {
-      if (line.length > 250) {
-        const subParts = line.match(/[^.!?]+[.!?]+|[^.!?]+$/g) || [line];
-        for (const sub of subParts) {
-          const s = sub.trim();
-          if (s) finalSentences.push(s);
+      let speakerPrefix = '';
+      let body = line;
+      const tagMatch = line.match(/^(\[?[a-zA-Z0-9_\u00C0-\u1EF9\s]+\]?\s*:\s*)(.*)$/);
+      if (tagMatch) {
+        speakerPrefix = tagMatch[1];
+        body = tagMatch[2];
+      }
+      const parts = body.match(/[^.!?\n]+[.!?]+|[^.!?\n]+$/g) || [body];
+      for (const part of parts) {
+        const s = part.trim();
+        if (s && s.length > 0) {
+          finalSentences.push(speakerPrefix ? `${speakerPrefix}${s}` : s);
         }
-      } else {
-        finalSentences.push(line);
       }
     }
 
@@ -450,9 +453,9 @@ export default function EventVoiceTester({
     const speakerRate = (matchedSpeakerAvatar?.rate ?? 1.0) * (speedRef.current || 1.0);
     const speakerVolume = (matchedSpeakerAvatar?.volume ?? 1.0) * (volumeRef.current || 1.0);
 
-    // Watchdog an toàn: Tối thiểu 60s hoặc 450ms/ký tự để câu dài đọc trọn vẹn TUYỆT ĐỐI KHÔNG BỊ BỎ DÒNG
+    // Watchdog an toàn: Thời gian tối đa cho 1 câu đọc ngắn (tối đa 6-12s tùy độ dài), chuyển ngay câu tiếp theo không bao giờ bị treo
     const cleanLen = (cleanSentenceText || '').length;
-    const dynamicTimeoutMs = Math.max(60000, cleanLen * 450);
+    const dynamicTimeoutMs = Math.max(5000, Math.ceil((cleanLen / 8) + 4) * 1000);
     let watchdogTimer = setTimeout(() => {
       if (isPlayingRef.current && currentSentenceIdxRef.current === index) {
         console.warn(`[EventVoiceTester] Watchdog safety timeout for sentence ${index} (len: ${cleanLen}), advancing.`);

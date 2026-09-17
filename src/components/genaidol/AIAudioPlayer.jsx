@@ -226,7 +226,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       .map(s => s.trim())
       .filter(Boolean);
 
-    return rawSentences.map((s, idx) => ({
+    const splitSentences = [];
+    rawSentences.forEach(line => {
+      const parts = line.match(/[^.!?\n]+[.!?]+|[^.!?\n]+$/g) || [line];
+      parts.forEach(p => {
+        const clean = p.trim();
+        if (clean) splitSentences.push(clean);
+      });
+    });
+
+    return splitSentences.map((s, idx) => ({
       id: `script_${idx}`,
       type: 'script',
       text: s.trim(),
@@ -422,9 +431,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         if (nextPriVoice) prefetchTTSAudio(nextPri.text, nextPriVoice);
       }
 
-      // Watchdog an toàn: Thời gian tối đa cho 1 câu đọc (tối thiểu 60s hoặc 450ms/ký tự) để TUYỆT ĐỐI KHÔNG BỎ DÒNG
+      // Watchdog an toàn: Tự động phục hồi cực nhanh nếu mạng chậm/lỗi buffer âm thanh, không bao giờ để kịch bản bị đứng
       const cleanLen = (item.text || '').length;
-      const dynamicTimeoutMs = Math.max(60000, cleanLen * 450);
+      const dynamicTimeoutMs = Math.max(5000, Math.ceil((cleanLen / 8) + 4) * 1000);
       let watchdogTimer = setTimeout(() => {
         if (isBusyRef.current) {
           console.warn('[AIAudioPlayer] Watchdog safety reset busy state after timeout (length:', cleanLen, ')');

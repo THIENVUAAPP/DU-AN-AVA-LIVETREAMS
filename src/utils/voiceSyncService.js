@@ -7067,29 +7067,39 @@ export function parseMultiCharacterScript(text, config = null) {
   const multiConfig = config || getMultiAvatarConfig();
   const rawLines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
+  const result = [];
+  let currentIdx = 0;
+
   // 🛡️ NẾU CHẾ ĐỘ MULTI-AVATAR ĐANG TẮT (ENABLED === FALSE): TRẢ VỀ CHẾ ĐỘ 1 AVATAR ĐƠN TIÊU CHUẨN (LẤY VOICE BỘ NÃO IDOL)
   if (!multiConfig.enabled) {
     const idolAvatar = multiConfig.avatars?.[0] || DEFAULT_MULTI_AVATAR_CONFIG.avatars[0];
     const voiceObj = resolveEffectiveVoice('idol', idolAvatar.voiceId, 'avatar_1');
-    return rawLines.map((line, idx) => {
+    rawLines.forEach((line) => {
       let cleanText = line.replace(/^\[([^\]]+)\]\s*:\s*/i, '').replace(/^([a-zA-Z0-9_\u00C0-\u1EF9\s]{2,20})\s*:\s*/i, '').trim();
       if (!cleanText) cleanText = line;
-      return {
-        index: idx,
-        rawLine: line,
-        text: cleanText,
-        avatarId: idolAvatar.id || 'avatar_1',
-        avatarName: idolAvatar.name || 'Idol',
-        role: idolAvatar.role || 'idol',
-        voiceId: voiceObj.id,
-        voiceObj,
-        volume: voiceObj.volume ?? idolAvatar.volume ?? 1.0,
-        rate: voiceObj.rate ?? idolAvatar.rate ?? 1.0
-      };
+      const sentenceParts = cleanText.match(/[^.!?\n]+[.!?]+|[^.!?\n]+$/g) || [cleanText];
+      sentenceParts.forEach((part) => {
+        const trimmed = part.trim();
+        if (trimmed) {
+          result.push({
+            index: currentIdx++,
+            rawLine: line,
+            text: trimmed,
+            avatarId: idolAvatar.id || 'avatar_1',
+            avatarName: idolAvatar.name || 'Idol',
+            role: idolAvatar.role || 'idol',
+            voiceId: voiceObj.id,
+            voiceObj,
+            volume: voiceObj.volume ?? idolAvatar.volume ?? 1.0,
+            rate: voiceObj.rate ?? idolAvatar.rate ?? 1.0
+          });
+        }
+      });
     });
+    return result;
   }
 
-  return rawLines.map((line, idx) => {
+  rawLines.forEach((line, lineIdx) => {
     let matchedAvatar = null;
     let cleanText = line;
 
@@ -7122,28 +7132,36 @@ export function parseMultiCharacterScript(text, config = null) {
     if (!matchedAvatar) {
       const activeAvatars = (multiConfig.avatars || []).slice(0, multiConfig.activeCount || 2);
       const activeCount = Math.max(1, activeAvatars.length);
-      matchedAvatar = activeAvatars[idx % activeCount] || multiConfig.avatars[0];
+      matchedAvatar = activeAvatars[lineIdx % activeCount] || multiConfig.avatars[0];
     }
 
     // ⚡ Lấy voice chuẩn xác 100% từ Tab Bộ Não AI tương ứng với từng nhân vật
     const voiceObj = resolveEffectiveVoice(matchedAvatar.role || 'idol', matchedAvatar.voiceId, matchedAvatar.id);
 
-    return {
-      index: idx,
-      rawLine: line,
-      text: cleanText,
-      avatarId: matchedAvatar.id,
-      avatarName: matchedAvatar.name,
-      avatarRole: matchedAvatar.role,
-      avatarTag: matchedAvatar.tag,
-      voiceId: voiceObj.id,
-      voiceObj,
-      idleVideo: matchedAvatar.idleVideo,
-      talkVideo: matchedAvatar.talkVideo,
-      volume: voiceObj.volume ?? matchedAvatar.volume ?? 1.0,
-      rate: voiceObj.rate ?? matchedAvatar.rate ?? 1.0
-    };
+    const sentenceParts = cleanText.match(/[^.!?\n]+[.!?]+|[^.!?\n]+$/g) || [cleanText];
+    sentenceParts.forEach((part) => {
+      const trimmed = part.trim();
+      if (trimmed) {
+        result.push({
+          index: currentIdx++,
+          rawLine: line,
+          text: trimmed,
+          avatarId: matchedAvatar.id,
+          avatarName: matchedAvatar.name,
+          avatarRole: matchedAvatar.role,
+          avatarTag: matchedAvatar.tag,
+          voiceId: voiceObj.id,
+          voiceObj,
+          idleVideo: matchedAvatar.idleVideo,
+          talkVideo: matchedAvatar.talkVideo,
+          volume: voiceObj.volume ?? matchedAvatar.volume ?? 1.0,
+          rate: voiceObj.rate ?? matchedAvatar.rate ?? 1.0
+        });
+      }
+    });
   });
+
+  return result;
 }
 
 // ==================== FAVORITE VOICES STORAGE ====================
