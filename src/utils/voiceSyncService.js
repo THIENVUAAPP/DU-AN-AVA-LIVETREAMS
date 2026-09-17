@@ -7512,13 +7512,13 @@ export function trimAudioBufferSilence(audioBuffer) {
       channelData.push(audioBuffer.getChannelData(c));
     }
 
-    // Cửa sổ trượt 20ms tính năng lượng RMS và biên độ đỉnh Peak
-    const windowSize = Math.max(16, Math.floor(sampleRate * 0.02)); // 20ms window
-    const hopSize = Math.max(8, Math.floor(sampleRate * 0.005));   // 5ms hop step
-    const rmsThreshold = 0.0004; // Ngưỡng nhạy cao bắt trọn vẹn âm thì thầm và dấu nặng
-    const peakThreshold = 0.0018;
-    const leadPadding = Math.floor(sampleRate * 0.025);    // 25ms lead-in
-    const safetyPadding = Math.floor(sampleRate * 0.20);   // 200ms safety padding bảo toàn 100% âm đuôi, âm 'gạo', '-n', '-ng', '-t', '-c', '-nh'
+    // Cửa sổ trượt 15ms tính năng lượng RMS và biên độ đỉnh Peak
+    const windowSize = Math.max(16, Math.floor(sampleRate * 0.015)); // 15ms window
+    const hopSize = Math.max(8, Math.floor(sampleRate * 0.003));     // 3ms hop step
+    const rmsThreshold = 0.0003; // Ngưỡng nhạy cao bắt trọn vẹn âm thì thầm và dấu nặng
+    const peakThreshold = 0.0015;
+    const leadPadding = Math.floor(sampleRate * 0.010);              // 10ms lead-in chống click
+    const safetyPadding = Math.floor(sampleRate * 0.060);            // 60ms safety padding bảo toàn 100% âm đuôi (-n, -ng, -nh, -t, -c, 'gạo') nhưng loại bỏ hoàn toàn khoảng lặng thừa
 
     // 1. Quét tìm vị trí bắt đầu có âm thanh (Start Index)
     let startIndex = 0;
@@ -7557,21 +7557,15 @@ export function trimAudioBufferSilence(audioBuffer) {
       }
       const rms = Math.sqrt(sumSq / windowSize);
       if (rms > rmsThreshold || maxP > peakThreshold) {
-        // Cộng 200ms safety padding: bảo toàn tuyệt đối âm đuôi ("bánh gạo", "-n", "-ng", "-t", "-c", "-nh")
+        // Cộng 60ms safety padding: bảo toàn trọn vẹn âm đuôi mà KHÔNG có khoảng lặng thừa
         endIndex = Math.min(length - 1, i + windowSize + safetyPadding);
         break;
       }
     }
 
-    // Bảo vệ tuyệt đối: Nếu khoảng lặng ở đuôi file âm thanh ngắn hơn 280ms thì giữ nguyên vẹn 100%, không cắt cụt
-    const tailSilenceSec = (length - endIndex) / sampleRate;
-    if (tailSilenceSec < 0.28 && startIndex < Math.floor(sampleRate * 0.04)) {
-      return audioBuffer;
-    }
-
     const trimmedLength = endIndex - startIndex + 1;
-    // Nếu chỉ cắt được dưới 60ms thì giữ nguyên
-    if (trimmedLength <= 0 || trimmedLength >= length - Math.floor(sampleRate * 0.06)) {
+    // Nếu chỉ cắt được dưới 20ms thì giữ nguyên
+    if (trimmedLength <= 0 || trimmedLength >= length - Math.floor(sampleRate * 0.02)) {
       return audioBuffer;
     }
 
@@ -8087,6 +8081,7 @@ export async function prefetchTTSAudio(text, voice = null, options = {}) {
     const mergedVoice = {
       ...(voice || {}),
       rate: options.rate !== undefined ? options.rate : voice?.rate,
+      pitch: options.pitch !== undefined ? options.pitch : voice?.pitch,
       volume: options.volume !== undefined ? options.volume : voice?.volume
     };
 

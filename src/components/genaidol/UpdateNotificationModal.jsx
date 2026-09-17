@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.4.3';
+export const APP_VERSION = '3.4.4';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v3.4.3 - Toàn Bộ Chế Độ Chờ Về 0s, Đọc Kịch Bản Liền Mạch Tuyệt Đối 0ms & Loại Bỏ Hoàn Toàn Gián Đoạn 30-40s',
-    description: '1. Toàn Bộ Chế Độ Chờ Voice Về 0.0s: Thiết lập mặc định 0.0s (Liền mạch 0ms - Không dừng) cho toàn bộ kịch bản bán hàng và kịch bản idol; đọc liên tục xuyên suốt từ câu đầu đến câu cuối không ngắt quãng kiểu cà nhấp, không chờ đợi; 2. Loại Bỏ Triệt Để Gián Đoạn Kịch Bản 30-40s: Vô hiệu hóa 100% vòng lặp IDLE và sự kiện phụ chen ngang khi đang phát kịch bản trên thanh công cụ ▶️ Phát Kịch Bản Live hoặc chạy thử kịch bản; 3. Tối Ưu Tốc Độ TTS Zero-Latency: Bộ nhớ đệm tái sử dụng endpoint TTS tức thì cùng cơ chế timeout AbortSignal 2.5s, loại bỏ dứt điểm tình trạng treo chờ mạng 10-20 giây giữa các câu.'
+    title: '⚡ Bản Cập Nhật v3.4.4 - Nạp Trước Toàn Bộ Kịch Bản Vào RAM Cache 0ms & Loại Bỏ Triệt Để 2-4 Giây Chờ Khoảng Lặng Thừa',
+    description: '1. Tải Trước Toàn Bộ Kịch Bản Vào RAM Cache (Parallel Pre-fetch 0ms): Toàn bộ các câu thoại trong kịch bản bán hàng, kịch bản Idol và phòng Live được tổng hợp song song ngầm ngay từ đầu; phát câu nào có ngay AudioBuffer trong RAM 0ms không phải chờ mạng; 2. Cắt Gọt Khoảng Lặng Chuẩn Xác Từng Mili-giây: Cắt triệt để 250-500ms khoảng lặng vô hình ở đầu/đuôi file EdgeTTS, chỉ giữ đúng 10ms mở đầu và 60ms an toàn đuôi câu (bảo toàn nguyên vẹn phụ âm c, t, p, ch, ng và từ ngữ như bánh gạo lứt); kịch bản đọc liền mạch thông suốt như người thật; 3. Giữ Trọn Ngữ Điệu Cảm Xúc & Nhấn Nhá: Giọng đọc tự nhiên, cuốn hút, giàu năng lượng chốt đơn; khi có bình luận khách hàng thì trả lời xong tự động nối tiếp kịch bản mượt mà.'
   }
 ];
 

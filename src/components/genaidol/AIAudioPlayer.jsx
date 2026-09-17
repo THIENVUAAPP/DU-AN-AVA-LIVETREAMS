@@ -254,6 +254,32 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     }));
   };
 
+  // ⚡ TẢI TRƯỚC TOÀN BỘ KỊCH BẢN VÀO RAM CACHE (PARALLEL PRE-FETCH 0MS DELAY)
+  const prefetchAllScriptItems = (items) => {
+    if (!items || !items.length) return;
+    items.forEach((item) => {
+      if (!item?.text) return;
+      const v = item.voiceObj || resolveEffectiveVoice(item.role || item.voiceChannel || 'idol', item.voiceId, item.avatarId);
+      if (v) {
+        prefetchTTSAudio(item.text, v, {
+          rate: item.rate !== undefined ? item.rate : v.rate,
+          pitch: item.pitch !== undefined ? item.pitch : v.pitch,
+          volume: item.volume !== undefined ? item.volume : v.volume
+        });
+      }
+    });
+  };
+
+  // Pre-warm RAM cache ngay khi AIAudioPlayer mount để khi bấm Live là phát 0ms ngay
+  useEffect(() => {
+    try {
+      const scriptItems = loadScriptFromStorage();
+      if (scriptItems && scriptItems.length > 0) {
+        prefetchAllScriptItems(scriptItems);
+      }
+    } catch (e) {}
+  }, []);
+
   // Khởi động khi isScriptRunning được kích hoạt
   useEffect(() => {
     if (isScriptRunning) {
@@ -272,6 +298,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         isPlayingRef.current = true;
         isBusyRef.current = false;
         if (scriptItems.length > 0) {
+          prefetchAllScriptItems(scriptItems);
           playItem(scriptItems[0], true);
         }
       } catch (err) {
@@ -298,6 +325,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         setCurrentIndex(0);
         currentIndexRef.current = 0;
         priorityQueueRef.current = [];
+        prefetchAllScriptItems(scriptItems);
         if (isScriptRunning || isPlayingRef.current) {
           setIsPlaying(true);
           isPlayingRef.current = true;
@@ -421,20 +449,32 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         }));
       }
 
-      // 🚀 LOOKAHEAD PRE-FETCHING: Tải trước ngầm 3 câu tiếp theo (N+1, N+2, N+3) vào RAM AudioBuffer
-      if (isScriptItem) {
-        for (let offset = 1; offset <= 3; offset++) {
-          const nextIdx = currentIndexRef.current + offset;
-          if (queueRef.current && queueRef.current[nextIdx]) {
-            const nextItem = queueRef.current[nextIdx];
-            const nextVoice = resolveEffectiveVoice(nextItem.role || nextItem.voiceChannel || 'idol', nextItem.voiceId, nextItem.avatarId);
-            if (nextVoice) prefetchTTSAudio(nextItem.text, nextVoice);
+      // 🚀 LOOKAHEAD PRE-FETCHING: Tải trước ngầm các câu tiếp theo vào RAM AudioBuffer với đầy đủ thông số rate, pitch
+      if (isScriptItem && queueRef.current) {
+        for (let offset = 1; offset <= 5; offset++) {
+          const nextIdx = (currentIndexRef.current + offset) % queueRef.current.length;
+          const nextItem = queueRef.current[nextIdx];
+          if (nextItem) {
+            const nextVoice = nextItem.voiceObj || resolveEffectiveVoice(nextItem.role || nextItem.voiceChannel || 'idol', nextItem.voiceId, nextItem.avatarId);
+            if (nextVoice) {
+              prefetchTTSAudio(nextItem.text, nextVoice, {
+                rate: nextItem.rate !== undefined ? nextItem.rate : nextVoice.rate,
+                pitch: nextItem.pitch !== undefined ? nextItem.pitch : nextVoice.pitch,
+                volume: nextItem.volume !== undefined ? nextItem.volume : nextVoice.volume
+              });
+            }
           }
         }
       } else if (priorityQueueRef.current.length > 0) {
         const nextPri = priorityQueueRef.current[0];
-        const nextPriVoice = resolveEffectiveVoice(nextPri.role || nextPri.voiceChannel || 'comment', nextPri.voiceId, nextPri.avatarId);
-        if (nextPriVoice) prefetchTTSAudio(nextPri.text, nextPriVoice);
+        const nextPriVoice = nextPri.voiceObj || resolveEffectiveVoice(nextPri.role || nextPri.voiceChannel || 'comment', nextPri.voiceId, nextPri.avatarId);
+        if (nextPriVoice) {
+          prefetchTTSAudio(nextPri.text, nextPriVoice, {
+            rate: nextPri.rate !== undefined ? nextPri.rate : nextPriVoice.rate,
+            pitch: nextPri.pitch !== undefined ? nextPri.pitch : nextPriVoice.pitch,
+            volume: nextPri.volume !== undefined ? nextPri.volume : nextPriVoice.volume
+          });
+        }
       }
 
       // Watchdog an toàn: Tự động phục hồi cực nhanh nếu mạng chậm/lỗi buffer âm thanh, không bao giờ để kịch bản bị đứng
@@ -613,12 +653,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         isPlayingRef.current = true;
         isBusyRef.current = false;
         if (scriptItems.length > 0) {
-          for (let i = 1; i <= 3; i++) {
-            if (scriptItems[i]) {
-              const v = resolveEffectiveVoice(scriptItems[i].role || scriptItems[i].voiceChannel || 'idol', scriptItems[i].voiceId, scriptItems[i].avatarId);
-              if (v) prefetchTTSAudio(scriptItems[i].text, v);
-            }
-          }
+          prefetchAllScriptItems(scriptItems);
           playItem(scriptItems[0], true);
         }
       } catch (e) {
@@ -640,6 +675,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       const scriptItems = loadScriptFromStorage(customScriptText);
       setQueue(scriptItems);
       queueRef.current = scriptItems;
+      prefetchAllScriptItems(scriptItems);
     },
     enqueueItem: (text, action, isImmediate = false, options = {}) => {
       // 🛡️ CHẶN 100% BÌNH LUẬN XEN VÀO KHI ĐANG PHÁT CHẠY THỬ KỊCH BẢN (TESTER MODE)

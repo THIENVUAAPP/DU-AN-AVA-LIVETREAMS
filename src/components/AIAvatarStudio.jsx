@@ -201,6 +201,11 @@ export default function AIAvatarStudio({ isLive, aiAvatarFeatureEnabled }) {
       });
       const playList = splitSentences.length > 0 ? splitSentences : [scriptText.trim()];
 
+      // Tải trước TOÀN BỘ kịch bản song song vào RAM Cache
+      playList.forEach(item => {
+        prefetchTTSAudio(item, activeVoice);
+      });
+
       let curIdx = 0;
       const playNext = async () => {
         if (curIdx >= playList.length) {
@@ -209,8 +214,10 @@ export default function AIAvatarStudio({ isLive, aiAvatarFeatureEnabled }) {
         }
         const textToPlay = playList[curIdx];
         curIdx++;
-        if (curIdx < playList.length) {
-          prefetchTTSAudio(playList[curIdx], activeVoice);
+        for (let off = 0; off < 4; off++) {
+          if (curIdx + off < playList.length) {
+            prefetchTTSAudio(playList[curIdx + off], activeVoice);
+          }
         }
         await previewVoiceAudio(activeVoice, textToPlay, {
           priority: true,

@@ -135,6 +135,11 @@ export default function AIVoiceModule() {
       });
       const playList = splitSentences.length > 0 ? splitSentences : [scriptText.trim()];
 
+      // Tải trước TOÀN BỘ kịch bản song song vào RAM Cache
+      playList.forEach(item => {
+        prefetchTTSAudio(item, activeFullVoice, { rate: speed, pitch });
+      });
+
       let curIdx = 0;
       const playNext = async () => {
         if (curIdx >= playList.length) {
@@ -143,8 +148,10 @@ export default function AIVoiceModule() {
         }
         const textToPlay = playList[curIdx];
         curIdx++;
-        if (curIdx < playList.length) {
-          prefetchTTSAudio(playList[curIdx], activeFullVoice, { rate: speed });
+        for (let off = 0; off < 4; off++) {
+          if (curIdx + off < playList.length) {
+            prefetchTTSAudio(playList[curIdx + off], activeFullVoice, { rate: speed, pitch });
+          }
         }
         await previewVoiceAudio(activeFullVoice, textToPlay, {
           rate: speed,
