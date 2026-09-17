@@ -285,6 +285,40 @@ export function normalizeCurrenciesAndUnits(text) {
 }
 
 // 6. LÀM SẠCH KÝ HIỆU TRÌNH BÀY & HASHTAG / MENTION / EMOJI
+export function cleanUserNameForSpeech(rawName) {
+  if (!rawName || typeof rawName !== 'string') return 'bạn';
+  let name = rawName.trim();
+  
+  // Loại bỏ @, dấu chấm, gạch dưới ở đầu/cuối
+  name = name.replace(/^[@#\._\-]+/, '').replace(/[\._\-]+$/, '').trim();
+  
+  // Nếu rỗng hoặc chỉ có 1 ký tự (vd: 'N', 'n', 'A', 'T', 'x') -> quy về 'bạn'
+  if (!name || name.length <= 1) return 'bạn';
+  
+  // Nếu là username mặc định kiểu tiktok user (user123456, id888, live_user...) -> 'bạn'
+  if (/^(?:user|tiktok|tiktokuser|id|khach|viewer|member|account)[\d_]*$/i.test(name)) {
+    return 'bạn';
+  }
+  
+  // Nếu chỉ toàn chữ số hoặc ký tự đặc biệt -> 'bạn'
+  if (/^[\d\W_]+$/.test(name)) {
+    return 'bạn';
+  }
+  
+  // Nếu đã có tiền tố xưng hô (bạn/anh/chị/em...)
+  if (/^(?:bạn|anh|chị|em|cô|chú|bác|quý khách|khách hàng)\s+/i.test(name)) {
+    const sub = name.replace(/^(?:bạn|anh|chị|em|cô|chú|bác|quý khách|khách hàng)\s+/i, '').trim();
+    if (sub.length <= 1) return 'bạn';
+    return name;
+  }
+  
+  // Cắt bớt đuôi số ngẫu nhiên quá dài (vd: "hoanglong9827364" -> "hoanglong")
+  name = name.replace(/\d{4,}$/, '').trim();
+  if (name.length <= 1) return 'bạn';
+  
+  return name;
+}
+
 export function cleanSpokenPunctuation(text) {
   if (!text) return '';
   let s = text;
@@ -296,8 +330,11 @@ export function cleanSpokenPunctuation(text) {
   // Hashtag #AI -> AI
   s = s.replace(/#([\p{L}\d_]+)/gu, '$1');
 
-  // Mention @username -> bạn username
-  s = s.replace(/@([\p{L}\d_\.]+)/gu, 'bạn $1');
+  // Mention @username -> bạn hoặc tên user chuẩn hóa
+  s = s.replace(/@([\p{L}\d_\.]+)/gu, (match, p1) => {
+    const cleaned = cleanUserNameForSpeech(p1);
+    return cleaned === 'bạn' ? 'bạn' : `bạn ${cleaned}`;
+  });
 
   // Loại bỏ các ký tự Markdown
   s = s.replace(/[*_~`]/g, '');
@@ -348,7 +385,12 @@ export function masterNormalizeVietnameseSpeech(rawText, options = {}) {
     return `mã O-T-P là ${spelled}`;
   });
 
-  // 8. Định dạng dấu câu và khoảng trắng
+  // 8. LOẠI BỎ TRIỆT ĐỂ LỖI XƯNG HÔ CHỮ CÁI ĐƠN KIỂU "Bạn N", "Bạn En-nờ", "Anh T", "Chị H"
+  text = text.replace(/\b(bạn|anh|chị|em|cô|chú|bác|đại gia|khách hàng)\s+[A-Za-z]\b/gi, '$1');
+  text = text.replace(/\b(bạn|anh|chị|em|cô|chú|bác|đại gia|khách hàng)\s+(?:En-nờ|Tê|Hát|Vê|Xê|Đê|Ít|Y-dài|Dê|Ca|Em-mờ|Quy)\b/gi, '$1');
+  text = text.replace(/\b(bạn)\s+bạn\b/gi, 'bạn');
+
+  // 9. Định dạng dấu câu và khoảng trắng
   text = text.replace(/[^\S\r\n]+/g, ' ');
   text = text.replace(/\s+([,\.!?:;])/g, '$1');
   text = text.replace(/([,\.!?:;])(?!\s|$)/g, '$1 ');

@@ -3,7 +3,7 @@ import { getAllLiveMedia } from '../lib/liveKhoDB';
 import { askGeminiLiveAi } from '../lib/geminiClient';
 import autoPinProductService from '../utils/autoPinProductService';
 import { resolveEffectiveVoice } from '../utils/voiceSyncService';
-import { isSmartSpamOrToxicComment } from '../utils/vietnamesePronunciationMaster';
+import { isSmartSpamOrToxicComment, cleanUserNameForSpeech } from '../utils/vietnamesePronunciationMaster';
 
 export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack = 'talk' }) {
   const [liveMedia, setLiveMedia] = useState([]);
@@ -264,8 +264,21 @@ function getSequentialSample(sampleAnswers, indexRef, fallback = '') {
 function fillTemplate(template, vars = {}) {
   let result = template || '';
   Object.keys(vars).forEach(key => {
-    const regex = new RegExp(`\\{${key}\\}`, 'gi');
-    result = result.replace(regex, vars[key]);
+    const val = vars[key];
+    if (key === 'user') {
+      const cleanUser = cleanUserNameForSpeech(val);
+      if (cleanUser === 'bạn' || cleanUser === 'Bạn') {
+        result = result.replace(/\bbạn\s+\{user\}/gi, 'bạn');
+        result = result.replace(/\banh\s+\{user\}/gi, 'anh');
+        result = result.replace(/\bchị\s+\{user\}/gi, 'chị');
+        result = result.replace(/\{user\}/gi, 'bạn');
+      } else {
+        result = result.replace(/\{user\}/gi, cleanUser);
+      }
+    } else {
+      const regex = new RegExp(`\\{${key}\\}`, 'gi');
+      result = result.replace(regex, val);
+    }
   });
   return result;
 }
@@ -278,7 +291,9 @@ function fillTemplate(template, vars = {}) {
     const configs = getSavedEventConfigs();
     let replyText = '';
     let shouldAction = null;
-    const userName = (payload?.name || payload?.username || 'Bạn').trim();
+    const rawUserName = (payload?.name || payload?.username || 'Bạn').trim();
+    const userName = cleanUserNameForSpeech(rawUserName);
+    const userDisplay = (userName === 'bạn' || userName === 'Bạn') ? 'bạn' : (userName.startsWith('bạn ') || userName.startsWith('anh ') || userName.startsWith('chị ') ? userName : `bạn ${userName}`);
     const isTestMode = payload?.isTest === true;
 
     // Xác định tab sự kiện tương ứng để lấy cấu hình và giọng đọc (Voice) riêng biệt
