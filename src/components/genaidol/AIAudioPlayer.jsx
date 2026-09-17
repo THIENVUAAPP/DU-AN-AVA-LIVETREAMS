@@ -309,9 +309,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       if (onAudioPlayStateChange) onAudioPlayStateChange(true);
       
       const channel = item.voiceChannel || (item.type === 'script' ? 'idol' : item.type === 'comment' ? 'comment' : 'manager');
-      let activeVoice = item.voiceObj || resolveEffectiveVoice(channel, item.voiceId);
+      // ⚡ ƯU TIÊN SỐ 1 (CAO NHẤT 100%): LẤY VOICE ĐÃ SETUP TRONG TAB BỘ NÃO AI
+      let activeVoice = resolveEffectiveVoice(item.role || channel, item.voiceId, item.avatarId);
       if (!activeVoice) {
-        activeVoice = resolveEffectiveVoice(channel, null);
+        activeVoice = item.voiceObj || resolveEffectiveVoice(channel, null);
       }
       
       if (activeVoice?.enabled === false) {
@@ -364,12 +365,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         const nextIdx = currentIndexRef.current + 1;
         if (queueRef.current && queueRef.current[nextIdx]) {
           const nextItem = queueRef.current[nextIdx];
-          const nextVoice = nextItem.voiceObj || (nextItem.voiceChannel === 'idol' ? (latestDualVoices.idolVoice || voiceConfig.idolVoice) : (latestDualVoices.managerVoice || voiceConfig.managerVoice));
+          const nextVoice = resolveEffectiveVoice(nextItem.role || nextItem.voiceChannel || 'idol', nextItem.voiceId, nextItem.avatarId);
           if (nextVoice) prefetchTTSAudio(nextItem.text, nextVoice);
         }
       } else if (priorityQueueRef.current.length > 0) {
         const nextPri = priorityQueueRef.current[0];
-        const nextPriVoice = nextPri.voiceObj || (nextPri.voiceChannel === 'idol' ? (latestDualVoices.idolVoice || voiceConfig.idolVoice) : (latestDualVoices.managerVoice || voiceConfig.managerVoice));
+        const nextPriVoice = resolveEffectiveVoice(nextPri.role || nextPri.voiceChannel || 'comment', nextPri.voiceId, nextPri.avatarId);
         if (nextPriVoice) prefetchTTSAudio(nextPri.text, nextPriVoice);
       }
 

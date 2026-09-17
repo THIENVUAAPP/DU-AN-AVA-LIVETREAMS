@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.2.4';
+export const APP_VERSION = '3.2.5';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Bản Cập Nhật v3.2.4 - Phát Âm Tên Riêng Chuẩn Tuyệt Đối 100%, Phát Kịch Bản Tuần Hoàn Chi Tiết & Tối Ưu Video 4K/8K Siêu Mượt',
-    description: '1. Chuẩn Hóa Phát Âm Tên Riêng, Tên User, Địa Danh: Xóa bỏ hoàn toàn việc thay thế chữ cái đơn (En-nờ, Tê, Hát...), đảm bảo toàn bộ tên bạn, anh, chị, tên người dùng, tên tiếng Anh, địa danh và từ khóa được đọc nguyên bản, chuẩn xác 100% tiếng Việt; 2. Phát Kịch Bản Chi Tiết & Tuần Hoàn Vô Tận (Infinite Loop): Tự động phát trọn vẹn 100% từng câu thoại trong kịch bản cài sẵn và kịch bản Bộ Não AI, hết thời lượng setup tự động lặp lại từ đầu liên tục cho đến khi kết thúc phiên Live; 3. Nâng Cấp Luồng Video 4K & 8K Siêu Nét, Siêu Mượt: Tối ưu hóa giải mã tăng tốc phần cứng GPU 60 FPS cho cả Cửa Sổ Bắt Hình (Window Capture) và Đường Link Trực Tiếp (TikTok Live Studio / OBS), triệt tiêu 100% tình trạng giật, lag, đứng hình.'
+    title: '👑 Bản Cập Nhật v3.2.5 - Chuẩn Hóa Voice Tối Thượng Theo Tab Bộ Não AI & Từng Nhân Vật',
+    description: '1. Ưu Tiên Tuyệt Đối Tab Bộ Não AI: Mọi giọng đọc phát ra (kịch bản idol, trợ lý, trả lời bình luận, game, đa nhân vật) bắt buộc tuân theo 100% cấu hình voice trong Tab Bộ Não AI là mức ưu tiên cao nhất; 2. Chuẩn Xác Theo Từng Nhân Vật Chỉ Định: Từng Avatar và vai trò (Idol chính, Trợ lý/Quản lý chốt đơn, BLV Game) được gán đúng voice đã setup, loại bỏ hoàn toàn việc sử dụng voice ngẫu nhiên hoặc lung tung; 3. Cơ Chế Fallback Thông Minh: Chỉ khi trong Bộ Não AI chưa setup voice thì hệ thống mới sử dụng voice từ cài đặt sự kiện; 4. Đồng Bộ Mượt Mà Hệ Thống 4K/8K 60 FPS.'
   }
 ];
 

@@ -6814,10 +6814,10 @@ export function parseMultiCharacterScript(text, config = null) {
   const multiConfig = config || getMultiAvatarConfig();
   const rawLines = text.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
 
-  // 🛡️ NẾU CHẾ ĐỘ MULTI-AVATAR ĐANG TẮT (ENABLED === FALSE): TRẢ VỀ CHẾ ĐỘ 1 AVATAR ĐƠN TIÊU CHUẨN
+  // 🛡️ NẾU CHẾ ĐỘ MULTI-AVATAR ĐANG TẮT (ENABLED === FALSE): TRẢ VỀ CHẾ ĐỘ 1 AVATAR ĐƠN TIÊU CHUẨN (LẤY VOICE BỘ NÃO IDOL)
   if (!multiConfig.enabled) {
     const idolAvatar = multiConfig.avatars?.[0] || DEFAULT_MULTI_AVATAR_CONFIG.avatars[0];
-    const voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === idolAvatar.voiceId) || { id: idolAvatar.voiceId || 'free_vi_female', lang: 'vi-VN', gender: 'Female' };
+    const voiceObj = resolveEffectiveVoice('idol', idolAvatar.voiceId, 'avatar_1');
     return rawLines.map((line, idx) => {
       let cleanText = line.replace(/^\[([^\]]+)\]\s*:\s*/i, '').replace(/^([a-zA-Z0-9_\u00C0-\u1EF9\s]{2,20})\s*:\s*/i, '').trim();
       if (!cleanText) cleanText = line;
@@ -6825,13 +6825,13 @@ export function parseMultiCharacterScript(text, config = null) {
         index: idx,
         rawLine: line,
         text: cleanText,
-        avatarId: idolAvatar.id,
-        avatarName: idolAvatar.name,
-        role: idolAvatar.role,
-        voiceId: idolAvatar.voiceId,
+        avatarId: idolAvatar.id || 'avatar_1',
+        avatarName: idolAvatar.name || 'Idol',
+        role: idolAvatar.role || 'idol',
+        voiceId: voiceObj.id,
         voiceObj,
-        volume: idolAvatar.volume ?? 1.0,
-        rate: idolAvatar.rate ?? 1.0
+        volume: voiceObj.volume ?? idolAvatar.volume ?? 1.0,
+        rate: voiceObj.rate ?? idolAvatar.rate ?? 1.0
       };
     });
   }
@@ -6872,7 +6872,8 @@ export function parseMultiCharacterScript(text, config = null) {
       matchedAvatar = activeAvatars[idx % activeCount] || multiConfig.avatars[0];
     }
 
-    const voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === matchedAvatar.voiceId) || { id: matchedAvatar.voiceId || 'free_vi_female', lang: 'vi-VN', gender: 'Female' };
+    // ⚡ Lấy voice chuẩn xác 100% từ Tab Bộ Não AI tương ứng với từng nhân vật
+    const voiceObj = resolveEffectiveVoice(matchedAvatar.role || 'idol', matchedAvatar.voiceId, matchedAvatar.id);
 
     return {
       index: idx,
@@ -6882,12 +6883,12 @@ export function parseMultiCharacterScript(text, config = null) {
       avatarName: matchedAvatar.name,
       avatarRole: matchedAvatar.role,
       avatarTag: matchedAvatar.tag,
-      voiceId: matchedAvatar.voiceId,
+      voiceId: voiceObj.id,
       voiceObj,
       idleVideo: matchedAvatar.idleVideo,
       talkVideo: matchedAvatar.talkVideo,
-      volume: matchedAvatar.volume || 1.0,
-      rate: matchedAvatar.rate || 1.0
+      volume: voiceObj.volume ?? matchedAvatar.volume ?? 1.0,
+      rate: voiceObj.rate ?? matchedAvatar.rate ?? 1.0
     };
   });
 }
@@ -6979,6 +6980,18 @@ export function getSavedVoiceConfig() {
           };
         }
       }
+      if (g.gameVoiceId) {
+        const gameMatch = ALL_SYSTEM_VOICES.find(v => v.id === g.gameVoiceId);
+        if (gameMatch) {
+          baseConfig.gameBlvVoice = {
+            ...gameMatch,
+            role: 'game',
+            volume: g.gameVoiceVolume !== undefined ? Number(g.gameVoiceVolume) : (baseConfig.gameBlvVoice?.volume ?? 1.0),
+            rate: g.gameVoiceRate !== undefined ? Number(g.gameVoiceRate) : (baseConfig.gameBlvVoice?.rate ?? 1.0),
+            pitch: g.gameVoicePitch !== undefined ? Number(g.gameVoicePitch) : (baseConfig.gameBlvVoice?.pitch ?? 1.0)
+          };
+        }
+      }
     }
   } catch (e) {
     console.warn('Lỗi đồng bộ general settings voice:', e);
@@ -7016,38 +7029,59 @@ export function updateActiveVoiceAudio(role, voiceObj) {
 
 /**
  * ⚡ BỘ PHÂN GIẢI GIỌNG NÓI ĐA TẦNG (VOICE PRIORITY RESOLVER)
- * - Ưu tiên số 1 (CHÍNH): 3 Cột Giọng Chính trong Tab BỘ NÃO (Giọng AvaLive: idolVoice, managerVoice, commentVoice).
- * - Ưu tiên số 2 (PHỤ): Giọng cài đặt trong 14 tác vụ (chỉ kích hoạt khi Bộ Não chưa gán).
- * - Sử dụng thống nhất cho toàn bộ phiên Live, phát video, video AI LipSync nhép miệng, demo, sự kiện.
+ * - ƯU TIÊN SỐ 1 (CAO NHẤT 100%): Cấu hình giọng nói trong Tab BỘ NÃO AI (idolVoice, managerVoice, commentVoice, gameBlvVoice/gameVoice).
+ * - TẤT CẢ CÁC VOICE ĐÃ SETUP CHO TỪNG NHÂN VẬT: Chuẩn xác 100% theo từng nhân vật đã chỉ định (Avatar 1 -> Idol chính, Avatar 2 -> Trợ lý/Quản lý, Avatar 3 -> BLV Game / Bình luận).
+ * - ƯU TIÊN SỐ 2 (PHỤ): Chỉ khi trong BỘ NÃO AI chưa setup voice thì mới sử dụng voice từ trang sự kiện cài đặt / 14 tác vụ.
+ * - TUYỆT ĐỐI KHÔNG SỬ DỤNG VOICE LUNG TUNG: Luôn chuẩn hóa và kiểm soát chặt chẽ 100%.
  */
-export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId = null) {
+export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId = null, avatarId = null) {
   const dualConfig = getSavedVoiceConfig();
-  const normalizedRole = (roleOrEvent || '').toLowerCase();
+  const normalizedRole = (roleOrEvent || '').toLowerCase().trim();
+  const normalizedAvatarId = (avatarId || '').toLowerCase().trim();
 
   let brainVoice = null;
-  if (normalizedRole === 'comment' || normalizedRole === 'ask_reply' || normalizedRole === 'qna') {
-    brainVoice = dualConfig.commentVoice || dualConfig.idolVoice;
-  } else if (normalizedRole === 'manager' || normalizedRole === 'assistant' || normalizedRole === 'checkout' || normalizedRole === 'purchase') {
+
+  // 1. Phân giải theo ID Avatar nhân vật cụ thể đã cấu hình trong Bộ Não AI
+  if (normalizedAvatarId === 'avatar_1' || normalizedRole === 'avatar_1') {
+    brainVoice = dualConfig.idolVoice;
+  } else if (normalizedAvatarId === 'avatar_2' || normalizedRole === 'avatar_2') {
     brainVoice = dualConfig.managerVoice || dualConfig.idolVoice;
-  } else if (normalizedRole === 'game' || normalizedRole === 'battle' || normalizedRole === 'bando') {
+  } else if (normalizedAvatarId === 'avatar_3' || normalizedRole === 'avatar_3') {
+    brainVoice = dualConfig.gameBlvVoice || dualConfig.gameVoice || dualConfig.commentVoice || dualConfig.idolVoice;
+  } else if (normalizedAvatarId === 'avatar_4' || normalizedRole === 'avatar_4') {
+    brainVoice = dualConfig.managerVoice || dualConfig.idolVoice;
+  }
+  // 2. Phân giải theo vai trò / kênh tác vụ
+  else if (normalizedRole === 'comment' || normalizedRole === 'ask_reply' || normalizedRole === 'qna' || normalizedRole === 'binhluan' || normalizedRole === 'hoi_dap') {
+    brainVoice = dualConfig.commentVoice || dualConfig.idolVoice;
+  } else if (normalizedRole === 'manager' || normalizedRole === 'assistant' || normalizedRole === 'checkout' || normalizedRole === 'purchase' || normalizedRole === 'troly' || normalizedRole === 'quanly' || normalizedRole === 'chot_don') {
+    brainVoice = dualConfig.managerVoice || dualConfig.idolVoice;
+  } else if (normalizedRole === 'game' || normalizedRole === 'battle' || normalizedRole === 'bando' || normalizedRole === 'blv' || normalizedRole === 'pk') {
     brainVoice = dualConfig.gameBlvVoice || dualConfig.gameVoice || dualConfig.idolVoice;
   } else {
-    // idol, welcome, gift, follow, like, script, talking, idle, apology, call_to_action
+    // idol, welcome, gift, follow, like, script, talking, idle, apology, call_to_action, general
     brainVoice = dualConfig.idolVoice;
   }
 
-  // 1. Nếu Bộ Não đã có cấu hình giọng hợp lệ -> ƯU TIÊN TUYỆT ĐỐI 100%
+  // 🎯 BƯỚC 1: ƯU TIÊN SỐ 1 (CAO NHẤT 100%) - NẾU TRONG TAB BỘ NÃO AI ĐÃ CẤU HÌNH VOICE HỢP LỆ
   if (brainVoice && brainVoice.id && brainVoice.enabled !== false) {
-    return brainVoice;
+    const fullVoice = ALL_SYSTEM_VOICES.find(v => v.id === brainVoice.id) || brainVoice;
+    return {
+      ...fullVoice,
+      ...brainVoice,
+      volume: brainVoice.volume !== undefined ? Number(brainVoice.volume) : (fullVoice.volume ?? 1.0),
+      rate: brainVoice.rate !== undefined ? Number(brainVoice.rate) : (fullVoice.rate ?? 1.0),
+      pitch: brainVoice.pitch !== undefined ? Number(brainVoice.pitch) : (fullVoice.pitch ?? 1.0)
+    };
   }
 
-  // 2. Nếu Bộ Não chưa chọn/để trống -> Sử dụng giọng cấu hình riêng trong 14 tác vụ
+  // 🎯 BƯỚC 2: NẾU TRONG BỘ NÃO AI CHƯA CẤU HÌNH -> MỚI SỬ DỤNG VOICE TỪ TRANG SỰ KIỆN / 14 TÁC VỤ
   if (taskSpecificVoiceId) {
     const matchedVoice = ALL_SYSTEM_VOICES.find(v => v.id === taskSpecificVoiceId);
     if (matchedVoice) return matchedVoice;
   }
 
-  // 3. Fallback mặc định
+  // 🎯 BƯỚC 3: FALLBACK MẶC ĐỊNH CHUẨN XÁC TỪ IDOL VOICE CỦA BỘ NÃO AI
   return dualConfig.idolVoice || DEFAULT_VOICE_CONFIG.idolVoice;
 }
 
@@ -7868,14 +7902,14 @@ export async function previewVoiceAudio(voiceOrId, sampleText = null, optionsOrO
     return true;
   }
 
-  // Chuẩn hóa voice object từ string ID hoặc role nếu cần
+  // Chuẩn hóa voice object từ string ID hoặc role theo chuẩn Bộ Não AI
   let voiceObj = voiceOrId;
   if (typeof voiceOrId === 'string') {
-    voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === voiceOrId) ||
-      (voiceOrId === 'idol' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'idol') :
-       voiceOrId === 'manager' || voiceOrId === 'assistant' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'manager' || v.id === 'vn_nam_quanly_uyquyen' || v.id === 'el_adam') :
-       voiceOrId === 'game' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'game' || v.id === 'vn_nam_blv_bungno') :
-       ALL_SYSTEM_VOICES.find(v => v.id === 'free_vi_female'));
+    if (['idol', 'manager', 'assistant', 'game', 'comment', 'avatar_1', 'avatar_2', 'avatar_3', 'avatar_4'].includes(voiceOrId.toLowerCase())) {
+      voiceObj = resolveEffectiveVoice(voiceOrId);
+    } else {
+      voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === voiceOrId) || resolveEffectiveVoice('idol', voiceOrId);
+    }
   }
   voiceObj = voiceObj || ALL_SYSTEM_VOICES[0];
 
