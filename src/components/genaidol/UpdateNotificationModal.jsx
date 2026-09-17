@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.3.7';
+export const APP_VERSION = '3.3.8';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Bản Cập Nhật v3.3.7 - Tinh Gọn Kịch Bản, Đọc Liên Tục Chuẩn 0ms Tức Thì & Đầy Đủ Cảm Xúc Tự Nhiên',
-    description: '1. Đọc Kịch Bản Siêu Tốc 0ms: Tối ưu hoá luồng phát âm thanh liên tục không khoảng dừng khi cài đặt 0s, chuyển câu tức thì 0ms, biểu cảm sống động, ngữ điệu tự nhiên và truyền cảm; 2. Tinh Gọn Giao Diện Soạn Thảo Kịch Bản: Dọn dẹp thanh chèn vai đọc theo yêu cầu, tập trung tối đa không gian soạn thảo mượt mà; 3. Đồng Bộ Toàn Diện: Toàn bộ hệ sinh thái Live Stream và Game PK vận hành trơn tru, không delay.'
+    title: '👑 Bản Cập Nhật v3.3.8 - Đột Phá Đọc Xuyên Suốt Không Dừng, Triệt Tiêu Độ Trễ Dấu Câu & Cắt Tỉa Khoảng Lặng Chuẩn Phòng Thu',
+    description: '1. Triệt Tiêu Độ Trễ Tại Dấu Chấm & Dấu Chấm Than: Chuẩn hoá toàn bộ ký tự chấm lửng (...), chấm than (!) và chấm (.) thành nhịp ngắt hơi tự nhiên, loại bỏ hoàn toàn hiện tượng khựng dừng lâu giữa các câu; 2. Cắt Tỉa Khoảng Lặng Đuôi Âm Thông Minh: Tự động phát hiện và loại bỏ khoảng lặng đuôi sau khi đọc xong, kích hoạt câu tiếp theo ngay lập tức 0ms; 3. Giữ Trọn Cảm Xúc & Ngữ Điệu Tự Nhiên: Giọng đọc chân thực, truyền cảm, cuốn hút và chuyên nghiệp như MC truyền hình.'
   }
 ];
 

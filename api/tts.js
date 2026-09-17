@@ -48,6 +48,14 @@ export default async function handler(req, res) {
 
         const tmpFile = path.resolve(os.tmpdir(), `tts_vercel_${Date.now()}_${Math.random().toString(36).slice(2)}.mp3`);
         try {
+          const cleanText = String(text || '')
+            .replace(/[…]+/g, ', ')
+            .replace(/\.{2,}/g, ', ')
+            .replace(/!{2,}/g, '! ')
+            .replace(/\?{2,}/g, '? ')
+            .replace(/,\s*,+/g, ', ')
+            .replace(/\s+/g, ' ')
+            .trim();
           const tts = new EdgeTTS({
             voice: neuralVoice,
             lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
@@ -55,7 +63,7 @@ export default async function handler(req, res) {
             rate,
             outputFormat: 'audio-24khz-48kbitrate-mono-mp3'
           });
-          await tts.ttsPromise(text, tmpFile);
+          await tts.ttsPromise(cleanText, tmpFile);
           if (fs.existsSync(tmpFile)) {
             const buf = fs.readFileSync(tmpFile);
             try { fs.unlinkSync(tmpFile); } catch (e) {}
@@ -122,6 +130,14 @@ export default async function handler(req, res) {
 
         const tmpFile = path.resolve(os.tmpdir(), `tts_post_${Date.now()}_${Math.random().toString(36).slice(2)}.mp3`);
         try {
+          const cleanText = String(text || '')
+            .replace(/[…]+/g, ', ')
+            .replace(/\.{2,}/g, ', ')
+            .replace(/!{2,}/g, '! ')
+            .replace(/\?{2,}/g, '? ')
+            .replace(/,\s*,+/g, ', ')
+            .replace(/\s+/g, ' ')
+            .trim();
           const tts = new EdgeTTS({
             voice: neuralVoice,
             lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
@@ -129,7 +145,7 @@ export default async function handler(req, res) {
             rate,
             outputFormat: 'audio-24khz-48kbitrate-mono-mp3'
           });
-          await tts.ttsPromise(text, tmpFile);
+          await tts.ttsPromise(cleanText, tmpFile);
           if (fs.existsSync(tmpFile)) {
             const buf = fs.readFileSync(tmpFile);
             try { fs.unlinkSync(tmpFile); } catch (e) {}

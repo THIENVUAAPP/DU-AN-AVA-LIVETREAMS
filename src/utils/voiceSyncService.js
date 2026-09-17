@@ -7481,10 +7481,74 @@ export function cleanTextForVoiceSpeech(rawText) {
  * Bảo toàn 100% âm đuôi, phụ âm cuối (-n, -ng, -nh, -m, -p, -t, -c) và ngữ điệu tự nhiên.
  * Tuyệt đối không cắt cụt đuôi âm khiến "bạn" bị đọc thành "bạ", "nhà" thành "nh..."!
  */
-export function trimAudioBufferSilence(audioBuffer, silenceThreshold = 0.0003) {
-  // ⚡ BẢO TOÀN 100% BIT-FOR-BIT NGUYÊN BẢN CỦA MICROSOFT AZURE NEURAL TTS:
-  // Tuyệt đối không can thiệp cắt tỉa buffer làm mất âm đuôi ("bạn", "bánh", "không", "em")
-  return audioBuffer;
+export function trimAudioBufferSilence(audioBuffer, silenceThreshold = 0.0004) {
+  if (!audioBuffer) return audioBuffer;
+  try {
+    const numChannels = audioBuffer.numberOfChannels;
+    const length = audioBuffer.length;
+    const sampleRate = audioBuffer.sampleRate;
+    if (length < 300) return audioBuffer;
+
+    const channelData = [];
+    for (let c = 0; c < numChannels; c++) {
+      channelData.push(audioBuffer.getChannelData(c));
+    }
+
+    // 1. Quét tìm vị trí bắt đầu có âm thanh (Start Index)
+    let startIndex = 0;
+    const scanStep = 16;
+    for (let i = 0; i < length; i += scanStep) {
+      let isSilent = true;
+      for (let c = 0; c < numChannels; c++) {
+        if (Math.abs(channelData[c][i]) > silenceThreshold) {
+          isSilent = false;
+          break;
+        }
+      }
+      if (!isSilent) {
+        startIndex = Math.max(0, i - Math.floor(sampleRate * 0.015)); // lùi 15ms an toàn
+        break;
+      }
+    }
+
+    // 2. Quét từ đuôi lên để tìm vị trí kết thúc âm thanh (End Index)
+    let endIndex = length - 1;
+    for (let i = length - 1; i >= startIndex; i -= scanStep) {
+      let isSilent = true;
+      for (let c = 0; c < numChannels; c++) {
+        if (Math.abs(channelData[c][i]) > silenceThreshold) {
+          isSilent = false;
+          break;
+        }
+      }
+      if (!isSilent) {
+        // Cộng thêm 35ms safety padding để bảo toàn 100% âm đuôi (-n, -ng, -nh, -m, -p, -t, -c)
+        endIndex = Math.min(length - 1, i + Math.floor(sampleRate * 0.035));
+        break;
+      }
+    }
+
+    const trimmedLength = endIndex - startIndex + 1;
+    // Nếu chỉ cắt được dưới 40ms thì giữ nguyên
+    if (trimmedLength <= 0 || trimmedLength >= length - Math.floor(sampleRate * 0.04)) {
+      return audioBuffer;
+    }
+
+    const audioCtx = getOrCreateAudioContext();
+    if (!audioCtx) return audioBuffer;
+
+    const trimmedBuffer = audioCtx.createBuffer(numChannels, trimmedLength, sampleRate);
+    for (let c = 0; c < numChannels; c++) {
+      const src = channelData[c];
+      const dest = trimmedBuffer.getChannelData(c);
+      dest.set(src.subarray(startIndex, endIndex + 1));
+    }
+
+    return trimmedBuffer;
+  } catch (err) {
+    console.warn('[trimAudioBufferSilence] Error trimming silence:', err);
+    return audioBuffer;
+  }
 }
 
 /**
@@ -7500,11 +7564,12 @@ export function humanizeVoiceSpeechText(rawText, voice = null) {
   const isVietnamese = !voice || voice?.lang === 'vi-VN' || voice?.region === 'vi' || voice?.id?.startsWith('vn_') || voice?.id === 'free_vi_female' || voice?.id === 'el_adam';
   if (!isVietnamese) return text;
 
-  // Dọn dẹp khoảng trắng và dấu câu thừa để âm thanh mượt mà không khựng
+  // Dọn dẹp khoảng trắng và dấu câu thừa để âm thanh mượt mà không khựng ngắt dài
   text = text
-    .replace(/!{2,}/g, '!')
-    .replace(/\?{2,}/g, '?')
-    .replace(/\.{2,}/g, '.')
+    .replace(/[…]+/g, ', ')
+    .replace(/\.{2,}/g, ', ')
+    .replace(/!{2,}/g, '! ')
+    .replace(/\?{2,}/g, '? ')
     .replace(/,\s*,+/g, ', ')
     .replace(/\s+/g, ' ')
     .trim();
@@ -7852,16 +7917,19 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
     ? window.location.origin
     : '';
 
-  // Chuẩn hóa văn bản gửi đến TTS engine: Giữ nguyên cấu trúc ngữ âm và dấu ngắt cuối câu để bảo toàn trọn vẹn âm đuôi (-n, -ng, -nh, -m, -p, -t, -c)
+  // Chuẩn hóa văn bản gửi đến TTS engine: Loại bỏ dấu ba chấm ..., dấu than lặp gây khựng ngắt dài
   let ttsText = text.trim();
   ttsText = ttsText
+    .replace(/[…]+/g, ', ')
+    .replace(/\.{2,}/g, ', ')
+    .replace(/!{2,}/g, '! ')
+    .replace(/\?{2,}/g, '? ')
     .replace(/[;:]+/g, ', ')
-    .replace(/\.{2,}/g, '. ')
     .replace(/,\s*,+/g, ', ')
     .replace(/\s+/g, ' ')
     .trim();
 
-  // Đảm bảo câu có dấu kết thúc (. hoặc !) để EdgeTTS không nuốt âm đuôi "bạn", "gạo", "không"
+  // Đảm bảo câu có dấu kết thúc (. hoặc !) để EdgeTTS không nuốt âm đuôi
   if (ttsText && !/[.!?]$/.test(ttsText)) {
     ttsText += '.';
   }
