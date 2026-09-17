@@ -1550,7 +1550,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '3.3.4';
+  let ver = '3.3.5';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1588,7 +1588,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '3.3.4';
+  let ver = '3.3.5';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -2978,6 +2978,15 @@ function resolveNeuralVoice(voice, gender, lang) {
   if (shortLang === 'ru') return isMale ? 'ru-RU-DmitryNeural' : 'ru-RU-SvetlanaNeural';
   if (shortLang === 'it') return isMale ? 'it-IT-DiegoNeural' : 'it-IT-ElsaNeural';
   if (shortLang === 'th') return isMale ? 'th-TH-NiwatNeural' : 'th-TH-PremwadeeNeural';
+  if (shortLang === 'pt') return isMale ? 'pt-BR-AntonioNeural' : 'pt-BR-FranciscaNeural';
+  if (shortLang === 'id') return isMale ? 'id-ID-ArdiNeural' : 'id-ID-GadisNeural';
+  if (shortLang === 'ms') return isMale ? 'ms-MY-OsmanNeural' : 'ms-MY-YasminNeural';
+  if (shortLang === 'tl' || shortLang === 'fil') return isMale ? 'fil-PH-AngeloNeural' : 'fil-PH-BlessicaNeural';
+  if (shortLang === 'hi') return isMale ? 'hi-IN-MadhurNeural' : 'hi-IN-SwaraNeural';
+  if (shortLang === 'ar') return isMale ? 'ar-SA-HamedNeural' : 'ar-SA-ZariyahNeural';
+  if (shortLang === 'tr') return isMale ? 'tr-TR-AhmetNeural' : 'tr-TR-EmelNeural';
+  if (shortLang === 'pl') return isMale ? 'pl-PL-MarekNeural' : 'pl-PL-ZofiaNeural';
+  if (shortLang === 'nl') return isMale ? 'nl-NL-MaartenNeural' : 'nl-NL-FennaNeural';
   
   return isMale ? 'vi-VN-NamMinhNeural' : 'vi-VN-HoaiMyNeural';
 }

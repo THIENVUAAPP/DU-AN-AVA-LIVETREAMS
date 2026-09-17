@@ -949,6 +949,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }
     }
 
+    // ⚡ TRUYỀN THẲNG FILE BLOB GỐC (1GB - 20GB) VÀO CỬA SỔ CON CHO PHÉP PHÁT 0MS KHÔNG GIẬT LAG
+    if (newWin) {
+      try {
+        newWin.__activeMediaBlob = currentFileBlobRef.current || window.__activeMediaBlob;
+        newWin.__activeMediaBlobUrl = currentBlobUrlRef.current || window.__activeMediaBlobUrl;
+        newWin.__activeMediaBlobMap = window.__activeMediaBlobMap;
+        newWin.focus();
+      } catch (e) {}
+    }
+
     showToast('🖥️ Đã mở Cửa Sổ Live 9:16! Khung hình đồng bộ chính xác 100% với phần mềm.', 'success');
   };
 
@@ -4600,7 +4610,37 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                         setCurrentLanguage(lang.code);
                         setCurrentLangState(lang.code);
                         setIsLangDropdownOpen(false);
-                        showToast(`🌐 Đã chuyển ngôn ngữ sang: ${lang.name} (${lang.flag})`, 'success');
+
+                        // Đồng bộ giọng đọc AI mặc định theo ngôn ngữ mới
+                        const voiceMap = {
+                          vi: 'free_vi_female',
+                          en: 'en-US-JennyNeural',
+                          zh: 'zh-CN-XiaoxiaoNeural',
+                          ja: 'ja-JP-NanamiNeural',
+                          ko: 'ko-KR-SunHiNeural',
+                          fr: 'fr-FR-DeniseNeural',
+                          es: 'es-ES-ElviraNeural',
+                          th: 'th-TH-PremwadeeNeural',
+                          pt: 'pt-BR-FranciscaNeural',
+                          de: 'de-DE-KatjaNeural',
+                          it: 'it-IT-ElsaNeural',
+                          ru: 'ru-RU-SvetlanaNeural',
+                          ar: 'ar-SA-ZariyahNeural',
+                          id: 'id-ID-GadisNeural',
+                          hi: 'hi-IN-SwaraNeural',
+                          tr: 'tr-TR-EmelNeural',
+                          pl: 'pl-PL-ZofiaNeural',
+                          nl: 'nl-NL-FennaNeural',
+                          tl: 'fil-PH-AngeloNeural',
+                          ms: 'ms-MY-YasminNeural'
+                        };
+                        const targetVoice = voiceMap[lang.code] || 'free_vi_female';
+                        try {
+                          localStorage.setItem('avalive_default_voice_id', targetVoice);
+                          window.dispatchEvent(new CustomEvent('avalive_default_voice_changed', { detail: { voiceId: targetVoice } }));
+                        } catch (e) {}
+
+                        showToast(`🌐 Đã chuyển sang ${lang.name} (${lang.flag}) & Đồng bộ giọng đọc AI`, 'success');
                       }}
                       className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 mb-0.5 cursor-pointer ${
                         currentLang === lang.code

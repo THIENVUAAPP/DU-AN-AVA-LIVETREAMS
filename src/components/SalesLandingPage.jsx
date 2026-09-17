@@ -12,7 +12,7 @@ import SePayModal from './SePayModal';
 import TechEcosystemMap from './TechEcosystemMap';
 import { getPlans } from '../lib/plansConfig';
 import { supabase } from '../lib/supabaseClient';
-import { getCurrentLanguage, setCurrentLanguage } from '../utils/i18n';
+import { getCurrentLanguage, setCurrentLanguage, SUPPORTED_LANGUAGES } from '../utils/i18n';
 import { landingTranslations } from './landing/landingTranslations';
 
 import HeroSection from './landing/HeroSection';
@@ -83,20 +83,48 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
   const [sepayModalOpen, setSepayModalOpen] = useState(false);
   const [selectedPlan, setSelectedPlan] = useState(null);
   const [isVideoPlaying, setIsVideoPlaying] = useState(false);
-  const [currentLang, setCurrentLangState] = useState(() => {
-    const saved = getCurrentLanguage();
-    return saved === 'en' ? 'en' : 'vi';
-  });
+  const [isLangDropdownOpen, setIsLangDropdownOpen] = useState(false);
+  const [currentLang, setCurrentLangState] = useState(() => getCurrentLanguage() || 'vi');
 
   const handleLanguageChange = (langCode) => {
     setCurrentLanguage(langCode);
     setCurrentLangState(langCode);
+    setIsLangDropdownOpen(false);
+
+    // Đồng bộ giọng đọc AI mặc định theo ngôn ngữ tương ứng
+    const voiceMap = {
+      vi: 'free_vi_female',
+      en: 'en-US-JennyNeural',
+      zh: 'zh-CN-XiaoxiaoNeural',
+      ja: 'ja-JP-NanamiNeural',
+      ko: 'ko-KR-SunHiNeural',
+      fr: 'fr-FR-DeniseNeural',
+      es: 'es-ES-ElviraNeural',
+      th: 'th-TH-PremwadeeNeural',
+      pt: 'pt-BR-FranciscaNeural',
+      de: 'de-DE-KatjaNeural',
+      it: 'it-IT-ElsaNeural',
+      ru: 'ru-RU-SvetlanaNeural',
+      ar: 'ar-SA-ZariyahNeural',
+      id: 'id-ID-GadisNeural',
+      hi: 'hi-IN-SwaraNeural',
+      tr: 'tr-TR-EmelNeural',
+      pl: 'pl-PL-ZofiaNeural',
+      nl: 'nl-NL-FennaNeural',
+      tl: 'fil-PH-AngeloNeural',
+      ms: 'ms-MY-YasminNeural'
+    };
+    const targetVoice = voiceMap[langCode] || 'free_vi_female';
+    try {
+      localStorage.setItem('avalive_default_voice_id', targetVoice);
+      window.dispatchEvent(new CustomEvent('avalive_default_voice_changed', { detail: { voiceId: targetVoice } }));
+    } catch (e) {}
   };
 
   useEffect(() => {
     const handleLang = (e) => {
       if (e.detail?.language) {
-        setCurrentLangState(e.detail.language === 'en' ? 'en' : 'vi');
+        setCurrentLangState(e.detail.language);
       }
     };
     window.addEventListener('avalive_language_changed', handleLang);
@@ -160,24 +188,47 @@ export default function SalesLandingPage({ setGoogleLoginModalOpen, currentUser,
           </nav>
 
           <div className="flex items-center gap-4">
-            {/* Language Switcher Switch */}
-            <div className="flex items-center bg-[#150D2E] border border-[#8B5CF6]/40 rounded-full p-1 shadow-[0_0_15px_rgba(139,92,246,0.25)]">
+            {/* 🌐 Bộ Chuyển Đổi 20 Ngôn Ngữ Toàn Cầu */}
+            <div className="relative">
               <button 
-                onClick={() => handleLanguageChange('vi')}
-                className={`px-3 py-1 rounded-full text-xs font-black transition-all cursor-pointer flex items-center gap-1 ${currentLang === 'vi' ? 'bg-gradient-to-r from-[#EC4899] to-[#9333EA] text-white shadow-[0_0_12px_rgba(236,72,153,0.6)]' : 'text-gray-400 hover:text-white'}`}
-                title="Chuyển sang Tiếng Việt"
+                onClick={() => setIsLangDropdownOpen(!isLangDropdownOpen)}
+                className="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-black bg-[#150D2E] border border-[#8B5CF6]/50 hover:border-[#00F0FF] text-white shadow-[0_0_15px_rgba(139,92,246,0.3)] transition-all cursor-pointer"
+                title="Chuyển đổi 20 Ngôn ngữ Quốc tế"
               >
-                <span>🇻🇳</span>
-                <span>VI</span>
+                <Globe className="w-3.5 h-3.5 text-[#00F0FF]" />
+                <span>{SUPPORTED_LANGUAGES.find(l => l.code === currentLang)?.flag || '🌐'}</span>
+                <span className="font-bold">{SUPPORTED_LANGUAGES.find(l => l.code === currentLang)?.name || 'Ngôn ngữ'}</span>
+                <ChevronDown className="w-3 h-3 text-gray-400" />
               </button>
-              <button 
-                onClick={() => handleLanguageChange('en')}
-                className={`px-3 py-1 rounded-full text-xs font-black transition-all cursor-pointer flex items-center gap-1 ${currentLang === 'en' ? 'bg-gradient-to-r from-[#00F0FF] to-[#3B82F6] text-white shadow-[0_0_12px_rgba(0,240,255,0.6)]' : 'text-gray-400 hover:text-white'}`}
-                title="Switch to English"
-              >
-                <span>🇺🇸</span>
-                <span>EN</span>
-              </button>
+
+              {isLangDropdownOpen && (
+                <>
+                  <div className="fixed inset-0 z-40" onClick={() => setIsLangDropdownOpen(false)} />
+                  <div className="absolute right-0 top-full mt-2 w-64 max-h-80 overflow-y-auto bg-[#100826] border border-[#8B5CF6]/60 rounded-2xl p-2 shadow-2xl z-50 backdrop-blur-xl">
+                    <div className="px-2.5 py-1.5 text-[11px] font-black uppercase text-[#00F0FF] border-b border-white/10 mb-1 flex items-center justify-between">
+                      <span>🌐 20 NGÔN NGỮ QUỐC TẾ</span>
+                      <span className="text-[9px] text-gray-400 font-normal">Toàn Cầu</span>
+                    </div>
+                    {SUPPORTED_LANGUAGES.map(lang => (
+                      <button
+                        key={lang.code}
+                        onClick={() => handleLanguageChange(lang.code)}
+                        className={`w-full text-left px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 mb-0.5 cursor-pointer ${
+                          currentLang === lang.code
+                            ? 'bg-gradient-to-r from-[#00F0FF] to-[#3B82F6] text-white shadow-sm'
+                            : 'hover:bg-white/10 text-gray-200'
+                        }`}
+                      >
+                        <span className="flex items-center gap-2">
+                          <span className="text-base">{lang.flag}</span>
+                          <span>{lang.name}</span>
+                        </span>
+                        <span className="text-[10px] opacity-75 font-mono px-1 py-0.5 rounded bg-black/40">{lang.code.toUpperCase()}</span>
+                      </button>
+                    ))}
+                  </div>
+                </>
+              )}
             </div>
 
             {!currentUser ? (

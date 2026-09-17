@@ -122,10 +122,12 @@ export default function LiveStreamStandalonePlayer() {
     return null;
   }, []);
 
+  const isHardwareLocalBlobRef = useRef(false);
+
   // 🌐 Chuyển đổi URL thông minh cho cả local, Cloudflare Tunnel HTTPS và Vercel
   const resolveUrl = useCallback((url) => {
     if (!url || typeof url !== 'string') return '';
-    if (url.startsWith('blob:')) return '';
+    if (url.startsWith('blob:')) return url; // Hỗ trợ phát blob URL mượt mà 60 FPS
 
     // Nếu là URL hoàn chỉnh http/https
     if (url.startsWith('http://') || url.startsWith('https://')) {
@@ -314,10 +316,13 @@ export default function LiveStreamStandalonePlayer() {
         if (data.mediaUrl || data.selectedCharacter) {
           const localBlob = await tryLoadFromLocalDB(data.selectedCharacter || data.mediaUrl);
           if (localBlob) {
+            isHardwareLocalBlobRef.current = true;
             setVideoSrc(localBlob);
             setIsVideoLoading(false);
           } else if (data.mediaUrl && !data.mediaUrl.startsWith('blob:') && !isSameMedia(videoSrc, data.mediaUrl)) {
-            setVideoSrc(data.mediaUrl);
+            if (!isHardwareLocalBlobRef.current) {
+              setVideoSrc(data.mediaUrl);
+            }
           }
         }
         if (!isExplicitlyPausedRef.current && videoRef.current && videoRef.current.paused) {
@@ -452,10 +457,12 @@ export default function LiveStreamStandalonePlayer() {
         src={resolveUrl(videoSrc) || undefined}
         autoPlay
         playsInline
-        webkit-playsinline
+        webkit-playsinline="true"
         loop
         preload="auto"
         muted={true}
+        disablePictureInPicture
+        controlsList="nodownload nofullscreen noremoteplayback"
         onLoadedMetadata={(e) => {
           setIsVideoLoading(false);
           if (!isExplicitlyPausedRef.current && e.currentTarget.paused) {

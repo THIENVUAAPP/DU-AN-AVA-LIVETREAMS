@@ -188,6 +188,69 @@ export default function EventVoiceTester({
     };
   }, []);
 
+  /**
+   * Helper phân giải câu thoại: bóc tách speaker tag ([Idol]:, [Trợ Lý]:...) và xác định đúng giọng đọc
+   */
+  const parseScriptSentence = (rawSentenceText, fallbackVoice = null) => {
+    if (!rawSentenceText || !rawSentenceText.trim()) {
+      return { cleanText: '', voiceObj: null, activeSpeakerId: 'idol', matchedSpeakerAvatar: null };
+    }
+
+    const multiConfig = getMultiAvatarConfig();
+    let matchedSpeakerAvatar = null;
+    let cleanSentenceText = rawSentenceText;
+
+    if (multiConfig && multiConfig.avatars) {
+      for (const av of multiConfig.avatars) {
+        if (!av.enabled) continue;
+        const tagClean = (av.tag || '').replace(/[\[\]]/g, '').trim().toLowerCase();
+        if (!tagClean) continue;
+        const regex = new RegExp(`^(\\[?${tagClean}\\]?|${tagClean})\\s*:\\s*(.*)$`, 'i');
+        const m = rawSentenceText.match(regex);
+        if (m) {
+          matchedSpeakerAvatar = av;
+          cleanSentenceText = m[2].trim();
+          break;
+        }
+      }
+    }
+
+    // Nếu không khớp trực tiếp từ tag avatar tùy chỉnh, kiểm tra các tag phổ biến
+    if (!matchedSpeakerAvatar) {
+      if (/^(\[?idol\]?|idol)\s*:\s*(.*)$/i.test(rawSentenceText)) {
+        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'idol') || { id: 'idol', voiceId: 'free_vi_female', name: 'Idol Chính' };
+        cleanSentenceText = rawSentenceText.replace(/^(\[?idol\]?|idol)\s*:\s*/i, '').trim();
+      } else if (/^(\[?trợ lý\]?|\[?tro ly\]?|\[?troly\]?|trợ lý|tro ly)\s*:\s*(.*)$/i.test(rawSentenceText)) {
+        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'assistant') || { id: 'assistant', voiceId: 'free_vi_female_2', name: 'Trợ Lý' };
+        cleanSentenceText = rawSentenceText.replace(/^(\[?trợ lý\]?|\[?tro ly\]?|\[?troly\]?|trợ lý|tro ly)\s*:\s*/i, '').trim();
+      } else if (/^(\[?blv game\]?|\[?game\]?|\[?blv\]?|blv game|game)\s*:\s*(.*)$/i.test(rawSentenceText)) {
+        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'game_caster') || { id: 'game_caster', voiceId: 'free_vi_male', name: 'BLV Game PK' };
+        cleanSentenceText = rawSentenceText.replace(/^(\[?blv game\]?|\[?game\]?|\[?blv\]?|blv game|game)\s*:\s*/i, '').trim();
+      } else if (/^(\[?khách mời\]?|\[?khach moi\]?|\[?khach\]?|khách mời|khach moi)\s*:\s*(.*)$/i.test(rawSentenceText)) {
+        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'guest') || { id: 'guest', voiceId: 'free_vi_female_3', name: 'Khách Mời' };
+        cleanSentenceText = rawSentenceText.replace(/^(\[?khách mời\]?|\[?khach moi\]?|\[?khach\]?|khách mời|khach moi)\s*:\s*/i, '').trim();
+      }
+    }
+
+    const activeSpeakerId = matchedSpeakerAvatar ? matchedSpeakerAvatar.id : 'idol';
+    const activeVoiceId = matchedSpeakerAvatar 
+      ? (matchedSpeakerAvatar.voiceId || selectedVoiceRef.current) 
+      : (fallbackVoice ? (fallbackVoice.id || fallbackVoice) : selectedVoiceRef.current);
+
+    let voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === activeVoiceId) || 
+      (activeVoiceId === 'idol' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'idol') :
+       activeVoiceId === 'manager' || activeVoiceId === 'assistant' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'manager') :
+       activeVoiceId === 'game' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'game') :
+       ALL_SYSTEM_VOICES.find(v => v.id === 'free_vi_female')) || { id: 'free_vi_female', lang: 'vi-VN', provider: 'system', gender: 'Female' };
+
+    return {
+      cleanText: cleanSentenceText,
+      voiceObj,
+      activeSpeakerId,
+      matchedSpeakerAvatar
+    };
+  };
+
   // Đổi giọng: Ngay lập tức lưu và PHÁT NGAY LẬP TỨC kịch bản với giọng mới được chọn (0ms)
   const handleVoiceSelect = (voiceId) => {
     if (!voiceId) return;
@@ -226,9 +289,12 @@ export default function EventVoiceTester({
       window.dispatchEvent(new CustomEvent('avalive_script_testing_state_change', { detail: { isTesting: true } }));
     }
 
-    // Lookahead prefetch chỉ câu tiếp theo (câu 1) để không làm nghẽn băng thông của câu 0
+    // Lookahead prefetch chính xác cleanText câu tiếp theo
     if (sentences.length > 1) {
-      prefetchTTSAudio(sentences[1], newVoiceObj, { rate: speedRef.current });
+      const nextParsed = parseScriptSentence(sentences[1], newVoiceObj);
+      if (nextParsed.cleanText) {
+        prefetchTTSAudio(nextParsed.cleanText, nextParsed.voiceObj, { rate: speedRef.current });
+      }
     }
 
     // Phát ngay lập tức 0ms câu đầu tiên với giọng mới
@@ -327,7 +393,7 @@ export default function EventVoiceTester({
         setCurrentSentenceIdx(0);
         currentSentenceIdxRef.current = 0;
         const pauseSec = pauseDurationRef.current !== undefined ? Number(pauseDurationRef.current) : 0.0;
-        const loopPauseMs = pauseSec <= 0.02 ? 20 : Math.max(20, Math.round(pauseSec * 1000));
+        const loopPauseMs = pauseSec <= 0.02 ? 0 : Math.max(20, Math.round(pauseSec * 1000));
         setTimeout(() => {
           if (isPlayingRef.current) {
             playSentenceAtIndex(0, customVoice);
@@ -343,58 +409,13 @@ export default function EventVoiceTester({
     currentSentenceIdxRef.current = index;
     const rawSentenceText = sentences[index];
 
-    // 🎭 Kiểm tra thẻ nhân vật (Multi-Avatar Interactive Tags: [Idol]:, [Trợ Lý]:, [BLV Game]:, [Khách Mời]:...)
-    const multiConfig = getMultiAvatarConfig();
-    let matchedSpeakerAvatar = null;
-    let cleanSentenceText = rawSentenceText;
-
-    if (multiConfig && multiConfig.avatars) {
-      for (const av of multiConfig.avatars) {
-        if (!av.enabled) continue;
-        const tagClean = (av.tag || '').replace(/[\[\]]/g, '').trim().toLowerCase();
-        if (!tagClean) continue;
-        const regex = new RegExp(`^(\\[?${tagClean}\\]?|${tagClean})\\s*:\\s*(.*)$`, 'i');
-        const m = rawSentenceText.match(regex);
-        if (m) {
-          matchedSpeakerAvatar = av;
-          cleanSentenceText = m[2].trim();
-          break;
-        }
-      }
-    }
-
-    // Nếu không khớp trực tiếp từ tag avatar tùy chỉnh, kiểm tra các tag phổ biến
-    if (!matchedSpeakerAvatar) {
-      if (/^(\[?idol\]?|idol)\s*:\s*(.*)$/i.test(rawSentenceText)) {
-        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'idol') || { id: 'idol', voiceId: 'free_vi_female', name: 'Idol Chính' };
-        cleanSentenceText = rawSentenceText.replace(/^(\[?idol\]?|idol)\s*:\s*/i, '').trim();
-      } else if (/^(\[?trợ lý\]?|\[?tro ly\]?|\[?troly\]?|trợ lý|tro ly)\s*:\s*(.*)$/i.test(rawSentenceText)) {
-        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'assistant') || { id: 'assistant', voiceId: 'free_vi_female_2', name: 'Trợ Lý' };
-        cleanSentenceText = rawSentenceText.replace(/^(\[?trợ lý\]?|\[?tro ly\]?|\[?troly\]?|trợ lý|tro ly)\s*:\s*/i, '').trim();
-      } else if (/^(\[?blv game\]?|\[?game\]?|\[?blv\]?|blv game|game)\s*:\s*(.*)$/i.test(rawSentenceText)) {
-        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'game_caster') || { id: 'game_caster', voiceId: 'free_vi_male', name: 'BLV Game PK' };
-        cleanSentenceText = rawSentenceText.replace(/^(\[?blv game\]?|\[?game\]?|\[?blv\]?|blv game|game)\s*:\s*/i, '').trim();
-      } else if (/^(\[?khách mời\]?|\[?khach moi\]?|\[?khach\]?|khách mời|khach moi)\s*:\s*(.*)$/i.test(rawSentenceText)) {
-        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'guest') || { id: 'guest', voiceId: 'free_vi_female_3', name: 'Khách Mời' };
-        cleanSentenceText = rawSentenceText.replace(/^(\[?khách mời\]?|\[?khach moi\]?|\[?khach\]?|khách mời|khach moi)\s*:\s*/i, '').trim();
-      }
-    }
+    // 🎭 Phân giải câu thoại hiện tại
+    const { cleanText: cleanSentenceText, voiceObj, activeSpeakerId, matchedSpeakerAvatar } = parseScriptSentence(rawSentenceText, customVoice);
 
     if (!cleanSentenceText || !cleanSentenceText.trim()) {
       playSentenceAtIndex(index + 1, customVoice);
       return;
     }
-
-    const activeSpeakerId = matchedSpeakerAvatar ? matchedSpeakerAvatar.id : 'idol';
-    const activeVoiceId = matchedSpeakerAvatar 
-      ? (matchedSpeakerAvatar.voiceId || selectedVoiceRef.current) 
-      : (customVoice ? (customVoice.id || customVoice) : selectedVoiceRef.current);
-
-    let voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === activeVoiceId) || 
-      (activeVoiceId === 'idol' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'idol') :
-       activeVoiceId === 'manager' || activeVoiceId === 'assistant' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'manager') :
-       activeVoiceId === 'game' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'game') :
-       ALL_SYSTEM_VOICES.find(v => v.id === 'free_vi_female')) || { id: 'free_vi_female', lang: 'vi-VN', provider: 'system', gender: 'Female' };
 
     // Bắn sự kiện chuyển đổi nhân vật phát biểu (Active Speaker) cho màn hình Live Overlay / Desktop OBS
     try {
@@ -408,12 +429,16 @@ export default function EventVoiceTester({
       }));
     } catch (e) {}
 
-    // 🚀 LOOKAHEAD PIPELINE: Ngay khi câu hiện tại bắt đầu phát, nạp trước câu N+1 và N+2 vào RAM
-    if (index + 1 < sentences.length) {
-      prefetchTTSAudio(sentences[index + 1], voiceObj, { rate: speedRef.current });
-    }
-    if (index + 2 < sentences.length) {
-      prefetchTTSAudio(sentences[index + 2], voiceObj, { rate: speedRef.current });
+    // 🚀 LOOKAHEAD PIPELINE VƯỢT TRỘI: Pre-fetch các câu tiếp theo (N+1, N+2, N+3) với CHÍNH XÁC cleanText & voiceObj tương ứng
+    for (let offset = 1; offset <= 3; offset++) {
+      const nextIdx = index + offset;
+      if (nextIdx < sentences.length) {
+        const nextParsed = parseScriptSentence(sentences[nextIdx], customVoice);
+        if (nextParsed.cleanText) {
+          const nextRate = (nextParsed.matchedSpeakerAvatar?.rate ?? 1.0) * (speedRef.current || 1.0);
+          prefetchTTSAudio(nextParsed.cleanText, nextParsed.voiceObj, { rate: nextRate });
+        }
+      }
     }
 
     const speakerRate = (matchedSpeakerAvatar?.rate ?? 1.0) * (speedRef.current || 1.0);
@@ -454,11 +479,11 @@ export default function EventVoiceTester({
 
           const pauseSec = pauseDurationRef.current !== undefined ? Number(pauseDurationRef.current) : 0.0;
           
-          // Phát câu tiếp theo: nếu người dùng setup liền mạch (<= 0.02s) thì phát sau 15ms cực mượt
+          // Phát câu tiếp theo: nếu người dùng không cài khoảng dừng (<= 0.02s) thì ĐỌC LIÊN TỤC KHÔNG DỪNG (0ms)
           if (pauseSec <= 0.02) {
             queueTimeoutRef.current = setTimeout(() => {
               if (isPlayingRef.current) playSentenceAtIndex(index + 1, customVoice);
-            }, 15);
+            }, 0);
           } else {
             const pauseMs = Math.max(20, Math.round(pauseSec * 1000));
             queueTimeoutRef.current = setTimeout(() => {
@@ -505,11 +530,13 @@ export default function EventVoiceTester({
         const sentences = splitIntoSentences(text);
         if (sentences && sentences.length > 0) {
           const curVoiceId = selectedVoiceRef.current || defaultVoiceId || 'free_vi_female';
-          const voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === curVoiceId) || { id: curVoiceId, lang: 'vi-VN', gender: 'Female' };
-          // Pre-warm câu đầu tiên và câu thứ hai vào RAM Cache
-          prefetchTTSAudio(sentences[0], voiceObj, { rate: speedRef.current });
-          if (sentences.length > 1) {
-            prefetchTTSAudio(sentences[1], voiceObj, { rate: speedRef.current });
+          // Pre-warm 3 câu đầu tiên với CHÍNH XÁC cleanText & voiceObj tương ứng
+          for (let i = 0; i < Math.min(3, sentences.length); i++) {
+            const parsed = parseScriptSentence(sentences[i], curVoiceId);
+            if (parsed.cleanText) {
+              const rate = (parsed.matchedSpeakerAvatar?.rate ?? 1.0) * (speedRef.current || 1.0);
+              prefetchTTSAudio(parsed.cleanText, parsed.voiceObj, { rate });
+            }
           }
         }
       } catch (e) {}
@@ -552,14 +579,23 @@ export default function EventVoiceTester({
     }
 
     const curVoiceId = selectedVoiceRef.current || defaultVoiceId || 'free_vi_female';
-    const voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === curVoiceId) || { id: curVoiceId, lang: 'vi-VN', gender: 'Female' };
+    const parsed0 = parseScriptSentence(sentences[0], curVoiceId);
 
-    // Lookahead thông minh: Chỉ nạp câu 0 và câu 1 (không nạp 300 câu cùng lúc gây nghẽn mạng)
+    // Lookahead thông minh: nạp trước câu 1 và câu 2 với CHÍNH XÁC cleanText
     if (sentences.length > 1) {
-      prefetchTTSAudio(sentences[1], voiceObj, { rate: speedRef.current });
+      const nextParsed1 = parseScriptSentence(sentences[1], curVoiceId);
+      if (nextParsed1.cleanText) {
+        prefetchTTSAudio(nextParsed1.cleanText, nextParsed1.voiceObj, { rate: speedRef.current });
+      }
+    }
+    if (sentences.length > 2) {
+      const nextParsed2 = parseScriptSentence(sentences[2], curVoiceId);
+      if (nextParsed2.cleanText) {
+        prefetchTTSAudio(nextParsed2.cleanText, nextParsed2.voiceObj, { rate: speedRef.current });
+      }
     }
 
-    playSentenceAtIndex(0, voiceObj);
+    playSentenceAtIndex(0, parsed0.voiceObj);
   };
 
   const isDark = theme === 'dark';
@@ -683,7 +719,7 @@ export default function EventVoiceTester({
         ))}
       </optgroup>
 
-      {/* 6. 🌐 GIỌNG ĐỌC QUỐC TẾ ĐA NGÔN NGỮ */}
+      {/* 6. 🌐 GIỌNG ĐỌC QUỐC TẾ ĐA NGÔN NGỮ (ĐẦY ĐỦ 20 NGÔN NGỮ TOÀN CẦU) */}
       <optgroup label="── 🇺🇸 🇬🇧 TIẾNG ANH (Mỹ, Anh, Úc, Canada) ──">
         {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('en')).map(v => (
           <option key={`intl_en_${v.id}`} value={v.id}>
@@ -692,17 +728,145 @@ export default function EventVoiceTester({
         ))}
       </optgroup>
 
-      <optgroup label="── 🌏 TIẾNG CHÂU Á (Nhật, Hàn, Trung, Thái) ──">
-        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('ja') || v.lang?.startsWith('ko') || v.lang?.startsWith('zh') || v.lang?.startsWith('th')).map(v => (
-          <option key={`intl_asia_${v.id}`} value={v.id}>
+      <optgroup label="── 🇯🇵 TIẾNG NHẬT (Japanese) ──">
+        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('ja')).map(v => (
+          <option key={`intl_ja_${v.id}`} value={v.id}>
             {cleanVoiceName(v.name)}
           </option>
         ))}
       </optgroup>
 
-      <optgroup label="── 🌍 TIẾNG CHÂU ÂU (Pháp, Đức, Ý, TBN, Nga) ──">
-        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('fr') || v.lang?.startsWith('de') || v.lang?.startsWith('it') || v.lang?.startsWith('es') || v.lang?.startsWith('ru')).map(v => (
-          <option key={`intl_eu_${v.id}`} value={v.id}>
+      <optgroup label="── 🇨🇳 TIẾNG TRUNG (Chinese) ──">
+        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('zh')).map(v => (
+          <option key={`intl_zh_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      <optgroup label="── 🇰🇷 TIẾNG HÀN (Korean) ──">
+        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('ko')).map(v => (
+          <option key={`intl_ko_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      <optgroup label="── 🇹🇭 TIẾNG THÁI (Thai) ──">
+        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('th')).map(v => (
+          <option key={`intl_th_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      <optgroup label="── 🇮🇩 TIẾNG INDONESIA (Indonesian) ──">
+        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('id')).map(v => (
+          <option key={`intl_id_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      <optgroup label="── 🇲🇾 TIẾNG MALAYSIA (Malay) ──">
+        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('ms')).map(v => (
+          <option key={`intl_ms_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      <optgroup label="── 🇵🇭 TIẾNG PHILIPPINES (Tagalog/Filipino) ──">
+        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('fil') || v.lang?.startsWith('tl')).map(v => (
+          <option key={`intl_fil_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      <optgroup label="── 🇮🇳 TIẾNG HINDI (Ấn Độ) ──">
+        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('hi')).map(v => (
+          <option key={`intl_hi_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      <optgroup label="── 🇸🇦 TIẾNG Ả RẬP (Arabic) ──">
+        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('ar')).map(v => (
+          <option key={`intl_ar_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      <optgroup label="── 🇫🇷 TIẾNG PHÁP (French) ──">
+        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('fr')).map(v => (
+          <option key={`intl_fr_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      <optgroup label="── 🇩🇪 TIẾNG ĐỨC (German) ──">
+        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('de')).map(v => (
+          <option key={`intl_de_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      <optgroup label="── 🇪🇸 TIẾNG TÂY BAN NHA (Spanish) ──">
+        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('es')).map(v => (
+          <option key={`intl_es_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      <optgroup label="── 🇮🇹 TIẾNG Ý (Italian) ──">
+        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('it')).map(v => (
+          <option key={`intl_it_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      <optgroup label="── 🇷🇺 TIẾNG NGA (Russian) ──">
+        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('ru')).map(v => (
+          <option key={`intl_ru_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      <optgroup label="── 🇧🇷 🇵🇹 TIẾNG BỒ ĐÀO NHA (Portuguese) ──">
+        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('pt')).map(v => (
+          <option key={`intl_pt_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      <optgroup label="── 🇹🇷 TIẾNG THỔ NHĨ KỲ (Turkish) ──">
+        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('tr')).map(v => (
+          <option key={`intl_tr_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      <optgroup label="── 🇵🇱 TIẾNG BA LAN (Polish) ──">
+        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('pl')).map(v => (
+          <option key={`intl_pl_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      <optgroup label="── 🇳🇱 TIẾNG HÀ LAN (Dutch) ──">
+        {INTERNATIONAL_VOICES.filter(v => v.lang?.startsWith('nl')).map(v => (
+          <option key={`intl_nl_${v.id}`} value={v.id}>
             {cleanVoiceName(v.name)}
           </option>
         ))}

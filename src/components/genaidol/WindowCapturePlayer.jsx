@@ -74,6 +74,8 @@ export default function WindowCapturePlayer() {
   const isUserMutedRef = useRef(false);
   const lastReportedTimeRef = useRef(0);
   const activeBlobUrlRef = useRef(null);
+  const isHardwareLocalBlobRef = useRef(false);
+  const currentCharIdRef = useRef(null);
 
   // Cập nhật tiêu đề cửa sổ cho OBS & TikTok Studio dễ nhận diện
   useEffect(() => {
@@ -82,17 +84,18 @@ export default function WindowCapturePlayer() {
     }
   }, []);
 
-  // ⚡ Tự động tìm kiếm fileBlob gốc trong Memory Cache / Opener / IndexedDB để phát 0ms không cần chờ upload/mạng
+  // ⚡ Tự động tìm kiếm fileBlob gốc trong Memory Cache / Opener / IndexedDB để phát 0ms không cần chờ upload/mạng (Hỗ trợ 1GB - 20GB, 2K - 8K)
   const tryLoadFromLocalDB = useCallback(async (targetUrlOrCharId) => {
     if (typeof window === 'undefined') return null;
     try {
-      // 0. Ưu tiên số 0: Lấy trực tiếp __activeMediaBlob từ opener (0ms)
+      // 0. Ưu tiên số 0: Lấy trực tiếp __activeMediaBlob từ opener (0ms tức thì)
       if (window.opener && window.opener.__activeMediaBlob && (window.opener.__activeMediaBlob instanceof Blob || window.opener.__activeMediaBlob instanceof File)) {
         if (activeBlobUrlRef.current) {
           try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
         }
         const bUrl = URL.createObjectURL(window.opener.__activeMediaBlob);
         activeBlobUrlRef.current = bUrl;
+        isHardwareLocalBlobRef.current = true;
         return bUrl;
       }
       if (window.__activeMediaBlob && (window.__activeMediaBlob instanceof Blob || window.__activeMediaBlob instanceof File)) {
@@ -101,6 +104,7 @@ export default function WindowCapturePlayer() {
         }
         const bUrl = URL.createObjectURL(window.__activeMediaBlob);
         activeBlobUrlRef.current = bUrl;
+        isHardwareLocalBlobRef.current = true;
         return bUrl;
       }
 
@@ -114,6 +118,7 @@ export default function WindowCapturePlayer() {
           }
           const bUrl = URL.createObjectURL(memBlob);
           activeBlobUrlRef.current = bUrl;
+          isHardwareLocalBlobRef.current = true;
           return bUrl;
         }
       }
@@ -136,6 +141,7 @@ export default function WindowCapturePlayer() {
         }
         const blobUrl = URL.createObjectURL(found.fileBlob);
         activeBlobUrlRef.current = blobUrl;
+        isHardwareLocalBlobRef.current = true;
         return blobUrl;
       }
     } catch (e) {}
@@ -322,15 +328,22 @@ export default function WindowCapturePlayer() {
           setTunnelUrl(state.tunnelUrl);
         }
         if (state.mediaUrl || state.selectedCharacter) {
+          if (state.selectedCharacter) {
+            currentCharIdRef.current = state.selectedCharacter;
+          }
           const localBlob = await tryLoadFromLocalDB(state.selectedCharacter || state.mediaUrl);
           if (localBlob) {
+            isHardwareLocalBlobRef.current = true;
             setVideoSrc(localBlob);
             setIsVideoLoading(false);
           } else if (state.mediaUrl) {
-            const resolved = resolveUrl(state.mediaUrl);
-            if (resolved && !isSameMedia(resolved, videoSrc)) {
-              setVideoSrc(resolved);
-              setIsVideoLoading(true);
+            // NẾU ĐANG CÓ HARDWARE BLOB TỪ MÁY THÌ TUYỆT ĐỐI KHÔNG GHI ĐÈ BẰNG URL SERVER CHƯA TẢI XONG
+            if (!isHardwareLocalBlobRef.current) {
+              const resolved = resolveUrl(state.mediaUrl);
+              if (resolved && !isSameMedia(resolved, videoSrc)) {
+                setVideoSrc(resolved);
+                setIsVideoLoading(true);
+              }
             }
           }
         }
@@ -488,7 +501,22 @@ export default function WindowCapturePlayer() {
         webkit-playsinline="true"
         loop
         preload="auto"
-        crossOrigin="anonymous"
+        disablePictureInPicture
+        controlsList="nodownload nofullscreen noremoteplayback"
+        crossOrigin={resolvedFinalSrc && resolvedFinalSrc.startsWith('blob:') ? undefined : "anonymous"}
+        onLoadedData={() => setIsVideoLoading(false)}
+        onCanPlay={() => setIsVideoLoading(false)}
+        onWaiting={() => setIsVideoLoading(true)}
+        onPlaying={() => setIsVideoLoading(false)}
+        onError={async (e) => {
+          console.warn('[WindowCapture] Video loading error, attempting fallback to local hardware blob:', e);
+          const fallback = await tryLoadFromLocalDB();
+          if (fallback) {
+            isHardwareLocalBlobRef.current = true;
+            setVideoSrc(fallback);
+            setIsVideoLoading(false);
+          }
+        }}
         style={{
           width: '100%',
           height: '100%',

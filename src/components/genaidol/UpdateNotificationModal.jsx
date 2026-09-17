@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.3.4';
+export const APP_VERSION = '3.3.5';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Bản Cập Nhật v3.3.4 - Kịch Bản Đọc Liền Mạch Tuyệt Đối, Triệt Tiêu Lỗi Bỏ Dòng & Đồng Bộ Video Siêu Tốc',
-    description: '1. Voice Đọc Kịch Bản Liền Mạch Tuyệt Đối: Khoảng dừng giữa các câu tuân thủ 100% thiết lập của người dùng (0.0s đọc liền mạch ngay tức thì ~15ms, không ngắt nghỉ cà nhấp; 0.1s - 1.0s chuẩn từng miligiây). Đồng bộ 2 chiều toàn diện giữa giao diện soạn kịch bản và trình phát live; 2. Triệt Tiêu Hoàn Toàn Hiện Tượng Bỏ Dòng: Loại bỏ watchdog 12s cố định gây cắt ngang các câu thoại dài; áp dụng watchdog an toàn dynamic tối thiểu 60s, bảo đảm đọc đầy đủ 100% từng dòng, từng chữ không bị sót dòng; 3. Chuẩn Hóa Phát Âm & Cảm Xúc Biểu Cảm Bán Hàng: Nâng cấp EdgeTTS 96kbps trong trẻo, bảo vệ từ khóa phát âm chuẩn "bánh gạo lứt", "gạo lứt", loại bỏ dấu ngoặc kép giúp giọng đọc tự nhiên truyền cảm, lên bổng xuống trầm thu hút; 4. Video Tải Lên Nặng Bất Kỳ Mở Ngay Lập Tức Trên Window Capture & TikTok Live Studio: Kết nối trực tiếp RAM Blob Object và Memory Cache, mở tức thì 0.001ms chuẩn GPU 60 FPS siêu mượt cho mọi kích thước video từ nhỏ đến 20GB.'
+    title: '👑 Bản Cập Nhật v3.3.5 - Kịch Bản Đọc Liên Tục 0ms, Đột Phá Video Nặng 1GB-20GB 2K-8K & Đầy Đủ 20 Ngôn Ngữ',
+    description: '1. Voice Đọc Kịch Bản Liên Tục Không Dừng: Đột phá cơ chế Lookahead Pipeline bóc tách speaker tag chuẩn xác, nạp trước âm thanh vào RAM với độ trễ 0ms; khi không cài đặt khoảng dừng, AI đọc xuyên suốt liên tục từ đầu đến cuối không khựng, không chờ mạng; 2. Video Nặng 1GB Đến 20GB, Độ Phân Giải 2K Đến 8K: Hiển thị ngay lập tức trên Cửa Sổ Window Capture và link TikTok Live Studio; bảo vệ nguồn phát Hardware Local Blob trực tiếp từ GPU không bị ghi đè, phát siêu mượt 60 FPS không đứng hình, không giật lag; 3. Đồng Bộ Toàn Diện Đầy Đủ 20 Ngôn Ngữ Toàn Cầu: Khôi phục danh sách hiển thị đầy đủ 20 ngôn ngữ quốc tế ở mọi giao diện, tự động đồng bộ giọng đọc AI bản xứ theo từng ngôn ngữ giống như Tiếng Việt.'
   }
 ];
 

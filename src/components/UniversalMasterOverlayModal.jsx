@@ -198,7 +198,12 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
       } catch (e) {}
     }
     if (newWin) {
-      try { newWin.focus(); } catch (e) {}
+      try {
+        newWin.__activeMediaBlob = window.__activeMediaBlob;
+        newWin.__activeMediaBlobUrl = window.__activeMediaBlobUrl;
+        newWin.__activeMediaBlobMap = window.__activeMediaBlobMap;
+        newWin.focus();
+      } catch (e) {}
     }
   };
 
