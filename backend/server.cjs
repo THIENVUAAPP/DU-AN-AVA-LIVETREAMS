@@ -1550,7 +1550,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '3.4.0';
+  let ver = '3.4.1';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1588,7 +1588,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '3.4.0';
+  let ver = '3.4.1';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -3037,7 +3037,20 @@ function humanizeTextForBackendTTS(rawText, gender, lang) {
     .replace(/(?<![\p{L}\p{N}_])fl(?![\p{L}\p{N}_])/giu, 'theo dõi')
     .replace(/(?<![\p{L}\p{N}_])cod(?![\p{L}\p{N}_])/giu, 'nhận hàng thanh toán')
     .replace(/(?<![\p{L}\p{N}_])stk(?![\p{L}\p{N}_])/giu, 'số tài khoản')
-    .replace(/(?<![\p{L}\p{N}_])combo(?![\p{L}\p{N}_])/giu, 'gói combo');
+    .replace(/(?<![\p{L}\p{N}_])combo(?![\p{L}\p{N}_])/giu, 'gói combo')
+    // Bảo vệ tuyệt đối các từ khóa nông sản, bánh kẹo thực phẩm
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo\s*lứt\s*(?:huyết\s*rồng|đỏ|đen|hữu\s*cơ)?(?![\p{L}\p{N}_])/giu, 'bánh gạo lứt')
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo\s*lức(?![\p{L}\p{N}_])/giu, 'bánh gạo lứt')
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo\s*nướng(?![\p{L}\p{N}_])/giu, 'bánh gạo nướng')
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo\s*rong\s*biển(?![\p{L}\p{N}_])/giu, 'bánh gạo rong biển')
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo\s*phô\s*mai(?![\p{L}\p{N}_])/giu, 'bánh gạo phô mai')
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo\s*ăn\s*kiêng(?![\p{L}\p{N}_])/giu, 'bánh gạo ăn kiêng')
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo\s*giòn\s*rụm(?![\p{L}\p{N}_])/giu, 'bánh gạo giòn rụm')
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo(?![\p{L}\p{N}_])/giu, 'bánh gạo')
+    .replace(/(?<![\p{L}\p{N}_])gạo\s*lứt(?![\p{L}\p{N}_])/giu, 'gạo lứt')
+    .replace(/(?<![\p{L}\p{N}_])gạo\s*st25(?![\p{L}\p{N}_])/giu, 'gạo ST25')
+    .replace(/(?<![\p{L}\p{N}_])gạo\s*st-?25(?![\p{L}\p{N}_])/giu, 'gạo ST25')
+    .replace(/(?<![\p{L}\p{N}_])lúa\s*gạo(?![\p{L}\p{N}_])/giu, 'lúa gạo');
 
   // Giữ nguyên câu từ kịch bản đọc liền mạch, mượt mà, loại bỏ triệt để dấu chấm lửng và dấu ngắt nghỉ dài
   return text

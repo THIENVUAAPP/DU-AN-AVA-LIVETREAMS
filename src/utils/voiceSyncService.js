@@ -7499,7 +7499,7 @@ export function cleanTextForVoiceSpeech(rawText) {
  * Bảo toàn 100% âm đuôi, phụ âm cuối (-n, -ng, -nh, -m, -p, -t, -c) và ngữ điệu tự nhiên.
  * Tuyệt đối không cắt cụt đuôi âm khiến "bạn" bị đọc thành "bạ", "nhà" thành "nh..."!
  */
-export function trimAudioBufferSilence(audioBuffer, silenceThreshold = 0.0004) {
+export function trimAudioBufferSilence(audioBuffer) {
   if (!audioBuffer) return audioBuffer;
   try {
     const numChannels = audioBuffer.numberOfChannels;
@@ -7512,36 +7512,53 @@ export function trimAudioBufferSilence(audioBuffer, silenceThreshold = 0.0004) {
       channelData.push(audioBuffer.getChannelData(c));
     }
 
+    // Cửa sổ trượt 20ms tính năng lượng RMS và biên độ đỉnh Peak
+    const windowSize = Math.max(16, Math.floor(sampleRate * 0.02)); // 20ms window
+    const hopSize = Math.max(8, Math.floor(sampleRate * 0.005));   // 5ms hop step
+    const rmsThreshold = 0.0006;
+    const peakThreshold = 0.0025;
+    const leadPadding = Math.floor(sampleRate * 0.02);    // 20ms lead-in
+    const safetyPadding = Math.floor(sampleRate * 0.085); // 85ms safety padding bảo toàn 100% âm đuôi
+
     // 1. Quét tìm vị trí bắt đầu có âm thanh (Start Index)
     let startIndex = 0;
-    const scanStep = 16;
-    for (let i = 0; i < length; i += scanStep) {
-      let isSilent = true;
-      for (let c = 0; c < numChannels; c++) {
-        if (Math.abs(channelData[c][i]) > silenceThreshold) {
-          isSilent = false;
-          break;
+    for (let i = 0; i < length - windowSize; i += hopSize) {
+      let sumSq = 0;
+      let maxP = 0;
+      for (let j = 0; j < windowSize; j++) {
+        let maxChan = 0;
+        for (let c = 0; c < numChannels; c++) {
+          const a = Math.abs(channelData[c][i + j]);
+          if (a > maxChan) maxChan = a;
         }
+        sumSq += maxChan * maxChan;
+        if (maxChan > maxP) maxP = maxChan;
       }
-      if (!isSilent) {
-        startIndex = Math.max(0, i - Math.floor(sampleRate * 0.015)); // lùi 15ms an toàn
+      const rms = Math.sqrt(sumSq / windowSize);
+      if (rms > rmsThreshold || maxP > peakThreshold) {
+        startIndex = Math.max(0, i - leadPadding);
         break;
       }
     }
 
-    // 2. Quét từ đuôi lên để tìm vị trí kết thúc âm thanh (End Index)
+    // 2. Quét từ đuôi lên để tìm vị trí kết thúc âm thanh thực tế (End Index)
     let endIndex = length - 1;
-    for (let i = length - 1; i >= startIndex; i -= scanStep) {
-      let isSilent = true;
-      for (let c = 0; c < numChannels; c++) {
-        if (Math.abs(channelData[c][i]) > silenceThreshold) {
-          isSilent = false;
-          break;
+    for (let i = length - windowSize; i >= startIndex; i -= hopSize) {
+      let sumSq = 0;
+      let maxP = 0;
+      for (let j = 0; j < windowSize; j++) {
+        let maxChan = 0;
+        for (let c = 0; c < numChannels; c++) {
+          const a = Math.abs(channelData[c][i + j]);
+          if (a > maxChan) maxChan = a;
         }
+        sumSq += maxChan * maxChan;
+        if (maxChan > maxP) maxP = maxChan;
       }
-      if (!isSilent) {
-        // Cộng thêm 35ms safety padding để bảo toàn 100% âm đuôi (-n, -ng, -nh, -m, -p, -t, -c)
-        endIndex = Math.min(length - 1, i + Math.floor(sampleRate * 0.035));
+      const rms = Math.sqrt(sumSq / windowSize);
+      if (rms > rmsThreshold || maxP > peakThreshold) {
+        // Cộng 85ms safety padding: bảo toàn tuyệt đối âm đuôi ("gạo", "-n", "-ng", "-t", "-c", "-nh")
+        endIndex = Math.min(length - 1, i + windowSize + safetyPadding);
         break;
       }
     }

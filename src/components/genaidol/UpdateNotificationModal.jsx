@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.4.0';
+export const APP_VERSION = '3.4.1';
 export const RELEASE_DATE = '17/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👑 Bản Cập Nhật v3.4.0 - Xóa Bỏ Hoàn Toàn Khoảng Lặng Dấu Câu, Đọc Kịch Bản Xuyên Suốt Mượt Mà 24/7',
-    description: '1. Triệt Tiêu Toàn Diện Khoảng Lặng Dấu Câu: Toàn bộ dấu chấm lửng (...), dấu than (!), dấu hỏi (?) và dấu câu phức tạp được xử lý mượt mà, loại bỏ triệt để khoảng lặng/khựng nghỉ không mong muốn; 2. Đọc Xuyên Suốt Toàn Bộ Kịch Bản: Mọi phòng thu giọng nói (Kịch Bản Live, VoiceStudio, AIAvatarStudio, EventVoiceTester) tự động đọc liên tục từ câu đầu đến câu cuối không bị dừng ngắt quãng; 3. Khoảng Dừng Linh Hoạt 100% Theo Người Dùng: AI đọc liền mạch 0ms (khi cài 0s) hoặc nghỉ đúng số giây người dùng thiết lập.'
+    title: '👑 Bản Cập Nhật v3.4.1 - Đọc Kịch Bản Liền Mạch 0ms Không Ngắt Quãng & Chuẩn Hóa Phát Âm Tiếng Việt Đỉnh Cao',
+    description: '1. Đọc Kịch Bản Liền Mạch 0ms: Loại bỏ triệt để hiện tượng dừng ngắt quãng giữa các câu trong cả Tab Kịch bản Idol lẫn thanh taskbar phát kịch bản Live; thuật toán RMS cửa sổ trượt 20ms cắt sạch 1.1s im lặng MP3 và prefetch 3 câu vào RAM giúp chuyển câu tức thì 0ms; 2. Chuẩn Hóa Phát Âm Từ Khóa Tuyệt Đối: Khắc phục lỗi nuốt âm đuôi biến "bánh gạo" thành "bánh gạ", bảo toàn 100% âm đuôi (-n, -ng, -nh, -m, -p, -t, -c), không chia chữ hay tách chữ; 3. Tự Động Lặp Lại Tuần Hoàn (Loop): Hết kịch bản tự động quay lại đầu đọc tiếp ngay lập tức, chỉ dừng khi người dùng chủ động cài đặt số giây nghỉ.'
   }
 ];
 

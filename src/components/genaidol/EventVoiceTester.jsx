@@ -133,10 +133,11 @@ export default function EventVoiceTester({
   // Lắng nghe sự kiện toàn cục khi người dùng đổi khoảng dừng ở bất kỳ nơi nào
   useEffect(() => {
     const handleGlobalPause = (e) => {
-      const p = e.detail?.pause;
+      const p = typeof e.detail === 'number' ? e.detail : (e.detail?.pause !== undefined ? e.detail.pause : Number(e.detail));
       if (p !== undefined && !isNaN(Number(p))) {
-        setPauseDuration(Number(p));
-        pauseDurationRef.current = Number(p);
+        const val = Math.max(0, Number(p));
+        setPauseDuration(val);
+        pauseDurationRef.current = val;
       }
     };
     window.addEventListener('avalive_pause_between_sentences_updated', handleGlobalPause);
@@ -333,7 +334,7 @@ export default function EventVoiceTester({
 
     processed = cleanTextForVoiceSpeech(processed);
 
-    // Tách theo dòng hoặc câu độc lập để mọi cấu trúc văn bản đều được đọc mạch lạc, liên tục
+    // Tách theo dòng tự nhiên của kịch bản để mọi câu thoại được đọc liền mạch, mượt mà không ngắt quãng
     const lines = processed.split(/\r?\n/).map(l => l.trim()).filter(Boolean);
     const finalSentences = [];
     for (const line of lines) {
@@ -344,12 +345,17 @@ export default function EventVoiceTester({
         speakerPrefix = tagMatch[1];
         body = tagMatch[2];
       }
-      const parts = body.match(/[^.!?\n]+[.!?]+|[^.!?\n]+$/g) || [body];
-      for (const part of parts) {
-        const s = part.trim();
-        if (s && s.length > 0) {
-          finalSentences.push(speakerPrefix ? `${speakerPrefix}${s}` : s);
+      // Chỉ tách nhỏ nếu một dòng quá dài (> 280 ký tự) để tối ưu tải lượng TTS
+      if (body.length > 280) {
+        const parts = body.match(/[^.!?\n]+[.!?]+|[^.!?\n]+$/g) || [body];
+        for (const part of parts) {
+          const s = part.trim();
+          if (s && s.length > 0) {
+            finalSentences.push(speakerPrefix ? `${speakerPrefix}${s}` : s);
+          }
         }
+      } else {
+        finalSentences.push(speakerPrefix ? `${speakerPrefix}${body}` : body);
       }
     }
 

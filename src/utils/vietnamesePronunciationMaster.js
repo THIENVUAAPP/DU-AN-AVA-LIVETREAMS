@@ -14,13 +14,22 @@
 
 // 1. TỪ ĐIỂN PHÁT ÂM THƯƠNG HIỆU & THUẬT NGỮ CÔNG NGHỆ (PRONUNCIATION DICTIONARY)
 export const PRONUNCIATION_DICTIONARY = [
-  // 🛡️ BẢO VỆ TUYỆT ĐỐI CÁC TỪ KHÓA TIẾNG VIỆT GỐC (TUYỆT ĐỐI KHÔNG TÁCH CHỮ, KHÔNG LỖI CHÍNH TẢ)
-  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo\s*lứt(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo lứt' },
+  // 🛡️ BẢO VỆ TUYỆT ĐỐI CÁC TỪ KHÓA TIẾNG VIỆT GỐC (TUYỆT ĐỐI KHÔNG TÁCH CHỮ, KHÔNG LỖI CHÍNH TẢ, KHÔNG CỤT ĐUÔI ÂM)
+  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo\s*lứt\s*(?:huyết\s*rồng|đỏ|đen|hữu\s*cơ)?(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo lứt' },
   { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo\s*lức(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo lứt' },
+  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo\s*nướng(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo nướng' },
+  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo\s*rong\s*biển(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo rong biển' },
+  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo\s*phô\s*mai(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo phô mai' },
+  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo\s*ăn\s*kiêng(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo ăn kiêng' },
+  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo\s*giòn\s*rụm(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo giòn rụm' },
+  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo' },
   { pattern: /(?<![\p{L}\p{N}_])gạo\s*lứt(?![\p{L}\p{N}_])/giu, replacement: 'gạo lứt' },
   { pattern: /(?<![\p{L}\p{N}_])gạo\s*lức(?![\p{L}\p{N}_])/giu, replacement: 'gạo lứt' },
-  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo' },
   { pattern: /(?<![\p{L}\p{N}_])gạo\s*st25(?![\p{L}\p{N}_])/giu, replacement: 'gạo ST25' },
+  { pattern: /(?<![\p{L}\p{N}_])gạo\s*st-?25(?![\p{L}\p{N}_])/giu, replacement: 'gạo ST25' },
+  { pattern: /(?<![\p{L}\p{N}_])gạo\s*thơm(?![\p{L}\p{N}_])/giu, replacement: 'gạo thơm' },
+  { pattern: /(?<![\p{L}\p{N}_])gạo\s*nàng\s*thơm(?![\p{L}\p{N}_])/giu, replacement: 'gạo nàng thơm' },
+  { pattern: /(?<![\p{L}\p{N}_])lúa\s*gạo(?![\p{L}\p{N}_])/giu, replacement: 'lúa gạo' },
   { pattern: /(?<![\p{L}\p{N}_])gạo(?![\p{L}\p{N}_])/giu, replacement: 'gạo' },
   { pattern: /(?<![\p{L}\p{N}_])không(?![\p{L}\p{N}_])/giu, replacement: 'không' },
   { pattern: /(?<![\p{L}\p{N}_])bạn(?![\p{L}\p{N}_])/giu, replacement: 'bạn' },
@@ -373,14 +382,32 @@ export function masterNormalizeVietnameseSpeech(rawText, options = {}) {
   // 2. Làm sạch ký hiệu trình bày
   text = cleanSpokenPunctuation(text);
 
-  // 3. Tra cứu từ điển phát âm thương hiệu & thuật ngữ công nghệ
+  // 3. Tra cứu từ điển phát âm thương hiệu & thuật ngữ công nghệ (Bảo tồn chữ hoa)
   for (const item of PRONUNCIATION_DICTIONARY) {
-    text = text.replace(item.pattern, item.replacement);
+    if (typeof item.replacement === 'function') {
+      text = text.replace(item.pattern, item.replacement);
+    } else {
+      text = text.replace(item.pattern, (match) => {
+        if (match && match[0] === match[0].toUpperCase() && item.replacement && item.replacement[0] !== item.replacement[0].toUpperCase()) {
+          return item.replacement[0].toUpperCase() + item.replacement.slice(1);
+        }
+        return item.replacement;
+      });
+    }
   }
 
   // 4. Tra cứu từ điển viết tắt tiếng Việt
   for (const item of VIETNAMESE_ABBREVIATIONS) {
-    text = text.replace(item.pattern, item.replacement);
+    if (typeof item.replacement === 'function') {
+      text = text.replace(item.pattern, item.replacement);
+    } else {
+      text = text.replace(item.pattern, (match) => {
+        if (match && match[0] === match[0].toUpperCase() && item.replacement && item.replacement[0] !== item.replacement[0].toUpperCase()) {
+          return item.replacement[0].toUpperCase() + item.replacement.slice(1);
+        }
+        return item.replacement;
+      });
+    }
   }
 
   // 5. Chuẩn hóa tiền tệ, số, đơn vị đo

@@ -72,10 +72,11 @@ const AIAudioPlayer = forwardRef(({ isLive, isScriptRunning = false, onAudioPlay
   // Lắng nghe sự kiện cập nhật khoảng dừng kịch bản từ người dùng setup
   useEffect(() => {
     const handlePauseUpdate = (e) => {
-      const p = e.detail?.pause;
+      const p = typeof e.detail === 'number' ? e.detail : (e.detail?.pause !== undefined ? e.detail.pause : Number(e.detail));
       if (p !== undefined && !isNaN(Number(p))) {
-        setUserPauseDuration(Number(p));
-        userPauseDurationRef.current = Number(p);
+        const val = Math.max(0, Number(p));
+        setUserPauseDuration(val);
+        userPauseDurationRef.current = val;
       }
     };
     window.addEventListener('avalive_pause_between_sentences_updated', handlePauseUpdate);
@@ -221,18 +222,24 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }
     }
 
-    const rawSentences = scriptRaw
+    const rawLines = scriptRaw
       .split(/\r?\n/)
       .map(s => s.trim())
       .filter(Boolean);
 
     const splitSentences = [];
-    rawSentences.forEach(line => {
-      const parts = line.match(/[^.!?\n]+[.!?]+|[^.!?\n]+$/g) || [line];
-      parts.forEach(p => {
-        const clean = p.trim();
-        if (clean) splitSentences.push(clean);
-      });
+    rawLines.forEach(line => {
+      // Chỉ tách nhỏ nếu một dòng quá dài (> 280 ký tự) để tối ưu payload TTS
+      // Các câu thông thường trong dòng được giữ trọn vẹn để đọc tự nhiên qua dấu chấm, dấu phẩy
+      if (line.length > 280) {
+        const parts = line.match(/[^.!?\n]+[.!?]+|[^.!?\n]+$/g) || [line];
+        parts.forEach(p => {
+          const clean = p.trim();
+          if (clean) splitSentences.push(clean);
+        });
+      } else {
+        splitSentences.push(line);
+      }
     });
 
     return splitSentences.map((s, idx) => ({
@@ -411,19 +418,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         }));
       }
 
-      // 🚀 LOOKAHEAD PRE-FETCHING: Tải trước ngầm 2 câu tiếp theo (N+1 và N+2) vào RAM AudioBuffer
+      // 🚀 LOOKAHEAD PRE-FETCHING: Tải trước ngầm 3 câu tiếp theo (N+1, N+2, N+3) vào RAM AudioBuffer
       if (isScriptItem) {
-        const nextIdx = currentIndexRef.current + 1;
-        if (queueRef.current && queueRef.current[nextIdx]) {
-          const nextItem = queueRef.current[nextIdx];
-          const nextVoice = resolveEffectiveVoice(nextItem.role || nextItem.voiceChannel || 'idol', nextItem.voiceId, nextItem.avatarId);
-          if (nextVoice) prefetchTTSAudio(nextItem.text, nextVoice);
-        }
-        const nextIdx2 = currentIndexRef.current + 2;
-        if (queueRef.current && queueRef.current[nextIdx2]) {
-          const nextItem2 = queueRef.current[nextIdx2];
-          const nextVoice2 = resolveEffectiveVoice(nextItem2.role || nextItem2.voiceChannel || 'idol', nextItem2.voiceId, nextItem2.avatarId);
-          if (nextVoice2) prefetchTTSAudio(nextItem2.text, nextVoice2);
+        for (let offset = 1; offset <= 3; offset++) {
+          const nextIdx = currentIndexRef.current + offset;
+          if (queueRef.current && queueRef.current[nextIdx]) {
+            const nextItem = queueRef.current[nextIdx];
+            const nextVoice = resolveEffectiveVoice(nextItem.role || nextItem.voiceChannel || 'idol', nextItem.voiceId, nextItem.avatarId);
+            if (nextVoice) prefetchTTSAudio(nextItem.text, nextVoice);
+          }
         }
       } else if (priorityQueueRef.current.length > 0) {
         const nextPri = priorityQueueRef.current[0];
@@ -607,6 +610,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         isPlayingRef.current = true;
         isBusyRef.current = false;
         if (scriptItems.length > 0) {
+          for (let i = 1; i <= 3; i++) {
+            if (scriptItems[i]) {
+              const v = resolveEffectiveVoice(scriptItems[i].role || scriptItems[i].voiceChannel || 'idol', scriptItems[i].voiceId, scriptItems[i].avatarId);
+              if (v) prefetchTTSAudio(scriptItems[i].text, v);
+            }
+          }
           playItem(scriptItems[0], true);
         }
       } catch (e) {

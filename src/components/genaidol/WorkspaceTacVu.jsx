@@ -877,8 +877,9 @@ export default function WorkspaceTacVu() {
     }
     if (field === 'pauseBetweenSentences') {
       try {
-        localStorage.setItem('avalive_pause_between_sentences', String(value));
-        window.dispatchEvent(new CustomEvent('avalive_pause_between_sentences_updated', { detail: value }));
+        const pNum = Math.max(0, Number(value));
+        localStorage.setItem('avalive_pause_between_sentences', String(pNum));
+        window.dispatchEvent(new CustomEvent('avalive_pause_between_sentences_updated', { detail: { pause: pNum } }));
       } catch (e) {}
     }
     updateEventConfig('script_broadcast', partial);
