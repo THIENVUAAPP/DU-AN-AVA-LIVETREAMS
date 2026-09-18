@@ -1878,11 +1878,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       bandoAudio.playWarHorn({ force: true });
     }
     
-    // Phát âm thanh Voice AI trực tiếp 100%
+    // Phát âm thanh Voice AI trực tiếp 100% chuẩn theo voice đã cấu hình
     previewVoiceAudio(role, text, { isTest: true, priority: true });
-    try {
-      mapVoiceEngine.speak(text, role, true);
-    } catch(e) {}
     showToast(`🔊 Đang phát kiểm tra âm thanh Giọng ${role === 'idol' ? 'Idol' : role === 'manager' ? 'Trợ lý' : 'Game'}!`, 'success');
   }, [unlockAllAudio]);
 

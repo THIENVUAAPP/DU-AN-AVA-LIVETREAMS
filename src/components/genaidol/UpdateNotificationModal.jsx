@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.8.4';
+export const APP_VERSION = '3.8.5';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v3.8.5 - Khắc Phục Triệt Để Lỗi Lẫn Lộn Giọng Voice, Tối Ưu Tốc Độ & Độ Trầm Bổng Độc Bản',
+    description: '1. Khắc Phục Triệt Để Lỗi Lẫn Lộn Giọng Đọc Trong Kịch Bản: Người dùng chọn giọng nào đọc chính xác 100% duy nhất giọng đó xuyên suốt toàn bộ kịch bản, không phát lẫn lộn, không đổi giọng giữa chừng, không đè nhiều giọng cùng lúc; 2. Tùy Chỉnh Tốc Độ (Speed) & Độ Trầm Bổng (Pitch) Chuẩn Xác: Tốc độ chỉ thay đổi nhịp đọc nhanh/chậm mà không làm biến dạng giọng đọc, giữ nguyên 100% âm sắc tự nhiên; 3. Đồng Bộ Video Siêu Mượt 60 FPS Sang Window Capture: Sử dụng trực tiếp video trong máy, phát ngay 0ms không độ trễ.'
+  },
   {
     title: '⚡ Bản Cập Nhật v3.8.4 - Khôi Phục Hoàn Toàn Theo Yêu Cầu & Nâng Cấp Hệ Thống Ổn Định Toàn Diện',
     description: '1. Khôi Phục Toàn Diện Bản Chuẩn: Khôi phục chính xác toàn bộ cấu trúc tính năng theo cam kết; 2. Nâng Cấp Bộ Điều Khiển Âm Lượng, Tốc Độ, Độ Trầm Bổng: Hoạt động chuẩn xác, tích hợp nút tích bật/tắt độc lập từng kênh giọng đọc; 3. Đồng Bộ Window Capture & Luồng Live 4K 60 FPS Siêu Tốc: Phát video dung lượng lớn tức thì 0ms, siêu mượt mà, không giật lag, không đứng hình.'

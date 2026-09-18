@@ -145,6 +145,11 @@ const AIAudioPlayer = forwardRef(({ isLive, isScriptRunning = false, onAudioPlay
       }
     }
 
+    let activeTabVoiceId = null;
+    let activeTabVolume = undefined;
+    let activeTabRate = undefined;
+    let activeTabPitch = undefined;
+
     // Ưu tiên 2: Kịch bản persistent của người dùng
     if (!scriptRaw) {
       const persistentTabsRaw = localStorage.getItem('aidol_user_script_tabs_persistent');
@@ -153,8 +158,14 @@ const AIAudioPlayer = forwardRef(({ isLive, isScriptRunning = false, onAudioPlay
           const pTabs = JSON.parse(persistentTabsRaw);
           if (Array.isArray(pTabs) && pTabs.length > 0) {
             const activeTab = pTabs.find(t => t.active) || pTabs[0];
-            if (activeTab && activeTab.fixedScriptText) {
-              scriptRaw = activeTab.fixedScriptText;
+            if (activeTab) {
+              if (activeTab.fixedScriptText) {
+                scriptRaw = activeTab.fixedScriptText;
+              }
+              if (activeTab.voiceId) activeTabVoiceId = activeTab.voiceId;
+              if (activeTab.volume !== undefined) activeTabVolume = activeTab.volume;
+              if (activeTab.rate !== undefined) activeTabRate = activeTab.rate;
+              if (activeTab.pitch !== undefined) activeTabPitch = activeTab.pitch;
             }
           }
         } catch (e) {}
@@ -217,6 +228,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           voiceObj: pItem.voiceObj,
           volume: pItem.volume,
           rate: pItem.rate,
+          pitch: pItem.pitch,
           voiceChannel: pItem.role || 'idol',
           index: idx
         }));
@@ -235,11 +247,19 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       splitSentences.push(cleanLine);
     });
 
+    const resolvedDefaultVoice = resolveEffectiveVoice('idol', activeTabVoiceId, 'avatar_1');
     return splitSentences.map((s, idx) => ({
       id: `script_${idx}`,
       type: 'script',
       text: s.trim(),
       voiceChannel: 'idol',
+      role: 'idol',
+      avatarId: 'avatar_1',
+      voiceId: activeTabVoiceId || resolvedDefaultVoice.id,
+      voiceObj: resolvedDefaultVoice,
+      volume: activeTabVolume ?? resolvedDefaultVoice.volume ?? 1.0,
+      rate: activeTabRate ?? resolvedDefaultVoice.rate ?? 1.0,
+      pitch: activeTabPitch ?? resolvedDefaultVoice.pitch ?? 1.0,
       index: idx
     }));
   };
@@ -391,10 +411,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       if (onAudioPlayStateChange) onAudioPlayStateChange(true);
       
       const channel = item.voiceChannel || (item.type === 'script' ? 'idol' : item.type === 'comment' ? 'comment' : 'manager');
-      // ⚡ ƯU TIÊN SỐ 1 (CAO NHẤT 100%): LẤY VOICE ĐÃ SETUP TRONG TAB BỘ NÃO AI
-      let activeVoice = resolveEffectiveVoice(item.role || channel, item.voiceId, item.avatarId);
+      // ⚡ ƯU TIÊN SỐ 1 (CAO NHẤT 100%): LẤY VOICE ĐÃ SETUP TRONG TAB BỘ NÃO AI HOẶC THEO CÂU THOẠI
+      let activeVoice = item.voiceObj || (item.voiceId ? resolveEffectiveVoice(item.role || channel, item.voiceId, item.avatarId) : null);
       if (!activeVoice) {
-        activeVoice = item.voiceObj || resolveEffectiveVoice(channel, null);
+        activeVoice = resolveEffectiveVoice(item.role || channel, item.voiceId, item.avatarId);
       }
       
       if (activeVoice?.enabled === false) {

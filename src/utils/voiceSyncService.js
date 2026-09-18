@@ -7193,8 +7193,7 @@ export function parseMultiCharacterScript(text, config = null) {
 
     if (!matchedAvatar) {
       const activeAvatars = (multiConfig.avatars || []).slice(0, multiConfig.activeCount || 2);
-      const activeCount = Math.max(1, activeAvatars.length);
-      matchedAvatar = activeAvatars[lineIdx % activeCount] || multiConfig.avatars[0];
+      matchedAvatar = activeAvatars[0] || (multiConfig.avatars && multiConfig.avatars[0]) || { id: 'idol', role: 'idol', name: 'Idol Chính', tag: '[Idol]' };
     }
 
     // ⚡ Lấy voice chuẩn xác 100% từ Tab Bộ Não AI tương ứng với từng nhân vật
@@ -7366,6 +7365,24 @@ export function updateActiveVoiceAudio(role, voiceObj) {
  * - TUYỆT ĐỐI KHÔNG SỬ DỤNG VOICE LUNG TUNG: Luôn chuẩn hóa và kiểm soát chặt chẽ 100%.
  */
 export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId = null, avatarId = null) {
+  // 🎯 BƯỚC 1: NẾU TRUYỀN TRỰC TIẾP VOICE CỤ THỂ (TASK SPECIFIC VOICE) -> ƯU TIÊN 100% PHÁT ĐÚNG VOICE ĐÓ
+  if (taskSpecificVoiceId) {
+    if (typeof taskSpecificVoiceId === 'object' && taskSpecificVoiceId.id) {
+      const fullVoice = ALL_SYSTEM_VOICES.find(v => v.id === taskSpecificVoiceId.id) || taskSpecificVoiceId;
+      return {
+        ...fullVoice,
+        ...taskSpecificVoiceId,
+        volume: taskSpecificVoiceId.volume !== undefined ? Number(taskSpecificVoiceId.volume) : (fullVoice.volume ?? 1.0),
+        rate: taskSpecificVoiceId.rate !== undefined ? Number(taskSpecificVoiceId.rate) : (fullVoice.rate ?? 1.0),
+        pitch: taskSpecificVoiceId.pitch !== undefined ? Number(taskSpecificVoiceId.pitch) : (fullVoice.pitch ?? 1.0)
+      };
+    }
+    if (typeof taskSpecificVoiceId === 'string' && taskSpecificVoiceId.trim()) {
+      const matchedVoice = ALL_SYSTEM_VOICES.find(v => v.id === taskSpecificVoiceId.trim());
+      if (matchedVoice) return matchedVoice;
+    }
+  }
+
   const dualConfig = getSavedVoiceConfig();
   const normalizedRole = (roleOrEvent || '').toLowerCase().trim();
   const normalizedAvatarId = (avatarId || '').toLowerCase().trim();
@@ -7394,7 +7411,7 @@ export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId 
     brainVoice = dualConfig.idolVoice;
   }
 
-  // 🎯 BƯỚC 1: ƯU TIÊN SỐ 1 (CAO NHẤT 100%) - NẾU TRONG TAB BỘ NÃO AI ĐÃ CẤU HÌNH VOICE HỢP LỆ
+  // 🎯 BƯỚC 2: CẤU HÌNH TRONG TAB BỘ NÃO AI
   if (brainVoice && brainVoice.id && brainVoice.enabled !== false) {
     const fullVoice = ALL_SYSTEM_VOICES.find(v => v.id === brainVoice.id) || brainVoice;
     return {
@@ -7404,12 +7421,6 @@ export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId 
       rate: brainVoice.rate !== undefined ? Number(brainVoice.rate) : (fullVoice.rate ?? 1.0),
       pitch: brainVoice.pitch !== undefined ? Number(brainVoice.pitch) : (fullVoice.pitch ?? 1.0)
     };
-  }
-
-  // 🎯 BƯỚC 2: NẾU TRONG BỘ NÃO AI CHƯA CẤU HÌNH -> MỚI SỬ DỤNG VOICE TỪ TRANG SỰ KIỆN / 14 TÁC VỤ
-  if (taskSpecificVoiceId) {
-    const matchedVoice = ALL_SYSTEM_VOICES.find(v => v.id === taskSpecificVoiceId);
-    if (matchedVoice) return matchedVoice;
   }
 
   // 🎯 BƯỚC 3: FALLBACK MẶC ĐỊNH CHUẨN XÁC TỪ IDOL VOICE CỦA BỘ NÃO AI
@@ -7459,25 +7470,16 @@ function initSpeechVoices() {
   if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
     const updateVoices = () => {
       try {
-        const v = window.speechSynthesis.getVoices();
-        if (v && v.length > 0) {
-          preloadedVoices = v;
-        }
+        preloadedVoices = window.speechSynthesis.getVoices() || [];
       } catch (e) {}
     };
     updateVoices();
-    if (typeof window.speechSynthesis.onvoiceschanged !== 'undefined') {
+    if (window.speechSynthesis.onvoiceschanged !== undefined) {
       window.speechSynthesis.onvoiceschanged = updateVoices;
     }
   }
 }
-
-if (typeof window !== 'undefined') {
-  initSpeechVoices();
-  if (document.readyState === 'loading') {
-    window.addEventListener('DOMContentLoaded', initSpeechVoices);
-  }
-}
+initSpeechVoices();
 
 // Queue management
 const globalSpeechQueue = [];
@@ -7497,7 +7499,7 @@ function getOrCreateAudioContext() {
   if (typeof window === 'undefined') return null;
   const AudioContextClass = window.AudioContext || window.webkitAudioContext;
   if (!AudioContextClass) return null;
-  if (!activeAudioContext || activeAudioContext.state === 'closed') {
+  if (!activeAudioContext) {
     activeAudioContext = new AudioContextClass();
   }
   if (activeAudioContext.state === 'suspended') {
@@ -7506,8 +7508,10 @@ function getOrCreateAudioContext() {
   return activeAudioContext;
 }
 
-export function stopVoiceAudio() {
-  clearGlobalSpeechQueue();
+/**
+ * ⏹️ DỪNG ÂM THANH HIỆN TẠI (KHÔNG XÓA HÀNG ĐỢI KỊCH BẢN)
+ */
+export function stopCurrentActiveAudioNode() {
   if (activeSourceNode) {
     try {
       activeSourceNode.onended = null;
@@ -7535,6 +7539,14 @@ export function stopVoiceAudio() {
     window._activeVoiceSet.clear();
   }
   activeUtterance = null;
+}
+
+/**
+ * ⏹️ DỪNG TOÀN BỘ ÂM THANH & XÓA SẠCH HÀNG ĐỢI
+ */
+export function stopVoiceAudio() {
+  clearGlobalSpeechQueue();
+  stopCurrentActiveAudioNode();
   isGlobalSpeaking = false;
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', {
@@ -7908,37 +7920,20 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
     }
   } catch (e) {}
 
-  stopVoiceAudio();
+  stopCurrentActiveAudioNode();
 
   const isMale = checkIsMale(voice);
   const source = audioCtx.createBufferSource();
   source.buffer = audioBuffer;
   activeSourceNode = source;
 
-  // 🎵 DETUNE / PITCH MASTERING DÀNH RIÊNG CHO TỪNG GIỌNG ĐỌC
-  const dsp = voice?.dspProfile || {};
+  // 🎵 Đảm bảo playbackRate = 1.0 và detune = 0 vì EdgeTTS đã xử lý chuẩn xác 100% formant và nhịp điệu gốc
   if (source.detune) {
     try {
-      let baseDetune = 0;
-      if (dsp.detune !== undefined && !isNaN(Number(dsp.detune))) {
-        baseDetune = Number(dsp.detune);
-      } else if (dsp.semitones !== undefined && !isNaN(Number(dsp.semitones))) {
-        baseDetune = Math.round(Number(dsp.semitones) * 100);
-      } else if (voice?.edgePitch && String(voice.edgePitch).includes('%')) {
-        const pNum = parseInt(String(voice.edgePitch).replace('%', ''), 10) || 0;
-        baseDetune = Math.round(pNum * 8.5);
-      }
-
-      let userPitchOffset = 0;
-      if (voice?.pitch !== undefined && !isNaN(Number(voice.pitch))) {
-        userPitchOffset = Math.round((Number(voice.pitch) - 1.0) * 800);
-      }
-
-      // Dải tần detune an toàn từ -800 cents (trầm ấm sâu lắng) đến +800 cents (tươi sáng sắc nét)
-      source.detune.value = Math.max(-800, Math.min(800, baseDetune + userPitchOffset));
+      source.detune.value = 0;
     } catch (e) {}
   }
-  source.playbackRate.value = requestedRate || dsp.rate || 1.0;
+  source.playbackRate.value = 1.0;
 
   // MASTER GAIN (Điều chỉnh âm lượng to lớn, rõ ràng đàng hoàng)
   const masterGain = audioCtx.createGain();
@@ -8426,7 +8421,7 @@ async function processGlobalSpeechQueue() {
 }
 
 async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTest = false) {
-  stopVoiceAudio();
+  stopCurrentActiveAudioNode();
 
   const isTestingMode = isTest === true || voice?.isTest === true || voice?.priority === true;
 
