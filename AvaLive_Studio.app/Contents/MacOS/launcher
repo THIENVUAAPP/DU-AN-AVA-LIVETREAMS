@@ -1,0 +1,67 @@
+#!/bin/bash
+DIR="$(cd "$(dirname "$0")/../../.." && pwd)"
+cd "$DIR"
+
+[ -f "$HOME/.zprofile" ] && source "$HOME/.zprofile" 2>/dev/null || true
+[ -f "$HOME/.zshrc" ] && source "$HOME/.zshrc" 2>/dev/null || true
+[ -f "$HOME/.bash_profile" ] && source "$HOME/.bash_profile" 2>/dev/null || true
+[ -f "$HOME/.bashrc" ] && source "$HOME/.bashrc" 2>/dev/null || true
+
+export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/local/sbin:$HOME/.nvm/versions/node/$(ls -t "$HOME/.nvm/versions/node" 2>/dev/null | head -n 1)/bin:$HOME/.volta/bin:$HOME/.fnm/current/bin:$HOME/.cargo/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+
+xattr -dr com.apple.quarantine "$DIR" 2>/dev/null || true
+
+if command -v lsof &>/dev/null; then
+    OLD_PID=$(lsof -ti :3001 2>/dev/null)
+    if [ -n "$OLD_PID" ]; then
+        kill -9 $OLD_PID 2>/dev/null || true
+        sleep 0.5
+    fi
+fi
+
+NODE_CMD=""
+for p in \
+    "$(command -v node 2>/dev/null)" \
+    "/opt/homebrew/bin/node" \
+    "/usr/local/bin/node" \
+    "/usr/bin/node" \
+    "$HOME/.nvm/versions/node/$(ls -t "$HOME/.nvm/versions/node" 2>/dev/null | head -n 1)/bin/node" \
+    "$HOME/.volta/bin/node" \
+    "$HOME/.fnm/current/bin/node" \
+    "$HOME/.asdf/shims/node"
+do
+    if [ -n "$p" ] && [ -x "$p" ]; then
+        NODE_CMD="$p"
+        export PATH="$(dirname "$p"):$PATH"
+        break
+    fi
+done
+
+APP_URL="http://127.0.0.1:3001/?update_cache=$RANDOM"
+
+(
+    for i in {1..30}; do
+        if curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:3001" 2>/dev/null | grep -qE "200|304|302|301"; then
+            if [ -d "/Applications/Google Chrome.app" ]; then
+                open -na "Google Chrome" --args --app="$APP_URL" 2>/dev/null || open "$APP_URL"
+            elif [ -d "/Applications/Microsoft Edge.app" ]; then
+                open -na "Microsoft Edge" --args --app="$APP_URL" 2>/dev/null || open "$APP_URL"
+            else
+                open "$APP_URL"
+            fi
+            exit 0
+        fi
+        sleep 0.5
+    done
+    open "$APP_URL" 2>/dev/null || open "http://localhost:3001" 2>/dev/null || open "https://avalivepro.vercel.app" 2>/dev/null
+) &
+
+if [ -n "$NODE_CMD" ] && [ -f "backend/server.cjs" ]; then
+    "$NODE_CMD" backend/server.cjs
+elif [ -n "$NODE_CMD" ] && [ -f "package.json" ]; then
+    npm run dev
+elif command -v python3 &> /dev/null && [ -d "dist" ]; then
+    python3 -m http.server 3001 --directory dist
+else
+    open "https://avalivepro.vercel.app"
+fi

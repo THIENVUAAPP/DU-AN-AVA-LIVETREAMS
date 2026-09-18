@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.7.5';
+export const APP_VERSION = '3.7.6';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v3.7.6 - Bộ Khởi Chạy macOS App 1-Click & Tối Ưu Local Chạy Siêu Mượt',
+    description: '1. Tích Hợp Ứng Dụng macOS Bản Quyền AvaLive_Studio.app: Cho phép mở trực tiếp bằng 1 nhấp chuột trên Mac không cần thao tác dòng lệnh Terminal phức tạp; 2. Tự Động Phục Hồi & Kết Nối Local 127.0.0.1:3001: Khắc phục triệt để lỗi chặn kết nối và Gatekeeper trên Mac; 3. Đồng Bộ Gói Cài Đặt Windows Mới Nhất: Phục vụ trực tiếp bản zip 3.7.6 siêu sắc nét, 60 FPS, không gián đoạn.'
+  },
   {
     title: '⚡ Bản Cập Nhật v3.7.5 - Tối Ưu Tốc Độ Khởi Động Server 0ms & Khắc Phục Lỗi Kết Nối Window Capture',
     description: '1. Khởi Động Express & Socket.io Ngay Lập Tức: Tách tác vụ quét tối ưu video dung lượng lớn sang chế độ bất đồng bộ nền, triệt tiêu hoàn toàn độ trễ khởi động server và lỗi ERR_CONNECTION_REFUSED; 2. Truyền Tải Video Gốc Siêu Tốc 0ms: Cửa sổ Window Capture và Link TikTok Live Studio nhận ngay nguồn phát video dung lượng lớn từ 100MB đến 50GB; 3. Chất Lượng Siêu Mượt 60 FPS, Siêu Sắc Nét 4K/8K: Phát mượt mà, không giật lag, không đứng hình.'
