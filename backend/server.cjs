@@ -140,8 +140,13 @@ function ensureMp4FastStart(filePath) {
         moovOffset = offset;
       }
 
+      if (size === 0) {
+        size = fileSize - offset;
+        atoms.push({ name, offset, size });
+        break;
+      }
+
       atoms.push({ name, offset, size });
-      if (size === 0) break;
       offset += size;
     }
 

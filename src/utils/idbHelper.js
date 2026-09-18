@@ -46,12 +46,28 @@ export const initAidolDB = () => {
 if (typeof window !== 'undefined') {
   window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
 }
-const getBlobMemoryCache = () => {
+export const getBlobMemoryCache = () => {
   if (typeof window !== 'undefined') {
     window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
     return window.__activeMediaBlobMap;
   }
   return new Map();
+};
+
+export const getActiveBlobForMedia = (key) => {
+  if (!key || typeof window === 'undefined') return null;
+  const memCache = getBlobMemoryCache();
+  if (memCache.has(key)) return memCache.get(key);
+  if (window.opener && window.opener.__activeMediaBlobMap && window.opener.__activeMediaBlobMap.has(key)) {
+    return window.opener.__activeMediaBlobMap.get(key);
+  }
+  if (window.opener && window.opener.__activeMediaBlob && (window.opener.__activeMediaBlob instanceof Blob || window.opener.__activeMediaBlob instanceof File)) {
+    return window.opener.__activeMediaBlob;
+  }
+  if (window.__activeMediaBlob && (window.__activeMediaBlob instanceof Blob || window.__activeMediaBlob instanceof File)) {
+    return window.__activeMediaBlob;
+  }
+  return null;
 };
 
 // --- CRUD Operations trên Unified Store ---
@@ -61,16 +77,20 @@ export const saveAidolItem = async (item) => {
     if (!db) return null;
 
     const rawBlob = item.fileBlob || item.fileData || null;
-    const isLargeBlob = rawBlob && typeof rawBlob.size === 'number' && rawBlob.size > 50 * 1024 * 1024; // > 50MB (1GB - 20GB)
+    const isLargeBlob = rawBlob && typeof rawBlob.size === 'number' && rawBlob.size > 50 * 1024 * 1024; // > 50MB (1GB - 50GB)
     const itemId = item.id || `aidol_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 
-    // Nếu là file dung lượng lớn (>50MB đến 20GB), TUYỆT ĐỐI KHÔNG ghi vào IndexedDB để tránh treo trình duyệt / OOM Crash
-    if (isLargeBlob && rawBlob) {
+    // Lưu ngay vào bộ nhớ RAM toàn cục siêu tốc 0ms
+    if (rawBlob) {
       try {
         const memCache = getBlobMemoryCache();
         memCache.set(itemId, rawBlob);
         if (item.url) memCache.set(item.url, rawBlob);
         if (item.mediaUrl) memCache.set(item.mediaUrl, rawBlob);
+        if (typeof window !== 'undefined') {
+          window.__activeMediaBlob = rawBlob;
+          if (item.url && item.url.startsWith('blob:')) window.__activeMediaBlobUrl = item.url;
+        }
       } catch (e) {}
     }
 
@@ -133,6 +153,9 @@ export const loadAllAidolItems = async () => {
             let finalBlob = item.fileBlob || memCache.get(item.id) || memCache.get(item.url) || memCache.get(item.mediaUrl);
             if (!finalBlob && openerCache) {
               finalBlob = openerCache.get(item.id) || openerCache.get(item.url) || openerCache.get(item.mediaUrl);
+            }
+            if (!finalBlob && typeof window !== 'undefined' && window.__activeMediaBlob) {
+              finalBlob = window.__activeMediaBlob;
             }
 
             if (!finalUrl && finalBlob) {

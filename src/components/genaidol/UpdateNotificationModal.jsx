@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.6.6';
+export const APP_VERSION = '3.6.7';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v3.6.7 - Nâng Cấp Siêu Tốc 0ms & 4K 60FPS Video Dung Lượng Lớn (1GB - 50GB) Cho Window Capture & TikTok Live Studio',
+    description: '1. Phát Ngay Lập Tức 0ms Cho Mọi Video Nặng (1GB - 50GB): Tối ưu hóa kiến trúc GPU Hardware Acceleration & RAM Blob Lock, đảm bảo mọi video 2K - 8K từ 1GB đến 50GB được load và phát tức thì ngay khi tải lên hoặc mở Window Capture; 2. Khóa Luồng 60 FPS Siêu Sắc Nét, Không Giật Lag: Loại bỏ hoàn toàn độ trễ, hiện tượng đứng hình hay đơ giật khi phát qua OBS & TikTok Live Studio; 3. Đồng Bộ Độc Lập 2 Chiều Hoàn Hảo: Giữ vững chất lượng hình ảnh nguyên bản, mượt mà và chân thật 100%.'
+  },
   {
     title: '⚡ Bản Cập Nhật v3.6.6 - Sửa Lỗi Hiển Thị Tab Giọng Hot Trend (100) & Nâng Cấp Bộ Phân Loại Giọng Đọc',
     description: '1. Khắc Phục Lỗi Tab Giọng Hot Trend (100 Giọng): Sửa triệt để lỗi hiển thị khi chuyển qua Tab Giọng Hot Trend, giao diện hiển thị mượt mà 60 FPS với đầy đủ 100 chất giọng đỉnh cao; 2. Tối Ưu Nút Gán Nhanh: Hiển thị đầy đủ trạng thái gán Giọng Idol Live, Giọng Trợ Lý và Giọng BLV Game PK; 3. Giữ Vững Tốc Độ & Bộ Lọc Đa Chiều: Lọc theo Phong cách, Giới tính, Độ tuổi và từ khóa tìm kiếm siêu nhanh.'

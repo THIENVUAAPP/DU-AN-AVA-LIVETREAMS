@@ -362,19 +362,24 @@ export default function LiveStreamStandalonePlayer() {
                 }
                 const bUrl = URL.createObjectURL(ev.data.fileBlob);
                 activeBlobUrlRef.current = bUrl;
+                isHardwareLocalBlobRef.current = true;
                 setVideoSrc(bUrl);
                 setIsVideoLoading(false);
               } catch (e) {}
-            } else if (ev.data.blobUrl) {
+            } else if (ev.data.blobUrl && String(ev.data.blobUrl).startsWith('blob:')) {
+              isHardwareLocalBlobRef.current = true;
               setVideoSrc(ev.data.blobUrl);
               setIsVideoLoading(false);
             } else {
               const localBlob = await tryLoadFromLocalDB(ev.data.characterId || ev.data.mediaUrl);
               if (localBlob) {
+                isHardwareLocalBlobRef.current = true;
                 setVideoSrc(localBlob);
                 setIsVideoLoading(false);
               } else if (ev.data.mediaUrl && !ev.data.mediaUrl.startsWith('blob:')) {
-                setVideoSrc(ev.data.mediaUrl);
+                if (!isHardwareLocalBlobRef.current) {
+                  setVideoSrc(ev.data.mediaUrl);
+                }
               }
             }
           }

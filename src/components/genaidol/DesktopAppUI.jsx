@@ -1969,7 +1969,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         localStorage.setItem('avalive_active_video_src', cleanUrl);
       } catch (e) {}
       const blobUrl = (charItem.url && charItem.url.startsWith('blob:')) ? charItem.url : null;
-      const fileBlob = charItem.fileData || null;
+      const fileBlob = charItem.fileData || charItem.fileBlob || (window.__activeMediaBlobMap && window.__activeMediaBlobMap.get(charItem.id)) || window.__activeMediaBlob || null;
       if (fileBlob) currentFileBlobRef.current = fileBlob;
       if (blobUrl) currentBlobUrlRef.current = blobUrl;
 
@@ -2159,8 +2159,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             const isPlaying = vid ? !vid.paused : isMasterLiveRunning;
             const charMatch = (customCharacters && Array.isArray(customCharacters)) ? customCharacters.find(c => c.id === selectedCharacter) : null;
             let playUrl = (charMatch ? (charMatch.mediaUrl || charMatch.url) : null) || userLockedMediaUrl || null;
-            const blobUrl = (charMatch && charMatch.url && charMatch.url.startsWith('blob:')) ? charMatch.url : (currentBlobUrlRef.current || null);
-            const fileBlob = (charMatch && charMatch.fileData) || currentFileBlobRef.current || null;
+            const blobUrl = (charMatch && charMatch.url && charMatch.url.startsWith('blob:')) ? charMatch.url : (currentBlobUrlRef.current || window.__activeMediaBlobUrl || null);
+            const fileBlob = (charMatch && (charMatch.fileData || charMatch.fileBlob)) || currentFileBlobRef.current || window.__activeMediaBlob || (selectedCharacter && window.__activeMediaBlobMap && window.__activeMediaBlobMap.get(selectedCharacter)) || null;
 
             if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
               playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
@@ -3082,6 +3082,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
         // Lưu tham chiếu Blob toàn cục cho Window Capture & popup con nạp tức thì 0ms
         if (typeof window !== 'undefined') {
+          window.__activeMediaBlob = file;
           window.__activeMediaBlobUrl = localUrl;
           window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
           window.__activeMediaBlobMap.set(newCharId, file);
