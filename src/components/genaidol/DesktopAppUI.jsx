@@ -1878,8 +1878,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       bandoAudio.playWarHorn({ force: true });
     }
     
-    // Phát âm thanh Voice AI trực tiếp 100% đúng vai trò / cấu hình
+    // Phát âm thanh Voice AI trực tiếp 100%
     previewVoiceAudio(role, text, { isTest: true, priority: true });
+    try {
+      mapVoiceEngine.speak(text, role, true);
+    } catch(e) {}
     showToast(`🔊 Đang phát kiểm tra âm thanh Giọng ${role === 'idol' ? 'Idol' : role === 'manager' ? 'Trợ lý' : 'Game'}!`, 'success');
   }, [unlockAllAudio]);
 
@@ -4997,15 +5000,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                         }
 
                         // ⚡ 1. CẬP NHẬT TRÌNH CHIẾU GIAO DIỆN PHẦN MỀM NGAY LẬP TỨC
-                        const charBlob = charItem.fileData || charItem.fileBlob || (window.__activeMediaBlobMap && window.__activeMediaBlobMap.get(charItem.id)) || window.__activeMediaBlob || null;
-                        if (typeof window !== 'undefined' && charBlob) {
-                          window.__activeMediaBlob = charBlob;
-                          window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
-                          window.__activeMediaBlobMap.set(charItem.id, charBlob);
-                          if (broadcastUrl) window.__activeMediaBlobMap.set(broadcastUrl, charBlob);
-                          if (cleanUrl) window.__activeMediaBlobMap.set(cleanUrl, charBlob);
-                        }
-
                         if (desktopVideoRef.current) {
                           desktopVideoRef.current.src = cleanUrl;
                           desktopVideoRef.current.currentTime = 0;
@@ -5021,8 +5015,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                           bc.postMessage({
                             type: 'GLOBAL_MEDIA_CHANGE',
                             mediaUrl: broadcastUrl || cleanUrl,
-                            blobUrl: cleanUrl,
-                            fileBlob: charBlob,
                             characterId: charItem.id,
                             characterName: charItem.name || 'AI Idol',
                             isVideo: isVid,
