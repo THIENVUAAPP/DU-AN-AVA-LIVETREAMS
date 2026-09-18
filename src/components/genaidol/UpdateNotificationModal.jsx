@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.6.5';
+export const APP_VERSION = '3.6.6';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v3.6.5 - Tích Hợp Bộ 50 Tông Giọng Nữ Master DNA (18-70t), Nâng Cấp Âm Sắc Hoa Hậu Model Ngọt Ngào & Lưu Yêu Thích ⭐ Realtime',
-    description: '1. Đại Nâng Cấp Thư Viện 50 Giọng Nữ Master DNA: Tích hợp trọn bộ 50 hồ sơ âm sắc độc bản (18-70 tuổi) với 5 tầng DNA âm học; đặc biệt các giọng nữ 18-24t chuẩn phong cách Hoa hậu, Người mẫu, ngọt ngào, quyến rũ, mê đắm lòng người; 2. Hệ Thống ⭐ Yêu Thích Hoàn Hảo: Bấm dấu sao là lưu ngay vào kho yêu thích, đồng bộ tức thì trên toàn bộ giao diện; 3. Chuẩn Hóa 100% Đa Bộ Lọc Vùng Miền / Giới Tính / Độ Tuổi: Lọc tuyệt đối chính xác theo đúng từng tiêu chí đã chọn.'
+    title: '⚡ Bản Cập Nhật v3.6.6 - Sửa Lỗi Hiển Thị Tab Giọng Hot Trend (100) & Nâng Cấp Bộ Phân Loại Giọng Đọc',
+    description: '1. Khắc Phục Lỗi Tab Giọng Hot Trend (100 Giọng): Sửa triệt để lỗi hiển thị khi chuyển qua Tab Giọng Hot Trend, giao diện hiển thị mượt mà 60 FPS với đầy đủ 100 chất giọng đỉnh cao; 2. Tối Ưu Nút Gán Nhanh: Hiển thị đầy đủ trạng thái gán Giọng Idol Live, Giọng Trợ Lý và Giọng BLV Game PK; 3. Giữ Vững Tốc Độ & Bộ Lọc Đa Chiều: Lọc theo Phong cách, Giới tính, Độ tuổi và từ khóa tìm kiếm siêu nhanh.'
   }
 ];
 

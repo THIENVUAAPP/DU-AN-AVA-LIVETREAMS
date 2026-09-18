@@ -2717,6 +2717,8 @@ IDOL MỈM CƯỜI + GESTURE
                         })
                         .map((v, idx) => {
                           const isSelectedAsIdol = settings.mainVoiceId === v.id;
+                          const isSelectedAsAssistant = settings.assistantVoiceId === v.id;
+                          const isSelectedAsGame = settings.gameVoiceId === v.id;
                           const isPlaying = previewingVoiceId === v.id;
                           const isFav = favoriteVoiceIds.includes(v.id);
                           const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
@@ -2753,6 +2755,8 @@ IDOL MỈM CƯỜI + GESTURE
                                   <span className="font-bold text-gray-900">{v.name}</span>
                                   {isFav && <span className="text-[10px] bg-amber-400/20 text-amber-700 px-1.5 py-0.2 rounded font-semibold">⭐ Yêu thích</span>}
                                   {isSelectedAsIdol && <span className="text-[10px] bg-orange-600 text-white px-1.5 py-0.2 rounded font-bold">🎯 Idol Live Chính</span>}
+                                  {isSelectedAsAssistant && <span className="text-[10px] bg-blue-600 text-white px-1.5 py-0.2 rounded font-bold">💬 Trợ Lý</span>}
+                                  {isSelectedAsGame && <span className="text-[10px] bg-purple-600 text-white px-1.5 py-0.2 rounded font-bold">🎮 BLV Game</span>}
                                 </div>
                                 <div className="text-[11px] text-gray-500 italic mt-0.5 line-clamp-1">
                                   💬 "{v.sampleText}"
