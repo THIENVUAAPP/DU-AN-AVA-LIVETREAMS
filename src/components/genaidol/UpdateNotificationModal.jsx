@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.5.6';
+export const APP_VERSION = '3.5.7';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v3.5.6 - Hoàn Thiện Master Voice DNA: Nữ 20-24t Độc Bản 100% & Nam 40t+ Dõng Dạc Chuẩn Nét',
-    description: '1. Phân Tách 100% 40 Master DNA Voices Nữ (20-24t): Mỗi giọng mang âm vực, cao độ, semitones và detune riêng biệt từ dễ thương, nũng nịu đến hoạt ngôn Bắc, ngọt ngào Nam, duyên dáng Tây; 2. Tối Ưu Giọng Nam Lớn Tuổi (40t+): Triệt tiêu hoàn toàn hiện tượng khàn đục hoặc nói chậm cà rề, âm thanh phát ra dõng dạc, đĩnh đạc, âm lượng lớn và phát âm chuẩn từng phụ âm; 3. Nâng Cấp Bộ Xử Lý DSP & Presence EQ: Cực nét, rõ chữ, chống vỡ âm cho toàn bộ phiên livestream.'
+    title: '⚡ Bản Cập Nhật v3.5.7 - Đột Phá Voice AI: Giọng Nam 40t+ Dõng Dạc, Chuẩn Sắc Âm Vang & Triệt Tiêu Khàn Rè Cà Rề',
+    description: '1. Khắc Phục Triệt Để Giọng Nam 40t+: Xử lý dứt điểm hiện tượng đọc chậm cà rề và rè khàn đục méo tiếng; loại bỏ toàn bộ hạ âm pitch tiêu cực, đảm bảo giọng nam phát ra dõng dạc, đĩnh đạc, sang trọng, hào sảng, chuẩn từng phụ âm; 2. Hệ Thống 40 Master DNA Voices Nữ (20-24t): Hoàn toàn độc bản 100% về cao độ, âm sắc, cảm xúc và vùng miền Bắc - Trung - Nam; 3. Nâng Cấp Bộ Xử Lý DSP Presence EQ (3500Hz) & High Gain: Giúp giọng đọc trong trẻo, to rõ, chuẩn phòng thu chuyên nghiệp.'
   }
 ];
 
