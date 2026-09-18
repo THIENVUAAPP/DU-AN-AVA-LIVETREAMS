@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.7.9';
+export const APP_VERSION = '3.8.0';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v3.8.0 - Đồng Bộ Gói Tải Windows & Mac ZIP Mới Nhất Lên GitHub Releases (Official)',
+    description: '1. Khắc Phục Triệt Để Lỗi Tải Phiên Bản Cũ: Cập nhật hệ thống phân giải link tải tự động, đẩy trực tiếp gói cài đặt ZIP mới nhất (AvaLive_VIP_PRO_Windows_v3.8.0.zip và AvaLive_VIP_PRO_Mac_v3.8.0.zip) lên GitHub Releases và bộ nhớ máy chủ; 2. Đảm Bảo Tải Về Đúng 100% Phiên Bản Mới Nhất: Triệt tiêu hoàn toàn trường hợp bị chuyển hướng tải nhầm phiên bản cũ, kích hoạt tải trực tiếp 0ms; 3. Duy Trì Siêu Mượt 60 FPS & Chuẩn Human-Like Voice DNA Toàn Diện.'
+  },
   {
     title: '⚡ Bản Cập Nhật v3.7.9 - Khắc Phục Triệt Để Lỗi Màn Hình Đen Window Capture & Tích Hợp Human-Like Voice DNA',
     description: '1. Khắc Phục Triệt Để Màn Hình Đen & Vòng Xoay Window Capture: Ứng dụng công nghệ Direct GPU Stream Cloner (captureStream) bê nguyên xi luồng video 60 FPS từ phần mềm chính sang Window Capture với độ trễ 0ms, không tốn tài nguyên mạng hay ổ đĩa; 2. Tích Hợp Chuẩn Voice AI Siêu Tự Nhiên (Human-Like Voice DNA): Giọng đọc sống động, có hơi thở, ngữ điệu biến chuyển linh hoạt theo cảm xúc, tự động tạo nhịp thở micro-pauses và phản xạ đệm từ tự nhiên; 3. Đảm Bảo Video 60 FPS Siêu Sắc Nét 4K/8K: Không giật lag, không đứng hình.'
