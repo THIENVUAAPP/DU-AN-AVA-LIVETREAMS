@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.5.3';
-export const RELEASE_DATE = '17/09/2026';
+export const APP_VERSION = '3.5.4';
+export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v3.5.3 - Phát Hành Trực Tiếp Gói Cài Đặt ZIP v3.5.3 Mới Nhất Lên GitHub Releases & Website',
-    description: '1. Tự Động Phân Giải & Tải Đúng Gói ZIP v3.5.3: Đã xuất bản và đính kèm trực tiếp file cài đặt ZIP v3.5.3 mới nhất lên GitHub Release và website; 2. Đọc Chuẩn Xác Từng Câu Từng Chữ: Phát âm tự nhiên 100% tiếng Việt, giữ nguyên vẹn khối thoại; 3. Mở Ứng Dụng 1-Click Tốc Độ Cao.'
+    title: '⚡ Bản Cập Nhật v3.5.4 - Chuẩn Hóa Chính Tả Tiếng Việt & Đọc Liền Khối Tuyệt Đối Không Ngắt Lẻ',
+    description: '1. Chống Tách Chữ & Sửa Chính Tả Tự Động: Chữa lành hoàn toàn các từ bị đứt quãng (kịch bản, bạn ơi, khách hàng, sản phẩm, liên tục, chính tả, bánh gạo lứt, ăn nhạt, nhắc lại); 2. Đọc Liền Mạch Nguyên Câu: Xóa bỏ ngắt nghỉ sai ở dấu ba chấm (...), câu thoại mượt mà tự nhiên; 3. DSP Audio Studio & 40 Master DNA Voices: Âm sắc đanh dày, ấm áp và rõ từng phát âm thanh quản.'
   }
 ];
 

@@ -10,6 +10,87 @@ try {
   EdgeTTS = edgePkg.EdgeTTS || edgePkg;
 } catch (e) {}
 
+function humanizeTextForApiTTS(rawText, lang = 'vi') {
+  if (!rawText || typeof rawText !== 'string') return '';
+  let text = rawText
+    .replace(/\[[^\]]*\]/g, ' ')
+    .replace(/\((?:cười|cười tươi|vỗ tay|hành động|chỉ tay|nháy mắt|nói to|nói nhỏ|thì thầm|hào hứng|nhấn mạnh|chỉ giỏ hàng|chốt đơn|đếm ngược|action|smile|clap)[^\)]*\)/gi, ' ')
+    .replace(/[#*`_~"'“”„«»‘’]/g, '')
+    .replace(/[\u200B\u200C\u200D\uFEFF\u00AD\u00A0\u202F\u180E\u2000-\u200A]/g, ' ')
+    .replace(/\p{Extended_Pictographic}/gu, '')
+    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{1FA00}-\u{1FAFF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, '')
+    .replace(/[^\S\r\n]+/g, ' ')
+    .trim();
+
+  const isVi = !lang || lang.toLowerCase().startsWith('vi');
+  if (!isVi) return text;
+
+  // Khử lỗi tách âm rời rạc, bảo vệ tuyệt đối cụm từ tiếng Việt
+  text = text
+    .replace(/(?<![\p{L}\p{N}_])dừng\s*lại\s*đây\s*một\s*chút\s*thôi(?![\p{L}\p{N}_])/giu, 'dừng lại đây một chút thôi')
+    .replace(/(?<![\p{L}\p{N}_])dừng\s*lại\s*đây\s*một\s*chút(?![\p{L}\p{N}_])/giu, 'dừng lại đây một chút')
+    .replace(/(?<![\p{L}\p{N}_])dừng\s*lại\s*đây(?![\p{L}\p{N}_])/giu, 'dừng lại đây')
+    .replace(/(?<![\p{L}\p{N}_])dừng\s*lại\s*một\s*chút\s*thôi(?![\p{L}\p{N}_])/giu, 'dừng lại một chút thôi')
+    .replace(/(?<![\p{L}\p{N}_])dừng\s*lại\s*một\s*chút(?![\p{L}\p{N}_])/giu, 'dừng lại một chút')
+    .replace(/(?<![\p{L}\p{N}_])dừ\s*ng\s*lạ\s*i(?![\p{L}\p{N}_])/giu, 'dừng lại')
+    .replace(/(?<![\p{L}\p{N}_])hiệ\s*n\s*tạ\s*i(?![\p{L}\p{N}_])/giu, 'hiện tại')
+    .replace(/(?<![\p{L}\p{N}_])hiện\s*tại(?![\p{L}\p{N}_])/giu, 'hiện tại')
+    .replace(/(?<![\p{L}\p{N}_])nhắ\s*c\s*lạ\s*i(?![\p{L}\p{N}_])/giu, 'nhắc lại')
+    .replace(/(?<![\p{L}\p{N}_])nhắc\s*lại(?![\p{L}\p{N}_])/giu, 'nhắc lại')
+    .replace(/(?<![\p{L}\p{N}_])nhắt\s*lại(?![\p{L}\p{N}_])/giu, 'nhắc lại')
+    .replace(/(?<![\p{L}\p{N}_])ăn\s*nhạ\s*t(?![\p{L}\p{N}_])/giu, 'ăn nhạt')
+    .replace(/(?<![\p{L}\p{N}_])ăn\s*nhạt(?![\p{L}\p{N}_])/giu, 'ăn nhạt')
+    .replace(/(?<![\p{L}\p{N}_])ăn\s*nhạc(?![\p{L}\p{N}_])/giu, 'ăn nhạt')
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạ\s*[\-_]?\s*[oô]\s*[\-_]?\s*lứ[ct](?![\p{L}\p{N}_])/giu, 'bánh gạo lứt')
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo\s*lức(?![\p{L}\p{N}_])/giu, 'bánh gạo lứt')
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo\s*lứt(?![\p{L}\p{N}_])/giu, 'bánh gạo lứt')
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạ\s*[\-_]?\s*[oô](?![\p{L}\p{N}_])/giu, 'bánh gạo')
+    .replace(/(?<![\p{L}\p{N}_])bánh\s*gạo(?![\p{L}\p{N}_])/giu, 'bánh gạo')
+    .replace(/(?<![\p{L}\p{N}_])gạ\s*[\-_]?\s*[oô]\s*[\-_]?\s*lứ[ct](?![\p{L}\p{N}_])/giu, 'gạo lứt')
+    .replace(/(?<![\p{L}\p{N}_])gạo\s*lức(?![\p{L}\p{N}_])/giu, 'gạo lứt')
+    .replace(/(?<![\p{L}\p{N}_])gạo\s*lứt(?![\p{L}\p{N}_])/giu, 'gạo lứt')
+    .replace(/(?<![\p{L}\p{N}_])gạ\s*[\-_]?\s*[oô](?![\p{L}\p{N}_])/giu, 'gạo')
+    .replace(/(?<![\p{L}\p{N}_])lức(?![\p{L}\p{N}_])/giu, 'lứt')
+    .replace(/(?<![\p{L}\p{N}_])lứ\s*t(?![\p{L}\p{N}_])/giu, 'lứt')
+    .replace(/(?<![\p{L}\p{N}_])lứ\s*c(?![\p{L}\p{N}_])/giu, 'lứt')
+    .replace(/(?<![\p{L}\p{N}_])bạ\s*[\-_]?\s*[nN](?![\p{L}\p{N}_])/giu, 'bạn')
+    .replace(/(?<![\p{L}\p{N}_])b\s*ạ\s*n(?![\p{L}\p{N}_])/giu, 'bạn')
+    .replace(/(?<![\p{L}\p{N}_])bạn(?![\p{L}\p{N}_])/giu, 'bạn')
+    .replace(/(?<![\p{L}\p{N}_])kị\s*ch\s*bả\s*n(?![\p{L}\p{N}_])/giu, 'kịch bản')
+    .replace(/(?<![\p{L}\p{N}_])kịch\s*bản(?![\p{L}\p{N}_])/giu, 'kịch bản')
+    .replace(/(?<![\p{L}\p{N}_])khá\s*ch\s*hà\s*ng(?![\p{L}\p{N}_])/giu, 'khách hàng')
+    .replace(/(?<![\p{L}\p{N}_])khách\s*hàng(?![\p{L}\p{N}_])/giu, 'khách hàng')
+    .replace(/(?<![\p{L}\p{N}_])khách(?![\p{L}\p{N}_])/giu, 'khách')
+    .replace(/(?<![\p{L}\p{N}_])chào\s*bạn(?![\p{L}\p{N}_])/giu, 'chào bạn')
+    .replace(/(?<![\p{L}\p{N}_])cảm\s*ơn\s*bạn(?![\p{L}\p{N}_])/giu, 'cảm ơn bạn')
+    .replace(/(?<![\p{L}\p{N}_])bạn\s*ơi(?![\p{L}\p{N}_])/giu, 'bạn ơi')
+    .replace(/(?<![\p{L}\p{N}_])sả\s*n\s*phẩ\s*m(?![\p{L}\p{N}_])/giu, 'sản phẩm')
+    .replace(/(?<![\p{L}\p{N}_])liê\s*n\s*tụ\s*c(?![\p{L}\p{N}_])/giu, 'liên tục')
+    .replace(/(?<![\p{L}\p{N}_])liên\s*tục(?![\p{L}\p{N}_])/giu, 'liên tục')
+    .replace(/(?<![\p{L}\p{N}_])chí\s*nh\s*tả(?![\p{L}\p{N}_])/giu, 'chính tả')
+    .replace(/(?<![\p{L}\p{N}_])phá\s*t\s*âm(?![\p{L}\p{N}_])/giu, 'phát âm')
+    .replace(/(?<![\p{L}\p{N}_])giọ\s*ng\s*đọ\s*c(?![\p{L}\p{N}_])/giu, 'giọng đọc')
+    .replace(/(?<![\p{L}\p{N}_])không(?![\p{L}\p{N}_])/giu, 'không')
+    .replace(/(?<![\p{L}\p{N}_])khoong6(?![\p{L}\p{N}_])/giu, 'không')
+    .replace(/(?<![\p{L}\p{N}_])đôc(?![\p{L}\p{N}_])/giu, 'đọc')
+    .replace(/(?<![\p{L}\p{N}_])đoc(?![\p{L}\p{N}_])/giu, 'đọc');
+
+  let cleaned = text
+    .replace(/[…]+/g, ' ')
+    .replace(/\.{2,}/g, ' ')
+    .replace(/!{2,}/g, '! ')
+    .replace(/\?{2,}/g, '? ')
+    .replace(/,\s*,+/g, ', ')
+    .replace(/[;:]+/g, ' ')
+    .replace(/[^\S\r\n]+/g, ' ')
+    .trim();
+
+  if (cleaned && !/[.!?]$/.test(cleaned)) {
+    cleaned += '.';
+  }
+  return cleaned;
+}
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
@@ -48,19 +129,7 @@ export default async function handler(req, res) {
 
         const tmpFile = path.resolve(os.tmpdir(), `tts_vercel_${Date.now()}_${Math.random().toString(36).slice(2)}.mp3`);
         try {
-          let cleanText = String(text || '')
-            .replace(/[#*`_~"'“”„«»‘’]/g, '')
-            .replace(/\p{Extended_Pictographic}/gu, '')
-            .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{1FA00}-\u{1FAFF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, '')
-            .replace(/[…]+/g, ', ')
-            .replace(/\.{2,}/g, ', ')
-            .replace(/!{2,}/g, '! ')
-            .replace(/\?{2,}/g, '? ')
-            .replace(/[;:]+/g, ' ')
-            .replace(/,\s*,+/g, ', ')
-            .replace(/[^\S\r\n]+/g, ' ')
-            .trim();
-          if (cleanText && !/[.!?]$/.test(cleanText)) cleanText += '.';
+          const cleanText = humanizeTextForApiTTS(text, lang);
           const tts = new EdgeTTS({
             voice: neuralVoice,
             lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',
@@ -135,19 +204,7 @@ export default async function handler(req, res) {
 
         const tmpFile = path.resolve(os.tmpdir(), `tts_post_${Date.now()}_${Math.random().toString(36).slice(2)}.mp3`);
         try {
-          let cleanText = String(text || '')
-            .replace(/[#*`_~"'“”„«»‘’]/g, '')
-            .replace(/\p{Extended_Pictographic}/gu, '')
-            .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{1FA00}-\u{1FAFF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, '')
-            .replace(/[…]+/g, ', ')
-            .replace(/\.{2,}/g, ', ')
-            .replace(/!{2,}/g, '! ')
-            .replace(/\?{2,}/g, '? ')
-            .replace(/[;:]+/g, ' ')
-            .replace(/,\s*,+/g, ', ')
-            .replace(/[^\S\r\n]+/g, ' ')
-            .trim();
-          if (cleanText && !/[.!?]$/.test(cleanText)) cleanText += '.';
+          const cleanText = humanizeTextForApiTTS(text, lang);
           const tts = new EdgeTTS({
             voice: neuralVoice,
             lang: neuralVoice.split('-').slice(0, 2).join('-') || 'vi-VN',

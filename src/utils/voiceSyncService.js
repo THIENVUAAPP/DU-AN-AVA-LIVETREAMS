@@ -6668,6 +6668,7 @@ export const INTERNATIONAL_VOICES = [
 
 // Toàn bộ danh sách 109 giọng AI Studio Pro (bao gồm 20 giọng Hot Trend)
 export const ALL_SYSTEM_VOICES = [
+  ...MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES,
   ...VIETNAMESE_HOTTREND_VOICES,
   ...VIETNAMESE_SALES_VOICES,
   ...VIETNAMESE_FEMALE_VOICES,
@@ -7793,9 +7794,76 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   masterGain.gain.value = Math.max(0, Math.min(2.0, requestedVolume !== undefined ? Number(requestedVolume) : 1.0));
   activeMasterGainNode = masterGain;
 
-  // KẾT NỐI TÍN HIỆU ÂM THANH TRỰC TIẾP & TRONG TRẺO (PRISTINE ZERO-DISTORTION PIPELINE)
-  // Truyền thẳng âm thanh phòng thu studio tới loa máy tính mà không qua bộ lọc làm méo tiếng
-  source.connect(masterGain);
+  // 🎛️ BỘ XỬ LÝ ÂM SẮC & EQ MASTERING CHUYÊN BIỆT CHO TỪNG GIỌNG ĐỌC (VOICE ACOUSTIC DSP)
+  const dsp = voice?.dspProfile || {};
+  let lastNode = source;
+
+  // 1. Low Shelf Filter (Điều chỉnh độ trầm, ấm của giọng đọc)
+  if (dsp.lowGain && dsp.lowGain !== 0) {
+    try {
+      const lowFilter = audioCtx.createBiquadFilter();
+      lowFilter.type = 'lowshelf';
+      lowFilter.frequency.value = 250;
+      lowFilter.gain.value = Math.max(-6, Math.min(6, dsp.lowGain));
+      lastNode.connect(lowFilter);
+      lastNode = lowFilter;
+    } catch (e) {}
+  }
+
+  // 2. Peaking Mid Filter (Điều chỉnh âm sắc trung âm - độ sáng, độ đanh của lời nói)
+  if (dsp.midGain && dsp.midGain !== 0) {
+    try {
+      const midFilter = audioCtx.createBiquadFilter();
+      midFilter.type = 'peaking';
+      midFilter.frequency.value = dsp.midFreq || 1200;
+      midFilter.Q.value = 1.0;
+      midFilter.gain.value = Math.max(-6, Math.min(6, dsp.midGain));
+      lastNode.connect(midFilter);
+      lastNode = midFilter;
+    } catch (e) {}
+  }
+
+  // 3. Presence Peaking Filter (Âm sắc phát âm thanh quản - sự rõ nét của từng chữ)
+  if (dsp.presenceGain && dsp.presenceGain !== 0) {
+    try {
+      const presenceFilter = audioCtx.createBiquadFilter();
+      presenceFilter.type = 'peaking';
+      presenceFilter.frequency.value = dsp.presenceFreq || 3800;
+      presenceFilter.Q.value = 1.2;
+      presenceFilter.gain.value = Math.max(-6, Math.min(6, dsp.presenceGain));
+      lastNode.connect(presenceFilter);
+      lastNode = presenceFilter;
+    } catch (e) {}
+  }
+
+  // 4. High Shelf Filter (Độ trong trẻo, không khí phòng thu studio)
+  if (dsp.highGain && dsp.highGain !== 0) {
+    try {
+      const highFilter = audioCtx.createBiquadFilter();
+      highFilter.type = 'highshelf';
+      highFilter.frequency.value = 7000;
+      highFilter.gain.value = Math.max(-6, Math.min(6, dsp.highGain));
+      lastNode.connect(highFilter);
+      lastNode = highFilter;
+    } catch (e) {}
+  }
+
+  // 5. Broadcast Dynamics Compressor (Giúp giọng đọc đanh dày, chắc tiếng, không vỡ âm)
+  if (dsp.compressor) {
+    try {
+      const comp = audioCtx.createDynamicsCompressor();
+      comp.threshold.value = dsp.compressor.threshold || -18;
+      comp.knee.value = 6;
+      comp.ratio.value = dsp.compressor.ratio || 3.5;
+      comp.attack.value = dsp.compressor.attack || 0.005;
+      comp.release.value = dsp.compressor.release || 0.18;
+      lastNode.connect(comp);
+      lastNode = comp;
+    } catch (e) {}
+  }
+
+  // Kết nối tới Master Gain & Loa Studio
+  lastNode.connect(masterGain);
   masterGain.connect(audioCtx.destination);
 
   // Kết nối LipSync Engine cho cả chế độ Live và chế độ Test để người dùng quan sát trực quan

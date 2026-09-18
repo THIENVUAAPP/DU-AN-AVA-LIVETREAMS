@@ -14,46 +14,61 @@
 
 // 1. TỪ ĐIỂN PHÁT ÂM THƯƠNG HIỆU & THUẬT NGỮ CÔNG NGHỆ (PRONUNCIATION DICTIONARY)
 export const PRONUNCIATION_DICTIONARY = [
-  // 🛡️ BẢO VỆ TUYỆT ĐỐI CÁC TỪ KHÓA TIẾNG VIỆT GỐC & TỰ ĐỘNG CHỮA LỖI CHÍNH TẢ
+  // 🛡️ BẢO VỆ TUYỆT ĐỐI CÁC TỪ KHÓA TIẾNG VIỆT GỐC, KHỬ TÁCH CHỮ RỜI RẠC & CHỮA LỖI CHÍNH TẢ
   { pattern: /(?<![\p{L}\p{N}_])dừng\s*lại\s*đây\s*một\s*chút\s*thôi(?![\p{L}\p{N}_])/giu, replacement: 'dừng lại đây một chút thôi' },
   { pattern: /(?<![\p{L}\p{N}_])dừng\s*lại\s*đây\s*một\s*chút(?![\p{L}\p{N}_])/giu, replacement: 'dừng lại đây một chút' },
   { pattern: /(?<![\p{L}\p{N}_])dừng\s*lại\s*đây(?![\p{L}\p{N}_])/giu, replacement: 'dừng lại đây' },
   { pattern: /(?<![\p{L}\p{N}_])dừng\s*lại\s*một\s*chút\s*thôi(?![\p{L}\p{N}_])/giu, replacement: 'dừng lại một chút thôi' },
   { pattern: /(?<![\p{L}\p{N}_])dừng\s*lại\s*một\s*chút(?![\p{L}\p{N}_])/giu, replacement: 'dừng lại một chút' },
+  { pattern: /(?<![\p{L}\p{N}_])dừ\s*ng\s*lạ\s*i(?![\p{L}\p{N}_])/giu, replacement: 'dừng lại' },
+  { pattern: /(?<![\p{L}\p{N}_])hiệ\s*n\s*tạ\s*i(?![\p{L}\p{N}_])/giu, replacement: 'hiện tại' },
   { pattern: /(?<![\p{L}\p{N}_])hiện\s*tại(?![\p{L}\p{N}_])/giu, replacement: 'hiện tại' },
+  { pattern: /(?<![\p{L}\p{N}_])nhắ\s*c\s*lạ\s*i(?![\p{L}\p{N}_])/giu, replacement: 'nhắc lại' },
   { pattern: /(?<![\p{L}\p{N}_])nhắc\s*lại(?![\p{L}\p{N}_])/giu, replacement: 'nhắc lại' },
   { pattern: /(?<![\p{L}\p{N}_])nhắt\s*lại(?![\p{L}\p{N}_])/giu, replacement: 'nhắc lại' },
+  { pattern: /(?<![\p{L}\p{N}_])ăn\s*nhạ\s*t(?![\p{L}\p{N}_])/giu, replacement: 'ăn nhạt' },
   { pattern: /(?<![\p{L}\p{N}_])ăn\s*nhạt(?![\p{L}\p{N}_])/giu, replacement: 'ăn nhạt' },
   { pattern: /(?<![\p{L}\p{N}_])ăn\s*nhạc(?![\p{L}\p{N}_])/giu, replacement: 'ăn nhạt' },
-  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạ\s*o\s*lức(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo lứt' },
-  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạ\s*o\s*lứt(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo lứt' },
+  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạ\s*[\-_]?\s*[oô]\s*[\-_]?\s*lứ[ct](?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo lứt' },
   { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo\s*lức(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo lứt' },
-  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạ\s*o(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo' },
-  { pattern: /(?<![\p{L}\p{N}_])gạ\s*o\s*lức(?![\p{L}\p{N}_])/giu, replacement: 'gạo lứt' },
-  { pattern: /(?<![\p{L}\p{N}_])gạ\s*o\s*lứt(?![\p{L}\p{N}_])/giu, replacement: 'gạo lứt' },
-  { pattern: /(?<![\p{L}\p{N}_])gạo\s*lức(?![\p{L}\p{N}_])/giu, replacement: 'gạo lứt' },
-  { pattern: /(?<![\p{L}\p{N}_])gạ\s*o(?![\p{L}\p{N}_])/giu, replacement: 'gạo' },
   { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo\s*lứt(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo lứt' },
+  { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạ\s*[\-_]?\s*[oô](?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo' },
   { pattern: /(?<![\p{L}\p{N}_])bánh\s*gạo(?![\p{L}\p{N}_])/giu, replacement: 'bánh gạo' },
+  { pattern: /(?<![\p{L}\p{N}_])gạ\s*[\-_]?\s*[oô]\s*[\-_]?\s*lứ[ct](?![\p{L}\p{N}_])/giu, replacement: 'gạo lứt' },
+  { pattern: /(?<![\p{L}\p{N}_])gạo\s*lức(?![\p{L}\p{N}_])/giu, replacement: 'gạo lứt' },
   { pattern: /(?<![\p{L}\p{N}_])gạo\s*lứt(?![\p{L}\p{N}_])/giu, replacement: 'gạo lứt' },
+  { pattern: /(?<![\p{L}\p{N}_])gạ\s*[\-_]?\s*[oô](?![\p{L}\p{N}_])/giu, replacement: 'gạo' },
   { pattern: /(?<![\p{L}\p{N}_])lức(?![\p{L}\p{N}_])/giu, replacement: 'lứt' },
+  { pattern: /(?<![\p{L}\p{N}_])lứ\s*t(?![\p{L}\p{N}_])/giu, replacement: 'lứt' },
+  { pattern: /(?<![\p{L}\p{N}_])lứ\s*c(?![\p{L}\p{N}_])/giu, replacement: 'lứt' },
   { pattern: /(?<![\p{L}\p{N}_])gạo\s*st25(?![\p{L}\p{N}_])/giu, replacement: 'gạo ST25' },
   { pattern: /(?<![\p{L}\p{N}_])gạo\s*st-?25(?![\p{L}\p{N}_])/giu, replacement: 'gạo ST25' },
   { pattern: /(?<![\p{L}\p{N}_])gạo\s*thơm(?![\p{L}\p{N}_])/giu, replacement: 'gạo thơm' },
   { pattern: /(?<![\p{L}\p{N}_])gạo\s*nàng\s*thơm(?![\p{L}\p{N}_])/giu, replacement: 'gạo nàng thơm' },
   { pattern: /(?<![\p{L}\p{N}_])lúa\s*gạo(?![\p{L}\p{N}_])/giu, replacement: 'lúa gạo' },
   { pattern: /(?<![\p{L}\p{N}_])gạo(?![\p{L}\p{N}_])/giu, replacement: 'gạo' },
-  { pattern: /(?<![\p{L}\p{N}_])không(?![\p{L}\p{N}_])/giu, replacement: 'không' },
-  { pattern: /(?<![\p{L}\p{N}_])khoong6(?![\p{L}\p{N}_])/giu, replacement: 'không' },
-  { pattern: /(?<![\p{L}\p{N}_])đôc(?![\p{L}\p{N}_])/giu, replacement: 'đọc' },
-  { pattern: /(?<![\p{L}\p{N}_])đoc(?![\p{L}\p{N}_])/giu, replacement: 'đọc' },
+  { pattern: /(?<![\p{L}\p{N}_])bạ\s*[\-_]?\s*[nN](?![\p{L}\p{N}_])/giu, replacement: 'bạn' },
+  { pattern: /(?<![\p{L}\p{N}_])b\s*ạ\s*n(?![\p{L}\p{N}_])/giu, replacement: 'bạn' },
   { pattern: /(?<![\p{L}\p{N}_])bạn(?![\p{L}\p{N}_])/giu, replacement: 'bạn' },
+  { pattern: /(?<![\p{L}\p{N}_])kị\s*ch\s*bả\s*n(?![\p{L}\p{N}_])/giu, replacement: 'kịch bản' },
   { pattern: /(?<![\p{L}\p{N}_])kịch\s*bản(?![\p{L}\p{N}_])/giu, replacement: 'kịch bản' },
+  { pattern: /(?<![\p{L}\p{N}_])khá\s*ch\s*hà\s*ng(?![\p{L}\p{N}_])/giu, replacement: 'khách hàng' },
   { pattern: /(?<![\p{L}\p{N}_])khách\s*hàng(?![\p{L}\p{N}_])/giu, replacement: 'khách hàng' },
   { pattern: /(?<![\p{L}\p{N}_])khách(?![\p{L}\p{N}_])/giu, replacement: 'khách' },
   { pattern: /(?<![\p{L}\p{N}_])chào\s*bạn(?![\p{L}\p{N}_])/giu, replacement: 'chào bạn' },
   { pattern: /(?<![\p{L}\p{N}_])cảm\s*ơn\s*bạn(?![\p{L}\p{N}_])/giu, replacement: 'cảm ơn bạn' },
   { pattern: /(?<![\p{L}\p{N}_])bạn\s*ơi(?![\p{L}\p{N}_])/giu, replacement: 'bạn ơi' },
+  { pattern: /(?<![\p{L}\p{N}_])sả\s*n\s*phẩ\s*m(?![\p{L}\p{N}_])/giu, replacement: 'sản phẩm' },
+  { pattern: /(?<![\p{L}\p{N}_])liê\s*n\s*tụ\s*c(?![\p{L}\p{N}_])/giu, replacement: 'liên tục' },
+  { pattern: /(?<![\p{L}\p{N}_])liên\s*tục(?![\p{L}\p{N}_])/giu, replacement: 'liên tục' },
+  { pattern: /(?<![\p{L}\p{N}_])chí\s*nh\s*tả(?![\p{L}\p{N}_])/giu, replacement: 'chính tả' },
+  { pattern: /(?<![\p{L}\p{N}_])chính\s*tả(?![\p{L}\p{N}_])/giu, replacement: 'chính tả' },
+  { pattern: /(?<![\p{L}\p{N}_])phá\s*t\s*âm(?![\p{L}\p{N}_])/giu, replacement: 'phát âm' },
+  { pattern: /(?<![\p{L}\p{N}_])giọ\s*ng\s*đọ\s*c(?![\p{L}\p{N}_])/giu, replacement: 'giọng đọc' },
+  { pattern: /(?<![\p{L}\p{N}_])không(?![\p{L}\p{N}_])/giu, replacement: 'không' },
+  { pattern: /(?<![\p{L}\p{N}_])khoong6(?![\p{L}\p{N}_])/giu, replacement: 'không' },
+  { pattern: /(?<![\p{L}\p{N}_])đôc(?![\p{L}\p{N}_])/giu, replacement: 'đọc' },
+  { pattern: /(?<![\p{L}\p{N}_])đoc(?![\p{L}\p{N}_])/giu, replacement: 'đọc' },
 
   // Thương hiệu độc quyền AvaLive
   { pattern: /(?<![\p{L}\p{N}_])(AVA\s*LIVE\s*PRO|AVALIVEPRO)(?![\p{L}\p{N}_])/giu, replacement: 'Ava Live Pro' },
@@ -354,6 +369,9 @@ export function cleanSpokenPunctuation(text) {
   if (!text) return '';
   let s = text;
 
+  // Loại bỏ các ký tự vô hình, zero-width, non-breaking spaces gây đứt gãy âm
+  s = s.replace(/[\u200B\u200C\u200D\uFEFF\u00AD\u00A0\u202F\u180E\u2000-\u200A]/g, ' ');
+
   // Loại bỏ chỉ dẫn kịch bản trong ngoặc
   s = s.replace(/\((?:cười|cười tươi|vỗ tay|hành động|chỉ tay|nháy mắt|nói to|nói nhỏ|thì thầm|hào hứng|nhấn mạnh|chỉ giỏ hàng|chốt đơn|đếm ngược|action|smile|clap)[^\)]*\)/gi, ' ');
   s = s.replace(/\[(?:cười|cười tươi|vỗ tay|hành động|chỉ tay|nháy mắt|nói to|nói nhỏ|thì thầm|hào hứng|nhấn mạnh|chỉ giỏ hàng|chốt đơn|đếm ngược|action|smile|clap)[^\]]*\]/gi, ' ');
@@ -374,9 +392,9 @@ export function cleanSpokenPunctuation(text) {
   s = s.replace(/\p{Extended_Pictographic}/gu, '');
   s = s.replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{1FA00}-\u{1FAFF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, '');
 
-  // Chuẩn hóa dấu câu: thay thế dấu chấm lửng ..., … bằng dấu phẩy tự nhiên để lấy hơi mềm mại
-  s = s.replace(/[…]+/g, ', ');
-  s = s.replace(/\.{2,}/g, ', ');
+  // Chuẩn hóa dấu câu: thay thế dấu chấm lửng ..., … bằng khoảng trắng mềm mại, không ngắt câu
+  s = s.replace(/[…]+/g, ' ');
+  s = s.replace(/\.{2,}/g, ' ');
   s = s.replace(/!{2,}/g, '! ');
   s = s.replace(/\?{2,}/g, '? ');
   s = s.replace(/[;:]+/g, ' ');
