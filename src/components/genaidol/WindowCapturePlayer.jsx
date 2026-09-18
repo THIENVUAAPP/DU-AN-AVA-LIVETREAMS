@@ -255,19 +255,21 @@ export default function WindowCapturePlayer() {
 
   // 1. Đồng bộ qua BroadcastChannel nội bộ cùng máy
   useEffect(() => {
-    // Khởi tạo kiểm tra ngay từ IndexedDB / Memory Cache khi mở cửa sổ
+    // Khởi tạo kiểm tra ngay từ Memory Cache / Opener / IndexedDB khi mở cửa sổ (Bê nguyên xi 100%)
     const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     const charParam = params ? params.get('char') : null;
     const vParam = params ? params.get('v') : null;
-    if (charParam || vParam) {
-      tryLoadFromLocalDB(charParam || vParam).then(localBlob => {
-        if (localBlob) {
-          isHardwareLocalBlobRef.current = true;
-          setVideoSrc(localBlob);
-          setIsVideoLoading(false);
+    tryLoadFromLocalDB(charParam || vParam || null).then(localBlob => {
+      if (localBlob) {
+        isHardwareLocalBlobRef.current = true;
+        setVideoSrc(localBlob);
+        setIsVideoLoading(false);
+        if (videoRef.current) {
+          videoRef.current.src = localBlob;
+          videoRef.current.play().catch(() => {});
         }
-      });
-    }
+      }
+    });
 
     let bc = null;
     try {

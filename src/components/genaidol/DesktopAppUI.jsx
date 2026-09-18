@@ -2155,39 +2155,50 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             const charMatch = (customCharacters && Array.isArray(customCharacters)) ? customCharacters.find(c => c.id === selectedCharacter) : null;
             let playUrl = (charMatch ? (charMatch.mediaUrl || charMatch.url) : null) || userLockedMediaUrl || null;
             const blobUrl = (charMatch && charMatch.url && charMatch.url.startsWith('blob:')) ? charMatch.url : (currentBlobUrlRef.current || window.__activeMediaBlobUrl || null);
-            const fileBlob = (charMatch && (charMatch.fileData || charMatch.fileBlob)) || currentFileBlobRef.current || window.__activeMediaBlob || (selectedCharacter && window.__activeMediaBlobMap && window.__activeMediaBlobMap.get(selectedCharacter)) || null;
+            let fileBlob = (charMatch && (charMatch.fileData || charMatch.fileBlob)) || currentFileBlobRef.current || window.__activeMediaBlob || (selectedCharacter && window.__activeMediaBlobMap && window.__activeMediaBlobMap.get(selectedCharacter)) || null;
 
-            if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
-              playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
+            const sendResponse = (blob) => {
+              if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
+                playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
+              }
+              try {
+                bc.postMessage({
+                  type: 'RESPONSE_CURRENT_MEDIA',
+                  mediaUrl: playUrl,
+                  blobUrl: blobUrl,
+                  fileBlob: blob,
+                  selectedCharacter: selectedCharacter,
+                  characterId: selectedCharacter,
+                  characterName: charMatch ? charMatch.name : '',
+                  currentTime: curTime,
+                  isPlaying: isPlaying,
+                  isVideo: true,
+                  force: true,
+                  timestamp: Date.now()
+                });
+                bc.postMessage({
+                  type: 'MASTER_TIME_SYNC',
+                  currentTime: curTime,
+                  isPlaying: isPlaying,
+                  selectedCharacter: selectedCharacter,
+                  mediaUrl: playUrl,
+                  blobUrl: blobUrl,
+                  fileBlob: blob,
+                  force: true,
+                  isMuted: isLocalSpeakerMuted,
+                  timestamp: Date.now()
+                });
+              } catch (e) {}
+            };
+
+            if (fileBlob) {
+              sendResponse(fileBlob);
+            } else {
+              loadAllAidolItems().then(items => {
+                const found = items && items.find(it => (it.id && it.id === selectedCharacter) || (playUrl && it.mediaUrl === playUrl));
+                sendResponse(found?.fileBlob || null);
+              }).catch(() => sendResponse(null));
             }
-            try {
-              bc.postMessage({
-                type: 'RESPONSE_CURRENT_MEDIA',
-                mediaUrl: playUrl,
-                blobUrl: blobUrl,
-                fileBlob: fileBlob,
-                selectedCharacter: selectedCharacter,
-                characterId: selectedCharacter,
-                characterName: charMatch ? charMatch.name : '',
-                currentTime: curTime,
-                isPlaying: isPlaying,
-                isVideo: true,
-                force: true,
-                timestamp: Date.now()
-              });
-              bc.postMessage({
-                type: 'MASTER_TIME_SYNC',
-                currentTime: curTime,
-                isPlaying: isPlaying,
-                selectedCharacter: selectedCharacter,
-                mediaUrl: playUrl,
-                blobUrl: blobUrl,
-                fileBlob: fileBlob,
-                force: true,
-                isMuted: isLocalSpeakerMuted,
-                timestamp: Date.now()
-              });
-            } catch (e) {}
             return;
           }
 

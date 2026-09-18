@@ -77,7 +77,6 @@ export const saveAidolItem = async (item) => {
     if (!db) return null;
 
     const rawBlob = item.fileBlob || item.fileData || null;
-    const isLargeBlob = rawBlob && typeof rawBlob.size === 'number' && rawBlob.size > 50 * 1024 * 1024; // > 50MB (1GB - 50GB)
     const itemId = item.id || `aidol_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 
     // Lưu ngay vào bộ nhớ RAM toàn cục siêu tốc 0ms
@@ -94,35 +93,68 @@ export const saveAidolItem = async (item) => {
       } catch (e) {}
     }
 
-    return new Promise((resolve, reject) => {
+    return new Promise((resolve) => {
       try {
         const transaction = db.transaction([STORE_NAME], 'readwrite');
         const store = transaction.objectStore(STORE_NAME);
         
-        const record = {
-          id: itemId,
-          name: item.name || 'Chưa đặt tên',
-          type: item.type || 'image',
-          // File lớn chỉ lưu metadata, không lưu binary để IndexedDB đọc siêu tốc 0ms
-          fileBlob: isLargeBlob ? null : rawBlob,
-          isLargeFile: isLargeBlob,
-          fileSize: rawBlob ? rawBlob.size : 0,
-          mediaUrl: item.mediaUrl || item.url || '',
-          url: item.url || item.mediaUrl || '',
-          tags: item.tags || [],
-          aspectRatio: item.aspectRatio || '9:16',
-          isLiveReady: true,
-          createdAt: new Date().toISOString()
-        };
-
-        const request = store.put(record);
-        request.onsuccess = () => {
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('aidol_db_updated', { detail: { action: 'save', item: record } }));
+        const getReq = store.get(itemId);
+        getReq.onsuccess = () => {
+          const oldRecord = getReq.result || {};
+          const finalBlob = rawBlob || oldRecord.fileBlob || null;
+          
+          if (finalBlob) {
+            try {
+              const memCache = getBlobMemoryCache();
+              memCache.set(itemId, finalBlob);
+              if (item.url) memCache.set(item.url, finalBlob);
+              if (item.mediaUrl) memCache.set(item.mediaUrl, finalBlob);
+            } catch (e) {}
           }
-          resolve(record);
+
+          const record = {
+            id: itemId,
+            name: item.name || oldRecord.name || 'Chưa đặt tên',
+            type: item.type || oldRecord.type || 'video',
+            // ⚡ LUÔN LƯU 100% FILE BLOB GỐC VÀO INDEXEDDB CHO VIDEO TỪ 100MB ĐẾN 50GB
+            fileBlob: finalBlob,
+            fileSize: finalBlob ? finalBlob.size : (oldRecord.fileSize || 0),
+            mediaUrl: item.mediaUrl || item.url || oldRecord.mediaUrl || '',
+            url: item.url || item.mediaUrl || oldRecord.url || '',
+            tags: item.tags || oldRecord.tags || [],
+            aspectRatio: item.aspectRatio || oldRecord.aspectRatio || '9:16',
+            isLiveReady: true,
+            createdAt: oldRecord.createdAt || new Date().toISOString(),
+            updatedAt: new Date().toISOString()
+          };
+
+          const putReq = store.put(record);
+          putReq.onsuccess = () => {
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('aidol_db_updated', { detail: { action: 'save', item: record } }));
+            }
+            resolve(record);
+          };
+          putReq.onerror = () => resolve(null);
         };
-        request.onerror = () => resolve(null);
+        getReq.onerror = () => {
+          const record = {
+            id: itemId,
+            name: item.name || 'Chưa đặt tên',
+            type: item.type || 'video',
+            fileBlob: rawBlob,
+            fileSize: rawBlob ? rawBlob.size : 0,
+            mediaUrl: item.mediaUrl || item.url || '',
+            url: item.url || item.mediaUrl || '',
+            tags: item.tags || [],
+            aspectRatio: item.aspectRatio || '9:16',
+            isLiveReady: true,
+            createdAt: new Date().toISOString()
+          };
+          const putReq = store.put(record);
+          putReq.onsuccess = () => resolve(record);
+          putReq.onerror = () => resolve(null);
+        };
       } catch (err) {
         resolve(null);
       }
@@ -158,7 +190,7 @@ export const loadAllAidolItems = async () => {
               finalBlob = window.__activeMediaBlob;
             }
 
-            if (!finalUrl && finalBlob) {
+            if (finalBlob && (!finalUrl || finalUrl.startsWith('blob:'))) {
                try {
                  finalUrl = URL.createObjectURL(finalBlob);
                } catch(e) {}
