@@ -7923,6 +7923,7 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   stopCurrentActiveAudioNode();
 
   const isMale = checkIsMale(voice);
+  const dsp = voice?.dspProfile || {};
   const source = audioCtx.createBufferSource();
   source.buffer = audioBuffer;
   activeSourceNode = source;
@@ -8208,7 +8209,7 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
     for (let attempt = 0; attempt < 2; attempt++) {
       for (const endpoint of endpointCandidates) {
         let controller = new AbortController();
-        let timeoutId = setTimeout(() => controller.abort(), 2200);
+        let timeoutId = setTimeout(() => controller.abort(), 8000);
         try {
           let res = await fetch(endpoint, {
             method: 'POST',
@@ -8220,7 +8221,7 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
           if (!res || !res.ok) {
             clearTimeout(timeoutId);
             controller = new AbortController();
-            timeoutId = setTimeout(() => controller.abort(), 2200);
+            timeoutId = setTimeout(() => controller.abort(), 8000);
             const getUrl = endpoint.includes('?') ? `${endpoint}&${ttsQuery}` : `${endpoint}?${ttsQuery}`;
             res = await fetch(getUrl, { signal: controller.signal }).catch(() => null);
           }
@@ -8246,7 +8247,7 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
             }
 
             if (arrayBuf && arrayBuf.byteLength > 100) {
-              const rawAudioBuffer = await audioCtx.decodeAudioData(arrayBuf);
+              const rawAudioBuffer = await audioCtx.decodeAudioData(arrayBuf.slice(0));
               if (rawAudioBuffer) {
                 const audioBuffer = trimAudioBufferSilence(rawAudioBuffer);
                 if (audioBufferMemoryCache.size > 300) {
