@@ -1938,8 +1938,8 @@ IDOL MỈM CƯỜI + GESTURE
                           type="button"
                           onClick={(e) => {
                             e.stopPropagation();
-                            toggleFavoriteVoiceId(v.id);
-                            setFavoriteVoiceIds(getFavoriteVoiceIds());
+                            const updated = toggleFavoriteVoiceId(v.id);
+                            setFavoriteVoiceIds([...(updated || getFavoriteVoiceIds())]);
                           }}
                           title={isFav ? "Bỏ khỏi kho yêu thích" : "Lưu vào kho yêu thích để dùng thường xuyên"}
                           className="p-1 rounded-full hover:scale-110 active:scale-95 transition-transform"
@@ -2717,8 +2717,6 @@ IDOL MỈM CƯỜI + GESTURE
                         })
                         .map((v, idx) => {
                           const isSelectedAsIdol = settings.mainVoiceId === v.id;
-                          const isSelectedAsAssistant = settings.assistantVoiceId === v.id;
-                          const isSelectedAsGame = settings.gameVoiceId === v.id;
                           const isPlaying = previewingVoiceId === v.id;
                           const isFav = favoriteVoiceIds.includes(v.id);
                           const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
@@ -4119,8 +4117,8 @@ IDOL MỈM CƯỜI + GESTURE
                                   type="button"
                                   onClick={(e) => {
                                     e.stopPropagation();
-                                    toggleFavoriteVoiceId(v.id);
-                                    setFavoriteVoiceIds(getFavoriteVoiceIds());
+                                    const updated = toggleFavoriteVoiceId(v.id);
+                                    setFavoriteVoiceIds([...(updated || getFavoriteVoiceIds())]);
                                   }}
                                   title={isFav ? "Bỏ khỏi kho yêu thích" : "Lưu vào kho yêu thích"}
                                   className="p-1 rounded-full hover:scale-110 active:scale-95 transition-transform"

@@ -15,8 +15,9 @@
 import { globalLipSyncEngine } from '../lib/avatar-sync/AvatarLipSyncEngine';
 import { masterNormalizeVietnameseSpeech } from './vietnamesePronunciationMaster';
 import { MASTER_DNA_MALE_VIETNAMESE_40_VOICES } from './maleVoicesMasterDNA';
+import { MASTER_DNA_FEMALE_VIETNAMESE_50_VOICES } from './femaleVoicesMasterDNA';
 
-export { MASTER_DNA_MALE_VIETNAMESE_40_VOICES };
+export { MASTER_DNA_MALE_VIETNAMESE_40_VOICES, MASTER_DNA_FEMALE_VIETNAMESE_50_VOICES };
 export const VIETNAMESE_FEMALE_VOICES = [
   // ---------------------------------------------------------------------------------------------------------
   // 🌸 PHÂN KHÚC 1: ĐỘ TUỔI 20 - 28 TUỔI (15 GIỌNG NỮ ĐỘC BẢN • ĐA VÙNG MIỀN • IDOL VIRAL • TÔNG SẮC HOÀN TOÀN KHÁC BIỆT)
@@ -6729,9 +6730,9 @@ export const INTERNATIONAL_VOICES = [
   }
 ];
 
-// Toàn bộ danh sách hơn 150 giọng AI Studio Pro (bao gồm 40 Master Nữ + 40 Master Nam)
+// Toàn bộ danh sách hơn 200 giọng AI Studio Pro (bao gồm 50 Master Nữ + 40 Master Nam)
 export const ALL_SYSTEM_VOICES = [
-  ...MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES,
+  ...MASTER_DNA_FEMALE_VIETNAMESE_50_VOICES,
   ...MASTER_DNA_MALE_VIETNAMESE_40_VOICES,
   ...VIETNAMESE_HOTTREND_VOICES,
   ...VIETNAMESE_SALES_VOICES,

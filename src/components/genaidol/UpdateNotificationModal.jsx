@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.6.4';
+export const APP_VERSION = '3.6.5';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v3.6.4 - Chuẩn Hóa Tuyệt Đối Đa Bộ Lọc Vùng Miền / Giới Tính / Độ Tuổi, Lưu Kho Yêu Thích Realtime & Tinh Chỉnh DSP Âm Sắc Độc Bản',
-    description: '1. Chuẩn Hóa Tuyệt Đối Tổ Hợp Đa Bộ Lọc: Khi chọn kết hợp Bộ Sưu Tập + Vùng Miền (Miền Bắc, Miền Trung, Miền Nam, Miền Tây) + Giới Tính (Nam/Nữ) + Độ Tuổi (Trẻ 18-28t, Trưởng Thành 25-40t, Trung & Cao Niên 35-65+t) + Vai Trò, hệ thống lọc chính xác 100% không để lọt bất kỳ giọng nào sai tiêu chí; 2. Hệ Thống Yêu Thích ⭐ Lưu Trữ Tức Thì: Bấm vào dấu sao ở bất kỳ bảng giọng nào sẽ lưu lại ngay vào danh mục "Yêu Thích", đồng bộ realtime trên toàn bộ giao diện; 3. Nâng Cấp Master Audio DSP: Chuẩn tốc độ phát, chuẩn âm lượng dày dặn, chuẩn âm sắc tự nhiên, phân hóa triệt để không trùng lặp âm sắc giữa các giọng.'
+    title: '⚡ Bản Cập Nhật v3.6.5 - Tích Hợp Bộ 50 Tông Giọng Nữ Master DNA (18-70t), Nâng Cấp Âm Sắc Hoa Hậu Model Ngọt Ngào & Lưu Yêu Thích ⭐ Realtime',
+    description: '1. Đại Nâng Cấp Thư Viện 50 Giọng Nữ Master DNA: Tích hợp trọn bộ 50 hồ sơ âm sắc độc bản (18-70 tuổi) với 5 tầng DNA âm học; đặc biệt các giọng nữ 18-24t chuẩn phong cách Hoa hậu, Người mẫu, ngọt ngào, quyến rũ, mê đắm lòng người; 2. Hệ Thống ⭐ Yêu Thích Hoàn Hảo: Bấm dấu sao là lưu ngay vào kho yêu thích, đồng bộ tức thì trên toàn bộ giao diện; 3. Chuẩn Hóa 100% Đa Bộ Lọc Vùng Miền / Giới Tính / Độ Tuổi: Lọc tuyệt đối chính xác theo đúng từng tiêu chí đã chọn.'
   }
 ];
 
