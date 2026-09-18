@@ -7369,9 +7369,18 @@ export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId 
   const normalizedRole = (roleOrEvent || '').toLowerCase().trim();
   const normalizedAvatarId = (avatarId || '').toLowerCase().trim();
 
+  // 🎯 BƯỚC 1: ƯU TIÊN SỐ 1 (TUYỆT ĐỐI 100%) - NẾU CÓ VOICE ID ĐƯỢC CHỈ ĐỊNH CỤ THỂ
+  if (taskSpecificVoiceId) {
+    if (typeof taskSpecificVoiceId === 'object' && taskSpecificVoiceId.id) {
+      return taskSpecificVoiceId;
+    }
+    const matchedVoice = ALL_SYSTEM_VOICES.find(v => v.id === taskSpecificVoiceId || v.id?.toLowerCase() === String(taskSpecificVoiceId).toLowerCase());
+    if (matchedVoice) return matchedVoice;
+  }
+
   let brainVoice = null;
 
-  // 1. Phân giải theo ID Avatar nhân vật cụ thể đã cấu hình trong Bộ Não AI
+  // 2. Phân giải theo ID Avatar nhân vật cụ thể đã cấu hình trong Bộ Não AI
   if (normalizedAvatarId === 'avatar_1' || normalizedRole === 'avatar_1') {
     brainVoice = dualConfig.idolVoice;
   } else if (normalizedAvatarId === 'avatar_2' || normalizedRole === 'avatar_2') {
@@ -7381,7 +7390,7 @@ export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId 
   } else if (normalizedAvatarId === 'avatar_4' || normalizedRole === 'avatar_4') {
     brainVoice = dualConfig.managerVoice || dualConfig.idolVoice;
   }
-  // 2. Phân giải theo vai trò / kênh tác vụ
+  // 3. Phân giải theo vai trò / kênh tác vụ
   else if (normalizedRole === 'comment' || normalizedRole === 'ask_reply' || normalizedRole === 'qna' || normalizedRole === 'binhluan' || normalizedRole === 'hoi_dap') {
     brainVoice = dualConfig.commentVoice || dualConfig.idolVoice;
   } else if (normalizedRole === 'manager' || normalizedRole === 'assistant' || normalizedRole === 'checkout' || normalizedRole === 'purchase' || normalizedRole === 'troly' || normalizedRole === 'quanly' || normalizedRole === 'chot_don') {
@@ -7393,7 +7402,6 @@ export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId 
     brainVoice = dualConfig.idolVoice;
   }
 
-  // 🎯 BƯỚC 1: ƯU TIÊN SỐ 1 (CAO NHẤT 100%) - NẾU TRONG TAB BỘ NÃO AI ĐÃ CẤU HÌNH VOICE HỢP LỆ
   if (brainVoice && brainVoice.id && brainVoice.enabled !== false) {
     const fullVoice = ALL_SYSTEM_VOICES.find(v => v.id === brainVoice.id) || brainVoice;
     return {
@@ -7403,12 +7411,6 @@ export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId 
       rate: brainVoice.rate !== undefined ? Number(brainVoice.rate) : (fullVoice.rate ?? 1.0),
       pitch: brainVoice.pitch !== undefined ? Number(brainVoice.pitch) : (fullVoice.pitch ?? 1.0)
     };
-  }
-
-  // 🎯 BƯỚC 2: NẾU TRONG BỘ NÃO AI CHƯA CẤU HÌNH -> MỚI SỬ DỤNG VOICE TỪ TRANG SỰ KIỆN / 14 TÁC VỤ
-  if (taskSpecificVoiceId) {
-    const matchedVoice = ALL_SYSTEM_VOICES.find(v => v.id === taskSpecificVoiceId);
-    if (matchedVoice) return matchedVoice;
   }
 
   // 🎯 BƯỚC 3: FALLBACK MẶC ĐỊNH CHUẨN XÁC TỪ IDOL VOICE CỦA BỘ NÃO AI
@@ -7918,30 +7920,13 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   source.buffer = audioBuffer;
   activeSourceNode = source;
 
-  // 🎵 DETUNE / PITCH MASTERING DÀNH RIÊNG CHO TỪNG GIỌNG ĐỌC
-  const dsp = voice?.dspProfile || {};
+  // 🎵 BẢO TỒN 100% CAO ĐỘ & ĐẶC TÍNH FORMANT CỦA TỪNG GIỌNG ĐỌC
+  // Tốc độ (Speed) đã được Edge Neural TTS xử lý chuẩn xác bằng thuật toán kéo dãn thời gian chuyên dụng,
+  // nên playbackRate tại Web Audio SourceNode luôn cố định 1.0 để TUYỆT ĐỐI KHÔNG BIẾN DẠNG GIỌNG HAY LÀM ĐỔI TONE.
   if (source.detune) {
-    try {
-      let baseDetune = 0;
-      if (dsp.detune !== undefined && !isNaN(Number(dsp.detune))) {
-        baseDetune = Number(dsp.detune);
-      } else if (dsp.semitones !== undefined && !isNaN(Number(dsp.semitones))) {
-        baseDetune = Math.round(Number(dsp.semitones) * 100);
-      } else if (voice?.edgePitch && String(voice.edgePitch).includes('%')) {
-        const pNum = parseInt(String(voice.edgePitch).replace('%', ''), 10) || 0;
-        baseDetune = Math.round(pNum * 8.5);
-      }
-
-      let userPitchOffset = 0;
-      if (voice?.pitch !== undefined && !isNaN(Number(voice.pitch))) {
-        userPitchOffset = Math.round((Number(voice.pitch) - 1.0) * 800);
-      }
-
-      // Dải tần detune an toàn từ -800 cents (trầm ấm sâu lắng) đến +800 cents (tươi sáng sắc nét)
-      source.detune.value = Math.max(-800, Math.min(800, baseDetune + userPitchOffset));
-    } catch (e) {}
+    source.detune.value = 0;
   }
-  source.playbackRate.value = requestedRate || dsp.rate || 1.0;
+  source.playbackRate.value = 1.0;
 
   // MASTER GAIN (Điều chỉnh âm lượng to lớn, rõ ràng đàng hoàng)
   const masterGain = audioCtx.createGain();
@@ -8322,13 +8307,21 @@ export async function previewVoiceAudio(voiceOrId, sampleText = null, optionsOrO
     return true;
   }
 
-  // Chuẩn hóa voice object từ string ID hoặc role theo chuẩn Bộ Não AI
+  // Chuẩn hóa voice object từ string ID, role hoặc object theo chuẩn Bộ Não AI
   let voiceObj = voiceOrId;
   if (typeof voiceOrId === 'string') {
-    if (['idol', 'manager', 'assistant', 'game', 'comment', 'avatar_1', 'avatar_2', 'avatar_3', 'avatar_4'].includes(voiceOrId.toLowerCase())) {
+    const vClean = voiceOrId.toLowerCase().trim();
+    if (['idol', 'manager', 'assistant', 'game', 'comment', 'avatar_1', 'avatar_2', 'avatar_3', 'avatar_4'].includes(vClean)) {
       voiceObj = resolveEffectiveVoice(voiceOrId);
     } else {
-      voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === voiceOrId) || resolveEffectiveVoice('idol', voiceOrId);
+      voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === voiceOrId || v.id?.toLowerCase() === vClean) || resolveEffectiveVoice('idol', voiceOrId);
+    }
+  } else if (typeof voiceOrId === 'object' && voiceOrId !== null) {
+    if (voiceOrId.id) {
+      const full = ALL_SYSTEM_VOICES.find(v => v.id === voiceOrId.id || v.id?.toLowerCase() === String(voiceOrId.id).toLowerCase());
+      if (full) {
+        voiceObj = { ...full, ...voiceOrId };
+      }
     }
   }
   voiceObj = voiceObj || ALL_SYSTEM_VOICES[0];

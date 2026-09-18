@@ -415,11 +415,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     try {
       if (onAudioPlayStateChange) onAudioPlayStateChange(true);
       
-      const channel = item.voiceChannel || (item.type === 'script' ? 'idol' : item.type === 'comment' ? 'comment' : 'manager');
-      // ⚡ ƯU TIÊN SỐ 1 (CAO NHẤT 100%): LẤY VOICE ĐÃ SETUP TRONG TAB BỘ NÃO AI
-      let activeVoice = resolveEffectiveVoice(item.role || channel, item.voiceId, item.avatarId);
+      // ⚡ ƯU TIÊN SỐ 1 (TUYỆT ĐỐI 100%): DÙNG VOICE ĐƯỢC CHỈ ĐỊNH CHO TỪNG CÂU/TAB/TÁC VỤ
+      let activeVoice = item.voiceObj || (item.voiceId ? ALL_SYSTEM_VOICES.find(v => v.id === item.voiceId) : null) || resolveEffectiveVoice(item.role || channel, item.voiceId, item.avatarId);
       if (!activeVoice) {
-        activeVoice = item.voiceObj || resolveEffectiveVoice(channel, null);
+        activeVoice = resolveEffectiveVoice(channel, null);
       }
       
       if (activeVoice?.enabled === false) {

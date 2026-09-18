@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.8.2';
+export const APP_VERSION = '3.8.3';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v3.8.3 - Tách Biệt Tuyệt Đối Giọng Nam/Nữ & Chuẩn Hóa Tốc Độ Độc Lập Formant Giọng Đọc',
+    description: '1. Tách Biệt Tuyệt Đối Giọng Nam & Giọng Nữ: Triệt tiêu 100% hiện tượng chồng chéo hoặc chèn giọng nam không mong muốn; bấm nghe thử bất kỳ giọng nào trong bảng đều nghe đúng chuẩn 100% bản sắc tự nhiên của giọng đó; 2. Điều Khiển Tốc Độ Độc Lập Formant: Tùy chỉnh Tốc độ (Speed) chỉ thay đổi nhịp đọc nhanh/chậm mà TUYỆT ĐỐI KHÔNG làm méo biến dạng giọng hay thay đổi cao độ; 3. Chỉnh Độ Trầm Bổng Chuyên Nghiệp: Tùy chỉnh Cao độ (Pitch) biến đổi âm sắc thanh cao / trầm ấm mượt mà.'
+  },
   {
     title: '⚡ Bản Cập Nhật v3.8.2 - Khắc Phục Triệt Để Phát Lộn Voice Kịch Bản & Tối Ưu Hóa Đồng Bộ Video TikTok Live Studio',
     description: '1. Đọc Đúng 100% Giọng Đọc Đã Chọn: Khắc phục triệt để lỗi tự động đảo giọng giữa các câu/dòng, đảm bảo toàn bộ văn bản và kịch bản phát chính xác từng giọng riêng biệt theo cài đặt của người dùng; 2. Chặn Triệt Để Đọc Đè 2-3 Giọng Cùng Lúc: Tối ưu hàng đợi âm thanh và giải phóng kênh phát tuần tự mượt mà; 3. Đồng Bộ Video Siêu Tốc 0ms Lên Window Capture & TikTok Live Studio: Giữ nguyên file gốc trên máy, không tải lại dữ liệu, phát ngay tức thì 4K 60 FPS.'

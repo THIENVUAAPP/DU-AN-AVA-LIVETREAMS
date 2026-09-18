@@ -2019,10 +2019,11 @@ IDOL MỈM CƯỜI + GESTURE
                             setPreviewingVoiceId(v.id);
                             previewVoiceAudio({ 
                               ...v, 
-                              volume: (v.volume !== undefined ? Number(v.volume) : 1.0) * roleVol, 
-                              rate: (v.rate !== undefined ? Number(v.rate) : 1.0) * roleRate, 
-                              pitch: (v.pitch !== undefined ? Number(v.pitch) : 1.0) * rolePitch, 
-                              isTest: true 
+                              volume: v.volume !== undefined ? Number(v.volume) : 1.0, 
+                              rate: v.rate !== undefined ? Number(v.rate) : 1.0, 
+                              pitch: v.pitch !== undefined ? Number(v.pitch) : 1.0, 
+                              isTest: true,
+                              priority: true
                             }, v.sampleText || null, () => {
                               setPreviewingVoiceId(null);
                             });
@@ -2793,10 +2794,11 @@ IDOL MỈM CƯỜI + GESTURE
                                     setPreviewingVoiceId(v.id);
                                     previewVoiceAudio({ 
                                       ...v, 
-                                      volume: hotTrendVoiceVolume !== undefined ? hotTrendVoiceVolume : (v.volume || 1.0), 
-                                      rate: (v.rate || 1.0) * hotTrendVoiceRate, 
-                                      pitch: (v.pitch || 1.0) * hotTrendVoicePitch, 
-                                      isTest: true 
+                                      volume: v.volume || 1.0, 
+                                      rate: v.rate || 1.0, 
+                                      pitch: v.pitch || 1.0, 
+                                      isTest: true,
+                                      priority: true
                                     }, null, () => {
                                       setPreviewingVoiceId(null);
                                     });
@@ -4175,10 +4177,11 @@ IDOL MỈM CƯỜI + GESTURE
                                     setPreviewingVoiceId(v.id);
                                     previewVoiceAudio({ 
                                       ...v, 
-                                      volume: (v.volume !== undefined ? Number(v.volume) : 1.0) * activeVolMultiplier, 
-                                      rate: (v.rate !== undefined ? Number(v.rate) : 1.0) * activeRateMultiplier, 
-                                      pitch: (v.pitch !== undefined ? Number(v.pitch) : 1.0) * activePitchMultiplier, 
-                                      isTest: true 
+                                      volume: v.volume !== undefined ? Number(v.volume) : 1.0, 
+                                      rate: v.rate !== undefined ? Number(v.rate) : 1.0, 
+                                      pitch: v.pitch !== undefined ? Number(v.pitch) : 1.0, 
+                                      isTest: true,
+                                      priority: true
                                     }, v.sampleText || null, () => {
                                       setPreviewingVoiceId(null);
                                       setPreviewingRole(null);
