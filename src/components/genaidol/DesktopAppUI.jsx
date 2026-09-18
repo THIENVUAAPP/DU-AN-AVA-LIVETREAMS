@@ -3700,6 +3700,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         return (
           <video 
             ref={desktopVideoRef}
+            data-main-player="true"
             src={lipSyncVideoUrl} 
             className="w-full h-full object-contain bg-black"
             autoPlay
@@ -3752,6 +3753,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         return (
           <video 
             ref={desktopVideoRef}
+            data-main-player="true"
             src={activeVideoItem.mediaUrl} 
             className="w-full h-full object-contain bg-black"
             autoPlay

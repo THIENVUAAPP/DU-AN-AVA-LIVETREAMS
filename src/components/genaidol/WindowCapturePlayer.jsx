@@ -5,14 +5,22 @@ import { loadAllAidolItems } from '../../utils/idbHelper';
 
 /**
  * 🖥️ TAB CODE ĐỘC LẬP: CỬA SỔ BẮT HÌNH WINDOW CAPTURE 4K 60 FPS CHO OBS & TIKTOK LIVE STUDIO
+ * - Bê nguyên xi 100% luồng video gốc từ phần mềm chính với độ trễ 0ms
+ * - Sử dụng Direct GPU Stream Cloner (captureStream) & In-Memory Hardware Blob 
  * - Tách biệt hoàn toàn 100% với đường link Online Live Stream (/live-stream)
- * - Khóa chặt luồng video 4K 60 FPS siêu mượt, không giật lag, không đứng hình
- * - Tối ưu nạp video dung lượng nặng 0ms từ bộ nhớ đệm / IndexedDB / Instant Chunks
+ * - Khóa chặt luồng video 4K 60 FPS siêu mượt, không giật lag, không đứng hình, không đen màn hình
  * - Nút [✕ Ẩn Toàn Bộ (H)] cho phép ẩn sạch 100% các nút và tab điều khiển trên video
  * - Biểu tượng mắt nổi [👁️] hoặc phím tắt [H] giúp hiện lại nhanh chóng bất kỳ lúc nào
  */
 export default function WindowCapturePlayer() {
   const videoRef = useRef(null);
+  const isDirectStreamActiveRef = useRef(false);
+  const activeBlobUrlRef = useRef(null);
+  const isHardwareLocalBlobRef = useRef(false);
+  const isExplicitlyPausedRef = useRef(false);
+  const isUserMutedRef = useRef(false);
+  const currentCharIdRef = useRef(null);
+
   const [tunnelUrl, setTunnelUrl] = useState(() => {
     if (typeof window === 'undefined') return '';
     const params = new URLSearchParams(window.location.search);
@@ -21,9 +29,8 @@ export default function WindowCapturePlayer() {
 
   const [videoSrc, setVideoSrc] = useState(() => {
     if (typeof window === 'undefined') return '';
-    // ⚡ BÊ NGUYÊN XI 100% NGUỒN VIDEO ĐANG PHÁT TỪ PHẦN MỀM CHÍNH (0ms, 0 byte mạng, nguyên bản siêu nét)
+    // ⚡ NẠP TỨC THÌ NGUỒN VIDEO GỐC TỪ PHẦN MỀM CHÍNH (0ms, 0 byte mạng, nguyên bản siêu nét)
     try {
-      // 1. Ưu tiên số 1: Lấy Blob trực tiếp từ Window opener và tạo Object URL trong document context của cửa sổ con này
       if (window.opener) {
         if (window.opener.__activeMediaBlob && (window.opener.__activeMediaBlob instanceof Blob || window.opener.__activeMediaBlob instanceof File)) {
           return URL.createObjectURL(window.opener.__activeMediaBlob);
@@ -44,7 +51,6 @@ export default function WindowCapturePlayer() {
         } catch (e) {}
       }
 
-      // 2. Ưu tiên số 2: Lấy Blob trực tiếp từ Window hiện tại
       if (window.__activeMediaBlob && (window.__activeMediaBlob instanceof Blob || window.__activeMediaBlob instanceof File)) {
         return URL.createObjectURL(window.__activeMediaBlob);
       }
@@ -59,14 +65,14 @@ export default function WindowCapturePlayer() {
 
     const params = new URLSearchParams(window.location.search);
     const v = params.get('v');
-    if (v && !v.startsWith('blob:')) return v;
+    if (v && !v.startsWith('blob:') && !v.startsWith('data:')) return v;
     try {
       const activeSrc = localStorage.getItem('avalive_active_video_src');
-      if (activeSrc && !activeSrc.startsWith('blob:')) return activeSrc;
+      if (activeSrc && !activeSrc.startsWith('blob:') && !activeSrc.startsWith('data:')) return activeSrc;
       const saved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
-      if (saved.mediaUrl && !saved.mediaUrl.startsWith('blob:')) return saved.mediaUrl;
+      if (saved.mediaUrl && !saved.mediaUrl.startsWith('blob:') && !saved.mediaUrl.startsWith('data:')) return saved.mediaUrl;
       const locked = localStorage.getItem('avalive_user_locked_media') || '';
-      if (locked && !locked.startsWith('blob:')) return locked;
+      if (locked && !locked.startsWith('blob:') && !locked.startsWith('data:')) return locked;
     } catch (e) {}
     return '';
   });
@@ -90,13 +96,6 @@ export default function WindowCapturePlayer() {
     }
   });
 
-  const isExplicitlyPausedRef = useRef(false);
-  const isUserMutedRef = useRef(false);
-  const lastReportedTimeRef = useRef(0);
-  const activeBlobUrlRef = useRef(null);
-  const isHardwareLocalBlobRef = useRef(false);
-  const currentCharIdRef = useRef(null);
-
   // Cập nhật tiêu đề cửa sổ cho OBS & TikTok Studio dễ nhận diện
   useEffect(() => {
     if (typeof document !== 'undefined') {
@@ -104,7 +103,77 @@ export default function WindowCapturePlayer() {
     }
   }, []);
 
-  // ⚡ Tự động tìm kiếm fileBlob gốc trong Memory Cache / Opener / IndexedDB để phát 0ms không cần chờ upload/mạng (Hỗ trợ 1GB - 50GB, 2K - 8K)
+  // 🌐 Chuyển đổi URL thông minh cho Window Capture (Tuyệt đối không trả về URL rỗng hoặc '/')
+  const resolveUrl = useCallback((url) => {
+    if (!url || typeof url !== 'string') return '';
+    const trimmed = url.trim();
+    if (!trimmed) return '';
+    if (trimmed.startsWith('blob:') || trimmed.startsWith('data:')) return trimmed;
+
+    if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
+      if (trimmed.includes('localhost:') || trimmed.includes('127.0.0.1:')) {
+        try {
+          const u = new URL(trimmed);
+          if (window.location.hostname.includes('vercel.app') && tunnelUrl) {
+            return `${tunnelUrl.replace(/\/$/, '')}${u.pathname}${u.search}`;
+          }
+          return `${window.location.origin}${u.pathname}${u.search}`;
+        } catch (e) {}
+      }
+      return trimmed;
+    }
+
+    if (trimmed.startsWith('/uploads/') || trimmed.includes('/uploads/')) {
+      const pathPart = trimmed.substring(trimmed.indexOf('/uploads/'));
+      if (window.location.hostname.includes('vercel.app') && tunnelUrl) {
+        return `${tunnelUrl.replace(/\/$/, '')}${pathPart}`;
+      }
+      return `${window.location.origin}${pathPart}`;
+    }
+
+    if (trimmed.startsWith('/')) {
+      if (window.location.hostname.includes('vercel.app') && tunnelUrl) {
+        return `${tunnelUrl.replace(/\/$/, '')}${trimmed}`;
+      }
+      return `${window.location.origin}${trimmed}`;
+    }
+
+    return `${window.location.origin}/${trimmed}`;
+  }, [tunnelUrl]);
+
+  // ⚡ 1. Direct GPU Stream Cloner: Bê nguyên xi luồng video của phần mềm chính qua GPU Pipeline (0ms, 0 byte)
+  const attachOpenerDirectStream = useCallback(() => {
+    try {
+      if (typeof window === 'undefined' || !window.opener || window.opener.closed) return false;
+      const openerVid = window.opener.document.querySelector('video[data-main-player="true"]') || window.opener.document.querySelector('video');
+      if (openerVid && (openerVid.captureStream || openerVid.mozCaptureStream)) {
+        const stream = openerVid.captureStream ? openerVid.captureStream() : openerVid.mozCaptureStream();
+        if (stream && stream.getVideoTracks().length > 0) {
+          const targetVid = videoRef.current;
+          if (targetVid) {
+            if (activeBlobUrlRef.current) {
+              try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
+              activeBlobUrlRef.current = null;
+            }
+            targetVid.removeAttribute('src');
+            targetVid.src = '';
+            targetVid.srcObject = stream;
+            targetVid.muted = isUserMutedRef.current;
+            targetVid.play().catch(() => {});
+            isDirectStreamActiveRef.current = true;
+            setIsVideoLoading(false);
+            setIsPlaybackActive(true);
+            return true;
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('[WindowCapture] directStream clone error/fallback:', e);
+    }
+    return false;
+  }, []);
+
+  // ⚡ 2. Tự động tìm kiếm fileBlob gốc trong Memory Cache / Opener / IndexedDB để phát 0ms không cần mạng
   const tryLoadFromLocalDB = useCallback(async (targetUrlOrCharId) => {
     if (typeof window === 'undefined') return null;
     try {
@@ -197,42 +266,6 @@ export default function WindowCapturePlayer() {
     } catch (e) {}
   };
 
-  // 🌐 Chuyển đổi URL thông minh cho Window Capture
-  const resolveUrl = useCallback((url) => {
-    if (!url || typeof url !== 'string') return '';
-    if (url.startsWith('blob:')) return url; // Giữ nguyên blob url local nếu hợp lệ
-
-    if (url.startsWith('http://') || url.startsWith('https://')) {
-      if (url.includes('localhost:') || url.includes('127.0.0.1:')) {
-        try {
-          const u = new URL(url);
-          if (window.location.hostname.includes('vercel.app') && tunnelUrl) {
-            return `${tunnelUrl.replace(/\/$/, '')}${u.pathname}${u.search}`;
-          }
-          return window.location.origin + u.pathname + u.search;
-        } catch (e) {}
-      }
-      return url;
-    }
-
-    if (url.startsWith('/uploads/') || url.includes('/uploads/')) {
-      const pathPart = url.substring(url.indexOf('/uploads/'));
-      if (window.location.hostname.includes('vercel.app') && tunnelUrl) {
-        return `${tunnelUrl.replace(/\/$/, '')}${pathPart}`;
-      }
-      return `${window.location.origin}${pathPart}`;
-    }
-
-    if (url.startsWith('/')) {
-      if (window.location.hostname.includes('vercel.app') && tunnelUrl) {
-        return `${tunnelUrl.replace(/\/$/, '')}${url}`;
-      }
-      return `${window.location.origin}${url}`;
-    }
-
-    return `${window.location.origin}/${url}`;
-  }, [tunnelUrl]);
-
   const isSameMedia = (srcA, srcB) => {
     if (!srcA || !srcB) return false;
     if (srcA === srcB) return true;
@@ -250,7 +283,7 @@ export default function WindowCapturePlayer() {
   const applyTimeSync = (targetTime, force = false) => {
     const vid = videoRef.current;
     if (!vid || typeof targetTime !== 'number' || isNaN(targetTime)) return;
-    if (isExplicitlyPausedRef.current) return;
+    if (isExplicitlyPausedRef.current || isDirectStreamActiveRef.current) return;
 
     const cur = vid.currentTime;
     const diff = Math.abs(cur - targetTime);
@@ -260,24 +293,33 @@ export default function WindowCapturePlayer() {
     }
   };
 
-  // 1. Đồng bộ qua BroadcastChannel nội bộ cùng máy
+  // Khởi động nạp video ngay tức khắc khi mở cửa sổ Window Capture
   useEffect(() => {
-    // Khởi tạo kiểm tra ngay từ Memory Cache / Opener / IndexedDB khi mở cửa sổ (Bê nguyên xi 100%)
+    // 1. Thử direct stream clone trước (0ms siêu mượt)
+    const streamAttached = attachOpenerDirectStream();
+    if (streamAttached) return;
+
+    // 2. Thử nạp local blob
     const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     const charParam = params ? params.get('char') : null;
     const vParam = params ? params.get('v') : null;
+
     tryLoadFromLocalDB(charParam || vParam || null).then(localBlob => {
-      if (localBlob) {
+      if (localBlob && !isDirectStreamActiveRef.current) {
         isHardwareLocalBlobRef.current = true;
         setVideoSrc(localBlob);
         setIsVideoLoading(false);
         if (videoRef.current) {
+          videoRef.current.srcObject = null;
           videoRef.current.src = localBlob;
           videoRef.current.play().catch(() => {});
         }
       }
     });
+  }, [attachOpenerDirectStream, tryLoadFromLocalDB]);
 
+  // Đồng bộ qua BroadcastChannel nội bộ cùng máy
+  useEffect(() => {
     let bc = null;
     try {
       bc = new BroadcastChannel('avalive_master_live_stream');
@@ -293,7 +335,11 @@ export default function WindowCapturePlayer() {
         if (!msg) return;
 
         if ((msg.type === 'GLOBAL_MEDIA_CHANGE' || msg.type === 'RESPONSE_CURRENT_MEDIA') && (msg.fileBlob || msg.mediaUrl || msg.blobUrl || msg.characterId)) {
-          // ⚡ ƯU TIÊN 1: File/Blob object trực tiếp qua Structured Clone (0ms, 60 FPS chuẩn GPU)
+          // Thử re-attach direct stream
+          const streamAttached = attachOpenerDirectStream();
+          if (streamAttached) return;
+
+          // ⚡ ƯU TIÊN: File/Blob object trực tiếp qua Structured Clone (0ms, 60 FPS chuẩn GPU)
           if (msg.fileBlob && (msg.fileBlob instanceof Blob || msg.fileBlob instanceof File)) {
             try {
               if (activeBlobUrlRef.current) {
@@ -302,6 +348,9 @@ export default function WindowCapturePlayer() {
               const url = URL.createObjectURL(msg.fileBlob);
               activeBlobUrlRef.current = url;
               isHardwareLocalBlobRef.current = true;
+              if (videoRef.current) {
+                videoRef.current.srcObject = null;
+              }
               setVideoSrc(url);
               setIsVideoLoading(false);
             } catch (e) {}
@@ -310,14 +359,19 @@ export default function WindowCapturePlayer() {
             const localBlob = await tryLoadFromLocalDB(msg.characterId || msg.mediaUrl);
             if (localBlob) {
               isHardwareLocalBlobRef.current = true;
+              if (videoRef.current) {
+                videoRef.current.srcObject = null;
+              }
               setVideoSrc(localBlob);
               setIsVideoLoading(false);
             } else if (msg.mediaUrl && !msg.mediaUrl.startsWith('blob:')) {
-              // Nếu đang phát blob mượt mà cùng máy, không hạ cấp về đường dẫn uploads server dở dang
               const isCurrentlyBlob = isHardwareLocalBlobRef.current || (videoSrc && String(videoSrc).startsWith('blob:'));
               if (!isCurrentlyBlob) {
                 const resolved = resolveUrl(msg.mediaUrl);
                 if (resolved && !isSameMedia(resolved, videoSrc)) {
+                  if (videoRef.current) {
+                    videoRef.current.srcObject = null;
+                  }
                   setVideoSrc(resolved);
                   setIsVideoLoading(true);
                 }
@@ -351,9 +405,9 @@ export default function WindowCapturePlayer() {
         try { bc.close(); } catch (e) {}
       }
     };
-  }, [videoSrc, resolveUrl, tryLoadFromLocalDB]);
+  }, [videoSrc, resolveUrl, tryLoadFromLocalDB, attachOpenerDirectStream]);
 
-  // 2. Đồng bộ qua Socket.io Realtime Server
+  // Đồng bộ qua Socket.io Realtime Server
   useEffect(() => {
     let socket = null;
     try {
@@ -378,19 +432,26 @@ export default function WindowCapturePlayer() {
           if (state.selectedCharacter) {
             currentCharIdRef.current = state.selectedCharacter;
           }
-          const localBlob = await tryLoadFromLocalDB(state.selectedCharacter || state.mediaUrl);
-          if (localBlob) {
-            isHardwareLocalBlobRef.current = true;
-            setVideoSrc(localBlob);
-            setIsVideoLoading(false);
-          } else if (state.mediaUrl) {
-            // NẾU ĐANG CÓ HARDWARE BLOB TỪ MÁY THÌ TUYỆT ĐỐI KHÔNG GHI ĐÈ BẰNG URL SERVER CHƯA TẢI XONG
-            const isCurrentlyBlob = isHardwareLocalBlobRef.current || (videoSrc && String(videoSrc).startsWith('blob:'));
-            if (!isCurrentlyBlob) {
-              const resolved = resolveUrl(state.mediaUrl);
-              if (resolved && !isSameMedia(resolved, videoSrc)) {
-                setVideoSrc(resolved);
-                setIsVideoLoading(true);
+          if (!isDirectStreamActiveRef.current) {
+            const localBlob = await tryLoadFromLocalDB(state.selectedCharacter || state.mediaUrl);
+            if (localBlob) {
+              isHardwareLocalBlobRef.current = true;
+              if (videoRef.current) {
+                videoRef.current.srcObject = null;
+              }
+              setVideoSrc(localBlob);
+              setIsVideoLoading(false);
+            } else if (state.mediaUrl) {
+              const isCurrentlyBlob = isHardwareLocalBlobRef.current || (videoSrc && String(videoSrc).startsWith('blob:'));
+              if (!isCurrentlyBlob) {
+                const resolved = resolveUrl(state.mediaUrl);
+                if (resolved && !isSameMedia(resolved, videoSrc)) {
+                  if (videoRef.current) {
+                    videoRef.current.srcObject = null;
+                  }
+                  setVideoSrc(resolved);
+                  setIsVideoLoading(true);
+                }
               }
             }
           }
@@ -421,7 +482,7 @@ export default function WindowCapturePlayer() {
     };
   }, [tunnelUrl, videoSrc, resolveUrl, tryLoadFromLocalDB]);
 
-  // 3. Quản lý phát Video & Phục hồi tự động
+  // Quản lý phát Video & Phục hồi tự động
   useEffect(() => {
     const vid = videoRef.current;
     if (!vid) return;
@@ -457,7 +518,12 @@ export default function WindowCapturePlayer() {
       playVideo();
     };
 
-    const handleWaiting = () => setIsVideoLoading(true);
+    const handleWaiting = () => {
+      if (!isDirectStreamActiveRef.current && (!vid.readyState || vid.readyState < 2)) {
+        setIsVideoLoading(true);
+      }
+    };
+
     const handlePlaying = () => {
       setIsVideoLoading(false);
       setIsPlaybackActive(true);
@@ -477,7 +543,7 @@ export default function WindowCapturePlayer() {
     };
   }, [videoSrc]);
 
-  // 4. Lắng nghe phím tắt điều khiển: Space (Play/Pause), M (Mute), H (Ẩn/Hiện Nút)
+  // Lắng nghe phím tắt điều khiển: Space (Play/Pause), M (Mute), H (Ẩn/Hiện Nút)
   useEffect(() => {
     const handleKeyDown = (e) => {
       if (['input', 'textarea', 'select'].includes(document.activeElement?.tagName?.toLowerCase())) return;
@@ -543,7 +609,7 @@ export default function WindowCapturePlayer() {
     >
       <video
         ref={videoRef}
-        src={resolvedFinalSrc}
+        src={resolvedFinalSrc || undefined}
         autoPlay
         playsInline
         webkit-playsinline="true"
@@ -553,15 +619,26 @@ export default function WindowCapturePlayer() {
         controlsList="nodownload nofullscreen noremoteplayback"
         onLoadedData={() => setIsVideoLoading(false)}
         onCanPlay={() => setIsVideoLoading(false)}
-        onWaiting={() => setIsVideoLoading(true)}
-        onPlaying={() => setIsVideoLoading(false)}
+        onWaiting={() => {
+          if (!isDirectStreamActiveRef.current && (!videoRef.current?.readyState || videoRef.current.readyState < 2)) {
+            setIsVideoLoading(true);
+          }
+        }}
+        onPlaying={() => {
+          setIsVideoLoading(false);
+          setIsPlaybackActive(true);
+        }}
         onError={async (e) => {
-          console.warn('[WindowCapture] Video loading error, attempting fallback to local hardware blob:', e);
-          const fallback = await tryLoadFromLocalDB();
-          if (fallback) {
-            isHardwareLocalBlobRef.current = true;
-            setVideoSrc(fallback);
-            setIsVideoLoading(false);
+          console.warn('[WindowCapture] Video loading error, attempting fallback to local hardware blob/stream:', e);
+          const attached = attachOpenerDirectStream();
+          if (!attached) {
+            const fallback = await tryLoadFromLocalDB();
+            if (fallback) {
+              isHardwareLocalBlobRef.current = true;
+              if (videoRef.current) videoRef.current.srcObject = null;
+              setVideoSrc(fallback);
+              setIsVideoLoading(false);
+            }
           }
         }}
         style={{
@@ -714,8 +791,8 @@ export default function WindowCapturePlayer() {
         </button>
       )}
 
-      {/* Hiển thị chỉ báo đang tải */}
-      {isVideoLoading && !isPlaybackActive && (
+      {/* Hiển thị chỉ báo đang tải - chỉ khi video thực sự chưa có dữ liệu và đang chờ */}
+      {isVideoLoading && !isPlaybackActive && !isDirectStreamActiveRef.current && (
         <div
           style={{
             position: 'absolute',
@@ -765,7 +842,7 @@ export default function WindowCapturePlayer() {
             zIndex: 10
           }}
         >
-          🔴 4K 60 FPS REALTIME v1.3.4
+          🔴 4K 60 FPS REALTIME v3.7.9
         </div>
       )}
     </div>

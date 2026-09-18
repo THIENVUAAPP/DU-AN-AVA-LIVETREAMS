@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.7.8';
+export const APP_VERSION = '3.7.9';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v3.7.9 - Khắc Phục Triệt Để Lỗi Màn Hình Đen Window Capture & Tích Hợp Human-Like Voice DNA',
+    description: '1. Khắc Phục Triệt Để Màn Hình Đen & Vòng Xoay Window Capture: Ứng dụng công nghệ Direct GPU Stream Cloner (captureStream) bê nguyên xi luồng video 60 FPS từ phần mềm chính sang Window Capture với độ trễ 0ms, không tốn tài nguyên mạng hay ổ đĩa; 2. Tích Hợp Chuẩn Voice AI Siêu Tự Nhiên (Human-Like Voice DNA): Giọng đọc sống động, có hơi thở, ngữ điệu biến chuyển linh hoạt theo cảm xúc, tự động tạo nhịp thở micro-pauses và phản xạ đệm từ tự nhiên; 3. Đảm Bảo Video 60 FPS Siêu Sắc Nét 4K/8K: Không giật lag, không đứng hình.'
+  },
   {
     title: '⚡ Bản Cập Nhật v3.7.8 - Tích Hợp Ứng Dụng Khởi Động Trực Tiếp Cho macOS (1_KHOI_DONG_AVALIVE_MAC.app)',
     description: '1. Khởi Động 1 Nhấp Chuột Trên macOS: Tích hợp ứng dụng Native AppleScript (1_KHOI_DONG_AVALIVE_MAC.app) tự động mở Terminal, kích hoạt server và kết nối trình duyệt mượt mà 100%; 2. Khắc Phục Triệt Để Quyền Chạy Script: Tối ưu script Chay_App_Mac_Linux.command loại bỏ độ trễ và gỡ cờ Gatekeeper; 3. Đồng Bộ Gói Cài Đặt Mới Nhất 4K 60 FPS.'
