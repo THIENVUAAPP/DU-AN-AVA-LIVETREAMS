@@ -5,7 +5,7 @@
   "characterName": "QUỲNH THỰC PHÂ…",
   "mediaUrl": "/uploads/media-1789725814907-546970629.mp4",
   "isVideo": true,
-  "videoPlaybackEvent": "seek",
+  "videoPlaybackEvent": "play",
   "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
@@ -20,7 +20,7 @@
   "isVideoAudioMuted": false,
   "videoVolume": 1,
   "clearMedia": false,
-  "tunnelUrl": "https://debut-badly-scanning-firewire.trycloudflare.com",
+  "tunnelUrl": "https://divisions-dts-methods-epson.trycloudflare.com",
   "isMuted": false,
   "pinnedProduct": {
     "id": 1,

@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.7.4';
+export const APP_VERSION = '3.7.5';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v3.7.5 - Tối Ưu Tốc Độ Khởi Động Server 0ms & Khắc Phục Lỗi Kết Nối Window Capture',
+    description: '1. Khởi Động Express & Socket.io Ngay Lập Tức: Tách tác vụ quét tối ưu video dung lượng lớn sang chế độ bất đồng bộ nền, triệt tiêu hoàn toàn độ trễ khởi động server và lỗi ERR_CONNECTION_REFUSED; 2. Truyền Tải Video Gốc Siêu Tốc 0ms: Cửa sổ Window Capture và Link TikTok Live Studio nhận ngay nguồn phát video dung lượng lớn từ 100MB đến 50GB; 3. Chất Lượng Siêu Mượt 60 FPS, Siêu Sắc Nét 4K/8K: Phát mượt mà, không giật lag, không đứng hình.'
+  },
   {
     title: '⚡ Bản Cập Nhật v3.7.4 - Tối Ưu Bê Nguyên Xi Video 100% Vào Window Capture & TikTok Live Studio',
     description: '1. Khắc Phục Lỗi Mở Video Trên Window Capture: Tự động trích xuất trực tiếp nguồn phát từ phần mềm chính, bộ nhớ đệm và IndexedDB 0ms; 2. Loại Bỏ Rào Cản CORS: Tối ưu thẻ video phát trực tiếp không bị gián đoạn; 3. Hình Ảnh Siêu Mượt 60 FPS, Siêu Sắc Nét 4K/8K: Không giật lag, không đứng hình.'

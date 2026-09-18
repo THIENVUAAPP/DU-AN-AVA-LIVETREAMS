@@ -242,17 +242,19 @@ function ensureMp4FastStart(filePath) {
   }
 }
 
-// 🛡️ TỰ ĐỘNG QUÉT & TỐI ƯU TOÀN BỘ VIDEO TRONG THƯ MỤC UPLOADS KHI KHỞI ĐỘNG
-try {
-  if (fs.existsSync(uploadsDir)) {
-    const existingMedia = fs.readdirSync(uploadsDir);
-    for (const f of existingMedia) {
-      if (f.endsWith('.mp4') || f.endsWith('.mov')) {
-        ensureMp4FastStart(path.join(uploadsDir, f));
+// 🛡️ TỰ ĐỘNG QUÉT & TỐI ƯU TOÀN BỘ VIDEO TRONG THƯ MỤC UPLOADS Ở BACKGROUND (KHÔNG CHẶN KHỞI ĐỘNG SERVER)
+setTimeout(() => {
+  try {
+    if (fs.existsSync(uploadsDir)) {
+      const existingMedia = fs.readdirSync(uploadsDir);
+      for (const f of existingMedia) {
+        if (f.endsWith('.mp4') || f.endsWith('.mov')) {
+          ensureMp4FastStart(path.join(uploadsDir, f));
+        }
       }
     }
-  }
-} catch (scanErr) {}
+  } catch (scanErr) {}
+}, 2000);
 
 // 🎬 TỰ ĐỘNG TÌM FILE VIDEO MỚI NHẤT & CHUẨN XÁC TRONG THƯ MỤC UPLOADS
 function getLatestUploadFilePath() {
