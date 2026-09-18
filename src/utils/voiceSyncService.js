@@ -7278,6 +7278,7 @@ export function getSavedVoiceConfig() {
           baseConfig.idolVoice = {
             ...idolMatch,
             role: 'idol',
+            enabled: g.mainVoiceEnabled !== false,
             volume: g.mainVoiceVolume !== undefined ? Number(g.mainVoiceVolume) : (baseConfig.idolVoice?.volume ?? 1.0),
             rate: g.mainVoiceRate !== undefined ? Number(g.mainVoiceRate) : (baseConfig.idolVoice?.rate ?? 1.0),
             pitch: g.mainVoicePitch !== undefined ? Number(g.mainVoicePitch) : (baseConfig.idolVoice?.pitch ?? 1.0)
@@ -7303,6 +7304,7 @@ export function getSavedVoiceConfig() {
           baseConfig.commentVoice = {
             ...commMatch,
             role: 'comment',
+            enabled: g.commentVoiceEnabled !== false,
             volume: g.commentVoiceVolume !== undefined ? Number(g.commentVoiceVolume) : (baseConfig.commentVoice?.volume ?? 1.0),
             rate: g.commentVoiceRate !== undefined ? Number(g.commentVoiceRate) : (baseConfig.commentVoice?.rate ?? 1.0),
             pitch: g.commentVoicePitch !== undefined ? Number(g.commentVoicePitch) : (baseConfig.commentVoice?.pitch ?? 1.0)
@@ -7917,27 +7919,32 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   const dsp = voice?.dspProfile || {};
   if (source.detune) {
     try {
-      let detuneCents = 0;
+      let baseDetune = 0;
       if (dsp.detune !== undefined && !isNaN(Number(dsp.detune))) {
-        detuneCents = Number(dsp.detune);
+        baseDetune = Number(dsp.detune);
       } else if (dsp.semitones !== undefined && !isNaN(Number(dsp.semitones))) {
-        detuneCents = Math.round(Number(dsp.semitones) * 100);
+        baseDetune = Math.round(Number(dsp.semitones) * 100);
       } else if (voice?.edgePitch && String(voice.edgePitch).includes('%')) {
         const pNum = parseInt(String(voice.edgePitch).replace('%', ''), 10) || 0;
-        detuneCents = Math.round(pNum * 8.5);
-      } else if (voice?.pitch !== undefined && !isNaN(Number(voice.pitch))) {
-        detuneCents = Math.round((Number(voice.pitch) - 1.0) * 800);
+        baseDetune = Math.round(pNum * 8.5);
       }
-      // Dải tần detune an toàn từ -450 cents (trầm ấm sâu lắng) đến +450 cents (tươi sáng sắc nét)
-      source.detune.value = Math.max(-450, Math.min(450, detuneCents));
+
+      let userPitchOffset = 0;
+      if (voice?.pitch !== undefined && !isNaN(Number(voice.pitch))) {
+        userPitchOffset = Math.round((Number(voice.pitch) - 1.0) * 800);
+      }
+
+      // Dải tần detune an toàn từ -800 cents (trầm ấm sâu lắng) đến +800 cents (tươi sáng sắc nét)
+      source.detune.value = Math.max(-800, Math.min(800, baseDetune + userPitchOffset));
     } catch (e) {}
   }
   source.playbackRate.value = requestedRate || dsp.rate || 1.0;
 
   // MASTER GAIN (Điều chỉnh âm lượng to lớn, rõ ràng đàng hoàng)
   const masterGain = audioCtx.createGain();
+  activeMasterGainNode = masterGain;
   const baseVol = requestedVolume !== undefined ? Number(requestedVolume) : 1.0;
-  masterGain.gain.value = Math.max(0, Math.min(2.0, isMale ? Math.max(1.0, baseVol * 1.15) : baseVol));
+  masterGain.gain.value = Math.max(0, Math.min(2.5, isMale ? Math.max(1.0, baseVol * 1.15) : baseVol));
 
   // 🎛️ BỘ XỬ LÝ ÂM SẮC & EQ MASTERING CHUYÊN BIỆT CHO TỪNG GIỌNG ĐỌC (VOICE ACOUSTIC DSP)
   let lastNode = source;
@@ -8432,7 +8439,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     return true;
   }
 
-  const requestedVolume = voice?.volume !== undefined ? Math.max(0, Math.min(1.0, Number(voice.volume))) : 1.0;
+  const requestedVolume = voice?.volume !== undefined ? Math.max(0, Math.min(2.0, Number(voice.volume))) : 1.0;
   const requestedRate = voice?.rate !== undefined ? Math.max(0.5, Math.min(2.0, Number(voice.rate))) : 1.0;
   
   const savedGlobalVol = typeof localStorage !== 'undefined' && localStorage.getItem('avalive_global_volume') 
@@ -8445,7 +8452,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
 
   const effectiveVoiceVolume = isTestingMode 
     ? requestedVolume 
-    : (isLocalSpeakerMuted ? 0 : Math.max(0, Math.min(1.0, requestedVolume * (savedGlobalVol !== null && !isNaN(savedGlobalVol) ? savedGlobalVol : 1.0))));
+    : (isLocalSpeakerMuted ? 0 : Math.max(0, Math.min(2.0, requestedVolume * (savedGlobalVol !== null && !isNaN(savedGlobalVol) ? savedGlobalVol : 1.0))));
 
   const isVietnameseVoice = voice?.lang === 'vi-VN' || voice?.region === 'vi' || voice?.id?.startsWith('vn_') || voice?.id === 'free_vi_female' || voice?.id === 'el_adam';
   const rawLang = voice?.lang || (isVietnameseVoice ? 'vi-VN' : 'en-US');

@@ -1755,6 +1755,7 @@ IDOL MỈM CƯỜI + GESTURE
 10. **Ưu tiên độ chính xác thông tin sản phẩm hơn tốc độ trả lời.**`,
     
     // Tab 2: Nhân vật Chính (Idol Live)
+    mainVoiceEnabled: true,
     llmChoice: 'gemini', 
     apiModel: 'gemini-1.5-flash',
     mainVoiceFilter: 'all', // 'all' | 'male' | 'female'
@@ -1767,6 +1768,7 @@ IDOL MỈM CƯỜI + GESTURE
     assistantVoiceId: 'vn_nam_quanly_uyquyen',
 
     // Tab 4: Bình luận (Trả Lời Bình Luận Live)
+    commentVoiceEnabled: true,
     commentVoiceFilter: 'all',
     commentVoiceId: 'free_vi_female',
 
@@ -2131,10 +2133,10 @@ IDOL MỈM CƯỜI + GESTURE
       const gameMatch = ALL_SYSTEM_VOICES.find(v => v.id === settings.gameVoiceId);
       
       saveDualVoiceConfig({
-        idolVoice: idolMatch ? { ...idolMatch, role: 'idol', volume: settings.mainVoiceVolume || 1.0, rate: settings.mainVoiceRate || 1.0, pitch: settings.mainVoicePitch || 1.0 } : undefined,
-        managerVoice: managerMatch ? { ...managerMatch, role: 'manager', volume: settings.assistantVoiceVolume || 1.0, rate: settings.assistantVoiceRate || 1.0, pitch: settings.assistantVoicePitch || 1.0 } : undefined,
-        commentVoice: commentMatch ? { ...commentMatch, role: 'comment', volume: settings.commentVoiceVolume || settings.mainVoiceVolume || 1.0, rate: settings.commentVoiceRate || settings.mainVoiceRate || 1.0, pitch: settings.commentVoicePitch || settings.mainVoicePitch || 1.0 } : undefined,
-        gameVoice: gameMatch ? { ...gameMatch, role: 'game', volume: settings.gameVoiceVolume || 1.0, rate: settings.gameVoiceRate || 1.0, pitch: settings.gameVoicePitch || 1.0 } : undefined
+        idolVoice: idolMatch ? { ...idolMatch, role: 'idol', enabled: settings.mainVoiceEnabled !== false, volume: settings.mainVoiceVolume !== undefined ? Number(settings.mainVoiceVolume) : 1.0, rate: settings.mainVoiceRate !== undefined ? Number(settings.mainVoiceRate) : 1.0, pitch: settings.mainVoicePitch !== undefined ? Number(settings.mainVoicePitch) : 1.0 } : undefined,
+        managerVoice: managerMatch ? { ...managerMatch, role: 'manager', enabled: settings.assistantEnabled !== false, volume: settings.assistantVoiceVolume !== undefined ? Number(settings.assistantVoiceVolume) : 1.0, rate: settings.assistantVoiceRate !== undefined ? Number(settings.assistantVoiceRate) : 1.0, pitch: settings.assistantVoicePitch !== undefined ? Number(settings.assistantVoicePitch) : 1.0 } : undefined,
+        commentVoice: commentMatch ? { ...commentMatch, role: 'comment', enabled: settings.commentVoiceEnabled !== false, volume: settings.commentVoiceVolume !== undefined ? Number(settings.commentVoiceVolume) : (settings.mainVoiceVolume !== undefined ? Number(settings.mainVoiceVolume) : 1.0), rate: settings.commentVoiceRate !== undefined ? Number(settings.commentVoiceRate) : (settings.mainVoiceRate !== undefined ? Number(settings.mainVoiceRate) : 1.0), pitch: settings.commentVoicePitch !== undefined ? Number(settings.commentVoicePitch) : (settings.mainVoicePitch !== undefined ? Number(settings.mainVoicePitch) : 1.0) } : undefined,
+        gameVoice: gameMatch ? { ...gameMatch, role: 'game', volume: settings.gameVoiceVolume !== undefined ? Number(settings.gameVoiceVolume) : 1.0, rate: settings.gameVoiceRate !== undefined ? Number(settings.gameVoiceRate) : 1.0, pitch: settings.gameVoicePitch !== undefined ? Number(settings.gameVoicePitch) : 1.0 } : undefined
       });
     } catch(e) {
       console.warn("Lỗi lưu cấu hình:", e);
@@ -2168,9 +2170,9 @@ IDOL MỈM CƯỜI + GESTURE
         const gameMatch = ALL_SYSTEM_VOICES.find(v => v.id === updated.gameVoiceId);
         
         saveDualVoiceConfig({
-          idolVoice: idolMatch ? { ...idolMatch, role: 'idol', volume: updated.mainVoiceVolume !== undefined ? Number(updated.mainVoiceVolume) : 1.0, rate: updated.mainVoiceRate !== undefined ? Number(updated.mainVoiceRate) : 1.0, pitch: updated.mainVoicePitch !== undefined ? Number(updated.mainVoicePitch) : 1.0 } : undefined,
-          managerVoice: managerMatch ? { ...managerMatch, role: 'manager', volume: updated.assistantVoiceVolume !== undefined ? Number(updated.assistantVoiceVolume) : 1.0, rate: updated.assistantVoiceRate !== undefined ? Number(updated.assistantVoiceRate) : 1.0, pitch: updated.assistantVoicePitch !== undefined ? Number(updated.assistantVoicePitch) : 1.0 } : undefined,
-          commentVoice: commentMatch ? { ...commentMatch, role: 'comment', volume: updated.commentVoiceVolume !== undefined ? Number(updated.commentVoiceVolume) : (updated.mainVoiceVolume !== undefined ? Number(updated.mainVoiceVolume) : 1.0), rate: updated.commentVoiceRate !== undefined ? Number(updated.commentVoiceRate) : (updated.mainVoiceRate !== undefined ? Number(updated.mainVoiceRate) : 1.0), pitch: updated.commentVoicePitch !== undefined ? Number(updated.commentVoicePitch) : (updated.mainVoicePitch !== undefined ? Number(updated.mainVoicePitch) : 1.0) } : undefined,
+          idolVoice: idolMatch ? { ...idolMatch, role: 'idol', enabled: updated.mainVoiceEnabled !== false, volume: updated.mainVoiceVolume !== undefined ? Number(updated.mainVoiceVolume) : 1.0, rate: updated.mainVoiceRate !== undefined ? Number(updated.mainVoiceRate) : 1.0, pitch: updated.mainVoicePitch !== undefined ? Number(updated.mainVoicePitch) : 1.0 } : undefined,
+          managerVoice: managerMatch ? { ...managerMatch, role: 'manager', enabled: updated.assistantEnabled !== false, volume: updated.assistantVoiceVolume !== undefined ? Number(updated.assistantVoiceVolume) : 1.0, rate: updated.assistantVoiceRate !== undefined ? Number(updated.assistantVoiceRate) : 1.0, pitch: updated.assistantVoicePitch !== undefined ? Number(updated.assistantVoicePitch) : 1.0 } : undefined,
+          commentVoice: commentMatch ? { ...commentMatch, role: 'comment', enabled: updated.commentVoiceEnabled !== false, volume: updated.commentVoiceVolume !== undefined ? Number(updated.commentVoiceVolume) : (updated.mainVoiceVolume !== undefined ? Number(updated.mainVoiceVolume) : 1.0), rate: updated.commentVoiceRate !== undefined ? Number(updated.commentVoiceRate) : (updated.mainVoiceRate !== undefined ? Number(updated.mainVoiceRate) : 1.0), pitch: updated.commentVoicePitch !== undefined ? Number(updated.commentVoicePitch) : (updated.mainVoicePitch !== undefined ? Number(updated.mainVoicePitch) : 1.0) } : undefined,
           gameVoice: gameMatch ? { ...gameMatch, role: 'game', volume: updated.gameVoiceVolume !== undefined ? Number(updated.gameVoiceVolume) : 1.0, rate: updated.gameVoiceRate !== undefined ? Number(updated.gameVoiceRate) : 1.0, pitch: updated.gameVoicePitch !== undefined ? Number(updated.gameVoicePitch) : 1.0 } : undefined
         });
       } catch (e) {}
@@ -2200,6 +2202,7 @@ IDOL MỈM CƯỜI + GESTURE
       let updated = { ...prev };
       if (role === 'idol') {
         updated.mainVoiceId = voice.id;
+        updated.mainVoiceEnabled = true;
         updated.mainVoiceVolume = prev.mainVoiceVolume !== undefined ? prev.mainVoiceVolume : (voice.volume || 1.0);
         updated.mainVoiceRate = prev.mainVoiceRate !== undefined ? prev.mainVoiceRate : (voice.rate || 1.0);
         updated.mainVoicePitch = prev.mainVoicePitch !== undefined ? prev.mainVoicePitch : (voice.pitch || 1.0);
@@ -2213,6 +2216,7 @@ IDOL MỈM CƯỜI + GESTURE
         notifyAssigned(`💼 Đã gán "${voice.name}" làm Giọng Quản Lý / Trợ Lý!`);
       } else if (role === 'comment') {
         updated.commentVoiceId = voice.id;
+        updated.commentVoiceEnabled = true;
         updated.commentVoiceVolume = prev.commentVoiceVolume !== undefined ? prev.commentVoiceVolume : (voice.volume || 1.0);
         updated.commentVoiceRate = prev.commentVoiceRate !== undefined ? prev.commentVoiceRate : (voice.rate || 1.0);
         updated.commentVoicePitch = prev.commentVoicePitch !== undefined ? prev.commentVoicePitch : (voice.pitch || 1.0);
@@ -2224,9 +2228,9 @@ IDOL MỈM CƯỜI + GESTURE
         const managerMatch = ALL_SYSTEM_VOICES.find(v => v.id === updated.assistantVoiceId);
         const commentMatch = ALL_SYSTEM_VOICES.find(v => v.id === (updated.commentVoiceId || updated.mainVoiceId));
         saveDualVoiceConfig({
-          idolVoice: idolMatch ? { ...idolMatch, role: 'idol', volume: Number(updated.mainVoiceVolume || 1.0), rate: Number(updated.mainVoiceRate || 1.0), pitch: Number(updated.mainVoicePitch || 1.0) } : undefined,
-          managerVoice: managerMatch ? { ...managerMatch, role: 'manager', volume: Number(updated.assistantVoiceVolume || 1.0), rate: Number(updated.assistantVoiceRate || 1.0), pitch: Number(updated.assistantVoicePitch || 1.0) } : undefined,
-          commentVoice: commentMatch ? { ...commentMatch, role: 'comment', volume: Number(updated.commentVoiceVolume || updated.mainVoiceVolume || 1.0), rate: Number(updated.commentVoiceRate || updated.mainVoiceRate || 1.0), pitch: Number(updated.commentVoicePitch || updated.mainVoicePitch || 1.0) } : undefined
+          idolVoice: idolMatch ? { ...idolMatch, role: 'idol', enabled: updated.mainVoiceEnabled !== false, volume: Number(updated.mainVoiceVolume || 1.0), rate: Number(updated.mainVoiceRate || 1.0), pitch: Number(updated.mainVoicePitch || 1.0) } : undefined,
+          managerVoice: managerMatch ? { ...managerMatch, role: 'manager', enabled: updated.assistantEnabled !== false, volume: Number(updated.assistantVoiceVolume || 1.0), rate: Number(updated.assistantVoiceRate || 1.0), pitch: Number(updated.assistantVoicePitch || 1.0) } : undefined,
+          commentVoice: commentMatch ? { ...commentMatch, role: 'comment', enabled: updated.commentVoiceEnabled !== false, volume: Number(updated.commentVoiceVolume || updated.mainVoiceVolume || 1.0), rate: Number(updated.commentVoiceRate || updated.mainVoiceRate || 1.0), pitch: Number(updated.commentVoicePitch || updated.mainVoicePitch || 1.0) } : undefined
         });
         localStorage.setItem('aidol_general_settings', JSON.stringify(updated));
       } catch (e) {}
@@ -4270,7 +4274,7 @@ IDOL MỈM CƯỜI + GESTURE
                         <h4 className="font-bold text-gray-800 text-sm flex items-center gap-2">
                           <User size={16} className="text-blue-600" /> 1. Giọng Idol Live Chính
                         </h4>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-2">
                           <button
                             type="button"
                             onClick={() => handlePreviewRoleVoice('idol')}
@@ -4297,9 +4301,14 @@ IDOL MỈM CƯỜI + GESTURE
                               </>
                             )}
                           </button>
-                          <span className="text-[11px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold">
-                            Kênh Chính
-                          </span>
+                          <label className="flex items-center gap-1.5 cursor-pointer">
+                            <input 
+                              type="checkbox" name="mainVoiceEnabled" 
+                              checked={settings.mainVoiceEnabled !== false} onChange={handleChange}
+                              className="w-3.5 h-3.5 text-blue-600 rounded focus:ring-blue-500" 
+                            />
+                            <span className="text-xs font-bold text-gray-800">Bật Kênh</span>
+                          </label>
                         </div>
                       </div>
 
@@ -4454,7 +4463,7 @@ IDOL MỈM CƯỜI + GESTURE
                         <h4 className="font-bold text-gray-800 text-sm flex items-center gap-2">
                           <Volume2 size={16} className="text-purple-600" /> 3. Giọng Trả Lời Bình Luận
                         </h4>
-                        <div className="flex items-center gap-1.5">
+                        <div className="flex items-center gap-2">
                           <button
                             type="button"
                             onClick={() => handlePreviewRoleVoice('comment')}
@@ -4481,9 +4490,14 @@ IDOL MỈM CƯỜI + GESTURE
                               </>
                             )}
                           </button>
-                          <span className="text-[11px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded font-bold">
-                            Hỏi Đáp & Q&A
-                          </span>
+                          <label className="flex items-center gap-1.5 cursor-pointer">
+                            <input 
+                              type="checkbox" name="commentVoiceEnabled" 
+                              checked={settings.commentVoiceEnabled !== false} onChange={handleChange}
+                              className="w-3.5 h-3.5 text-purple-600 rounded focus:ring-purple-500" 
+                            />
+                            <span className="text-xs font-bold text-gray-800">Bật Kênh</span>
+                          </label>
                         </div>
                       </div>
 

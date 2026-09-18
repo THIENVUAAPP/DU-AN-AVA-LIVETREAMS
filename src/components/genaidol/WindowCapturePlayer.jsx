@@ -141,6 +141,8 @@ export default function WindowCapturePlayer() {
     return `${window.location.origin}/${trimmed}`;
   }, [tunnelUrl]);
 
+  const [isDirectStreamActive, setIsDirectStreamActive] = useState(false);
+
   // ⚡ 1. Direct GPU Stream Cloner: Bê nguyên xi luồng video của phần mềm chính qua GPU Pipeline (0ms, 0 byte)
   const attachOpenerDirectStream = useCallback(() => {
     try {
@@ -161,6 +163,7 @@ export default function WindowCapturePlayer() {
             targetVid.muted = isUserMutedRef.current;
             targetVid.play().catch(() => {});
             isDirectStreamActiveRef.current = true;
+            setIsDirectStreamActive(true);
             setIsVideoLoading(false);
             setIsPlaybackActive(true);
             return true;
@@ -609,7 +612,7 @@ export default function WindowCapturePlayer() {
     >
       <video
         ref={videoRef}
-        src={resolvedFinalSrc || undefined}
+        src={isDirectStreamActive ? undefined : (resolvedFinalSrc || undefined)}
         autoPlay
         playsInline
         webkit-playsinline="true"
@@ -842,7 +845,7 @@ export default function WindowCapturePlayer() {
             zIndex: 10
           }}
         >
-          🔴 4K 60 FPS REALTIME v3.8.0
+          🔴 4K 60 FPS REALTIME v3.8.1
         </div>
       )}
     </div>

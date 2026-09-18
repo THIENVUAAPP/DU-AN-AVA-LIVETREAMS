@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.8.0';
+export const APP_VERSION = '3.8.1';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v3.8.1 - Nâng Cấp Bộ Điều Khiển Âm Lượng, Tốc Độ, Độ Trầm Bổng & Tích Hợp Bật/Tắt Từng Kênh Giọng Đọc',
+    description: '1. Hoạt Động 100% Các Thanh Trượt Âm Lượng, Tốc Độ & Độ Trầm Bổng: Tùy chỉnh Volume (0-200%), Speed (0.5x-2.0x) và Pitch (Độ trầm bổng dõng dạc) cho cả 3 vai trò (Idol Chính, Quản Lý/Trợ Lý, Trả Lời Bình Luận); 2. Tích Hợp Nút Tích [Bật Kênh] Linh Hoạt: Bật/tắt độc lập từng kênh giọng đọc theo nhu cầu livestream; 3. Đồng Bộ Window Capture & Luồng Live 4K 60 FPS Siêu Tốc: Phát video dung lượng lớn (1GB - 50GB) tức thì 0ms, siêu mượt mà, không giật lag, không đứng hình.'
+  },
   {
     title: '⚡ Bản Cập Nhật v3.8.0 - Đồng Bộ Gói Tải Windows & Mac ZIP Mới Nhất Lên GitHub Releases (Official)',
     description: '1. Khắc Phục Triệt Để Lỗi Tải Phiên Bản Cũ: Cập nhật hệ thống phân giải link tải tự động, đẩy trực tiếp gói cài đặt ZIP mới nhất (AvaLive_VIP_PRO_Windows_v3.8.0.zip và AvaLive_VIP_PRO_Mac_v3.8.0.zip) lên GitHub Releases và bộ nhớ máy chủ; 2. Đảm Bảo Tải Về Đúng 100% Phiên Bản Mới Nhất: Triệt tiêu hoàn toàn trường hợp bị chuyển hướng tải nhầm phiên bản cũ, kích hoạt tải trực tiếp 0ms; 3. Duy Trì Siêu Mượt 60 FPS & Chuẩn Human-Like Voice DNA Toàn Diện.'
