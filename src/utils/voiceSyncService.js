@@ -7931,7 +7931,7 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
       source.detune.value = Math.max(-450, Math.min(450, detuneCents));
     } catch (e) {}
   }
-  source.playbackRate.value = 1.0;
+  source.playbackRate.value = requestedRate || dsp.rate || 1.0;
 
   // MASTER GAIN (Điều chỉnh âm lượng to lớn, rõ ràng đàng hoàng)
   const masterGain = audioCtx.createGain();

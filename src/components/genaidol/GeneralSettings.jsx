@@ -1828,6 +1828,19 @@ IDOL MỈM CƯỜI + GESTURE
     getLiveMediaByCategory('idle').then(items => {
       setIdleVideoCount(items.length);
     }).catch(console.error);
+
+    // Lắng nghe cập nhật danh sách yêu thích realtime
+    const handleFavChanged = (e) => {
+      if (e.detail) {
+        setFavoriteVoiceIds(e.detail);
+      } else {
+        setFavoriteVoiceIds(getFavoriteVoiceIds());
+      }
+    };
+    window.addEventListener('avalive_favorite_voices_changed', handleFavChanged);
+    return () => {
+      window.removeEventListener('avalive_favorite_voices_changed', handleFavChanged);
+    };
   }, []);
 
   // Helper renderers for Tables with Instant Audio Preview
@@ -3931,7 +3944,7 @@ IDOL MỈM CƯỜI + GESTURE
                           const isUsUk = !isVn && (v.region === 'us_uk' || v.region === 'eu' || v.lang?.startsWith('en'));
                           const isAsia = !isVn && (v.region === 'asia' || v.lang?.startsWith('zh') || v.lang?.startsWith('ja') || v.lang?.startsWith('ko') || v.lang?.startsWith('th'));
 
-                          // 1. Group Filter
+                          // 1. Group / Collection Filter
                           if (avaGroupFilter === 'favorites' && !isFav) return false;
                           if (avaGroupFilter === 'vi_pro' && (!isVn || isHotTrend || isSales)) return false;
                           if (avaGroupFilter === 'hottrend' && !isHotTrend) return false;
@@ -3940,29 +3953,43 @@ IDOL MỈM CƯỜI + GESTURE
                           if (avaGroupFilter === 'asia' && !isAsia) return false;
                           if (avaGroupFilter === 'game_pk' && !isGamePK) return false;
 
-                          // 2. Region / Dialect Filter
+                          // 2. Region / Dialect Filter (Phân tách chuẩn xác 100% từng miền)
                           if (avaRegionFilter !== 'all') {
                             const d = (v.dialect || '').toLowerCase();
                             const c = (v.category || '').toLowerCase();
                             const n = (v.name || '').toLowerCase();
                             const desc = (v.desc || '').toLowerCase();
+                            const regionDna = (v.dna?.region?.region || '').toLowerCase();
+                            const accentDna = (v.dna?.region?.accent || '').toLowerCase();
 
                             if (avaRegionFilter === 'bac') {
-                              const isBac = d === 'bac' || d === 'north' || c.includes('miền bắc') || c.includes('hà nội') || n.includes('hà nội') || n.includes('miền bắc') || desc.includes('miền bắc') || desc.includes('hà nội') || desc.includes('giọng bắc');
+                              const isBac = d === 'bac' || d === 'north' || regionDna.includes('north') || accentDna.includes('north') ||
+                                c.includes('miền bắc') || c.includes('hà nội') || c.includes('giọng bắc') ||
+                                n.includes('hà nội') || n.includes('miền bắc') || n.includes('[hà nội]') ||
+                                desc.includes('miền bắc') || desc.includes('hà nội') || desc.includes('giọng bắc');
                               if (!isBac) return false;
                             } else if (avaRegionFilter === 'trung') {
-                              const isTrung = d === 'trung' || d === 'central' || c.includes('miền trung') || c.includes('huế') || c.includes('đà nẵng') || n.includes('huế') || n.includes('đà nẵng') || n.includes('miền trung') || desc.includes('miền trung') || desc.includes('giọng trung');
+                              const isTrung = d === 'trung' || d === 'central' || d === 'hue' || d === 'danang' || regionDna.includes('central') || accentDna.includes('central') ||
+                                c.includes('miền trung') || c.includes('huế') || c.includes('đà nẵng') ||
+                                n.includes('huế') || n.includes('đà nẵng') || n.includes('miền trung') || n.includes('[huế]') || n.includes('[đà nẵng]') ||
+                                desc.includes('miền trung') || desc.includes('giọng trung') || desc.includes('huế') || desc.includes('đà nẵng');
                               if (!isTrung) return false;
                             } else if (avaRegionFilter === 'nam') {
-                              const isNam = d === 'nam' || d === 'south' || c.includes('miền nam') || c.includes('sài gòn') || c.includes('tphcm') || n.includes('sài gòn') || n.includes('miền nam') || desc.includes('sài gòn') || desc.includes('miền nam') || desc.includes('giọng nam (sài gòn');
+                              const isNam = d === 'nam' || d === 'south' || regionDna.includes('south') || accentDna.includes('south') ||
+                                c.includes('miền nam') || c.includes('sài gòn') || c.includes('tphcm') ||
+                                n.includes('sài gòn') || n.includes('miền nam') || n.includes('[tp.hcm]') || n.includes('[sài gòn]') ||
+                                desc.includes('sài gòn') || desc.includes('miền nam') || desc.includes('giọng nam (sài gòn');
                               if (!isNam) return false;
                             } else if (avaRegionFilter === 'tay') {
-                              const isTay = d === 'tay' || d === 'west' || c.includes('miền tây') || c.includes('sông nước') || c.includes('cần thơ') || c.includes('đồng bằng sông cửu long') || n.includes('miền tây') || n.includes('cần thơ') || desc.includes('miền tây') || desc.includes('sông nước');
+                              const isTay = d === 'tay' || d === 'west' || regionDna.includes('west') || accentDna.includes('west') ||
+                                c.includes('miền tây') || c.includes('sông nước') || c.includes('cần thơ') || c.includes('đồng bằng sông cửu long') ||
+                                n.includes('miền tây') || n.includes('cần thơ') || n.includes('[cần thơ]') || n.includes('[miền tây]') ||
+                                desc.includes('miền tây') || desc.includes('sông nước') || desc.includes('miền tây sông nước');
                               if (!isTay) return false;
                             }
                           }
 
-                          // 3. Gender Filter
+                          // 3. Gender Filter (Chuẩn Nam ra Nam, Nữ ra Nữ 100%)
                           if (avaGenderFilter !== 'all') {
                             const isFemVoice = (v.gender || '').toLowerCase() === 'female' || (v.gender || '').toLowerCase() === 'nữ' || v.gender === 'Female' || v.gender === 'Nữ';
                             const isMalVoice = (v.gender || '').toLowerCase() === 'male' || (v.gender || '').toLowerCase() === 'nam' || v.gender === 'Male' || v.gender === 'Nam';
@@ -3970,23 +3997,44 @@ IDOL MỈM CƯỜI + GESTURE
                             if (avaGenderFilter === 'Male' && !isMalVoice) return false;
                           }
 
-                          // 4. Age Filter
+                          // 4. Age Filter (Chuẩn từng dải độ tuổi)
                           if (avaAgeFilter !== 'all') {
                             const a = (v.ageGroup || '').toLowerCase();
                             const ar = (v.ageRange || '').toLowerCase();
+                            const personaAge = (v.dna?.persona?.age || '').toLowerCase();
                             const s = (v.styleCategory || '').toLowerCase();
                             const c = (v.category || '').toLowerCase();
                             const n = (v.name || '').toLowerCase();
                             const desc = (v.desc || '').toLowerCase();
 
                             if (avaAgeFilter === 'young') {
-                              const isYoung = a === 'young' || a === 'genz' || ar.includes('18-24') || ar.includes('20-28') || s === 'idol_genz' || s === 'genz' || c.includes('genz') || c.includes('trẻ') || n.includes('genz') || n.includes('trẻ') || n.includes('18-24') || desc.includes('18-24');
+                              // Trẻ 18 - 28 tuổi
+                              const isYoung = a === 'young' || a === 'genz' || a.includes('18_24') || a.includes('20_24') || a.includes('20_28') ||
+                                ar.includes('18-24') || ar.includes('20-24') || ar.includes('20-28') ||
+                                personaAge.includes('18-24') || personaAge.includes('20-24') || personaAge.includes('20-28') ||
+                                s === 'idol_genz' || s === 'genz' ||
+                                c.includes('genz') || c.includes('trẻ') || c.includes('18-24') || c.includes('20-24') || c.includes('20-28') ||
+                                n.includes('genz') || n.includes('trẻ') || n.includes('18-24') || n.includes('20-24') || n.includes('20-28') ||
+                                desc.includes('18-24') || desc.includes('20-24') || desc.includes('20-28') || desc.includes('trẻ trung');
                               if (!isYoung) return false;
                             } else if (avaAgeFilter === 'middle') {
-                              const isMiddle = a === 'middle' || a === 'mature' || ar.includes('25-34') || ar.includes('28-40') || s === 'doanhnhan' || s === 'sales_expert' || c.includes('trưởng thành') || c.includes('doanh nhân') || n.includes('trưởng thành') || n.includes('doanh nhân') || n.includes('25-34') || desc.includes('25-34');
+                              // Trưởng Thành 25 - 40 tuổi
+                              const isMiddle = a === 'middle' || a === 'mature' || a.includes('24_28') || a.includes('25_34') ||
+                                ar.includes('24-28') || ar.includes('25-34') || ar.includes('28-40') ||
+                                personaAge.includes('24-28') || personaAge.includes('25-34') || personaAge.includes('28-40') ||
+                                s === 'doanhnhan' || s === 'sales_expert' || s === 'chuyengia' ||
+                                c.includes('trưởng thành') || c.includes('doanh nhân') || c.includes('chuyên gia') || c.includes('24-28') || c.includes('25-34') || c.includes('28-40') ||
+                                n.includes('trưởng thành') || n.includes('doanh nhân') || n.includes('chuyên gia') || n.includes('24-28') || n.includes('25-34') || n.includes('28-40') ||
+                                desc.includes('24-28') || desc.includes('25-34') || desc.includes('28-40') || desc.includes('trưởng thành');
                               if (!isMiddle) return false;
                             } else if (avaAgeFilter === 'senior') {
-                              const isSenior = a === 'senior' || a === 'elder' || ar.includes('35-45') || ar.includes('46-65') || ar.includes('40-70') || c.includes('trung niên') || c.includes('cao niên') || c.includes('lão') || n.includes('trung niên') || n.includes('cao niên') || n.includes('già dặn') || n.includes('35-45') || n.includes('46-65') || desc.includes('trung niên') || desc.includes('cao niên');
+                              // Trung & Cao Niên 35 - 65+ tuổi
+                              const isSenior = a === 'senior' || a === 'elder' || a.includes('35_45') || a.includes('46_65') || a.includes('40_70') ||
+                                ar.includes('35-45') || ar.includes('46-65') || ar.includes('40-70') ||
+                                personaAge.includes('35-45') || personaAge.includes('46-65') || personaAge.includes('40-70') || personaAge.includes('55-70') ||
+                                c.includes('trung niên') || c.includes('cao niên') || c.includes('lão niên') || c.includes('lão') || c.includes('35-45') || c.includes('46-65') || c.includes('40-70') ||
+                                n.includes('trung niên') || n.includes('cao niên') || n.includes('lão niên') || n.includes('lão') || n.includes('già dặn') || n.includes('35-45') || n.includes('46-65') || n.includes('40-70') ||
+                                desc.includes('trung niên') || desc.includes('cao niên') || desc.includes('lão niên') || desc.includes('35-45') || desc.includes('46-65') || desc.includes('40-70');
                               if (!isSenior) return false;
                             }
                           }

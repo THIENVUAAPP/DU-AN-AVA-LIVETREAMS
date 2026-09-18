@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.6.3';
+export const APP_VERSION = '3.6.4';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v3.6.3 - Chuẩn Hóa 100% Đa Bộ Lọc Vùng Miền / Giới Tính & Phát Audio Tức Thì 0ms Không Trùng Lặp',
-    description: '1. Nâng Cấp Tổ Hợp Đa Bộ Lọc Toàn Diện (Multi-Filter Precision): Khắc phục triệt để lỗi nhận nhầm Miền Nam với giọng Nam. Giờ đây khi chọn kết hợp Bộ Sưu Tập + Vùng Miền (Bắc/Trung/Nam/Tây) + Giới Tính (Nam/Nữ) + Độ Tuổi + Vai Trò, danh sách lọc chính xác 100% theo đúng từng tiêu chí; 2. Âm Thanh Phát Tức Thì 0ms: Tối ưu bộ đệm Web Audio & DSP, bấm thử giọng là loa phát ngay lập tức không bị đơ câm, kèm sóng âm hiển thị động; 3. Âm Sắc Phân Hóa Độc Bản: Tinh chỉnh EQ & Formant cao cấp đảm bảo từng giọng mang bản sắc riêng biệt, mượt mà và tự nhiên.'
+    title: '⚡ Bản Cập Nhật v3.6.4 - Chuẩn Hóa Tuyệt Đối Đa Bộ Lọc Vùng Miền / Giới Tính / Độ Tuổi, Lưu Kho Yêu Thích Realtime & Tinh Chỉnh DSP Âm Sắc Độc Bản',
+    description: '1. Chuẩn Hóa Tuyệt Đối Tổ Hợp Đa Bộ Lọc: Khi chọn kết hợp Bộ Sưu Tập + Vùng Miền (Miền Bắc, Miền Trung, Miền Nam, Miền Tây) + Giới Tính (Nam/Nữ) + Độ Tuổi (Trẻ 18-28t, Trưởng Thành 25-40t, Trung & Cao Niên 35-65+t) + Vai Trò, hệ thống lọc chính xác 100% không để lọt bất kỳ giọng nào sai tiêu chí; 2. Hệ Thống Yêu Thích ⭐ Lưu Trữ Tức Thì: Bấm vào dấu sao ở bất kỳ bảng giọng nào sẽ lưu lại ngay vào danh mục "Yêu Thích", đồng bộ realtime trên toàn bộ giao diện; 3. Nâng Cấp Master Audio DSP: Chuẩn tốc độ phát, chuẩn âm lượng dày dặn, chuẩn âm sắc tự nhiên, phân hóa triệt để không trùng lặp âm sắc giữa các giọng.'
   }
 ];
 
