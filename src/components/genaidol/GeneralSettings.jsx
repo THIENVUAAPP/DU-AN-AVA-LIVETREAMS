@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef, useMemo } from 'react';
-import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Search, CheckCircle2, FolderOpen, Brain, Upload, Star, ShoppingBag, Sparkles, Award, Sliders, Flame, Users, Bot, BookOpen, Send, Zap, Clock, ShieldCheck } from 'lucide-react';
+import { Key, User, Mic, Settings2, Download, Save, X, Volume2, Loader2, Search, CheckCircle2, FolderOpen, Brain, Upload, Star, ShoppingBag, Sparkles, Award, Sliders, Flame, Users, Bot, BookOpen, Send, Zap, Clock, ShieldCheck } from 'lucide-react';
 
 import { getLiveMediaByCategory } from '../../lib/liveKhoDB';
 import { 
@@ -27,15 +27,35 @@ const ASSISTANT_VOICES = [...ALL_SYSTEM_VOICES];
 const GAME_VOICES = [...ALL_SYSTEM_VOICES];
 
 export const getVoiceAgeBadge = (v) => {
-  if (!v) return { text: 'Trẻ 20–28t', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+  if (!v) return { text: 'Trẻ 20–24t', color: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
 
+  // 1. Phân khúc 18-24 tuổi
+  if (
+    v.ageRange === '18-24' ||
+    v.dna?.persona?.age === '18-24' ||
+    v.ageGroup === 'young_18_24' ||
+    v.name?.includes('18–24') ||
+    v.name?.includes('18-24') ||
+    v.name?.includes('18-24t') ||
+    v.category?.includes('18-24') ||
+    v.category?.includes('18–24')
+  ) {
+    return {
+      text: 'Trẻ 18–24t',
+      color: 'bg-emerald-50 text-emerald-700 border-emerald-200'
+    };
+  }
+
+  // 2. Phân khúc 20-24 tuổi
   if (
     v.ageRange === '20-24' || 
     v.dna?.persona?.age === '20-24' || 
     v.ageGroup === 'young_20_24' ||
     v.name?.includes('20–24') || 
     v.name?.includes('20-24') ||
-    v.name?.includes('20-24t')
+    v.name?.includes('20-24t') ||
+    v.category?.includes('20-24') ||
+    v.category?.includes('20–24')
   ) {
     return {
       text: 'Trẻ 20–24t',
@@ -43,13 +63,16 @@ export const getVoiceAgeBadge = (v) => {
     };
   }
 
+  // 3. Phân khúc 24-28 tuổi
   if (
     v.ageRange === '24-28' || 
     v.dna?.persona?.age === '24-28' || 
     v.ageGroup === 'young_24_28' ||
     v.name?.includes('24–28') || 
     v.name?.includes('24-28') ||
-    v.name?.includes('24-28t')
+    v.name?.includes('24-28t') ||
+    v.category?.includes('24-28') ||
+    v.category?.includes('24–28')
   ) {
     return {
       text: 'Trưởng Thành 24–28t',
@@ -57,23 +80,66 @@ export const getVoiceAgeBadge = (v) => {
     };
   }
 
+  // 4. Phân khúc 25-34 tuổi
   if (
+    v.ageRange === '25-34' || 
+    v.dna?.persona?.age === '25-34' || 
+    v.ageGroup === 'young_25_34' ||
+    v.name?.includes('25–34') || 
+    v.name?.includes('25-34') ||
+    v.name?.includes('25-34t') ||
+    v.category?.includes('25-34') ||
+    v.category?.includes('25–34')
+  ) {
+    return {
+      text: 'Trưởng Thành 25–34t',
+      color: 'bg-sky-50 text-sky-700 border-sky-200'
+    };
+  }
+
+  // 5. Phân khúc 35-45 tuổi
+  if (
+    v.ageRange === '35-45' || 
+    v.dna?.persona?.age === '35-45' || 
+    v.ageGroup === 'middle_35_45' ||
+    v.name?.includes('35–45') || 
+    v.name?.includes('35-45') ||
+    v.name?.includes('35-45t') ||
+    v.category?.includes('35-45') ||
+    v.category?.includes('35–45')
+  ) {
+    return {
+      text: 'Trung Niên 35–45t',
+      color: 'bg-indigo-50 text-indigo-700 border-indigo-200'
+    };
+  }
+
+  // 6. Phân khúc 46-65+ tuổi / 40-70 tuổi
+  if (
+    v.ageRange === '46-65+' || 
+    v.ageRange === '40-70' || 
     v.ageGroup === 'senior' || 
     v.ageGroup === 'elder' || 
     v.category?.includes('Lão Niên') || 
-    v.category?.includes('40-70t') || 
+    v.category?.includes('46-65') || 
+    v.category?.includes('46–65') || 
+    v.category?.includes('40-70') || 
     v.category?.includes('40–70') || 
+    v.name?.includes('46-65') || 
+    v.name?.includes('46–65') || 
     v.name?.includes('40-70') || 
     v.name?.includes('40–70') || 
+    v.dna?.persona?.age === '46-65+' ||
     v.dna?.persona?.age === '40-70' || 
     v.dna?.persona?.age === '55-70'
   ) {
     return {
-      text: 'Trung / Lão Niên 40–70t',
+      text: 'Cao Niên 46–65+t',
       color: 'bg-amber-50 text-amber-700 border-amber-200'
     };
   }
 
+  // 7. Phân khúc 28-40 tuổi
   if (
     v.ageGroup === 'middle' || 
     v.ageGroup === 'mature' || 
@@ -2693,11 +2759,11 @@ IDOL MỈM CƯỜI + GESTURE
                                   }}
                                   className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold cursor-pointer active:scale-95 transition-all ${
                                     isPlaying 
-                                      ? 'bg-amber-500 text-white animate-pulse shadow-md ring-2 ring-amber-300' 
+                                      ? 'bg-amber-500 text-white animate-pulse shadow-md ring-2 ring-amber-300 font-bold' 
                                       : 'bg-orange-50 text-orange-600 hover:bg-orange-100 border border-orange-200'
                                   }`}
                                 >
-                                  <Volume2 size={14} className={isPlaying ? "animate-spin" : ""} />
+                                  {isPlaying ? <Loader2 size={14} className="animate-spin text-white" /> : <Volume2 size={14} />}
                                   <span>{isPlaying ? 'Dừng' : '🔊 Thử giọng'}</span>
                                 </button>
                               </td>
@@ -3167,11 +3233,11 @@ IDOL MỈM CƯỜI + GESTURE
                                 }}
                                 className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold cursor-pointer active:scale-95 transition-all ${
                                   isPlaying 
-                                    ? 'bg-amber-500 text-white animate-pulse shadow-md ring-2 ring-amber-300' 
+                                    ? 'bg-amber-500 text-white animate-pulse shadow-md ring-2 ring-amber-300 font-bold' 
                                     : 'bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200'
                                 }`}
                               >
-                                <Volume2 size={14} className={isPlaying ? "animate-spin" : ""} />
+                                {isPlaying ? <Loader2 size={14} className="animate-spin text-white" /> : <Volume2 size={14} />}
                                 <span>{isPlaying ? 'Dừng' : '🔊 Thử giọng'}</span>
                               </button>
                             </td>
@@ -3936,7 +4002,7 @@ IDOL MỈM CƯỜI + GESTURE
                                       : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200'
                                   }`}
                                 >
-                                  <Volume2 size={14} className={isPlaying ? "animate-spin" : ""} />
+                                  {isPlaying ? <Loader2 size={14} className="animate-spin text-white" /> : <Volume2 size={14} />}
                                   <span>{isPlaying ? 'Dừng' : '🔊 Thử giọng'}</span>
                                 </button>
                               </td>

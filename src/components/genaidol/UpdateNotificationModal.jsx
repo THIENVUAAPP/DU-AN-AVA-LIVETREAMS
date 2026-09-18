@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.5.8';
+export const APP_VERSION = '3.5.9';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v3.5.8 - Ra Mắt Bộ Sưu Tập 40 Master DNA Voices Nam: Phân Hóa Triệt Để 4 Độ Tuổi & Đa Vùng Miền',
-    description: '1. Hệ Thống 40 Master DNA Voices Nam Độc Bản 100%: Phân chia chính xác theo 4 độ tuổi (Nam Trẻ GenZ 18-24t, Nam Trưởng Thành 25-34t, Nam Trung Niên 35-45t, Nam Cao Niên 46-65+t); 2. Phân Tách Âm Sắc, Tông Giọng & Ngữ Điệu: Mỗi giọng mang tần số EQ, Presence và tốc độ độc lập từ BLV Game PK, Chốt Sale Sài Gòn, BTV Thời Sự đến Thầy Thuốc & Lão Thành; 3. Giữ Vững Độ Trong Trẻo & Dõng Dạc: Không trùng lặp tần số, không méo tiếng, không cà rề, âm lượng lớn và phát âm chuẩn từng phụ âm.'
+    title: '⚡ Bản Cập Nhật v3.5.9 - Đồng Bộ Chuẩn Xác Badge Độ Tuổi & Hiệu Ứng Xoay Tức Thì Khi Thử Giọng',
+    description: '1. Đồng Bộ Badge Độ Tuổi Chuẩn Xác 100%: Khắc phục triệt để lỗi lệch độ tuổi (nhóm 25–34t không còn hiển thị nhầm thành 20–28t, hiển thị chính xác Trưởng Thành 25–34t, Trung Niên 35–45t, Cao Niên 46–65+t); 2. Hiệu Ứng Xoay Trực Quan Khi Thử Giọng: Bấm nghe giọng lập tức hiển thị spinner loading xoay động thái trực quan và phát âm thanh ngay tức thì (0ms latency); 3. Tối Ưu Độ Ổn Định Voice Engine & Phản Hồi Giao Diện.'
   }
 ];
 
