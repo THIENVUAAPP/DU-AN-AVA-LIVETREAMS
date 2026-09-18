@@ -281,6 +281,43 @@ function getLatestUploadMediaUrl() {
   return null;
 }
 
+// 🧹 TỰ ĐỘNG DỌN DẸP FILE RÁC UPLOADS CŨ (GIỮ LẠI CÁC FILE ĐANG PHÁT & 5 FILE MỚI NHẤT, GIẢM DUNG LƯỢNG ĐĨA TỐI ĐA)
+function pruneOldUploads() {
+  try {
+    if (!fs.existsSync(uploadsDir)) return;
+    const activeMediaUrl = currentMasterLiveState?.mediaUrl || '';
+    const activeFilename = activeMediaUrl.includes('/uploads/') ? path.basename(activeMediaUrl) : '';
+    const files = fs.readdirSync(uploadsDir)
+      .filter(f => !f.startsWith('.') && f !== '.gitkeep' && !f.includes('default_idol'))
+      .map(f => {
+        try {
+          return { name: f, fullPath: path.join(uploadsDir, f), time: fs.statSync(path.join(uploadsDir, f)).mtimeMs };
+        } catch (e) {
+          return null;
+        }
+      })
+      .filter(Boolean)
+      .sort((a, b) => b.time - a.time);
+
+    // Giữ lại tối đa 5 file mới nhất + file đang phát sóng
+    if (files.length > 5) {
+      const filesToRemove = files.slice(5);
+      for (const item of filesToRemove) {
+        if (item.name !== activeFilename && !item.name.includes(activeFilename)) {
+          try {
+            fs.unlinkSync(item.fullPath);
+            console.log(`[AutoCleaner] 🧹 Đã dọn dẹp file video test cũ: ${item.name}`);
+          } catch (delErr) {}
+        }
+      }
+    }
+  } catch (err) {}
+}
+
+// Chạy dọn dẹp định kỳ mỗi 30 phút
+setInterval(pruneOldUploads, 30 * 60 * 1000);
+setTimeout(pruneOldUploads, 5000);
+
 // ⚡ HIGH-PERFORMANCE VIDEO STREAMING ENGINE (HTTP 206 Byte-Range Partial Content)
 // Giúp video MP4/WebM load ngay lập tức 0ms, không lag, không giật, hỗ trợ video 5-10 tiếng siêu mượt trên TikTok Live Studio & OBS
 app.all('/uploads/:filename', (req, res, next) => {

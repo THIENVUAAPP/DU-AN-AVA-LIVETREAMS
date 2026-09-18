@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.7.2';
+export const APP_VERSION = '3.7.3';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v3.7.3 - Tối Ưu Hóa & Dọn Dẹp Dung Lượng Dự Án (Giải Phóng Hơn 56GB Dữ Liệu Rác)',
+    description: '1. Dọn Dẹp File Rác & Bản Tải Cũ: Loại bỏ toàn bộ các bản video test trùng lặp cũ và các file zip đóng gói trước đây, giải phóng ngay hơn 56GB dung lượng đĩa; 2. Hệ Thống Auto-Prune Thông Minh: Tự động duy trì và dọn dẹp file thừa định kỳ, giữ lại nguyên vẹn file đang live và các file mới nhất; 3. Bảo Toàn 100% Tính Năng Web App & Livestream.'
+  },
   {
     title: '⚡ Bản Cập Nhật v3.7.2 - Bê Nguyên Xi Video 100MB - 50GB Tức Thì 0ms Vào Window Capture (Khắc Phục Màn Hình Đen)',
     description: '1. Khắc Phục Triệt Để Lỗi Màn Hình Đen: Lưu trữ 100% binary Blob gốc vào IndexedDB không giới hạn dung lượng, giúp Window Capture OBS & TikTok Live Studio phát video ngay lập tức 0ms; 2. Đồng Bộ Trực Tiếp Từ Video Gốc Phần Mềm: Tải lên video nào là đẩy thẳng luồng GPU gốc sang Window Capture 60 FPS mà không cần phụ thuộc đường truyền mạng; 3. Hình Ảnh Siêu Sắc Nét 4K/8K: Không giật lag, không đứng hình, không chờ nạp.'
