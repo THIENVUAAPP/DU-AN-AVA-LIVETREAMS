@@ -108,6 +108,11 @@ const AIAudioPlayer = forwardRef(({ isLive, isScriptRunning = false, onAudioPlay
   const loadScriptFromStorage = (customText = null) => {
     let scriptRaw = typeof customText === 'string' && customText.trim() ? customText : '';
     
+    let currentVoiceId = null;
+    let currentRate = undefined;
+    let currentPitch = undefined;
+    let currentVolume = undefined;
+
     // Ưu tiên 1: Đọc từ aidol_event_configs để kiểm tra chế độ phát sóng
     if (!scriptRaw) {
       const eventConfigsRaw = localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup');
@@ -115,6 +120,11 @@ const AIAudioPlayer = forwardRef(({ isLive, isScriptRunning = false, onAudioPlay
         try {
           const evConf = JSON.parse(eventConfigsRaw);
           if (evConf.script_broadcast) {
+            currentVoiceId = evConf.script_broadcast.voiceId || null;
+            currentRate = evConf.script_broadcast.rate;
+            currentPitch = evConf.script_broadcast.pitch;
+            currentVolume = evConf.script_broadcast.volume;
+
             const bMode = evConf.script_broadcast.broadcastMode || 'fixed_script';
             if (bMode === 'ai_brain' || bMode === 'ai_prompt') {
               const durMin = evConf.script_broadcast.scriptDurationMinutes || evConf.script_broadcast.aiLiveDuration || 60;
@@ -134,8 +144,12 @@ const AIAudioPlayer = forwardRef(({ isLive, isScriptRunning = false, onAudioPlay
               const activeTab = evConf.script_broadcast.scriptTabs.find(t => t.active === true) || 
                 evConf.script_broadcast.scriptTabs.find(t => t.id === evConf.script_broadcast.activeScriptTabId) || 
                 evConf.script_broadcast.scriptTabs[0];
-              if (activeTab && activeTab.fixedScriptText) {
-                scriptRaw = activeTab.fixedScriptText;
+              if (activeTab) {
+                if (activeTab.fixedScriptText) scriptRaw = activeTab.fixedScriptText;
+                if (activeTab.voiceId) currentVoiceId = activeTab.voiceId;
+                if (activeTab.rate !== undefined) currentRate = activeTab.rate;
+                if (activeTab.pitch !== undefined) currentPitch = activeTab.pitch;
+                if (activeTab.volume !== undefined) currentVolume = activeTab.volume;
               }
             } else if (evConf.script_broadcast.fixedScriptText) {
               scriptRaw = evConf.script_broadcast.fixedScriptText;
@@ -153,8 +167,12 @@ const AIAudioPlayer = forwardRef(({ isLive, isScriptRunning = false, onAudioPlay
           const pTabs = JSON.parse(persistentTabsRaw);
           if (Array.isArray(pTabs) && pTabs.length > 0) {
             const activeTab = pTabs.find(t => t.active) || pTabs[0];
-            if (activeTab && activeTab.fixedScriptText) {
-              scriptRaw = activeTab.fixedScriptText;
+            if (activeTab) {
+              if (activeTab.fixedScriptText) scriptRaw = activeTab.fixedScriptText;
+              if (activeTab.voiceId) currentVoiceId = activeTab.voiceId;
+              if (activeTab.rate !== undefined) currentRate = activeTab.rate;
+              if (activeTab.pitch !== undefined) currentPitch = activeTab.pitch;
+              if (activeTab.volume !== undefined) currentVolume = activeTab.volume;
             }
           }
         } catch (e) {}
@@ -170,6 +188,7 @@ const AIAudioPlayer = forwardRef(({ isLive, isScriptRunning = false, onAudioPlay
           setJob(parsed);
           if (parsed && typeof parsed.scriptContent === 'string' && parsed.scriptContent.trim()) {
             scriptRaw = parsed.scriptContent;
+            if (parsed.voiceId) currentVoiceId = parsed.voiceId;
           }
         } catch (e) {}
       }
@@ -202,7 +221,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     const multiConf = getMultiAvatarConfig();
     const hasRoleTags = /\[([^\]]+)\]\s*:/i.test(scriptRaw) || /^(Idol|Trợ Lý|Quản Lý|BLV|Game|Khách Mời|Host)\s*:/im.test(scriptRaw);
 
-    if (multiConf.enabled || hasRoleTags) {
+    // 🛡️ CHỈ kích hoạt phân vai đa nhân vật khi kịch bản THỰC SỰ có tag vai trò [Idol]:, [Trợ lý]: hoặc multiConf được bật VÀ có cấu hình
+    if (hasRoleTags) {
       const parsedMulti = parseMultiCharacterScript(scriptRaw, multiConf);
       if (parsedMulti.length > 0) {
         return parsedMulti.map((pItem, idx) => ({
@@ -213,10 +233,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           avatarId: pItem.avatarId,
           avatarName: pItem.avatarName,
           role: pItem.role,
-          voiceId: pItem.voiceId,
+          voiceId: pItem.voiceId || currentVoiceId || undefined,
           voiceObj: pItem.voiceObj,
-          volume: pItem.volume,
-          rate: pItem.rate,
+          volume: pItem.volume !== undefined ? pItem.volume : currentVolume,
+          rate: pItem.rate !== undefined ? pItem.rate : currentRate,
+          pitch: pItem.pitch !== undefined ? pItem.pitch : currentPitch,
           voiceChannel: pItem.role || 'idol',
           index: idx
         }));
@@ -240,6 +261,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       type: 'script',
       text: s.trim(),
       voiceChannel: 'idol',
+      voiceId: currentVoiceId || undefined,
+      volume: currentVolume,
+      rate: currentRate,
+      pitch: currentPitch,
       index: idx
     }));
   };

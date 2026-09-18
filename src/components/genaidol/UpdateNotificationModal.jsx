@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.8.1';
+export const APP_VERSION = '3.8.2';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v3.8.2 - Khắc Phục Triệt Để Phát Lộn Voice Kịch Bản & Tối Ưu Hóa Đồng Bộ Video TikTok Live Studio',
+    description: '1. Đọc Đúng 100% Giọng Đọc Đã Chọn: Khắc phục triệt để lỗi tự động đảo giọng giữa các câu/dòng, đảm bảo toàn bộ văn bản và kịch bản phát chính xác từng giọng riêng biệt theo cài đặt của người dùng; 2. Chặn Triệt Để Đọc Đè 2-3 Giọng Cùng Lúc: Tối ưu hàng đợi âm thanh và giải phóng kênh phát tuần tự mượt mà; 3. Đồng Bộ Video Siêu Tốc 0ms Lên Window Capture & TikTok Live Studio: Giữ nguyên file gốc trên máy, không tải lại dữ liệu, phát ngay tức thì 4K 60 FPS.'
+  },
   {
     title: '⚡ Bản Cập Nhật v3.8.1 - Nâng Cấp Bộ Điều Khiển Âm Lượng, Tốc Độ, Độ Trầm Bổng & Tích Hợp Bật/Tắt Từng Kênh Giọng Đọc',
     description: '1. Hoạt Động 100% Các Thanh Trượt Âm Lượng, Tốc Độ & Độ Trầm Bổng: Tùy chỉnh Volume (0-200%), Speed (0.5x-2.0x) và Pitch (Độ trầm bổng dõng dạc) cho cả 3 vai trò (Idol Chính, Quản Lý/Trợ Lý, Trả Lời Bình Luận); 2. Tích Hợp Nút Tích [Bật Kênh] Linh Hoạt: Bật/tắt độc lập từng kênh giọng đọc theo nhu cầu livestream; 3. Đồng Bộ Window Capture & Luồng Live 4K 60 FPS Siêu Tốc: Phát video dung lượng lớn (1GB - 50GB) tức thì 0ms, siêu mượt mà, không giật lag, không đứng hình.'

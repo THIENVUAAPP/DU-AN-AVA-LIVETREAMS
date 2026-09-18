@@ -7191,10 +7191,9 @@ export function parseMultiCharacterScript(text, config = null) {
       );
     }
 
+    // 🛡️ NẾU KHÔNG CÓ TAG NHÂN VẬT RÕ RÀNG: LUÔN DÙNG NHÂN VẬT CHÍNH (IDOL), TUYỆT ĐỐI KHÔNG TỰ ĐỔI GIỌNG THEO TỪNG DÒNG
     if (!matchedAvatar) {
-      const activeAvatars = (multiConfig.avatars || []).slice(0, multiConfig.activeCount || 2);
-      const activeCount = Math.max(1, activeAvatars.length);
-      matchedAvatar = activeAvatars[lineIdx % activeCount] || multiConfig.avatars[0];
+      matchedAvatar = activeAvatars[0] || idolAvatar;
     }
 
     // ⚡ Lấy voice chuẩn xác 100% từ Tab Bộ Não AI tương ứng với từng nhân vật
@@ -7506,8 +7505,7 @@ function getOrCreateAudioContext() {
   return activeAudioContext;
 }
 
-export function stopVoiceAudio() {
-  clearGlobalSpeechQueue();
+export function stopCurrentActiveAudioNode() {
   if (activeSourceNode) {
     try {
       activeSourceNode.onended = null;
@@ -7536,6 +7534,11 @@ export function stopVoiceAudio() {
   }
   activeUtterance = null;
   isGlobalSpeaking = false;
+}
+
+export function stopVoiceAudio() {
+  clearGlobalSpeechQueue();
+  stopCurrentActiveAudioNode();
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', {
       detail: { isSpeaking: false, avatarId: null }
@@ -7908,7 +7911,7 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
     }
   } catch (e) {}
 
-  stopVoiceAudio();
+  stopCurrentActiveAudioNode();
 
   const isMale = checkIsMale(voice);
   const source = audioCtx.createBufferSource();
@@ -8426,7 +8429,7 @@ async function processGlobalSpeechQueue() {
 }
 
 async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTest = false) {
-  stopVoiceAudio();
+  stopCurrentActiveAudioNode();
 
   const isTestingMode = isTest === true || voice?.isTest === true || voice?.priority === true;
 
