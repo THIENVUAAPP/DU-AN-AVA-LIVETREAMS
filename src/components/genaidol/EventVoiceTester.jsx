@@ -220,30 +220,28 @@ export default function EventVoiceTester({
     // Nếu không khớp trực tiếp từ tag avatar tùy chỉnh, kiểm tra các tag phổ biến
     if (!matchedSpeakerAvatar) {
       if (/^(\[?idol\]?|idol)\s*:\s*(.*)$/i.test(rawSentenceText)) {
-        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'idol') || { id: 'idol', voiceId: 'free_vi_female', name: 'Idol Chính' };
+        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'avatar_1' || a.role === 'idol') || { id: 'avatar_1', role: 'idol', voiceId: 'free_vi_female', name: 'Idol Chính' };
         cleanSentenceText = rawSentenceText.replace(/^(\[?idol\]?|idol)\s*:\s*/i, '').trim();
-      } else if (/^(\[?trợ lý\]?|\[?tro ly\]?|\[?troly\]?|trợ lý|tro ly)\s*:\s*(.*)$/i.test(rawSentenceText)) {
-        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'assistant') || { id: 'assistant', voiceId: 'free_vi_female_2', name: 'Trợ Lý' };
-        cleanSentenceText = rawSentenceText.replace(/^(\[?trợ lý\]?|\[?tro ly\]?|\[?troly\]?|trợ lý|tro ly)\s*:\s*/i, '').trim();
-      } else if (/^(\[?blv game\]?|\[?game\]?|\[?blv\]?|blv game|game)\s*:\s*(.*)$/i.test(rawSentenceText)) {
-        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'game_caster') || { id: 'game_caster', voiceId: 'free_vi_male', name: 'BLV Game PK' };
-        cleanSentenceText = rawSentenceText.replace(/^(\[?blv game\]?|\[?game\]?|\[?blv\]?|blv game|game)\s*:\s*/i, '').trim();
-      } else if (/^(\[?khách mời\]?|\[?khach moi\]?|\[?khach\]?|khách mời|khach moi)\s*:\s*(.*)$/i.test(rawSentenceText)) {
-        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'guest') || { id: 'guest', voiceId: 'free_vi_female_3', name: 'Khách Mời' };
-        cleanSentenceText = rawSentenceText.replace(/^(\[?khách mời\]?|\[?khach moi\]?|\[?khach\]?|khách mời|khach moi)\s*:\s*/i, '').trim();
+      } else if (/^(\[?trợ lý\]?|\[?tro ly\]?|\[?troly\]?|\[?quản lý\]?|\[?quan ly\]?|trợ lý|tro ly|quản lý|quan ly)\s*:\s*(.*)$/i.test(rawSentenceText)) {
+        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'avatar_2' || a.role === 'assistant' || a.role === 'manager') || { id: 'avatar_2', role: 'assistant', voiceId: 'vn_nam_quanly_uyquyen', name: 'Trợ Lý' };
+        cleanSentenceText = rawSentenceText.replace(/^(\[?trợ lý\]?|\[?tro ly\]?|\[?troly\]?|\[?quản lý\]?|\[?quan ly\]?|trợ lý|tro ly|quản lý|quan ly)\s*:\s*/i, '').trim();
+      } else if (/^(\[?blv game\]?|\[?game\]?|\[?blv\]?|\[?pk\]?|blv game|game|blv|pk)\s*:\s*(.*)$/i.test(rawSentenceText)) {
+        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'avatar_3' || a.role === 'game') || { id: 'avatar_3', role: 'game', voiceId: 'vn_nam_bando_chienbinh', name: 'BLV Game PK' };
+        cleanSentenceText = rawSentenceText.replace(/^(\[?blv game\]?|\[?game\]?|\[?blv\]?|\[?pk\]?|blv game|game|blv|pk)\s*:\s*/i, '').trim();
+      } else if (/^(\[?khách mời\]?|\[?khach moi\]?|\[?khach\]?|khách mời|khach moi|khach)\s*:\s*(.*)$/i.test(rawSentenceText)) {
+        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'avatar_4' || a.role === 'guest') || { id: 'avatar_4', role: 'guest', voiceId: 'vn_nu_jessica_sangchanh', name: 'Khách Mời' };
+        cleanSentenceText = rawSentenceText.replace(/^(\[?khách mời\]?|\[?khach moi\]?|\[?khach\]?|khách mời|khach moi|khach)\s*:\s*/i, '').trim();
       }
     }
 
-    const activeSpeakerId = matchedSpeakerAvatar ? matchedSpeakerAvatar.id : 'idol';
-    const activeVoiceId = matchedSpeakerAvatar 
-      ? (matchedSpeakerAvatar.voiceId || selectedVoiceRef.current) 
-      : (fallbackVoice ? (fallbackVoice.id || fallbackVoice) : selectedVoiceRef.current);
-
-    let voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === activeVoiceId) || 
-      (activeVoiceId === 'idol' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'idol') :
-       activeVoiceId === 'manager' || activeVoiceId === 'assistant' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'manager') :
-       activeVoiceId === 'game' ? ALL_SYSTEM_VOICES.find(v => v.recommendedFor === 'game') :
-       ALL_SYSTEM_VOICES.find(v => v.id === 'free_vi_female')) || { id: 'free_vi_female', lang: 'vi-VN', provider: 'system', gender: 'Female' };
+    const activeSpeakerId = matchedSpeakerAvatar ? matchedSpeakerAvatar.id : 'avatar_1';
+    let voiceObj = null;
+    if (matchedSpeakerAvatar) {
+      voiceObj = resolveEffectiveVoice(matchedSpeakerAvatar.role || 'idol', matchedSpeakerAvatar.voiceId, matchedSpeakerAvatar.id);
+    } else {
+      const activeVoiceId = fallbackVoice ? (fallbackVoice.id || fallbackVoice) : selectedVoiceRef.current;
+      voiceObj = resolveEffectiveVoice('idol', activeVoiceId, 'avatar_1');
+    }
 
     // Chuẩn hóa phát âm và làm sạch emoji/ký tự đặc biệt cho câu thoại để khớp 100% cache key
     const normalizedText = cleanTextForVoiceSpeech(cleanSentenceText);

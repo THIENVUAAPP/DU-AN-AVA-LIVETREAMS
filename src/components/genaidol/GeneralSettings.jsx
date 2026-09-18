@@ -1801,9 +1801,15 @@ IDOL MỈM CƯỜI + GESTURE
         if (parsed.userPresets) {
           parsed.userPresets = parsed.userPresets.filter(p => p.id !== 'custom_LanHuong');
         }
-        // Ensure assistantVoiceId defaults to ElevenLabs
-        if (parsed.assistantVoiceId === '1') {
-          parsed.assistantVoiceId = 'el_callum';
+        // Ensure assistantVoiceId defaults to valid system voice
+        if (!parsed.assistantVoiceId || parsed.assistantVoiceId === '1' || parsed.assistantVoiceId === 'el_callum' || !ALL_SYSTEM_VOICES.some(v => v.id === parsed.assistantVoiceId)) {
+          parsed.assistantVoiceId = 'vn_nam_quanly_uyquyen';
+        }
+        if (!parsed.mainVoiceId || !ALL_SYSTEM_VOICES.some(v => v.id === parsed.mainVoiceId)) {
+          parsed.mainVoiceId = 'free_vi_female';
+        }
+        if (!parsed.commentVoiceId || !ALL_SYSTEM_VOICES.some(v => v.id === parsed.commentVoiceId)) {
+          parsed.commentVoiceId = 'free_vi_female';
         }
         // Default model to gemini-1.5-flash if Model AvaLive or not set
         if (!parsed.apiModel || parsed.apiModel === 'Model AvaLive') {
@@ -2261,11 +2267,7 @@ IDOL MỈM CƯỜI + GESTURE
       pitch = settings.mainVoicePitch !== undefined ? Number(settings.mainVoicePitch) : 1.0;
       sample = 'Xin chào tất cả mọi người! Hôm nay mình sẽ chia sẻ những điều tuyệt vời nhất cùng cả nhà nhé!';
     } else if (role === 'assistant') {
-      targetVoice = allVoices.find(v => v.id === settings.assistantVoiceId);
-      if (!targetVoice) {
-        notifyAssigned('Vui lòng gán Giọng Trợ Lý ở bảng trên trước khi nghe thử!', 'warning');
-        return;
-      }
+      targetVoice = allVoices.find(v => v.id === settings.assistantVoiceId) || allVoices.find(v => v.id === 'vn_nam_quanly_uyquyen') || ALL_SYSTEM_VOICES.find(v => v.id === 'vn_nam_quanly_uyquyen') || ALL_SYSTEM_VOICES[1] || ALL_SYSTEM_VOICES[0];
       vol = settings.assistantVoiceVolume !== undefined ? Number(settings.assistantVoiceVolume) : 1.0;
       rate = settings.assistantVoiceRate !== undefined ? Number(settings.assistantVoiceRate) : 1.0;
       pitch = settings.assistantVoicePitch !== undefined ? Number(settings.assistantVoicePitch) : 1.0;
@@ -3713,7 +3715,7 @@ IDOL MỈM CƯỜI + GESTURE
                         </span>
                       </div>
                       <div className="text-sm font-bold text-gray-900 truncate max-w-[180px]">
-                        {ALL_SYSTEM_VOICES.find(v => v.id === settings.assistantVoiceId)?.name || 'Chưa chọn'}
+                        {ALL_SYSTEM_VOICES.find(v => v.id === settings.assistantVoiceId)?.name || ALL_SYSTEM_VOICES.find(v => v.id === 'vn_nam_quanly_uyquyen')?.name || 'Quốc Cường 👑 (Nam - Quản Lý Giục Chốt Đơn Uy Quyền)'}
                       </div>
                     </div>
                   </div>
@@ -4263,7 +4265,7 @@ IDOL MỈM CƯỜI + GESTURE
               {(() => {
                 const allAvail = [...(settings.customVoices || []).filter(v => v && v.name), ...ALL_SYSTEM_VOICES];
                 const idolVoiceObj = allAvail.find(v => v.id === settings.mainVoiceId) || ALL_SYSTEM_VOICES[0];
-                const assistantVoiceObj = allAvail.find(v => v.id === settings.assistantVoiceId);
+                const assistantVoiceObj = allAvail.find(v => v.id === settings.assistantVoiceId) || allAvail.find(v => v.id === 'vn_nam_quanly_uyquyen') || ALL_SYSTEM_VOICES.find(v => v.id === 'vn_nam_quanly_uyquyen') || ALL_SYSTEM_VOICES[1] || ALL_SYSTEM_VOICES[0];
                 const commentVoiceObj = allAvail.find(v => v.id === (settings.commentVoiceId || settings.mainVoiceId)) || idolVoiceObj;
 
                 return (
@@ -4362,38 +4364,36 @@ IDOL MỈM CƯỜI + GESTURE
                           <Mic size={16} className="text-red-500" /> 2. Giọng Quản Lý / Trợ Lý
                         </h4>
                         <div className="flex items-center gap-2">
-                          {assistantVoiceObj && (
-                            <button
-                              type="button"
-                              onClick={() => handlePreviewRoleVoice('assistant')}
-                              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
-                                previewingRole === 'assistant'
-                                  ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-300 ring-offset-1 font-bold'
-                                  : 'bg-red-600 hover:bg-red-700 text-white shadow-xs'
-                              }`}
-                            >
-                              {previewingRole === 'assistant' ? (
-                                <>
-                                  <Loader2 size={13} className="animate-spin text-white" />
-                                  <div className="flex items-center gap-0.5 h-3 px-0.5">
-                                    <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
-                                    <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
-                                    <span className="w-0.5 h-full bg-white rounded-full animate-bounce" />
-                                  </div>
-                                  <span>Dừng</span>
-                                </>
-                              ) : (
-                                <>
-                                  <Volume2 size={13} />
-                                  <span>▶️ Nghe Thử</span>
-                                </>
-                              )}
-                            </button>
-                          )}
+                          <button
+                            type="button"
+                            onClick={() => handlePreviewRoleVoice('assistant')}
+                            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
+                              previewingRole === 'assistant'
+                                ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-300 ring-offset-1 font-bold'
+                                : 'bg-red-600 hover:bg-red-700 text-white shadow-xs'
+                            }`}
+                          >
+                            {previewingRole === 'assistant' ? (
+                              <>
+                                <Loader2 size={13} className="animate-spin text-white" />
+                                <div className="flex items-center gap-0.5 h-3 px-0.5">
+                                  <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                  <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                  <span className="w-0.5 h-full bg-white rounded-full animate-bounce" />
+                                </div>
+                                <span>Dừng</span>
+                              </>
+                            ) : (
+                              <>
+                                <Volume2 size={13} />
+                                <span>▶️ Nghe Thử</span>
+                              </>
+                            )}
+                          </button>
                           <label className="flex items-center gap-1.5 cursor-pointer">
                             <input 
                               type="checkbox" name="assistantEnabled" 
-                              checked={settings.assistantEnabled} onChange={handleChange}
+                              checked={settings.assistantEnabled !== false} onChange={handleChange}
                               className="w-3.5 h-3.5 text-red-600 rounded focus:ring-red-500" 
                             />
                             <span className="text-xs font-bold text-gray-800">Bật Kênh</span>
@@ -4402,11 +4402,9 @@ IDOL MỈM CƯỜI + GESTURE
                       </div>
 
                       {/* Hiển thị Voice Trợ Lý đang được gán */}
-                      <div className={`p-2.5 rounded-lg border flex items-center justify-between text-xs ${
-                        assistantVoiceObj ? 'bg-red-50/80 border-red-200 text-red-900' : 'bg-gray-50 border-gray-200 text-gray-500'
-                      }`}>
-                        <span className="font-semibold truncate">
-                          💼 Giọng gán: <b className="font-extrabold">{assistantVoiceObj?.name || 'Chưa gán (Bấm "💼 Gán Trợ Lý" ở bảng trên)'}</b>
+                      <div className="bg-red-50/80 border border-red-200 rounded-lg p-2.5 flex items-center justify-between text-xs">
+                        <span className="text-red-900 font-semibold truncate">
+                          💼 Giọng gán: <b className="font-extrabold text-red-950">{assistantVoiceObj?.name || 'Quốc Cường 👑 (Nam - Quản Lý Giục Chốt Đơn Uy Quyền)'}</b>
                         </span>
                       </div>
 

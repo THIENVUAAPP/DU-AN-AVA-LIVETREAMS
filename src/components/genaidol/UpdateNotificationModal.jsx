@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.8.5';
+export const APP_VERSION = '3.8.6';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v3.8.6 - Khôi Phục Nút Nghe Thử Giọng Trợ Lý & Tối Ưu Phân Giải Voice 100%',
+    description: '1. Khôi Phục Hoàn Toàn Nút Nghe Thử Giọng Trợ Lý: Nút [▶️ Nghe Thử] của ô Giọng Quản Lý / Trợ Lý luôn luôn hiển thị trực quan và phát thử âm thanh 100% không độ trễ; 2. Phân Giải Voice Tự Động & Chống Mất Nút: Tự động gán fallback giọng Quản lý Quốc Cường chuẩn xác, loại bỏ hoàn toàn tình trạng mất nút nghe thử khi chuyển đổi; 3. Tối Ưu Bộ Thử Giọng Toàn Diện: Bấm vào bất kỳ voice nào phát ngay lập tức, không bị chặn hoặc tắt voice.'
+  },
   {
     title: '⚡ Bản Cập Nhật v3.8.5 - Khắc Phục Triệt Để Lỗi Lẫn Lộn Giọng Voice, Tối Ưu Tốc Độ & Độ Trầm Bổng Độc Bản',
     description: '1. Khắc Phục Triệt Để Lỗi Lẫn Lộn Giọng Đọc Trong Kịch Bản: Người dùng chọn giọng nào đọc chính xác 100% duy nhất giọng đó xuyên suốt toàn bộ kịch bản, không phát lẫn lộn, không đổi giọng giữa chừng, không đè nhiều giọng cùng lúc; 2. Tùy Chỉnh Tốc Độ (Speed) & Độ Trầm Bổng (Pitch) Chuẩn Xác: Tốc độ chỉ thay đổi nhịp đọc nhanh/chậm mà không làm biến dạng giọng đọc, giữ nguyên 100% âm sắc tự nhiên; 3. Đồng Bộ Video Siêu Mượt 60 FPS Sang Window Capture: Sử dụng trực tiếp video trong máy, phát ngay 0ms không độ trễ.'
