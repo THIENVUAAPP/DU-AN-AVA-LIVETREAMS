@@ -823,22 +823,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     const left = Math.max(0, Math.round((screenW - width) / 2));
     const top = Math.max(0, Math.round((screenH - height) / 2));
 
-    // ⚡ Đồng bộ ngay lập tức video hiện tại vào cửa sổ Window Capture
-    let activeUrl = userLockedMediaUrl || desktopVideoRef.current?.src || '';
-    if (activeUrl && typeof activeUrl === 'string' && activeUrl.startsWith('blob:')) {
-      const match = customCharacters.find(c => (c.mediaUrl && !c.mediaUrl.startsWith('blob:')) || (c.url && !c.url.startsWith('blob:')));
-      activeUrl = match ? (match.mediaUrl || match.url) : activeUrl;
-    }
+    // ⚡ BÊ NGUYÊN XI 100% NGUỒN VIDEO ĐANG PHÁT TỪ PHẦN MỀM QUA WINDOW CAPTURE (0ms, 0 byte mạng, siêu nét gốc)
+    let activeUrl = (desktopVideoRef.current && (desktopVideoRef.current.currentSrc || desktopVideoRef.current.src)) || currentBlobUrlRef.current || userLockedMediaUrl || '';
     if (!activeUrl && selectedCharacter && Array.isArray(customCharacters)) {
-      const match = customCharacters.find(c => c.id === selectedCharacter && ((c.mediaUrl && !c.mediaUrl.startsWith('blob:')) || (c.url && !c.url.startsWith('blob:'))));
-      if (match && (match.mediaUrl || match.url)) activeUrl = match.mediaUrl || match.url;
+      const match = customCharacters.find(c => c.id === selectedCharacter);
+      if (match) activeUrl = match.url || match.mediaUrl || '';
     }
     if (!activeUrl && Array.isArray(customCharacters) && customCharacters.length > 0) {
-      const match = customCharacters.find(c => (c.mediaUrl && !c.mediaUrl.startsWith('blob:')) || (c.url && !c.url.startsWith('blob:')));
-      if (match) activeUrl = match.mediaUrl || match.url || '';
-    }
-    if (activeUrl && typeof activeUrl === 'string' && activeUrl.includes('/uploads/')) {
-      activeUrl = activeUrl.substring(activeUrl.indexOf('/uploads/'));
+      const match = customCharacters[0];
+      if (match) activeUrl = match.url || match.mediaUrl || '';
     }
 
     let curTime = 0;
@@ -848,7 +841,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       curTime = lastPlaybackTimeRef.current;
     }
 
-    let serverActiveUrl = activeUrl;
+    let serverActiveUrl = userLockedMediaUrl || '';
     if (!serverActiveUrl || serverActiveUrl.startsWith('blob:')) {
       const matchChar = customCharacters.find(c => c.id === selectedCharacter);
       if (matchChar && matchChar.mediaUrl && !matchChar.mediaUrl.startsWith('blob:')) {
@@ -856,17 +849,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       } else {
         const locked = localStorage.getItem('avalive_user_locked_media');
         if (locked && !locked.startsWith('blob:')) serverActiveUrl = locked;
-        else {
-          const actSrc = localStorage.getItem('avalive_active_video_src');
-          if (actSrc && !actSrc.startsWith('blob:')) serverActiveUrl = actSrc;
-        }
       }
     }
     if (typeof serverActiveUrl === 'string' && serverActiveUrl.includes('/uploads/')) {
       serverActiveUrl = serverActiveUrl.substring(serverActiveUrl.indexOf('/uploads/'));
     }
 
-    const broadcastUrl = serverActiveUrl || activeUrl;
+    const broadcastUrl = activeUrl || serverActiveUrl || '';
 
     try {
       localStorage.removeItem('avalive_user_paused');
@@ -902,11 +891,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }, socketRef.current);
     }
 
+    const activeBlob = currentFileBlobRef.current || window.__activeMediaBlob || (selectedCharacter && window.__activeMediaBlobMap && window.__activeMediaBlobMap.get(selectedCharacter)) || null;
+
     try {
       const bc = new BroadcastChannel('avalive_master_live_stream');
       bc.postMessage({
         type: 'GLOBAL_MEDIA_CHANGE',
         mediaUrl: broadcastUrl,
+        blobUrl: broadcastUrl,
+        fileBlob: activeBlob,
         characterId: selectedCharacter,
         isVideo: true,
         isPlaying: true,
@@ -918,7 +911,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       setTimeout(() => bc.close(), 100);
     } catch (err) {}
 
-    const effectiveV = serverActiveUrl || activeUrl || broadcastUrl || '';
+    const effectiveV = broadcastUrl || '';
 
     // ⚡ LƯU TRỰC TIẾP BLOB VÀ BLOB URL TRÊN WINDOW CHO CỬA SỔ WINDOW CAPTURE MỞ 0MS KHÔNG GIẬT LAG
     if (typeof window !== 'undefined') {
@@ -4014,7 +4007,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               onEnded={(e) => {
                 // Tự động chuyển bài kế tiếp trong playlist nếu có nhiều video, hoặc lặp 0ms liền mạch (24/24)
                 const validVideos = Array.isArray(customCharacters) 
-                  ? customCharacters.filter(c => (c.url || c.mediaUrl) && !c.url?.startsWith('blob:')) 
+                  ? customCharacters.filter(c => Boolean(c.url || c.mediaUrl)) 
                   : [];
                 if (validVideos.length > 1) {
                   const currentIndex = validVideos.findIndex(c => c.id === selectedCharacter);
