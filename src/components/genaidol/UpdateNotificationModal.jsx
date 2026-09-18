@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.6.0';
+export const APP_VERSION = '3.6.1';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v3.6.0 - Đại Tu Toàn Diện 40 Master DNA Voices Nam: Phân Hóa Độc Bản 100% Âm Sắc, Cao Độ & Ngữ Điệu Theo 4 Độ Tuổi',
-    description: '1. Phân Hóa Triệt Để 40 Giọng Nam Độc Bản 100%: Thiết lập dải cao độ (detune -260 đến +210 cents), tốc độ (rate 0.88x đến 1.25x), dải tần EQ, Presence và Formant riêng biệt cho từng giọng thuộc 4 nhóm tuổi (GenZ 18-24t, Trưởng Thành 25-34t, Trung Niên 35-45t, Cao Niên 46-65+t); 2. Tự Động Đọc Kịch Bản Thoại Riêng Biệt (Signature Sample Text): Mỗi giọng mang ngữ điệu, phương ngữ và từ vựng đặc trưng theo vùng miền (Bắc - Trung - Nam) và phong cách ngành nghề; 3. Mở Khóa Toàn Diện Web Audio Realtime DSP & Giữ Nguyên Hiệu Ứng Xoay 0ms Latency.'
+    title: '⚡ Bản Cập Nhật v3.6.1 - Hiệu Ứng Spinner Xoay Tròn & Visualizer Sóng Âm Thanh Khi Nghe Thử Giọng Đọc',
+    description: '1. Nâng Cấp Hoạt Ảnh Trực Quan Cho Tất Cả Nút Thử Giọng: Khi bấm nghe thử bất kỳ giọng đọc nào (Master DNA, Hot Trend, Sales, Studio Đa Nhân Vật, Bảng 3 Kênh Vai Trò), hệ thống kích hoạt ngay hiệu ứng Spinner Loader xoay tròn mượt mà cùng visualizer sóng âm thanh nảy động đa tầng; 2. Trực Quan Hóa Trạng Thái Giải Mã & Phát Âm: Giúp người dùng theo dõi chính xác từng luồng âm thanh đang phát realtime; 3. Giữ Vững Tốc Độ Phản Hồi 0ms Siêu Tốc.'
   }
 ];
 

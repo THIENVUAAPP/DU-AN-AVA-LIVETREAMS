@@ -2009,17 +2009,31 @@ IDOL MỈM CƯỜI + GESTURE
                               setPreviewingVoiceId(null);
                             });
                           }}
-                          title={isPlaying ? "Dừng nghe thử" : "Bấm để nghe thử giọng này bằng tiếng Việt chuẩn có cảm xúc & nhấn nhá"}
-                          className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg cursor-pointer active:scale-95 transition-all text-xs font-semibold ${
+                          title={isPlaying ? "Đang phát giọng đọc - Bấm để dừng" : "Bấm để nghe thử giọng này bằng tiếng Việt chuẩn có cảm xúc & nhấn nhá"}
+                          className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg cursor-pointer active:scale-95 transition-all text-xs font-semibold ${
                             isPlaying
-                              ? 'bg-amber-500 text-white animate-pulse shadow-md ring-2 ring-amber-300'
+                              ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-md ring-2 ring-amber-300 ring-offset-1 font-bold'
                               : isSelected 
-                                ? 'bg-white text-blue-700 hover:bg-gray-100 shadow-sm' 
-                                : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200'
+                                ? 'bg-white text-blue-700 hover:bg-gray-100 shadow-sm border border-blue-200' 
+                                : 'bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-300 border border-blue-200'
                           }`}
                         >
-                          {isPlaying ? <Loader2 size={14} className="animate-spin text-white" /> : <Volume2 size={14} />}
-                          <span>{isPlaying ? 'Dừng' : (isVn ? '🔊 Thử Tiếng Việt' : '🔊 Nghe thử')}</span>
+                          {isPlaying ? (
+                            <>
+                              <Loader2 size={14} className="animate-spin text-white shrink-0" />
+                              <div className="flex items-center gap-0.5 h-3 px-0.5">
+                                <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                <span className="w-0.5 h-full bg-white rounded-full animate-bounce" />
+                              </div>
+                              <span className="text-[11px] font-bold">Đang phát (Dừng)</span>
+                            </>
+                          ) : (
+                            <>
+                              <Volume2 size={14} className="text-blue-600 shrink-0" />
+                              <span>{isVn ? '🔊 Thử Tiếng Việt' : '🔊 Nghe thử'}</span>
+                            </>
+                          )}
                         </button>
                       </td>
                     </tr>
@@ -2763,14 +2777,29 @@ IDOL MỈM CƯỜI + GESTURE
                                       setPreviewingVoiceId(null);
                                     });
                                   }}
-                                  className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold cursor-pointer active:scale-95 transition-all ${
+                                  title={isPlaying ? "Đang phát giọng đọc - Bấm để dừng" : "Bấm để nghe thử giọng này"}
+                                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer active:scale-95 transition-all ${
                                     isPlaying 
-                                      ? 'bg-amber-500 text-white animate-pulse shadow-md ring-2 ring-amber-300 font-bold' 
-                                      : 'bg-orange-50 text-orange-600 hover:bg-orange-100 border border-orange-200'
+                                      ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-md ring-2 ring-amber-300 ring-offset-1 font-bold' 
+                                      : 'bg-orange-50 text-orange-700 hover:bg-orange-100 hover:border-orange-300 border border-orange-200 shadow-2xs'
                                   }`}
                                 >
-                                  {isPlaying ? <Loader2 size={14} className="animate-spin text-white" /> : <Volume2 size={14} />}
-                                  <span>{isPlaying ? 'Dừng' : '🔊 Thử giọng'}</span>
+                                  {isPlaying ? (
+                                    <>
+                                      <Loader2 size={14} className="animate-spin text-white shrink-0" />
+                                      <div className="flex items-center gap-0.5 h-3 px-0.5">
+                                        <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                        <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                        <span className="w-0.5 h-full bg-white rounded-full animate-bounce" />
+                                      </div>
+                                      <span className="text-[11px] font-bold">Đang phát (Dừng)</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Volume2 size={14} className="text-orange-600 shrink-0" />
+                                      <span>🔊 Thử giọng</span>
+                                    </>
+                                  )}
                                 </button>
                               </td>
                               <td className="px-4 py-2.5 text-center">
@@ -2854,17 +2883,44 @@ IDOL MỈM CƯỜI + GESTURE
                         type="button"
                         onClick={() => {
                           const targetVoice = VIETNAMESE_HOTTREND_VOICES.find(v => v.id === settings.mainVoiceId) || VIETNAMESE_HOTTREND_VOICES[0];
+                          const testId = 'hottrend_preview_custom';
+                          if (previewingVoiceId === testId || previewingVoiceId === targetVoice.id) {
+                            stopVoiceAudio();
+                            setPreviewingVoiceId(null);
+                            return;
+                          }
+                          setPreviewingVoiceId(testId);
                           previewVoiceAudio({
                             ...targetVoice,
                             volume: hotTrendVoiceVolume,
                             rate: (targetVoice.rate || 1.0) * hotTrendVoiceRate,
                             pitch: (targetVoice.pitch || 1.0) * hotTrendVoicePitch,
                             isTest: true
+                          }, null, () => {
+                            setPreviewingVoiceId(null);
                           });
                         }}
-                        className="px-3 py-1.5 bg-orange-600 hover:bg-orange-700 text-white text-xs font-bold rounded-lg shadow-xs flex items-center gap-1.5 cursor-pointer active:scale-95 transition-transform"
+                        className={`px-3 py-1.5 text-xs font-bold rounded-lg shadow-sm flex items-center gap-1.5 cursor-pointer active:scale-95 transition-all ${
+                          previewingVoiceId === 'hottrend_preview_custom'
+                            ? 'bg-amber-500 text-white ring-2 ring-amber-300 ring-offset-1 font-bold'
+                            : 'bg-orange-600 hover:bg-orange-700 text-white'
+                        }`}
                       >
-                        <Volume2 size={14} /> Nghe Thử Âm Thanh
+                        {previewingVoiceId === 'hottrend_preview_custom' ? (
+                          <>
+                            <Loader2 size={14} className="animate-spin text-white" />
+                            <div className="flex items-center gap-0.5 h-3 px-0.5">
+                              <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
+                              <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
+                              <span className="w-0.5 h-full bg-white rounded-full animate-bounce" />
+                            </div>
+                            <span>Đang phát (Dừng)</span>
+                          </>
+                        ) : (
+                          <>
+                            <Volume2 size={14} /> <span>Nghe Thử Âm Thanh</span>
+                          </>
+                        )}
                       </button>
                     </div>
                   </div>
@@ -3218,34 +3274,49 @@ IDOL MỈM CƯỜI + GESTURE
                               </span>
                             </td>
                             <td className="px-3 py-2.5 text-center">
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  if (isPlaying) {
-                                    stopVoiceAudio();
-                                    setPreviewingVoiceId(null);
-                                    return;
-                                  }
-                                  setPreviewingVoiceId(v.id);
-                                  previewVoiceAudio({ 
-                                    ...v, 
-                                    volume: settings.salesVoiceVolume !== undefined ? settings.salesVoiceVolume : (v.volume || 1.0), 
-                                    rate: v.rate || 1.0, 
-                                    pitch: v.pitch || 1.0, 
-                                    isTest: true 
-                                  }, null, () => {
-                                    setPreviewingVoiceId(null);
-                                  });
-                                }}
-                                className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold cursor-pointer active:scale-95 transition-all ${
-                                  isPlaying 
-                                    ? 'bg-amber-500 text-white animate-pulse shadow-md ring-2 ring-amber-300 font-bold' 
-                                    : 'bg-rose-50 text-rose-600 hover:bg-rose-100 border border-rose-200'
-                                }`}
-                              >
-                                {isPlaying ? <Loader2 size={14} className="animate-spin text-white" /> : <Volume2 size={14} />}
-                                <span>{isPlaying ? 'Dừng' : '🔊 Thử giọng'}</span>
-                              </button>
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    if (isPlaying) {
+                                      stopVoiceAudio();
+                                      setPreviewingVoiceId(null);
+                                      return;
+                                    }
+                                    setPreviewingVoiceId(v.id);
+                                    previewVoiceAudio({ 
+                                      ...v, 
+                                      volume: settings.salesVoiceVolume !== undefined ? settings.salesVoiceVolume : (v.volume || 1.0), 
+                                      rate: v.rate || 1.0, 
+                                      pitch: v.pitch || 1.0, 
+                                      isTest: true 
+                                    }, null, () => {
+                                      setPreviewingVoiceId(null);
+                                    });
+                                  }}
+                                  title={isPlaying ? "Đang phát giọng đọc - Bấm để dừng" : "Bấm để nghe thử giọng này"}
+                                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer active:scale-95 transition-all ${
+                                    isPlaying 
+                                      ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-md ring-2 ring-amber-300 ring-offset-1 font-bold' 
+                                      : 'bg-rose-50 text-rose-700 hover:bg-rose-100 hover:border-rose-300 border border-rose-200 shadow-2xs'
+                                  }`}
+                                >
+                                  {isPlaying ? (
+                                    <>
+                                      <Loader2 size={14} className="animate-spin text-white shrink-0" />
+                                      <div className="flex items-center gap-0.5 h-3 px-0.5">
+                                        <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                        <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                        <span className="w-0.5 h-full bg-white rounded-full animate-bounce" />
+                                      </div>
+                                      <span className="text-[11px] font-bold">Đang phát (Dừng)</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Volume2 size={14} className="text-rose-600 shrink-0" />
+                                      <span>🔊 Thử giọng</span>
+                                    </>
+                                  )}
+                                </button>
                             </td>
                             <td className="px-4 py-2.5 text-center">
                               <div className="flex items-center justify-center gap-1.5">
@@ -3534,12 +3605,26 @@ IDOL MỈM CƯỜI + GESTURE
                       }}
                       className={`inline-flex items-center gap-2 px-4 py-2 rounded-lg text-xs font-bold text-white shadow-md transition-all active:scale-95 cursor-pointer ${
                         previewingVoiceId === 'sales_preview_custom'
-                          ? 'bg-amber-500 ring-2 ring-amber-300 animate-pulse'
+                          ? 'bg-amber-500 ring-2 ring-amber-300 ring-offset-1 font-bold'
                           : 'bg-gradient-to-r from-rose-600 to-amber-600 hover:from-rose-700 hover:to-amber-700'
                       }`}
                     >
-                      <Volume2 size={16} className={previewingVoiceId === 'sales_preview_custom' ? 'animate-spin' : ''} />
-                      <span>{previewingVoiceId === 'sales_preview_custom' ? 'Đang phát thử (Bấm để dừng)' : '🔊 Nghe Thử Với Tốc Độ & Âm Lượng Này'}</span>
+                      {previewingVoiceId === 'sales_preview_custom' ? (
+                        <>
+                          <Loader2 size={16} className="animate-spin text-white" />
+                          <div className="flex items-center gap-0.5 h-3.5 px-0.5">
+                            <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
+                            <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
+                            <span className="w-0.5 h-full bg-white rounded-full animate-bounce" />
+                          </div>
+                          <span>Đang phát thử (Bấm để dừng)</span>
+                        </>
+                      ) : (
+                        <>
+                          <Volume2 size={16} />
+                          <span>🔊 Nghe Thử Với Tốc Độ & Âm Lượng Này</span>
+                        </>
+                      )}
                     </button>
                   </div>
                 </div>
@@ -4010,14 +4095,29 @@ IDOL MỈM CƯỜI + GESTURE
                                       setPreviewingRole(null);
                                     });
                                   }}
-                                  className={`inline-flex items-center gap-1 px-2.5 py-1.5 rounded-lg text-xs font-semibold cursor-pointer active:scale-95 transition-all ${
+                                  title={isPlaying ? "Đang phát giọng đọc - Bấm để dừng" : "Bấm để nghe thử giọng này"}
+                                  className={`inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold cursor-pointer active:scale-95 transition-all ${
                                     isPlaying 
-                                      ? 'bg-amber-500 text-white animate-pulse shadow-md ring-2 ring-amber-300 font-bold' 
-                                      : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200'
+                                      ? 'bg-gradient-to-r from-amber-500 via-orange-500 to-amber-600 text-white shadow-md ring-2 ring-amber-300 ring-offset-1 font-bold' 
+                                      : 'bg-blue-50 text-blue-700 hover:bg-blue-100 hover:border-blue-300 border border-blue-200 shadow-2xs'
                                   }`}
                                 >
-                                  {isPlaying ? <Loader2 size={14} className="animate-spin text-white" /> : <Volume2 size={14} />}
-                                  <span>{isPlaying ? 'Dừng' : '🔊 Thử giọng'}</span>
+                                  {isPlaying ? (
+                                    <>
+                                      <Loader2 size={14} className="animate-spin text-white shrink-0" />
+                                      <div className="flex items-center gap-0.5 h-3 px-0.5">
+                                        <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                        <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                        <span className="w-0.5 h-full bg-white rounded-full animate-bounce" />
+                                      </div>
+                                      <span className="text-[11px] font-bold">Đang phát (Dừng)</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Volume2 size={14} className="text-blue-600 shrink-0" />
+                                      <span>🔊 Thử giọng</span>
+                                    </>
+                                  )}
                                 </button>
                               </td>
                               <td className="px-4 py-2.5 text-center">
@@ -4089,14 +4189,28 @@ IDOL MỈM CƯỜI + GESTURE
                           <button
                             type="button"
                             onClick={() => handlePreviewRoleVoice('idol')}
-                            className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${
+                            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
                               previewingRole === 'idol'
-                                ? 'bg-amber-500 text-white animate-pulse shadow-sm ring-2 ring-amber-300'
+                                ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-300 ring-offset-1 font-bold'
                                 : 'bg-blue-600 hover:bg-blue-700 text-white shadow-xs'
                             }`}
                           >
-                            <Volume2 size={12} />
-                            <span>{previewingRole === 'idol' ? '⏹️ Dừng' : '▶️ Nghe Thử'}</span>
+                            {previewingRole === 'idol' ? (
+                              <>
+                                <Loader2 size={13} className="animate-spin text-white" />
+                                <div className="flex items-center gap-0.5 h-3 px-0.5">
+                                  <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                  <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                  <span className="w-0.5 h-full bg-white rounded-full animate-bounce" />
+                                </div>
+                                <span>Dừng</span>
+                              </>
+                            ) : (
+                              <>
+                                <Volume2 size={13} />
+                                <span>▶️ Nghe Thử</span>
+                              </>
+                            )}
                           </button>
                           <span className="text-[11px] bg-blue-100 text-blue-800 px-2 py-0.5 rounded font-bold">
                             Kênh Chính
@@ -4158,14 +4272,28 @@ IDOL MỈM CƯỜI + GESTURE
                             <button
                               type="button"
                               onClick={() => handlePreviewRoleVoice('assistant')}
-                              className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${
+                              className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
                                 previewingRole === 'assistant'
-                                  ? 'bg-amber-500 text-white animate-pulse shadow-sm ring-2 ring-amber-300'
+                                  ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-300 ring-offset-1 font-bold'
                                   : 'bg-red-600 hover:bg-red-700 text-white shadow-xs'
                               }`}
                             >
-                              <Volume2 size={12} />
-                              <span>{previewingRole === 'assistant' ? '⏹️ Dừng' : '▶️ Nghe Thử'}</span>
+                              {previewingRole === 'assistant' ? (
+                                <>
+                                  <Loader2 size={13} className="animate-spin text-white" />
+                                  <div className="flex items-center gap-0.5 h-3 px-0.5">
+                                    <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                    <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                    <span className="w-0.5 h-full bg-white rounded-full animate-bounce" />
+                                  </div>
+                                  <span>Dừng</span>
+                                </>
+                              ) : (
+                                <>
+                                  <Volume2 size={13} />
+                                  <span>▶️ Nghe Thử</span>
+                                </>
+                              )}
                             </button>
                           )}
                           <label className="flex items-center gap-1.5 cursor-pointer">
@@ -4245,14 +4373,28 @@ IDOL MỈM CƯỜI + GESTURE
                           <button
                             type="button"
                             onClick={() => handlePreviewRoleVoice('comment')}
-                            className={`px-2.5 py-1 rounded-md text-xs font-bold transition-all flex items-center gap-1 ${
+                            className={`px-2.5 py-1.5 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ${
                               previewingRole === 'comment'
-                                ? 'bg-amber-500 text-white animate-pulse shadow-sm ring-2 ring-amber-300'
+                                ? 'bg-amber-500 text-white shadow-md ring-2 ring-amber-300 ring-offset-1 font-bold'
                                 : 'bg-purple-600 hover:bg-purple-700 text-white shadow-xs'
                             }`}
                           >
-                            <Volume2 size={12} />
-                            <span>{previewingRole === 'comment' ? '⏹️ Dừng' : '▶️ Nghe Thử'}</span>
+                            {previewingRole === 'comment' ? (
+                              <>
+                                <Loader2 size={13} className="animate-spin text-white" />
+                                <div className="flex items-center gap-0.5 h-3 px-0.5">
+                                  <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                  <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                  <span className="w-0.5 h-full bg-white rounded-full animate-bounce" />
+                                </div>
+                                <span>Dừng</span>
+                              </>
+                            ) : (
+                              <>
+                                <Volume2 size={13} />
+                                <span>▶️ Nghe Thử</span>
+                              </>
+                            )}
                           </button>
                           <span className="text-[11px] bg-purple-100 text-purple-700 px-2 py-0.5 rounded font-bold">
                             Hỏi Đáp & Q&A

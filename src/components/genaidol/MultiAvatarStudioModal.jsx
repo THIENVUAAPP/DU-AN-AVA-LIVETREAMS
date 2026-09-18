@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from 'react';
 import { 
-  Users, Sparkles, Video, Mic, Volume2, Gauge, HelpCircle, X, Check, Play, Square, 
+  Users, Sparkles, Video, Mic, Volume2, Gauge, HelpCircle, X, Check, Play, Square, Loader2,
   Upload, FolderOpen, Layers, ShieldCheck, Info, MessageSquare, Plus, RefreshCw, Eye, EyeOff, BookOpen,
   Move, Maximize2, Palette, Sliders, Image as ImageIcon, Monitor, Smartphone, ChevronRight, LayoutGrid, CheckCircle2,
   Crop, Wand2, ArrowUp, ArrowDown, ArrowUpToLine, ArrowDownToLine, Scaling, ZoomIn, FileVideo, UserCheck, RotateCcw,
@@ -2105,9 +2105,25 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                         <button
                           type="button"
                           onClick={(e) => { e.stopPropagation(); handleVoicePreview(v.id); }}
-                          className="px-2 py-1 rounded bg-indigo-500/20 hover:bg-indigo-500 text-indigo-300 hover:text-white text-[10px] font-black shrink-0"
+                          className={`px-2 py-1 rounded text-[10px] font-black shrink-0 transition-all flex items-center gap-1 ${
+                            previewingVoiceId === v.id
+                              ? 'bg-amber-500 text-white ring-2 ring-amber-300 ring-offset-1 shadow-sm font-bold'
+                              : 'bg-indigo-500/20 hover:bg-indigo-500 text-indigo-300 hover:text-white'
+                          }`}
                         >
-                          {previewingVoiceId === v.id ? '⏹️ Dừng' : '▶️ Thử'}
+                          {previewingVoiceId === v.id ? (
+                            <>
+                              <Loader2 size={11} className="animate-spin text-white" />
+                              <div className="flex items-center gap-0.5 h-2.5 px-0.5">
+                                <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.3s]" />
+                                <span className="w-0.5 h-full bg-white rounded-full animate-bounce [animation-delay:-0.15s]" />
+                                <span className="w-0.5 h-full bg-white rounded-full animate-bounce" />
+                              </div>
+                              <span>Dừng</span>
+                            </>
+                          ) : (
+                            <span>▶️ Thử</span>
+                          )}
                         </button>
                       </div>
                     ))}
