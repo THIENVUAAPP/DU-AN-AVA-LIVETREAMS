@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.5.5';
+export const APP_VERSION = '3.5.6';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v3.5.5 - Phân Tách 100% Độc Bản Tông Giọng & Phương Ngữ Vùng Miền 20-28 Tuổi',
-    description: '1. Phân Tách Tông & Âm Sắc 100%: Tích hợp Web Audio Detune động và dải cao độ chuyên sâu (-350 đến +450 cents), mỗi giọng sở hữu 1 âm vực và phong cách hoàn toàn khác biệt; 2. Chuẩn Sắc Phương Ngữ 4 Vùng Miền (Tây, Trung, Bắc, Nam): Tự động chuyển đổi trợ từ, thán từ và khẩu khí bản xứ mộc mạc, ngọt ngào, duyên dáng; 3. Phong Cách Bán Hàng & Chốt Deal Triệu View: Nhấn nhá đỉnh cao kích thích hưng phấn và giữ chân người xem.'
+    title: '⚡ Bản Cập Nhật v3.5.6 - Hoàn Thiện Master Voice DNA: Nữ 20-24t Độc Bản 100% & Nam 40t+ Dõng Dạc Chuẩn Nét',
+    description: '1. Phân Tách 100% 40 Master DNA Voices Nữ (20-24t): Mỗi giọng mang âm vực, cao độ, semitones và detune riêng biệt từ dễ thương, nũng nịu đến hoạt ngôn Bắc, ngọt ngào Nam, duyên dáng Tây; 2. Tối Ưu Giọng Nam Lớn Tuổi (40t+): Triệt tiêu hoàn toàn hiện tượng khàn đục hoặc nói chậm cà rề, âm thanh phát ra dõng dạc, đĩnh đạc, âm lượng lớn và phát âm chuẩn từng phụ âm; 3. Nâng Cấp Bộ Xử Lý DSP & Presence EQ: Cực nét, rõ chữ, chống vỡ âm cho toàn bộ phiên livestream.'
   }
 ];
 

@@ -736,14 +736,14 @@ export const VIETNAMESE_MALE_VOICES = [
     ageGroup: 'middle',
     styleCategory: 'banhang',
     category: 'Thương Mại & Thuyết Trình • Miền Bắc',
-    pitch: 0.75,
-    rate: 1.06,
+    pitch: 0.95,
+    rate: 1.05,
     recommendedFor: 'both',
-    desc: 'Giọng nam trầm ấm, điềm đạm, phong thái chững chạc cực kỳ thuyết phục.',
+    desc: 'Giọng nam trầm ấm, điềm đạm, đĩnh đạc, phát âm tròn vành rõ chữ chuẩn truyền hình quốc gia.',
     sampleText: 'Chào mừng tất cả các bạn đã đến với buổi phát sóng hôm nay! Chúc mọi người một ngày tràn đầy năng lượng và gặt hái nhiều thành công!',
-        edgePitch: '-14%',
-    edgeRate: '+2%',
-dspProfile: { semitones: -2.5, rate: 1.06, lowGain: 6.5, midFreq: 450, midGain: 3.5, presenceFreq: 2200, presenceGain: -2.0, highGain: 0, compressor: { threshold: -18, ratio: 4.5, attack: 0.015, release: 0.3 } }
+    edgePitch: '-4%',
+    edgeRate: '+4%',
+    dspProfile: { semitones: -0.6, detune: -60, rate: 1.05, lowGain: 2.5, midFreq: 500, midGain: 2.5, presenceFreq: 3200, presenceGain: 4.8, highGain: 2.0, compressor: { threshold: -20, ratio: 4.0, attack: 0.005, release: 0.15 } }
   },
   {
     id: 'vn_nam_blv_bungno',
@@ -758,14 +758,14 @@ dspProfile: { semitones: -2.5, rate: 1.06, lowGain: 6.5, midFreq: 450, midGain: 
     ageGroup: 'young',
     styleCategory: 'blv_game',
     category: 'BLV Game Sôi Động • Miền Bắc',
-    pitch: 0.82,
+    pitch: 0.98,
     rate: 1.25,
     recommendedFor: 'game',
     desc: 'Giọng bình luận viên game PK bùng nổ, tốc độ cực nhanh khi combat nghẹt thở.',
     sampleText: 'Pha combat đỉnh cao! Cả hai đội đang tung toàn bộ chiêu thức, hãy cùng bùng nổ năng lượng nào anh em ơi!',
-        edgePitch: '+18%',
+    edgePitch: '+12%',
     edgeRate: '+26%',
-dspProfile: { semitones: 2.8, rate: 1.25, lowGain: 4, midFreq: 600, midGain: 4.0, presenceFreq: 2600, presenceGain: 3.5, highGain: 3.5, compressor: { threshold: -26, ratio: 8, attack: 0.002, release: 0.08 } }
+    dspProfile: { semitones: 1.8, detune: 180, rate: 1.25, lowGain: 2.0, midFreq: 650, midGain: 3.5, presenceFreq: 3500, presenceGain: 5.5, highGain: 3.5, compressor: { threshold: -24, ratio: 6.0, attack: 0.002, release: 0.08 } }
   },
   {
     id: 'vn_nam_mc_haosang',
@@ -780,14 +780,14 @@ dspProfile: { semitones: 2.8, rate: 1.25, lowGain: 4, midFreq: 600, midGain: 4.0
     ageGroup: 'young',
     styleCategory: 'mc_btv',
     category: 'MC Sự Kiện • Miền Bắc',
-    pitch: 0.78,
+    pitch: 0.96,
     rate: 1.08,
     recommendedFor: 'both',
-    desc: 'Giọng MC dẫn chương trình truyền hình cuốn hút, hoạt náo, tràn đầy năng lượng.',
+    desc: 'Giọng MC dẫn chương trình truyền hình cuốn hút, hoạt náo, tràn đầy năng lượng và dõng dạc.',
     sampleText: 'Xin nhiệt liệt chào mừng toàn thể quý vị đại biểu và quý khán giả đã có mặt tại sự kiện trực tiếp ngày hôm nay!',
-        edgePitch: '+4%',
-    edgeRate: '+12%',
-dspProfile: { semitones: 0.8, rate: 1.08, lowGain: 5.5, midFreq: 500, midGain: 3.0, presenceFreq: 2400, presenceGain: 1.0, highGain: 2, compressor: { threshold: -20, ratio: 4.5, attack: 0.006, release: 0.2 } }
+    edgePitch: '+2%',
+    edgeRate: '+8%',
+    dspProfile: { semitones: 0.4, detune: 40, rate: 1.08, lowGain: 2.2, midFreq: 520, midGain: 2.8, presenceFreq: 3400, presenceGain: 5.0, highGain: 2.5, compressor: { threshold: -20, ratio: 4.2, attack: 0.005, release: 0.16 } }
   },
   {
     id: 'vn_nam_phongsu_vtv',
@@ -802,14 +802,14 @@ dspProfile: { semitones: 0.8, rate: 1.08, lowGain: 5.5, midFreq: 500, midGain: 3
     ageGroup: 'middle',
     styleCategory: 'mc_btv',
     category: 'Phóng Sự & Truyền Hình • Miền Bắc',
-    pitch: 0.70,
-    rate: 1.02,
+    pitch: 0.94,
+    rate: 1.04,
     recommendedFor: 'both',
-    desc: 'Giọng nam chuẩn phóng sự tài liệu, chín chắn, sâu sắc và đáng tin cậy.',
+    desc: 'Giọng nam chuẩn phóng sự tài liệu, chín chắn, sâu sắc, dõng dạc và cực kỳ đáng tin cậy.',
     sampleText: 'Góc nhìn chân thực, thông tin đa chiều và những câu chuyện lay động hàng triệu trái tim người xem truyền hình.',
-        edgePitch: '-18%',
-    edgeRate: '-4%',
-dspProfile: { semitones: -3.2, rate: 1.02, lowGain: 7.5, midFreq: 380, midGain: 3.5, presenceFreq: 1900, presenceGain: -2.5, highGain: -1, compressor: { threshold: -18, ratio: 4, attack: 0.012, release: 0.28 } }
+    edgePitch: '-4%',
+    edgeRate: '+4%',
+    dspProfile: { semitones: -0.7, detune: -70, rate: 1.04, lowGain: 2.8, midFreq: 460, midGain: 2.8, presenceFreq: 3300, presenceGain: 5.2, highGain: 2.0, compressor: { threshold: -20, ratio: 4.2, attack: 0.005, release: 0.16 } }
   },
   {
     id: 'vn_nam_chotsale',
@@ -824,14 +824,14 @@ dspProfile: { semitones: -3.2, rate: 1.02, lowGain: 7.5, midFreq: 380, midGain: 
     ageGroup: 'young',
     styleCategory: 'banhang',
     category: 'Bán Hàng Chốt Đơn • Miền Nam',
-    pitch: 0.80,
+    pitch: 0.98,
     rate: 1.18,
     recommendedFor: 'manager',
-    desc: 'Giọng nam bán hàng chốt đơn livestream dứt khoát, thuyết phục khách mua ngay.',
+    desc: 'Giọng nam bán hàng chốt đơn livestream dứt khoát, năng lượng cao và thuyết phục khách mua ngay.',
     sampleText: 'Cơ hội duy nhất trong ngày hôm nay! Giá sốc tận đáy kèm quà tặng khủng, anh em chốt đơn ngay kẻo hết nhé!',
-        edgePitch: '+10%',
-    edgeRate: '+20%',
-dspProfile: { semitones: 1.8, rate: 1.18, lowGain: 5, midFreq: 550, midGain: 3.5, presenceFreq: 2500, presenceGain: 2.0, highGain: 2.5, compressor: { threshold: -24, ratio: 6, attack: 0.003, release: 0.12 } }
+    edgePitch: '+6%',
+    edgeRate: '+18%',
+    dspProfile: { semitones: 1.0, detune: 100, rate: 1.18, lowGain: 2.0, midFreq: 580, midGain: 3.2, presenceFreq: 3500, presenceGain: 5.4, highGain: 2.8, compressor: { threshold: -22, ratio: 5.0, attack: 0.003, release: 0.12 } }
   },
   {
     id: 'vn_nam_thuyetminh_dienanh',
@@ -846,14 +846,14 @@ dspProfile: { semitones: 1.8, rate: 1.18, lowGain: 5, midFreq: 550, midGain: 3.5
     ageGroup: 'middle',
     styleCategory: 'tam_su',
     category: 'Thuyết Minh Điện Ảnh • Miền Bắc',
-    pitch: 0.65,
+    pitch: 0.92,
     rate: 1.02,
     recommendedFor: 'idol',
-    desc: 'Giọng thuyết minh phim điện ảnh Hollywood đầy kịch tính, trầm hùng vang dội.',
+    desc: 'Giọng thuyết minh phim điện ảnh Hollywood đầy kịch tính, trầm hùng vang dội và dõng dạc.',
     sampleText: 'Một cuộc chiến định mệnh đã bắt đầu, thay đổi toàn bộ dòng chảy thời gian và vận mệnh của cả vũ trụ!',
-        edgePitch: '-30%',
-    edgeRate: '-10%',
-dspProfile: { semitones: -5.5, rate: 1.02, lowGain: 8.5, midFreq: 320, midGain: 4.5, presenceFreq: 1800, presenceGain: -2.0, highGain: -3, compressor: { threshold: -22, ratio: 5.5, attack: 0.015, release: 0.35 } }
+    edgePitch: '-6%',
+    edgeRate: '+2%',
+    dspProfile: { semitones: -1.0, detune: -100, rate: 1.02, lowGain: 3.2, midFreq: 420, midGain: 3.0, presenceFreq: 3400, presenceGain: 5.2, highGain: 2.2, compressor: { threshold: -22, ratio: 4.5, attack: 0.005, release: 0.18 } }
   },
   {
     id: 'vn_nam_kechuyen_tramam',
@@ -868,14 +868,14 @@ dspProfile: { semitones: -5.5, rate: 1.02, lowGain: 8.5, midFreq: 320, midGain: 
     ageGroup: 'middle',
     styleCategory: 'tam_su',
     category: 'Kể Chuyện & Tâm Sự • Miền Bắc',
-    pitch: 0.68,
-    rate: 1.0,
+    pitch: 0.94,
+    rate: 1.02,
     recommendedFor: 'idol',
-    desc: 'Giọng nam trầm ấm, truyền cảm, thích hợp đọc truyện đêm khuya, podcast lắng đọng.',
+    desc: 'Giọng nam trầm ấm, truyền cảm, thích hợp đọc truyện đêm khuya, podcast sâu lắng rõ nét.',
     sampleText: 'Đêm tĩnh lặng, những kỷ niệm xưa lại ùa về mang theo bao nỗi niềm chất chứa trong tâm hồn.',
-        edgePitch: '-22%',
-    edgeRate: '-12%',
-dspProfile: { semitones: -4, rate: 1.0, lowGain: 7.8, midFreq: 360, midGain: 3.0, presenceFreq: 1900, presenceGain: -3.0, highGain: -2, compressor: { threshold: -14, ratio: 2.8, attack: 0.03, release: 0.45 } }
+    edgePitch: '-4%',
+    edgeRate: '+2%',
+    dspProfile: { semitones: -0.7, detune: -70, rate: 1.02, lowGain: 2.6, midFreq: 460, midGain: 2.6, presenceFreq: 3200, presenceGain: 4.8, highGain: 2.0, compressor: { threshold: -18, ratio: 3.8, attack: 0.008, release: 0.2 } }
   },
   {
     id: 'vn_nam_quanly_uyquyen',
@@ -890,14 +890,14 @@ dspProfile: { semitones: -4, rate: 1.0, lowGain: 7.8, midFreq: 360, midGain: 3.0
     ageGroup: 'middle',
     styleCategory: 'banhang',
     category: 'Giục Đơn Uy Quyền • Miền Nam',
-    pitch: 0.74,
-    rate: 1.12,
+    pitch: 0.96,
+    rate: 1.10,
     recommendedFor: 'manager',
-    desc: 'Giọng quản lý bán hàng uy quyền, thúc giục khán giả đặt hàng ngay.',
+    desc: 'Giọng quản lý bán hàng uy quyền, dứt khoát, thúc giục khán giả đặt hàng ngay.',
     sampleText: 'Bộ phận kho thông báo số lượng chỉ còn dưới 10 sản phẩm, quý khách nhanh tay hoàn tất đơn hàng ngay lập tức!',
-        edgePitch: '-12%',
+    edgePitch: '-2%',
     edgeRate: '+8%',
-dspProfile: { semitones: -2, rate: 1.12, lowGain: 6.8, midFreq: 460, midGain: 3.5, presenceFreq: 2300, presenceGain: 1.0, highGain: 1, compressor: { threshold: -22, ratio: 5.5, attack: 0.005, release: 0.16 } }
+    dspProfile: { semitones: -0.4, detune: -40, rate: 1.10, lowGain: 2.4, midFreq: 520, midGain: 3.0, presenceFreq: 3500, presenceGain: 5.2, highGain: 2.5, compressor: { threshold: -22, ratio: 5.0, attack: 0.004, release: 0.14 } }
   },
   {
     id: 'vn_nam_doanhnhan',
@@ -912,14 +912,14 @@ dspProfile: { semitones: -2, rate: 1.12, lowGain: 6.8, midFreq: 460, midGain: 3.
     ageGroup: 'middle',
     styleCategory: 'doanhnhan',
     category: 'Doanh Nhân & Giám Đốc • Miền Bắc',
-    pitch: 0.72,
-    rate: 1.02,
+    pitch: 0.95,
+    rate: 1.05,
     recommendedFor: 'manager',
     desc: 'Giọng giám đốc điều hành, doanh nhân thành đạt, đĩnh đạc và quyết đoán.',
     sampleText: 'Chiến lược đúng đắn và sự quyết đoán chính là chìa khóa mở ra cánh cửa thành công vượt bậc trong kinh doanh.',
-        edgePitch: '-16%',
-    edgeRate: '+0%',
-dspProfile: { semitones: -2.8, rate: 1.02, lowGain: 7.2, midFreq: 400, midGain: 3.8, presenceFreq: 2000, presenceGain: -1.0, highGain: -0.5, compressor: { threshold: -19, ratio: 4.2, attack: 0.01, release: 0.3 } }
+    edgePitch: '-3%',
+    edgeRate: '+4%',
+    dspProfile: { semitones: -0.5, detune: -50, rate: 1.05, lowGain: 2.5, midFreq: 480, midGain: 2.8, presenceFreq: 3300, presenceGain: 5.0, highGain: 2.2, compressor: { threshold: -20, ratio: 4.2, attack: 0.006, release: 0.18 } }
   },
   {
     id: 'vn_nam_quyong_lichlam',
@@ -934,14 +934,14 @@ dspProfile: { semitones: -2.8, rate: 1.02, lowGain: 7.2, midFreq: 400, midGain: 
     ageGroup: 'middle',
     styleCategory: 'doanhnhan',
     category: 'Sang Trọng & Thương Hiệu • Miền Nam',
-    pitch: 0.75,
-    rate: 1.04,
+    pitch: 0.96,
+    rate: 1.06,
     recommendedFor: 'idol',
     desc: 'Giọng nam quý phái, thanh lịch, phù hợp các sản phẩm cao cấp xa xỉ.',
     sampleText: 'Sự sang trọng tinh tế không nằm ở vẻ hào nhoáng, mà toát ra từ thần thái và đẳng cấp đích thực.',
-        edgePitch: '-8%',
-    edgeRate: '+6%',
-dspProfile: { semitones: -1.2, rate: 1.04, lowGain: 6, midFreq: 480, midGain: 2.8, presenceFreq: 2200, presenceGain: 0.0, highGain: 1.5, compressor: { threshold: -17, ratio: 3.5, attack: 0.012, release: 0.25 } }
+    edgePitch: '-2%',
+    edgeRate: '+5%',
+    dspProfile: { semitones: -0.4, detune: -40, rate: 1.06, lowGain: 2.2, midFreq: 500, midGain: 2.6, presenceFreq: 3400, presenceGain: 4.8, highGain: 2.4, compressor: { threshold: -19, ratio: 3.8, attack: 0.006, release: 0.18 } }
   },
   {
     id: 'vn_nam_mientay_bacthanh',
@@ -956,15 +956,15 @@ dspProfile: { semitones: -1.2, rate: 1.04, lowGain: 6, midFreq: 480, midGain: 2.
     ageGroup: 'elder',
     styleCategory: 'mientay',
     category: 'Miền Tây & Dân Dã',
-    pitch: 0.82,
-    rate: 0.84,
+    pitch: 0.94,
+    rate: 1.04,
     recommendedFor: 'both',
-    desc: 'Giọng chú Năm chân quê, bình dị, chất phác miền Tây sông nước.',
+    desc: 'Giọng chú Năm chân quê, bình dị, chất phác miền Tây sông nước, dõng dạc rõ chữ.',
     sampleText: 'Bà con cô bác ghé qua kênh livestream ủng hộ mấy món đặc sản miệt vườn quê mình nghen!',
-    edgePitch: '-28%',
-    edgeRate: '-16%',
+    edgePitch: '-4%',
+    edgeRate: '+4%',
     neuralVoice: 'vi-VN-NamMinhNeural',
-    dspProfile: { semitones: -5.0, rate: 0.84, lowGain: 8.5, midFreq: 450, midGain: 3.2, presenceFreq: 2200, presenceGain: 1.0, highGain: -3.0 }
+    dspProfile: { semitones: -0.7, detune: -70, rate: 1.04, lowGain: 2.6, midFreq: 480, midGain: 2.8, presenceFreq: 3200, presenceGain: 5.0, highGain: 2.0, compressor: { threshold: -19, ratio: 4.0, attack: 0.006, release: 0.18 } }
   }
 ];
 
@@ -1009,15 +1009,15 @@ export const VIETNAMESE_SALES_VOICES = [
     ageGroup: 'young',
     styleCategory: 'sales_services',
     category: 'Công Nghệ & Smartphone • Miền Nam',
-    pitch: 0.82,
+    pitch: 0.98,
     rate: 1.18,
     recommendedFor: 'both',
-    desc: 'Giọng nam Sài Gòn trẻ trung, tốc độ, am hiểu sâu về cấu hình gaming, iPhone, laptop, tai nghe chống ồn.',
+    desc: 'Giọng nam Sài Gòn trẻ trung, tốc độ, dõng dạc, am hiểu sâu về cấu hình gaming, iPhone, laptop, tai nghe chống ồn.',
     sampleText: 'Màn hình 120Hz siêu mượt, quất chip Snapdragon thế hệ mới cân mọi tựa game max setting mát rượi anh em ơi! Giá sale sốc độc quyền duy nhất phiên live tối nay, quẹo lựa quẹo lựa nha!',
-    edgePitch: '-8%',
+    edgePitch: '+4%',
     edgeRate: '+18%',
     neuralVoice: 'vi-VN-NamMinhNeural',
-    dspProfile: { semitones: -6.5, rate: 1.18, lowGain: 7.5, midFreq: 580, midGain: 3.8, presenceFreq: 2600, presenceGain: 1.5, highGain: -1.5 }
+    dspProfile: { semitones: 0.4, detune: 40, rate: 1.18, lowGain: 2.0, midFreq: 580, midGain: 3.2, presenceFreq: 3500, presenceGain: 5.4, highGain: 2.5 }
   },
   {
     id: 'vn_sales_chotdeal_livestream_nam',
@@ -1032,7 +1032,7 @@ export const VIETNAMESE_SALES_VOICES = [
     ageGroup: 'young',
     styleCategory: 'sales_services',
     category: 'Chốt Deal Livestream • Miền Nam',
-    pitch: 0.88,
+    pitch: 0.98,
     rate: 1.25,
     recommendedFor: 'manager',
     desc: 'Giọng nam Sài Gòn hối hả giục đơn, năng lượng bùng nổ, thúc đẩy người xem bấm nút mua hàng ngay tức thì.',
@@ -1040,7 +1040,7 @@ export const VIETNAMESE_SALES_VOICES = [
     edgePitch: '+8%',
     edgeRate: '+25%',
     neuralVoice: 'vi-VN-NamMinhNeural',
-    dspProfile: { semitones: -5.0, rate: 1.25, lowGain: 6.0, midFreq: 640, midGain: 4.2, presenceFreq: 2800, presenceGain: 3.0, highGain: 0.0 }
+    dspProfile: { semitones: 1.2, detune: 120, rate: 1.25, lowGain: 2.0, midFreq: 640, midGain: 3.8, presenceFreq: 3600, presenceGain: 5.6, highGain: 2.8 }
   },
   {
     id: 'vn_sales_mevabe_diudang',
@@ -1063,7 +1063,7 @@ export const VIETNAMESE_SALES_VOICES = [
     edgePitch: '+16%',
     edgeRate: '-2%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { semitones: 2.8, rate: 1.08, lowGain: -1.2, midFreq: 1280, midGain: 2.8, presenceFreq: 3750, presenceGain: 5.0, highGain: 3.8 }
+    dspProfile: { semitones: 2.8, detune: 280, rate: 1.08, lowGain: -1.2, midFreq: 1280, midGain: 2.8, presenceFreq: 3750, presenceGain: 5.0, highGain: 3.8 }
   },
   {
     id: 'vn_sales_thethao_fitness',
@@ -1078,15 +1078,15 @@ export const VIETNAMESE_SALES_VOICES = [
     ageGroup: 'young',
     styleCategory: 'sales_services',
     category: 'Thể Thao & Gym Fitness • Miền Nam',
-    pitch: 0.80,
-    rate: 1.22,
+    pitch: 0.96,
+    rate: 1.20,
     recommendedFor: 'both',
-    desc: 'Giọng nam HLV thể hình Sài Gòn tràn trề cơ bắp và năng lượng, tư vấn whey protein, creatine, máy tập.',
+    desc: 'Giọng nam HLV thể hình Sài Gòn tràn trề cơ bắp và năng lượng, dõng dạc, tư vấn whey protein, creatine, máy tập.',
     sampleText: 'Bứt phá giới hạn, siết cơ giảm mỡ cực đỉnh với dòng whey protein tinh khiết hấp thu siêu tốc anh em ơi! Uống vô là tràn trề sinh lực, đặt liền tay có quà nha!',
-    edgePitch: '-12%',
+    edgePitch: '+2%',
     edgeRate: '+16%',
     neuralVoice: 'vi-VN-NamMinhNeural',
-    dspProfile: { semitones: -6.2, rate: 1.22, lowGain: 8.0, midFreq: 620, midGain: 4.0, presenceFreq: 2450, presenceGain: 1.2, highGain: -2.0 }
+    dspProfile: { semitones: 0.4, detune: 40, rate: 1.20, lowGain: 2.4, midFreq: 600, midGain: 3.4, presenceFreq: 3400, presenceGain: 5.2, highGain: 2.5 }
   },
   {
     id: 'vn_sales_noithat_kientruc',
@@ -1101,15 +1101,15 @@ export const VIETNAMESE_SALES_VOICES = [
     ageGroup: 'middle',
     styleCategory: 'sales_services',
     category: 'Nội Thất & Kiến Trúc • Miền Nam',
-    pitch: 0.75,
-    rate: 1.02,
+    pitch: 0.94,
+    rate: 1.04,
     recommendedFor: 'both',
-    desc: 'Giọng nam kiến trúc sư trung niên 45 tuổi đĩnh đạc, tư vấn bàn ghế sofa da bò Ý, tủ gỗ óc chó tự nhiên và không gian sống đẳng cấp.',
+    desc: 'Giọng nam kiến trúc sư trung niên 45 tuổi đĩnh đạc, dõng dạc rõ chữ, tư vấn bàn ghế sofa da bò Ý, tủ gỗ óc chó tự nhiên và không gian sống đẳng cấp.',
     sampleText: 'Dạ nội thất gỗ óc chó tự nhiên nguyên khối gia công tỉ mỉ từng chi tiết, đường nét sang trọng kiến tạo không gian sống đẳng cấp cho tổ ấm của gia đình mình anh chị nha.',
-    edgePitch: '-16%',
-    edgeRate: '-2%',
+    edgePitch: '-4%',
+    edgeRate: '+4%',
     neuralVoice: 'vi-VN-NamMinhNeural',
-    dspProfile: { semitones: -7.5, rate: 1.02, lowGain: 9.0, midFreq: 460, midGain: 3.5, presenceFreq: 2150, presenceGain: -1.0, highGain: -3.5 }
+    dspProfile: { semitones: -0.7, detune: -70, rate: 1.04, lowGain: 2.6, midFreq: 480, midGain: 2.8, presenceFreq: 3300, presenceGain: 5.0, highGain: 2.2 }
   },
   {
     id: 'vn_sales_dongho_quyba_saigon',
@@ -1129,10 +1129,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'idol',
     desc: 'Giọng nữ quý bà thành đạt 48 tuổi đài các, sang trọng, am hiểu trang sức đá quý, kim cương và nước hoa niche cao cấp.',
     sampleText: 'Mùi hương nước hoa niche quý phái lưu hương trên 12 tiếng nè quý cô ơi, toát lên thần thái sang trọng, quyến rũ và đẳng cấp độc bản của người phụ nữ thành đạt nha.',
-    edgePitch: '-4%',
-    edgeRate: '-4%',
+    edgePitch: '+4%',
+    edgeRate: '+2%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { semitones: 0.8, rate: 0.98, lowGain: 1.5, midFreq: 1150, midGain: 2.2, presenceFreq: 3200, presenceGain: 3.2, highGain: 2.0 }
+    dspProfile: { semitones: 0.8, detune: 80, rate: 0.98, lowGain: 1.5, midFreq: 1150, midGain: 2.2, presenceFreq: 3400, presenceGain: 4.2, highGain: 2.5 }
   },
   {
     id: 'vn_sales_ongtu_saigon_xua',
@@ -1147,15 +1147,15 @@ export const VIETNAMESE_SALES_VOICES = [
     ageGroup: 'senior',
     styleCategory: 'sales_services',
     category: 'Sức Khỏe & Thảo Mộc Lão Niên • Miền Nam',
-    pitch: 0.68,
-    rate: 0.92,
+    pitch: 0.94,
+    rate: 1.04,
     recommendedFor: 'both',
-    desc: 'Giọng ông cụ 65 tuổi phúc hậu, từng trải, chân thành chia sẻ bài thuốc xương khớp gia truyền và trà thảo mộc dưỡng sinh.',
+    desc: 'Giọng ông cụ 65 tuổi phúc hậu, từng trải, dõng dạc rõ chữ, chân thành chia sẻ bài thuốc xương khớp gia truyền và trà thảo mộc dưỡng sinh.',
     sampleText: 'Bà con mình ai đau lưng mỏi gối, đi đứng khó khăn thì uống thảo dược gia truyền này mỗi tối nghen, khí huyết lưu thông, ngủ một mạch tới sáng khỏe re bà con nha!',
-    edgePitch: '-24%',
-    edgeRate: '-14%',
+    edgePitch: '-4%',
+    edgeRate: '+4%',
     neuralVoice: 'vi-VN-NamMinhNeural',
-    dspProfile: { semitones: -9.0, rate: 0.92, lowGain: 10.5, midFreq: 380, midGain: 4.0, presenceFreq: 1800, presenceGain: -2.0, highGain: -5.0 }
+    dspProfile: { semitones: -0.7, detune: -70, rate: 1.04, lowGain: 2.8, midFreq: 460, midGain: 2.8, presenceFreq: 3300, presenceGain: 5.0, highGain: 2.0 }
   },
 
   // ==========================================
@@ -1182,7 +1182,7 @@ export const VIETNAMESE_SALES_VOICES = [
     edgePitch: '+18%',
     edgeRate: '+6%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { semitones: 3.2, rate: 1.10, lowGain: -1.5, midFreq: 1350, midGain: 3.0, presenceFreq: 4100, presenceGain: 5.8, highGain: 4.8 }
+    dspProfile: { semitones: 3.2, detune: 320, rate: 1.10, lowGain: -1.5, midFreq: 1350, midGain: 3.0, presenceFreq: 4100, presenceGain: 5.8, highGain: 4.8 }
   },
   {
     id: 'vn_sales_oto_xediahinh',
@@ -1197,15 +1197,15 @@ export const VIETNAMESE_SALES_VOICES = [
     ageGroup: 'young',
     styleCategory: 'sales_services',
     category: 'Ô Tô & Xe Sang • Miền Bắc',
-    pitch: 0.84,
-    rate: 1.14,
+    pitch: 0.96,
+    rate: 1.12,
     recommendedFor: 'both',
-    desc: 'Giọng nam Hà Nội tự tin, am hiểu xe hơi, phụ kiện camera hành trình 4K, phim cách nhiệt và đồ chơi xe sang.',
+    desc: 'Giọng nam Hà Nội tự tin, dõng dạc, am hiểu xe hơi, phụ kiện camera hành trình 4K, phim cách nhiệt và đồ chơi xe sang.',
     sampleText: 'Trang bị camera hành trình 4K quay đêm siêu nét, tích hợp cảnh báo giao thông giọng nói thông minh, các bác tài lái xe đường dài cứ gọi là an tâm tuyệt đối nhé!',
-    edgePitch: '-6%',
+    edgePitch: '+0%',
     edgeRate: '+10%',
     neuralVoice: 'vi-VN-NamMinhNeural',
-    dspProfile: { semitones: -5.8, rate: 1.14, lowGain: 7.0, midFreq: 600, midGain: 3.5, presenceFreq: 2500, presenceGain: 1.8, highGain: -1.0 }
+    dspProfile: { semitones: 0.0, detune: 0, rate: 1.12, lowGain: 2.2, midFreq: 540, midGain: 3.0, presenceFreq: 3400, presenceGain: 5.0, highGain: 2.2 }
   },
   {
     id: 'vn_sales_bds_trieudo',
@@ -1220,15 +1220,15 @@ export const VIETNAMESE_SALES_VOICES = [
     ageGroup: 'middle',
     styleCategory: 'sales_services',
     category: 'Bất Động Sản Triệu Đô • Miền Bắc',
-    pitch: 0.76,
-    rate: 1.00,
+    pitch: 0.95,
+    rate: 1.04,
     recommendedFor: 'both',
-    desc: 'Giọng nam chuyên gia bất động sản 42 tuổi trầm ấm, uy lực, tạo niềm tin lớn cho các thương vụ biệt thự triệu đô.',
+    desc: 'Giọng nam chuyên gia bất động sản 42 tuổi trầm ấm, uy lực, dõng dạc, tạo niềm tin lớn cho các thương vụ biệt thự triệu đô.',
     sampleText: 'Vị trí kim cương trung tâm đắc địa, pháp lý minh bạch sổ đỏ trao tay, tiềm năng sinh lời và tăng giá vượt trội cho các nhà đầu tư thông thái thưa quý vị.',
-    edgePitch: '-14%',
-    edgeRate: '-6%',
+    edgePitch: '-3%',
+    edgeRate: '+4%',
     neuralVoice: 'vi-VN-NamMinhNeural',
-    dspProfile: { semitones: -7.2, rate: 1.00, lowGain: 8.5, midFreq: 480, midGain: 3.6, presenceFreq: 2300, presenceGain: 0.5, highGain: -2.5 }
+    dspProfile: { semitones: -0.5, detune: -50, rate: 1.04, lowGain: 2.5, midFreq: 490, midGain: 2.8, presenceFreq: 3400, presenceGain: 5.0, highGain: 2.2 }
   },
   {
     id: 'vn_sales_bacsi_duocpham',
@@ -1243,15 +1243,15 @@ export const VIETNAMESE_SALES_VOICES = [
     ageGroup: 'middle',
     styleCategory: 'sales_services',
     category: 'Dược Phẩm & Y Khoa • Miền Bắc',
-    pitch: 0.74,
+    pitch: 0.95,
     rate: 1.04,
     recommendedFor: 'both',
-    desc: 'Giọng nam bác sĩ chuyên khoa điềm đạm, khoa học, tạo niềm tin tuyệt đối cho người mua hàng.',
+    desc: 'Giọng nam bác sĩ chuyên khoa điềm đạm, khoa học, dõng dạc rõ từng câu chữ, tạo niềm tin tuyệt đối cho người mua hàng.',
     sampleText: 'Sản phẩm đạt chuẩn GMP của Bộ Y Tế, thành phần chiết xuất tự nhiên lành tính giúp tăng cường sức đề kháng và bảo vệ sức khỏe toàn diện cho cả gia đình thưa các bác.',
-    edgePitch: '-12%',
-    edgeRate: '+0%',
+    edgePitch: '-3%',
+    edgeRate: '+4%',
     neuralVoice: 'vi-VN-NamMinhNeural',
-    dspProfile: { semitones: -7.8, rate: 1.04, lowGain: 9.0, midFreq: 450, midGain: 3.6, presenceFreq: 2200, presenceGain: -1.0, highGain: -3.5 }
+    dspProfile: { semitones: -0.6, detune: -60, rate: 1.04, lowGain: 2.4, midFreq: 470, midGain: 2.8, presenceFreq: 3300, presenceGain: 5.2, highGain: 2.4 }
   },
   {
     id: 'vn_sales_phongthuy_tramhuong',
@@ -1271,10 +1271,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng nữ đằm thắm, sang trọng, tư vấn vòng tay trầm hương, ngọc bích, vàng bạc chiêu tài hút lộc.',
     sampleText: 'Trầm hương tự nhiên tích tụ linh khí đất trời, mang lại vượng khí bình an và may mắn tài lộc cho chủ nhân sở hữu, kính mời các anh chị chiêm ngưỡng ạ.',
-    edgePitch: '-4%',
-    edgeRate: '-8%',
+    edgePitch: '+4%',
+    edgeRate: '+0%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { semitones: 1.2, rate: 1.04, lowGain: 0.8, midFreq: 1080, midGain: 2.4, presenceFreq: 3300, presenceGain: 3.8, highGain: 2.5 }
+    dspProfile: { semitones: 1.0, detune: 100, rate: 1.04, lowGain: 0.8, midFreq: 1080, midGain: 2.4, presenceFreq: 3400, presenceGain: 4.2, highGain: 2.8 }
   },
   {
     id: 'vn_sales_giadung_thongminh',
@@ -1297,7 +1297,7 @@ export const VIETNAMESE_SALES_VOICES = [
     edgePitch: '+18%',
     edgeRate: '+8%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { semitones: 3.4, rate: 1.12, lowGain: -1.6, midFreq: 1380, midGain: 3.0, presenceFreq: 4150, presenceGain: 5.6, highGain: 4.6 }
+    dspProfile: { semitones: 3.4, detune: 340, rate: 1.12, lowGain: -1.6, midFreq: 1380, midGain: 3.0, presenceFreq: 4150, presenceGain: 5.6, highGain: 4.6 }
   },
   {
     id: 'vn_sales_cuong_traco',
@@ -1312,15 +1312,15 @@ export const VIETNAMESE_SALES_VOICES = [
     ageGroup: 'senior',
     styleCategory: 'sales_services',
     category: 'Trà Đạo & Gốm Sứ Cổ Truyền • Miền Bắc',
-    pitch: 0.65,
-    rate: 0.90,
+    pitch: 0.93,
+    rate: 1.02,
     recommendedFor: 'both',
-    desc: 'Giọng cụ ông 68 tuổi trầm ấm, đượm nét văn hóa kinh kỳ, am hiểu sâu sắc về nghệ thuật thưởng trà và gốm sứ cổ.',
+    desc: 'Giọng cụ ông 68 tuổi trầm ấm, đượm nét văn hóa kinh kỳ, dõng dạc rõ chữ, am hiểu sâu sắc về nghệ thuật thưởng trà và gốm sứ cổ.',
     sampleText: 'Búp trà Shan tuyết cổ thụ ngậm sương non trên đỉnh Tây Côn Lĩnh, hương thơm thanh khiết tiền chát hậu ngọt lắng sâu, kính mời các bác cùng đàm đạo thưởng trà ạ.',
-    edgePitch: '-26%',
-    edgeRate: '-16%',
+    edgePitch: '-5%',
+    edgeRate: '+3%',
     neuralVoice: 'vi-VN-NamMinhNeural',
-    dspProfile: { semitones: -9.5, rate: 0.90, lowGain: 11.0, midFreq: 360, midGain: 4.2, presenceFreq: 1750, presenceGain: -2.5, highGain: -5.5 }
+    dspProfile: { semitones: -0.8, detune: -80, rate: 1.02, lowGain: 2.8, midFreq: 450, midGain: 2.8, presenceFreq: 3300, presenceGain: 5.0, highGain: 2.0 }
   },
   {
     id: 'vn_sales_baphuong_dongy',
@@ -1335,15 +1335,15 @@ export const VIETNAMESE_SALES_VOICES = [
     ageGroup: 'senior',
     styleCategory: 'sales_services',
     category: 'Đặc Sản Cổ Truyền Lão Niên • Miền Bắc',
-    pitch: 0.96,
-    rate: 0.92,
+    pitch: 0.98,
+    rate: 1.00,
     recommendedFor: 'idol',
-    desc: 'Giọng bà cụ 66 tuổi phúc hậu, từ tốn, tư vấn bột sắn ướp hoa bưởi, ô mai Hàng Đường gia truyền chuẩn vị phố cổ.',
+    desc: 'Giọng bà cụ 66 tuổi phúc hậu, từ tốn, ấm áp rõ ràng, tư vấn bột sắn ướp hoa bưởi, ô mai Hàng Đường gia truyền chuẩn vị phố cổ.',
     sampleText: 'Bột sắn dây nguyên chất ướp hương hoa bưởi thanh mát, mùa hè khuấy một bát giải nhiệt, thanh lọc cơ thể rất tốt cho sức khỏe các bác và các cháu nhé.',
-    edgePitch: '-10%',
-    edgeRate: '-12%',
+    edgePitch: '+2%',
+    edgeRate: '+2%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { semitones: -0.8, rate: 0.92, lowGain: 3.5, midFreq: 920, midGain: 2.0, presenceFreq: 2800, presenceGain: 2.0, highGain: 0.5 }
+    dspProfile: { semitones: 0.4, detune: 40, rate: 1.00, lowGain: 2.2, midFreq: 950, midGain: 2.2, presenceFreq: 3200, presenceGain: 4.2, highGain: 2.0 }
   },
 
   // ==========================================
@@ -1370,7 +1370,7 @@ export const VIETNAMESE_SALES_VOICES = [
     edgePitch: '+12%',
     edgeRate: '-2%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { semitones: 2.2, rate: 1.02, lowGain: -0.5, midFreq: 1250, midGain: 2.6, presenceFreq: 3800, presenceGain: 4.8, highGain: 3.6 }
+    dspProfile: { semitones: 2.2, detune: 220, rate: 1.02, lowGain: -0.5, midFreq: 1250, midGain: 2.6, presenceFreq: 3800, presenceGain: 4.8, highGain: 3.6 }
   },
   {
     id: 'vn_sales_dulich_resort',
@@ -1393,7 +1393,7 @@ export const VIETNAMESE_SALES_VOICES = [
     edgePitch: '+16%',
     edgeRate: '+8%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { semitones: 3.0, rate: 1.12, lowGain: -1.2, midFreq: 1320, midGain: 2.8, presenceFreq: 3950, presenceGain: 5.2, highGain: 4.2 }
+    dspProfile: { semitones: 3.0, detune: 300, rate: 1.12, lowGain: -1.2, midFreq: 1320, midGain: 2.8, presenceFreq: 3950, presenceGain: 5.2, highGain: 4.2 }
   },
   {
     id: 'vn_sales_haisan_danang',
@@ -1408,15 +1408,15 @@ export const VIETNAMESE_SALES_VOICES = [
     ageGroup: 'young',
     styleCategory: 'sales_services',
     category: 'Hải Sản & Đặc Sản Biển • Miền Trung',
-    pitch: 0.85,
-    rate: 1.16,
+    pitch: 0.96,
+    rate: 1.14,
     recommendedFor: 'both',
-    desc: 'Giọng nam Đà Nẵng khỏe khoắn, hào sảng miền biển, tư vấn mực một nắng, chả bò cây nguyên chất và tôm cá tươi.',
+    desc: 'Giọng nam Đà Nẵng khỏe khoắn, hào sảng miền biển, dõng dạc, tư vấn mực một nắng, chả bò cây nguyên chất và tôm cá tươi.',
     sampleText: 'Chả bò Đà Nẵng loại 1 nguyên chất 100% không hàn the, thơm lừng mùi tiêu sọ, cắn ngập răng giòn sần sật bao ngon bao chuẩn vị miền Trung nì anh em ơi!',
-    edgePitch: '-4%',
+    edgePitch: '+2%',
     edgeRate: '+14%',
     neuralVoice: 'vi-VN-NamMinhNeural',
-    dspProfile: { semitones: -5.5, rate: 1.16, lowGain: 6.8, midFreq: 620, midGain: 3.6, presenceFreq: 2550, presenceGain: 2.0, highGain: -0.8 }
+    dspProfile: { semitones: 0.4, detune: 40, rate: 1.14, lowGain: 2.2, midFreq: 600, midGain: 3.4, presenceFreq: 3450, presenceGain: 5.2, highGain: 2.5 }
   },
   {
     id: 'vn_sales_giochame_nghean',
@@ -1431,15 +1431,15 @@ export const VIETNAMESE_SALES_VOICES = [
     ageGroup: 'middle',
     styleCategory: 'sales_services',
     category: 'Đặc Sản Xứ Nghệ • Miền Trung',
-    pitch: 0.78,
-    rate: 1.04,
+    pitch: 0.95,
+    rate: 1.06,
     recommendedFor: 'both',
-    desc: 'Giọng nam xứ Nghệ chân tình, mộc mạc, chất phác, tư vấn giò bê Nam Đàn, tương Sa Nam và kẹo cu đơ Hà Tĩnh.',
+    desc: 'Giọng nam xứ Nghệ chân tình, dõng dạc, rõ chữ, mộc mạc chất phác, tư vấn giò bê Nam Đàn, tương Sa Nam và kẹo cu đơ Hà Tĩnh.',
     sampleText: 'Giò me Nam Đàn thịt bê tươi mềm ngọt tự nhiên, bì giòn thơm phức tiêu rừng, làm mồi nhậu hay quà biếu tết thì ngon hết ý bà con xứ Nghệ mình ơi!',
-    edgePitch: '-10%',
-    edgeRate: '+0%',
+    edgePitch: '-3%',
+    edgeRate: '+5%',
     neuralVoice: 'vi-VN-NamMinhNeural',
-    dspProfile: { semitones: -6.8, rate: 1.04, lowGain: 8.0, midFreq: 500, midGain: 3.4, presenceFreq: 2350, presenceGain: 0.8, highGain: -2.0 }
+    dspProfile: { semitones: -0.5, detune: -50, rate: 1.06, lowGain: 2.5, midFreq: 510, midGain: 3.0, presenceFreq: 3350, presenceGain: 5.0, highGain: 2.2 }
   },
   {
     id: 'vn_sales_thaylang_quangnam',
@@ -1454,15 +1454,15 @@ export const VIETNAMESE_SALES_VOICES = [
     ageGroup: 'senior',
     styleCategory: 'sales_services',
     category: 'Thảo Dược Dân Gian Lão Niên • Miền Trung',
-    pitch: 0.68,
-    rate: 0.94,
+    pitch: 0.93,
+    rate: 1.02,
     recommendedFor: 'both',
-    desc: 'Giọng thầy lang cao tuổi xứ Huế điềm đạm, ấm cúng, tư vấn tinh dầu tràm nguyên chất, cao xoa bóp thảo dược bí truyền.',
+    desc: 'Giọng thầy lang cao tuổi xứ Huế điềm đạm, ấm cúng, dõng dạc rõ chữ, tư vấn tinh dầu tràm nguyên chất, cao xoa bóp thảo dược bí truyền.',
     sampleText: 'Dầu tràm Huế nguyên chất nấu thủ công giữ trọn tinh dầu tràm gió, giữ ấm cho mẹ và bé, xoa bóp đau nhức xương khớp công hiệu vô cùng thưa bà con nì.',
-    edgePitch: '-22%',
-    edgeRate: '-12%',
+    edgePitch: '-5%',
+    edgeRate: '+3%',
     neuralVoice: 'vi-VN-NamMinhNeural',
-    dspProfile: { semitones: -8.8, rate: 0.94, lowGain: 10.0, midFreq: 400, midGain: 3.8, presenceFreq: 1900, presenceGain: -1.5, highGain: -4.5 }
+    dspProfile: { semitones: -0.8, detune: -80, rate: 1.02, lowGain: 2.8, midFreq: 450, midGain: 2.8, presenceFreq: 3300, presenceGain: 5.0, highGain: 2.0 }
   },
   {
     id: 'vn_sales_yensao_quangnam',
@@ -1482,10 +1482,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'idol',
     desc: 'Giọng nữ trung niên 52 tuổi ấm áp, phúc hậu xứ Quảng, tư vấn tổ yến tinh chế, yến rút lông nguyên tổ và sâm Ngọc Linh đại bổ.',
     sampleText: 'Tổ yến đảo thiên nhiên nguyên chất sợi yến dai nở nhiều nì, giàu protein và khoáng chất bồi bổ sức khỏe cho cha mẹ, bà con đặt hàng kiểm tra ưng ý mới thanh toán nì.',
-    edgePitch: '-2%',
-    edgeRate: '-6%',
+    edgePitch: '+4%',
+    edgeRate: '+0%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { semitones: 1.0, rate: 0.98, lowGain: 1.2, midFreq: 1100, midGain: 2.4, presenceFreq: 3300, presenceGain: 3.5, highGain: 2.2 }
+    dspProfile: { semitones: 0.8, detune: 80, rate: 0.98, lowGain: 1.2, midFreq: 1100, midGain: 2.4, presenceFreq: 3350, presenceGain: 4.2, highGain: 2.5 }
   },
 
   // ==========================================
@@ -1512,7 +1512,7 @@ export const VIETNAMESE_SALES_VOICES = [
     edgePitch: '+20%',
     edgeRate: '+8%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { semitones: 3.5, rate: 1.10, lowGain: -1.8, midFreq: 1400, midGain: 3.2, presenceFreq: 4200, presenceGain: 6.0, highGain: 5.0 }
+    dspProfile: { semitones: 3.5, detune: 350, rate: 1.10, lowGain: -1.8, midFreq: 1400, midGain: 3.2, presenceFreq: 4200, presenceGain: 6.0, highGain: 5.0 }
   },
   {
     id: 'vn_sales_khoca_mientay',
@@ -1527,15 +1527,15 @@ export const VIETNAMESE_SALES_VOICES = [
     ageGroup: 'young',
     styleCategory: 'sales_services',
     category: 'Đặc Sản Khô & Mắm • Miền Tây',
-    pitch: 0.82,
+    pitch: 0.96,
     rate: 1.14,
     recommendedFor: 'both',
-    desc: 'Giọng nam miền Tây chân chất, rộn ràng tiếng cười, tư vấn khô cá lóc đồng, mắm cá linh, mắm tép xịn xò.',
+    desc: 'Giọng nam miền Tây chân chất, rộn ràng tiếng cười, dõng dạc, tư vấn khô cá lóc đồng, mắm cá linh, mắm tép xịn xò.',
     sampleText: 'Khô cá lóc đồng miền Tây ướp vừa ăn, phơi đủ ba nắng vàng ươm, nướng lên chấm mắm me cay ngọt thì nhức nách luôn á anh em ơi, quẹo lựa nghen!',
-    edgePitch: '-8%',
+    edgePitch: '+0%',
     edgeRate: '+12%',
     neuralVoice: 'vi-VN-NamMinhNeural',
-    dspProfile: { semitones: -6.0, rate: 1.14, lowGain: 7.2, midFreq: 590, midGain: 3.6, presenceFreq: 2500, presenceGain: 1.6, highGain: -1.2 }
+    dspProfile: { semitones: 0.0, detune: 0, rate: 1.14, lowGain: 2.2, midFreq: 590, midGain: 3.2, presenceFreq: 3450, presenceGain: 5.0, highGain: 2.4 }
   },
   {
     id: 'vn_sales_banhpia_soctrang',
@@ -1558,7 +1558,7 @@ export const VIETNAMESE_SALES_VOICES = [
     edgePitch: '+22%',
     edgeRate: '+6%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { semitones: 3.8, rate: 1.08, lowGain: -2.0, midFreq: 1450, midGain: 3.2, presenceFreq: 4300, presenceGain: 6.2, highGain: 5.2 }
+    dspProfile: { semitones: 3.8, detune: 380, rate: 1.08, lowGain: -2.0, midFreq: 1450, midGain: 3.2, presenceFreq: 4300, presenceGain: 6.2, highGain: 5.2 }
   },
   {
     id: 'vn_sales_matong_dongthap',
@@ -1573,15 +1573,15 @@ export const VIETNAMESE_SALES_VOICES = [
     ageGroup: 'middle',
     styleCategory: 'sales_services',
     category: 'Mật Ong & Nông Sản Sạch • Miền Tây',
-    pitch: 0.74,
-    rate: 1.00,
+    pitch: 0.94,
+    rate: 1.04,
     recommendedFor: 'both',
-    desc: 'Giọng bác Ba 54 tuổi mộc mạc đậm chất nông dân Đồng Tháp, tư vấn mật ong hoa tràm nguyên chất, hạt sen tươi sấy giòn.',
+    desc: 'Giọng bác Ba 54 tuổi mộc mạc đậm chất nông dân Đồng Tháp, dõng dạc rõ chữ, tư vấn mật ong hoa tràm nguyên chất, hạt sen tươi sấy giòn.',
     sampleText: 'Mật ong rừng tràm U Minh nguyên chất vàng sánh, thơm lừng mùi hoa tràm tự nhiên, bồi bổ sức khỏe cho người lớn tuổi và trẻ nhỏ rất tốt nghen bà con cô bác mình.',
-    edgePitch: '-16%',
-    edgeRate: '-4%',
+    edgePitch: '-4%',
+    edgeRate: '+4%',
     neuralVoice: 'vi-VN-NamMinhNeural',
-    dspProfile: { semitones: -7.6, rate: 1.00, lowGain: 8.8, midFreq: 460, midGain: 3.5, presenceFreq: 2200, presenceGain: 0.0, highGain: -3.0 }
+    dspProfile: { semitones: -0.7, detune: -70, rate: 1.04, lowGain: 2.6, midFreq: 470, midGain: 2.8, presenceFreq: 3300, presenceGain: 5.0, highGain: 2.2 }
   },
   {
     id: 'vn_sales_cuabien_camau',
@@ -1601,10 +1601,10 @@ export const VIETNAMESE_SALES_VOICES = [
     recommendedFor: 'both',
     desc: 'Giọng cô Ba 49 tuổi hào sảng, xởi lởi, nhiệt tình, tư vấn cua gạch Năm Căn chắc nịch, tôm khô đất sinh thái cao cấp.',
     sampleText: 'Cua gạch Năm Căn chính gốc Cà Mau thịt chắc ngọt lịm gạch son đầy ắp nè, bao trói dây không trọng lượng, nhận hàng mở ra kiểm tra thoải mái nghen bà con!',
-    edgePitch: '+0%',
-    edgeRate: '+0%',
+    edgePitch: '+6%',
+    edgeRate: '+2%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { semitones: 1.5, rate: 1.02, lowGain: 0.5, midFreq: 1180, midGain: 2.6, presenceFreq: 3400, presenceGain: 4.0, highGain: 2.8 }
+    dspProfile: { semitones: 1.2, detune: 120, rate: 1.02, lowGain: 0.5, midFreq: 1180, midGain: 2.6, presenceFreq: 3450, presenceGain: 4.5, highGain: 2.8 }
   },
   {
     id: 'vn_sales_gao_st25_angiang',
@@ -1619,15 +1619,15 @@ export const VIETNAMESE_SALES_VOICES = [
     ageGroup: 'senior',
     styleCategory: 'sales_services',
     category: 'Gạo Ngon & Nông Sản Lão Nông • Miền Tây',
-    pitch: 0.66,
-    rate: 0.90,
+    pitch: 0.93,
+    rate: 1.02,
     recommendedFor: 'both',
-    desc: 'Giọng lão nông 67 tuổi thật thà, đôn hậu xứ Bảy Núi An Giang, tư vấn gạo ngon nhất thế giới ST25 và mắm cá lóc Châu Đốc.',
+    desc: 'Giọng lão nông 67 tuổi thật thà, đôn hậu xứ Bảy Núi An Giang, dõng dạc rõ chữ, tư vấn gạo ngon nhất thế giới ST25 và mắm cá lóc Châu Đốc.',
     sampleText: 'Gạo ST25 chính gốc hạt dài trắng trong, cơm dẻo thơm phức mùi lá dứa tự nhiên, để nguội vẫn mềm ngon chuẩn vị lúa thơm miệt vườn nghen con cháu mình.',
-    edgePitch: '-25%',
-    edgeRate: '-15%',
+    edgePitch: '-5%',
+    edgeRate: '+3%',
     neuralVoice: 'vi-VN-NamMinhNeural',
-    dspProfile: { semitones: -9.2, rate: 0.90, lowGain: 10.8, midFreq: 370, midGain: 4.0, presenceFreq: 1800, presenceGain: -2.0, highGain: -5.0 }
+    dspProfile: { semitones: -0.8, detune: -80, rate: 1.02, lowGain: 2.8, midFreq: 450, midGain: 2.8, presenceFreq: 3300, presenceGain: 5.0, highGain: 2.0 }
   },
   {
     id: 'vn_sales_mutduanon_tiengiang',
@@ -1643,14 +1643,14 @@ export const VIETNAMESE_SALES_VOICES = [
     styleCategory: 'sales_services',
     category: 'Mứt Quê & Bánh Mứt Lão Niên • Miền Tây',
     pitch: 0.98,
-    rate: 0.90,
+    rate: 1.00,
     recommendedFor: 'both',
-    desc: 'Giọng bà ngoại 68 tuổi ân cần, ấm áp hiền từ, tư vấn mứt dừa non sên tay lá dứa, kẹo chuối gừng truyền thống đậm đà tình quê.',
+    desc: 'Giọng bà ngoại 68 tuổi ân cần, ấm áp hiền từ, rõ ràng, tư vấn mứt dừa non sên tay lá dứa, kẹo chuối gừng truyền thống đậm đà tình quê.',
     sampleText: 'Mứt dừa non làm từ cơm dừa dẻo mềm sên đường phèn ít ngọt, nhai dẻo béo ngậy thơm lừng mùi lá dứa quê nhà, ăn hoài hổng thấy ngán đâu nghen con cháu.',
-    edgePitch: '-8%',
-    edgeRate: '-14%',
+    edgePitch: '+2%',
+    edgeRate: '+0%',
     neuralVoice: 'vi-VN-HoaiMyNeural',
-    dspProfile: { semitones: -0.5, rate: 0.90, lowGain: 3.0, midFreq: 950, midGain: 2.2, presenceFreq: 2900, presenceGain: 2.2, highGain: 0.8 }
+    dspProfile: { semitones: 0.4, detune: 40, rate: 1.00, lowGain: 2.0, midFreq: 950, midGain: 2.2, presenceFreq: 3200, presenceGain: 4.2, highGain: 2.0 }
   },
   {
     id: 'vn_sales_buoidaxanh_vinhlong',
@@ -1665,15 +1665,15 @@ export const VIETNAMESE_SALES_VOICES = [
     ageGroup: 'middle',
     styleCategory: 'sales_services',
     category: 'Bưởi Da Xanh & Cây Trái • Miền Tây',
-    pitch: 0.73,
-    rate: 1.02,
+    pitch: 0.94,
+    rate: 1.04,
     recommendedFor: 'both',
-    desc: 'Giọng chú Sáu 52 tuổi chủ vườn bưởi Vĩnh Long cởi mở, chân chất, cam kết bưởi da xanh múi hồng mọng nước ngọt thanh không hạt.',
+    desc: 'Giọng chú Sáu 52 tuổi chủ vườn bưởi Vĩnh Long cởi mở, chân chất, dõng dạc rõ chữ, cam kết bưởi da xanh múi hồng mọng nước ngọt thanh không hạt.',
     sampleText: 'Bưởi da xanh hái tận vườn tép bưởi mọng nước ngọt thanh ráo trọi, bao ngọt lịm từng múi, đặt hàng hôm nay nhà vườn chú Sáu ship tận nơi nghen bà con cô bác!',
-    edgePitch: '-15%',
-    edgeRate: '+0%',
+    edgePitch: '-4%',
+    edgeRate: '+4%',
     neuralVoice: 'vi-VN-NamMinhNeural',
-    dspProfile: { semitones: -7.8, rate: 1.02, lowGain: 9.0, midFreq: 450, midGain: 3.5, presenceFreq: 2200, presenceGain: -0.5, highGain: -3.2 }
+    dspProfile: { semitones: -0.7, detune: -70, rate: 1.04, lowGain: 2.6, midFreq: 460, midGain: 2.8, presenceFreq: 3300, presenceGain: 5.0, highGain: 2.2 }
   }
 ];
 
@@ -1693,12 +1693,12 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "20-24",
     "styleCategory": "banhang",
     "category": "Bán Hàng & Chốt Deal",
-    "pitch": 1.06,
-    "rate": 1.04,
+    "pitch": 1.16,
+    "rate": 1.06,
     "recommendedFor": "both",
     "desc": "Giọng nữ miền Nam 20-24t ngọt ngào, tươi sáng, mở âm nụ cười thu hút ngay từ từ đầu tiên, chốt đơn tự nhiên và dễ mến.",
     "sampleText": "Dạ em chào cả nhà mình nha! Hôm nay em mang đến một bất ngờ siêu ngọt ngào luôn nè, ai chốt đơn liền tay trên live là có quà xịn liền nha!",
-    "edgePitch": "+20%",
+    "edgePitch": "+32%",
     "edgeRate": "+14%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
@@ -1760,9 +1760,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": -0.5,
       "midFreq": 1350,
       "midGain": 2.8,
-      "presenceFreq": 4200,
-      "presenceGain": 5.2,
-      "highGain": 3.8,
+      "presenceFreq": 4600,
+      "presenceGain": 6.2,
+      "highGain": 5.2,
       "reverb": 0.05,
       "reverbDecay": 0.32,
       "compressor": {
@@ -1770,7 +1770,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 3.8,
         "attack": 0.005,
         "release": 0.15
-      }
+      },
+      "semitones": 4.2,
+      "detune": 420
     }
   },
   {
@@ -1787,8 +1789,8 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "20-24",
     "styleCategory": "banhang",
     "category": "Bán Hàng & Chốt Deal",
-    "pitch": 1.08,
-    "rate": 1.12,
+    "pitch": 1.12,
+    "rate": 1.15,
     "recommendedFor": "both",
     "desc": "Giọng nữ Bắc trẻ cực kỳ nhanh nhạy, phụ âm bật sắc nét, năng lượng bùng nổ xử lý mọi tương tác bình luận trong chớp mắt.",
     "sampleText": "Chào mừng các bác đã ghé livestream của em! Deal độc quyền giá sốc chỉ mở đúng trong 60 giây thôi, các bác nhanh tay bấm mua ngay kẻo lỡ nha!",
@@ -1856,7 +1858,7 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "midGain": 3.2,
       "presenceFreq": 4400,
       "presenceGain": 5.8,
-      "highGain": 4.2,
+      "highGain": 4.6,
       "reverb": 0.04,
       "reverbDecay": 0.24,
       "compressor": {
@@ -1864,7 +1866,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 4.5,
         "attack": 0.003,
         "release": 0.12
-      }
+      },
+      "semitones": 2.8,
+      "detune": 280
     }
   },
   {
@@ -1881,12 +1885,12 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "20-24",
     "styleCategory": "banhang",
     "category": "Bán Hàng & Chốt Deal",
-    "pitch": 1.11,
-    "rate": 1.02,
+    "pitch": 1.22,
+    "rate": 1.04,
     "recommendedFor": "both",
     "desc": "Giọng nữ trẻ dễ thương tự nhiên, không làm nũng giả tạo, âm hơi nhẹ nhàng tạo cảm giác cưng xỉu cho sản phẩm phụ kiện, thời trang.",
     "sampleText": "Hihi chiếc áo này xinh xỉu luôn á mọi người ơi! Mặc lên tôn dáng cực kỳ, nhìn là mê liền luôn đó nha!",
-    "edgePitch": "+26%",
+    "edgePitch": "+36%",
     "edgeRate": "+12%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
@@ -1949,8 +1953,8 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "midFreq": 1600,
       "midGain": 3,
       "presenceFreq": 4800,
-      "presenceGain": 6,
-      "highGain": 4.6,
+      "presenceGain": 6.5,
+      "highGain": 5.5,
       "reverb": 0.06,
       "reverbDecay": 0.32,
       "compressor": {
@@ -1958,7 +1962,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 3.5,
         "attack": 0.005,
         "release": 0.16
-      }
+      },
+      "semitones": 4.8,
+      "detune": 480
     }
   },
   {
@@ -1975,13 +1981,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "20-24",
     "styleCategory": "banhang",
     "category": "Bán Hàng & Chốt Deal",
-    "pitch": 1.07,
-    "rate": 1.09,
+    "pitch": 1.1,
+    "rate": 1.12,
     "recommendedFor": "both",
     "desc": "Giọng nữ livestream chuyên nghiệp, tương phản âm lượng và nhịp điệu đỉnh cao, kéo view giữ chân từ đầu tới cuối phiên.",
     "sampleText": "Cả nhà mình ơi bấm tim liên tục giúp em nha! Chuẩn bị đếm ngược 3 giây để mở kho 50 suất giảm nửa giá đây ạ!",
-    "edgePitch": "+19%",
-    "edgeRate": "+21%",
+    "edgePitch": "+20%",
+    "edgeRate": "+22%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -2044,7 +2050,7 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "midGain": 3.2,
       "presenceFreq": 4300,
       "presenceGain": 5.6,
-      "highGain": 4.2,
+      "highGain": 4.4,
       "reverb": 0.05,
       "reverbDecay": 0.28,
       "compressor": {
@@ -2052,7 +2058,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 4.2,
         "attack": 0.004,
         "release": 0.14
-      }
+      },
+      "semitones": 2.5,
+      "detune": 250
     }
   },
   {
@@ -2069,12 +2077,12 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "20-24",
     "styleCategory": "banhang",
     "category": "Bán Hàng & Chốt Deal",
-    "pitch": 1.05,
-    "rate": 0.98,
+    "pitch": 1.08,
+    "rate": 1.02,
     "recommendedFor": "both",
     "desc": "Giọng nữ miền Tây ngọt lịm, mộc mạc, chân thành như người nhà, chinh phục lòng tin cho đặc sản vùng miền, nông sản sạch.",
     "sampleText": "Dạ bà con cô bác ơi, mẻ bánh với trái cây này nhà em tự tay chọn lựa kỹ càng lắm, bà con ủng hộ em gái nhỏ một đơn nha!",
-    "edgePitch": "+17%",
+    "edgePitch": "+18%",
     "edgeRate": "+8%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
@@ -2136,9 +2144,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 1.2,
       "midFreq": 1150,
       "midGain": 2.6,
-      "presenceFreq": 3700,
-      "presenceGain": 4.4,
-      "highGain": 2.8,
+      "presenceFreq": 3900,
+      "presenceGain": 5.2,
+      "highGain": 4,
       "reverb": 0.07,
       "reverbDecay": 0.38,
       "compressor": {
@@ -2146,7 +2154,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 3.2,
         "attack": 0.01,
         "release": 0.22
-      }
+      },
+      "semitones": 2.2,
+      "detune": 220
     }
   },
   {
@@ -2163,13 +2173,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "20-24",
     "styleCategory": "banhang",
     "category": "Bán Hàng & Chốt Deal",
-    "pitch": 1.08,
-    "rate": 1.14,
+    "pitch": 1.14,
+    "rate": 1.16,
     "recommendedFor": "both",
     "desc": "Giọng tạo áp lực khan hiếm đỉnh cao, tăng tốc dồn dập trước CTA, kích thích bấm mua ngay kẻo hết trong 3 giây.",
     "sampleText": "Chỉ còn đúng 3 suất quà cuối cùng trong giỏ hàng thôi cả nhà ơi! Nhanh tay bấm đặt hàng ngay bây giờ kẻo hệ thống khóa giá nè!",
-    "edgePitch": "+21%",
-    "edgeRate": "+24%",
+    "edgePitch": "+26%",
+    "edgeRate": "+26%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -2231,8 +2241,8 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "midFreq": 1450,
       "midGain": 3.5,
       "presenceFreq": 4500,
-      "presenceGain": 5.8,
-      "highGain": 4.2,
+      "presenceGain": 6,
+      "highGain": 4.8,
       "reverb": 0.04,
       "reverbDecay": 0.22,
       "compressor": {
@@ -2240,7 +2250,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 4.8,
         "attack": 0.003,
         "release": 0.1
-      }
+      },
+      "semitones": 3.4,
+      "detune": 340
     }
   },
   {
@@ -2257,8 +2269,8 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "20-24",
     "styleCategory": "banhang",
     "category": "Bán Hàng & Chốt Deal",
-    "pitch": 1.04,
-    "rate": 1.01,
+    "pitch": 1.06,
+    "rate": 1.04,
     "recommendedFor": "both",
     "desc": "Giọng nữ chia sẻ bí quyết tự nhiên 100% như hội bạn thân rủ nhau mua sắm, tạo sự gắn kết bền chặt và tin cậy.",
     "sampleText": "Mấy bà ơi dùng cái này bao ưng luôn á, tui xài suốt mấy tháng nay rồi mới dám mách cho mấy bà đó nha, thích xỉu luôn!",
@@ -2325,8 +2337,8 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "midFreq": 1250,
       "midGain": 2.2,
       "presenceFreq": 3900,
-      "presenceGain": 4.2,
-      "highGain": 3.2,
+      "presenceGain": 4.6,
+      "highGain": 3.6,
       "reverb": 0.05,
       "reverbDecay": 0.3,
       "compressor": {
@@ -2334,7 +2346,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 3.2,
         "attack": 0.008,
         "release": 0.2
-      }
+      },
+      "semitones": 1.8,
+      "detune": 180
     }
   },
   {
@@ -2351,12 +2365,12 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "20-24",
     "styleCategory": "idol_genz",
     "category": "Creator & Viral",
-    "pitch": 1.1,
-    "rate": 1.12,
+    "pitch": 1.16,
+    "rate": 1.14,
     "recommendedFor": "both",
     "desc": "Giọng nữ bắt tai, quãng pitch rộng biến thiên cực nhanh, giật hook giữ trọn 3 giây vàng của Shorts & Reels.",
     "sampleText": "Dừng lại 3 giây lướt màn hình ngay! Thứ này vừa cập bến là khiến dân tình phát sốt, xem hết video để nhận quà bí mật nha!",
-    "edgePitch": "+24%",
+    "edgePitch": "+28%",
     "edgeRate": "+24%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
@@ -2419,8 +2433,8 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "midFreq": 1550,
       "midGain": 3.4,
       "presenceFreq": 4600,
-      "presenceGain": 6,
-      "highGain": 4.5,
+      "presenceGain": 6.2,
+      "highGain": 5,
       "reverb": 0.04,
       "reverbDecay": 0.22,
       "compressor": {
@@ -2428,7 +2442,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 4.6,
         "attack": 0.003,
         "release": 0.1
-      }
+      },
+      "semitones": 3.6,
+      "detune": 360
     }
   },
   {
@@ -2445,13 +2461,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "20-24",
     "styleCategory": "podcast",
     "category": "Kể Chuyện & Podcast",
-    "pitch": 1.01,
-    "rate": 0.92,
+    "pitch": 1.02,
+    "rate": 0.98,
     "recommendedFor": "both",
     "desc": "Giọng nữ Hà Thành dịu dàng, âm hơi thở chạm sâu vào cảm xúc, làm dịu lòng người nghe trong các video chữa lành, radio đêm.",
     "sampleText": "Nếu hôm nay bạn cảm thấy mệt mỏi, hãy cho phép mình được nghỉ ngơi một chút nhé. Mọi chuyện rồi sẽ nhẹ nhàng trôi qua thôi.",
-    "edgePitch": "+13%",
-    "edgeRate": "-1%",
+    "edgePitch": "+6%",
+    "edgeRate": "+0%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -2512,9 +2528,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 1.8,
       "midFreq": 1050,
       "midGain": 2.2,
-      "presenceFreq": 3400,
-      "presenceGain": 3.8,
-      "highGain": 2.8,
+      "presenceFreq": 3300,
+      "presenceGain": 3.6,
+      "highGain": 2.2,
       "reverb": 0.1,
       "reverbDecay": 0.52,
       "compressor": {
@@ -2522,7 +2538,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 2.8,
         "attack": 0.02,
         "release": 0.3
-      }
+      },
+      "semitones": 0.6,
+      "detune": 60
     }
   },
   {
@@ -2539,13 +2557,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "20-24",
     "styleCategory": "chuyengia",
     "category": "Tri Thức & Công Nghệ",
-    "pitch": 0.99,
-    "rate": 1.02,
+    "pitch": 1.05,
+    "rate": 1.06,
     "recommendedFor": "both",
     "desc": "Giọng đọc thông minh, khúc chiết, chuẩn xác từng thuật ngữ, lý tưởng cho video giới thiệu ứng dụng, phần mềm và khóa học số.",
     "sampleText": "Tính năng tự động hóa thông minh này sẽ giúp bạn tiết kiệm tới 80% thời gian xử lý công việc hàng ngày mà vẫn đạt hiệu quả tối đa.",
-    "edgePitch": "+10%",
-    "edgeRate": "+9%",
+    "edgePitch": "+12%",
+    "edgeRate": "+10%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -2607,8 +2625,8 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "midFreq": 1200,
       "midGain": 2.8,
       "presenceFreq": 3800,
-      "presenceGain": 5,
-      "highGain": 3.2,
+      "presenceGain": 4.8,
+      "highGain": 3.4,
       "reverb": 0.04,
       "reverbDecay": 0.25,
       "compressor": {
@@ -2616,7 +2634,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 3.8,
         "attack": 0.005,
         "release": 0.15
-      }
+      },
+      "semitones": 1.4,
+      "detune": 140
     }
   },
   {
@@ -2633,13 +2653,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "20-24",
     "styleCategory": "banhang",
     "category": "Bán Hàng & Chốt Deal",
-    "pitch": 1.09,
-    "rate": 1.05,
+    "pitch": 1.13,
+    "rate": 1.08,
     "recommendedFor": "both",
     "desc": "Giọng nói tràn đầy nụ cười, ấm áp và tươi tắn như ánh nắng mai, truyền nguồn năng lượng sảng khoái kích thích mua sắm.",
     "sampleText": "Một ngày mới thật tuyệt vời nha cả nhà! Cùng em khám phá bộ sưu tập mới toanh giúp nâng tầm phong cách ngay hôm nay nhé!",
-    "edgePitch": "+22%",
-    "edgeRate": "+15%",
+    "edgePitch": "+24%",
+    "edgeRate": "+16%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -2701,8 +2721,8 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "midFreq": 1400,
       "midGain": 3,
       "presenceFreq": 4400,
-      "presenceGain": 5.5,
-      "highGain": 4,
+      "presenceGain": 5.6,
+      "highGain": 4.5,
       "reverb": 0.05,
       "reverbDecay": 0.3,
       "compressor": {
@@ -2710,7 +2730,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 3.8,
         "attack": 0.005,
         "release": 0.15
-      }
+      },
+      "semitones": 3.2,
+      "detune": 320
     }
   },
   {
@@ -2727,13 +2749,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "20-24",
     "styleCategory": "banhang",
     "category": "Bán Hàng & Chốt Deal",
-    "pitch": 1,
-    "rate": 1.04,
+    "pitch": 1.06,
+    "rate": 1.08,
     "recommendedFor": "both",
     "desc": "Giọng nữ cá tính, đanh thép, phát âm chắc nịch và quyết liệt, không khoan nhượng khi chốt các deal số lượng có hạn.",
     "sampleText": "Đã thích là phải nhích liền tay! Cơ hội giá tốt như thế này không có lần thứ hai đâu, bấm nút đặt ngay bây giờ nhé!",
-    "edgePitch": "+11%",
-    "edgeRate": "+13%",
+    "edgePitch": "+14%",
+    "edgeRate": "+14%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -2794,9 +2816,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 2.2,
       "midFreq": 1150,
       "midGain": 3,
-      "presenceFreq": 3700,
+      "presenceFreq": 4000,
       "presenceGain": 5,
-      "highGain": 2.8,
+      "highGain": 3.6,
       "reverb": 0.04,
       "reverbDecay": 0.26,
       "compressor": {
@@ -2804,7 +2826,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 4.2,
         "attack": 0.004,
         "release": 0.14
-      }
+      },
+      "semitones": 1.6,
+      "detune": 160
     }
   },
   {
@@ -2821,13 +2845,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "20-24",
     "styleCategory": "banhang",
     "category": "Bán Hàng & Chốt Deal",
-    "pitch": 1.1,
-    "rate": 1.08,
+    "pitch": 1.15,
+    "rate": 1.1,
     "recommendedFor": "both",
     "desc": "Giọng nữ trêu đùa duyên dáng, nhử deal thông minh: tease nhẹ -> ngưng 1 nhịp -> chốt hạ khiến người nghe không thể cưỡng lại.",
     "sampleText": "Ai mà còn chần chừ là tí nữa hết hàng ngồi tiếc hùi hụi ráng chịu nha, em bấm mở cổng giỏ hàng ngay bây giờ nè!",
-    "edgePitch": "+23%",
-    "edgeRate": "+19%",
+    "edgePitch": "+27%",
+    "edgeRate": "+20%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -2888,9 +2912,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": -1,
       "midFreq": 1500,
       "midGain": 3.2,
-      "presenceFreq": 4600,
-      "presenceGain": 5.8,
-      "highGain": 4.4,
+      "presenceFreq": 4550,
+      "presenceGain": 5.9,
+      "highGain": 4.8,
       "reverb": 0.04,
       "reverbDecay": 0.25,
       "compressor": {
@@ -2898,7 +2922,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 4.2,
         "attack": 0.004,
         "release": 0.12
-      }
+      },
+      "semitones": 3.5,
+      "detune": 350
     }
   },
   {
@@ -2915,13 +2941,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "20-24",
     "styleCategory": "banhang",
     "category": "Bán Hàng & Chốt Deal",
-    "pitch": 1,
-    "rate": 0.9,
+    "pitch": 1.03,
+    "rate": 0.98,
     "recommendedFor": "both",
     "desc": "Giọng nữ thanh khiết, nói năng từ tốn, khoảng nghỉ dài kiểm soát, rất hợp nến thơm, skincare, trà sữa cao cấp và sách.",
     "sampleText": "Chăm sóc bản thân từ những điều giản dị nhất sẽ mang lại cho bạn sự an yên và tự tin rạng ngời suốt cả ngày dài.",
-    "edgePitch": "+12%",
-    "edgeRate": "-4%",
+    "edgePitch": "+8%",
+    "edgeRate": "-2%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -2982,9 +3008,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 1.5,
       "midFreq": 1000,
       "midGain": 2.2,
-      "presenceFreq": 3500,
-      "presenceGain": 4,
-      "highGain": 2.8,
+      "presenceFreq": 3400,
+      "presenceGain": 3.8,
+      "highGain": 2.4,
       "reverb": 0.08,
       "reverbDecay": 0.45,
       "compressor": {
@@ -2992,7 +3018,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 2.8,
         "attack": 0.015,
         "release": 0.28
-      }
+      },
+      "semitones": 0.9,
+      "detune": 90
     }
   },
   {
@@ -3009,13 +3037,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "20-24",
     "styleCategory": "podcast",
     "category": "Kể Chuyện & Podcast",
-    "pitch": 1.01,
-    "rate": 0.99,
+    "pitch": 1.07,
+    "rate": 1.05,
     "recommendedFor": "both",
     "desc": "Giọng đọc nữ trẻ tràn đầy nhiệt huyết, cao trào cảm xúc dâng trào truyền động lực mạnh mẽ cho giới trẻ bứt phá vươn lên.",
     "sampleText": "Đừng bao giờ để bất kỳ ai giới hạn ước mơ của bạn! Hãy mạnh dạn bước tới và chứng minh năng lực tuyệt vời của chính mình!",
-    "edgePitch": "+13%",
-    "edgeRate": "+6%",
+    "edgePitch": "+15%",
+    "edgeRate": "+8%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -3076,9 +3104,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 2.5,
       "midFreq": 1150,
       "midGain": 3,
-      "presenceFreq": 3700,
-      "presenceGain": 5,
-      "highGain": 3,
+      "presenceFreq": 3950,
+      "presenceGain": 4.9,
+      "highGain": 3.5,
       "reverb": 0.06,
       "reverbDecay": 0.35,
       "compressor": {
@@ -3086,7 +3114,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 4,
         "attack": 0.005,
         "release": 0.16
-      }
+      },
+      "semitones": 1.7,
+      "detune": 170
     }
   },
   {
@@ -3103,13 +3133,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "20-24",
     "styleCategory": "quangcao",
     "category": "Quảng Cáo & TVC",
-    "pitch": 1.06,
-    "rate": 0.96,
+    "pitch": 1.09,
+    "rate": 1.03,
     "recommendedFor": "both",
     "desc": "Giọng đọc TVC mỹ phẩm mềm mại, âm thanh lụa là thoáng khí, gợi tả làn da mọng nước và phong cách sang chảnh.",
     "sampleText": "Chạm nhẹ để cảm nhận làn da căng bóng mịn màng, rạng rỡ tỏa sáng tự nhiên không tì vết suốt 24 giờ.",
-    "edgePitch": "+19%",
-    "edgeRate": "+3%",
+    "edgePitch": "+20%",
+    "edgeRate": "+4%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -3170,8 +3200,8 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": -0.2,
       "midFreq": 1200,
       "midGain": 2.5,
-      "presenceFreq": 4100,
-      "presenceGain": 5.2,
+      "presenceFreq": 4200,
+      "presenceGain": 5.4,
       "highGain": 4.2,
       "reverb": 0.08,
       "reverbDecay": 0.4,
@@ -3180,7 +3210,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 3.2,
         "attack": 0.008,
         "release": 0.18
-      }
+      },
+      "semitones": 2.4,
+      "detune": 240
     }
   },
   {
@@ -3197,12 +3229,12 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "20-24",
     "styleCategory": "idol_genz",
     "category": "Creator & Viral",
-    "pitch": 1.1,
-    "rate": 1.1,
+    "pitch": 1.18,
+    "rate": 1.12,
     "recommendedFor": "both",
     "desc": "Bậc thầy tấu hài, thả punchline bất ngờ kèm micro-pause kịch tính, biến mọi khoảnh khắc livestream thành tràng cười triệu view.",
     "sampleText": "Trời đất ơi coi nè! Tui nói thiệt chứ không mua cái này là tối về ngủ không có yên giấc đâu nha quý vị ơi!",
-    "edgePitch": "+24%",
+    "edgePitch": "+34%",
     "edgeRate": "+22%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
@@ -3264,9 +3296,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": -1,
       "midFreq": 1450,
       "midGain": 3.2,
-      "presenceFreq": 4500,
-      "presenceGain": 5.8,
-      "highGain": 4.4,
+      "presenceFreq": 4700,
+      "presenceGain": 6.4,
+      "highGain": 5.2,
       "reverb": 0.05,
       "reverbDecay": 0.28,
       "compressor": {
@@ -3274,7 +3306,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 4.2,
         "attack": 0.004,
         "release": 0.14
-      }
+      },
+      "semitones": 4.4,
+      "detune": 440
     }
   },
   {
@@ -3291,13 +3325,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "20-24",
     "styleCategory": "banhang",
     "category": "Bán Hàng & Chốt Deal",
-    "pitch": 1.07,
-    "rate": 1.02,
+    "pitch": 1.1,
+    "rate": 1.06,
     "recommendedFor": "both",
     "desc": "Giọng đọc mở đầu bằng câu hỏi lôi cuốn, intonation thắc mắc treo cao (suspended rise), thôi thúc người xem tò mò xem tiếp.",
     "sampleText": "Bạn có bao giờ tự hỏi vì sao sản phẩm này vừa ra mắt đã cháy hàng liên tục trên mọi nền tảng không? Bí mật nằm ở đây!",
     "edgePitch": "+21%",
-    "edgeRate": "+11%",
+    "edgeRate": "+12%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -3358,9 +3392,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 0.5,
       "midFreq": 1350,
       "midGain": 2.8,
-      "presenceFreq": 4100,
-      "presenceGain": 5.2,
-      "highGain": 3.8,
+      "presenceFreq": 4250,
+      "presenceGain": 5.3,
+      "highGain": 4,
       "reverb": 0.05,
       "reverbDecay": 0.3,
       "compressor": {
@@ -3368,7 +3402,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 3.8,
         "attack": 0.005,
         "release": 0.16
-      }
+      },
+      "semitones": 2.6,
+      "detune": 260
     }
   },
   {
@@ -3385,13 +3421,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "20-24",
     "styleCategory": "banhang",
     "category": "Bán Hàng & Chốt Deal",
-    "pitch": 1.01,
-    "rate": 0.96,
+    "pitch": 1.04,
+    "rate": 1.02,
     "recommendedFor": "both",
     "desc": "Giọng nữ ấm áp, cao độ ổn định không lên xuống thất thường, cam kết chân thành giúp khách hàng an tâm tuyệt đối khi xuống tiền.",
     "sampleText": "Shop em cam kết hoàn tiền 100% nếu sản phẩm có bất kỳ lỗi nhỏ nào, các bác hoàn toàn yên tâm nhận hàng kiểm tra thoải mái nha!",
-    "edgePitch": "+12%",
-    "edgeRate": "+3%",
+    "edgePitch": "+10%",
+    "edgeRate": "+4%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -3453,8 +3489,8 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "midFreq": 1100,
       "midGain": 2.5,
       "presenceFreq": 3600,
-      "presenceGain": 4.5,
-      "highGain": 2.8,
+      "presenceGain": 4.4,
+      "highGain": 3,
       "reverb": 0.05,
       "reverbDecay": 0.32,
       "compressor": {
@@ -3462,7 +3498,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 3.5,
         "attack": 0.008,
         "release": 0.18
-      }
+      },
+      "semitones": 1.1,
+      "detune": 110
     }
   },
   {
@@ -3479,13 +3517,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "20-24",
     "styleCategory": "banhang",
     "category": "Bán Hàng & Chốt Deal",
-    "pitch": 1.04,
-    "rate": 1.06,
+    "pitch": 1.08,
+    "rate": 1.1,
     "recommendedFor": "both",
     "desc": "Giọng chốt sale ngắn gọn, dứt khoát, âm sắc đặc và chắc, chuyển đổi giỏ hàng siêu tốc cho các sản phẩm tiêu dùng nhanh.",
     "sampleText": "Thêm vào giỏ hàng và thanh toán ngay thôi cả nhà ơi! Mã giảm 50k chỉ áp dụng cho 10 đơn hàng đầu tiên trong phiên này thôi nè!",
-    "edgePitch": "+14%",
-    "edgeRate": "+17%",
+    "edgePitch": "+17%",
+    "edgeRate": "+18%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -3546,9 +3584,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 1.8,
       "midFreq": 1250,
       "midGain": 3,
-      "presenceFreq": 3900,
+      "presenceFreq": 4100,
       "presenceGain": 5.2,
-      "highGain": 3.2,
+      "highGain": 3.8,
       "reverb": 0.04,
       "reverbDecay": 0.24,
       "compressor": {
@@ -3556,7 +3594,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 4.5,
         "attack": 0.003,
         "release": 0.12
-      }
+      },
+      "semitones": 2,
+      "detune": 200
     }
   },
   {
@@ -3573,13 +3613,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "24-28",
     "styleCategory": "banhang",
     "category": "Sang Trọng & Đẳng Cấp",
-    "pitch": 0.97,
-    "rate": 0.94,
+    "pitch": 1.03,
+    "rate": 1.02,
     "recommendedFor": "both",
     "desc": "Giọng nữ sang trọng, điềm tĩnh, ấm dày và thanh tao, tôn vinh đẳng cấp sản phẩm thời trang thiết kế, trang sức và bất động sản.",
     "sampleText": "Mỗi chi tiết đều được chế tác tinh xảo với tiêu chuẩn hoàn thiện cao nhất, mang lại vẻ đẹp thanh lịch và độc bản cho người sở hữu.",
-    "edgePitch": "+6%",
-    "edgeRate": "+1%",
+    "edgePitch": "+8%",
+    "edgeRate": "+2%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -3640,9 +3680,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 3.2,
       "midFreq": 980,
       "midGain": 2.4,
-      "presenceFreq": 3300,
-      "presenceGain": 4.2,
-      "highGain": 2.2,
+      "presenceFreq": 3500,
+      "presenceGain": 4.4,
+      "highGain": 3,
       "reverb": 0.08,
       "reverbDecay": 0.44,
       "compressor": {
@@ -3650,7 +3690,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 3.2,
         "attack": 0.012,
         "release": 0.24
-      }
+      },
+      "semitones": 0.9,
+      "detune": 90
     }
   },
   {
@@ -3667,13 +3709,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "24-28",
     "styleCategory": "banhang",
     "category": "Bán Hàng & Chốt Deal",
-    "pitch": 1.02,
-    "rate": 0.98,
+    "pitch": 1.05,
+    "rate": 1.03,
     "recommendedFor": "both",
     "desc": "Giọng nữ Sài Gòn trưởng thành, duyên dáng, ngọt ngào có chiều sâu, tạo sức hút tự nhiên không thể rời tai.",
     "sampleText": "Dạ em chào các anh chị nha! Hôm nay em lựa được mấy mẫu đầm thiết kế form dáng siêu chuẩn, mặc lên là thần thái ngút ngàn luôn nè!",
-    "edgePitch": "+10%",
-    "edgeRate": "+4%",
+    "edgePitch": "+13%",
+    "edgeRate": "+5%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -3734,9 +3776,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 1.5,
       "midFreq": 1150,
       "midGain": 2.6,
-      "presenceFreq": 3700,
+      "presenceFreq": 3850,
       "presenceGain": 4.8,
-      "highGain": 3.2,
+      "highGain": 3.6,
       "reverb": 0.07,
       "reverbDecay": 0.38,
       "compressor": {
@@ -3744,7 +3786,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 3.5,
         "attack": 0.008,
         "release": 0.2
-      }
+      },
+      "semitones": 1.5,
+      "detune": 150
     }
   },
   {
@@ -3761,13 +3805,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "24-28",
     "styleCategory": "doanhnhan",
     "category": "Doanh Nhân & Lãnh Đạo",
-    "pitch": 0.94,
-    "rate": 0.94,
+    "pitch": 1,
+    "rate": 1.04,
     "recommendedFor": "both",
     "desc": "Giọng nói trầm chắc từ lồng ngực, quyền uy và đĩnh đạc, truyền tải thông điệp chiến lược, tầm nhìn và quản trị đỉnh cao.",
     "sampleText": "Sự kiên định với chất lượng cốt lõi và tư duy đột phá chính là chìa khóa giúp chúng ta bứt phá và dẫn đầu thị trường.",
-    "edgePitch": "+1%",
-    "edgeRate": "-1%",
+    "edgePitch": "+2%",
+    "edgeRate": "+2%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -3828,9 +3872,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 4,
       "midFreq": 900,
       "midGain": 2.8,
-      "presenceFreq": 3100,
-      "presenceGain": 4,
-      "highGain": 2,
+      "presenceFreq": 3400,
+      "presenceGain": 4.8,
+      "highGain": 2.8,
       "reverb": 0.05,
       "reverbDecay": 0.32,
       "compressor": {
@@ -3838,7 +3882,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 4,
         "attack": 0.008,
         "release": 0.18
-      }
+      },
+      "semitones": 0.2,
+      "detune": 20
     }
   },
   {
@@ -3855,13 +3901,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "24-28",
     "styleCategory": "doanhnhan",
     "category": "Doanh Nhân & Lãnh Đạo",
-    "pitch": 0.98,
-    "rate": 1,
+    "pitch": 1.03,
+    "rate": 1.06,
     "recommendedFor": "both",
     "desc": "Giọng nữ founder giàu hoài bão, ấm áp và truyền cảm, thắp sáng niềm tin và tinh thần phụng sự trong từng dự án kinh doanh.",
     "sampleText": "Mỗi sản phẩm chúng tôi tạo ra không chỉ là công nghệ, mà là tâm huyết mang lại giải pháp tốt nhất cho cộng đồng.",
-    "edgePitch": "+5%",
-    "edgeRate": "+6%",
+    "edgePitch": "+7%",
+    "edgeRate": "+7%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -3923,8 +3969,8 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "midFreq": 1100,
       "midGain": 2.8,
       "presenceFreq": 3600,
-      "presenceGain": 4.8,
-      "highGain": 2.8,
+      "presenceGain": 4.6,
+      "highGain": 3.2,
       "reverb": 0.06,
       "reverbDecay": 0.32,
       "compressor": {
@@ -3932,7 +3978,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 3.5,
         "attack": 0.008,
         "release": 0.18
-      }
+      },
+      "semitones": 0.8,
+      "detune": 80
     }
   },
   {
@@ -3949,13 +3997,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "24-28",
     "styleCategory": "quangcao",
     "category": "Quảng Cáo & TVC",
-    "pitch": 0.94,
-    "rate": 0.88,
+    "pitch": 1.01,
+    "rate": 1,
     "recommendedFor": "both",
     "desc": "Giọng đọc TVC thương hiệu thượng lưu, trầm sâu, sang quý như nhung, tôn vinh kiệt tác kiến trúc và phong cách sống xa hoa.",
     "sampleText": "Không gian sống hoàn mỹ, nơi hội tụ những giá trị trường tồn và khẳng định vị thế độc tôn của chủ nhân xứng tầm.",
-    "edgePitch": "+1%",
-    "edgeRate": "-6%",
+    "edgePitch": "+3%",
+    "edgeRate": "-2%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -4016,9 +4064,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 3.8,
       "midFreq": 920,
       "midGain": 2.2,
-      "presenceFreq": 3100,
-      "presenceGain": 4,
-      "highGain": 2.2,
+      "presenceFreq": 3300,
+      "presenceGain": 4.2,
+      "highGain": 3,
       "reverb": 0.12,
       "reverbDecay": 0.55,
       "compressor": {
@@ -4026,7 +4074,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 3,
         "attack": 0.015,
         "release": 0.28
-      }
+      },
+      "semitones": 0.3,
+      "detune": 30
     }
   },
   {
@@ -4043,13 +4093,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "24-28",
     "styleCategory": "chuyengia",
     "category": "Tri Thức & Công Nghệ",
-    "pitch": 0.96,
-    "rate": 0.97,
+    "pitch": 1.02,
+    "rate": 1.04,
     "recommendedFor": "both",
     "desc": "Giọng đọc chuẩn mực, đĩnh đạc, dựa trên số liệu và cơ chế khoa học, tạo độ tin cậy tuyệt đối cho tài chính, y dược, thẩm mỹ.",
     "sampleText": "Kết quả kiểm nghiệm lâm sàng đã chứng minh sản phẩm cải thiện độ đàn hồi rõ rệt sau 2 tuần sử dụng liên tục.",
-    "edgePitch": "+4%",
-    "edgeRate": "+4%",
+    "edgePitch": "+5%",
+    "edgeRate": "+5%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -4112,7 +4162,7 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "midGain": 2.8,
       "presenceFreq": 3500,
       "presenceGain": 4.8,
-      "highGain": 2.5,
+      "highGain": 3,
       "reverb": 0.04,
       "reverbDecay": 0.28,
       "compressor": {
@@ -4120,7 +4170,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 3.5,
         "attack": 0.008,
         "release": 0.18
-      }
+      },
+      "semitones": 0.5,
+      "detune": 50
     }
   },
   {
@@ -4137,13 +4189,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "24-28",
     "styleCategory": "podcast",
     "category": "Kể Chuyện & Podcast",
-    "pitch": 0.98,
-    "rate": 0.88,
+    "pitch": 1.02,
+    "rate": 0.98,
     "recommendedFor": "both",
     "desc": "Giọng kể chuyện đong đầy cảm xúc, ấm áp lắng đọng từng hơi thở, chạm sâu vào những góc khuất tâm hồn người nghe.",
     "sampleText": "Có những kỷ niệm dù đã qua đi rất lâu, nhưng mỗi khi nhớ lại, lòng ta vẫn vẹn nguyên cảm xúc ngọt ngào như ngày đầu.",
     "edgePitch": "+6%",
-    "edgeRate": "-6%",
+    "edgeRate": "-4%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -4204,9 +4256,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 2.8,
       "midFreq": 980,
       "midGain": 2.4,
-      "presenceFreq": 3300,
-      "presenceGain": 4.2,
-      "highGain": 2.8,
+      "presenceFreq": 3350,
+      "presenceGain": 3.8,
+      "highGain": 2.4,
       "reverb": 0.12,
       "reverbDecay": 0.58,
       "compressor": {
@@ -4214,7 +4266,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 2.8,
         "attack": 0.02,
         "release": 0.3
-      }
+      },
+      "semitones": 0.6,
+      "detune": 60
     }
   },
   {
@@ -4231,13 +4285,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "24-28",
     "styleCategory": "podcast",
     "category": "Kể Chuyện & Podcast",
-    "pitch": 0.92,
-    "rate": 0.86,
+    "pitch": 1,
+    "rate": 0.98,
     "recommendedFor": "both",
     "desc": "Giọng đọc điện ảnh kịch tính, trầm tối ma mị, khoảng lặng hồi hộp tạo cảm giác điện ảnh đỉnh cao cho review phim và trinh thám.",
     "sampleText": "Khi sự thật dần hé lộ sau bức màn bí ẩn, tất cả những kẻ đứng sau kế hoạch tàn nhẫn đều không ngờ tới kết cục này.",
-    "edgePitch": "-1%",
-    "edgeRate": "-9%",
+    "edgePitch": "+1%",
+    "edgeRate": "-6%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -4298,9 +4352,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 4.4,
       "midFreq": 850,
       "midGain": 2.6,
-      "presenceFreq": 2900,
-      "presenceGain": 4.4,
-      "highGain": 2,
+      "presenceFreq": 3200,
+      "presenceGain": 4.2,
+      "highGain": 2.2,
       "reverb": 0.14,
       "reverbDecay": 0.65,
       "compressor": {
@@ -4308,7 +4362,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 3.5,
         "attack": 0.015,
         "release": 0.3
-      }
+      },
+      "semitones": 0.1,
+      "detune": 10
     }
   },
   {
@@ -4325,13 +4381,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "24-28",
     "styleCategory": "banhang",
     "category": "Bán Hàng & Chốt Deal",
-    "pitch": 1,
-    "rate": 0.94,
+    "pitch": 1.04,
+    "rate": 1,
     "recommendedFor": "both",
     "desc": "Bán hàng không tạo áp lực, nhịp điệu thuyết phục êm dịu, mưa dầm thấm lâu, khách nghe là tự động muốn chốt đơn.",
     "sampleText": "Chị em mình đầu tư cho bản thân một sản phẩm chất lượng như vầy thì vừa tiết kiệm thời gian mà kết quả lại vượt mong đợi nè.",
-    "edgePitch": "+8%",
-    "edgeRate": "-1%",
+    "edgePitch": "+9%",
+    "edgeRate": "+0%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -4392,9 +4448,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 1.8,
       "midFreq": 1100,
       "midGain": 2.2,
-      "presenceFreq": 3600,
-      "presenceGain": 4.2,
-      "highGain": 2.8,
+      "presenceFreq": 3650,
+      "presenceGain": 4.4,
+      "highGain": 3,
       "reverb": 0.07,
       "reverbDecay": 0.38,
       "compressor": {
@@ -4402,7 +4458,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 3,
         "attack": 0.01,
         "release": 0.22
-      }
+      },
+      "semitones": 1,
+      "detune": 100
     }
   },
   {
@@ -4419,12 +4477,12 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "24-28",
     "styleCategory": "banhang",
     "category": "Bán Hàng & Chốt Deal",
-    "pitch": 0.97,
-    "rate": 1.05,
+    "pitch": 1.03,
+    "rate": 1.08,
     "recommendedFor": "both",
     "desc": "Quy trình chốt sale hoàn hảo: ngưng lặng -> báo giá -> ngưng lặng -> dứt khoát kêu gọi hành động, biến mọi lưỡng lự thành đơn hàng.",
     "sampleText": "Cơ hội duy nhất trong ngày hôm nay: đúng 500 nghìn đồng. Bấm vào nút Mua Ngay để nhận ưu đãi trước khi kết thúc phiên!",
-    "edgePitch": "+4%",
+    "edgePitch": "+6%",
     "edgeRate": "+12%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
@@ -4487,8 +4545,8 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "midFreq": 1150,
       "midGain": 3.2,
       "presenceFreq": 3700,
-      "presenceGain": 5.4,
-      "highGain": 3,
+      "presenceGain": 5,
+      "highGain": 3.2,
       "reverb": 0.04,
       "reverbDecay": 0.25,
       "compressor": {
@@ -4496,7 +4554,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 4.8,
         "attack": 0.003,
         "release": 0.1
-      }
+      },
+      "semitones": 0.7,
+      "detune": 70
     }
   },
   {
@@ -4513,13 +4573,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "24-28",
     "styleCategory": "quangcao",
     "category": "Quảng Cáo & TVC",
-    "pitch": 1.03,
-    "rate": 0.94,
+    "pitch": 1.06,
+    "rate": 1.02,
     "recommendedFor": "both",
     "desc": "Giọng đọc làm đẹp thượng lưu, thanh tao quý phái, hơi thở nhẹ êm gợi cảm giác đắm mình trong liệu trình spa cao cấp.",
     "sampleText": "Khơi nguồn nét thanh xuân bất tận cùng tinh chất vàng hoàng gia, nuôi dưỡng từng tế bào da căng tràn sức sống.",
-    "edgePitch": "+12%",
-    "edgeRate": "+1%",
+    "edgePitch": "+14%",
+    "edgeRate": "+2%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -4580,7 +4640,7 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 0.5,
       "midFreq": 1150,
       "midGain": 2.6,
-      "presenceFreq": 3900,
+      "presenceFreq": 4000,
       "presenceGain": 5,
       "highGain": 4,
       "reverb": 0.09,
@@ -4590,7 +4650,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 3,
         "attack": 0.01,
         "release": 0.22
-      }
+      },
+      "semitones": 1.6,
+      "detune": 160
     }
   },
   {
@@ -4607,13 +4669,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "24-28",
     "styleCategory": "quangcao",
     "category": "Quảng Cáo & TVC",
-    "pitch": 0.99,
-    "rate": 1.02,
+    "pitch": 1.04,
+    "rate": 1.06,
     "recommendedFor": "both",
     "desc": "Giọng đọc sắc sảo, siêu hiện đại, biểu tượng của trí tuệ nhân tạo thế hệ mới, giải pháp công nghệ đám mây và tương lai số.",
     "sampleText": "Khám phá kỷ nguyên trí tuệ nhân tạo toàn diện, tự động hóa mọi quy trình và mở khóa tiềm năng phát triển không giới hạn.",
-    "edgePitch": "+6%",
-    "edgeRate": "+9%",
+    "edgePitch": "+8%",
+    "edgeRate": "+10%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -4674,8 +4736,8 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 1.8,
       "midFreq": 1250,
       "midGain": 3,
-      "presenceFreq": 3800,
-      "presenceGain": 5.2,
+      "presenceFreq": 3750,
+      "presenceGain": 5,
       "highGain": 3.4,
       "reverb": 0.04,
       "reverbDecay": 0.26,
@@ -4684,7 +4746,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 3.8,
         "attack": 0.005,
         "release": 0.15
-      }
+      },
+      "semitones": 0.9,
+      "detune": 90
     }
   },
   {
@@ -4701,13 +4765,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "24-28",
     "styleCategory": "podcast",
     "category": "Kể Chuyện & Podcast",
-    "pitch": 0.98,
-    "rate": 0.99,
+    "pitch": 1.04,
+    "rate": 1.06,
     "recommendedFor": "both",
     "desc": "Giọng đọc hùng tráng của nữ thủ lĩnh, nội lực cuồn cuộn, tuyên bố mạnh mẽ giúp người nghe thức tỉnh và hành động ngay lập tức.",
     "sampleText": "Thành công không tự nhiên đến với người chỉ biết ngồi chờ đợi! Hãy đứng dậy, dấn thân và kiến tạo tương lai của chính bạn!",
-    "edgePitch": "+6%",
-    "edgeRate": "+6%",
+    "edgePitch": "+8%",
+    "edgeRate": "+8%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -4768,9 +4832,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 3.2,
       "midFreq": 1100,
       "midGain": 3.2,
-      "presenceFreq": 3600,
+      "presenceFreq": 3700,
       "presenceGain": 5.2,
-      "highGain": 3,
+      "highGain": 3.2,
       "reverb": 0.06,
       "reverbDecay": 0.35,
       "compressor": {
@@ -4778,7 +4842,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 4.2,
         "attack": 0.005,
         "release": 0.15
-      }
+      },
+      "semitones": 0.9,
+      "detune": 90
     }
   },
   {
@@ -4795,13 +4861,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "24-28",
     "styleCategory": "chuyengia",
     "category": "Tri Thức & Công Nghệ",
-    "pitch": 0.96,
-    "rate": 0.95,
+    "pitch": 1.02,
+    "rate": 1.02,
     "recommendedFor": "both",
     "desc": "Giọng tư vấn trung thực, trầm ấm, chuẩn mực, đem lại sự tin cậy tuyệt đối cho các hợp đồng lớn, bảo hiểm và giải pháp tài chính.",
     "sampleText": "Chúng tôi luôn đồng hành và bảo vệ quyền lợi tối đa của bạn với những giải pháp tài chính an toàn và bền vững nhất.",
-    "edgePitch": "+4%",
-    "edgeRate": "+1%",
+    "edgePitch": "+5%",
+    "edgeRate": "+2%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -4862,9 +4928,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 2.8,
       "midFreq": 1000,
       "midGain": 2.6,
-      "presenceFreq": 3400,
-      "presenceGain": 4.4,
-      "highGain": 2.2,
+      "presenceFreq": 3500,
+      "presenceGain": 4.5,
+      "highGain": 2.8,
       "reverb": 0.05,
       "reverbDecay": 0.3,
       "compressor": {
@@ -4872,7 +4938,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 3.5,
         "attack": 0.008,
         "release": 0.18
-      }
+      },
+      "semitones": 0.5,
+      "detune": 50
     }
   },
   {
@@ -4889,12 +4957,12 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "24-28",
     "styleCategory": "mc_btv",
     "category": "MC, BTV & Sự Kiện",
-    "pitch": 1.01,
-    "rate": 0.99,
+    "pitch": 1.05,
+    "rate": 1.04,
     "recommendedFor": "both",
     "desc": "Giọng nữ MC đài các, uyển chuyển, giới thiệu có độ nâng thanh lịch, tôn vinh các lễ trao giải, dạ tiệc và lễ kỷ niệm trang trọng.",
     "sampleText": "Kính thưa quý vị đại biểu, giây phút trang trọng nhất đêm nay: xin được vinh danh những gương mặt xuất sắc và tiêu biểu nhất!",
-    "edgePitch": "+9%",
+    "edgePitch": "+11%",
     "edgeRate": "+6%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
@@ -4956,9 +5024,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 2,
       "midFreq": 1150,
       "midGain": 2.8,
-      "presenceFreq": 3800,
-      "presenceGain": 5,
-      "highGain": 3.2,
+      "presenceFreq": 3900,
+      "presenceGain": 4.8,
+      "highGain": 3.5,
       "reverb": 0.08,
       "reverbDecay": 0.42,
       "compressor": {
@@ -4966,7 +5034,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 3.5,
         "attack": 0.008,
         "release": 0.2
-      }
+      },
+      "semitones": 1.3,
+      "detune": 130
     }
   },
   {
@@ -4983,13 +5053,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "24-28",
     "styleCategory": "podcast",
     "category": "Kể Chuyện & Podcast",
-    "pitch": 0.96,
-    "rate": 0.93,
+    "pitch": 1.01,
+    "rate": 0.98,
     "recommendedFor": "both",
     "desc": "Giọng host podcast ấm áp chuẩn phòng thu close-mic, tĩnh lặng và sâu lắng, dẫn dắt các cuộc trò chuyện nhân sinh đa chiều.",
     "sampleText": "Chào mừng bạn quay trở lại với không gian podcast, nơi chúng ta cùng ngồi lại và chia sẻ những góc nhìn chân thật nhất về cuộc sống.",
     "edgePitch": "+4%",
-    "edgeRate": "-4%",
+    "edgeRate": "-2%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -5050,8 +5120,8 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 3.4,
       "midFreq": 980,
       "midGain": 2.6,
-      "presenceFreq": 3400,
-      "presenceGain": 4.5,
+      "presenceFreq": 3300,
+      "presenceGain": 3.8,
       "highGain": 2.5,
       "reverb": 0.05,
       "reverbDecay": 0.28,
@@ -5060,7 +5130,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 3.8,
         "attack": 0.008,
         "release": 0.18
-      }
+      },
+      "semitones": 0.4,
+      "detune": 40
     }
   },
   {
@@ -5077,13 +5149,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "24-28",
     "styleCategory": "idol_genz",
     "category": "Creator & Viral",
-    "pitch": 1.07,
-    "rate": 1.06,
+    "pitch": 1.11,
+    "rate": 1.1,
     "recommendedFor": "both",
     "desc": "Hài hước sâu cay và duyên dáng của phụ nữ trưởng thành, timing nhả chữ đỉnh cao, biến video drama thành tiếng cười dí dỏm.",
     "sampleText": "Đời người ngắn ngủi lắm mấy bà ơi, rảnh đâu mà buồn phiền, cứ sắm sửa cho đẹp rạng ngời rồi tự tin bước tiếp nha!",
-    "edgePitch": "+18%",
-    "edgeRate": "+17%",
+    "edgePitch": "+22%",
+    "edgeRate": "+18%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -5144,9 +5216,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": -0.5,
       "midFreq": 1400,
       "midGain": 3,
-      "presenceFreq": 4400,
+      "presenceFreq": 4350,
       "presenceGain": 5.6,
-      "highGain": 4.2,
+      "highGain": 4.5,
       "reverb": 0.05,
       "reverbDecay": 0.28,
       "compressor": {
@@ -5154,7 +5226,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 4,
         "attack": 0.004,
         "release": 0.14
-      }
+      },
+      "semitones": 2.7,
+      "detune": 270
     }
   },
   {
@@ -5171,13 +5245,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "24-28",
     "styleCategory": "doanhnhan",
     "category": "Doanh Nhân & Lãnh Đạo",
-    "pitch": 0.93,
-    "rate": 0.91,
+    "pitch": 1.01,
+    "rate": 1.02,
     "recommendedFor": "both",
     "desc": "Giọng nói không cần lên gân nhưng toát ra uy lực tối cao, khoảng dừng chiến lược làm chủ toàn bộ khán phòng.",
     "sampleText": "Chất lượng đích thực không cần phải phô trương. Nó tự khẳng định giá trị bằng sự tin tưởng và trải nghiệm của khách hàng.",
-    "edgePitch": "+0%",
-    "edgeRate": "-3%",
+    "edgePitch": "+2%",
+    "edgeRate": "+0%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -5238,9 +5312,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 3.8,
       "midFreq": 900,
       "midGain": 2.8,
-      "presenceFreq": 3100,
-      "presenceGain": 4.2,
-      "highGain": 2,
+      "presenceFreq": 3400,
+      "presenceGain": 4.6,
+      "highGain": 2.6,
       "reverb": 0.06,
       "reverbDecay": 0.35,
       "compressor": {
@@ -5248,7 +5322,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 4,
         "attack": 0.01,
         "release": 0.2
-      }
+      },
+      "semitones": 0.2,
+      "detune": 20
     }
   },
   {
@@ -5265,13 +5341,13 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "24-28",
     "styleCategory": "banhang",
     "category": "Bán Hàng & Chốt Deal",
-    "pitch": 1.03,
-    "rate": 0.97,
+    "pitch": 1.07,
+    "rate": 1.03,
     "recommendedFor": "both",
     "desc": "Âm sắc mượt mà, nhấn nhá lưu luyến ở từ khóa lợi ích rồi chốt hạ dứt khoát, kích hoạt khao khát sở hữu sản phẩm mãnh liệt.",
     "sampleText": "Hãy tưởng tượng cảm giác tuyệt vời khi bạn bước ra phố với diện mạo quyến rũ và tự tin nhất. Đừng chần chừ, sở hữu ngay hôm nay nhé!",
-    "edgePitch": "+11%",
-    "edgeRate": "+2%",
+    "edgePitch": "+15%",
+    "edgeRate": "+4%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
       "region": {
@@ -5332,9 +5408,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 1.5,
       "midFreq": 1150,
       "midGain": 2.8,
-      "presenceFreq": 3800,
-      "presenceGain": 5,
-      "highGain": 3.5,
+      "presenceFreq": 4050,
+      "presenceGain": 5.2,
+      "highGain": 3.8,
       "reverb": 0.08,
       "reverbDecay": 0.4,
       "compressor": {
@@ -5342,7 +5418,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 3.5,
         "attack": 0.008,
         "release": 0.18
-      }
+      },
+      "semitones": 1.8,
+      "detune": 180
     }
   },
   {
@@ -5359,12 +5437,12 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
     "ageRange": "24-28",
     "styleCategory": "banhang",
     "category": "Bán Hàng & Chốt Deal",
-    "pitch": 1.01,
-    "rate": 1.03,
+    "pitch": 1.05,
+    "rate": 1.09,
     "recommendedFor": "both",
     "desc": "Giọng đọc đỉnh cao hội tụ toàn bộ 5 tầng DNA: Hook sáng -> Lợi ích ấm -> Báo giá sâu -> Khẩn cấp nhanh -> CTA đanh -> Chốt hạ quyết đoán.",
     "sampleText": "Duy nhất trong phiên live này: cơ hội sở hữu trọn bộ giải pháp cao cấp với mức giá độc quyền! Bấm Mua Ngay để nhận trọn bộ quà tặng đặc quyền!",
-    "edgePitch": "+8%",
+    "edgePitch": "+10%",
     "edgeRate": "+14%",
     "neuralVoice": "vi-VN-HoaiMyNeural",
     "dna": {
@@ -5426,9 +5504,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
       "lowGain": 2.5,
       "midFreq": 1100,
       "midGain": 3.2,
-      "presenceFreq": 3700,
-      "presenceGain": 5.5,
-      "highGain": 3.5,
+      "presenceFreq": 3800,
+      "presenceGain": 5.2,
+      "highGain": 3.4,
       "reverb": 0.05,
       "reverbDecay": 0.3,
       "compressor": {
@@ -5436,7 +5514,9 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
         "ratio": 4.5,
         "attack": 0.004,
         "release": 0.12
-      }
+      },
+      "semitones": 1.2,
+      "detune": 120
     }
   }
 ];
@@ -7776,10 +7856,10 @@ export function getVoicePitchShiftFactor(voice, isMale) {
   }
   if (voice?.dspProfile?.semitones !== undefined && !isNaN(Number(voice.dspProfile.semitones))) {
     const st = Number(voice.dspProfile.semitones);
-    return Math.max(0.80, Math.min(1.30, Math.pow(2, st / 12)));
+    return Math.max(0.92, Math.min(1.25, Math.pow(2, st / 12)));
   }
   if (voice?.pitch !== undefined && !isNaN(Number(voice.pitch)) && Number(voice.pitch) !== 1.0) {
-    return Math.max(0.80, Math.min(1.30, Number(voice.pitch)));
+    return Math.max(0.92, Math.min(1.25, Number(voice.pitch)));
   }
   
   const id = (voice?.id || '').toLowerCase();
@@ -7787,9 +7867,9 @@ export function getVoicePitchShiftFactor(voice, isMale) {
   const name = (voice?.name || '').toLowerCase();
   const age = voice?.ageGroup;
 
-  // 1. Nhóm Lão Niên / Cụ Ông / Bà Cụ (Trầm khàn, đục ấm cổ điển)
+  // 1. Nhóm Lão Niên / Cụ Ông / Bà Cụ (Ấm áp, dõng dạc, rõ chữ)
   if (age === 'senior' || age === 'elder' || id.includes('traco') || id.includes('dongy') || id.includes('ongbay') || id.includes('bacu') || id.includes('laonien') || name.includes('cụ') || name.includes('bà bẩy') || name.includes('ông bẩy')) {
-    return isMale ? 0.85 : 0.90;
+    return isMale ? 0.98 : 1.00;
   }
 
   // 2. Nhóm Trẻ Em / Anime / Cute (Trong veo, líu lo)
@@ -7799,25 +7879,25 @@ export function getVoicePitchShiftFactor(voice, isMale) {
 
   // 3. Nhóm Nữ Trẻ / KOC / Hot Trend / Gia Dụng / Skincare / Mỹ Phẩm (Tươi sáng, tự nhiên, ngọt ngào)
   if (id.includes('giadung') || id.includes('mypham') || id.includes('koc') || id.includes('genz') || id.includes('idol') || id.includes('tiktok') || id.includes('shorts') || id.includes('jessica') || id.includes('thao') || id.includes('nhi')) {
-    return isMale ? 1.01 : 1.01;
+    return isMale ? 1.00 : 1.02;
   }
 
-  // 4. Nhóm Nam Trầm / Uy Quyền / Bất Động Sản / Cinematic / Trailer (Trầm hùng, đanh thép)
+  // 4. Nhóm Nam Trầm / Uy Quyền / Bất Động Sản / Cinematic / Trailer (Trầm hùng, dõng dạc)
   if (id.includes('uyquyen') || id.includes('chotsale') || id.includes('batdongsan') || id.includes('docu') || id.includes('cinema') || id.includes('trailer') || id.includes('adam') || id.includes('trieuduong')) {
-    return isMale ? 0.90 : 0.98;
+    return isMale ? 0.98 : 1.00;
   }
 
-  // 5. Nhóm Tâm Sự / Kể Chuyện / Podcast / Luxury / Trầm Hương (Sâu lắng, truyền cảm)
+  // 5. Nhóm Tâm Sự / Kể Chuyện / Podcast / Luxury / Trầm Hương (Sâu lắng, truyền cảm, rõ nét)
   if (id.includes('tam_su') || id.includes('kechuyen') || id.includes('podcast') || id.includes('luxury') || id.includes('tramhuong') || id.includes('giang') || id.includes('matilda') || id.includes('sarah')) {
-    return isMale ? 0.94 : 0.99;
+    return isMale ? 0.98 : 1.00;
   }
 
   // 6. Nhóm Thể Thao / BLV / Gym / Ô Tô (Bùng nổ, rực lửa)
   if (id.includes('thethao') || id.includes('fitness') || id.includes('blv') || id.includes('oto') || id.includes('hung') || id.includes('kevin')) {
-    return isMale ? 1.03 : 1.02;
+    return isMale ? 1.02 : 1.02;
   }
 
-  return isMale ? 0.96 : 1.01;
+  return isMale ? 0.98 : 1.01;
 }
 
 /**
