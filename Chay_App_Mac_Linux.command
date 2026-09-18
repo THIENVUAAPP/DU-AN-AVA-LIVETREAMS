@@ -23,8 +23,8 @@ export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/local/sbin
 
 # 3. Tự động gỡ cờ bảo mật Gatekeeper và cấp quyền thực thi
 xattr -dr com.apple.quarantine "$SCRIPT_DIR" 2>/dev/null || true
-chmod -R 755 "$SCRIPT_DIR" 2>/dev/null || true
 chmod +x "$0" 2>/dev/null || true
+chmod +x "$SCRIPT_DIR"/*.command "$SCRIPT_DIR"/*.sh 2>/dev/null || true
 
 # 4. Tìm Node.js trong tất cả các đường dẫn tiêu chuẩn trên macOS & Linux
 NODE_CMD=""
