@@ -2,6 +2,8 @@ import React, { Component } from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App.jsx';
 import DesktopAppUI from './components/genaidol/DesktopAppUI.jsx';
+import WindowCapturePlayer from './components/genaidol/WindowCapturePlayer.jsx';
+import LiveStreamStandalonePlayer from './components/genaidol/LiveStreamStandalonePlayer.jsx';
 import { TokenProvider } from './components/genaidol/TokenContext.jsx';
 import { sanitizeAllLocalStorage, safeRemoveItem } from './utils/safeStorage.js';
 import { APP_VERSION } from './components/genaidol/UpdateNotificationModal';
@@ -134,7 +136,22 @@ const pathname = typeof window !== 'undefined' ? window.location.pathname.toLowe
 const searchParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : new URLSearchParams();
 const hostname = typeof window !== 'undefined' ? window.location.hostname.toLowerCase() : '';
 
+const isWindowCapture = 
+  pathname.includes('/window-capture') || 
+  pathname.includes('/window_capture') || 
+  searchParams.get('mode') === 'window_capture' || 
+  searchParams.get('view') === 'window_capture';
+
+const isLiveStreamStandalone = 
+  (!isWindowCapture) && (
+    pathname.includes('/live-stream') || 
+    pathname.includes('/live-player') || 
+    pathname.includes('/stream-player')
+  );
+
 const hasOverlayParam = 
+  isWindowCapture ||
+  isLiveStreamStandalone ||
   searchParams.has('overlay') || 
   pathname.includes('/live') || 
   pathname.includes('/battle') || 
@@ -161,7 +178,15 @@ ReactDOM.createRoot(document.getElementById('root')).render(
   <React.StrictMode>
     <ErrorBoundary>
       <TokenProvider>
-        {isDesktopMode ? <DesktopAppUI /> : <App />}
+        {isWindowCapture ? (
+          <WindowCapturePlayer />
+        ) : isLiveStreamStandalone ? (
+          <LiveStreamStandalonePlayer />
+        ) : isDesktopMode ? (
+          <DesktopAppUI />
+        ) : (
+          <App />
+        )}
       </TokenProvider>
     </ErrorBoundary>
   </React.StrictMode>,
