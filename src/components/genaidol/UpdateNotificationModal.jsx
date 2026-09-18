@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.7.3';
+export const APP_VERSION = '3.7.4';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v3.7.4 - Tối Ưu Bê Nguyên Xi Video 100% Vào Window Capture & TikTok Live Studio',
+    description: '1. Khắc Phục Lỗi Mở Video Trên Window Capture: Tự động trích xuất trực tiếp nguồn phát từ phần mềm chính, bộ nhớ đệm và IndexedDB 0ms; 2. Loại Bỏ Rào Cản CORS: Tối ưu thẻ video phát trực tiếp không bị gián đoạn; 3. Hình Ảnh Siêu Mượt 60 FPS, Siêu Sắc Nét 4K/8K: Không giật lag, không đứng hình.'
+  },
   {
     title: '⚡ Bản Cập Nhật v3.7.3 - Tối Ưu Hóa & Dọn Dẹp Dung Lượng Dự Án (Giải Phóng Hơn 56GB Dữ Liệu Rác)',
     description: '1. Dọn Dẹp File Rác & Bản Tải Cũ: Loại bỏ toàn bộ các bản video test trùng lặp cũ và các file zip đóng gói trước đây, giải phóng ngay hơn 56GB dung lượng đĩa; 2. Hệ Thống Auto-Prune Thông Minh: Tự động duy trì và dọn dẹp file thừa định kỳ, giữ lại nguyên vẹn file đang live và các file mới nhất; 3. Bảo Toàn 100% Tính Năng Web App & Livestream.'

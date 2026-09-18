@@ -1948,73 +1948,77 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   const handleSelectCharacter = useCallback((charId) => {
     const charItem = customCharacters.find(c => c.id === charId);
     if (!charItem) return;
-    const charUrl = charItem.mediaUrl || charItem.url;
+    let charUrl = charItem.mediaUrl || charItem.url;
     setSelectedCharacter(charId);
     try { localStorage.setItem('avalive_selected_char', charId); } catch (e) {}
     setIsGameBattleActive(false);
     setIsGameBanDoActive(false);
-    if (charUrl) {
-      let cleanUrl = charUrl;
-      if (typeof cleanUrl === 'string' && cleanUrl.includes('/uploads/')) {
-        cleanUrl = cleanUrl.substring(cleanUrl.indexOf('/uploads/'));
+
+    const memBlob = (typeof window !== 'undefined' && window.__activeMediaBlobMap && window.__activeMediaBlobMap.get(charId)) || charItem.fileData || charItem.fileBlob || (typeof window !== 'undefined' && window.__activeMediaBlob) || null;
+    let fileBlob = memBlob;
+    let blobUrl = fileBlob ? URL.createObjectURL(fileBlob) : ((charItem.url && charItem.url.startsWith('blob:')) ? charItem.url : null);
+
+    if (fileBlob) {
+      currentFileBlobRef.current = fileBlob;
+      if (blobUrl) currentBlobUrlRef.current = blobUrl;
+      if (typeof window !== 'undefined') {
+        window.__activeMediaBlob = fileBlob;
+        window.__activeMediaBlobUrl = blobUrl;
+        window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+        window.__activeMediaBlobMap.set(charItem.id, fileBlob);
+        if (charUrl) window.__activeMediaBlobMap.set(charUrl, fileBlob);
+        if (blobUrl) window.__activeMediaBlobMap.set(blobUrl, fileBlob);
       }
+    }
+
+    let cleanUrl = charUrl || '';
+    if (typeof cleanUrl === 'string' && cleanUrl.includes('/uploads/')) {
+      cleanUrl = cleanUrl.substring(cleanUrl.indexOf('/uploads/'));
+    }
+    if (cleanUrl) {
       setUserLockedMediaUrl(cleanUrl);
       try {
         localStorage.setItem('avalive_user_locked_media', cleanUrl);
-        localStorage.setItem('avalive_active_video_src', cleanUrl);
+        localStorage.setItem('avalive_active_video_src', blobUrl || cleanUrl);
       } catch (e) {}
-      const blobUrl = (charItem.url && charItem.url.startsWith('blob:')) ? charItem.url : null;
-      const fileBlob = charItem.fileData || charItem.fileBlob || (window.__activeMediaBlobMap && window.__activeMediaBlobMap.get(charItem.id)) || window.__activeMediaBlob || null;
-      if (fileBlob) currentFileBlobRef.current = fileBlob;
-      if (blobUrl) currentBlobUrlRef.current = blobUrl;
-
-      if (typeof window !== 'undefined') {
-        if (fileBlob) {
-          window.__activeMediaBlob = fileBlob;
-          window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
-          window.__activeMediaBlobMap.set(charItem.id, fileBlob);
-          window.__activeMediaBlobMap.set(cleanUrl, fileBlob);
-          if (blobUrl) window.__activeMediaBlobMap.set(blobUrl, fileBlob);
-        }
-        if (blobUrl) {
-          window.__activeMediaBlobUrl = blobUrl;
-        }
-      }
-
-      if (desktopVideoRef.current) {
-        desktopVideoRef.current.src = blobUrl || cleanUrl;
-        desktopVideoRef.current.currentTime = 0;
-        desktopVideoRef.current.dataset.userPaused = 'false';
-        desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
-      }
-      setIsVideoPlaying(true);
-      try {
-        const bc = new BroadcastChannel('avalive_master_live_stream');
-        bc.postMessage({
-          type: 'GLOBAL_MEDIA_CHANGE',
-          mediaUrl: cleanUrl,
-          blobUrl: blobUrl,
-          fileBlob: fileBlob,
-          characterId: charItem.id,
-          characterName: charItem.name || 'AI Idol',
-          isVideo: true,
-          isPlaying: true,
-          currentTime: 0,
-          force: true,
-          source: 'desktop',
-          timestamp: Date.now()
-        });
-        setTimeout(() => bc.close(), 100);
-      } catch (e) {}
-      sendVideoControl({
-        action: 'play',
-        currentTime: 0,
-        isPlaying: true,
-        force: true,
-        mediaUrl: cleanUrl,
-        timestamp: Date.now()
-      }, socketRef.current);
     }
+
+    const playSrc = blobUrl || cleanUrl;
+    if (playSrc && desktopVideoRef.current) {
+      desktopVideoRef.current.src = playSrc;
+      desktopVideoRef.current.currentTime = 0;
+      desktopVideoRef.current.dataset.userPaused = 'false';
+      desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+    }
+    setIsVideoPlaying(true);
+
+    try {
+      const bc = new BroadcastChannel('avalive_master_live_stream');
+      bc.postMessage({
+        type: 'GLOBAL_MEDIA_CHANGE',
+        mediaUrl: cleanUrl || blobUrl,
+        blobUrl: blobUrl,
+        fileBlob: fileBlob,
+        characterId: charItem.id,
+        characterName: charItem.name || 'AI Idol',
+        isVideo: true,
+        isPlaying: true,
+        currentTime: 0,
+        force: true,
+        source: 'desktop',
+        timestamp: Date.now()
+      });
+      setTimeout(() => bc.close(), 100);
+    } catch (e) {}
+
+    sendVideoControl({
+      action: 'play',
+      currentTime: 0,
+      isPlaying: true,
+      force: true,
+      mediaUrl: cleanUrl || blobUrl,
+      timestamp: Date.now()
+    }, socketRef.current);
   }, [customCharacters]);
 
   // Nút Bật/Tắt Video trên màn hình phần mềm: độc lập 100%, dùng để xem thử / kiểm tra video

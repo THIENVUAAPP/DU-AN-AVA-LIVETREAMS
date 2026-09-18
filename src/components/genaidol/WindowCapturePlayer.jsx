@@ -20,7 +20,7 @@ export default function WindowCapturePlayer() {
   });
 
   const [videoSrc, setVideoSrc] = useState(() => {
-    if (typeof window === 'undefined') return '/uploads/media-1789044811424-233037063.mp4';
+    if (typeof window === 'undefined') return '';
     // ⚡ BÊ NGUYÊN XI 100% NGUỒN VIDEO ĐANG PHÁT TỪ PHẦN MỀM CHÍNH (0ms, 0 byte mạng, nguyên bản siêu nét)
     try {
       // 1. Ưu tiên số 1: Lấy Blob trực tiếp từ Window opener và tạo Object URL trong document context của cửa sổ con này
@@ -35,6 +35,13 @@ export default function WindowCapturePlayer() {
             }
           }
         }
+        try {
+          const openerVid = window.opener.document.querySelector('video[data-main-player="true"]') || window.opener.document.querySelector('video');
+          if (openerVid && (openerVid.currentSrc || openerVid.src)) {
+            const src = openerVid.currentSrc || openerVid.src;
+            if (src && !src.startsWith('blob:') && !src.startsWith('data:')) return src;
+          }
+        } catch (e) {}
       }
 
       // 2. Ưu tiên số 2: Lấy Blob trực tiếp từ Window hiện tại
@@ -61,7 +68,7 @@ export default function WindowCapturePlayer() {
       const locked = localStorage.getItem('avalive_user_locked_media') || '';
       if (locked && !locked.startsWith('blob:')) return locked;
     } catch (e) {}
-    return '/uploads/media-1789044811424-233037063.mp4';
+    return '';
   });
 
   const [fitMode, setFitMode] = useState(() => {
@@ -544,7 +551,6 @@ export default function WindowCapturePlayer() {
         preload="auto"
         disablePictureInPicture
         controlsList="nodownload nofullscreen noremoteplayback"
-        crossOrigin={resolvedFinalSrc && resolvedFinalSrc.startsWith('blob:') ? undefined : "anonymous"}
         onLoadedData={() => setIsVideoLoading(false)}
         onCanPlay={() => setIsVideoLoading(false)}
         onWaiting={() => setIsVideoLoading(true)}
