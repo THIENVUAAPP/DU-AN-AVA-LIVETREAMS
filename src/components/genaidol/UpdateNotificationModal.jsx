@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.5.7';
+export const APP_VERSION = '3.5.8';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v3.5.7 - Đột Phá Voice AI: Giọng Nam 40t+ Dõng Dạc, Chuẩn Sắc Âm Vang & Triệt Tiêu Khàn Rè Cà Rề',
-    description: '1. Khắc Phục Triệt Để Giọng Nam 40t+: Xử lý dứt điểm hiện tượng đọc chậm cà rề và rè khàn đục méo tiếng; loại bỏ toàn bộ hạ âm pitch tiêu cực, đảm bảo giọng nam phát ra dõng dạc, đĩnh đạc, sang trọng, hào sảng, chuẩn từng phụ âm; 2. Hệ Thống 40 Master DNA Voices Nữ (20-24t): Hoàn toàn độc bản 100% về cao độ, âm sắc, cảm xúc và vùng miền Bắc - Trung - Nam; 3. Nâng Cấp Bộ Xử Lý DSP Presence EQ (3500Hz) & High Gain: Giúp giọng đọc trong trẻo, to rõ, chuẩn phòng thu chuyên nghiệp.'
+    title: '⚡ Bản Cập Nhật v3.5.8 - Ra Mắt Bộ Sưu Tập 40 Master DNA Voices Nam: Phân Hóa Triệt Để 4 Độ Tuổi & Đa Vùng Miền',
+    description: '1. Hệ Thống 40 Master DNA Voices Nam Độc Bản 100%: Phân chia chính xác theo 4 độ tuổi (Nam Trẻ GenZ 18-24t, Nam Trưởng Thành 25-34t, Nam Trung Niên 35-45t, Nam Cao Niên 46-65+t); 2. Phân Tách Âm Sắc, Tông Giọng & Ngữ Điệu: Mỗi giọng mang tần số EQ, Presence và tốc độ độc lập từ BLV Game PK, Chốt Sale Sài Gòn, BTV Thời Sự đến Thầy Thuốc & Lão Thành; 3. Giữ Vững Độ Trong Trẻo & Dõng Dạc: Không trùng lặp tần số, không méo tiếng, không cà rề, âm lượng lớn và phát âm chuẩn từng phụ âm.'
   }
 ];
 

@@ -3,6 +3,7 @@ import { Volume2, VolumeX, Play, Square, Sparkles, ChevronDown, Check, Gauge, Sl
 import { 
   ALL_SYSTEM_VOICES, 
   MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES,
+  MASTER_DNA_MALE_VIETNAMESE_40_VOICES,
   VIETNAMESE_HOTTREND_VOICES,
   VIETNAMESE_SALES_VOICES,
   VIETNAMESE_FEMALE_VOICES,
@@ -687,26 +688,34 @@ export default function EventVoiceTester({
         ))}
       </optgroup>
 
-      {/* 4. 👔 GIỌNG NAM VIỆT NAM (THEO ĐỘ TUỔI & PHONG CÁCH) */}
-      <optgroup label="── 👨 NAM TRẺ 20–28t (BLV Game PK, Creator & TikTok) ──">
-        {VIETNAMESE_MALE_VOICES.filter(v => v.ageGroup === 'young').map(v => (
-          <option key={`male_young_${v.id}`} value={v.id}>
+      {/* 4. 👔 GIỌNG NAM VIỆT NAM (THEO 4 ĐỘ TUỔI & PHONG CÁCH ĐỘC BẢN) */}
+      <optgroup label="── 👨 NAM TRẺ 18–24t (GenZ Bắt Trend, BLV Game & TikTok Viral) ──">
+        {MASTER_DNA_MALE_VIETNAMESE_40_VOICES.filter(v => v.ageRange === '18-24').map(v => (
+          <option key={`male_18_24_${v.id}`} value={v.id}>
             {cleanVoiceName(v.name)}
           </option>
         ))}
       </optgroup>
 
-      <optgroup label="── 👨 NAM TRƯỞNG THÀNH 28–40t (MC Sự Kiện, Phóng Sự VTV & Doanh Nhân) ──">
-        {VIETNAMESE_MALE_VOICES.filter(v => v.ageGroup === 'middle').map(v => (
-          <option key={`male_mid_${v.id}`} value={v.id}>
+      <optgroup label="── 👨 NAM TRƯỞNG THÀNH 25–34t (Chốt Deal, MC Sự Kiện & Doanh Nhân) ──">
+        {MASTER_DNA_MALE_VIETNAMESE_40_VOICES.filter(v => v.ageRange === '25-34').map(v => (
+          <option key={`male_25_34_${v.id}`} value={v.id}>
             {cleanVoiceName(v.name)}
           </option>
         ))}
       </optgroup>
 
-      <optgroup label="── 👴 NAM TRUNG & LÃO NIÊN 40–70t (Bác Sĩ, Lão Nông & Thầy Lang) ──">
-        {VIETNAMESE_MALE_VOICES.filter(v => v.ageGroup === 'elder' || v.ageGroup === 'senior').map(v => (
-          <option key={`male_eld_${v.id}`} value={v.id}>
+      <optgroup label="── 👔 NAM TRUNG NIÊN 35–45t (BTV Thời Sự VTV, Doanh Nhân & Phim Bom Tấn) ──">
+        {MASTER_DNA_MALE_VIETNAMESE_40_VOICES.filter(v => v.ageRange === '35-45').map(v => (
+          <option key={`male_35_45_${v.id}`} value={v.id}>
+            {cleanVoiceName(v.name)}
+          </option>
+        ))}
+      </optgroup>
+
+      <optgroup label="── 👴 NAM CAO NIÊN 46–65+t (Lão Thành, Lương Y & Phong Trần Từng Trải) ──">
+        {MASTER_DNA_MALE_VIETNAMESE_40_VOICES.filter(v => v.ageRange === '46-65+').map(v => (
+          <option key={`male_46_65_${v.id}`} value={v.id}>
             {cleanVoiceName(v.name)}
           </option>
         ))}

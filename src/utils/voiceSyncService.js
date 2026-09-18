@@ -14,9 +14,9 @@
 
 import { globalLipSyncEngine } from '../lib/avatar-sync/AvatarLipSyncEngine';
 import { masterNormalizeVietnameseSpeech } from './vietnamesePronunciationMaster';
+import { MASTER_DNA_MALE_VIETNAMESE_40_VOICES } from './maleVoicesMasterDNA';
 
-
-// ==================== 1. 25 GIỌNG NỮ VIỆT NAM CAO CẤP PHÂN THEO 3 ĐỘ TUỔI (20-28t | 28-40t | 40-70t) ====================
+export { MASTER_DNA_MALE_VIETNAMESE_40_VOICES };
 export const VIETNAMESE_FEMALE_VOICES = [
   // ---------------------------------------------------------------------------------------------------------
   // 🌸 PHÂN KHÚC 1: ĐỘ TUỔI 20 - 28 TUỔI (15 GIỌNG NỮ ĐỘC BẢN • ĐA VÙNG MIỀN • IDOL VIRAL • TÔNG SẮC HOÀN TOÀN KHÁC BIỆT)
@@ -721,8 +721,9 @@ export const VIETNAMESE_FEMALE_VOICES = [
   }
 ];
 
-// ==================== 2. 20 GIỌNG NAM VIỆT NAM CAO CẤP (NAM TÍNH, TRẦM HÙNG, TỐC ĐỘ CHUẨN XÁC 100%) ====================
+// ==================== 2. 60 GIỌNG NAM VIỆT NAM CAO CẤP (ĐA ĐỘ TUỔI 18-65t, TRẦM HÙNG, CHUYÊN NGHIỆP) ====================
 export const VIETNAMESE_MALE_VOICES = [
+  ...MASTER_DNA_MALE_VIETNAMESE_40_VOICES,
   {
     id: 'el_adam',
     name: 'Adam 👑 (Nam - Thuyết Trình Điềm Đạm Chuẩn Quốc Gia [Miền Bắc])',
@@ -5523,6 +5524,7 @@ export const MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES = [
 
 export const VIETNAMESE_HOTTREND_VOICES = [
   ...MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES,
+  ...MASTER_DNA_MALE_VIETNAMESE_40_VOICES,
   {
     id: 'hottrend_adam',
     name: 'Adam 👑 (Nam Authority - Bán Hàng, Review & Storytelling Mạnh)',
@@ -6746,9 +6748,10 @@ export const INTERNATIONAL_VOICES = [
   }
 ];
 
-// Toàn bộ danh sách 109 giọng AI Studio Pro (bao gồm 20 giọng Hot Trend)
+// Toàn bộ danh sách hơn 150 giọng AI Studio Pro (bao gồm 40 Master Nữ + 40 Master Nam)
 export const ALL_SYSTEM_VOICES = [
   ...MASTER_DNA_FEMALE_VIETNAMESE_40_VOICES,
+  ...MASTER_DNA_MALE_VIETNAMESE_40_VOICES,
   ...VIETNAMESE_HOTTREND_VOICES,
   ...VIETNAMESE_SALES_VOICES,
   ...VIETNAMESE_FEMALE_VOICES,
@@ -7961,26 +7964,27 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   // 🎛️ BỘ XỬ LÝ ÂM SẮC & EQ MASTERING CHUYÊN BIỆT CHO TỪNG GIỌNG ĐỌC (VOICE ACOUSTIC DSP)
   let lastNode = source;
 
-  // 1. Low Shelf Filter (Điều chỉnh độ trầm, ấm của giọng đọc - tuyệt đối không boost quá mức cho Nam gây ù rè)
-  const lowGainVal = isMale ? Math.min(0.5, Math.max(-1.0, dsp.lowGain || 0)) : (dsp.lowGain || 0);
+  // 1. Low Shelf Filter (Điều chỉnh độ trầm, ấm của giọng đọc)
+  const lowGainVal = dsp.lowGain !== undefined ? Number(dsp.lowGain) : (isMale ? 0.8 : 0);
   if (lowGainVal !== 0) {
     try {
       const lowFilter = audioCtx.createBiquadFilter();
       lowFilter.type = 'lowshelf';
       lowFilter.frequency.value = 250;
-      lowFilter.gain.value = Math.max(-4, Math.min(4, lowGainVal));
+      lowFilter.gain.value = Math.max(-4, Math.min(5, lowGainVal));
       lastNode.connect(lowFilter);
       lastNode = lowFilter;
     } catch (e) {}
   }
 
-  // 2. Peaking Mid Filter (Sáng rõ trung âm)
-  const midGainVal = isMale ? Math.max(1.8, Math.min(3.2, dsp.midGain || 2.2)) : (dsp.midGain || 0);
+  // 2. Peaking Mid Filter (Sáng rõ trung âm theo từng dải tần riêng của từng giọng)
+  const midGainVal = dsp.midGain !== undefined ? Number(dsp.midGain) : (isMale ? 2.6 : 2.2);
+  const midFreqVal = dsp.midFreq || (isMale ? 850 : 1200);
   if (midGainVal !== 0) {
     try {
       const midFilter = audioCtx.createBiquadFilter();
       midFilter.type = 'peaking';
-      midFilter.frequency.value = isMale ? 1200 : (dsp.midFreq || 1200);
+      midFilter.frequency.value = midFreqVal;
       midFilter.Q.value = 1.0;
       midFilter.gain.value = Math.max(-4, Math.min(4, midGainVal));
       lastNode.connect(midFilter);
@@ -7989,12 +7993,13 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   }
 
   // 3. Presence Peaking Filter (Âm sắc phát âm thanh quản - CỰC KỲ RÕ CHỮ, DÕNG DẠC TỪNG CHỮ MỘT)
-  const presenceGainVal = isMale ? Math.max(4.5, Math.min(6.5, dsp.presenceGain || 5.0)) : (dsp.presenceGain || 0);
+  const presenceGainVal = dsp.presenceGain !== undefined ? Number(dsp.presenceGain) : (isMale ? 5.0 : 4.5);
+  const presenceFreqVal = dsp.presenceFreq || (isMale ? 3400 : 3800);
   if (presenceGainVal !== 0) {
     try {
       const presenceFilter = audioCtx.createBiquadFilter();
       presenceFilter.type = 'peaking';
-      presenceFilter.frequency.value = isMale ? 3500 : (dsp.presenceFreq || 3800);
+      presenceFilter.frequency.value = presenceFreqVal;
       presenceFilter.Q.value = 1.2;
       presenceFilter.gain.value = Math.max(-4, Math.min(6.5, presenceGainVal));
       lastNode.connect(presenceFilter);
@@ -8003,7 +8008,7 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   }
 
   // 4. High Shelf Filter (Độ trong trẻo, không khí phòng thu studio chuẩn broadcast)
-  const highGainVal = isMale ? Math.max(2.2, Math.min(4.5, dsp.highGain || 2.8)) : (dsp.highGain || 0);
+  const highGainVal = dsp.highGain !== undefined ? Number(dsp.highGain) : (isMale ? 2.5 : 3.0);
   if (highGainVal !== 0) {
     try {
       const highFilter = audioCtx.createBiquadFilter();
@@ -8131,16 +8136,16 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
   if (voice?.edgePitch && voice.edgePitch.includes('%')) {
     basePitchNum = parseInt(voice.edgePitch.replace('%', ''), 10) || 0;
   } else if (voice?.dspProfile?.semitones !== undefined) {
-    basePitchNum = Math.round(voice.dspProfile.semitones * 5);
+    basePitchNum = Math.round(voice.dspProfile.semitones * 6);
   }
   let userPitchOffset = 0;
   if (voice?.pitch !== undefined && !isNaN(Number(voice.pitch))) {
     userPitchOffset = Math.round((Number(voice.pitch) - 1.0) * 80);
   }
   let finalPitchNum = Math.max(-60, Math.min(60, basePitchNum + userPitchOffset));
-  // ⚡ ĐỐI VỚI TẤT CẢ GIỌNG NAM (đặc biệt 40t+): Tuyệt đối không hạ âm pitch xuống âm vì sẽ bóp méo dải formant, làm giọng bị khàn đục, ồ ồ rè tiếng
+  // ⚡ ĐỐI VỚI GIỌNG NAM: Cho phép dải âm sắc phong phú theo lứa tuổi (Trẻ +15%, Thanh niên +3%, Trung niên -3%, Cao niên -8%) mà vẫn giữ nguyên độ trong trẻo và formant sạch
   if (isMale) {
-    finalPitchNum = Math.max(0, finalPitchNum);
+    finalPitchNum = Math.max(-12, Math.min(25, finalPitchNum));
   }
   const effectivePitch = (finalPitchNum >= 0 ? '+' : '') + finalPitchNum + '%';
 
@@ -8154,9 +8159,9 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
     userRateOffset = Math.round((Number(voice.rate) - 1.0) * 100);
   }
   let finalRateNum = Math.max(-50, Math.min(80, baseRateNum + userRateOffset));
-  // ⚡ ĐỐI VỚI GIỌNG NAM: Tốc độ tối thiểu +5% để luôn nói dứt khoát, nhanh nhẹn, không bao giờ bị cà rề chậm chạp
+  // ⚡ ĐỐI VỚI GIỌNG NAM: Tốc độ luôn giữ từ 0% trở lên để giọng luôn lưu loát, dõng dạc, không bao giờ bị cà rề chậm chạp
   if (isMale) {
-    finalRateNum = Math.max(5, finalRateNum);
+    finalRateNum = Math.max(0, Math.min(50, finalRateNum));
   }
   const effectiveRate = (finalRateNum >= 0 ? '+' : '') + finalRateNum + '%';
 
