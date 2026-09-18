@@ -1848,6 +1848,9 @@ IDOL MỈM CƯỜI + GESTURE
         if (!matchName && !matchCategory && !matchDesc && !matchLang && !matchIndustry) return false;
       }
 
+      const isFemVoice = v.gender === 'Female' || v.gender === 'Nữ' || (v.gender || '').toLowerCase() === 'female';
+      const isMalVoice = v.gender === 'Male' || v.gender === 'Nam' || (v.gender || '').toLowerCase() === 'male';
+
       // 2. Category / Region / Gender / Dialect / Favorite filter
       if (currentFilter === 'favorites') return isFav;
       if (currentFilter === 'sales' || currentFilter === 'vn_sales') return isSales;
@@ -1856,14 +1859,14 @@ IDOL MỈM CƯỜI + GESTURE
       if (currentFilter === 'dialect_nam') return isVn && (v.dialect === 'nam' || v.category?.includes('Nam') || v.name?.includes('Sài Gòn') || v.name?.includes('Nam'));
       if (currentFilter === 'dialect_tay') return isVn && (v.dialect === 'tay' || v.category?.includes('Tây') || v.name?.includes('Miền Tây') || v.name?.includes('Sông Nước') || v.name?.includes('Cần Thơ') || v.name?.includes('Tây'));
       if (currentFilter === 'vn_all') return isVn;
-      if (currentFilter === 'vn_female') return isVn && (v.gender === 'Female' || v.gender === 'Nữ');
-      if (currentFilter === 'vn_male') return isVn && (v.gender === 'Male' || v.gender === 'Nam');
+      if (currentFilter === 'vn_female') return isVn && isFemVoice;
+      if (currentFilter === 'vn_male') return isVn && isMalVoice;
       if (currentFilter === 'vn_young') return isVn && (v.ageGroup === 'young' || v.styleCategory === 'idol_genz');
       if (currentFilter === 'vn_mc') return isVn && v.styleCategory === 'mc_btv';
       if (currentFilter === 'vn_game') return isVn && v.styleCategory === 'blv_game';
       if (currentFilter === 'vn_mature') return isVn && (v.ageGroup === 'mature' || v.ageGroup === 'middle' || v.styleCategory === 'doanhnhan' || v.ageGroup === 'elder');
-      if (currentFilter === 'female') return v.gender === 'Female' || v.gender === 'Nữ';
-      if (currentFilter === 'male') return v.gender === 'Male' || v.gender === 'Nam';
+      if (currentFilter === 'female') return isFemVoice;
+      if (currentFilter === 'male') return isMalVoice;
       if (currentFilter === 'vi') return isVn;
       if (currentFilter === 'pro') return v.tier === 'pro';
       if (currentFilter === 'us_uk') return !isVn && v.region === 'us_uk';
@@ -2675,7 +2678,9 @@ IDOL MỈM CƯỜI + GESTURE
                     <tbody className="divide-y divide-gray-200">
                       {VIETNAMESE_HOTTREND_VOICES
                         .filter(v => {
-                          if (hotTrendGender !== 'all' && v.gender !== hotTrendGender) return false;
+                          const isFem = v.gender === 'Female' || v.gender === 'Nữ' || (v.gender || '').toLowerCase() === 'female';
+                          if (hotTrendGender === 'Female' && !isFem) return false;
+                          if (hotTrendGender === 'Male' && isFem) return false;
                           if (hotTrendCategory === 'sales') {
                             if (!v.id.includes('sales') && !v.id.includes('closer') && !v.id.includes('fomo') && !v.id.includes('adam') && !v.id.includes('tungdang') && !v.id.includes('charme') && !v.id.includes('desire') && !v.category?.includes('Bán Hàng') && !v.category?.includes('Chốt Deal')) return false;
                           } else if (hotTrendCategory === 'social') {
@@ -3162,8 +3167,8 @@ IDOL MỈM CƯỜI + GESTURE
                       <span className="text-[11px] font-bold text-gray-500 px-1.5">Giới Tính:</span>
                       {[
                         { key: 'all', label: 'Tất cả' },
-                        { key: 'Male', label: '👨 Nam (16)' },
-                        { key: 'Female', label: '👩 Nữ (14)' }
+                        { key: 'Male', label: `👨 Nam (${VIETNAMESE_SALES_VOICES.filter(v => v.gender === 'Male' || v.gender === 'Nam' || (v.gender || '').toLowerCase() === 'male').length})` },
+                        { key: 'Female', label: `👩 Nữ (${VIETNAMESE_SALES_VOICES.filter(v => v.gender === 'Female' || v.gender === 'Nữ' || (v.gender || '').toLowerCase() === 'female').length})` }
                       ].map(tab => (
                         <button
                           key={tab.key}
@@ -3202,7 +3207,9 @@ IDOL MỈM CƯỜI + GESTURE
                         .filter(v => {
                           if (salesFilterRegion !== 'all' && v.dialect !== salesFilterRegion) return false;
                           if (salesFilterAge !== 'all' && v.ageGroup !== salesFilterAge) return false;
-                          if (salesFilterGender !== 'all' && v.gender !== salesFilterGender) return false;
+                          const isFem = v.gender === 'Female' || v.gender === 'Nữ' || (v.gender || '').toLowerCase() === 'female';
+                          if (salesFilterGender === 'Female' && !isFem) return false;
+                          if (salesFilterGender === 'Male' && isFem) return false;
                           if (salesSearchQuery.trim()) {
                             const q = salesSearchQuery.toLowerCase();
                             const matchName = v.name?.toLowerCase().includes(q);
@@ -3944,9 +3951,10 @@ IDOL MỈM CƯỜI + GESTURE
 
                           // 3. Gender Filter
                           if (avaGenderFilter !== 'all') {
-                            const isFemale = v.gender === 'Female' || v.gender === 'Nữ';
-                            if (avaGenderFilter === 'Female' && !isFemale) return false;
-                            if (avaGenderFilter === 'Male' && isFemale) return false;
+                            const isFemVoice = v.gender === 'Female' || v.gender === 'Nữ' || (v.gender || '').toLowerCase() === 'female';
+                            const isMalVoice = v.gender === 'Male' || v.gender === 'Nam' || (v.gender || '').toLowerCase() === 'male';
+                            if (avaGenderFilter === 'Female' && !isFemVoice) return false;
+                            if (avaGenderFilter === 'Male' && !isMalVoice) return false;
                           }
 
                           // 4. Age Filter

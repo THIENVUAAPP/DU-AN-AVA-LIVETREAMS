@@ -4473,7 +4473,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     <div className={`w-full h-screen flex flex-col font-sans transition-colors duration-200 ${isDarkMode ? 'bg-[#0f0f13] text-white' : 'bg-slate-100 text-slate-900'}`}>
       
       {/* 1. Fake Window Title Bar (Thu nhỏ ~30% đồng đều tất cả các ô nút bấm) */}
-      <div className={`flex items-center justify-between px-2 py-1 ${isDarkMode ? 'bg-[#1c1c23] border-gray-800 text-white' : 'bg-slate-200 border-slate-300 text-slate-800'} select-none z-30 border-b`}>
+      <div className={`flex items-center justify-between px-2 py-1 ${isDarkMode ? 'bg-[#1c1c23] border-gray-800 text-white' : 'bg-slate-200 border-slate-300 text-slate-800'} select-none z-50 border-b`}>
         <div className="flex items-center gap-2 shrink-0 max-w-[40%]">
           <div className="relative flex items-center justify-center shrink-0 group">
             <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-pink-500 rounded-lg blur-xs opacity-75 group-hover:opacity-100 transition animate-pulse"></div>
@@ -4606,85 +4606,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 {SUPPORTED_LANGUAGES.find(l => l.code === currentLang)?.flag || '🌐'} {SUPPORTED_LANGUAGES.find(l => l.code === currentLang)?.name || 'Ngôn ngữ'}
               </span>
             </button>
-            {isLangDropdownOpen && (
-              <div className="fixed inset-0 z-[999999] flex items-start justify-end p-2 sm:p-4 pt-12 pointer-events-none">
-                <div 
-                  className="fixed inset-0 bg-black/40 backdrop-blur-xs pointer-events-auto" 
-                  onClick={() => setIsLangDropdownOpen(false)} 
-                />
-                <div className={`relative pointer-events-auto w-84 max-h-[85vh] overflow-y-auto rounded-2xl shadow-2xl border p-3 ${
-                  isDarkMode ? 'bg-[#181824] border-amber-500/50 text-white shadow-black/90' : 'bg-white border-gray-300 text-slate-800 shadow-2xl'
-                } animate-in fade-in zoom-in-95 duration-150`}>
-                  <div className="px-2.5 py-1.5 text-xs font-black uppercase text-amber-400 border-b border-white/10 mb-2 flex items-center justify-between">
-                    <span className="flex items-center gap-1.5">🌐 20 NGÔN NGỮ QUỐC TẾ</span>
-                    <span className="text-[10px] text-emerald-400 font-normal">Đồng bộ toàn hệ thống</span>
-                  </div>
-                  <div className="space-y-1">
-                    {SUPPORTED_LANGUAGES.map(lang => (
-                      <button
-                        key={lang.code}
-                        type="button"
-                        onClick={() => {
-                          setCurrentLanguage(lang.code);
-                          setCurrentLangState(lang.code);
-                          setIsLangDropdownOpen(false);
-
-                          // Đồng bộ giọng đọc AI mặc định theo ngôn ngữ mới
-                          const voiceMap = {
-                            vi: 'free_vi_female',
-                            en: 'en-US-JennyNeural',
-                            zh: 'zh-CN-XiaoxiaoNeural',
-                            ja: 'ja-JP-NanamiNeural',
-                            ko: 'ko-KR-SunHiNeural',
-                            fr: 'fr-FR-DeniseNeural',
-                            es: 'es-ES-ElviraNeural',
-                            th: 'th-TH-PremwadeeNeural',
-                            pt: 'pt-BR-FranciscaNeural',
-                            de: 'de-DE-KatjaNeural',
-                            it: 'it-IT-ElsaNeural',
-                            ru: 'ru-RU-SvetlanaNeural',
-                            ar: 'ar-SA-ZariyahNeural',
-                            id: 'id-ID-GadisNeural',
-                            hi: 'hi-IN-SwaraNeural',
-                            tr: 'tr-TR-EmelNeural',
-                            pl: 'pl-PL-ZofiaNeural',
-                            nl: 'nl-NL-FennaNeural',
-                            tl: 'fil-PH-AngeloNeural',
-                            ms: 'ms-MY-YasminNeural'
-                          };
-                          const targetVoice = voiceMap[lang.code] || 'free_vi_female';
-                          try {
-                            localStorage.setItem('avalive_default_voice_id', targetVoice);
-                            window.dispatchEvent(new CustomEvent('avalive_default_voice_changed', { detail: { voiceId: targetVoice } }));
-                            postMasterBroadcast({ type: 'GLOBAL_LANGUAGE_CHANGE', language: lang.code });
-                          } catch (e) {}
-
-                          showToast(`🌐 Đã chuyển sang ${lang.name} (${lang.flag}) & Đồng bộ giọng đọc AI`, 'success');
-                        }}
-                        className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 cursor-pointer ${
-                          currentLang === lang.code
-                            ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md ring-1 ring-white/20'
-                            : (isDarkMode ? 'hover:bg-white/10 text-gray-200' : 'hover:bg-gray-100 text-gray-800')
-                        }`}
-                      >
-                        <span className="flex items-center gap-2.5">
-                          <span className="text-xl">{lang.flag}</span>
-                          <span className="flex flex-col">
-                            <span className="font-bold leading-tight">{lang.name}</span>
-                            <span className="text-[10px] opacity-65 font-normal">{lang.country}</span>
-                          </span>
-                        </span>
-                        <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${
-                          currentLang === lang.code ? 'bg-white/20 text-white' : 'bg-black/20 text-gray-400'
-                        }`}>
-                          {lang.code.toUpperCase()}
-                        </span>
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-            )}
           </div>
 
           <button onClick={() => setIsDarkMode(!isDarkMode)} className={`p-0.5 rounded transition-colors ${isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-400 text-gray-800 hover:bg-gray-500'}`}>
@@ -6292,6 +6213,93 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           <button onClick={() => setToast(null)} className="ml-2 opacity-70 hover:opacity-100 transition-opacity">
             <X size={14} />
           </button>
+        </div>
+      )}
+
+      {/* 🌐 MODAL CHỌN 20 NGÔN NGỮ QUỐC TẾ NỔI LỚP TRÊN CÙNG (Z-[9999999]) TUYỆT ĐỐI KHÔNG BỊ CHE */}
+      {isLangDropdownOpen && (
+        <div className="fixed inset-0 z-[9999999] flex items-start justify-end p-2 sm:p-4 pt-11 pointer-events-none">
+          <div 
+            className="fixed inset-0 bg-black/50 backdrop-blur-xs pointer-events-auto" 
+            onClick={() => setIsLangDropdownOpen(false)} 
+          />
+          <div className={`relative pointer-events-auto w-84 max-h-[85vh] overflow-y-auto rounded-2xl shadow-2xl border p-3 ${
+            isDarkMode ? 'bg-[#181824] border-amber-500/50 text-white shadow-black/90' : 'bg-white border-gray-300 text-slate-800 shadow-2xl'
+          } animate-in fade-in zoom-in-95 duration-150`}>
+            <div className="px-2.5 py-1.5 text-xs font-black uppercase text-amber-400 border-b border-white/10 mb-2 flex items-center justify-between">
+              <span className="flex items-center gap-1.5">🌐 20 NGÔN NGỮ QUỐC TẾ</span>
+              <button 
+                type="button" 
+                onClick={() => setIsLangDropdownOpen(false)}
+                className="text-gray-400 hover:text-white p-0.5 rounded cursor-pointer"
+              >
+                <X size={14} />
+              </button>
+            </div>
+            <div className="space-y-1">
+              {SUPPORTED_LANGUAGES.map(lang => (
+                <button
+                  key={lang.code}
+                  type="button"
+                  onClick={() => {
+                    setCurrentLanguage(lang.code);
+                    setCurrentLangState(lang.code);
+                    setIsLangDropdownOpen(false);
+
+                    // Đồng bộ giọng đọc AI mặc định theo ngôn ngữ mới
+                    const voiceMap = {
+                      vi: 'free_vi_female',
+                      en: 'en-US-JennyNeural',
+                      zh: 'zh-CN-XiaoxiaoNeural',
+                      ja: 'ja-JP-NanamiNeural',
+                      ko: 'ko-KR-SunHiNeural',
+                      fr: 'fr-FR-DeniseNeural',
+                      es: 'es-ES-ElviraNeural',
+                      th: 'th-TH-PremwadeeNeural',
+                      pt: 'pt-BR-FranciscaNeural',
+                      de: 'de-DE-KatjaNeural',
+                      it: 'it-IT-ElsaNeural',
+                      ru: 'ru-RU-SvetlanaNeural',
+                      ar: 'ar-SA-ZariyahNeural',
+                      id: 'id-ID-GadisNeural',
+                      hi: 'hi-IN-SwaraNeural',
+                      tr: 'tr-TR-EmelNeural',
+                      pl: 'pl-PL-ZofiaNeural',
+                      nl: 'nl-NL-FennaNeural',
+                      tl: 'fil-PH-AngeloNeural',
+                      ms: 'ms-MY-YasminNeural'
+                    };
+                    const targetVoice = voiceMap[lang.code] || 'free_vi_female';
+                    try {
+                      localStorage.setItem('avalive_default_voice_id', targetVoice);
+                      window.dispatchEvent(new CustomEvent('avalive_default_voice_changed', { detail: { voiceId: targetVoice } }));
+                      postMasterBroadcast({ type: 'GLOBAL_LANGUAGE_CHANGE', language: lang.code });
+                    } catch (e) {}
+
+                    showToast(`🌐 Đã chuyển sang ${lang.name} (${lang.flag}) & Đồng bộ giọng đọc AI`, 'success');
+                  }}
+                  className={`w-full text-left px-3 py-2 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2 cursor-pointer ${
+                    currentLang === lang.code
+                      ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md ring-1 ring-white/20'
+                      : (isDarkMode ? 'hover:bg-white/10 text-gray-200' : 'hover:bg-gray-100 text-gray-800')
+                  }`}
+                >
+                  <span className="flex items-center gap-2.5">
+                    <span className="text-xl">{lang.flag}</span>
+                    <span className="flex flex-col">
+                      <span className="font-bold leading-tight">{lang.name}</span>
+                      <span className="text-[10px] opacity-65 font-normal">{lang.country}</span>
+                    </span>
+                  </span>
+                  <span className={`text-[10px] font-mono px-2 py-0.5 rounded ${
+                    currentLang === lang.code ? 'bg-white/20 text-white' : 'bg-black/20 text-gray-400'
+                  }`}>
+                    {lang.code.toUpperCase()}
+                  </span>
+                </button>
+              ))}
+            </div>
+          </div>
         </div>
       )}
 

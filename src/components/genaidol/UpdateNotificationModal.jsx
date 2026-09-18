@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.6.1';
+export const APP_VERSION = '3.6.2';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v3.6.1 - Hiệu Ứng Spinner Xoay Tròn & Visualizer Sóng Âm Thanh Khi Nghe Thử Giọng Đọc',
-    description: '1. Nâng Cấp Hoạt Ảnh Trực Quan Cho Tất Cả Nút Thử Giọng: Khi bấm nghe thử bất kỳ giọng đọc nào (Master DNA, Hot Trend, Sales, Studio Đa Nhân Vật, Bảng 3 Kênh Vai Trò), hệ thống kích hoạt ngay hiệu ứng Spinner Loader xoay tròn mượt mà cùng visualizer sóng âm thanh nảy động đa tầng; 2. Trực Quan Hóa Trạng Thái Giải Mã & Phát Âm: Giúp người dùng theo dõi chính xác từng luồng âm thanh đang phát realtime; 3. Giữ Vững Tốc Độ Phản Hồi 0ms Siêu Tốc.'
+    title: '⚡ Bản Cập Nhật v3.6.2 - Tối Ưu Z-Index Ngôn Ngữ, Chuẩn Hóa Lọc Giọng Nam/Nữ & Tăng Tốc Độ Phát Âm Thanh 0ms Siêu Tốc',
+    description: '1. Nâng Cấp Modal Ngôn Ngữ Toàn Cầu: Đưa danh sách 20 ngôn ngữ quốc tế nổi lên lớp cao nhất (Z-[9999999]), hoàn toàn không bị các thanh công cụ và tab điều khiển che khuất; 2. Chuẩn Hóa 100% Bộ Lọc Giới Tính Giọng Đọc: Khi chọn Nam chỉ hiển thị duy nhất giọng Nam, chọn Nữ chỉ hiển thị duy nhất giọng Nữ trên tất cả các bảng (Master DNA, Hot Trend, Sales, Studio); 3. Tăng Tốc Độ Phát Audio Tức Thì (Instant 0ms): Tối ưu timeout kết nối và kích hoạt cơ chế dự phòng phát âm thanh siêu tốc, bấm nghe thử là phát ra tiếng ngay lập tức không độ trễ.'
   }
 ];
 

@@ -3152,7 +3152,7 @@ async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+
           pitch: safePitch,
           rate: safeRate,
           outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
-          timeout: 8000
+          timeout: 3500
         });
         await tts.ttsPromise(processedText, tmpFile);
         if (fs.existsSync(tmpFile)) {
