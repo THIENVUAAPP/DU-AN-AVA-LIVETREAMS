@@ -343,8 +343,8 @@ app.all('/uploads/:filename', (req, res, next) => {
       } else {
         start = parseInt(parts[0], 10);
         // Kiểm tra phạm vi hợp lệ
-        if (isNaN(start) || start < 0 || (start >= currentOnDiskSize && currentOnDiskSize >= declaredFileSize)) {
-          res.status(416).set('Content-Range', `bytes */${declaredFileSize}`).end();
+        if (isNaN(start) || start < 0 || start >= currentOnDiskSize) {
+          res.status(416).set('Content-Range', `bytes */${currentOnDiskSize}`).end();
           return;
         }
 
@@ -359,12 +359,8 @@ app.all('/uploads/:filename', (req, res, next) => {
       }
 
       if (end < start) {
-        if (currentOnDiskSize < declaredFileSize) {
-          end = Math.min(start + 1024 * 1024, declaredFileSize - 1);
-        } else {
-          res.status(416).set('Content-Range', `bytes */${declaredFileSize}`).end();
-          return;
-        }
+        res.status(416).set('Content-Range', `bytes */${currentOnDiskSize}`).end();
+        return;
       }
 
       const chunksize = Math.max(1, (end - start) + 1);

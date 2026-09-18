@@ -25,15 +25,23 @@ export default function LiveStreamStandalonePlayer() {
         if (window.opener.__activeMediaBlob && (window.opener.__activeMediaBlob instanceof Blob || window.opener.__activeMediaBlob instanceof File)) {
           return URL.createObjectURL(window.opener.__activeMediaBlob);
         }
-        if (window.opener.__activeMediaBlobUrl) {
-          return window.opener.__activeMediaBlobUrl;
+        if (window.opener.__activeMediaBlobMap && window.opener.__activeMediaBlobMap.size > 0) {
+          for (const val of window.opener.__activeMediaBlobMap.values()) {
+            if (val && (val instanceof Blob || val instanceof File)) {
+              return URL.createObjectURL(val);
+            }
+          }
         }
       }
       if (window.__activeMediaBlob && (window.__activeMediaBlob instanceof Blob || window.__activeMediaBlob instanceof File)) {
         return URL.createObjectURL(window.__activeMediaBlob);
       }
-      if (window.__activeMediaBlobUrl) {
-        return window.__activeMediaBlobUrl;
+      if (window.__activeMediaBlobMap && window.__activeMediaBlobMap.size > 0) {
+        for (const val of window.__activeMediaBlobMap.values()) {
+          if (val && (val instanceof Blob || val instanceof File)) {
+            return URL.createObjectURL(val);
+          }
+        }
       }
     } catch (e) {}
 

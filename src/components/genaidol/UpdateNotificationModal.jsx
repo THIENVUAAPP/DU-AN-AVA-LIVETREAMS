@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.7.0';
+export const APP_VERSION = '3.7.1';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v3.7.1 - Bê Nguyên Xi Video 1GB - 50GB 4K 60FPS Cho Window Capture & TikTok Live Studio',
+    description: '1. Khắc Phục Triệt Để Cross-Document Blob Isolation: Cửa sổ Window Capture tự động giải mã trực tiếp File/Blob gốc từ bộ nhớ máy, phát ngay lập tức 0ms chuẩn 60 FPS mọi video từ 1GB đến 50GB; 2. Tối Ưu Hóa HTTP 206 Streaming: Khóa ranh giới Byte-Range chính xác theo RFC 7233 giúp TikTok Live Studio và OBS nạp video nặng siêu tốc mà không lo lỗi gián đoạn luồng; 3. Giữ Vững Chất Lượng Siêu Nét 4K/8K: Không giật lag, không đứng hình.'
+  },
   {
     title: '⚡ Bản Cập Nhật v3.7.0 - Tối Ưu Hóa Triệt Để Video 1GB - 50GB 4K 60FPS Cho Window Capture & Link TikTok Live Studio',
     description: '1. Bê Nguyên Xi 100% Nguồn Video Đang Phát: Window Capture tự động đồng bộ tức thì mọi video gốc từ phần mềm sang không tốn dung lượng mạng, 0ms latency; 2. Tối Ưu Link TikTok Live Studio & OBS: Nâng cấp Progressive Chunk Streaming 64MB và Dynamic Range Reader, khắc phục hoàn toàn lỗi nạp video nặng từ 1GB đến 50GB; 3. Hình Ảnh Siêu Sắc Nét 60 FPS: Không giật lag, không đứng hình, hiển thị tự nhiên và mượt mà 100%.'

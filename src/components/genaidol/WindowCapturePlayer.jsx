@@ -23,40 +23,43 @@ export default function WindowCapturePlayer() {
     if (typeof window === 'undefined') return '/uploads/media-1789044811424-233037063.mp4';
     // ⚡ BÊ NGUYÊN XI 100% NGUỒN VIDEO ĐANG PHÁT TỪ PHẦN MỀM CHÍNH (0ms, 0 byte mạng, nguyên bản siêu nét)
     try {
+      // 1. Ưu tiên số 1: Lấy Blob trực tiếp từ Window opener và tạo Object URL trong document context của cửa sổ con này
       if (window.opener) {
-        try {
-          const openerVid = window.opener.document.querySelector('video[data-main-player="true"]') || window.opener.document.querySelector('video');
-          if (openerVid && (openerVid.currentSrc || openerVid.src)) {
-            const src = openerVid.currentSrc || openerVid.src;
-            if (src && !src.startsWith('data:')) return src;
-          }
-        } catch (e) {}
-
         if (window.opener.__activeMediaBlob && (window.opener.__activeMediaBlob instanceof Blob || window.opener.__activeMediaBlob instanceof File)) {
           return URL.createObjectURL(window.opener.__activeMediaBlob);
         }
-        if (window.opener.__activeMediaBlobUrl) {
-          return window.opener.__activeMediaBlobUrl;
+        if (window.opener.__activeMediaBlobMap && window.opener.__activeMediaBlobMap.size > 0) {
+          for (const val of window.opener.__activeMediaBlobMap.values()) {
+            if (val && (val instanceof Blob || val instanceof File)) {
+              return URL.createObjectURL(val);
+            }
+          }
         }
       }
+
+      // 2. Ưu tiên số 2: Lấy Blob trực tiếp từ Window hiện tại
       if (window.__activeMediaBlob && (window.__activeMediaBlob instanceof Blob || window.__activeMediaBlob instanceof File)) {
         return URL.createObjectURL(window.__activeMediaBlob);
       }
-      if (window.__activeMediaBlobUrl) {
-        return window.__activeMediaBlobUrl;
+      if (window.__activeMediaBlobMap && window.__activeMediaBlobMap.size > 0) {
+        for (const val of window.__activeMediaBlobMap.values()) {
+          if (val && (val instanceof Blob || val instanceof File)) {
+            return URL.createObjectURL(val);
+          }
+        }
       }
     } catch (e) {}
 
     const params = new URLSearchParams(window.location.search);
     const v = params.get('v');
-    if (v) return v;
+    if (v && !v.startsWith('blob:')) return v;
     try {
       const activeSrc = localStorage.getItem('avalive_active_video_src');
-      if (activeSrc) return activeSrc;
+      if (activeSrc && !activeSrc.startsWith('blob:')) return activeSrc;
       const saved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
-      if (saved.mediaUrl) return saved.mediaUrl;
+      if (saved.mediaUrl && !saved.mediaUrl.startsWith('blob:')) return saved.mediaUrl;
       const locked = localStorage.getItem('avalive_user_locked_media') || '';
-      if (locked) return locked;
+      if (locked && !locked.startsWith('blob:')) return locked;
     } catch (e) {}
     return '/uploads/media-1789044811424-233037063.mp4';
   });
@@ -118,7 +121,7 @@ export default function WindowCapturePlayer() {
         return bUrl;
       }
 
-      // 1. Kiểm tra RAM Blob Map trực tiếp từ Opener hoặc Window hiện tại (0ms)
+      // 1. Kiểm tra RAM Blob Map trực tiếp từ Opener hoặc Window hiện tại theo ID / Key
       if (targetUrlOrCharId) {
         const memBlob = (window.opener && window.opener.__activeMediaBlobMap && window.opener.__activeMediaBlobMap.get(targetUrlOrCharId)) ||
                         (window.__activeMediaBlobMap && window.__activeMediaBlobMap.get(targetUrlOrCharId));
@@ -133,26 +136,47 @@ export default function WindowCapturePlayer() {
         }
       }
 
-      // 2. Kiểm tra IndexedDB
-      const items = await loadAllAidolItems();
-      if (!items || !items.length) return null;
-      
-      const found = items.find(it => 
-        (it.id && it.id === targetUrlOrCharId) ||
-        (it.url && it.url === targetUrlOrCharId) ||
-        (it.mediaUrl && it.mediaUrl === targetUrlOrCharId) ||
-        (it.mediaUrl && targetUrlOrCharId && targetUrlOrCharId.includes(it.mediaUrl)) ||
-        (targetUrlOrCharId && it.mediaUrl && it.mediaUrl.includes(targetUrlOrCharId))
-      );
-
-      if (found && found.fileBlob && (found.fileBlob instanceof Blob || found.fileBlob instanceof File)) {
-        if (activeBlobUrlRef.current) {
-          try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
+      // Kiểm tra bất kỳ Blob nào có sẵn trong Opener Map
+      if (window.opener && window.opener.__activeMediaBlobMap && window.opener.__activeMediaBlobMap.size > 0) {
+        for (const [k, v] of window.opener.__activeMediaBlobMap.entries()) {
+          if (v && (v instanceof Blob || v instanceof File)) {
+            if (activeBlobUrlRef.current) {
+              try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
+            }
+            const bUrl = URL.createObjectURL(v);
+            activeBlobUrlRef.current = bUrl;
+            isHardwareLocalBlobRef.current = true;
+            return bUrl;
+          }
         }
-        const blobUrl = URL.createObjectURL(found.fileBlob);
-        activeBlobUrlRef.current = blobUrl;
-        isHardwareLocalBlobRef.current = true;
-        return blobUrl;
+      }
+
+      // 2. Kiểm tra IndexedDB trên máy (Bê nguyên xi file gốc từ IndexedDB)
+      const items = await loadAllAidolItems();
+      if (items && items.length > 0) {
+        let found = null;
+        if (targetUrlOrCharId) {
+          found = items.find(it => 
+            (it.id && it.id === targetUrlOrCharId) ||
+            (it.url && it.url === targetUrlOrCharId) ||
+            (it.mediaUrl && it.mediaUrl === targetUrlOrCharId) ||
+            (it.mediaUrl && targetUrlOrCharId && targetUrlOrCharId.includes(it.mediaUrl)) ||
+            (targetUrlOrCharId && it.mediaUrl && it.mediaUrl.includes(targetUrlOrCharId))
+          );
+        }
+        if (!found || !found.fileBlob) {
+          found = items.slice().reverse().find(it => it && it.fileBlob && (it.fileBlob instanceof Blob || it.fileBlob instanceof File));
+        }
+
+        if (found && found.fileBlob && (found.fileBlob instanceof Blob || found.fileBlob instanceof File)) {
+          if (activeBlobUrlRef.current) {
+            try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
+          }
+          const blobUrl = URL.createObjectURL(found.fileBlob);
+          activeBlobUrlRef.current = blobUrl;
+          isHardwareLocalBlobRef.current = true;
+          return blobUrl;
+        }
       }
     } catch (e) {}
     return null;
@@ -272,10 +296,6 @@ export default function WindowCapturePlayer() {
               setVideoSrc(url);
               setIsVideoLoading(false);
             } catch (e) {}
-          } else if (msg.blobUrl && String(msg.blobUrl).startsWith('blob:')) {
-            isHardwareLocalBlobRef.current = true;
-            setVideoSrc(msg.blobUrl);
-            setIsVideoLoading(false);
           } else {
             // Thử nạp tức thì 0ms từ Memory Cache / Opener / IndexedDB trước nếu có file gốc
             const localBlob = await tryLoadFromLocalDB(msg.characterId || msg.mediaUrl);
@@ -283,7 +303,7 @@ export default function WindowCapturePlayer() {
               isHardwareLocalBlobRef.current = true;
               setVideoSrc(localBlob);
               setIsVideoLoading(false);
-            } else if (msg.mediaUrl) {
+            } else if (msg.mediaUrl && !msg.mediaUrl.startsWith('blob:')) {
               // Nếu đang phát blob mượt mà cùng máy, không hạ cấp về đường dẫn uploads server dở dang
               const isCurrentlyBlob = isHardwareLocalBlobRef.current || (videoSrc && String(videoSrc).startsWith('blob:'));
               if (!isCurrentlyBlob) {
