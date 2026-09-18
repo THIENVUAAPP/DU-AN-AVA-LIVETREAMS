@@ -200,11 +200,28 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     if (newWin) {
       try {
         newWin.__activeMediaBlob = window.__activeMediaBlob;
-        newWin.__activeMediaBlobUrl = window.__activeMediaBlobUrl;
+        newWin.__activeMediaBlobUrl = window.__activeMediaBlobUrl || finalVideoUrl;
         newWin.__activeMediaBlobMap = window.__activeMediaBlobMap;
         newWin.focus();
       } catch (e) {}
     }
+    try {
+      const bc = new BroadcastChannel('avalive_master_live_stream');
+      bc.postMessage({
+        type: 'GLOBAL_MEDIA_CHANGE',
+        mediaUrl: finalVideoUrl,
+        blobUrl: window.__activeMediaBlobUrl,
+        fileBlob: window.__activeMediaBlob,
+        characterId: selectedCharId,
+        isVideo: true,
+        isPlaying: true,
+        currentTime: curTime,
+        force: true,
+        source: 'desktop',
+        timestamp: Date.now()
+      });
+      setTimeout(() => bc.close(), 100);
+    } catch (e) {}
   };
 
   // 🔄 FETCH TUNNEL URL TỪ BACKEND

@@ -21,9 +21,17 @@ export default function WindowCapturePlayer() {
 
   const [videoSrc, setVideoSrc] = useState(() => {
     if (typeof window === 'undefined') return '/uploads/media-1789044811424-233037063.mp4';
-    // ⚡ ƯU TIÊN 0 (CAO NHẤT): Lấy trực tiếp fileBlob hoặc Blob URL từ opener hoặc window hiện tại (0ms nạp tức thì)
+    // ⚡ BÊ NGUYÊN XI 100% NGUỒN VIDEO ĐANG PHÁT TỪ PHẦN MỀM CHÍNH (0ms, 0 byte mạng, nguyên bản siêu nét)
     try {
       if (window.opener) {
+        try {
+          const openerVid = window.opener.document.querySelector('video[data-main-player="true"]') || window.opener.document.querySelector('video');
+          if (openerVid && (openerVid.currentSrc || openerVid.src)) {
+            const src = openerVid.currentSrc || openerVid.src;
+            if (src && !src.startsWith('data:')) return src;
+          }
+        } catch (e) {}
+
         if (window.opener.__activeMediaBlob && (window.opener.__activeMediaBlob instanceof Blob || window.opener.__activeMediaBlob instanceof File)) {
           return URL.createObjectURL(window.opener.__activeMediaBlob);
         }
@@ -43,6 +51,8 @@ export default function WindowCapturePlayer() {
     const v = params.get('v');
     if (v) return v;
     try {
+      const activeSrc = localStorage.getItem('avalive_active_video_src');
+      if (activeSrc) return activeSrc;
       const saved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
       if (saved.mediaUrl) return saved.mediaUrl;
       const locked = localStorage.getItem('avalive_user_locked_media') || '';

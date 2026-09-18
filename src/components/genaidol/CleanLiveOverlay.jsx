@@ -104,21 +104,30 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     }
 
     let resolvedMedia = directVideoUrl;
-    if (resolvedMedia && resolvedMedia.startsWith('blob:')) resolvedMedia = null;
     if (!resolvedMedia && typeof window !== 'undefined') {
       try {
-        const activeSrc = localStorage.getItem('avalive_active_video_src');
-        if (activeSrc && typeof activeSrc === 'string' && !activeSrc.startsWith('blob:') && activeSrc.trim() !== '') {
-          resolvedMedia = activeSrc;
+        if (window.opener && window.opener.__activeMediaBlobUrl) {
+          resolvedMedia = window.opener.__activeMediaBlobUrl;
         }
-        const locked = localStorage.getItem('avalive_user_locked_media');
-        if (!resolvedMedia && locked && !locked.startsWith('blob:')) resolvedMedia = locked;
-        if (!resolvedMedia && saved?.mediaUrl && !saved.mediaUrl.startsWith('blob:')) resolvedMedia = saved.mediaUrl;
+        if (!resolvedMedia && window.__activeMediaBlobUrl) {
+          resolvedMedia = window.__activeMediaBlobUrl;
+        }
+        if (!resolvedMedia) {
+          const activeSrc = localStorage.getItem('avalive_active_video_src');
+          if (activeSrc && typeof activeSrc === 'string' && activeSrc.trim() !== '') {
+            resolvedMedia = activeSrc;
+          }
+        }
+        if (!resolvedMedia) {
+          const locked = localStorage.getItem('avalive_user_locked_media');
+          if (locked) resolvedMedia = locked;
+        }
+        if (!resolvedMedia && saved?.mediaUrl) resolvedMedia = saved.mediaUrl;
         if (!resolvedMedia) {
           const customChars = JSON.parse(localStorage.getItem('avalive_custom_characters') || '[]');
           const charId = urlParams?.get('char') || saved?.selectedCharacter || localStorage.getItem('avalive_selected_char');
           const found = customChars.find(c => c.id === charId);
-          if (found) resolvedMedia = (found.mediaUrl && !found.mediaUrl.startsWith('blob:')) ? found.mediaUrl : (found.url && !found.url.startsWith('blob:') ? found.url : null);
+          if (found) resolvedMedia = found.mediaUrl || found.url || null;
         }
       } catch (e) {}
     }
@@ -136,7 +145,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     return {
       stage: defaultStage, // 'idol' | 'dancefloor' | 'battle' | 'bando' | 'broadcast'
       aspectRatio: ratioParam || '9:16',
-      mediaUrl: resolvedMedia || (saved?.mediaUrl && !saved.mediaUrl.startsWith('blob:') ? saved.mediaUrl : null),
+      mediaUrl: resolvedMedia || (saved?.mediaUrl || null),
       flvUrl: resolvedMedia || saved?.flvUrl || null,
       isVideo: saved?.isVideo !== false,
       selectedCharacter: urlParams?.get('char') || saved?.selectedCharacter || (typeof window !== 'undefined' ? localStorage.getItem('avalive_active_character_id') : '') || '',
@@ -1387,7 +1396,18 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               setTimeout(() => { isInternalAudioChangeRef.current = false; }, 300);
             } else if (event.data.type === 'GLOBAL_MEDIA_CHANGE') {
               if (event.data.source === 'overlay') return;
-              const newUrl = event.data.mediaUrl;
+              let newUrl = null;
+              if (event.data.fileBlob && (event.data.fileBlob instanceof Blob || event.data.fileBlob instanceof File)) {
+                try {
+                  newUrl = URL.createObjectURL(event.data.fileBlob);
+                } catch (e) {}
+              }
+              if (!newUrl && event.data.blobUrl && String(event.data.blobUrl).startsWith('blob:')) {
+                newUrl = event.data.blobUrl;
+              }
+              if (!newUrl) {
+                newUrl = event.data.mediaUrl;
+              }
               if (newUrl) {
                 let cleanUrl = newUrl;
                 if (typeof cleanUrl === 'string' && cleanUrl.includes('/uploads/')) {
@@ -1397,6 +1417,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   localStorage.removeItem('avalive_user_paused');
                   localStorage.removeItem('avalive_window_capture_paused');
                   localStorage.setItem('avalive_user_locked_media', cleanUrl);
+                  localStorage.setItem('avalive_active_video_src', cleanUrl);
                 } catch (e) {}
 
                 setMasterState(prev => ({

@@ -922,7 +922,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
     // ⚡ LƯU TRỰC TIẾP BLOB VÀ BLOB URL TRÊN WINDOW CHO CỬA SỔ WINDOW CAPTURE MỞ 0MS KHÔNG GIẬT LAG
     if (typeof window !== 'undefined') {
-      const activeBlob = currentFileBlobRef.current;
+      const activeBlob = currentFileBlobRef.current || window.__activeMediaBlob || (selectedCharacter && window.__activeMediaBlobMap && window.__activeMediaBlobMap.get(selectedCharacter)) || null;
       if (activeBlob) {
         window.__activeMediaBlob = activeBlob;
         window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
@@ -930,10 +930,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         if (effectiveV) window.__activeMediaBlobMap.set(effectiveV, activeBlob);
         if (broadcastUrl) window.__activeMediaBlobMap.set(broadcastUrl, activeBlob);
       }
-      if (currentBlobUrlRef.current) {
-        window.__activeMediaBlobUrl = currentBlobUrlRef.current;
+      const activeBlobUrl = currentBlobUrlRef.current || window.__activeMediaBlobUrl || (desktopVideoRef.current && (desktopVideoRef.current.currentSrc || desktopVideoRef.current.src)) || null;
+      if (activeBlobUrl) {
+        window.__activeMediaBlobUrl = activeBlobUrl;
         window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
-        window.__activeMediaBlobMap.set(currentBlobUrlRef.current, activeBlob || currentBlobUrlRef.current);
+        window.__activeMediaBlobMap.set(activeBlobUrl, activeBlob || activeBlobUrl);
+        try { localStorage.setItem('avalive_active_video_src', activeBlobUrl); } catch (e) {}
       }
     }
 
