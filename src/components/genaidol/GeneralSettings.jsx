@@ -1854,10 +1854,10 @@ IDOL MỈM CƯỜI + GESTURE
       // 2. Category / Region / Gender / Dialect / Favorite filter
       if (currentFilter === 'favorites') return isFav;
       if (currentFilter === 'sales' || currentFilter === 'vn_sales') return isSales;
-      if (currentFilter === 'dialect_bac') return isVn && (v.dialect === 'bac' || v.category?.includes('Bắc') || v.name?.includes('Hà Nội') || v.name?.includes('Bắc'));
-      if (currentFilter === 'dialect_trung') return isVn && (v.dialect === 'trung' || v.category?.includes('Trung') || v.name?.includes('Huế') || v.name?.includes('Đà Nẵng') || v.name?.includes('Trung'));
-      if (currentFilter === 'dialect_nam') return isVn && (v.dialect === 'nam' || v.category?.includes('Nam') || v.name?.includes('Sài Gòn') || v.name?.includes('Nam'));
-      if (currentFilter === 'dialect_tay') return isVn && (v.dialect === 'tay' || v.category?.includes('Tây') || v.name?.includes('Miền Tây') || v.name?.includes('Sông Nước') || v.name?.includes('Cần Thơ') || v.name?.includes('Tây'));
+      if (currentFilter === 'dialect_bac') return isVn && (v.dialect === 'bac' || v.dialect === 'north' || v.category?.includes('Bắc') || v.name?.includes('Hà Nội') || v.name?.includes('Bắc'));
+      if (currentFilter === 'dialect_trung') return isVn && (v.dialect === 'trung' || v.dialect === 'central' || v.category?.includes('Trung') || v.name?.includes('Huế') || v.name?.includes('Đà Nẵng') || v.name?.includes('Trung'));
+      if (currentFilter === 'dialect_nam') return isVn && (v.dialect === 'nam' || v.dialect === 'south' || (v.category && (v.category.toLowerCase().includes('miền nam') || v.category.toLowerCase().includes('sài gòn') || v.category.toLowerCase().includes('tphcm'))) || (v.name && (v.name.toLowerCase().includes('sài gòn') || v.name.toLowerCase().includes('miền nam'))));
+      if (currentFilter === 'dialect_tay') return isVn && (v.dialect === 'tay' || v.dialect === 'west' || v.category?.includes('Tây') || v.name?.includes('Miền Tây') || v.name?.includes('Sông Nước') || v.name?.includes('Cần Thơ') || v.name?.includes('Tây'));
       if (currentFilter === 'vn_all') return isVn;
       if (currentFilter === 'vn_female') return isVn && isFemVoice;
       if (currentFilter === 'vn_male') return isVn && isMalVoice;
@@ -3118,10 +3118,10 @@ IDOL MỈM CƯỜI + GESTURE
                       <span className="text-[11px] font-bold text-gray-500 px-1.5">Vùng Miền:</span>
                       {[
                         { key: 'all', label: `Tất cả (${VIETNAMESE_SALES_VOICES.length})` },
-                        { key: 'nam', label: `Miền Nam (${VIETNAMESE_SALES_VOICES.filter(v => v.dialect === 'nam' || v.category?.includes('Nam')).length})` },
-                        { key: 'bac', label: `Miền Bắc (${VIETNAMESE_SALES_VOICES.filter(v => v.dialect === 'bac' || v.category?.includes('Bắc')).length})` },
-                        { key: 'trung', label: `Miền Trung (${VIETNAMESE_SALES_VOICES.filter(v => v.dialect === 'trung' || v.category?.includes('Trung')).length})` },
-                        { key: 'tay', label: `Miền Tây (${VIETNAMESE_SALES_VOICES.filter(v => v.dialect === 'tay' || v.category?.includes('Tây')).length})` }
+                        { key: 'nam', label: `Miền Nam (${VIETNAMESE_SALES_VOICES.filter(v => v.dialect === 'nam' || v.dialect === 'south' || v.category?.toLowerCase().includes('miền nam') || v.category?.toLowerCase().includes('sài gòn')).length})` },
+                        { key: 'bac', label: `Miền Bắc (${VIETNAMESE_SALES_VOICES.filter(v => v.dialect === 'bac' || v.dialect === 'north' || v.category?.toLowerCase().includes('miền bắc') || v.category?.toLowerCase().includes('hà nội')).length})` },
+                        { key: 'trung', label: `Miền Trung (${VIETNAMESE_SALES_VOICES.filter(v => v.dialect === 'trung' || v.dialect === 'central' || v.category?.toLowerCase().includes('miền trung') || v.category?.toLowerCase().includes('huế')).length})` },
+                        { key: 'tay', label: `Miền Tây (${VIETNAMESE_SALES_VOICES.filter(v => v.dialect === 'tay' || v.dialect === 'west' || v.category?.toLowerCase().includes('miền tây') || v.category?.toLowerCase().includes('cần thơ')).length})` }
                       ].map(tab => (
                         <button
                           key={tab.key}
@@ -3783,9 +3783,9 @@ IDOL MỈM CƯỜI + GESTURE
                           key={tab.key}
                           type="button"
                           onClick={() => setAvaGroupFilter(tab.key)}
-                          className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all whitespace-nowrap ${
+                          className={`px-2.5 py-1 rounded text-[11px] font-semibold transition-all whitespace-nowrap cursor-pointer ${
                             avaGroupFilter === tab.key 
-                              ? 'bg-blue-600 text-white shadow-xs' 
+                              ? 'bg-blue-600 text-white shadow-xs font-bold' 
                               : 'text-gray-600 hover:bg-gray-100'
                           }`}
                         >
@@ -3811,9 +3811,9 @@ IDOL MỈM CƯỜI + GESTURE
                           key={tab.key}
                           type="button"
                           onClick={() => setAvaRegionFilter(tab.key)}
-                          className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all ${
+                          className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all cursor-pointer ${
                             avaRegionFilter === tab.key 
-                              ? 'bg-indigo-600 text-white shadow-xs' 
+                              ? 'bg-indigo-600 text-white shadow-xs font-bold' 
                               : 'text-gray-600 hover:bg-gray-100'
                           }`}
                         >
@@ -3834,9 +3834,9 @@ IDOL MỈM CƯỜI + GESTURE
                           key={tab.key}
                           type="button"
                           onClick={() => setAvaGenderFilter(tab.key)}
-                          className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all ${
+                          className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all cursor-pointer ${
                             avaGenderFilter === tab.key 
-                              ? 'bg-pink-600 text-white shadow-xs' 
+                              ? 'bg-pink-600 text-white shadow-xs font-bold' 
                               : 'text-gray-600 hover:bg-gray-100'
                           }`}
                         >
@@ -3850,17 +3850,17 @@ IDOL MỈM CƯỜI + GESTURE
                       <span className="text-[11px] font-bold text-gray-500 px-1.5">Độ Tuổi:</span>
                       {[
                         { key: 'all', label: 'Tất cả' },
-                        { key: 'young', label: 'Trẻ 20-28t' },
-                        { key: 'middle', label: 'Trưởng Thành 28-40t' },
-                        { key: 'senior', label: 'Trung Niên 40-70t' }
+                        { key: 'young', label: 'Trẻ 18-28t' },
+                        { key: 'middle', label: 'Trưởng Thành 25-40t' },
+                        { key: 'senior', label: 'Trung & Cao Niên 35-65+t' }
                       ].map(tab => (
                         <button
                           key={tab.key}
                           type="button"
                           onClick={() => setAvaAgeFilter(tab.key)}
-                          className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all ${
+                          className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all cursor-pointer ${
                             avaAgeFilter === tab.key 
-                              ? 'bg-emerald-600 text-white shadow-xs' 
+                              ? 'bg-emerald-600 text-white shadow-xs font-bold' 
                               : 'text-gray-600 hover:bg-gray-100'
                           }`}
                         >
@@ -3882,9 +3882,9 @@ IDOL MỈM CƯỜI + GESTURE
                           key={tab.key}
                           type="button"
                           onClick={() => setAvaRoleFilter(tab.key)}
-                          className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all ${
+                          className={`px-2 py-0.5 rounded text-[11px] font-semibold transition-all cursor-pointer ${
                             avaRoleFilter === tab.key 
-                              ? 'bg-purple-600 text-white shadow-xs' 
+                              ? 'bg-purple-600 text-white shadow-xs font-bold' 
                               : 'text-gray-600 hover:bg-gray-100'
                           }`}
                         >
@@ -3924,7 +3924,7 @@ IDOL MỈM CƯỜI + GESTURE
                       {[...(settings.customVoices || []).filter(v => v && v.name && !v.name.includes('Giọng cá nhân') && (v.file || v.url || v.audioUrl || v.sampleText)), ...ALL_SYSTEM_VOICES]
                         .filter(v => {
                           const isFav = favoriteVoiceIds.includes(v.id);
-                          const isVn = v.region === 'vi' || v.id === 'free_vi_female' || v.id?.startsWith('vn_') || v.id === 'el_adam';
+                          const isVn = v.region === 'vi' || v.id === 'free_vi_female' || v.id?.startsWith('vn_') || v.id?.startsWith('hottrend_') || v.id === 'el_adam' || (v.lang && v.lang.startsWith('vi'));
                           const isHotTrend = v.id?.startsWith('hottrend_');
                           const isSales = v.id?.startsWith('vn_sales_') || v.category?.includes('Bán Hàng') || v.category?.includes('Chốt Đơn') || v.styleCategory === 'banhang';
                           const isGamePK = v.id?.startsWith('el_') || v.provider === 'elevenlabs' || v.styleCategory === 'blv_game';
@@ -3940,28 +3940,55 @@ IDOL MỈM CƯỜI + GESTURE
                           if (avaGroupFilter === 'asia' && !isAsia) return false;
                           if (avaGroupFilter === 'game_pk' && !isGamePK) return false;
 
-                          // 2. Region Filter
+                          // 2. Region / Dialect Filter
                           if (avaRegionFilter !== 'all') {
-                            if (!isVn) return false;
-                            if (avaRegionFilter === 'bac' && !(v.dialect === 'bac' || v.category?.includes('Bắc') || v.name?.includes('Hà Nội') || v.name?.includes('Bắc'))) return false;
-                            if (avaRegionFilter === 'trung' && !(v.dialect === 'trung' || v.category?.includes('Trung') || v.name?.includes('Huế') || v.name?.includes('Đà Nẵng') || v.name?.includes('Trung'))) return false;
-                            if (avaRegionFilter === 'nam' && !(v.dialect === 'nam' || v.category?.includes('Nam') || v.name?.includes('Sài Gòn') || v.name?.includes('Nam'))) return false;
-                            if (avaRegionFilter === 'tay' && !(v.dialect === 'tay' || v.category?.includes('Tây') || v.name?.includes('Miền Tây') || v.name?.includes('Sông Nước') || v.name?.includes('Cần Thơ') || v.name?.includes('Tây'))) return false;
+                            const d = (v.dialect || '').toLowerCase();
+                            const c = (v.category || '').toLowerCase();
+                            const n = (v.name || '').toLowerCase();
+                            const desc = (v.desc || '').toLowerCase();
+
+                            if (avaRegionFilter === 'bac') {
+                              const isBac = d === 'bac' || d === 'north' || c.includes('miền bắc') || c.includes('hà nội') || n.includes('hà nội') || n.includes('miền bắc') || desc.includes('miền bắc') || desc.includes('hà nội') || desc.includes('giọng bắc');
+                              if (!isBac) return false;
+                            } else if (avaRegionFilter === 'trung') {
+                              const isTrung = d === 'trung' || d === 'central' || c.includes('miền trung') || c.includes('huế') || c.includes('đà nẵng') || n.includes('huế') || n.includes('đà nẵng') || n.includes('miền trung') || desc.includes('miền trung') || desc.includes('giọng trung');
+                              if (!isTrung) return false;
+                            } else if (avaRegionFilter === 'nam') {
+                              const isNam = d === 'nam' || d === 'south' || c.includes('miền nam') || c.includes('sài gòn') || c.includes('tphcm') || n.includes('sài gòn') || n.includes('miền nam') || desc.includes('sài gòn') || desc.includes('miền nam') || desc.includes('giọng nam (sài gòn');
+                              if (!isNam) return false;
+                            } else if (avaRegionFilter === 'tay') {
+                              const isTay = d === 'tay' || d === 'west' || c.includes('miền tây') || c.includes('sông nước') || c.includes('cần thơ') || c.includes('đồng bằng sông cửu long') || n.includes('miền tây') || n.includes('cần thơ') || desc.includes('miền tây') || desc.includes('sông nước');
+                              if (!isTay) return false;
+                            }
                           }
 
                           // 3. Gender Filter
                           if (avaGenderFilter !== 'all') {
-                            const isFemVoice = v.gender === 'Female' || v.gender === 'Nữ' || (v.gender || '').toLowerCase() === 'female';
-                            const isMalVoice = v.gender === 'Male' || v.gender === 'Nam' || (v.gender || '').toLowerCase() === 'male';
+                            const isFemVoice = (v.gender || '').toLowerCase() === 'female' || (v.gender || '').toLowerCase() === 'nữ' || v.gender === 'Female' || v.gender === 'Nữ';
+                            const isMalVoice = (v.gender || '').toLowerCase() === 'male' || (v.gender || '').toLowerCase() === 'nam' || v.gender === 'Male' || v.gender === 'Nam';
                             if (avaGenderFilter === 'Female' && !isFemVoice) return false;
                             if (avaGenderFilter === 'Male' && !isMalVoice) return false;
                           }
 
                           // 4. Age Filter
                           if (avaAgeFilter !== 'all') {
-                            if (avaAgeFilter === 'young' && v.ageGroup !== 'young' && v.styleCategory !== 'idol_genz') return false;
-                            if (avaAgeFilter === 'middle' && v.ageGroup !== 'middle' && v.ageGroup !== 'mature' && v.styleCategory !== 'doanhnhan') return false;
-                            if (avaAgeFilter === 'senior' && v.ageGroup !== 'senior' && v.ageGroup !== 'elder') return false;
+                            const a = (v.ageGroup || '').toLowerCase();
+                            const ar = (v.ageRange || '').toLowerCase();
+                            const s = (v.styleCategory || '').toLowerCase();
+                            const c = (v.category || '').toLowerCase();
+                            const n = (v.name || '').toLowerCase();
+                            const desc = (v.desc || '').toLowerCase();
+
+                            if (avaAgeFilter === 'young') {
+                              const isYoung = a === 'young' || a === 'genz' || ar.includes('18-24') || ar.includes('20-28') || s === 'idol_genz' || s === 'genz' || c.includes('genz') || c.includes('trẻ') || n.includes('genz') || n.includes('trẻ') || n.includes('18-24') || desc.includes('18-24');
+                              if (!isYoung) return false;
+                            } else if (avaAgeFilter === 'middle') {
+                              const isMiddle = a === 'middle' || a === 'mature' || ar.includes('25-34') || ar.includes('28-40') || s === 'doanhnhan' || s === 'sales_expert' || c.includes('trưởng thành') || c.includes('doanh nhân') || n.includes('trưởng thành') || n.includes('doanh nhân') || n.includes('25-34') || desc.includes('25-34');
+                              if (!isMiddle) return false;
+                            } else if (avaAgeFilter === 'senior') {
+                              const isSenior = a === 'senior' || a === 'elder' || ar.includes('35-45') || ar.includes('46-65') || ar.includes('40-70') || c.includes('trung niên') || c.includes('cao niên') || c.includes('lão') || n.includes('trung niên') || n.includes('cao niên') || n.includes('già dặn') || n.includes('35-45') || n.includes('46-65') || desc.includes('trung niên') || desc.includes('cao niên');
+                              if (!isSenior) return false;
+                            }
                           }
 
                           // 5. Role Active Filter

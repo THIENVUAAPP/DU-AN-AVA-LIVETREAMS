@@ -94,10 +94,10 @@ export default function AIVoiceModule() {
     if (activeCategoryTab === 'female') return v.gender === 'female' && v.region === 'vi';
     if (activeCategoryTab === 'male') return v.gender === 'male' && v.region === 'vi';
     if (activeCategoryTab === 'sales') return v.styleCategory === 'sales_services' || v.rawVoice?.styleCategory === 'banhang' || v.id.startsWith('vn_sales_') || v.id.startsWith('vn_sale_');
-    if (activeCategoryTab === 'bac') return v.dialect === 'bac' || v.rawVoice?.category?.includes('Bắc');
-    if (activeCategoryTab === 'trung') return v.dialect === 'trung' || v.dialect === 'hue' || v.dialect === 'danang' || v.dialect === 'nghean' || v.rawVoice?.category?.includes('Trung');
-    if (activeCategoryTab === 'nam') return v.dialect === 'nam' || v.rawVoice?.category?.includes('Nam');
-    if (activeCategoryTab === 'tay') return v.dialect === 'tay' || v.rawVoice?.category?.includes('Tây');
+    if (activeCategoryTab === 'bac') return v.dialect === 'bac' || v.dialect === 'north' || v.rawVoice?.category?.includes('Bắc');
+    if (activeCategoryTab === 'trung') return v.dialect === 'trung' || v.dialect === 'central' || v.dialect === 'hue' || v.dialect === 'danang' || v.dialect === 'nghean' || v.rawVoice?.category?.includes('Trung');
+    if (activeCategoryTab === 'nam') return v.dialect === 'nam' || v.dialect === 'south' || v.rawVoice?.category?.toLowerCase().includes('miền nam') || v.rawVoice?.category?.toLowerCase().includes('sài gòn') || v.name?.toLowerCase().includes('sài gòn') || v.name?.toLowerCase().includes('miền nam');
+    if (activeCategoryTab === 'tay') return v.dialect === 'tay' || v.dialect === 'west' || v.rawVoice?.category?.includes('Tây');
     if (activeCategoryTab === 'intl') return v.region !== 'vi' || v.rawVoice?.category?.includes('Quốc Tế') || v.id.startsWith('intl_') || v.id.startsWith('el_en_') || v.id.startsWith('el_fr_') || v.id.startsWith('el_ja_');
     return true;
   });

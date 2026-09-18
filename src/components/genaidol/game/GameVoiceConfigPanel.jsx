@@ -666,10 +666,10 @@ export default function GameVoiceConfigPanel({
 
     // Vietnamese sub-filters
     if (voiceMainTab === 'vn') {
-      if (voiceSubFilter === 'dialect_bac') return v.dialect === 'bac' || v.category?.includes('Bắc') || v.name?.includes('Hà Nội') || v.name?.includes('Bắc');
-      if (voiceSubFilter === 'dialect_trung') return v.dialect === 'trung' || v.category?.includes('Trung') || v.name?.includes('Huế') || v.name?.includes('Đà Nẵng') || v.name?.includes('Trung');
-      if (voiceSubFilter === 'dialect_nam') return v.dialect === 'nam' || v.category?.includes('Nam') || v.name?.includes('Sài Gòn') || v.name?.includes('Nam');
-      if (voiceSubFilter === 'dialect_tay') return v.dialect === 'tay' || v.category?.includes('Tây') || v.name?.includes('Miền Tây') || v.name?.includes('Sông Nước') || v.name?.includes('Cần Thơ') || v.name?.includes('Tây');
+      if (voiceSubFilter === 'dialect_bac') return v.dialect === 'bac' || v.dialect === 'north' || v.category?.includes('Bắc') || v.name?.includes('Hà Nội') || v.name?.includes('Bắc');
+      if (voiceSubFilter === 'dialect_trung') return v.dialect === 'trung' || v.dialect === 'central' || v.category?.includes('Trung') || v.name?.includes('Huế') || v.name?.includes('Đà Nẵng') || v.name?.includes('Trung');
+      if (voiceSubFilter === 'dialect_nam') return v.dialect === 'nam' || v.dialect === 'south' || (v.category && (v.category.toLowerCase().includes('miền nam') || v.category.toLowerCase().includes('sài gòn') || v.category.toLowerCase().includes('tphcm'))) || (v.name && (v.name.toLowerCase().includes('sài gòn') || v.name.toLowerCase().includes('miền nam')));
+      if (voiceSubFilter === 'dialect_tay') return v.dialect === 'tay' || v.dialect === 'west' || v.category?.includes('Tây') || v.name?.includes('Miền Tây') || v.name?.includes('Sông Nước') || v.name?.includes('Cần Thơ') || v.name?.includes('Tây');
       if (voiceSubFilter === 'sales') return v.category?.includes('Bán Hàng') || v.category?.includes('Chốt Đơn') || v.styleCategory === 'banhang' || v.styleCategory === 'sales_expert' || v.id?.startsWith('vn_sales_');
       if (voiceSubFilter === 'female' && v.gender !== 'Female') return false;
       if (voiceSubFilter === 'male' && v.gender !== 'Male') return false;
