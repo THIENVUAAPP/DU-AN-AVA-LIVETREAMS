@@ -9,20 +9,21 @@
 export async function fastStreamUpload(file, options = {}) {
   const { onInit, onProgress, onError } = options;
   
-  // Tối ưu chunk size cho video nặng 2K, 4K, 8K (lên tới nhiều GB)
+  // ⚡ Tối ưu chunk size siêu tốc cho video nặng 1GB - 50GB (64MB chunks, 6 workers)
   const isUltraHd = file.size > 100 * 1024 * 1024;
   const isSuperLarge = file.size > 500 * 1024 * 1024;
   
-  const HEAD_CHUNK_SIZE = isSuperLarge ? 16 * 1024 * 1024 : (isUltraHd ? 8 * 1024 * 1024 : 4 * 1024 * 1024);
-  const BODY_CHUNK_SIZE = isSuperLarge ? 32 * 1024 * 1024 : (isUltraHd ? 20 * 1024 * 1024 : 16 * 1024 * 1024);
+  const HEAD_CHUNK_SIZE = isSuperLarge ? 32 * 1024 * 1024 : (isUltraHd ? 16 * 1024 * 1024 : 8 * 1024 * 1024);
+  const BODY_CHUNK_SIZE = isSuperLarge ? 64 * 1024 * 1024 : (isUltraHd ? 32 * 1024 * 1024 : 16 * 1024 * 1024);
   
   const getBackendUrl = () => {
     if (typeof window === 'undefined') return 'http://127.0.0.1:3001';
     const custom = localStorage.getItem('aidol_backend_url');
     if (custom && custom.startsWith('http')) return custom;
-    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
+    if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1' || window.location.port === '5173') {
       return `${window.location.protocol}//${window.location.hostname}:3001`;
     }
+    // Nếu chạy qua Cloudflare tunnel hoặc Vercel trên máy local, ưu tiên gửi thẳng về localhost:3001 cho tốc độ 2GB/s
     return window.location.origin || 'http://127.0.0.1:3001';
   };
 
@@ -102,10 +103,10 @@ export async function fastStreamUpload(file, options = {}) {
 
     if (onProgress) onProgress(Math.round((1 / totalChunks) * 100) || 5);
 
-    // BƯỚC 3: Nạp các khối tiếp theo tuần tự / song song liền kề, không tạo sparse hole
+    // BƯỚC 3: Nạp các khối tiếp theo tuần tự / song song liền kề (6 workers song song)
     (async () => {
       let uploaded = 1;
-      const CONCURRENCY = 3;
+      const CONCURRENCY = 6;
       let currentIndex = 1;
 
       const worker = async () => {

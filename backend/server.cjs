@@ -342,9 +342,9 @@ app.all('/uploads/:filename', (req, res, next) => {
         }
       } else {
         start = parseInt(parts[0], 10);
-        // Kiểm tra phạm vi hợp lệ: Tuyệt đối không đọc vượt quá dung lượng hiện có trên đĩa
-        if (isNaN(start) || start < 0 || start >= currentOnDiskSize) {
-          res.status(416).set('Content-Range', `bytes */${currentOnDiskSize}`).end();
+        // Kiểm tra phạm vi hợp lệ
+        if (isNaN(start) || start < 0 || (start >= currentOnDiskSize && currentOnDiskSize >= declaredFileSize)) {
+          res.status(416).set('Content-Range', `bytes */${declaredFileSize}`).end();
           return;
         }
 
@@ -353,22 +353,23 @@ app.all('/uploads/:filename', (req, res, next) => {
           end = parseInt(parts[1], 10);
           if (isNaN(end) || end >= currentOnDiskSize) end = currentOnDiskSize - 1;
         } else {
-          // ⚡ CHUẨN HTTP RFC 7233 CHO PHÁT VIDEO LIỀN MẠCH TỪ ĐẦU ĐẾN ĐUÔI:
-          // Khi trình duyệt yêu cầu "bytes=START-", server phục vụ toàn bộ dải đến hết file.
-          // Tuyệt đối không cắt vụn dải byte (không cắt 8MB hay 32MB) vì sẽ khiến trình duyệt tưởng hết file
-          // và tự động quay lại phát từ đầu sau đúng 25-30 giây!
+          // ⚡ CHUẨN HTTP RFC 7233: Khi upload hoàn tất, phục vụ đến hết file; khi đang stream chunk, phục vụ dải hiện có trên đĩa
           end = currentOnDiskSize - 1;
         }
       }
 
       if (end < start) {
-        res.status(416).set('Content-Range', `bytes */${currentOnDiskSize}`).end();
-        return;
+        if (currentOnDiskSize < declaredFileSize) {
+          end = Math.min(start + 1024 * 1024, declaredFileSize - 1);
+        } else {
+          res.status(416).set('Content-Range', `bytes */${declaredFileSize}`).end();
+          return;
+        }
       }
 
-      const chunksize = (end - start) + 1;
+      const chunksize = Math.max(1, (end - start) + 1);
       res.writeHead(206, {
-        'Content-Range': `bytes ${start}-${end}/${currentOnDiskSize}`,
+        'Content-Range': `bytes ${start}-${end}/${declaredFileSize}`,
         'Accept-Ranges': 'bytes',
         'Content-Length': chunksize,
         'Content-Type': contentType,
