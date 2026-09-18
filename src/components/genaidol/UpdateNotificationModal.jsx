@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.5.9';
+export const APP_VERSION = '3.6.0';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v3.5.9 - Đồng Bộ Chuẩn Xác Badge Độ Tuổi & Hiệu Ứng Xoay Tức Thì Khi Thử Giọng',
-    description: '1. Đồng Bộ Badge Độ Tuổi Chuẩn Xác 100%: Khắc phục triệt để lỗi lệch độ tuổi (nhóm 25–34t không còn hiển thị nhầm thành 20–28t, hiển thị chính xác Trưởng Thành 25–34t, Trung Niên 35–45t, Cao Niên 46–65+t); 2. Hiệu Ứng Xoay Trực Quan Khi Thử Giọng: Bấm nghe giọng lập tức hiển thị spinner loading xoay động thái trực quan và phát âm thanh ngay tức thì (0ms latency); 3. Tối Ưu Độ Ổn Định Voice Engine & Phản Hồi Giao Diện.'
+    title: '⚡ Bản Cập Nhật v3.6.0 - Đại Tu Toàn Diện 40 Master DNA Voices Nam: Phân Hóa Độc Bản 100% Âm Sắc, Cao Độ & Ngữ Điệu Theo 4 Độ Tuổi',
+    description: '1. Phân Hóa Triệt Để 40 Giọng Nam Độc Bản 100%: Thiết lập dải cao độ (detune -260 đến +210 cents), tốc độ (rate 0.88x đến 1.25x), dải tần EQ, Presence và Formant riêng biệt cho từng giọng thuộc 4 nhóm tuổi (GenZ 18-24t, Trưởng Thành 25-34t, Trung Niên 35-45t, Cao Niên 46-65+t); 2. Tự Động Đọc Kịch Bản Thoại Riêng Biệt (Signature Sample Text): Mỗi giọng mang ngữ điệu, phương ngữ và từ vựng đặc trưng theo vùng miền (Bắc - Trung - Nam) và phong cách ngành nghề; 3. Mở Khóa Toàn Diện Web Audio Realtime DSP & Giữ Nguyên Hiệu Ứng Xoay 0ms Latency.'
   }
 ];
 

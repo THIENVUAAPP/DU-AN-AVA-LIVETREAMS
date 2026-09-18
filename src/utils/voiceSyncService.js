@@ -721,31 +721,12 @@ export const VIETNAMESE_FEMALE_VOICES = [
   }
 ];
 
-// ==================== 2. 60 GIỌNG NAM VIỆT NAM CAO CẤP (ĐA ĐỘ TUỔI 18-65t, TRẦM HÙNG, CHUYÊN NGHIỆP) ====================
+// ==================== 2. 40 GIỌNG NAM MASTER DNA VIỆT NAM CAO CẤP (ĐA ĐỘ TUỔI 18-65t, TRẦM HÙNG, CHUYÊN NGHIỆP) ====================
 export const VIETNAMESE_MALE_VOICES = [
-  ...MASTER_DNA_MALE_VIETNAMESE_40_VOICES,
-  {
-    id: 'el_adam',
-    name: 'Adam 👑 (Nam - Thuyết Trình Điềm Đạm Chuẩn Quốc Gia [Miền Bắc])',
-    provider: 'system',
-    tier: 'pro',
-    badge: '👑 Studio VIP',
-    gender: 'Male',
-    lang: 'vi-VN',
-    region: 'vi',
-    dialect: 'bac',
-    ageGroup: 'middle',
-    styleCategory: 'banhang',
-    category: 'Thương Mại & Thuyết Trình • Miền Bắc',
-    pitch: 1.00,
-    rate: 1.05,
-    recommendedFor: 'both',
-    desc: 'Giọng nam trầm ấm, điềm đạm, đĩnh đạc, phát âm tròn vành rõ chữ chuẩn truyền hình quốc gia.',
-    sampleText: 'Chào mừng tất cả các bạn đã đến với buổi phát sóng hôm nay! Chúc mọi người một ngày tràn đầy năng lượng và gặt hái nhiều thành công!',
-    edgePitch: '+0%',
-    edgeRate: '+8%',
-    dspProfile: { semitones: 0.0, detune: 0, rate: 1.05, lowGain: 0.0, midFreq: 500, midGain: 2.5, presenceFreq: 3500, presenceGain: 4.8, highGain: 2.5, compressor: { threshold: -20, ratio: 4.0, attack: 0.005, release: 0.15 } }
-  },
+  ...MASTER_DNA_MALE_VIETNAMESE_40_VOICES
+];
+
+const LEGACY_MALE_VOICES = [
   {
     id: 'vn_nam_blv_bungno',
     name: 'Quang Huy 👑 (Nam - BLV Game PK Bùng Nổ [Miền Bắc])',
@@ -7936,22 +7917,18 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   if (source.detune) {
     try {
       let detuneCents = 0;
-      if (isMale) {
-        // TUYỆT ĐỐI KHÔNG DETUNE ÂM CHO GIỌNG NAM ĐỂ GIỮ NGUYÊN FORMANT GỐC ĐĨNH ĐẠC, TRONG TRẺO, KHÔNG KHÀN ĐỤC, KHÔNG CHẬM CÀ RỀ!
-        detuneCents = 0;
-      } else {
-        if (dsp.detune !== undefined && !isNaN(Number(dsp.detune))) {
-          detuneCents = Math.max(0, Number(dsp.detune));
-        } else if (dsp.semitones !== undefined && !isNaN(Number(dsp.semitones))) {
-          detuneCents = Math.max(0, Math.round(Number(dsp.semitones) * 100));
-        } else if (voice?.edgePitch && String(voice.edgePitch).includes('%')) {
-          const pNum = parseInt(String(voice.edgePitch).replace('%', ''), 10) || 0;
-          detuneCents = Math.max(0, Math.round(pNum * 8.5));
-        } else if (voice?.pitch !== undefined && !isNaN(Number(voice.pitch))) {
-          detuneCents = Math.max(0, Math.round((Number(voice.pitch) - 1.0) * 800));
-        }
+      if (dsp.detune !== undefined && !isNaN(Number(dsp.detune))) {
+        detuneCents = Number(dsp.detune);
+      } else if (dsp.semitones !== undefined && !isNaN(Number(dsp.semitones))) {
+        detuneCents = Math.round(Number(dsp.semitones) * 100);
+      } else if (voice?.edgePitch && String(voice.edgePitch).includes('%')) {
+        const pNum = parseInt(String(voice.edgePitch).replace('%', ''), 10) || 0;
+        detuneCents = Math.round(pNum * 8.5);
+      } else if (voice?.pitch !== undefined && !isNaN(Number(voice.pitch))) {
+        detuneCents = Math.round((Number(voice.pitch) - 1.0) * 800);
       }
-      source.detune.value = Math.max(0, Math.min(550, detuneCents));
+      // Dải tần detune an toàn từ -450 cents (trầm ấm sâu lắng) đến +450 cents (tươi sáng sắc nét)
+      source.detune.value = Math.max(-450, Math.min(450, detuneCents));
     } catch (e) {}
   }
   source.playbackRate.value = 1.0;
@@ -7970,8 +7947,8 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
     try {
       const lowFilter = audioCtx.createBiquadFilter();
       lowFilter.type = 'lowshelf';
-      lowFilter.frequency.value = 250;
-      lowFilter.gain.value = Math.max(-4, Math.min(5, lowGainVal));
+      lowFilter.frequency.value = dsp.lowFreq || 240;
+      lowFilter.gain.value = Math.max(-8, Math.min(8, lowGainVal));
       lastNode.connect(lowFilter);
       lastNode = lowFilter;
     } catch (e) {}
@@ -7985,8 +7962,8 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
       const midFilter = audioCtx.createBiquadFilter();
       midFilter.type = 'peaking';
       midFilter.frequency.value = midFreqVal;
-      midFilter.Q.value = 1.0;
-      midFilter.gain.value = Math.max(-4, Math.min(4, midGainVal));
+      midFilter.Q.value = dsp.midQ || 1.0;
+      midFilter.gain.value = Math.max(-6, Math.min(6, midGainVal));
       lastNode.connect(midFilter);
       lastNode = midFilter;
     } catch (e) {}
@@ -8000,8 +7977,8 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
       const presenceFilter = audioCtx.createBiquadFilter();
       presenceFilter.type = 'peaking';
       presenceFilter.frequency.value = presenceFreqVal;
-      presenceFilter.Q.value = 1.2;
-      presenceFilter.gain.value = Math.max(-4, Math.min(6.5, presenceGainVal));
+      presenceFilter.Q.value = dsp.presenceQ || 1.2;
+      presenceFilter.gain.value = Math.max(-6, Math.min(8, presenceGainVal));
       lastNode.connect(presenceFilter);
       lastNode = presenceFilter;
     } catch (e) {}
@@ -8013,8 +7990,8 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
     try {
       const highFilter = audioCtx.createBiquadFilter();
       highFilter.type = 'highshelf';
-      highFilter.frequency.value = 7000;
-      highFilter.gain.value = Math.max(-4, Math.min(5, highGainVal));
+      highFilter.frequency.value = dsp.highFreq || 7000;
+      highFilter.gain.value = Math.max(-6, Math.min(6, highGainVal));
       lastNode.connect(highFilter);
       lastNode = highFilter;
     } catch (e) {}
@@ -8142,27 +8119,21 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
   if (voice?.pitch !== undefined && !isNaN(Number(voice.pitch))) {
     userPitchOffset = Math.round((Number(voice.pitch) - 1.0) * 80);
   }
-  let finalPitchNum = Math.max(-60, Math.min(60, basePitchNum + userPitchOffset));
-  // ⚡ ĐỐI VỚI GIỌNG NAM: Cho phép dải âm sắc phong phú theo lứa tuổi (Trẻ +15%, Thanh niên +3%, Trung niên -3%, Cao niên -8%) mà vẫn giữ nguyên độ trong trẻo và formant sạch
-  if (isMale) {
-    finalPitchNum = Math.max(-12, Math.min(25, finalPitchNum));
-  }
+  let finalPitchNum = Math.max(-40, Math.min(50, basePitchNum + userPitchOffset));
   const effectivePitch = (finalPitchNum >= 0 ? '+' : '') + finalPitchNum + '%';
 
   // 2. TÍNH TOÁN TỐC ĐỘ (RATE) DẠNG % CÓ HIỆU LỰC 100% THEO THANH TRƯỢT NGƯỜI DÙNG
   let baseRateNum = 0;
   if (voice?.edgeRate && voice.edgeRate.includes('%')) {
     baseRateNum = parseInt(voice.edgeRate.replace('%', ''), 10) || 0;
+  } else if (voice?.dspProfile?.rate !== undefined) {
+    baseRateNum = Math.round((Number(voice.dspProfile.rate) - 1.0) * 100);
   }
   let userRateOffset = 0;
   if (voice?.rate !== undefined && !isNaN(Number(voice.rate))) {
     userRateOffset = Math.round((Number(voice.rate) - 1.0) * 100);
   }
-  let finalRateNum = Math.max(-50, Math.min(80, baseRateNum + userRateOffset));
-  // ⚡ ĐỐI VỚI GIỌNG NAM: Tốc độ luôn giữ từ 0% trở lên để giọng luôn lưu loát, dõng dạc, không bao giờ bị cà rề chậm chạp
-  if (isMale) {
-    finalRateNum = Math.max(0, Math.min(50, finalRateNum));
-  }
+  let finalRateNum = Math.max(-25, Math.min(60, baseRateNum + userRateOffset));
   const effectiveRate = (finalRateNum >= 0 ? '+' : '') + finalRateNum + '%';
 
   // Khóa bộ nhớ đệm độc bản theo từng ID giọng đọc riêng biệt để không bao giờ bị phát nhầm giọng khác

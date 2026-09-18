@@ -1983,23 +1983,29 @@ IDOL MỈM CƯỜI + GESTURE
                               return;
                             }
 
-                            let vol = 1.0, rate = 1.0, pitch = 1.0;
+                            let roleVol = 1.0, roleRate = 1.0, rolePitch = 1.0;
                             if (roleType === 'idol') {
-                              vol = settings.mainVoiceVolume !== undefined ? settings.mainVoiceVolume : 1.0;
-                              rate = settings.mainVoiceRate !== undefined ? settings.mainVoiceRate : 1.0;
-                              pitch = settings.mainVoicePitch !== undefined ? settings.mainVoicePitch : 1.0;
+                              roleVol = settings.mainVoiceVolume !== undefined ? Number(settings.mainVoiceVolume) : 1.0;
+                              roleRate = settings.mainVoiceRate !== undefined ? Number(settings.mainVoiceRate) : 1.0;
+                              rolePitch = settings.mainVoicePitch !== undefined ? Number(settings.mainVoicePitch) : 1.0;
                             } else if (roleType === 'manager') {
-                              vol = settings.assistantVoiceVolume !== undefined ? settings.assistantVoiceVolume : 1.0;
-                              rate = settings.assistantVoiceRate !== undefined ? settings.assistantVoiceRate : 1.0;
-                              pitch = settings.assistantVoicePitch !== undefined ? settings.assistantVoicePitch : 1.0;
+                              roleVol = settings.assistantVoiceVolume !== undefined ? Number(settings.assistantVoiceVolume) : 1.0;
+                              roleRate = settings.assistantVoiceRate !== undefined ? Number(settings.assistantVoiceRate) : 1.0;
+                              rolePitch = settings.assistantVoicePitch !== undefined ? Number(settings.assistantVoicePitch) : 1.0;
                             } else if (roleType === 'game') {
-                              vol = settings.gameVoiceVolume !== undefined ? settings.gameVoiceVolume : 1.0;
-                              rate = settings.gameVoiceRate !== undefined ? settings.gameVoiceRate : 1.0;
-                              pitch = settings.gameVoicePitch !== undefined ? settings.gameVoicePitch : 1.0;
+                              roleVol = settings.gameVoiceVolume !== undefined ? Number(settings.gameVoiceVolume) : 1.0;
+                              roleRate = settings.gameVoiceRate !== undefined ? Number(settings.gameVoiceRate) : 1.0;
+                              rolePitch = settings.gameVoicePitch !== undefined ? Number(settings.gameVoicePitch) : 1.0;
                             }
 
                             setPreviewingVoiceId(v.id);
-                            previewVoiceAudio({ ...v, volume: vol, rate, pitch, isTest: true }, null, () => {
+                            previewVoiceAudio({ 
+                              ...v, 
+                              volume: (v.volume !== undefined ? Number(v.volume) : 1.0) * roleVol, 
+                              rate: (v.rate !== undefined ? Number(v.rate) : 1.0) * roleRate, 
+                              pitch: (v.pitch !== undefined ? Number(v.pitch) : 1.0) * rolePitch, 
+                              isTest: true 
+                            }, v.sampleText || null, () => {
                               setPreviewingVoiceId(null);
                             });
                           }}
@@ -2012,7 +2018,7 @@ IDOL MỈM CƯỜI + GESTURE
                                 : 'bg-blue-50 text-blue-600 hover:bg-blue-100 border border-blue-200'
                           }`}
                         >
-                          <Volume2 size={15} className={isPlaying ? "animate-spin" : ""} />
+                          {isPlaying ? <Loader2 size={14} className="animate-spin text-white" /> : <Volume2 size={14} />}
                           <span>{isPlaying ? 'Dừng' : (isVn ? '🔊 Thử Tiếng Việt' : '🔊 Nghe thử')}</span>
                         </button>
                       </td>
@@ -3901,7 +3907,15 @@ IDOL MỈM CƯỜI + GESTURE
                                 ? (settings.commentVoiceVolume !== undefined ? Number(settings.commentVoiceVolume) : 1.0)
                                 : 1.0;
 
-                          const activeRate = isSelectedAsIdol 
+                          const activeVolMultiplier = isSelectedAsIdol 
+                            ? (settings.mainVoiceVolume !== undefined ? Number(settings.mainVoiceVolume) : 1.0)
+                            : isSelectedAsAssistant 
+                              ? (settings.assistantVoiceVolume !== undefined ? Number(settings.assistantVoiceVolume) : 1.0)
+                              : isSelectedAsComment 
+                                ? (settings.commentVoiceVolume !== undefined ? Number(settings.commentVoiceVolume) : 1.0)
+                                : 1.0;
+
+                          const activeRateMultiplier = isSelectedAsIdol 
                             ? (settings.mainVoiceRate !== undefined ? Number(settings.mainVoiceRate) : 1.0)
                             : isSelectedAsAssistant 
                               ? (settings.assistantVoiceRate !== undefined ? Number(settings.assistantVoiceRate) : 1.0)
@@ -3909,7 +3923,7 @@ IDOL MỈM CƯỜI + GESTURE
                                 ? (settings.commentVoiceRate !== undefined ? Number(settings.commentVoiceRate) : 1.0)
                                 : 1.0;
 
-                          const activePitch = isSelectedAsIdol 
+                          const activePitchMultiplier = isSelectedAsIdol 
                             ? (settings.mainVoicePitch !== undefined ? Number(settings.mainVoicePitch) : 1.0)
                             : isSelectedAsAssistant 
                               ? (settings.assistantVoicePitch !== undefined ? Number(settings.assistantVoicePitch) : 1.0)
@@ -3987,11 +4001,11 @@ IDOL MỈM CƯỜI + GESTURE
                                     setPreviewingVoiceId(v.id);
                                     previewVoiceAudio({ 
                                       ...v, 
-                                      volume: activeVol, 
-                                      rate: activeRate, 
-                                      pitch: activePitch, 
+                                      volume: (v.volume !== undefined ? Number(v.volume) : 1.0) * activeVolMultiplier, 
+                                      rate: (v.rate !== undefined ? Number(v.rate) : 1.0) * activeRateMultiplier, 
+                                      pitch: (v.pitch !== undefined ? Number(v.pitch) : 1.0) * activePitchMultiplier, 
                                       isTest: true 
-                                    }, null, () => {
+                                    }, v.sampleText || null, () => {
                                       setPreviewingVoiceId(null);
                                       setPreviewingRole(null);
                                     });
