@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.5.4';
+export const APP_VERSION = '3.5.5';
 export const RELEASE_DATE = '18/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v3.5.4 - Chuẩn Hóa Chính Tả Tiếng Việt & Đọc Liền Khối Tuyệt Đối Không Ngắt Lẻ',
-    description: '1. Chống Tách Chữ & Sửa Chính Tả Tự Động: Chữa lành hoàn toàn các từ bị đứt quãng (kịch bản, bạn ơi, khách hàng, sản phẩm, liên tục, chính tả, bánh gạo lứt, ăn nhạt, nhắc lại); 2. Đọc Liền Mạch Nguyên Câu: Xóa bỏ ngắt nghỉ sai ở dấu ba chấm (...), câu thoại mượt mà tự nhiên; 3. DSP Audio Studio & 40 Master DNA Voices: Âm sắc đanh dày, ấm áp và rõ từng phát âm thanh quản.'
+    title: '⚡ Bản Cập Nhật v3.5.5 - Phân Tách 100% Độc Bản Tông Giọng & Phương Ngữ Vùng Miền 20-28 Tuổi',
+    description: '1. Phân Tách Tông & Âm Sắc 100%: Tích hợp Web Audio Detune động và dải cao độ chuyên sâu (-350 đến +450 cents), mỗi giọng sở hữu 1 âm vực và phong cách hoàn toàn khác biệt; 2. Chuẩn Sắc Phương Ngữ 4 Vùng Miền (Tây, Trung, Bắc, Nam): Tự động chuyển đổi trợ từ, thán từ và khẩu khí bản xứ mộc mạc, ngọt ngào, duyên dáng; 3. Phong Cách Bán Hàng & Chốt Deal Triệu View: Nhấn nhá đỉnh cao kích thích hưng phấn và giữ chân người xem.'
   }
 ];
 

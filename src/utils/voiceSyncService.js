@@ -7658,7 +7658,71 @@ Bên em cam kết 100% hàng chính hãng, bảo hành một đổi một trong 
 export function formatTextForRegionalSpeech(rawText, voice) {
   if (!rawText || typeof rawText !== 'string') return '';
   let text = humanizeVoiceSpeechText(rawText, voice);
-  return text || '';
+  if (!text) return '';
+
+  const dialect = (voice?.dialect || '').toLowerCase();
+  const cat = (voice?.styleCategory || voice?.category || '').toLowerCase();
+  const id = (voice?.id || '').toLowerCase();
+
+  // 1. 🌾 MIỀN TÂY (Sông nước mộc mạc, ngọt lịm, ấm áp)
+  if (dialect === 'tay' || id.includes('meko') || id.includes('mientay') || id.includes('mientay_') || id.includes('ongbay') || id.includes('bacu') || id.includes('utmai') || id.includes('bentre')) {
+    text = text
+      .replace(/(?<![\p{L}\p{N}_])nhé(?!\p{L})/giu, 'nghen bà con')
+      .replace(/(?<![\p{L}\p{N}_])nhá(?!\p{L})/giu, 'nghen')
+      .replace(/(?<![\p{L}\p{N}_])nha các bác(?!\p{L})/giu, 'nhen bà con cô bác')
+      .replace(/(?<![\p{L}\p{N}_])các bác ơi(?!\p{L})/giu, 'bà con cô bác ơi')
+      .replace(/(?<![\p{L}\p{N}_])các bác(?!\p{L})/giu, 'bà con mình')
+      .replace(/(?<![\p{L}\p{N}_])chốt ngay(?!\p{L})/giu, 'chốt lẹ tay nghen')
+      .replace(/(?<![\p{L}\p{N}_])mua ngay(?!\p{L})/giu, 'rinh liền tay nghen')
+      .replace(/(?<![\p{L}\p{N}_])rất ngon(?!\p{L})/giu, 'ngon hết sảy bà con ơi')
+      .replace(/(?<![\p{L}\p{N}_])ngon lắm(?!\p{L})/giu, 'ngon mê ly dữ dằn')
+      .replace(/(?<![\p{L}\p{N}_])rất đẹp(?!\p{L})/giu, 'đẹp dữ thần luôn á')
+      .replace(/(?<![\p{L}\p{N}_])rất nhiều(?!\p{L})/giu, 'quá chừng chừng luôn')
+      .replace(/(?<![\p{L}\p{N}_])không lo(?!\p{L})/giu, 'hổng có lo nghen');
+  }
+
+  // 2. 🌊 MIỀN TRUNG (Đậm đà, sâu lắng, chuẩn vị Huế / Đà Nẵng / Quảng Nam / Nghệ Tĩnh)
+  else if (dialect === 'trung' || id.includes('mientrung') || id.includes('hue') || id.includes('danang') || id.includes('quangnam') || id.includes('nghean')) {
+    text = text
+      .replace(/(?<![\p{L}\p{N}_])nhé(?!\p{L})/giu, 'nì cả nhà')
+      .replace(/(?<![\p{L}\p{N}_])nhá(?!\p{L})/giu, 'nì')
+      .replace(/(?<![\p{L}\p{N}_])nha(?!\p{L})/giu, 'nì nha')
+      .replace(/(?<![\p{L}\p{N}_])các bác ơi(?!\p{L})/giu, 'bà con anh chị ơi nì')
+      .replace(/(?<![\p{L}\p{N}_])rất đẹp(?!\p{L})/giu, 'răng mà đẹp dữ rứa nì')
+      .replace(/(?<![\p{L}\p{N}_])ngon lắm(?!\p{L})/giu, 'ngon hết sẩy nì')
+      .replace(/(?<![\p{L}\p{N}_])thích lắm(?!\p{L})/giu, 'thích chi lạ')
+      .replace(/(?<![\p{L}\p{N}_])chốt ngay(?!\p{L})/giu, 'chốt nhanh tay nì cả nhà');
+  }
+
+  // 3. 🏛️ MIỀN BẮC (Hà Nội, Phố Cổ, Chuẩn chỉ, thanh lịch, uy tín)
+  else if (dialect === 'bac' || id.includes('hanoi') || id.includes('mienbac') || id.includes('phoco') || id.includes('hoaimy') || id.includes('quynhluong')) {
+    text = text
+      .replace(/(?<![\p{L}\p{N}_])nghen(?!\p{L})/giu, 'nhé các bác')
+      .replace(/(?<![\p{L}\p{N}_])nhen(?!\p{L})/giu, 'nhé')
+      .replace(/(?<![\p{L}\p{N}_])mấy bà ơi(?!\p{L})/giu, 'các chị đẹp ơi')
+      .replace(/(?<![\p{L}\p{N}_])xịn sò(?!\p{L})/giu, 'chuẩn chỉ từng chi tiết')
+      .replace(/(?<![\p{L}\p{N}_])cưng xỉu(?!\p{L})/giu, 'đẹp mê ly xuất sắc')
+      .replace(/(?<![\p{L}\p{N}_])quá đã(?!\p{L})/giu, 'cực kỳ ưng ý');
+  }
+
+  // 4. 🏙️ MIỀN NAM (Sài Gòn Trendy, Idol Livestream, KOC Top Trending)
+  else if (dialect === 'nam' || id.includes('saigon') || id.includes('miennam') || id.includes('tphcm') || id.includes('genz') || id.includes('idol') || id.includes('koc')) {
+    text = text
+      .replace(/(?<![\p{L}\p{N}_])nhé các bác(?!\p{L})/giu, 'nha cả nhà mình ơi')
+      .replace(/(?<![\p{L}\p{N}_])nhé(?!\p{L})/giu, 'nha')
+      .replace(/(?<![\p{L}\p{N}_])nhá(?!\p{L})/giu, 'nè')
+      .replace(/(?<![\p{L}\p{N}_])các bác(?!\p{L})/giu, 'cả nhà mình');
+  }
+
+  // 5. 🎯 PHONG CÁCH BÁN HÀNG & CHỐT DEAL VIRAL (Dopamine & FOMO Booster)
+  if (cat.includes('banhang') || cat.includes('chotdeal') || id.includes('fomo') || id.includes('closer') || id.includes('flash')) {
+    text = text
+      .replace(/(?<![\p{L}\p{N}_])hết hàng(?!\p{L})/giu, 'cháy hàng khét lẹt')
+      .replace(/(?<![\p{L}\p{N}_])giá tốt(?!\p{L})/giu, 'deal hời sập sàn')
+      .replace(/(?<![\p{L}\p{N}_])đặt hàng(?!\p{L})/giu, 'chốt đơn liền tay');
+  }
+
+  return text;
 }
 
 /**
@@ -7780,11 +7844,23 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   source.buffer = audioBuffer;
   activeSourceNode = source;
 
-  // Giữ nguyên 100% tông giọng tự nhiên của Neural TTS gốc
-  // Tuyệt đối không can thiệp detune hay bóp méo tần số mẫu
+  // 🎵 DETUNE / PITCH MASTERING DÀNH RIÊNG CHO TỪNG GIỌNG ĐỌC
+  // Tinh chỉnh cao độ F0 độc bản (từ -350 cents đến +450 cents) để mỗi giọng có thanh điệu khác biệt 100%
+  const dsp = voice?.dspProfile || {};
   if (source.detune) {
     try {
-      source.detune.value = 0;
+      let detuneCents = 0;
+      if (dsp.detune !== undefined && !isNaN(Number(dsp.detune))) {
+        detuneCents = Number(dsp.detune);
+      } else if (dsp.semitones !== undefined && !isNaN(Number(dsp.semitones))) {
+        detuneCents = Math.round(Number(dsp.semitones) * 100);
+      } else if (voice?.edgePitch && String(voice.edgePitch).includes('%')) {
+        const pNum = parseInt(String(voice.edgePitch).replace('%', ''), 10) || 0;
+        detuneCents = Math.round(pNum * 8.5);
+      } else if (voice?.pitch !== undefined && !isNaN(Number(voice.pitch))) {
+        detuneCents = Math.round((Number(voice.pitch) - 1.0) * 800);
+      }
+      source.detune.value = Math.max(-450, Math.min(550, detuneCents));
     } catch (e) {}
   }
   source.playbackRate.value = 1.0;
@@ -7792,10 +7868,7 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   // MASTER GAIN (Điều chỉnh âm lượng trung thực và mượt mà)
   const masterGain = audioCtx.createGain();
   masterGain.gain.value = Math.max(0, Math.min(2.0, requestedVolume !== undefined ? Number(requestedVolume) : 1.0));
-  activeMasterGainNode = masterGain;
-
   // 🎛️ BỘ XỬ LÝ ÂM SẮC & EQ MASTERING CHUYÊN BIỆT CHO TỪNG GIỌNG ĐỌC (VOICE ACOUSTIC DSP)
-  const dsp = voice?.dspProfile || {};
   let lastNode = source;
 
   // 1. Low Shelf Filter (Điều chỉnh độ trầm, ấm của giọng đọc)
