@@ -212,93 +212,109 @@ export const saveAidolItem = async (item) => {
             return false;
           });
 
-          // 🛡️ NẾU ĐÃ TỒN TẠI: TÁI SỬ DỤNG 100% BẢN GHI ĐÃ CÓ, TUYỆT ĐỐI KHÔNG TẠO BẢN GHI MỚI
-          if (existingRecord) {
-            const finalBlob = rawBlob || existingRecord.fileBlob || null;
-            const targetId = existingRecord.id;
+// Ngưỡng dung lượng tối đa cho phép ghi Blob vào IndexedDB (25MB)
+// Các file video nặng hơn 25MB (chuẩn OBS từ 500MB - 50GB) sẽ CHỈ lưu metadata & file pointer trong RAM
+// Tránh 100% việc trình duyệt clone hàng chục GB vào disk profile, gây tràn RAM và sập trình duyệt!
+const MAX_IDB_BLOB_SIZE = 25 * 1024 * 1024;
 
-            if (finalBlob) {
-              try {
-                const memCache = getBlobMemoryCache();
-                memCache.set(targetId, finalBlob);
-                if (fileSignature) memCache.set(fileSignature, finalBlob);
-                if (existingRecord.url) memCache.set(existingRecord.url, finalBlob);
-                if (existingRecord.mediaUrl) memCache.set(existingRecord.mediaUrl, finalBlob);
-              } catch (e) {}
+            // 🛡️ NẾU ĐÃ TỒN TẠI: TÁI SỬ DỤNG 100% BẢN GHI ĐÃ CÓ, TUYỆT ĐỐI KHÔNG TẠO BẢN GHI MỚI
+            if (existingRecord) {
+              const finalBlob = rawBlob || existingRecord.fileBlob || null;
+              const targetId = existingRecord.id;
+
+              if (finalBlob) {
+                try {
+                  const memCache = getBlobMemoryCache();
+                  memCache.set(targetId, finalBlob);
+                  if (fileSignature) memCache.set(fileSignature, finalBlob);
+                  if (existingRecord.url) memCache.set(existingRecord.url, finalBlob);
+                  if (existingRecord.mediaUrl) memCache.set(existingRecord.mediaUrl, finalBlob);
+                } catch (e) {}
+              }
+
+              // Chuẩn OBS: Nếu blob > 25MB thì không lưu binary vào IndexedDB để bảo vệ RAM
+              const blobForIDB = (finalBlob && finalBlob.size <= MAX_IDB_BLOB_SIZE) ? finalBlob : null;
+
+              const updatedRecord = {
+                ...existingRecord,
+                name: item.name || existingRecord.name,
+                fileBlob: blobForIDB,
+                fileSize: finalBlob ? finalBlob.size : (existingRecord.fileSize || fileSize),
+                fileSignature: fileSignature || existingRecord.fileSignature || '',
+                isZeroCopyMedia: !!(finalBlob && finalBlob.size > MAX_IDB_BLOB_SIZE),
+                mediaUrl: (item.mediaUrl && !item.mediaUrl.startsWith('blob:')) ? item.mediaUrl : (existingRecord.mediaUrl || item.url || ''),
+                url: (item.url && item.url.startsWith('blob:')) ? item.url : (existingRecord.url || item.mediaUrl || ''),
+                updatedAt: new Date().toISOString(),
+                isLiveReady: true
+              };
+
+              const putReq = store.put(updatedRecord);
+              putReq.onsuccess = () => {
+                if (typeof window !== 'undefined') {
+                  window.dispatchEvent(new CustomEvent('aidol_db_updated', { detail: { action: 'reuse', item: updatedRecord } }));
+                }
+                resolve({ ...updatedRecord, fileBlob: finalBlob });
+              };
+              putReq.onerror = () => resolve(existingRecord);
+              return;
             }
 
-            const updatedRecord = {
-              ...existingRecord,
-              name: item.name || existingRecord.name,
-              fileBlob: finalBlob,
-              fileSize: finalBlob ? finalBlob.size : (existingRecord.fileSize || fileSize),
-              fileSignature: fileSignature || existingRecord.fileSignature || '',
-              mediaUrl: (item.mediaUrl && !item.mediaUrl.startsWith('blob:')) ? item.mediaUrl : (existingRecord.mediaUrl || item.url || ''),
-              url: (item.url && item.url.startsWith('blob:')) ? item.url : (existingRecord.url || item.mediaUrl || ''),
-              updatedAt: new Date().toISOString(),
-              isLiveReady: true
+            // 🆕 NẾU LÀ VIDEO HOÀN TOÀN MỚI: LƯU DUY NHẤT 1 LẦN
+            const finalBlob = rawBlob || null;
+            // Chuẩn OBS: Không ép lưu file vài chục GB vào SQLite IndexedDB của browser
+            const blobForIDB = (finalBlob && finalBlob.size <= MAX_IDB_BLOB_SIZE) ? finalBlob : null;
+
+            const record = {
+              id: itemId,
+              name: item.name || 'Chưa đặt tên',
+              type: item.type || 'video',
+              fileBlob: blobForIDB,
+              fileSize: finalBlob ? finalBlob.size : fileSize,
+              fileSignature: fileSignature,
+              isZeroCopyMedia: !!(finalBlob && finalBlob.size > MAX_IDB_BLOB_SIZE),
+              mediaUrl: item.mediaUrl || item.url || '',
+              url: item.url || item.mediaUrl || '',
+              tags: item.tags || [],
+              aspectRatio: item.aspectRatio || '9:16',
+              isLiveReady: true,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
             };
 
-            const putReq = store.put(updatedRecord);
+            const putReq = store.put(record);
             putReq.onsuccess = () => {
               if (typeof window !== 'undefined') {
-                window.dispatchEvent(new CustomEvent('aidol_db_updated', { detail: { action: 'reuse', item: updatedRecord } }));
+                window.dispatchEvent(new CustomEvent('aidol_db_updated', { detail: { action: 'save', item: record } }));
               }
-              resolve(updatedRecord);
+              resolve({ ...record, fileBlob: finalBlob });
             };
-            putReq.onerror = () => resolve(existingRecord);
-            return;
-          }
-
-          // 🆕 NẾU LÀ VIDEO HOÀN TOÀN MỚI: LƯU DUY NHẤT 1 LẦN
-          const finalBlob = rawBlob || null;
-          const record = {
-            id: itemId,
-            name: item.name || 'Chưa đặt tên',
-            type: item.type || 'video',
-            fileBlob: finalBlob,
-            fileSize: finalBlob ? finalBlob.size : fileSize,
-            fileSignature: fileSignature,
-            mediaUrl: item.mediaUrl || item.url || '',
-            url: item.url || item.mediaUrl || '',
-            tags: item.tags || [],
-            aspectRatio: item.aspectRatio || '9:16',
-            isLiveReady: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
+            putReq.onerror = () => resolve(null);
           };
 
-          const putReq = store.put(record);
-          putReq.onsuccess = () => {
-            if (typeof window !== 'undefined') {
-              window.dispatchEvent(new CustomEvent('aidol_db_updated', { detail: { action: 'save', item: record } }));
-            }
-            resolve(record);
+          getAllReq.onerror = () => {
+            // Fallback lưu trực tiếp nếu getAll lỗi
+            const finalBlob = rawBlob || null;
+            const blobForIDB = (finalBlob && finalBlob.size <= MAX_IDB_BLOB_SIZE) ? finalBlob : null;
+            const record = {
+              id: itemId,
+              name: item.name || 'Chưa đặt tên',
+              type: item.type || 'video',
+              fileBlob: blobForIDB,
+              fileSize: finalBlob ? finalBlob.size : fileSize,
+              fileSignature: fileSignature,
+              isZeroCopyMedia: !!(finalBlob && finalBlob.size > MAX_IDB_BLOB_SIZE),
+              mediaUrl: item.mediaUrl || item.url || '',
+              url: item.url || item.mediaUrl || '',
+              tags: item.tags || [],
+              aspectRatio: item.aspectRatio || '9:16',
+              isLiveReady: true,
+              createdAt: new Date().toISOString(),
+              updatedAt: new Date().toISOString()
+            };
+            const putReq = store.put(record);
+            putReq.onsuccess = () => resolve({ ...record, fileBlob: finalBlob });
+            putReq.onerror = () => resolve(null);
           };
-          putReq.onerror = () => resolve(null);
-        };
-
-        getAllReq.onerror = () => {
-          // Fallback lưu trực tiếp nếu getAll lỗi
-          const record = {
-            id: itemId,
-            name: item.name || 'Chưa đặt tên',
-            type: item.type || 'video',
-            fileBlob: rawBlob,
-            fileSize: rawBlob ? rawBlob.size : fileSize,
-            fileSignature: fileSignature,
-            mediaUrl: item.mediaUrl || item.url || '',
-            url: item.url || item.mediaUrl || '',
-            tags: item.tags || [],
-            aspectRatio: item.aspectRatio || '9:16',
-            isLiveReady: true,
-            createdAt: new Date().toISOString(),
-            updatedAt: new Date().toISOString()
-          };
-          const putReq = store.put(record);
-          putReq.onsuccess = () => resolve(record);
-          putReq.onerror = () => resolve(null);
-        };
       } catch (err) {
         resolve(null);
       }

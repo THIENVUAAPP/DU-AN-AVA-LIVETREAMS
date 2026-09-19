@@ -443,25 +443,32 @@ app.all('/uploads/:filename', (req, res, next) => {
       }
 
       const chunksize = Math.max(1, (end - start) + 1);
+      const etag = `W/"${stat.size}-${Math.floor(stat.mtimeMs)}"`;
+      const isRemoteClient = Boolean(req.headers['x-forwarded-for'] || req.headers['cf-connecting-ip']);
+      const streamBuffer = isRemoteClient ? Math.min(chunksize, 2 * 1024 * 1024) : Math.min(chunksize, 8 * 1024 * 1024);
+
       res.writeHead(206, {
         'Content-Range': `bytes ${start}-${end}/${declaredFileSize}`,
         'Accept-Ranges': 'bytes',
         'Content-Length': chunksize,
         'Content-Type': contentType,
+        'ETag': etag,
+        'Last-Modified': stat.mtime.toUTCString(),
         'Cache-Control': 'public, max-age=31536000, immutable',
         'Cloudflare-CDN-Cache-Control': 'max-age=31536000',
         'CDN-Cache-Control': 'max-age=31536000',
         'Connection': 'keep-alive',
         'Keep-Alive': 'timeout=120, max=1000',
         'X-Content-Type-Options': 'nosniff',
+        'X-Accel-Buffering': 'no', // Chống Nginx & Cloudflare buffer gây trễ / đứng khung hình
         'Access-Control-Allow-Origin': '*',
-        'Access-Control-Expose-Headers': 'Content-Range, Accept-Ranges, Content-Length'
+        'Access-Control-Expose-Headers': 'Content-Range, Accept-Ranges, Content-Length, ETag'
       });
 
       try { req.socket.setNoDelay(true); } catch(e) {}
 
-      // ⚡ BUFFER 8MB SIÊU TỐC CHO VIDEO DUNG LƯỢNG LỚN & BITRATE CAO 4K 60FPS
-      const stream = fs.createReadStream(filePath, { start, end, highWaterMark: 8 * 1024 * 1024 });
+      // ⚡ ADAPTIVE STREAM BUFFER: 2MB cho Tunnel/TikTok Live Studio, 8MB cho Localhost OBS
+      const stream = fs.createReadStream(filePath, { start, end, highWaterMark: streamBuffer });
       req.on('close', () => {
         try { stream.destroy(); } catch (e) {}
       });
@@ -1673,7 +1680,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '3.8.9';
+  let ver = '3.9.0';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1711,7 +1718,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '3.8.9';
+  let ver = '3.9.0';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));

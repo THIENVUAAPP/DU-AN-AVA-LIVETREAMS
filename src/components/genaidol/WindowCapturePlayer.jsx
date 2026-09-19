@@ -546,8 +546,37 @@ export default function WindowCapturePlayer() {
 
     playVideo();
 
+    // ⚡ ANTI-FREEZE & ZERO-STALL WATCHDOG ENGINE: Chống đứng hình 100% khi TikTok Live Studio quay cửa sổ
+    let lastTime = -1;
+    let stuckCount = 0;
+    const watchdog = setInterval(() => {
+      if (!isSubscribed || isExplicitlyPausedRef.current || !videoRef.current) return;
+      const v = videoRef.current;
+      if (v.paused && v.src) {
+        v.play().catch(() => {});
+        return;
+      }
+      if (!v.paused && v.readyState >= 2) {
+        if (Math.abs(v.currentTime - lastTime) < 0.05) {
+          stuckCount++;
+          if (stuckCount >= 2) {
+            // Nudge nhẹ 0.01s để đánh thức GPU decoder nếu bị đứng khung hình
+            try {
+              v.currentTime = (v.currentTime + 0.01) % (v.duration || 1000);
+              v.play().catch(() => {});
+            } catch (e) {}
+            stuckCount = 0;
+          }
+        } else {
+          stuckCount = 0;
+          lastTime = v.currentTime;
+        }
+      }
+    }, 1200);
+
     return () => {
       isSubscribed = false;
+      clearInterval(watchdog);
       vid.removeEventListener('loadedmetadata', handleLoadedMetadata);
       vid.removeEventListener('waiting', handleWaiting);
       vid.removeEventListener('playing', handlePlaying);
@@ -853,7 +882,7 @@ export default function WindowCapturePlayer() {
             zIndex: 10
           }}
         >
-          🔴 4K 60 FPS REALTIME v3.8.9
+          🔴 4K 60 FPS REALTIME v3.9.0 (OBS ZERO-COPY)
         </div>
       )}
     </div>

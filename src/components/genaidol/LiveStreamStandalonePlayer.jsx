@@ -18,7 +18,7 @@ export default function LiveStreamStandalonePlayer() {
   });
 
   const [videoSrc, setVideoSrc] = useState(() => {
-    if (typeof window === 'undefined') return '/uploads/media-1789044811424-233037063.mp4';
+    if (typeof window === 'undefined') return '';
     // ⚡ ƯU TIÊN 0: Trực tiếp lấy fileBlob hoặc Blob URL nếu cùng máy / mở từ phần mềm
     try {
       if (window.opener) {
@@ -49,12 +49,14 @@ export default function LiveStreamStandalonePlayer() {
     const v = params.get('v');
     if (v && !v.startsWith('blob:')) return v;
     try {
+      const activeSrc = localStorage.getItem('avalive_active_video_src');
+      if (activeSrc && !activeSrc.startsWith('blob:')) return activeSrc;
       const saved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
       if (saved.mediaUrl && !saved.mediaUrl.startsWith('blob:')) return saved.mediaUrl;
       const locked = localStorage.getItem('avalive_user_locked_media') || '';
       if (locked && !locked.startsWith('blob:')) return locked;
     } catch (e) {}
-    return '/uploads/media-1789044811424-233037063.mp4';
+    return '';
   });
 
   const [fitMode, setFitMode] = useState(() => {
@@ -402,17 +404,33 @@ export default function LiveStreamStandalonePlayer() {
     };
     window.addEventListener('click', handleWindowClick);
 
-    // Watchdog 60fps
+    // ⚡ ZERO-STALL & ANTI-FREEZE WATCHDOG ENGINE: Chống đứng hình 100% cho TikTok Live Studio CEF Player
+    let freezeCount = 0;
     const watchdog = setInterval(() => {
       const vid = videoRef.current;
-      if (vid && !isExplicitlyPausedRef.current && !vid.paused && !vid.seeking) {
-        const cur = vid.currentTime;
-        if (Math.abs(cur - lastReportedTimeRef.current) < 0.01 && vid.readyState >= 2) {
-          vid.play().catch(() => {});
-        }
-        lastReportedTimeRef.current = cur;
+      if (!vid || isExplicitlyPausedRef.current) return;
+      if (vid.paused && vid.src) {
+        tryPlayWithSound();
+        return;
       }
-    }, 1500);
+      if (!vid.paused && !vid.seeking && vid.readyState >= 2) {
+        const cur = vid.currentTime;
+        if (Math.abs(cur - lastReportedTimeRef.current) < 0.02) {
+          freezeCount++;
+          if (freezeCount >= 2) {
+            // Nudge nhẹ video tiếp tục phát 0ms nếu bộ giải mã CEF bị đứng
+            try {
+              vid.currentTime = (cur + 0.02) % (vid.duration || 1000);
+              vid.play().catch(() => {});
+            } catch (e) {}
+            freezeCount = 0;
+          }
+        } else {
+          freezeCount = 0;
+          lastReportedTimeRef.current = cur;
+        }
+      }
+    }, 1200);
 
     return () => {
       if (socket) socket.disconnect();
@@ -668,7 +686,7 @@ export default function LiveStreamStandalonePlayer() {
           zIndex: 10
         }}
       >
-        🔴 4K 60 FPS REALTIME v1.3.4
+        🔴 4K 60 FPS REALTIME v3.9.0 (TIKTOK LIVE)
       </div>
     </div>
   );
