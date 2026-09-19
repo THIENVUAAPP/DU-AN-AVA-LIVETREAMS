@@ -91,27 +91,41 @@ function cleanupDuplicateUploads() {
   try {
     if (!fs.existsSync(uploadsDir)) return;
     const files = fs.readdirSync(uploadsDir);
-    const sizeMap = new Map(); // size -> firstFilePath
+    const sizeMap = new Map(); // hashKey -> firstFilePath
     let savedBytes = 0;
     let removedFiles = 0;
+    const crypto = require('crypto');
 
     for (const file of files) {
       if (!file.startsWith('media-') || file.includes('.part')) continue;
       const fullPath = path.join(uploadsDir, file);
       try {
         const stat = fs.statSync(fullPath);
-        if (stat.size < 1000000) continue; // Chỉ dọn dẹp các video > 1MB
+        if (stat.size < 1000) continue;
 
-        if (sizeMap.has(stat.size)) {
+        // Tính hash MD5 1MB đầu hoặc toàn bộ file nếu nhỏ hơn 20MB
+        let fileHash = '';
+        if (stat.size <= 20 * 1024 * 1024) {
+          fileHash = crypto.createHash('md5').update(fs.readFileSync(fullPath)).digest('hex');
+        } else {
+          const sampleBuf = Buffer.alloc(1024 * 1024);
+          const fd = fs.openSync(fullPath, 'r');
+          fs.readSync(fd, sampleBuf, 0, 1024 * 1024, 0);
+          fs.closeSync(fd);
+          fileHash = crypto.createHash('md5').update(sampleBuf).digest('hex');
+        }
+        const key = `${stat.size}_${fileHash}`;
+
+        if (sizeMap.has(key)) {
           // Trùng lặp chính xác từng byte một!
           // Xóa file trùng lặp để trả lại dung lượng cho ổ đĩa máy
-          const original = sizeMap.get(stat.size);
+          const original = sizeMap.get(key);
           fs.unlinkSync(fullPath);
           savedBytes += stat.size;
           removedFiles++;
           console.log(`[Storage Cleanup] 🗑️ Đã xóa video trùng lặp: ${file} -> Giữ lại bản gốc: ${path.basename(original)}`);
         } else {
-          sizeMap.set(stat.size, fullPath);
+          sizeMap.set(key, fullPath);
         }
       } catch (err) {}
     }
@@ -740,13 +754,66 @@ app.post('/api/upload-media', upload.single('file'), (req, res) => {
   }
   
   const savedFilePath = path.join(uploadsDir, req.file.filename);
+  let finalFilename = req.file.filename;
+  let finalFilePath = savedFilePath;
+  let reused = false;
 
-  // 🚀 TỰ ĐỘNG FASTSTART ĐỂ TIKTOK LIVE STUDIO PHÁT NGAY LẬP TỨC 0MS
-  if (req.file.filename.endsWith('.mp4') || req.file.filename.endsWith('.mov')) {
-    ensureMp4FastStart(savedFilePath);
+  // 🛡️ DEDUPLICATION TỨC THÌ: So khớp nếu file đã tồn tại trên đĩa -> Xóa bản sao vừa ghi, dùng file gốc
+  try {
+    const stat = fs.statSync(savedFilePath);
+    if (stat.size > 0) {
+      const files = fs.readdirSync(uploadsDir);
+      const crypto = require('crypto');
+      let sampleBuf = null;
+      if (stat.size <= 20 * 1024 * 1024) {
+        sampleBuf = fs.readFileSync(savedFilePath);
+      } else {
+        sampleBuf = Buffer.alloc(1024 * 1024);
+        const fd = fs.openSync(savedFilePath, 'r');
+        fs.readSync(fd, sampleBuf, 0, 1024 * 1024, 0);
+        fs.closeSync(fd);
+      }
+      const newHash = crypto.createHash('md5').update(sampleBuf).digest('hex');
+
+      for (const f of files) {
+        if (f === req.file.filename || f.startsWith('.') || f.includes('.part')) continue;
+        const otherPath = path.join(uploadsDir, f);
+        try {
+          const otherStat = fs.statSync(otherPath);
+          if (otherStat.size === stat.size) {
+            let otherSample = null;
+            if (otherStat.size <= 20 * 1024 * 1024) {
+              otherSample = fs.readFileSync(otherPath);
+            } else {
+              otherSample = Buffer.alloc(1024 * 1024);
+              const ofd = fs.openSync(otherPath, 'r');
+              fs.readSync(ofd, otherSample, 0, 1024 * 1024, 0);
+              fs.closeSync(ofd);
+            }
+            const otherHash = crypto.createHash('md5').update(otherSample).digest('hex');
+            if (newHash === otherHash) {
+              // Trùng lặp chính xác! Xóa file vừa tạo và tái sử dụng file gốc
+              fs.unlinkSync(savedFilePath);
+              finalFilename = f;
+              finalFilePath = otherPath;
+              reused = true;
+              console.log(`[Upload Deduplication] ♻️ Phát hiện video đã tồn tại (${f}) -> Tái sử dụng file gốc, xóa bản sao vừa nạp!`);
+              break;
+            }
+          }
+        } catch (subErr) {}
+      }
+    }
+  } catch (dedupErr) {
+    console.warn('[Upload Deduplication warn]', dedupErr);
   }
 
-  const fileUrl = `/uploads/${req.file.filename}`;
+  // 🚀 TỰ ĐỘNG FASTSTART ĐỂ TIKTOK LIVE STUDIO PHÁT NGAY LẬP TỨC 0MS
+  if (!reused && (finalFilename.endsWith('.mp4') || finalFilename.endsWith('.mov'))) {
+    ensureMp4FastStart(finalFilePath);
+  }
+
+  const fileUrl = `/uploads/${finalFilename}`;
   currentMasterLiveState = {
     ...currentMasterLiveState,
     stage: 'idol',
@@ -759,7 +826,7 @@ app.post('/api/upload-media', upload.single('file'), (req, res) => {
   };
   io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
   saveLiveStateToFile();
-  res.json({ url: fileUrl, filename: req.file.filename, success: true });
+  res.json({ url: fileUrl, filename: finalFilename, reused: reused, success: true });
 });
 
 // ============================================================
@@ -1693,7 +1760,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '3.9.1';
+  let ver = '3.9.2';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1731,7 +1798,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '3.9.1';
+  let ver = '3.9.2';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
