@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 
 import { loadAllAidolItems } from '../../utils/idbHelper';
+import { getActiveMedia } from '../../utils/activeMediaStore';
 
 /**
  * 🖥️ TAB CODE ĐỘC LẬP: CỬA SỔ BẮT HÌNH WINDOW CAPTURE 4K 60 FPS CHO OBS & TIKTOK LIVE STUDIO
@@ -215,19 +216,16 @@ export default function WindowCapturePlayer() {
         }
       }
 
-      // Kiểm tra bất kỳ Blob nào có sẵn trong Opener Map
-      if (window.opener && window.opener.__activeMediaBlobMap && window.opener.__activeMediaBlobMap.size > 0) {
-        for (const [k, v] of window.opener.__activeMediaBlobMap.entries()) {
-          if (v && (v instanceof Blob || v instanceof File)) {
-            if (activeBlobUrlRef.current) {
-              try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
-            }
-            const bUrl = URL.createObjectURL(v);
-            activeBlobUrlRef.current = bUrl;
-            isHardwareLocalBlobRef.current = true;
-            return bUrl;
-          }
+      // 1.5. ⚡ ĐỘT PHÁ: Kiểm tra ActiveMediaStore Session chia sẻ trực tiếp giữa các tab/cửa sổ (0ms)
+      const sessionActiveFile = await getActiveMedia(targetUrlOrCharId || 'current_active');
+      if (sessionActiveFile && (sessionActiveFile instanceof Blob || sessionActiveFile instanceof File)) {
+        if (activeBlobUrlRef.current) {
+          try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
         }
+        const bUrl = URL.createObjectURL(sessionActiveFile);
+        activeBlobUrlRef.current = bUrl;
+        isHardwareLocalBlobRef.current = true;
+        return bUrl;
       }
 
       // 2. Kiểm tra IndexedDB trên máy (Bê nguyên xi file gốc từ IndexedDB)
@@ -882,7 +880,7 @@ export default function WindowCapturePlayer() {
             zIndex: 10
           }}
         >
-          🔴 4K 60 FPS REALTIME v3.9.0 (OBS ZERO-COPY)
+          🔴 4K 60 FPS REALTIME v3.9.1 (OBS ZERO-COPY)
         </div>
       )}
     </div>

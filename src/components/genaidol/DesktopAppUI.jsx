@@ -43,6 +43,7 @@ import { SUPPORTED_LANGUAGES, getCurrentLanguage, setCurrentLanguage, t } from '
 import UpdateNotificationModal, { APP_VERSION } from './UpdateNotificationModal';
 import { bootstrapDefaultPresets } from '../../utils/defaultPresetsBootstrap';
 import { fastStreamUpload } from '../../utils/fastStreamService';
+import { setActiveMedia } from '../../utils/activeMediaStore';
 import ShopeeLiveConnectModal from './ShopeeLiveConnectModal';
 import autoPinProductService from '../../utils/autoPinProductService';
 import { generateAiKnowledgeScript } from '../../utils/aiScriptGenerator';
@@ -916,8 +917,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     const effectiveV = broadcastUrl || '';
 
     // ⚡ LƯU TRỰC TIẾP BLOB VÀ BLOB URL TRÊN WINDOW CHO CỬA SỔ WINDOW CAPTURE MỞ 0MS KHÔNG GIẬT LAG
+    if (activeBlob) {
+      setActiveMedia(activeBlob, 'current_active', { id: selectedCharacter, mediaUrl: broadcastUrl }).catch(() => {});
+      if (selectedCharacter) setActiveMedia(activeBlob, selectedCharacter, { id: selectedCharacter, mediaUrl: broadcastUrl }).catch(() => {});
+    }
+
     if (typeof window !== 'undefined') {
-      const activeBlob = currentFileBlobRef.current || window.__activeMediaBlob || (selectedCharacter && window.__activeMediaBlobMap && window.__activeMediaBlobMap.get(selectedCharacter)) || null;
       if (activeBlob) {
         window.__activeMediaBlob = activeBlob;
         window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
@@ -1960,6 +1965,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     if (fileBlob) {
       currentFileBlobRef.current = fileBlob;
       if (blobUrl) currentBlobUrlRef.current = blobUrl;
+      setActiveMedia(fileBlob, charId, { id: charId, name: charItem.name, mediaUrl: charUrl }).catch(() => {});
+      setActiveMedia(fileBlob, 'current_active', { id: charId, name: charItem.name, mediaUrl: charUrl }).catch(() => {});
       if (typeof window !== 'undefined') {
         window.__activeMediaBlob = fileBlob;
         window.__activeMediaBlobUrl = blobUrl;
@@ -3176,6 +3183,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
         // Lưu tham chiếu Blob toàn cục cho Window Capture & popup con nạp tức thì 0ms
         registerFileInRAM(file, newCharId);
+        setActiveMedia(file, newCharId, { name: charName, mediaUrl: localUrl, id: newCharId }).catch(() => {});
+        setActiveMedia(file, 'current_active', { name: charName, mediaUrl: localUrl, id: newCharId }).catch(() => {});
         if (typeof window !== 'undefined') {
           window.__activeMediaBlob = file;
           window.__activeMediaBlobUrl = localUrl;

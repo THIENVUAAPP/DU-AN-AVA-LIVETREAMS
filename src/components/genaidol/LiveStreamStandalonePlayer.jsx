@@ -1,6 +1,7 @@
 import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { loadAllAidolItems } from '../../utils/idbHelper';
+import { getActiveMedia } from '../../utils/activeMediaStore';
 
 /**
  * 🎬 SIÊU PLAYER LIVESTREAM 60 FPS ĐỘC LẬP CHO TIKTOK LIVE STUDIO & OBS BROWSER SOURCE
@@ -107,6 +108,17 @@ export default function LiveStreamStandalonePlayer() {
           activeBlobUrlRef.current = bUrl;
           return bUrl;
         }
+      }
+
+      // 1.5. ⚡ Kiểm tra ActiveMediaStore Session chia sẻ trực tiếp (0ms)
+      const sessionActiveFile = await getActiveMedia(targetUrlOrCharId || 'current_active');
+      if (sessionActiveFile && (sessionActiveFile instanceof Blob || sessionActiveFile instanceof File)) {
+        if (activeBlobUrlRef.current) {
+          try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
+        }
+        const bUrl = URL.createObjectURL(sessionActiveFile);
+        activeBlobUrlRef.current = bUrl;
+        return bUrl;
       }
 
       const items = await loadAllAidolItems();
@@ -686,7 +698,7 @@ export default function LiveStreamStandalonePlayer() {
           zIndex: 10
         }}
       >
-        🔴 4K 60 FPS REALTIME v3.9.0 (TIKTOK LIVE)
+        🔴 4K 60 FPS REALTIME v3.9.1 (TIKTOK LIVE)
       </div>
     </div>
   );
