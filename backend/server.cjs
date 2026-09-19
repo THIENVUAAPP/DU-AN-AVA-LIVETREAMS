@@ -117,13 +117,22 @@ function cleanupDuplicateUploads() {
         const key = `${stat.size}_${fileHash}`;
 
         if (sizeMap.has(key)) {
-          // Trùng lặp chính xác từng byte một!
-          // Xóa file trùng lặp để trả lại dung lượng cho ổ đĩa máy
           const original = sizeMap.get(key);
+          const deletedUrl = `/uploads/${file}`;
+          const originalUrl = `/uploads/${path.basename(original)}`;
+
           fs.unlinkSync(fullPath);
           savedBytes += stat.size;
           removedFiles++;
           console.log(`[Storage Cleanup] 🗑️ Đã xóa video trùng lặp: ${file} -> Giữ lại bản gốc: ${path.basename(original)}`);
+
+          // 🛡️ TỰ ĐỘNG SỬA LIVE STATE: Nếu mediaUrl đang trỏ đến file vừa xóa -> chuyển sang file gốc
+          if (currentMasterLiveState && currentMasterLiveState.mediaUrl && currentMasterLiveState.mediaUrl.includes(file)) {
+            currentMasterLiveState.mediaUrl = originalUrl;
+            currentMasterLiveState.updatedAt = Date.now();
+            saveLiveStateToFile();
+            console.log(`[Storage Cleanup] 🔄 Đã cập nhật live_state.mediaUrl: ${deletedUrl} -> ${originalUrl}`);
+          }
         } else {
           sizeMap.set(key, fullPath);
         }
@@ -1760,7 +1769,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '3.9.2';
+  let ver = '3.9.3';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1798,7 +1807,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '3.9.2';
+  let ver = '3.9.3';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));

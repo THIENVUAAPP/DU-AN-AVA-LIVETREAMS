@@ -105,20 +105,35 @@ export default function WindowCapturePlayer() {
   }, []);
 
   // 🌐 Chuyển đổi URL thông minh cho Window Capture (Tuyệt đối không trả về URL rỗng hoặc '/')
+  // ⚡ FIX: Khi chạy trên Vite dev (port 5173), /uploads/ phải trỏ về backend (port 3001)
   const resolveUrl = useCallback((url) => {
     if (!url || typeof url !== 'string') return '';
     const trimmed = url.trim();
     if (!trimmed) return '';
     if (trimmed.startsWith('blob:') || trimmed.startsWith('data:')) return trimmed;
 
+    // Xác định base origin cho uploads (backend server, KHÔNG PHẢI Vite dev server)
+    const getUploadsOrigin = () => {
+      if (window.location.hostname.includes('vercel.app') && tunnelUrl) {
+        return tunnelUrl.replace(/\/$/, '');
+      }
+      // Nếu đang chạy trên Vite dev port (5173) -> redirect về backend port 3001
+      const port = window.location.port;
+      if (port === '5173' || port === '5174') {
+        return `${window.location.protocol}//${window.location.hostname}:3001`;
+      }
+      return window.location.origin;
+    };
+
     if (trimmed.startsWith('http://') || trimmed.startsWith('https://')) {
       if (trimmed.includes('localhost:') || trimmed.includes('127.0.0.1:')) {
         try {
           const u = new URL(trimmed);
-          if (window.location.hostname.includes('vercel.app') && tunnelUrl) {
-            return `${tunnelUrl.replace(/\/$/, '')}${u.pathname}${u.search}`;
+          // Nếu URL chứa /uploads/, luôn dùng backend origin
+          if (u.pathname.startsWith('/uploads/')) {
+            return `${getUploadsOrigin()}${u.pathname}${u.search}`;
           }
-          return `${window.location.origin}${u.pathname}${u.search}`;
+          return `${getUploadsOrigin()}${u.pathname}${u.search}`;
         } catch (e) {}
       }
       return trimmed;
@@ -126,20 +141,14 @@ export default function WindowCapturePlayer() {
 
     if (trimmed.startsWith('/uploads/') || trimmed.includes('/uploads/')) {
       const pathPart = trimmed.substring(trimmed.indexOf('/uploads/'));
-      if (window.location.hostname.includes('vercel.app') && tunnelUrl) {
-        return `${tunnelUrl.replace(/\/$/, '')}${pathPart}`;
-      }
-      return `${window.location.origin}${pathPart}`;
+      return `${getUploadsOrigin()}${pathPart}`;
     }
 
     if (trimmed.startsWith('/')) {
-      if (window.location.hostname.includes('vercel.app') && tunnelUrl) {
-        return `${tunnelUrl.replace(/\/$/, '')}${trimmed}`;
-      }
-      return `${window.location.origin}${trimmed}`;
+      return `${getUploadsOrigin()}${trimmed}`;
     }
 
-    return `${window.location.origin}/${trimmed}`;
+    return `${getUploadsOrigin()}/${trimmed}`;
   }, [tunnelUrl]);
 
   const [isDirectStreamActive, setIsDirectStreamActive] = useState(false);
@@ -315,9 +324,55 @@ export default function WindowCapturePlayer() {
           videoRef.current.src = localBlob;
           videoRef.current.play().catch(() => {});
         }
+      } else if (!isDirectStreamActiveRef.current) {
+        // 3. ⚡ FALLBACK MẠNH MẼ: Nếu blob/opener đều fail → lấy URL trực tiếp từ server
+        // Ưu tiên dùng ?v= param nếu có (đã là server URL sẵn)
+        if (vParam && !vParam.startsWith('blob:')) {
+          const serverUrl = resolveUrl(vParam);
+          if (serverUrl) {
+            isHardwareLocalBlobRef.current = false;
+            setVideoSrc(serverUrl);
+            setIsVideoLoading(true);
+            if (videoRef.current) {
+              videoRef.current.srcObject = null;
+              videoRef.current.src = serverUrl;
+              videoRef.current.play().catch(() => {});
+            }
+            return;
+          }
+        }
+
+        // 4. Fallback cuối cùng: Gọi API /api/live-state để lấy mediaUrl mới nhất
+        const backendOrigin = (() => {
+          const port = window.location.port;
+          if (port === '5173' || port === '5174') {
+            return `${window.location.protocol}//${window.location.hostname}:3001`;
+          }
+          return window.location.origin;
+        })();
+
+        fetch(`${backendOrigin}/api/live-state`)
+          .then(res => res.json())
+          .then(data => {
+            if (data && data.mediaUrl && !isDirectStreamActiveRef.current) {
+              const serverUrl = resolveUrl(data.mediaUrl);
+              if (serverUrl) {
+                isHardwareLocalBlobRef.current = false;
+                setVideoSrc(serverUrl);
+                setIsVideoLoading(true);
+                if (videoRef.current) {
+                  videoRef.current.srcObject = null;
+                  videoRef.current.src = serverUrl;
+                  videoRef.current.play().catch(() => {});
+                }
+                console.log('[WindowCapture] ✅ Fallback thành công! Phát video từ server:', serverUrl);
+              }
+            }
+          })
+          .catch(() => {});
       }
     });
-  }, [attachOpenerDirectStream, tryLoadFromLocalDB]);
+  }, [attachOpenerDirectStream, tryLoadFromLocalDB, resolveUrl]);
 
   // Đồng bộ qua BroadcastChannel nội bộ cùng máy
   useEffect(() => {
@@ -416,7 +471,11 @@ export default function WindowCapturePlayer() {
   useEffect(() => {
     let socket = null;
     try {
-      const serverOrigin = window.location.origin;
+      // ⚡ FIX: Kết nối socket.io đến backend server, KHÔNG PHẢI Vite dev server
+      const port = window.location.port;
+      const serverOrigin = (port === '5173' || port === '5174')
+        ? `${window.location.protocol}//${window.location.hostname}:3001`
+        : window.location.origin;
       socket = io(serverOrigin, {
         transports: ['websocket', 'polling'],
         reconnection: true,
@@ -667,7 +726,7 @@ export default function WindowCapturePlayer() {
           setIsPlaybackActive(true);
         }}
         onError={async (e) => {
-          console.warn('[WindowCapture] Video loading error, attempting fallback to local hardware blob/stream:', e);
+          console.warn('[WindowCapture] Video loading error, attempting fallback:', e);
           const attached = attachOpenerDirectStream();
           if (!attached) {
             const fallback = await tryLoadFromLocalDB();
@@ -676,6 +735,29 @@ export default function WindowCapturePlayer() {
               if (videoRef.current) videoRef.current.srcObject = null;
               setVideoSrc(fallback);
               setIsVideoLoading(false);
+            } else {
+              // ⚡ ULTIMATE FALLBACK: Gọi /api/live-state lấy URL mới nhất từ server
+              try {
+                const port = window.location.port;
+                const backendOrigin = (port === '5173' || port === '5174')
+                  ? `${window.location.protocol}//${window.location.hostname}:3001`
+                  : window.location.origin;
+                const res = await fetch(`${backendOrigin}/api/live-state`);
+                const data = await res.json();
+                if (data && data.mediaUrl) {
+                  const serverUrl = resolveUrl(data.mediaUrl);
+                  if (serverUrl && videoRef.current) {
+                    isHardwareLocalBlobRef.current = false;
+                    videoRef.current.srcObject = null;
+                    videoRef.current.src = serverUrl;
+                    setVideoSrc(serverUrl);
+                    videoRef.current.play().catch(() => {});
+                    console.log('[WindowCapture] ✅ Ultimate fallback: Đã khôi phục video từ server:', serverUrl);
+                  }
+                }
+              } catch (fetchErr) {
+                console.warn('[WindowCapture] Server fallback also failed:', fetchErr);
+              }
             }
           }
         }}
@@ -880,7 +962,7 @@ export default function WindowCapturePlayer() {
             zIndex: 10
           }}
         >
-          🔴 4K 60 FPS REALTIME v3.9.2 (OBS ZERO-COPY)
+          🔴 4K 60 FPS REALTIME v3.9.3 (OBS ZERO-COPY)
         </div>
       )}
     </div>
