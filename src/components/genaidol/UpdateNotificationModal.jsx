@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.8.8';
+export const APP_VERSION = '3.8.9';
 export const RELEASE_DATE = '19/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v3.8.9 - Tối Ưu Gói Cài Đặt Winform ZIP & Tinh Gọn Bảng Cập Nhật Mới Nhất 100%',
+    description: '1. Cập Nhật Gói Cài Đặt Winform & Windows ZIP Mới Nhất: Đảm bảo toàn bộ gói tải ZIP (AvaLive_VIP_PRO_Windows_v3.8.9.zip và AvaLive_VIP_PRO_Mac_v3.8.9.zip) luôn đồng bộ 100% mã nguồn mới nhất, mở lên chạy ngay 1-click không lỗi; 2. Tinh Gọn Bảng Thông Báo Cập Nhật: Loại bỏ toàn bộ dữ liệu cũ không còn phù hợp, chỉ giữ lại các cải tiến cốt lõi mới nhất giúp giao diện gọn gàng, trực quan và tải nhanh; 3. Duy Trì Khả Năng Đồng Bộ Video 0ms (Chuẩn OBS) & Tái Sử Dụng Video Gốc Không Tốn Dung Lượng Máy.'
+  },
   {
     title: '⚡ Bản Cập Nhật v3.8.8 - Đồng Bộ Video Tức Thì 0ms (Chuẩn OBS) & Chống Lưu Chồng Chéo Dữ Liệu 100%',
     description: '1. Đồng Bộ Video Siêu Tốc Sang Window Capture & TikTok Live Studio (Chuẩn OBS): Mọi video dù dung lượng nặng nhiều GB (1GB - 50GB) đều đồng bộ và phát ngay lập tức 0ms, siêu mượt mà 60 FPS, không giật lag, không đứng hình; 2. Chống Lưu Chồng Chéo Dữ Liệu Video 100%: Mỗi video tải lên chỉ lưu trữ duy nhất 1 lần, khi người dùng tải lại cùng video thì tự động tái sử dụng dữ liệu gốc 100%, không nhân bản bộ nhớ, không làm nặng máy; 3. Tự Động Thu Dọn & Giải Phóng Hơn 9.29GB Dung Lượng: Quét và loại bỏ sạch sẽ các bản sao trùng lặp, tối ưu hóa bộ nhớ RAM và đĩa cứng.'
@@ -17,66 +21,6 @@ export const UPDATE_NOTES = [
   {
     title: '⚡ Bản Cập Nhật v3.8.6 - Khôi Phục Nút Nghe Thử Giọng Trợ Lý & Tối Ưu Phân Giải Voice 100%',
     description: '1. Khôi Phục Hoàn Toàn Nút Nghe Thử Giọng Trợ Lý: Nút [▶️ Nghe Thử] của ô Giọng Quản Lý / Trợ Lý luôn luôn hiển thị trực quan và phát thử âm thanh 100% không độ trễ; 2. Phân Giải Voice Tự Động & Chống Mất Nút: Tự động gán fallback giọng Quản lý Quốc Cường chuẩn xác, loại bỏ hoàn toàn tình trạng mất nút nghe thử khi chuyển đổi; 3. Tối Ưu Bộ Thử Giọng Toàn Diện: Bấm vào bất kỳ voice nào phát ngay lập tức, không bị chặn hoặc tắt voice.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v3.8.5 - Khắc Phục Triệt Để Lỗi Lẫn Lộn Giọng Voice, Tối Ưu Tốc Độ & Độ Trầm Bổng Độc Bản',
-    description: '1. Khắc Phục Triệt Để Lỗi Lẫn Lộn Giọng Đọc Trong Kịch Bản: Người dùng chọn giọng nào đọc chính xác 100% duy nhất giọng đó xuyên suốt toàn bộ kịch bản, không phát lẫn lộn, không đổi giọng giữa chừng, không đè nhiều giọng cùng lúc; 2. Tùy Chỉnh Tốc Độ (Speed) & Độ Trầm Bổng (Pitch) Chuẩn Xác: Tốc độ chỉ thay đổi nhịp đọc nhanh/chậm mà không làm biến dạng giọng đọc, giữ nguyên 100% âm sắc tự nhiên; 3. Đồng Bộ Video Siêu Mượt 60 FPS Sang Window Capture: Sử dụng trực tiếp video trong máy, phát ngay 0ms không độ trễ.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v3.8.4 - Khôi Phục Hoàn Toàn Theo Yêu Cầu & Nâng Cấp Hệ Thống Ổn Định Toàn Diện',
-    description: '1. Khôi Phục Toàn Diện Bản Chuẩn: Khôi phục chính xác toàn bộ cấu trúc tính năng theo cam kết; 2. Nâng Cấp Bộ Điều Khiển Âm Lượng, Tốc Độ, Độ Trầm Bổng: Hoạt động chuẩn xác, tích hợp nút tích bật/tắt độc lập từng kênh giọng đọc; 3. Đồng Bộ Window Capture & Luồng Live 4K 60 FPS Siêu Tốc: Phát video dung lượng lớn tức thì 0ms, siêu mượt mà, không giật lag, không đứng hình.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v3.8.1 - Nâng Cấp Bộ Điều Khiển Âm Lượng, Tốc Độ, Độ Trầm Bổng & Tích Hợp Bật/Tắt Từng Kênh Giọng Đọc',
-    description: '1. Hoạt Động 100% Các Thanh Trượt Âm Lượng, Tốc Độ & Độ Trầm Bổng: Tùy chỉnh Volume (0-200%), Speed (0.5x-2.0x) và Pitch (Độ trầm bổng dõng dạc) cho cả 3 vai trò (Idol Chính, Quản Lý/Trợ Lý, Trả Lời Bình Luận); 2. Tích Hợp Nút Tích [Bật Kênh] Linh Hoạt: Bật/tắt độc lập từng kênh giọng đọc theo nhu cầu livestream; 3. Đồng Bộ Window Capture & Luồng Live 4K 60 FPS Siêu Tốc: Phát video dung lượng lớn (1GB - 50GB) tức thì 0ms, siêu mượt mà, không giật lag, không đứng hình.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v3.8.0 - Đồng Bộ Gói Tải Windows & Mac ZIP Mới Nhất Lên GitHub Releases (Official)',
-    description: '1. Khắc Phục Triệt Để Lỗi Tải Phiên Bản Cũ: Cập nhật hệ thống phân giải link tải tự động, đẩy trực tiếp gói cài đặt ZIP mới nhất (AvaLive_VIP_PRO_Windows_v3.8.0.zip và AvaLive_VIP_PRO_Mac_v3.8.0.zip) lên GitHub Releases và bộ nhớ máy chủ; 2. Đảm Bảo Tải Về Đúng 100% Phiên Bản Mới Nhất: Triệt tiêu hoàn toàn trường hợp bị chuyển hướng tải nhầm phiên bản cũ, kích hoạt tải trực tiếp 0ms; 3. Duy Trì Siêu Mượt 60 FPS & Chuẩn Human-Like Voice DNA Toàn Diện.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v3.7.9 - Khắc Phục Triệt Để Lỗi Màn Hình Đen Window Capture & Tích Hợp Human-Like Voice DNA',
-    description: '1. Khắc Phục Triệt Để Màn Hình Đen & Vòng Xoay Window Capture: Ứng dụng công nghệ Direct GPU Stream Cloner (captureStream) bê nguyên xi luồng video 60 FPS từ phần mềm chính sang Window Capture với độ trễ 0ms, không tốn tài nguyên mạng hay ổ đĩa; 2. Tích Hợp Chuẩn Voice AI Siêu Tự Nhiên (Human-Like Voice DNA): Giọng đọc sống động, có hơi thở, ngữ điệu biến chuyển linh hoạt theo cảm xúc, tự động tạo nhịp thở micro-pauses và phản xạ đệm từ tự nhiên; 3. Đảm Bảo Video 60 FPS Siêu Sắc Nét 4K/8K: Không giật lag, không đứng hình.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v3.7.8 - Tích Hợp Ứng Dụng Khởi Động Trực Tiếp Cho macOS (1_KHOI_DONG_AVALIVE_MAC.app)',
-    description: '1. Khởi Động 1 Nhấp Chuột Trên macOS: Tích hợp ứng dụng Native AppleScript (1_KHOI_DONG_AVALIVE_MAC.app) tự động mở Terminal, kích hoạt server và kết nối trình duyệt mượt mà 100%; 2. Khắc Phục Triệt Để Quyền Chạy Script: Tối ưu script Chay_App_Mac_Linux.command loại bỏ độ trễ và gỡ cờ Gatekeeper; 3. Đồng Bộ Gói Cài Đặt Mới Nhất 4K 60 FPS.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v3.7.7 - Khắc Phục Lỗi Hiển Thị Trên Mac & Tối Ưu Toàn Bộ Hệ Thống Voice AI',
-    description: '1. Khắc Phục Triệt Để Lỗi Hiển Thị Giao Diện Trên Mac: Tối ưu bộ định tuyến Router trong main.jsx, phân tách chuẩn xác chế độ Studio Dashboard, Window Capture và Standalone Live Stream Player; 2. Toàn Bộ Chức Năng Voice AI Hoạt Động 100%: Kiểm tra và xác nhận đồng bộ toàn bộ Edge Neural TTS, Voice Clone, Giọng đọc AI đa ngôn ngữ không mất dữ liệu; 3. Hình Ảnh Siêu Nét, Siêu Mượt 60 FPS: Phát tức thì 0ms, không đứng hình, không giật lag.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v3.7.6 - Bộ Khởi Chạy macOS App 1-Click & Tối Ưu Local Chạy Siêu Mượt',
-    description: '1. Tích Hợp Ứng Dụng macOS Bản Quyền AvaLive_Studio.app: Cho phép mở trực tiếp bằng 1 nhấp chuột trên Mac không cần thao tác dòng lệnh Terminal phức tạp; 2. Tự Động Phục Hồi & Kết Nối Local 127.0.0.1:3001: Khắc phục triệt để lỗi chặn kết nối và Gatekeeper trên Mac; 3. Đồng Bộ Gói Cài Đặt Windows Mới Nhất: Phục vụ trực tiếp bản zip 3.7.6 siêu sắc nét, 60 FPS, không gián đoạn.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v3.7.5 - Tối Ưu Tốc Độ Khởi Động Server 0ms & Khắc Phục Lỗi Kết Nối Window Capture',
-    description: '1. Khởi Động Express & Socket.io Ngay Lập Tức: Tách tác vụ quét tối ưu video dung lượng lớn sang chế độ bất đồng bộ nền, triệt tiêu hoàn toàn độ trễ khởi động server và lỗi ERR_CONNECTION_REFUSED; 2. Truyền Tải Video Gốc Siêu Tốc 0ms: Cửa sổ Window Capture và Link TikTok Live Studio nhận ngay nguồn phát video dung lượng lớn từ 100MB đến 50GB; 3. Chất Lượng Siêu Mượt 60 FPS, Siêu Sắc Nét 4K/8K: Phát mượt mà, không giật lag, không đứng hình.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v3.7.4 - Tối Ưu Bê Nguyên Xi Video 100% Vào Window Capture & TikTok Live Studio',
-    description: '1. Khắc Phục Lỗi Mở Video Trên Window Capture: Tự động trích xuất trực tiếp nguồn phát từ phần mềm chính, bộ nhớ đệm và IndexedDB 0ms; 2. Loại Bỏ Rào Cản CORS: Tối ưu thẻ video phát trực tiếp không bị gián đoạn; 3. Hình Ảnh Siêu Mượt 60 FPS, Siêu Sắc Nét 4K/8K: Không giật lag, không đứng hình.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v3.7.3 - Tối Ưu Hóa & Dọn Dẹp Dung Lượng Dự Án (Giải Phóng Hơn 56GB Dữ Liệu Rác)',
-    description: '1. Dọn Dẹp File Rác & Bản Tải Cũ: Loại bỏ toàn bộ các bản video test trùng lặp cũ và các file zip đóng gói trước đây, giải phóng ngay hơn 56GB dung lượng đĩa; 2. Hệ Thống Auto-Prune Thông Minh: Tự động duy trì và dọn dẹp file thừa định kỳ, giữ lại nguyên vẹn file đang live và các file mới nhất; 3. Bảo Toàn 100% Tính Năng Web App & Livestream.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v3.7.2 - Bê Nguyên Xi Video 100MB - 50GB Tức Thì 0ms Vào Window Capture (Khắc Phục Màn Hình Đen)',
-    description: '1. Khắc Phục Triệt Để Lỗi Màn Hình Đen: Lưu trữ 100% binary Blob gốc vào IndexedDB không giới hạn dung lượng, giúp Window Capture OBS & TikTok Live Studio phát video ngay lập tức 0ms; 2. Đồng Bộ Trực Tiếp Từ Video Gốc Phần Mềm: Tải lên video nào là đẩy thẳng luồng GPU gốc sang Window Capture 60 FPS mà không cần phụ thuộc đường truyền mạng; 3. Hình Ảnh Siêu Sắc Nét 4K/8K: Không giật lag, không đứng hình, không chờ nạp.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v3.7.1 - Bê Nguyên Xi Video 1GB - 50GB 4K 60FPS Cho Window Capture & TikTok Live Studio',
-    description: '1. Khắc Phục Triệt Để Cross-Document Blob Isolation: Cửa sổ Window Capture tự động giải mã trực tiếp File/Blob gốc từ bộ nhớ máy, phát ngay lập tức 0ms chuẩn 60 FPS mọi video từ 1GB đến 50GB; 2. Tối Ưu Hóa HTTP 206 Streaming: Khóa ranh giới Byte-Range chính xác theo RFC 7233 giúp TikTok Live Studio và OBS nạp video nặng siêu tốc mà không lo lỗi gián đoạn luồng; 3. Giữ Vững Chất Lượng Siêu Nét 4K/8K: Không giật lag, không đứng hình.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v3.7.0 - Tối Ưu Hóa Triệt Để Video 1GB - 50GB 4K 60FPS Cho Window Capture & Link TikTok Live Studio',
-    description: '1. Bê Nguyên Xi 100% Nguồn Video Đang Phát: Window Capture tự động đồng bộ tức thì mọi video gốc từ phần mềm sang không tốn dung lượng mạng, 0ms latency; 2. Tối Ưu Link TikTok Live Studio & OBS: Nâng cấp Progressive Chunk Streaming 64MB và Dynamic Range Reader, khắc phục hoàn toàn lỗi nạp video nặng từ 1GB đến 50GB; 3. Hình Ảnh Siêu Sắc Nét 60 FPS: Không giật lag, không đứng hình, hiển thị tự nhiên và mượt mà 100%.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v3.6.9 - Tối Ưu Bê Toàn Bộ Nguồn Video Đang Phát Qua Window Capture & Link TikTok Live',
-    description: '1. Đồng Bộ Nguyên Bản Trực Tiếp 100%: Mở bất kỳ video nào (kể cả file tải lên dung lượng lớn 1GB - 50GB) trên phần mềm là Cửa sổ Window Capture và Link TikTok Live Studio nhận ngay lập tức 0ms, không tốn dữ liệu mạng; 2. Giữ Vững Độ Sắc Nét & Mượt Mà 60 FPS: Loại bỏ hoàn toàn bộ lọc bỏ sót Blob, cho phép chuyển bài, lặp vô tận và phát siêu thực; 3. Không Giật Lag, Không Đứng Hình.'
   }
 ];
 
