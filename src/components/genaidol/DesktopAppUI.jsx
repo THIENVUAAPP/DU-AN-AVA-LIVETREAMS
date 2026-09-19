@@ -37,7 +37,8 @@ import AIVoiceModule from '../kol-live/AIVoiceModule';
 import AICharacterBeautyModal from './AICharacterBeautyModal';
 import UniversalMasterOverlayModal from '../UniversalMasterOverlayModal';
 import { syncMasterLiveState, sendVideoControl } from '../../lib/masterLiveSync';
-import { saveCharacterToIDB, loadAllCharactersFromIDB, deleteCharacterFromIDB } from '../../utils/idbHelper';
+import { saveCharacterToIDB, loadAllCharactersFromIDB, deleteCharacterFromIDB, findExistingAidolByFile, cleanupDuplicateAidolItems } from '../../utils/idbHelper';
+import { generateFileSignature, registerFileInRAM } from '../../utils/mediaDeduplication';
 import { SUPPORTED_LANGUAGES, getCurrentLanguage, setCurrentLanguage, t } from '../../utils/i18n';
 import UpdateNotificationModal, { APP_VERSION } from './UpdateNotificationModal';
 import { bootstrapDefaultPresets } from '../../utils/defaultPresetsBootstrap';
@@ -74,6 +75,7 @@ export default function DesktopAppUI() {
   useEffect(() => {
     bootstrapDefaultPresets();
     try {
+      cleanupDuplicateAidolItems();
       stopVoiceAudio();
       clearGlobalSpeechQueue();
       if (typeof window !== 'undefined' && window.speechSynthesis) {
@@ -3073,10 +3075,93 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         /\.(mp4|webm|mov|mkv|avi|m4v)$/i.test(file.name) ||
         /video|nhép|lipsync|livestream/i.test(file.name);
       const localUrl = URL.createObjectURL(file);
-      const newCharId = `custom_${Date.now()}`;
-      
+      const fileSig = generateFileSignature(file);
+
       if (isVideo) {
-        // ⚡ 1. HIỂN THỊ VÀ PHÁT TỨC THÌ 0MS TRÊN MÀN HÌNH & GIAO DIỆN
+        // 🛡️ BƯỚC 0: KIỂM TRA TRÙNG LẶP TRONG CUSTOM CHARACTERS HOẶC INDEXEDDB
+        const existingChar = customCharacters.find(c => 
+          (c.fileSignature && c.fileSignature === fileSig) ||
+          (c.fileSize && Number(c.fileSize) === file.size && file.size > 50000 && c.name === charName) ||
+          (c.name === charName && Number(c.fileSize || 0) === file.size)
+        );
+        const existingIDB = !existingChar ? await findExistingAidolByFile(file) : null;
+        const matchedChar = existingChar || existingIDB;
+
+        if (matchedChar) {
+          // 🎉 TÁI SỬ DỤNG 100% VIDEO ĐÃ CÓ: KHÔNG TẠO MỚI, KHÔNG NHÂN BẢN DUNG LƯỢNG
+          const targetId = matchedChar.id;
+          const targetMediaUrl = matchedChar.mediaUrl || localUrl;
+
+          // Lưu tham chiếu Blob và signature vào RAM Cache
+          registerFileInRAM(file, targetId);
+          if (typeof window !== 'undefined') {
+            window.__activeMediaBlob = file;
+            window.__activeMediaBlobUrl = localUrl;
+            window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+            window.__activeMediaBlobMap.set(targetId, file);
+            window.__activeMediaBlobMap.set(localUrl, file);
+            if (targetMediaUrl) window.__activeMediaBlobMap.set(targetMediaUrl, file);
+          }
+
+          setSelectedCharacter(targetId);
+          setUserLockedMediaUrl(targetMediaUrl);
+          setIsVideoPlaying(true);
+          lastPlaybackTimeRef.current = 0;
+          currentFileBlobRef.current = file;
+          currentBlobUrlRef.current = localUrl;
+
+          if (desktopVideoRef.current) {
+            desktopVideoRef.current.src = localUrl;
+            desktopVideoRef.current.currentTime = 0;
+            desktopVideoRef.current.dataset.userPaused = 'false';
+            desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+          }
+
+          // Bắn broadcast đồng bộ sang Window Capture ngay lập tức 0ms với fileBlob gốc
+          try {
+            const bc = new BroadcastChannel('avalive_master_live_stream');
+            bc.postMessage({
+              type: 'GLOBAL_MEDIA_CHANGE',
+              mediaUrl: targetMediaUrl,
+              blobUrl: localUrl,
+              fileBlob: file,
+              characterId: targetId,
+              characterName: charName,
+              isVideo: true,
+              isPlaying: true,
+              currentTime: 0,
+              force: true,
+              source: 'desktop',
+              timestamp: Date.now()
+            });
+            setTimeout(() => bc.close(), 100);
+          } catch (err) {}
+
+          sendVideoControl({
+            action: 'play',
+            currentTime: 0,
+            isPlaying: true,
+            mediaUrl: targetMediaUrl,
+            timestamp: Date.now()
+          }, socketRef.current);
+
+          syncMasterLiveState({
+            stage: 'idol',
+            selectedCharacter: targetId,
+            characterName: charName,
+            mediaUrl: targetMediaUrl,
+            isVideo: true,
+            videoPlaybackEvent: 'play',
+            isPlaying: true,
+            aspectRatio: globalAspectRatio || '9:16'
+          }, socketRef.current);
+
+          showToast(`⚡ Video "${charName}" đã có sẵn trong hệ thống! Đã kích hoạt sử dụng ngay lập tức mà không tốn dung lượng máy.`, 'success');
+          return;
+        }
+
+        // ⚡ 1. NẾU LÀ VIDEO MỚI: HIỂN THỊ VÀ PHÁT TỨC THÌ 0MS TRÊN MÀN HÌNH & GIAO DIỆN
+        const newCharId = `custom_${Date.now()}`;
         const tempChar = {
           id: newCharId,
           name: charName,
@@ -3084,10 +3169,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           mediaUrl: localUrl,
           type: 'video',
           fileData: file,
-          fileBlob: file
+          fileBlob: file,
+          fileSize: file.size,
+          fileSignature: fileSig
         };
 
         // Lưu tham chiếu Blob toàn cục cho Window Capture & popup con nạp tức thì 0ms
+        registerFileInRAM(file, newCharId);
         if (typeof window !== 'undefined') {
           window.__activeMediaBlob = file;
           window.__activeMediaBlobUrl = localUrl;

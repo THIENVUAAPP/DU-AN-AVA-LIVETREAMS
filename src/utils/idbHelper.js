@@ -2,6 +2,7 @@
 // UNIFIED AIDOL DB - Cơ sở dữ liệu dùng chung 100% giữa Web & Desktop Studio
 // DB: AIDOL_DB | Store: library_items
 // ========================================================
+import { generateFileSignature } from './mediaDeduplication';
 
 const DB_NAME = 'AIDOL_DB';
 const STORE_NAME = 'library_items';
@@ -70,13 +71,102 @@ export const getActiveBlobForMedia = (key) => {
   return null;
 };
 
-// --- CRUD Operations trên Unified Store ---
+// --- Tìm kiếm item video đã tồn tại dựa trên file signature hoặc kích thước byte ---
+export const findExistingAidolByFile = async (file) => {
+  if (!file) return null;
+  try {
+    const db = await initAidolDB();
+    if (!db) return null;
+    const sig = generateFileSignature(file);
+    const fileSize = Number(file.size || 0);
+    const fileName = String(file.name || '').trim().toLowerCase();
+
+    return new Promise((resolve) => {
+      try {
+        const transaction = db.transaction([STORE_NAME], 'readonly');
+        const store = transaction.objectStore(STORE_NAME);
+        const req = store.getAll();
+        req.onsuccess = () => {
+          const items = req.result || [];
+          const found = items.find(it => {
+            if (it.fileSignature && it.fileSignature === sig) return true;
+            if (fileSize > 50000 && it.fileSize && Number(it.fileSize) === fileSize) {
+              const itName = String(it.name || '').trim().toLowerCase();
+              if (itName && fileName && (itName === fileName || fileName.includes(itName) || itName.includes(fileName))) {
+                return true;
+              }
+            }
+            return false;
+          });
+          resolve(found || null);
+        };
+        req.onerror = () => resolve(null);
+      } catch (e) {
+        resolve(null);
+      }
+    });
+  } catch (e) {
+    return null;
+  }
+};
+
+// --- Dọn dẹp triệt để các bản ghi video trùng lặp trong IndexedDB (Giải phóng bộ nhớ máy) ---
+export const cleanupDuplicateAidolItems = async () => {
+  try {
+    const db = await initAidolDB();
+    if (!db) return { removedCount: 0, keptCount: 0 };
+
+    return new Promise((resolve) => {
+      try {
+        const transaction = db.transaction([STORE_NAME], 'readwrite');
+        const store = transaction.objectStore(STORE_NAME);
+        const req = store.getAll();
+        req.onsuccess = () => {
+          const items = req.result || [];
+          const seenSignatures = new Set();
+          const seenSizes = new Map(); // size -> firstItemId
+          let removedCount = 0;
+          let keptCount = 0;
+
+          for (const it of items) {
+            const sig = it.fileSignature || (it.fileBlob ? generateFileSignature(it.fileBlob) : '');
+            const size = Number(it.fileSize || (it.fileBlob?.size) || 0);
+            const name = String(it.name || '').trim().toLowerCase();
+            const key = sig || (size > 100000 ? `${name}__${size}` : null);
+
+            if (key) {
+              if (seenSignatures.has(key)) {
+                // Trùng lặp! Xóa bản ghi thừa để giải phóng dung lượng đĩa
+                store.delete(it.id);
+                removedCount++;
+                continue;
+              }
+              seenSignatures.add(key);
+            }
+            keptCount++;
+          }
+          console.log(`[IndexedDB Deduplication] Đã dọn dẹp ${removedCount} video trùng lặp, giữ lại ${keptCount} video gốc!`);
+          resolve({ removedCount, keptCount });
+        };
+        req.onerror = () => resolve({ removedCount: 0, keptCount: 0 });
+      } catch (e) {
+        resolve({ removedCount: 0, keptCount: 0 });
+      }
+    });
+  } catch (e) {
+    return { removedCount: 0, keptCount: 0 };
+  }
+};
+
+// --- CRUD Operations trên Unified Store (Tự động chống trùng lặp & tái sử dụng dữ liệu gốc 100%) ---
 export const saveAidolItem = async (item) => {
   try {
     const db = await initAidolDB();
     if (!db) return null;
 
     const rawBlob = item.fileBlob || item.fileData || null;
+    const fileSignature = item.fileSignature || (rawBlob ? generateFileSignature(rawBlob) : '');
+    const fileSize = rawBlob ? rawBlob.size : (item.fileSize || 0);
     const itemId = item.id || `aidol_${Date.now()}_${Math.random().toString(36).slice(2, 6)}`;
 
     // Lưu ngay vào bộ nhớ RAM toàn cục siêu tốc 0ms
@@ -84,10 +174,15 @@ export const saveAidolItem = async (item) => {
       try {
         const memCache = getBlobMemoryCache();
         memCache.set(itemId, rawBlob);
+        if (fileSignature) memCache.set(fileSignature, rawBlob);
         if (item.url) memCache.set(item.url, rawBlob);
         if (item.mediaUrl) memCache.set(item.mediaUrl, rawBlob);
         if (typeof window !== 'undefined') {
           window.__activeMediaBlob = rawBlob;
+          window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+          window.__activeMediaBlobMap.set(itemId, rawBlob);
+          if (fileSignature) window.__activeMediaBlobMap.set(fileSignature, rawBlob);
+          if (item.mediaUrl) window.__activeMediaBlobMap.set(item.mediaUrl, rawBlob);
           if (item.url && item.url.startsWith('blob:')) window.__activeMediaBlobUrl = item.url;
         }
       } catch (e) {}
@@ -98,33 +193,78 @@ export const saveAidolItem = async (item) => {
         const transaction = db.transaction([STORE_NAME], 'readwrite');
         const store = transaction.objectStore(STORE_NAME);
         
-        const getReq = store.get(itemId);
-        getReq.onsuccess = () => {
-          const oldRecord = getReq.result || {};
-          const finalBlob = rawBlob || oldRecord.fileBlob || null;
+        // ⚡ KIỂM TRA TRÙNG LẶP: Quét nhanh xem đã có video này trong Database chưa
+        const getAllReq = store.getAll();
+        getAllReq.onsuccess = () => {
+          const allItems = getAllReq.result || [];
           
-          if (finalBlob) {
-            try {
-              const memCache = getBlobMemoryCache();
-              memCache.set(itemId, finalBlob);
-              if (item.url) memCache.set(item.url, finalBlob);
-              if (item.mediaUrl) memCache.set(item.mediaUrl, finalBlob);
-            } catch (e) {}
+          // Tìm video trùng lặp theo ID, Signature hoặc Size byte chính xác
+          let existingRecord = allItems.find(r => {
+            if (r.id === itemId) return true;
+            if (fileSignature && r.fileSignature === fileSignature) return true;
+            if (fileSize > 50000 && r.fileSize && Number(r.fileSize) === fileSize) {
+              const rName = String(r.name || '').trim().toLowerCase();
+              const itName = String(item.name || '').trim().toLowerCase();
+              if (rName && itName && (rName === itName || rName.includes(itName) || itName.includes(rName))) {
+                return true;
+              }
+            }
+            return false;
+          });
+
+          // 🛡️ NẾU ĐÃ TỒN TẠI: TÁI SỬ DỤNG 100% BẢN GHI ĐÃ CÓ, TUYỆT ĐỐI KHÔNG TẠO BẢN GHI MỚI
+          if (existingRecord) {
+            const finalBlob = rawBlob || existingRecord.fileBlob || null;
+            const targetId = existingRecord.id;
+
+            if (finalBlob) {
+              try {
+                const memCache = getBlobMemoryCache();
+                memCache.set(targetId, finalBlob);
+                if (fileSignature) memCache.set(fileSignature, finalBlob);
+                if (existingRecord.url) memCache.set(existingRecord.url, finalBlob);
+                if (existingRecord.mediaUrl) memCache.set(existingRecord.mediaUrl, finalBlob);
+              } catch (e) {}
+            }
+
+            const updatedRecord = {
+              ...existingRecord,
+              name: item.name || existingRecord.name,
+              fileBlob: finalBlob,
+              fileSize: finalBlob ? finalBlob.size : (existingRecord.fileSize || fileSize),
+              fileSignature: fileSignature || existingRecord.fileSignature || '',
+              mediaUrl: (item.mediaUrl && !item.mediaUrl.startsWith('blob:')) ? item.mediaUrl : (existingRecord.mediaUrl || item.url || ''),
+              url: (item.url && item.url.startsWith('blob:')) ? item.url : (existingRecord.url || item.mediaUrl || ''),
+              updatedAt: new Date().toISOString(),
+              isLiveReady: true
+            };
+
+            const putReq = store.put(updatedRecord);
+            putReq.onsuccess = () => {
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('aidol_db_updated', { detail: { action: 'reuse', item: updatedRecord } }));
+              }
+              resolve(updatedRecord);
+            };
+            putReq.onerror = () => resolve(existingRecord);
+            return;
           }
 
+          // 🆕 NẾU LÀ VIDEO HOÀN TOÀN MỚI: LƯU DUY NHẤT 1 LẦN
+          const finalBlob = rawBlob || null;
           const record = {
             id: itemId,
-            name: item.name || oldRecord.name || 'Chưa đặt tên',
-            type: item.type || oldRecord.type || 'video',
-            // ⚡ LUÔN LƯU 100% FILE BLOB GỐC VÀO INDEXEDDB CHO VIDEO TỪ 100MB ĐẾN 50GB
+            name: item.name || 'Chưa đặt tên',
+            type: item.type || 'video',
             fileBlob: finalBlob,
-            fileSize: finalBlob ? finalBlob.size : (oldRecord.fileSize || 0),
-            mediaUrl: item.mediaUrl || item.url || oldRecord.mediaUrl || '',
-            url: item.url || item.mediaUrl || oldRecord.url || '',
-            tags: item.tags || oldRecord.tags || [],
-            aspectRatio: item.aspectRatio || oldRecord.aspectRatio || '9:16',
+            fileSize: finalBlob ? finalBlob.size : fileSize,
+            fileSignature: fileSignature,
+            mediaUrl: item.mediaUrl || item.url || '',
+            url: item.url || item.mediaUrl || '',
+            tags: item.tags || [],
+            aspectRatio: item.aspectRatio || '9:16',
             isLiveReady: true,
-            createdAt: oldRecord.createdAt || new Date().toISOString(),
+            createdAt: new Date().toISOString(),
             updatedAt: new Date().toISOString()
           };
 
@@ -137,19 +277,23 @@ export const saveAidolItem = async (item) => {
           };
           putReq.onerror = () => resolve(null);
         };
-        getReq.onerror = () => {
+
+        getAllReq.onerror = () => {
+          // Fallback lưu trực tiếp nếu getAll lỗi
           const record = {
             id: itemId,
             name: item.name || 'Chưa đặt tên',
             type: item.type || 'video',
             fileBlob: rawBlob,
-            fileSize: rawBlob ? rawBlob.size : 0,
+            fileSize: rawBlob ? rawBlob.size : fileSize,
+            fileSignature: fileSignature,
             mediaUrl: item.mediaUrl || item.url || '',
             url: item.url || item.mediaUrl || '',
             tags: item.tags || [],
             aspectRatio: item.aspectRatio || '9:16',
             isLiveReady: true,
-            createdAt: new Date().toISOString()
+            createdAt: new Date().toISOString(),
+            updatedAt: new Date().toISOString()
           };
           const putReq = store.put(record);
           putReq.onsuccess = () => resolve(record);

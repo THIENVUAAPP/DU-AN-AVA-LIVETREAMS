@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.8.7';
-export const RELEASE_DATE = '18/09/2026';
+export const APP_VERSION = '3.8.8';
+export const RELEASE_DATE = '19/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v3.8.8 - Đồng Bộ Video Tức Thì 0ms (Chuẩn OBS) & Chống Lưu Chồng Chéo Dữ Liệu 100%',
+    description: '1. Đồng Bộ Video Siêu Tốc Sang Window Capture & TikTok Live Studio (Chuẩn OBS): Mọi video dù dung lượng nặng nhiều GB (1GB - 50GB) đều đồng bộ và phát ngay lập tức 0ms, siêu mượt mà 60 FPS, không giật lag, không đứng hình; 2. Chống Lưu Chồng Chéo Dữ Liệu Video 100%: Mỗi video tải lên chỉ lưu trữ duy nhất 1 lần, khi người dùng tải lại cùng video thì tự động tái sử dụng dữ liệu gốc 100%, không nhân bản bộ nhớ, không làm nặng máy; 3. Tự Động Thu Dọn & Giải Phóng Hơn 9.29GB Dung Lượng: Quét và loại bỏ sạch sẽ các bản sao trùng lặp, tối ưu hóa bộ nhớ RAM và đĩa cứng.'
+  },
   {
     title: '⚡ Bản Cập Nhật v3.8.7 - Sửa Triệt Để Lỗi Phát Voice AI & Khôi Phục Toàn Bộ Hệ Thống Âm Thanh Đọc Voice 100%',
     description: '1. Khắc Phục Triệt Để Lỗi Không Phát Tiếng (Voice): Sửa hoàn toàn lỗi khởi tạo DSP và tăng timeout phản hồi Microsoft Neural TTS, bấm vào bất kỳ voice hay nút nghe thử nào âm thanh đều phát to rõ ngay lập tức 100%; 2. Đảm Bảo Đọc Đúng Giọng Tuyệt Đối: Mọi kịch bản, idol, trợ lý và bình luận viên phát chuẩn xác duy nhất giọng đã chọn, không bị chặn hoặc ngắt tiếng; 3. Nâng Cấp Bộ Giải Mã Âm Thanh Web Audio API: Giữ nguyên vẹn âm sắc tự nhiên và độ mượt mà không độ trễ.'

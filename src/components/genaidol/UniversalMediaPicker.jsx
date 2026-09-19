@@ -1,5 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Video, FolderOpen, Sparkles, X, ChevronDown, Play, Eye, CheckCircle2, Film } from 'lucide-react';
+import { registerFileInRAM } from '../../utils/mediaDeduplication';
 const toast = {
   success: (message) => {
     if (typeof window !== 'undefined') {
@@ -94,6 +95,9 @@ export default function UniversalMediaPicker({
 
     const objectUrl = URL.createObjectURL(file);
     setLocalPreviewUrl(objectUrl);
+    try {
+      registerFileInRAM(file, objectUrl);
+    } catch (e) {}
 
     if (onSelectFile) {
       onSelectFile(file, objectUrl);

@@ -86,6 +86,46 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+// 🛡️ TỰ ĐỘNG DỌN DẸP CÁC BẢN SAO VIDEO TRÙNG LẶP TRONG uploadsDir (GIẢI PHÓNG HÀNG CHỤC GB Ổ CỨNG)
+function cleanupDuplicateUploads() {
+  try {
+    if (!fs.existsSync(uploadsDir)) return;
+    const files = fs.readdirSync(uploadsDir);
+    const sizeMap = new Map(); // size -> firstFilePath
+    let savedBytes = 0;
+    let removedFiles = 0;
+
+    for (const file of files) {
+      if (!file.startsWith('media-') || file.includes('.part')) continue;
+      const fullPath = path.join(uploadsDir, file);
+      try {
+        const stat = fs.statSync(fullPath);
+        if (stat.size < 1000000) continue; // Chỉ dọn dẹp các video > 1MB
+
+        if (sizeMap.has(stat.size)) {
+          // Trùng lặp chính xác từng byte một!
+          // Xóa file trùng lặp để trả lại dung lượng cho ổ đĩa máy
+          const original = sizeMap.get(stat.size);
+          fs.unlinkSync(fullPath);
+          savedBytes += stat.size;
+          removedFiles++;
+          console.log(`[Storage Cleanup] 🗑️ Đã xóa video trùng lặp: ${file} -> Giữ lại bản gốc: ${path.basename(original)}`);
+        } else {
+          sizeMap.set(stat.size, fullPath);
+        }
+      } catch (err) {}
+    }
+
+    if (removedFiles > 0) {
+      const gbSaved = (savedBytes / (1024 * 1024 * 1024)).toFixed(2);
+      console.log(`[Storage Cleanup] 🎉 ĐÃ GIẢI PHÓNG THÀNH CÔNG ${gbSaved} GB từ ${removedFiles} video trùng lặp!`);
+    }
+  } catch (e) {
+    console.warn('[Storage Cleanup error]', e);
+  }
+}
+cleanupDuplicateUploads();
+
 const storage = multer.diskStorage({
   destination: function (req, file, cb) {
     cb(null, uploadsDir);
@@ -523,11 +563,53 @@ app.post('/api/upload-stream-init', (req, res) => {
       }
     }
 
+    // 🛡️ DEDUPLICATION: Kiểm tra xem video này đã có sẵn trên máy/backend chưa (Chống lưu chồng chéo, không nhân đôi dung lượng)
+    const totalSize = parseInt(fileSize, 10) || 0;
+    if (totalSize > 50000 && fs.existsSync(uploadsDir)) {
+      try {
+        const existingFiles = fs.readdirSync(uploadsDir);
+        for (const f of existingFiles) {
+          if (f.startsWith('media-') && !f.includes('.part')) {
+            const fPath = path.join(uploadsDir, f);
+            try {
+              const stat = fs.statSync(fPath);
+              if (stat.size === totalSize) {
+                // TÌM THẤY VIDEO ĐÃ CÓ SẴN TRÊN MÁY!
+                console.log(`[FastStream Deduplication] ⚡ Tái sử dụng video đã có sẵn 0ms (${totalSize} bytes): ${f}`);
+                const fileUrl = `/uploads/${f}`;
+                currentMasterLiveState = {
+                  ...currentMasterLiveState,
+                  stage: 'idol',
+                  mediaUrl: fileUrl,
+                  isVideo: true,
+                  videoPlaybackEvent: 'play',
+                  isPlaying: true,
+                  isUserExplicitMediaLocked: true,
+                  updatedAt: Date.now()
+                };
+                io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+                saveLiveStateToFile();
+                return res.json({
+                  success: true,
+                  instant: true,
+                  reused: true,
+                  fileUrl,
+                  filename: f,
+                  message: 'Video đã có sẵn trên hệ thống, tái sử dụng tức thì 0ms không tốn dung lượng'
+                });
+              }
+            } catch (e) {}
+          }
+        }
+      } catch (dedupErr) {
+        console.warn('[Deduplication error]', dedupErr);
+      }
+    }
+
     const ext = path.extname(originalName || '') || '.mp4';
     const filename = 'media-' + Date.now() + '-' + Math.round(Math.random() * 1E9) + ext;
     const filePath = path.join(uploadsDir, filename);
     const uploadId = 'up_' + Date.now() + '_' + Math.random().toString(36).substring(2, 9);
-    const totalSize = parseInt(fileSize, 10) || 0;
     
     // Mở file ghi sẵn sàng (w+) ghi tuần tự liền mạch, không tạo sparse hole byte 0
     const fd = fs.openSync(filePath, 'w+');
@@ -1591,7 +1673,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '3.8.7';
+  let ver = '3.8.8';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1629,7 +1711,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '3.8.7';
+  let ver = '3.8.8';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));

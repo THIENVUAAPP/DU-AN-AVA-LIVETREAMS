@@ -49,6 +49,7 @@ export async function fastStreamUpload(file, options = {}) {
         originalName: file.name,
         fileSize: file.size,
         fileType: file.type,
+        fileSignature: file.fileSignature || `${file.name}_${file.size}_${file.lastModified}`,
         filePath: nativeFilePath || null // Hardlink instant 0ms nếu chạy native app
       })
     });
@@ -59,9 +60,9 @@ export async function fastStreamUpload(file, options = {}) {
     const uploadId = initData.uploadId;
 
     if (initData.instant || !uploadId) {
-      if (onInit) onInit({ fileUrl, uploadId, totalChunks: 1, instant: true });
+      if (onInit) onInit({ fileUrl, uploadId, totalChunks: 1, instant: true, reused: !!initData.reused });
       if (onProgress) onProgress(100);
-      return { success: true, fileUrl };
+      return { success: true, fileUrl, reused: !!initData.reused };
     }
 
     // BƯỚC 2: Nạp khối đầu tiên (HEAD_CHUNK) để lấy trọn vẹn moov/header và những giây đầu

@@ -243,7 +243,7 @@ export default function WindowCapturePlayer() {
             (targetUrlOrCharId && it.mediaUrl && it.mediaUrl.includes(targetUrlOrCharId))
           );
         }
-        if (!found || !found.fileBlob) {
+        if (!found && !targetUrlOrCharId) {
           found = items.slice().reverse().find(it => it && it.fileBlob && (it.fileBlob instanceof Blob || it.fileBlob instanceof File));
         }
 
@@ -368,16 +368,20 @@ export default function WindowCapturePlayer() {
               setVideoSrc(localBlob);
               setIsVideoLoading(false);
             } else if (msg.mediaUrl && !msg.mediaUrl.startsWith('blob:')) {
-              const isCurrentlyBlob = isHardwareLocalBlobRef.current || (videoSrc && String(videoSrc).startsWith('blob:'));
-              if (!isCurrentlyBlob) {
-                const resolved = resolveUrl(msg.mediaUrl);
-                if (resolved && !isSameMedia(resolved, videoSrc)) {
-                  if (videoRef.current) {
-                    videoRef.current.srcObject = null;
-                  }
-                  setVideoSrc(resolved);
-                  setIsVideoLoading(true);
+              const resolved = resolveUrl(msg.mediaUrl);
+              if (resolved && !isSameMedia(resolved, videoSrc)) {
+                isHardwareLocalBlobRef.current = false;
+                if (activeBlobUrlRef.current) {
+                  try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
+                  activeBlobUrlRef.current = null;
                 }
+                if (videoRef.current) {
+                  videoRef.current.srcObject = null;
+                  videoRef.current.src = resolved;
+                  videoRef.current.play().catch(() => {});
+                }
+                setVideoSrc(resolved);
+                setIsVideoLoading(true);
               }
             }
           }
@@ -445,16 +449,20 @@ export default function WindowCapturePlayer() {
               setVideoSrc(localBlob);
               setIsVideoLoading(false);
             } else if (state.mediaUrl) {
-              const isCurrentlyBlob = isHardwareLocalBlobRef.current || (videoSrc && String(videoSrc).startsWith('blob:'));
-              if (!isCurrentlyBlob) {
-                const resolved = resolveUrl(state.mediaUrl);
-                if (resolved && !isSameMedia(resolved, videoSrc)) {
-                  if (videoRef.current) {
-                    videoRef.current.srcObject = null;
-                  }
-                  setVideoSrc(resolved);
-                  setIsVideoLoading(true);
+              const resolved = resolveUrl(state.mediaUrl);
+              if (resolved && !isSameMedia(resolved, videoSrc)) {
+                isHardwareLocalBlobRef.current = false;
+                if (activeBlobUrlRef.current) {
+                  try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
+                  activeBlobUrlRef.current = null;
                 }
+                if (videoRef.current) {
+                  videoRef.current.srcObject = null;
+                  videoRef.current.src = resolved;
+                  videoRef.current.play().catch(() => {});
+                }
+                setVideoSrc(resolved);
+                setIsVideoLoading(true);
               }
             }
           }
@@ -845,7 +853,7 @@ export default function WindowCapturePlayer() {
             zIndex: 10
           }}
         >
-          🔴 4K 60 FPS REALTIME v3.8.7
+          🔴 4K 60 FPS REALTIME v3.8.8
         </div>
       )}
     </div>
