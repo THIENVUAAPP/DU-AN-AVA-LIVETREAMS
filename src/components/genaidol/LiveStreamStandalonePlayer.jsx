@@ -698,7 +698,7 @@ export default function LiveStreamStandalonePlayer() {
           zIndex: 10
         }}
       >
-        🔴 4K 60 FPS REALTIME v3.9.3 (TIKTOK LIVE)
+        🔴 4K 60 FPS REALTIME v3.9.4 (TIKTOK LIVE)
       </div>
     </div>
   );

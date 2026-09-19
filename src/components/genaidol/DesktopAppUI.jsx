@@ -852,13 +852,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       } else {
         const locked = localStorage.getItem('avalive_user_locked_media');
         if (locked && !locked.startsWith('blob:')) serverActiveUrl = locked;
+        const masterState = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
+        if (!serverActiveUrl && masterState.mediaUrl && !masterState.mediaUrl.startsWith('blob:')) {
+          serverActiveUrl = masterState.mediaUrl;
+        }
       }
     }
     if (typeof serverActiveUrl === 'string' && serverActiveUrl.includes('/uploads/')) {
       serverActiveUrl = serverActiveUrl.substring(serverActiveUrl.indexOf('/uploads/'));
     }
 
-    const broadcastUrl = activeUrl || serverActiveUrl || '';
+    // ⚡ CHUẨN HOÁ BROADCAST URL: Tuyệt đối ưu tiên server URL (/uploads/...) để mọi trình duyệt (Chrome, Safari, Cốc Cốc, OBS, TikTok Live Studio) đều mở được 100%
+    const broadcastUrl = serverActiveUrl || (activeUrl && !activeUrl.startsWith('blob:') ? activeUrl : '') || '';
 
     try {
       localStorage.removeItem('avalive_user_paused');
@@ -3096,8 +3101,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
         if (matchedChar) {
           // 🎉 TÁI SỬ DỤNG 100% VIDEO ĐÃ CÓ: KHÔNG TẠO MỚI, KHÔNG NHÂN BẢN DUNG LƯỢNG
-          const targetId = matchedChar.id;
-          const targetMediaUrl = matchedChar.mediaUrl || localUrl;
+          let targetMediaUrl = (matchedChar.mediaUrl && !matchedChar.mediaUrl.startsWith('blob:')) ? matchedChar.mediaUrl : '';
 
           // Lưu tham chiếu Blob và signature vào RAM Cache
           registerFileInRAM(file, targetId);
@@ -3111,7 +3115,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           }
 
           setSelectedCharacter(targetId);
-          setUserLockedMediaUrl(targetMediaUrl);
+          if (targetMediaUrl) setUserLockedMediaUrl(targetMediaUrl);
           setIsVideoPlaying(true);
           lastPlaybackTimeRef.current = 0;
           currentFileBlobRef.current = file;
@@ -3124,44 +3128,65 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
           }
 
-          // Bắn broadcast đồng bộ sang Window Capture ngay lập tức 0ms với fileBlob gốc
-          try {
-            const bc = new BroadcastChannel('avalive_master_live_stream');
-            bc.postMessage({
-              type: 'GLOBAL_MEDIA_CHANGE',
-              mediaUrl: targetMediaUrl,
-              blobUrl: localUrl,
-              fileBlob: file,
-              characterId: targetId,
-              characterName: charName,
-              isVideo: true,
-              isPlaying: true,
+          // 🚀 Nếu chưa có server URL (/uploads/...), gọi upload-stream-init tức thì (2ms) để lấy link server chuẩn cho TikTok Live Studio & Window Capture
+          if (!targetMediaUrl) {
+            fastStreamUpload(file, {
+              onInit: ({ fileUrl }) => {
+                if (fileUrl) {
+                  setUserLockedMediaUrl(fileUrl);
+                  syncMasterLiveState({
+                    stage: 'idol',
+                    selectedCharacter: targetId,
+                    characterName: charName,
+                    mediaUrl: fileUrl,
+                    isVideo: true,
+                    videoPlaybackEvent: 'play',
+                    isPlaying: true,
+                    aspectRatio: globalAspectRatio || '9:16'
+                  }, socketRef.current);
+                }
+              }
+            }).catch(() => {});
+          } else {
+            // Bắn broadcast đồng bộ sang Window Capture ngay lập tức 0ms với fileBlob gốc và server URL
+            try {
+              const bc = new BroadcastChannel('avalive_master_live_stream');
+              bc.postMessage({
+                type: 'GLOBAL_MEDIA_CHANGE',
+                mediaUrl: targetMediaUrl,
+                blobUrl: localUrl,
+                fileBlob: file,
+                characterId: targetId,
+                characterName: charName,
+                isVideo: true,
+                isPlaying: true,
+                currentTime: 0,
+                force: true,
+                source: 'desktop',
+                timestamp: Date.now()
+              });
+              setTimeout(() => bc.close(), 100);
+            } catch (err) {}
+
+            sendVideoControl({
+              action: 'play',
               currentTime: 0,
-              force: true,
-              source: 'desktop',
+              isPlaying: true,
+              mediaUrl: targetMediaUrl,
               timestamp: Date.now()
-            });
-            setTimeout(() => bc.close(), 100);
-          } catch (err) {}
+            }, socketRef.current);
 
-          sendVideoControl({
-            action: 'play',
-            currentTime: 0,
-            isPlaying: true,
-            mediaUrl: targetMediaUrl,
-            timestamp: Date.now()
-          }, socketRef.current);
-
-          syncMasterLiveState({
-            stage: 'idol',
-            selectedCharacter: targetId,
-            characterName: charName,
-            mediaUrl: targetMediaUrl,
-            isVideo: true,
-            videoPlaybackEvent: 'play',
-            isPlaying: true,
-            aspectRatio: globalAspectRatio || '9:16'
-          }, socketRef.current);
+            syncMasterLiveState({
+              stage: 'idol',
+              selectedCharacter: targetId,
+              characterName: charName,
+              mediaUrl: targetMediaUrl,
+              isVideo: true,
+              videoPlaybackEvent: 'play',
+              isPlaying: true,
+              aspectRatio: globalAspectRatio || '9:16'
+            }, socketRef.current);
+          }
 
           showToast(`⚡ Video "${charName}" đã có sẵn trong hệ thống! Đã kích hoạt sử dụng ngay lập tức mà không tốn dung lượng máy.`, 'success');
           return;

@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.9.3';
+export const APP_VERSION = '3.9.4';
 export const RELEASE_DATE = '19/09/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '⚡ Bản Cập Nhật v3.9.4 - Đồng Bộ Đa Nền Tảng (Chrome, Safari, Cốc Cốc) & Chuẩn Hoá Zero-Overlap Media',
+    description: '1. Đồng Bộ Toàn Diện Window Capture & TikTok Live Studio: Kết nối mượt mà trên mọi trình duyệt (Google Chrome, Safari, Cốc Cốc, Edge, OBS), loại bỏ triệt để lỗi đường dẫn blob URL cục bộ; 2. Zero-Overlap Media & Tái Sử Dụng File Gốc 100%: Nhận diện tức thì video đã có trên máy và server, không tải lại, không lưu chồng chéo dữ liệu; 3. Quy Chuẩn claude.md & cloud.md: Khóa cứng tiêu chuẩn phát video 4K 60 FPS siêu mượt, xử lý tức thì video dài nhiều giờ và dung lượng lớn.'
+  },
+  {
     title: '⚡ Bản Cập Nhật v3.9.3 - Khắc Phục Triệt Để Video Window Capture & Đồng Bộ TikTok Live Studio Tức Thì',
-    description: '1. Khắc Phục 100% Lỗi Video Không Mở Được Trên Window Capture: Sửa triệt để lỗi URL trỏ đến file đã bị xóa sau deduplication, thêm cơ chế tự động phát hiện và cập nhật đường dẫn video đúng; 2. Fallback Server Mạnh Mẽ: Khi tất cả phương thức blob/opener/cache đều thất bại, tự động gọi API server lấy video mới nhất và phát ngay lập tức 0ms; 3. Fix Port 5173 Dev → Backend 3001: Sửa lỗi Window Capture chạy trên Vite dev không tìm được file video vì sai cổng kết nối.'
+    description: '1. Khắc Phục Lỗi Video Trên Window Capture; 2. Fallback Server Mạnh Mẽ; 3. Fix Port 5173 Dev → Backend 3001.'
   },
   {
     title: '⚡ Bản Cập Nhật v3.9.2 - Đồng Bộ Cloud & Triệt Tiêu Trùng Lặp Media (Zero-Overlap Storage Spec)',
     description: '1. Cơ Chế Chống Trùng Lặp Tuyệt Đối: Tự động phát hiện và ngăn chặn 100% video nạp lặp lại, giải phóng dung lượng bộ nhớ; 2. Quy Chuẩn Kỹ Thuật cloud.md.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v3.9.1 - Đột Phá Nạp & Phát Video Tức Thì 0ms (Chuẩn OBS) & Đồng Bộ Toàn Năng TikTok Live Studio',
-    description: '1. Công Nghệ Đệm Nhị Phân Trực Tiếp (ActiveMediaStore): Nạp video gốc tức thì 0ms; 2. Pipeline Nạp 5 Tầng Chống Thất Bại & Anti-Freeze 60 FPS.'
   }
 ];
 
