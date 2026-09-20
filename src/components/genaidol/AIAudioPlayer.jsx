@@ -493,20 +493,136 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       // Watchdog an toàn: Tự động phục hồi cực nhanh nếu mạng chậm/lỗi buffer âm thanh, không bao giờ để kịch bản bị đứng
       const cleanLen = (item.text || '').length;
       const dynamicTimeoutMs = Math.max(5000, Math.ceil((cleanLen / 8) + 4) * 1000);
-      let watchdogTimer = setTimeout(() => {
-        if (isBusyRef.current) {
-          console.warn('[AIAudioPlayer] Watchdog safety reset busy state after timeout (length:', cleanLen, ')');
-          isBusyRef.current = false;
-          if (priorityQueueRef.current.length > 0) {
-            const nextPriority = priorityQueueRef.current.shift();
-            if (nextPriority) playItem(nextPriority, false);
-          } else if (isScriptItem && isPlayingRef.current && queueRef.current && queueRef.current.length > 0) {
-            const nextIdx = (currentIndexRef.current + 1) % queueRef.current.length;
+      let hasHandledItem = false;
+      let watchdogTimer = null;
+
+      const handleItemComplete = () => {
+        if (hasHandledItem) return;
+        hasHandledItem = true;
+
+        if (watchdogTimer) {
+          clearTimeout(watchdogTimer);
+          watchdogTimer = null;
+        }
+
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('avalive_speaker_change', {
+            detail: {
+              avatarId: null,
+              role: null,
+              isSpeaking: false
+            }
+          }));
+        }
+        if (onActionTriggered) onActionTriggered({ type: 'LIPSYNC_ENDED' });
+        isBusyRef.current = false;
+
+        // 1. Nếu có bình luận ưu tiên đang chờ (chỉ khi đang Live thật sự)
+        if (priorityQueueRef.current.length > 0 && (isLive || item.isTest)) {
+          const nextPriority = priorityQueueRef.current.shift();
+          setTimeout(() => {
+            playItem(nextPriority, false);
+          }, 60);
+          return;
+        }
+
+        if (!isPlayingRef.current) return;
+
+        // 2. Chuyển sang câu kịch bản tiếp theo tuần tự từ đầu đến đuôi
+        if (isScriptItem) {
+          const nextIdx = currentIndexRef.current + 1;
+          if (nextIdx >= queueRef.current.length) {
+            // Đã đọc hết câu cuối cùng: Tự động lặp lại từ câu đầu tiên (Infinite Loop tuần hoàn 100%)
+            const savedConfig = localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup');
+            let shouldLoop = true;
+            try {
+              if (savedConfig) {
+                const parsed = JSON.parse(savedConfig);
+                if (parsed.script_broadcast && parsed.script_broadcast.loopScript === false) {
+                  shouldLoop = false;
+                }
+              }
+            } catch (e) {}
+
+            if (shouldLoop && queueRef.current.length > 0) {
+              currentIndexRef.current = 0;
+              setCurrentIndex(0);
+              const firstItem = queueRef.current[0];
+              if (firstItem) {
+                const pauseSec = userPauseDurationRef.current !== undefined ? Number(userPauseDurationRef.current) : 0.0;
+                const loopDelayMs = pauseSec <= 0.01 ? 0 : Math.round(pauseSec * 1000);
+                if (loopDelayMs <= 0) {
+                  if (isPlayingRef.current) playItem(firstItem, true);
+                } else {
+                  setTimeout(() => {
+                    if (isPlayingRef.current) playItem(firstItem, true);
+                  }, loopDelayMs);
+                }
+              }
+            } else {
+              setIsPlaying(false);
+              isPlayingRef.current = false;
+              if (onAudioPlayStateChange) onAudioPlayStateChange(false);
+            }
+          } else {
+            // Đọc câu tiếp theo trong kịch bản: Liền mạch 0ms hoặc theo đúng thiết lập khoảng dừng của người dùng
             currentIndexRef.current = nextIdx;
             setCurrentIndex(nextIdx);
             const nextItem = queueRef.current[nextIdx];
-            if (nextItem) playItem(nextItem, true);
+            if (nextItem && isPlayingRef.current) {
+              const pauseSec = userPauseDurationRef.current !== undefined ? Number(userPauseDurationRef.current) : 0.0;
+              const delayMs = pauseSec <= 0.01 ? 0 : Math.round(pauseSec * 1000);
+              if (delayMs <= 0) {
+                if (isPlayingRef.current) playItem(nextItem, true);
+              } else {
+                setTimeout(() => {
+                  if (isPlayingRef.current) playItem(nextItem, true);
+                }, delayMs);
+              }
+            }
           }
+        } else {
+          // 3. SAU KHI VỪA TRẢ LỜI XONG BÌNH LUẬN CỦA KHÁCH HÀNG (isScriptItem === false):
+          // Nhắc lại ngữ cảnh / dẫn nối thông minh để tiếp tục phát kịch bản tại vị trí hiện tại
+          if (priorityQueueRef.current.length > 0) {
+            const nextPri = priorityQueueRef.current.shift();
+            setTimeout(() => {
+              playItem(nextPri, false);
+            }, 100);
+            return;
+          }
+
+          if (isPlayingRef.current && queueRef.current.length > 0) {
+            const curIdx = currentIndexRef.current;
+            const targetItem = queueRef.current[curIdx] || queueRef.current[0];
+            if (targetItem) {
+              const bridgePhrases = [
+                "Dạ tiếp tục với siêu phẩm ngày hôm nay của shop em nha cả nhà,",
+                "Dạ quay trở lại với chia sẻ về ưu đãi lúc nãy,",
+                "Dạ như em vừa chia sẻ với cả nhà thì,",
+                "Dạ tiếp tục với chương trình livestream hôm nay nha quý vị,"
+              ];
+              const randomBridge = bridgePhrases[Math.floor(Math.random() * bridgePhrases.length)];
+              
+              const bridgedItem = {
+                ...targetItem,
+                id: `resumed_${targetItem.id}_${Date.now()}`,
+                text: `${randomBridge} ${targetItem.text}`
+              };
+              
+              setTimeout(() => {
+                if (isPlayingRef.current) playItem(bridgedItem, true);
+              }, 250);
+            }
+          }
+        }
+      };
+
+      watchdogTimer = setTimeout(() => {
+        if (isBusyRef.current && !hasHandledItem) {
+          console.warn('[AIAudioPlayer] Watchdog safety reset busy state after timeout (length:', cleanLen, ')');
+          stopVoiceAudio();
+          handleItemComplete();
         }
       }, dynamicTimeoutMs);
 
@@ -517,118 +633,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         rate: item.rate !== undefined ? item.rate : activeVoice?.rate,
         pitch: item.pitch !== undefined ? item.pitch : activeVoice?.pitch,
         onEnd: () => {
-          if (watchdogTimer) clearTimeout(watchdogTimer);
-          if (typeof window !== 'undefined') {
-            window.dispatchEvent(new CustomEvent('avalive_speaker_change', {
-              detail: {
-                avatarId: null,
-                role: null,
-                isSpeaking: false
-              }
-            }));
-          }
-          if (onActionTriggered) onActionTriggered({ type: 'LIPSYNC_ENDED' });
-          isBusyRef.current = false;
-
-          // 1. Nếu có bình luận ưu tiên đang chờ (chỉ khi đang Live thật sự)
-          if (priorityQueueRef.current.length > 0 && (isLive || item.isTest)) {
-            const nextPriority = priorityQueueRef.current.shift();
-            setTimeout(() => {
-              playItem(nextPriority, false);
-            }, 60);
-            return;
-          }
-
-          if (!isPlayingRef.current) return;
-
-          // 2. Chuyển sang câu kịch bản tiếp theo tuần tự từ đầu đến đuôi
-          if (isScriptItem) {
-            const nextIdx = currentIndexRef.current + 1;
-            if (nextIdx >= queueRef.current.length) {
-              // Đã đọc hết câu cuối cùng: Tự động lặp lại từ câu đầu tiên (Infinite Loop tuần hoàn 100%)
-              const savedConfig = localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup');
-              let shouldLoop = true;
-              try {
-                if (savedConfig) {
-                  const parsed = JSON.parse(savedConfig);
-                  if (parsed.script_broadcast && parsed.script_broadcast.loopScript === false) {
-                    shouldLoop = false;
-                  }
-                }
-              } catch (e) {}
-
-              if (shouldLoop && queueRef.current.length > 0) {
-                currentIndexRef.current = 0;
-                setCurrentIndex(0);
-                const firstItem = queueRef.current[0];
-                if (firstItem) {
-                  const pauseSec = userPauseDurationRef.current !== undefined ? Number(userPauseDurationRef.current) : 0.0;
-                  const loopDelayMs = pauseSec <= 0.01 ? 0 : Math.round(pauseSec * 1000);
-                  if (loopDelayMs <= 0) {
-                    if (isPlayingRef.current) playItem(firstItem, true);
-                  } else {
-                    setTimeout(() => {
-                      if (isPlayingRef.current) playItem(firstItem, true);
-                    }, loopDelayMs);
-                  }
-                }
-              } else {
-                setIsPlaying(false);
-                isPlayingRef.current = false;
-                if (onAudioPlayStateChange) onAudioPlayStateChange(false);
-              }
-            } else {
-              // Đọc câu tiếp theo trong kịch bản: Liền mạch 0ms hoặc theo đúng thiết lập khoảng dừng của người dùng
-              currentIndexRef.current = nextIdx;
-              setCurrentIndex(nextIdx);
-              const nextItem = queueRef.current[nextIdx];
-              if (nextItem && isPlayingRef.current) {
-                const pauseSec = userPauseDurationRef.current !== undefined ? Number(userPauseDurationRef.current) : 0.0;
-                const delayMs = pauseSec <= 0.01 ? 0 : Math.round(pauseSec * 1000);
-                if (delayMs <= 0) {
-                  if (isPlayingRef.current) playItem(nextItem, true);
-                } else {
-                  setTimeout(() => {
-                    if (isPlayingRef.current) playItem(nextItem, true);
-                  }, delayMs);
-                }
-              }
-            }
-          } else {
-            // 3. SAU KHI VỪA TRẢ LỜI XONG BÌNH LUẬN CỦA KHÁCH HÀNG (isScriptItem === false):
-            // Nhắc lại ngữ cảnh / dẫn nối thông minh để tiếp tục phát kịch bản tại vị trí hiện tại
-            if (priorityQueueRef.current.length > 0) {
-              const nextPri = priorityQueueRef.current.shift();
-              setTimeout(() => {
-                playItem(nextPri, false);
-              }, 100);
-              return;
-            }
-
-            if (isPlayingRef.current && queueRef.current.length > 0) {
-              const curIdx = currentIndexRef.current;
-              const targetItem = queueRef.current[curIdx] || queueRef.current[0];
-              if (targetItem) {
-                const bridgePhrases = [
-                  "Dạ tiếp tục với siêu phẩm ngày hôm nay của shop em nha cả nhà,",
-                  "Dạ quay trở lại với chia sẻ về ưu đãi lúc nãy,",
-                  "Dạ như em vừa chia sẻ với cả nhà thì,",
-                  "Dạ tiếp tục với chương trình livestream hôm nay nha quý vị,"
-                ];
-                const randomBridge = bridgePhrases[Math.floor(Math.random() * bridgePhrases.length)];
-                
-                const bridgedItem = {
-                  ...targetItem,
-                  id: `resumed_${targetItem.id}_${Date.now()}`,
-                  text: `${randomBridge} ${targetItem.text}`
-                };
-                
-                setTimeout(() => {
-                  if (isPlayingRef.current) playItem(bridgedItem, true);
-                }, 250);
-              }
-            }
-          }
+          handleItemComplete();
         }
       });
     } catch (err) {

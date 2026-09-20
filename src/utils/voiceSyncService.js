@@ -7359,30 +7359,12 @@ export function updateActiveVoiceAudio(role, voiceObj) {
 
 /**
  * ⚡ BỘ PHÂN GIẢI GIỌNG NÓI ĐA TẦNG (VOICE PRIORITY RESOLVER)
- * - ƯU TIÊN SỐ 1 (CAO NHẤT 100%): Cấu hình giọng nói trong Tab BỘ NÃO AI (idolVoice, managerVoice, commentVoice, gameBlvVoice/gameVoice).
- * - TẤT CẢ CÁC VOICE ĐÃ SETUP CHO TỪNG NHÂN VẬT: Chuẩn xác 100% theo từng nhân vật đã chỉ định (Avatar 1 -> Idol chính, Avatar 2 -> Trợ lý/Quản lý, Avatar 3 -> BLV Game / Bình luận).
- * - ƯU TIÊN SỐ 2 (PHỤ): Chỉ khi trong BỘ NÃO AI chưa setup voice thì mới sử dụng voice từ trang sự kiện cài đặt / 14 tác vụ.
- * - TUYỆT ĐỐI KHÔNG SỬ DỤNG VOICE LUNG TUNG: Luôn chuẩn hóa và kiểm soát chặt chẽ 100%.
+ * - ƯU TIÊN SỐ 1 (BỘ NÃO AI CHÍNH - CAO NHẤT 100%): Giọng đọc đã cài đặt trong Tab BỘ NÃO AI (idolVoice, managerVoice, commentVoice, gameBlvVoice/gameVoice).
+ * - ƯU TIÊN SỐ 2 (PHỤ / TÁC VỤ SỰ KIỆN): Chỉ khi trong BỘ NÃO AI chưa setup hoặc chưa chọn giọng đọc thì mới sử dụng giọng từ các tab sự kiện/14 tác vụ.
+ * - ƯU TIÊN SỐ 3: Fallback về giọng mặc định của hệ thống.
+ * - TUYỆT ĐỐI KHÔNG CHỒNG CHÉO: Luôn phát duy nhất đúng 1 giọng được chọn.
  */
 export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId = null, avatarId = null) {
-  // 🎯 BƯỚC 1: NẾU TRUYỀN TRỰC TIẾP VOICE CỤ THỂ (TASK SPECIFIC VOICE) -> ƯU TIÊN 100% PHÁT ĐÚNG VOICE ĐÓ
-  if (taskSpecificVoiceId) {
-    if (typeof taskSpecificVoiceId === 'object' && taskSpecificVoiceId.id) {
-      const fullVoice = ALL_SYSTEM_VOICES.find(v => v.id === taskSpecificVoiceId.id) || taskSpecificVoiceId;
-      return {
-        ...fullVoice,
-        ...taskSpecificVoiceId,
-        volume: taskSpecificVoiceId.volume !== undefined ? Number(taskSpecificVoiceId.volume) : (fullVoice.volume ?? 1.0),
-        rate: taskSpecificVoiceId.rate !== undefined ? Number(taskSpecificVoiceId.rate) : (fullVoice.rate ?? 1.0),
-        pitch: taskSpecificVoiceId.pitch !== undefined ? Number(taskSpecificVoiceId.pitch) : (fullVoice.pitch ?? 1.0)
-      };
-    }
-    if (typeof taskSpecificVoiceId === 'string' && taskSpecificVoiceId.trim()) {
-      const matchedVoice = ALL_SYSTEM_VOICES.find(v => v.id === taskSpecificVoiceId.trim());
-      if (matchedVoice) return matchedVoice;
-    }
-  }
-
   const dualConfig = getSavedVoiceConfig();
   const normalizedRole = (roleOrEvent || '').toLowerCase().trim();
   const normalizedAvatarId = (avatarId || '').toLowerCase().trim();
@@ -7411,7 +7393,7 @@ export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId 
     brainVoice = dualConfig.idolVoice;
   }
 
-  // 🎯 BƯỚC 2: CẤU HÌNH TRONG TAB BỘ NÃO AI
+  // 🎯 ƯU TIÊN SỐ 1 (CAO NHẤT): CẤU HÌNH TRONG TAB BỘ NÃO AI
   if (brainVoice && brainVoice.id && brainVoice.enabled !== false) {
     const fullVoice = ALL_SYSTEM_VOICES.find(v => v.id === brainVoice.id) || brainVoice;
     return {
@@ -7423,11 +7405,30 @@ export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId 
     };
   }
 
-  // 🎯 BƯỚC 3: FALLBACK MẶC ĐỊNH CHUẨN XÁC TỪ IDOL VOICE CỦA BỘ NÃO AI
+  // 🎯 ƯU TIÊN SỐ 2 (PHỤ / FALLBACK): NẾU BỘ NÃO CHƯA CÓ, DÙNG VOICE TRUYỀN CỤ THỂ TỪ TÁC VỤ / SỰ KIỆN
+  if (taskSpecificVoiceId) {
+    if (typeof taskSpecificVoiceId === 'object' && taskSpecificVoiceId.id) {
+      const fullVoice = ALL_SYSTEM_VOICES.find(v => v.id === taskSpecificVoiceId.id) || taskSpecificVoiceId;
+      return {
+        ...fullVoice,
+        ...taskSpecificVoiceId,
+        volume: taskSpecificVoiceId.volume !== undefined ? Number(taskSpecificVoiceId.volume) : (fullVoice.volume ?? 1.0),
+        rate: taskSpecificVoiceId.rate !== undefined ? Number(taskSpecificVoiceId.rate) : (fullVoice.rate ?? 1.0),
+        pitch: taskSpecificVoiceId.pitch !== undefined ? Number(taskSpecificVoiceId.pitch) : (fullVoice.pitch ?? 1.0)
+      };
+    }
+    if (typeof taskSpecificVoiceId === 'string' && taskSpecificVoiceId.trim()) {
+      const matchedVoice = ALL_SYSTEM_VOICES.find(v => v.id === taskSpecificVoiceId.trim());
+      if (matchedVoice) return matchedVoice;
+    }
+  }
+
+  // 🎯 ƯU TIÊN SỐ 3: FALLBACK MẶC ĐỊNH CHUẨN XÁC TỪ IDOL VOICE CỦA BỘ NÃO AI
   return dualConfig.idolVoice || DEFAULT_VOICE_CONFIG.idolVoice;
 }
 
-// Global active audio & utterance references
+// Global active audio, speech generation counter & utterance references
+let currentSpeechGenerationId = 0;
 let activePreviewAudio = null;
 let activeUtterance = null;
 let preloadedVoices = [];
@@ -7910,7 +7911,9 @@ export function getVoicePitchShiftFactor(voice, isMale) {
  * - Giọng Nữ: Mở rộng âm vực thanh cao, trong sáng, ngọt ngào, nũng nịu hoặc chuẩn mực.
  * - Bộ nén động lực Broadcast Dynamic Compressor chống vỡ âm, đanh dày và rõ chữ.
  */
-async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, requestedRate, onEnd, isTestingMode) {
+async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, requestedRate, onEnd, isTestingMode, speechId = null) {
+  if (speechId !== null && speechId !== currentSpeechGenerationId) return false;
+
   const audioCtx = getOrCreateAudioContext();
   if (!audioCtx) return false;
 
@@ -7920,7 +7923,17 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
     }
   } catch (e) {}
 
-  stopCurrentActiveAudioNode();
+  if (speechId !== null && speechId !== currentSpeechGenerationId) return false;
+
+  // Dừng mọi source node cũ
+  if (activeSourceNode) {
+    try {
+      activeSourceNode.onended = null;
+      activeSourceNode.stop();
+      activeSourceNode.disconnect();
+    } catch(e) {}
+    activeSourceNode = null;
+  }
 
   const isMale = checkIsMale(voice);
   const dsp = voice?.dspProfile || {};
@@ -8049,6 +8062,9 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
         window.dispatchEvent(new CustomEvent('avalive_speaker_change', {
           detail: { isSpeaking: false, avatarId: null }
         }));
+      }
+      if (speechId !== null && speechId !== currentSpeechGenerationId) {
+        return resolve(false);
       }
       if (onEnd) {
         try { onEnd(); } catch(e) { console.warn('onEnd callback error:', e); }
@@ -8423,6 +8439,7 @@ async function processGlobalSpeechQueue() {
 
 async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTest = false) {
   stopCurrentActiveAudioNode();
+  const thisSpeechId = ++currentSpeechGenerationId;
 
   const isTestingMode = isTest === true || voice?.isTest === true || voice?.priority === true;
 
@@ -8473,6 +8490,8 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     ? (formatTextForRegionalSpeech(candidateText, voice) || humanizeVoiceSpeechText(candidateText, voice) || cleanTextForVoiceSpeech(candidateText) || candidateText)
     : (humanizeVoiceSpeechText(candidateText, voice) || cleanTextForVoiceSpeech(candidateText) || candidateText);
 
+  if (thisSpeechId !== currentSpeechGenerationId) return true;
+
   const apiKey = getElevenLabsApiKey();
   const voiceId = voice?.voiceId || '21m00Tcm4TlvDq8ikWAM';
 
@@ -8500,8 +8519,11 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
         })
       });
 
+      if (thisSpeechId !== currentSpeechGenerationId) return true;
+
       if (res.ok) {
         const blob = await res.blob();
+        if (thisSpeechId !== currentSpeechGenerationId) return true;
         const audioUrl = URL.createObjectURL(blob);
         const audio = new Audio(audioUrl);
         audio.volume = effectiveVoiceVolume;
@@ -8520,6 +8542,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
             finished = true;
             activePreviewAudio = null;
             try { URL.revokeObjectURL(audioUrl); } catch {}
+            if (thisSpeechId !== currentSpeechGenerationId) return resolve(false);
             if (onEnd) onEnd();
             resolve(true);
           };
@@ -8533,18 +8556,23 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     }
   }
 
+  if (thisSpeechId !== currentSpeechGenerationId) return true;
+
   // =========================================================================
   // TIER 2: MICROSOFT AZURE NEURAL TTS (CHUẨN 100% ĐÚNG GIỌNG NGƯỜI DÙNG CHỌN)
   // =========================================================================
   try {
     const audioBuffer = await fetchAndDecodeTTSAudio(textToSpeak, voice);
+    if (thisSpeechId !== currentSpeechGenerationId) return true;
     if (audioBuffer) {
-      const success = await playAudioBufferWithDSP(audioBuffer, voice, effectiveVoiceVolume, requestedRate, onEnd, isTestingMode);
+      const success = await playAudioBufferWithDSP(audioBuffer, voice, effectiveVoiceVolume, requestedRate, onEnd, isTestingMode, thisSpeechId);
       if (success) return true;
     }
   } catch (dspErr) {
     console.warn('[voiceSyncService] Neural Voice synthesis error, fallback to resilient stream:', dspErr);
   }
+
+  if (thisSpeechId !== currentSpeechGenerationId) return true;
 
   // =========================================================================
   // TIER 3: GOOGLE TRANSLATE STREAM & WEB SPEECH API ULTRA-ROBUST FALLBACK
@@ -8586,12 +8614,14 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
             detail: { isSpeaking: false, avatarId: null }
           }));
         }
+        if (thisSpeechId !== currentSpeechGenerationId) return resolve(false);
         if (onEnd) onEnd();
         resolve(true);
       };
 
       audio.onended = finish;
       audio.onerror = () => {
+        if (thisSpeechId !== currentSpeechGenerationId) return finish();
         if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
           try {
             window.speechSynthesis.cancel();
@@ -8609,6 +8639,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
       };
 
       audio.play().catch(() => {
+        if (thisSpeechId !== currentSpeechGenerationId) return finish();
         if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
           try {
             window.speechSynthesis.cancel();
@@ -8630,7 +8661,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
   }
 
   // Kết thúc an toàn
-  if (onEnd) onEnd();
+  if (thisSpeechId === currentSpeechGenerationId && onEnd) onEnd();
   return true;
 }
 

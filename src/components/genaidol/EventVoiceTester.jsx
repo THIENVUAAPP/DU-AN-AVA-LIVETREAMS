@@ -466,13 +466,52 @@ export default function EventVoiceTester({
     const speakerRate = (matchedSpeakerAvatar?.rate ?? 1.0) * (speedRef.current || 1.0);
     const speakerVolume = (matchedSpeakerAvatar?.volume ?? 1.0) * (volumeRef.current || 1.0);
 
+    let hasHandledStep = false;
+    let watchdogTimer = null;
+
+    const advanceToNextSentence = () => {
+      if (hasHandledStep) return;
+      hasHandledStep = true;
+      if (watchdogTimer) {
+        clearTimeout(watchdogTimer);
+        watchdogTimer = null;
+      }
+      if (!isPlayingRef.current) return;
+      if (queueTimeoutRef.current) {
+        clearTimeout(queueTimeoutRef.current);
+        queueTimeoutRef.current = null;
+      }
+
+      // Thông báo nhân vật đã nói xong câu hiện tại
+      try {
+        window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', {
+          detail: { avatarId: activeSpeakerId, isSpeaking: false }
+        }));
+      } catch (e) {}
+
+      const pauseSec = pauseDurationRef.current !== undefined ? Number(pauseDurationRef.current) : 0.0;
+      
+      // Phát câu tiếp theo: nếu người dùng không cài khoảng dừng (<= 0.01s) thì ĐỌC LIÊN TỤC KHÔNG DỪNG (0ms)
+      if (pauseSec <= 0.01) {
+        if (isPlayingRef.current) playSentenceAtIndex(index + 1, customVoice);
+      } else {
+        const pauseMs = Math.round(pauseSec * 1000);
+        queueTimeoutRef.current = setTimeout(() => {
+          if (isPlayingRef.current) {
+            playSentenceAtIndex(index + 1, customVoice);
+          }
+        }, pauseMs);
+      }
+    };
+
     // Watchdog an toàn: Thời gian tối đa cho 1 câu đọc ngắn (tối đa 6-12s tùy độ dài), chuyển ngay câu tiếp theo không bao giờ bị treo
     const cleanLen = (cleanSentenceText || '').length;
     const dynamicTimeoutMs = Math.max(5000, Math.ceil((cleanLen / 8) + 4) * 1000);
-    let watchdogTimer = setTimeout(() => {
-      if (isPlayingRef.current && currentSentenceIdxRef.current === index) {
+    watchdogTimer = setTimeout(() => {
+      if (isPlayingRef.current && currentSentenceIdxRef.current === index && !hasHandledStep) {
         console.warn(`[EventVoiceTester] Watchdog safety timeout for sentence ${index} (len: ${cleanLen}), advancing.`);
-        playSentenceAtIndex(index + 1, customVoice);
+        stopVoiceAudio();
+        advanceToNextSentence();
       }
     }, dynamicTimeoutMs);
 
@@ -485,33 +524,7 @@ export default function EventVoiceTester({
         volume: speakerVolume,
         rate: speakerRate,
         onEnd: () => {
-          if (watchdogTimer) clearTimeout(watchdogTimer);
-          if (!isPlayingRef.current) return;
-          if (queueTimeoutRef.current) {
-            clearTimeout(queueTimeoutRef.current);
-            queueTimeoutRef.current = null;
-          }
-
-          // Thông báo nhân vật đã nói xong câu hiện tại
-          try {
-            window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', {
-              detail: { avatarId: activeSpeakerId, isSpeaking: false }
-            }));
-          } catch (e) {}
-
-          const pauseSec = pauseDurationRef.current !== undefined ? Number(pauseDurationRef.current) : 0.0;
-          
-          // Phát câu tiếp theo: nếu người dùng không cài khoảng dừng (<= 0.01s) thì ĐỌC LIÊN TỤC KHÔNG DỪNG (0ms)
-          if (pauseSec <= 0.01) {
-            if (isPlayingRef.current) playSentenceAtIndex(index + 1, customVoice);
-          } else {
-            const pauseMs = Math.round(pauseSec * 1000);
-            queueTimeoutRef.current = setTimeout(() => {
-              if (isPlayingRef.current) {
-                playSentenceAtIndex(index + 1, customVoice);
-              }
-            }, pauseMs);
-          }
+          advanceToNextSentence();
         }
       }
     );
