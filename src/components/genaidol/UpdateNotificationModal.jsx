@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.1.6';
+export const APP_VERSION = '4.1.7';
 export const RELEASE_DATE = '20/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.1.7 - Hiển Thị Tab Chuỗi Kịch Bản Live (Sequencer) Trực Quan Trên Menu Chính & Header',
+    description: '1. Tab Menu Chính Thức: Đặt tab "🎬 Chuỗi Kịch Bản Live" trực tiếp trên Header Navbar và Menu Dropdown tài khoản giúp truy cập 1 chạm tức thì; 2. Tương Thích Hoàn Hảo Web & Máy Tính (Mac & Windows): Hiển thị đồng bộ trên mọi nền tảng; 3. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle, Game Bản Đồ 3D, Multi-Avatar.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.1.6 - Hiển Thị Trực Quan Nút Bấm Chuỗi Kịch Bản (Sequencer) & Mở Mặc Định 100%',
     description: '1. Hiển Thị Nổi Bật Trên Thanh Điều Khiển: Bổ sung nút bấm trực tiếp "🎬 CHUỖI KỊCH BẢN" ngay trên thanh công cụ chính và menu ứng dụng giúp người dùng nhìn thấy và mở ngay lập tức; 2. Nạp Mặc Định Chuỗi Kịch Bản: Mở trực tiếp giao diện Sequencer với đầy đủ Preset mẫu khi mở Cài đặt Sự kiện; 3. Đồng Bộ Hoàn Hảo 60 FPS 4K: Giữ nguyên vẹn 100% tất cả các tab chức năng đã khóa.'

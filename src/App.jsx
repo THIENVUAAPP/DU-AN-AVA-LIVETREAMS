@@ -30,6 +30,7 @@ import UpdateNotificationModal from "./components/genaidol/UpdateNotificationMod
 import LiveStreamStandalonePlayer from "./components/genaidol/LiveStreamStandalonePlayer";
 import WindowCapturePlayer from "./components/genaidol/WindowCapturePlayer";
 import TemplateLibraryModal from "./components/genaidol/TemplateLibraryModal";
+import LivestreamFlowSequencer from "./components/genaidol/LivestreamFlowSequencer";
 import { bootstrapDefaultPresets } from "./utils/defaultPresetsBootstrap";
 import { Lock, Sparkles, ShieldCheck, Mail, LogIn, ArrowRight } from "lucide-react";
 
@@ -335,6 +336,12 @@ export default function App() {
         {/* WORKSPACE VIP STUDIO MODE (When User IS Logged In) - ALL MODULES UNLOCKED */}
         {currentUser && (
           <>
+            {activeTab === "flow-sequencer" && (
+              <div className="w-full h-[85vh] bg-[#0E0E17] rounded-3xl p-4 border border-rose-500/30 overflow-y-auto shadow-2xl">
+                <LivestreamFlowSequencer />
+              </div>
+            )}
+
             {activeTab === "broadcast" && (
               <ProductionStudio isLive={isLive} aiAvatarFeatureEnabled={aiAvatarFeatureEnabled} setActiveTab={setActiveTab} currentUser={currentUser} />
             )}

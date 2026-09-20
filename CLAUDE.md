@@ -1,7 +1,7 @@
 # ☁️ CLAUDE & CLOUD MEDIA SPECIFICATION — QUY CHUẨN XỬ LÝ VIDEO & ĐỒNG BỘ LIVESTREAM (BẮT BUỘC DUY TRÌ)
 
 > **DỰ ÁN:** AVA LIVESTREAM VIP PRO  
-> **PHIÊN BẢN DUY TRÌ:** v4.1.6+  
+> **PHIÊN BẢN DUY TRÌ:** v4.1.7+  
 > **QUY TẮC BẮT BUỘC:** Duy trì vĩnh viễn trong mọi lần cập nhật, không chồng chéo dữ liệu, xử lý video tức thì 0ms cho Window Capture và TikTok Live Studio trên mọi nền tảng trình duyệt (Google Chrome, Safari, Cốc Cốc, Microsoft Edge, OBS Studio...).
 > **QUY TẮC KHÓA CHẶT (STRICT TAB & SUBVIEW LOCK):** Toàn bộ các tab chức năng, subview và module không được yêu cầu đều được khóa chặt 100%. Chỉ kích hoạt lệnh và tương tác chính xác với subview/tab mục tiêu khi người dùng yêu cầu, không có bất kỳ lệnh ngoài luồng nào tác động chéo.
 

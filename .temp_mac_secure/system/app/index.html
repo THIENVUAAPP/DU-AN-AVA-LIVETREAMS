@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="vi" class="dark">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/png" href="/favicon.png" />
+    <link rel="apple-touch-icon" href="/favicon.png" />
+    
+    <!-- TikTok Verification -->
+    <meta name="tiktok-site-verification" content="AXsH6x9kC6LLbZrFSBJnfET6X45Ytnw3" />
+    <!-- Cache Control -->
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate" />
+    <meta http-equiv="Pragma" content="no-cache" />
+    <meta http-equiv="Expires" content="0" />
+
+    <!-- Mobile App Store & Google Play Native App Viewport & Meta Tags -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
+    <meta name="theme-color" content="#EF4444" />
+    <meta name="mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="apple-mobile-web-app-title" content="AvaLive PRO" />
+    <link rel="manifest" href="/manifest.json" />
+
+    <title>AvaLive PRO — Nền Tảng AI Livestream & Thương Mại Điện Tử</title>
+    <meta name="description" content="AvaLive PRO - Nền tảng AI Livestream đa nền tảng, 20 MC AI Avatar người thật, làm đẹp trực tiếp trên live, chuyên viên chốt sale AI & thanh toán tự động SePay VietQR." />
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Be+Vietnam+Pro:wght@300;400;500;600;700;800;900&family=JetBrains+Mono:wght@400;500;700&family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+
+    <!-- MediaPipe AI Selfie Segmentation for 100% Clean AI Background Removal (Non-blocking defer) -->
+    <script defer src="https://cdn.jsdelivr.net/npm/@mediapipe/camera_utils/camera_utils.js" crossorigin="anonymous"></script>
+    <script defer src="https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js" crossorigin="anonymous"></script>
+
+    <!-- OBS & TIKTOK STUDIO ANTI-STATIC-IMAGE & BACKGROUND UNTHROTTLE FIX -->
+    <script>
+      (function() {
+        var isOverlay = window.location.search.includes('overlay=') || window.location.pathname.includes('/overlay');
+        var isCEF = navigator.userAgent.includes('OBS') || navigator.userAgent.includes('TikTok') || navigator.userAgent.includes('CEF');
+        if (isOverlay || isCEF) {
+          var style = document.createElement('style');
+          style.innerHTML = `
+            * { will-change: auto !important; transform-style: flat !important; backface-visibility: visible !important; }
+            video, canvas { transform: none !important; mix-blend-mode: normal !important; }
+          `;
+          document.head.appendChild(style);
+        }
+
+        // Global Lightweight Keep-Alive for Chrome / Cốc Cốc / Edge / macOS / Windows
+        // Prevents browser from freezing videos when tab goes to background without CPU overhead
+        try {
+          // Track intentional user pauses so we don't force play them
+          document.addEventListener('pause', function(e) {
+            if (e.target && e.target.tagName === 'VIDEO' && !e.target.seeking && !e.target.ended) {
+              e.target.dataset.userPaused = 'true';
+            }
+          }, true);
+          
+          document.addEventListener('play', function(e) {
+            if (e.target && e.target.tagName === 'VIDEO') {
+              e.target.dataset.userPaused = 'false';
+            }
+          }, true);
+
+          var blob = new Blob([
+            "let t; self.onmessage=e=>{ if(e.data==='start'){ if(!t) t=setInterval(()=>self.postMessage('tick'), 500); } };"
+          ], { type: 'application/javascript' });
+          var worker = new Worker(URL.createObjectURL(blob));
+          worker.onmessage = function() {
+            if (document.hidden) {
+              document.querySelectorAll('video').forEach(function(v) {
+                if (v.dataset.userPaused !== 'true' && v.paused && !v.ended) {
+                  v.play().catch(function(){});
+                }
+              });
+            }
+          };
+          worker.postMessage('start');
+        } catch(e) {}
+      })();
+    </script>
+    <script type="module" crossorigin src="/assets/index-IcDrBz3E.js"></script>
+    <link rel="modulepreload" crossorigin href="/assets/vendor-icons-Bw8Peyyf.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-supabase-Cz-Vy19d.js">
+    <link rel="modulepreload" crossorigin href="/assets/vendor-three-D5cdGfmC.js">
+    <link rel="stylesheet" crossorigin href="/assets/index-DT8nZmr3.css">
+  </head>
+  <body class="bg-[#0A0A0A] text-gray-100 antialiased selection:bg-[#EF4444] selection:text-white min-h-screen overflow-x-hidden pt-safe pb-safe">
+    <div id="root"></div>
+    <script>
+      // Trình duyệt luôn chặn không cho chạy file JS dạng "module" khi mở trực tiếp file HTML
+      // (giao thức file://) — vì vậy nếu ai đó bấm đúp mở nhầm file index.html trong thư mục
+      // app_data/dist thay vì chạy đúng file khởi động, trang sẽ luôn trắng trơn không rõ lý do.
+      // Chặn sớm ở đây để hiện thông báo rõ ràng thay vì màn hình trắng im lặng.
+      if (window.location.protocol === 'file:') {
+        document.getElementById('root').innerHTML =
+          '<div style="min-height:100vh;display:flex;align-items:center;justify-content:center;padding:24px;font-family:sans-serif;text-align:center;background:#0A0A0A;color:#fff;">' +
+          '<div style="max-width:520px;">' +
+          '<div style="font-size:48px;margin-bottom:16px;">⚠️</div>' +
+          '<h1 style="font-size:20px;font-weight:800;color:#EF4444;margin-bottom:12px;">Vui lòng KHÔNG mở file này trực tiếp</h1>' +
+          '<p style="color:#ccc;line-height:1.6;">Đây là file dữ liệu nội bộ của phần mềm. Để khởi động AvaLive PRO đúng cách, hãy đóng tab này và chạy file:</p>' +
+          '<p style="margin-top:12px;font-weight:700;color:#38bdf8;">Khoi_Dong_AvaLive_Mac.command (Mac) &nbsp;hoặc&nbsp; Chay_App_Windows.bat (Windows)</p>' +
+          '<p style="margin-top:12px;color:#888;font-size:13px;">(File này nằm ở thư mục ngoài cùng sau khi giải nén, không phải trong thư mục app_data)</p>' +
+          '</div></div>';
+      }
+    </script>
+  </body>
+</html>

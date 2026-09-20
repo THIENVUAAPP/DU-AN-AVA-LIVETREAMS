@@ -20,7 +20,8 @@ import {
   CreditCard,
   Zap,
   MessageSquare,
-  Download
+  Download,
+  Video
 } from 'lucide-react';
 import { supabase } from '../lib/supabaseClient';
 
@@ -98,9 +99,79 @@ export default function Header({
         </div>
 
         {/* Clean Nav Items with Big Bold Text & Horizontal Scroll */}
-        <div className="flex-1 w-full overflow-x-auto no-scrollbar py-1 flex items-center justify-center">
+        <div className="flex-1 w-full overflow-x-auto no-scrollbar py-1 flex items-center justify-center gap-2">
+          {currentUser ? (
+            <>
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`px-3 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer ${
+                  activeTab === 'overview' 
+                    ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-md' 
+                    : 'text-gray-300 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                🏠 Trang Chủ
+              </button>
+              
+              <button
+                onClick={() => setActiveTab('flow-sequencer')}
+                className={`flex items-center gap-1.5 px-4 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer border ${
+                  activeTab === 'flow-sequencer'
+                    ? 'bg-gradient-to-r from-rose-600 via-pink-600 to-indigo-600 text-white border-pink-400 shadow-lg shadow-rose-500/30 animate-pulse'
+                    : 'bg-rose-500/15 text-rose-300 border-rose-500/30 hover:bg-rose-500/30 hover:text-white'
+                }`}
+              >
+                <Layers className="w-3.5 h-3.5 text-rose-400" />
+                <span>🎬 Chuỗi Kịch Bản Live</span>
+                <span className="text-[9px] px-1.5 py-0.2 bg-rose-600 text-white rounded font-black">MỚI</span>
+              </button>
 
+              <button
+                onClick={() => setActiveTab('broadcast')}
+                className={`px-3 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer ${
+                  activeTab === 'broadcast'
+                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
+                    : 'text-gray-300 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                🎥 Studio Live
+              </button>
 
+              <button
+                onClick={() => setActiveTab('avatars')}
+                className={`px-3 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer ${
+                  activeTab === 'avatars'
+                    ? 'bg-gradient-to-r from-purple-600 to-pink-600 text-white shadow-md'
+                    : 'text-gray-300 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                🤖 AI Avatar
+              </button>
+            </>
+          ) : (
+            <>
+              <button
+                onClick={() => setActiveTab('overview')}
+                className={`px-3 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer ${
+                  activeTab === 'overview' 
+                    ? 'bg-blue-600 text-white' 
+                    : 'text-gray-300 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                Trang Chủ
+              </button>
+              <button
+                onClick={() => setActiveTab('affiliate-landing')}
+                className={`px-3 py-1.5 rounded-full text-xs font-black transition-all cursor-pointer ${
+                  activeTab === 'affiliate-landing'
+                    ? 'bg-emerald-600 text-white'
+                    : 'text-gray-300 hover:text-white hover:bg-white/10'
+                }`}
+              >
+                Tiếp Thị 30%
+              </button>
+            </>
+          )}
         </div>
 
         {/* User Account Pill Badge & Download Software Button */}
@@ -160,6 +231,23 @@ export default function Header({
 
                   {/* Concise Menu Items */}
                   <div className="space-y-1 pt-1">
+                    {/* Chuỗi Kịch Bản Live Đa Phân Đoạn (Sequencer) */}
+                    <button
+                      onClick={() => {
+                        setActiveTab("flow-sequencer");
+                        setProfileDropdownOpen(false);
+                      }}
+                      className="w-full flex items-center justify-between px-3 py-2 rounded-xl bg-gradient-to-r from-rose-950/60 to-pink-900/40 border border-rose-600/40 text-rose-200 hover:text-white font-black text-xs transition-all text-left cursor-pointer shadow-md"
+                    >
+                      <div className="flex items-center gap-2.5">
+                        <Layers className="w-4 h-4 text-rose-400" />
+                        <span>🎬 Chuỗi Kịch Bản Live (Sequencer)</span>
+                      </div>
+                      <span className="px-1.5 py-0.5 rounded bg-rose-600 text-white text-[9px] font-black">
+                        MỚI
+                      </span>
+                    </button>
+
                     <button
                       onClick={() => {
                         setActiveTab("profile");

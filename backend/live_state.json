@@ -9,7 +9,7 @@
   "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1789921893445,
+  "updatedAt": 1789922486659,
   "flvUrl": null,
   "isConnected": false,
   "type": "MASTER_LIVE_STATE_UPDATE",
@@ -23,17 +23,17 @@
   "tunnelUrl": "https://jill-weekly-rentals-aurora.trycloudflare.com",
   "isMuted": false,
   "pinnedProduct": {
-    "id": 1,
-    "name": "AVA LIVE",
-    "productName": "AVA LIVE",
+    "id": 2,
+    "name": "Sản phẩm mới 2",
+    "productName": "Sản phẩm mới 2",
     "price": "Giá Sốc",
     "oldPrice": "",
     "image": "https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80",
-    "badge": "DEAL ĐỘC QUYỀN 🔥",
+    "badge": "HOT DEAL 🔥",
     "stock": 99,
-    "keywords": "ava live;ava;phần mềm ava live;phần mềm livestream ai;livestream ai;livestream bằng ai;nhân vật",
+    "keywords": "",
     "storeUrl": "https://shop.tiktok.com",
-    "pinnedAt": 1789714350299,
-    "triggerSource": "ai_speech_keyword: nhân vật"
+    "pinnedAt": 1789922298958,
+    "triggerSource": "manual_workspace"
   }
 }
