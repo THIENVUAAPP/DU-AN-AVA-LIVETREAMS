@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.1.4';
+export const APP_VERSION = '4.1.5';
 export const RELEASE_DATE = '20/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.1.5 - Tích Hợp Chính Thức Trình Điều Phối Chuỗi Kịch Bản Phân Đoạn & Quản Lý Preset Đa Dạng',
+    description: '1. Trình Điều Phối Chuỗi Kịch Bản Trực Quan: Bổ sung module Điều Phối Chuỗi Kịch Bản (Sequencer) ngay trong Workspace Tác Vụ, cho phép lưu trữ và chuyển đổi linh hoạt giữa nhiều Preset bán hàng (Mỹ phẩm, Thời trang, Gia dụng...); 2. Tự Động Hóa Vận Hành 24/7: Tự động điều phối chuyển bước từ AI Avatar mở màn, Q&A bình luận TikTok Live, phát video sản phẩm, video feedback đến CTA chốt sale; 3. Đồng Bộ 0ms Chuẩn 60 FPS 4K: Chuyển đổi mượt mà không độ trễ trên TikTok Live Studio và OBS; 4. Khóa Chặt 100% Toàn Bộ Module: Bảo toàn tuyệt đối mọi tab chức năng hiện có.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.1.4 - Chuẩn Hóa Chuỗi Kịch Bản Livestream Tự Động Đa Phân Đoạn & Vòng Lặp Bán Hàng 24/7',
     description: '1. Quy Chuẩn Vận Hành Đa Phân Đoạn (Multi-Section Sequencer): Hỗ trợ thiết lập chuỗi sự kiện tự động tuần tự từ AI Avatar mở màn, phản hồi bình luận TikTok Live bằng Voice/Lip-sync, phát video sản phẩm, video feedback cho đến CTA chốt sale; 2. Tự Động Định Giờ & Chuyển Đoạn: Điều phối thời lượng phát từng video và tác vụ chính xác theo từng giây; 3. Khóa Chặt 100% Hệ Thống: Bảo toàn tuyệt đối mọi tab chức năng, subview và module không bị ảnh hưởng chéo.'

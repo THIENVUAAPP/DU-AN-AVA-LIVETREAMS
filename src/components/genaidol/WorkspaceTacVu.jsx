@@ -14,6 +14,7 @@ import WorkspaceKeywordPanel from './WorkspaceKeywordPanel';
 import EventVoiceTester from './EventVoiceTester';
 import UniversalMediaPicker, { SAMPLE_IDOL_VIDEOS } from './UniversalMediaPicker';
 import MultiAvatarStudioModal, { MultiAvatarStudioPanel } from './MultiAvatarStudioModal';
+import LivestreamFlowSequencer from './LivestreamFlowSequencer';
 import autoPinProductService from '../../utils/autoPinProductService';
 
 const toast = {
@@ -86,6 +87,7 @@ function UniversalFileUploadButton({
 }
 
 const EVENTS = [
+  { id: 'flow_sequencer', label: '🎬 Chuỗi Kịch Bản Live Đa Phân Đoạn', icon: Layers, color: 'text-rose-500', desc: 'Điều phối chuỗi sự kiện phân đoạn tự động 24/7: Avatar chào mở màn -> Trả lời comment TikTok -> Chiếu video sản phẩm -> Chiếu video feedback -> Tư vấn ghim giỏ hàng -> CTA chốt sale. Hỗ trợ lưu trữ & chuyển đổi nhiều Preset linh hoạt.' },
   { id: 'multi_avatar_studio', label: '👥 Studio 2–4 Avatar', icon: Users, color: 'text-purple-600', desc: 'Thiết lập phiên livestream tương tác 2, 3 hoặc 4 Nhân Vật AI đồng thời với Giọng Đọc, Video Lắng Nghe và Video Nhép Miệng Lip-sync độc lập.' },
   { id: 'script_broadcast', label: '📜 Kịch bản Idol', icon: FileText, color: 'text-indigo-600', desc: 'Thiết lập kịch bản bán hàng tuần tự (Fixed Script) hoặc bộ não AI tư vấn từ Kho Tri Thức Doanh Nghiệp.' },
   { id: 'checkout', label: '🛒 Chốt đơn', icon: ShoppingCart, color: 'text-blue-500', desc: 'Khai báo các sản phẩm có trong giỏ hàng để AI tự động nhận diện từ khóa, phát video minh họa và tư vấn chốt đơn cho từng sản phẩm.' },
@@ -1535,9 +1537,14 @@ export default function WorkspaceTacVu() {
         <div className="flex-1 overflow-y-auto pr-1">
 
           {/* ========================================================================= */}
-          {/* 0. STUDIO 2–4 AVATAR (MULTI-AVATAR LIVE STUDIO) */}
           {/* ========================================================================= */}
-          {selectedEventId === 'multi_avatar_studio' ? (
+          {/* 0. CHUỖI KỊCH BẢN PHÂN ĐOẠN (MULTI-SECTION SEQUENCER & PRESETS) */}
+          {/* ========================================================================= */}
+          {selectedEventId === 'flow_sequencer' ? (
+            <div className="h-full flex flex-col">
+              <LivestreamFlowSequencer />
+            </div>
+          ) : selectedEventId === 'multi_avatar_studio' ? (
             <div className="h-full flex flex-col">
               <MultiAvatarStudioPanel 
                 isEmbedded={true}
