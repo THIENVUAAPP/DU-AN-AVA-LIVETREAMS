@@ -86,6 +86,29 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true });
 }
 
+const candidateUploadDirs = [
+  uploadsDir,
+  path.join(process.cwd(), 'backend', 'uploads'),
+  path.join(process.cwd(), 'uploads'),
+  path.join(__dirname, '..', 'uploads')
+];
+
+function findFileInUploadDirs(filename) {
+  if (!filename) return null;
+  let cleanName = path.basename(filename).split('?')[0];
+  let decodedName = cleanName;
+  try { decodedName = decodeURIComponent(cleanName); } catch(e) {}
+  
+  for (const dir of candidateUploadDirs) {
+    if (!fs.existsSync(dir)) continue;
+    const p1 = path.join(dir, cleanName);
+    if (fs.existsSync(p1)) return p1;
+    const p2 = path.join(dir, decodedName);
+    if (fs.existsSync(p2)) return p2;
+  }
+  return null;
+}
+
 // 🛡️ TỰ ĐỘNG DỌN DẸP CÁC BẢN SAO VIDEO TRÙNG LẶP TRONG uploadsDir (GIẢI PHÓNG HÀNG CHỤC GB Ổ CỨNG)
 function cleanupDuplicateUploads() {
   try {
@@ -319,15 +342,29 @@ setTimeout(() => {
   } catch (scanErr) {}
 }, 2000);
 
-// 🎬 TỰ ĐỘNG TÌM FILE VIDEO MỚI NHẤT & CHUẨN XÁC TRONG THƯ MỤC UPLOADS
+// 🎬 TỰ ĐỘNG TÌM FILE VIDEO MỚI NHẤT & CHUẨN XÁC TRONG TẤT CẢ THƯ MỤC UPLOADS
 function getLatestUploadFilePath() {
   try {
-    const files = fs.readdirSync(uploadsDir)
-      .filter(f => (f.endsWith('.mp4') || f.endsWith('.webm') || f.endsWith('.mov')) && !f.includes('default_idol'))
-      .map(f => ({ path: path.join(uploadsDir, f), time: fs.statSync(path.join(uploadsDir, f)).mtimeMs }))
-      .sort((a, b) => b.time - a.time);
-    if (files.length > 0) {
-      return files[0].path;
+    const videoExts = ['.mp4', '.webm', '.mov', '.mkv', '.avi', '.flv', '.m4v', '.ts', '.m3u8'];
+    const allFiles = [];
+    for (const dir of candidateUploadDirs) {
+      if (!fs.existsSync(dir)) continue;
+      try {
+        const list = fs.readdirSync(dir);
+        for (const f of list) {
+          const ext = path.extname(f).toLowerCase();
+          if (videoExts.includes(ext) && !f.endsWith('.part') && !f.startsWith('.') && !f.includes('default_idol')) {
+            const fullPath = path.join(dir, f);
+            try {
+              allFiles.push({ name: f, path: fullPath, time: fs.statSync(fullPath).mtimeMs });
+            } catch(e) {}
+          }
+        }
+      } catch(e) {}
+    }
+    allFiles.sort((a, b) => b.time - a.time);
+    if (allFiles.length > 0) {
+      return allFiles[0].path;
     }
   } catch (e) {}
   return null;
@@ -335,24 +372,26 @@ function getLatestUploadFilePath() {
 
 function getLatestUploadMediaUrl() {
   try {
-    if (!fs.existsSync(uploadsDir)) return null;
     const videoExts = ['.mp4', '.webm', '.mov', '.mkv', '.avi', '.flv', '.m4v', '.ts', '.m3u8'];
-    const files = fs.readdirSync(uploadsDir)
-      .filter(f => {
-        const ext = path.extname(f).toLowerCase();
-        return videoExts.includes(ext) && !f.endsWith('.part') && !f.startsWith('.');
-      })
-      .map(f => {
-        try {
-          return { name: f, time: fs.statSync(path.join(uploadsDir, f)).mtimeMs };
-        } catch(e) {
-          return null;
+    const allFiles = [];
+    for (const dir of candidateUploadDirs) {
+      if (!fs.existsSync(dir)) continue;
+      try {
+        const list = fs.readdirSync(dir);
+        for (const f of list) {
+          const ext = path.extname(f).toLowerCase();
+          if (videoExts.includes(ext) && !f.endsWith('.part') && !f.startsWith('.') && !f.includes('default_idol')) {
+            const fullPath = path.join(dir, f);
+            try {
+              allFiles.push({ name: f, path: fullPath, time: fs.statSync(fullPath).mtimeMs });
+            } catch(e) {}
+          }
         }
-      })
-      .filter(Boolean)
-      .sort((a, b) => b.time - a.time);
-    if (files.length > 0) {
-      return `/uploads/${files[0].name}`;
+      } catch(e) {}
+    }
+    allFiles.sort((a, b) => b.time - a.time);
+    if (allFiles.length > 0) {
+      return `/uploads/${allFiles[0].name}`;
     }
   } catch (e) {}
   return null;
@@ -401,8 +440,8 @@ app.all(['/uploads/:filename', '/uploads/*'], (req, res, next) => {
   try { reqName = decodeURIComponent(reqName); } catch(e) {}
   reqName = path.basename(reqName);
 
-  let filePath = path.join(uploadsDir, reqName);
-  if (!fs.existsSync(filePath)) {
+  let filePath = findFileInUploadDirs(reqName);
+  if (!filePath || !fs.existsSync(filePath)) {
     // 🛡️ TỰ ĐỘNG DỰ PHÒNG: Nếu file requested không tồn tại (link cũ hoặc bị xóa), phát ngay file video mới nhất trên server
     const fallbackPath = getLatestUploadFilePath();
     if (fallbackPath && fs.existsSync(fallbackPath)) {
@@ -860,7 +899,6 @@ app.post('/api/upload-media', upload.single('file'), (req, res) => {
 
 // ============================================================
 // 🎬 ROUTE PHÁT SÓNG ĐỘC LẬP /live-stream CHO TIKTOK LIVE STUDIO & OBS
-// // 🎬 ROUTE PHÁT SÓNG ĐỘC LẬP /live-stream CHO TIKTOK LIVE STUDIO & OBS
 // Tối ưu hóa GPU Hardware Acceleration 100%, 4K 60 FPS siêu sắc nét, không bao giờ đen màn hình hay lỗi link
 // ============================================================
 app.get([
@@ -897,26 +935,19 @@ app.get([
   let existsOnDisk = false;
   if (vParam && typeof vParam === 'string' && vParam.includes('/uploads/')) {
     const filename = vParam.substring(vParam.indexOf('/uploads/') + 9).split('?')[0];
-    const checkFile = path.join(uploadsDir, filename);
-    if (fs.existsSync(checkFile)) {
+    const foundPath = findFileInUploadDirs(filename);
+    if (foundPath) {
       existsOnDisk = true;
-      vParam = `/uploads/${filename}`;
-    } else {
-      try {
-        const decodedName = decodeURIComponent(filename);
-        if (fs.existsSync(path.join(uploadsDir, decodedName))) {
-          existsOnDisk = true;
-          vParam = `/uploads/${decodedName}`;
-        }
-      } catch(e) {}
+      vParam = `/uploads/${path.basename(foundPath)}`;
     }
   }
   if (!existsOnDisk) {
     if (currentMasterLiveState && currentMasterLiveState.mediaUrl && currentMasterLiveState.mediaUrl.includes('/uploads/')) {
       const mFilename = currentMasterLiveState.mediaUrl.substring(currentMasterLiveState.mediaUrl.indexOf('/uploads/') + 9).split('?')[0];
-      if (fs.existsSync(path.join(uploadsDir, mFilename))) {
+      const foundPath = findFileInUploadDirs(mFilename);
+      if (foundPath) {
         existsOnDisk = true;
-        vParam = `/uploads/${mFilename}`;
+        vParam = `/uploads/${path.basename(foundPath)}`;
       }
     }
   }
@@ -939,7 +970,7 @@ app.get([
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.0.5</title>
+  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.0.6</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -978,6 +1009,32 @@ app.get([
       -webkit-font-smoothing: antialiased;
       will-change: transform;
     }
+    #loadingOverlay {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+      color: #38bdf8;
+      font-family: system-ui, -apple-system, sans-serif;
+      z-index: 20;
+      transition: opacity 0.4s ease;
+      pointer-events: none;
+    }
+    .spinner {
+      width: 44px;
+      height: 44px;
+      border: 3px solid rgba(56, 189, 248, 0.2);
+      border-top-color: #38bdf8;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+      margin-bottom: 12px;
+    }
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
     #controlsDock {
       position: absolute; top: 8px; right: 8px; z-index: 50;
       display: flex; align-items: center; gap: 6px;
@@ -1009,6 +1066,11 @@ app.get([
 </head>
 <body>
   <div id="stage">
+    <div id="loadingOverlay">
+      <div class="spinner"></div>
+      <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.5px;">⚡ ĐANG KẾT NỐI LUỒNG LIVE AVALIVE 4K 60FPS...</div>
+      <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Đồng bộ trực tiếp với phần mềm AvaLive VIP PRO</div>
+    </div>
     <video 
       id="videoPlayer" 
       ${initialSrcAttr}
@@ -1027,12 +1089,13 @@ app.get([
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.0.5</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.0.6</div>
   </div>
   <script>
     (function() {
       const vid = document.getElementById('videoPlayer');
       const badge = document.getElementById('badge');
+      const loadingOverlay = document.getElementById('loadingOverlay');
       const btnPlayPause = document.getElementById('btnPlayPause');
       const btnMuteUnmute = document.getElementById('btnMuteUnmute');
       const btnFitToggle = document.getElementById('btnFitToggle');
@@ -1047,6 +1110,22 @@ app.get([
       // Khởi tạo video luôn bắt đầu với muted để 100% CEF TikTok Live Studio / OBS cho phép phát ngay 0ms
       vid.muted = true;
       vid.defaultMuted = true;
+
+      function hideLoading() {
+        if (loadingOverlay) {
+          loadingOverlay.style.opacity = '0';
+          setTimeout(function() {
+            if (loadingOverlay) loadingOverlay.style.display = 'none';
+          }, 400);
+        }
+      }
+
+      function showLoading() {
+        if (loadingOverlay) {
+          loadingOverlay.style.display = 'flex';
+          loadingOverlay.style.opacity = '1';
+        }
+      }
 
       setTimeout(function() { if (badge) badge.style.opacity = '0.2'; }, 6000);
 
@@ -1087,6 +1166,7 @@ app.get([
           if (p !== undefined && typeof p.then === 'function') {
             p.then(function() {
               isPlayPending = false;
+              hideLoading();
               updateDockUI();
               if (targetSoundEnabled) {
                 setTimeout(tryEnableAudioSafe, 250);
@@ -1096,12 +1176,13 @@ app.get([
               vid.muted = true;
               setTimeout(function() {
                 if (vid.paused && !isStreamUserPaused) {
-                  try { vid.play().then(updateDockUI).catch(function() {}); } catch(e) {}
+                  try { vid.play().then(function() { hideLoading(); updateDockUI(); }).catch(function() {}); } catch(e) {}
                 }
               }, 150);
             });
           } else {
             isPlayPending = false;
+            hideLoading();
             updateDockUI();
           }
         } catch(err) {
@@ -1219,6 +1300,17 @@ app.get([
         }
       });
 
+      vid.addEventListener('playing', function() {
+        hideLoading();
+        updateDockUI();
+      });
+
+      vid.addEventListener('timeupdate', function() {
+        if (vid.currentTime > 0) {
+          hideLoading();
+        }
+      });
+
       vid.addEventListener('canplay', function() {
         if (vid.paused && !isStreamUserPaused) {
           safePlay();
@@ -1298,8 +1390,16 @@ app.get([
           .catch(function() {});
       }
 
+      // Quét định kỳ mỗi 1s nếu chưa có nguồn video hoặc video chưa phát
+      setInterval(function() {
+        if (!vid.src || vid.paused || vid.readyState < 2) {
+          fetchLatestState();
+        }
+      }, 1000);
+
       vid.addEventListener('error', function() {
         console.warn('Video playback error, recovering state...');
+        showLoading();
         setTimeout(fetchLatestState, 400);
       });
 
@@ -1346,7 +1446,7 @@ app.get([
             }, 3000);
 
             socket.on('connect', function() {
-              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.0.5';
+              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.0.6';
               socket.emit('REQUEST_MASTER_LIVE_STATE');
             });
 
@@ -1863,7 +1963,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.0.5';
+  let ver = '4.0.6';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1901,7 +2001,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.0.5';
+  let ver = '4.0.6';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
