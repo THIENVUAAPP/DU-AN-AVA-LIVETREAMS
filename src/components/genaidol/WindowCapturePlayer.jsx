@@ -984,7 +984,7 @@ export default function WindowCapturePlayer() {
             zIndex: 10
           }}
         >
-          🔴 4K 60 FPS REALTIME v3.9.7 (OBS ZERO-COPY)
+          🔴 4K 60 FPS REALTIME v3.9.8 (OBS ZERO-COPY)
         </div>
       )}
     </div>

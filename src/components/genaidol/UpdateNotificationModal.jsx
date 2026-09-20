@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.9.7';
+export const APP_VERSION = '3.9.8';
 export const RELEASE_DATE = '20/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v3.9.8 - Hướng Dẫn & Khắc Phục Lỗi Xác Thực Trình Duyệt (Code 11) & Tối Ưu Header Vercel',
+    description: '1. Tối Ưu Cấu Hình Headers & WAF Vercel (vercel.json): Bổ sung đầy đủ CORS, X-Content-Type-Options và bypass các rào cản kiểm tra bot; 2. Hướng Dẫn Tắt Attack Challenge Mode / Bot Protection trên Vercel: Loại bỏ hoàn toàn màn hình "Failed to verify your browser (Code 11)"; 3. Mở Trực Tiếp Bản Cài Đặt Local & Cloudflare Tunnel 100% không qua WAF.'
+  },
   {
     title: '⚡ Bản Cập Nhật v3.9.7 - Xử Lý Triệt Để Lỗi Moov Atom Đuôi MP4, Nạp Tức Thì 0ms Window Capture & TikTok Live Studio',
     description: '1. Gửi Đồng Thời Head Chunk & Tail Chunk (Moov Atom) Trong 100ms: Khắc phục triệt để lỗi HTTP 416 màn hình đen trên mọi video dung lượng từ 100MB đến 50GB; 2. Nạp Video Trực Tiếp 0ms Window Capture: Ưu tiên phát trực tiếp Blob / Server URL với Hardware Acceleration 60 FPS 4K, loại bỏ hoàn toàn hiện tượng đen khung hình; 3. Đồng Bộ Trọn Vẹn Link TikTok Live Studio: Phát sóng siêu nét, không giật lag, không đứng hình.'
@@ -13,10 +17,6 @@ export const UPDATE_NOTES = [
   {
     title: '⚡ Bản Cập Nhật v3.9.6 - Khắc Phục Triệt Để Link Cloudflare Tunnel & Video Window Capture Hỗ Trợ 1GB-50GB',
     description: '1. Khóa Chặt Link Cloudflare Tunnel HTTPS (trycloudflare.com): Tuyệt đối không phục vụ link web Vercel không có media, đảm bảo TikTok Live Studio và OBS nạp video tức thì 0ms; 2. Phát Mượt Mọi Video 1GB - 50GB: Sửa lỗi Watchdog NaN và ưu tiên chính xác tham số URL trong Window Capture & Live Stream Player; 3. Bảo Vệ Toàn Diện Bộ Nhớ Video: Ngừng xoá file video người dùng, bảo toàn dữ liệu và tái sử dụng 100% video gốc theo đúng claude.md.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v3.9.5 - Khắc Phục Triệt Để Luồng Video Tải Lên & Đồng Bộ Đa Trình Duyệt (Chrome, Safari, Cốc Cốc, OBS)',
-    description: '1. Đồng Bộ Hoàn Hảo Video Tải Lên; 2. Tái Sử Dụng Video Gốc 100% 0ms; 3. Khóa Cứng Quy Chuẩn claude.md.'
   }
 ];
 
