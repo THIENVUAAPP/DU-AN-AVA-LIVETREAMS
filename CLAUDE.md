@@ -1,17 +1,18 @@
 # ☁️ CLAUDE & CLOUD MEDIA SPECIFICATION — QUY CHUẨN XỬ LÝ VIDEO & ĐỒNG BỘ LIVESTREAM (BẮT BUỘC DUY TRÌ)
 
 > **DỰ ÁN:** AVA LIVESTREAM VIP PRO  
-> **QUY TẮC BẮT BUỘC:** Duy trì vĩnh viễn trong mọi lần cập nhật, không chồng chéo dữ liệu, xử lý video tức thì 0ms cho Window Capture và TikTok Live Studio trên mọi nền tảng trình duyệt (Chrome, Safari, Cốc Cốc, Edge...).
+> **PHIÊN BẢN DUY TRÌ:** v3.9.5+  
+> **QUY TẮC BẮT BUỘC:** Duy trì vĩnh viễn trong mọi lần cập nhật, không chồng chéo dữ liệu, xử lý video tức thì 0ms cho Window Capture và TikTok Live Studio trên mọi nền tảng trình duyệt (Google Chrome, Safari, Cốc Cốc, Microsoft Edge, OBS Studio...).
 
 ---
 
 ## 1. 🛡️ NGUYÊN TẮC ZERO-OVERLAP MEDIA & CHỐNG CHỒNG CHÉO DỮ LIỆU
 
 1. **Mỗi Video Chỉ Tải Lên 1 Lần Duy Nhất (Single Source of Truth):**
-   - Khi người dùng chọn bất kỳ video nào từ máy tính (dù nặng vài trăm MB hay hàng chục GB, dài bao nhiêu tiếng):
-     - **Nếu video đã có trong hệ thống (`backend/uploads/` hoặc IndexedDB/Cache):** Tự động phát hiện qua `fileSignature` và `fileSize` (MD5 hash). Tái sử dụng **100% file gốc**, tuyệt đối **KHÔNG TẢI LẠI**, không nhân bản dung lượng ổ đĩa.
+   - Khi người dùng chọn bất kỳ video nào từ máy tính (dù dung lượng vài trăm MB hay 10GB - 50GB, dài bao nhiêu phút/tiếng):
+     - **Nếu video đã có trong hệ thống (`backend/uploads/` hoặc IndexedDB/Cache):** Hệ thống tự động so khớp `fileSignature`, `fileSize`, và MD5 Checksum. Tái sử dụng **100% file gốc**, tuyệt đối **KHÔNG TẢI LẠI**, không nhân bản dung lượng ổ đĩa.
      - **Nếu là video mới:** Chỉ lưu đúng **1 file duy nhất** vào hệ thống và kích hoạt phát ngay lập tức (0ms).
-   - Tự động dọn dẹp các bản sao trùng lặp (`cleanupDuplicateUploads`) và bảo toàn liên kết đang phát sóng trong `live_state.json`.
+   - Tiến trình `cleanupDuplicateUploads()` tự động dọn dẹp các bản sao trùng lặp và bảo toàn liên kết đang phát sóng trong `live_state.json`.
 
 2. **Xử Lý Video Dài Nhiều Giờ & Dung Lượng Lớn Tức Thì (0ms Fast-Stream):**
    - Áp dụng công nghệ **Fast-Stream Chunked Pipeline** & **HTTP 206 Partial Content (Byte-Range Streaming)**.
@@ -25,7 +26,7 @@
    - Mọi liên kết gửi sang Window Capture, TikTok Live Studio, và các trình duyệt (Google Chrome, Safari, Cốc Cốc, OBS Studio) BẮT BUỘC là đường dẫn **Server HTTP URL** (`/uploads/media-xxx.mp4` hoặc Online HTTPS URL).
    - Tuyệt đối **KHÔNG truyền `blob:` URL** sang các cửa sổ hoặc tiến trình khác, vì các trình duyệt khác không thể truy cập `blob:` URL tạo từ tab riêng biệt.
 
-2. **Chất Lượng Video Siêu Sắc Nét, Siêu Mượt 60 FPS (OBS Zero-Copy):**
+2. **Chất Lượng Video Siêu Thực, Siêu Sắc Nét, Siêu Mượt 60 FPS (OBS Zero-Copy):**
    - Window Capture chạy chế độ tăng tốc phần cứng GPU (Hardware Acceleration) 1080p/4K 60 FPS.
    - Chế độ Direct GPU Stream Cloner (`captureStream`) và In-Memory Hardware Blob cho phép phát 0ms không độ trễ, không giật lag, không đứng hình.
    - Tích hợp **Anti-Freeze Watchdog**: Tự động đánh thức bộ giải mã GPU và khôi phục luồng nếu trình duyệt hoặc TikTok Live Studio bị nghẽn buffer.

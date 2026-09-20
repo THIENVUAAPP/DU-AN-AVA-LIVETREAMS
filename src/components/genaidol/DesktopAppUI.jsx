@@ -2003,11 +2003,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     }
     setIsVideoPlaying(true);
 
+    const finalServerMediaUrl = (cleanUrl && !cleanUrl.startsWith('blob:')) ? cleanUrl : '';
+
     try {
       const bc = new BroadcastChannel('avalive_master_live_stream');
       bc.postMessage({
         type: 'GLOBAL_MEDIA_CHANGE',
-        mediaUrl: cleanUrl || blobUrl,
+        mediaUrl: finalServerMediaUrl || blobUrl,
         blobUrl: blobUrl,
         fileBlob: fileBlob,
         characterId: charItem.id,
@@ -2027,10 +2029,21 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       currentTime: 0,
       isPlaying: true,
       force: true,
-      mediaUrl: cleanUrl || blobUrl,
+      mediaUrl: finalServerMediaUrl || blobUrl,
       timestamp: Date.now()
     }, socketRef.current);
-  }, [customCharacters]);
+
+    syncMasterLiveState({
+      stage: 'idol',
+      selectedCharacter: charItem.id,
+      characterName: charItem.name || 'AI Idol',
+      mediaUrl: finalServerMediaUrl || null,
+      isVideo: true,
+      videoPlaybackEvent: 'play',
+      isPlaying: true,
+      aspectRatio: globalAspectRatio || '9:16'
+    }, socketRef.current);
+  }, [customCharacters, globalAspectRatio]);
 
   // Nút Bật/Tắt Video trên màn hình phần mềm: độc lập 100%, dùng để xem thử / kiểm tra video
   const toggleDesktopVideoPlayback = useCallback(() => {

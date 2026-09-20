@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.9.4';
-export const RELEASE_DATE = '19/09/2026';
+export const APP_VERSION = '3.9.5';
+export const RELEASE_DATE = '20/09/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '⚡ Bản Cập Nhật v3.9.5 - Khắc Phục Triệt Để Luồng Video Tải Lên & Đồng Bộ Đa Trình Duyệt (Chrome, Safari, Cốc Cốc, OBS)',
+    description: '1. Đồng Bộ Hoàn Hảo Video Tải Lên: Sửa triệt để sự kiện chọn nhân vật/video để tự động kích hoạt syncMasterLiveState và Server HTTP URL sang Window Capture và TikTok Live Studio; 2. Tái Sử Dụng Video Gốc 100% 0ms: Kiểm tra thông minh MD5 & fileSignature để không tải lại, không lưu chồng chéo dữ liệu dù video nặng hàng chục GB; 3. Khóa Cứng Quy Chuẩn claude.md: Đảm bảo luồng phát 4K 60 FPS siêu mượt, siêu nét, chống giật lag và không đứng hình.'
+  },
+  {
     title: '⚡ Bản Cập Nhật v3.9.4 - Đồng Bộ Đa Nền Tảng (Chrome, Safari, Cốc Cốc) & Chuẩn Hoá Zero-Overlap Media',
-    description: '1. Đồng Bộ Toàn Diện Window Capture & TikTok Live Studio: Kết nối mượt mà trên mọi trình duyệt (Google Chrome, Safari, Cốc Cốc, Edge, OBS), loại bỏ triệt để lỗi đường dẫn blob URL cục bộ; 2. Zero-Overlap Media & Tái Sử Dụng File Gốc 100%: Nhận diện tức thì video đã có trên máy và server, không tải lại, không lưu chồng chéo dữ liệu; 3. Quy Chuẩn claude.md & cloud.md: Khóa cứng tiêu chuẩn phát video 4K 60 FPS siêu mượt, xử lý tức thì video dài nhiều giờ và dung lượng lớn.'
+    description: '1. Đồng Bộ Toàn Diện Window Capture & TikTok Live Studio; 2. Zero-Overlap Media & Tái Sử Dụng File Gốc 100%; 3. Quy Chuẩn claude.md & cloud.md.'
   },
   {
     title: '⚡ Bản Cập Nhật v3.9.3 - Khắc Phục Triệt Để Video Window Capture & Đồng Bộ TikTok Live Studio Tức Thì',
     description: '1. Khắc Phục Lỗi Video Trên Window Capture; 2. Fallback Server Mạnh Mẽ; 3. Fix Port 5173 Dev → Backend 3001.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v3.9.2 - Đồng Bộ Cloud & Triệt Tiêu Trùng Lặp Media (Zero-Overlap Storage Spec)',
-    description: '1. Cơ Chế Chống Trùng Lặp Tuyệt Đối: Tự động phát hiện và ngăn chặn 100% video nạp lặp lại, giải phóng dung lượng bộ nhớ; 2. Quy Chuẩn Kỹ Thuật cloud.md.'
   }
 ];
 
