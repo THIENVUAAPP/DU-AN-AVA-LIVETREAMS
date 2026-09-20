@@ -1,7 +1,7 @@
 # ☁️ CLAUDE & CLOUD MEDIA SPECIFICATION — QUY CHUẨN XỬ LÝ VIDEO & ĐỒNG BỘ LIVESTREAM (BẮT BUỘC DUY TRÌ)
 
 > **DỰ ÁN:** AVA LIVESTREAM VIP PRO  
-> **PHIÊN BẢN DUY TRÌ:** v4.1.3+  
+> **PHIÊN BẢN DUY TRÌ:** v4.1.4+  
 > **QUY TẮC BẮT BUỘC:** Duy trì vĩnh viễn trong mọi lần cập nhật, không chồng chéo dữ liệu, xử lý video tức thì 0ms cho Window Capture và TikTok Live Studio trên mọi nền tảng trình duyệt (Google Chrome, Safari, Cốc Cốc, Microsoft Edge, OBS Studio...).
 > **QUY TẮC KHÓA CHẶT (STRICT TAB & SUBVIEW LOCK):** Toàn bộ các tab chức năng, subview và module không được yêu cầu đều được khóa chặt 100%. Chỉ kích hoạt lệnh và tương tác chính xác với subview/tab mục tiêu khi người dùng yêu cầu, không có bất kỳ lệnh ngoài luồng nào tác động chéo.
 
@@ -53,6 +53,53 @@ flowchart TD
     E --> F["Đồng bộ tức thì sang Window Capture (OBS)"]
     E --> G["Đồng bộ tức thì sang TikTok Live Studio (Chrome/Safari/Cốc Cốc)"]
 ```
+
+---
+
+## 4. 🎬 QUY CHUẨN THIẾT LẬP CHUỖI KỊCH BẢN LIVESTREAM TỰ ĐỘNG ĐA PHÂN ĐOẠN (AUTOMATED MULTI-SECTION FLOW SEQUENCER)
+
+### 1. Kiến Trúc Luồng Vận Hành Phiên Live Hoàn Chỉnh (6-Step Cycle):
+Hệ thống kết hợp các module hiện có (`AIAvatarStudio.jsx`, `WorkspaceTacVu.jsx`, `WorkspaceKeywordPanel.jsx`, `LiveCommerceStudio.jsx`) thành chuỗi phân đoạn tự động liên tiếp:
+
+```mermaid
+flowchart LR
+    S1["Section 1: AI Avatar Chia Sẻ Mở Màn"] --> S2["Section 2: AI Avatar Trả Lời Bình Luận Q&A"]
+    S2 --> S3["Section 3: Phát Video Giới Thiệu Sản Phẩm"]
+    S3 --> S4["Section 4: Phát Video Feedback / Review"]
+    S4 --> S5["Section 5: AI Avatar Tư Vấn & Bắt Từ Khóa"]
+    S5 --> S6["Section 6: Kêu Gọi CTA & Chốt Sale"]
+    S6 --> S1
+```
+
+### 2. Chi Tiết Từng Phân Đoạn (Sections) & Cấu Hình Thời Gian:
+- **Section 1 — AI Avatar Mở Màn & Chia Sẻ Kiến Thức (2 - 3 phút):**
+  - *Module phụ trách:* `WorkspaceTacVu` -> *Mục "Kịch bản Idol"* (`script_broadcast`).
+  - *Cơ chế:* AI đọc kịch bản giới thiệu theo thời gian định trước. Avatar nhép miệng tự động theo giọng đọc AI sinh ra.
+- **Section 2 — Tự Động Trả Lời Bình Luận TikTok Live (3 - 5 phút hoặc ngắt khi hết câu hỏi):**
+  - *Module phụ trách:* `WorkspaceTacVu` -> *Mục "Bình luận"* (`comment`) & *Bộ Não Voice AI*.
+  - *Cơ chế linh hoạt:*
+    - Khi có bình luận từ TikTok Live Studio: AI trích xuất câu hỏi -> tạo câu trả lời tức thì.
+    - Người dùng có thể chọn: Trả lời bằng **Voice AI + Video Avatar Lip-sync** (khi muốn Avatar xuất hiện nói trực tiếp), hoặc chỉ phát **Voice AI nền** (khi đang phát slide/video nền).
+- **Section 3 — Trình Chiếu Video Giới Thiệu Sản Phẩm (Setup theo thời lượng video: ví dụ 60s - 120s):**
+  - *Module phụ trách:* `WorkspaceTacVu` -> *Mục "Chốt đơn"* (`checkout`) / Thư viện Media.
+  - *Cơ chế:* Khi hết thời gian Section 2, hệ thống tự động chuyển luồng phát sang Video Sản phẩm tương ứng. Video chạy hết thời lượng (hoặc hết thời gian đặt trước) sẽ tự động trigger sang Section tiếp theo.
+- **Section 4 — Trình Chiếu Video Feedback / Trải Nghiệm Khách Hàng (30s - 60s):**
+  - *Module phụ trách:* `WorkspaceTacVu` / `WorkspaceKeywordPanel` (Media Trigger).
+  - *Cơ chế:* Phát các video review thực tế để gia tăng độ tin cậy và kích thích quyết định mua hàng.
+- **Section 5 — AI Avatar Tư Vấn Chuyên Sâu & Bắt Từ Khóa Giỏ Hàng (2 - 3 phút):**
+  - *Module phụ trách:* `WorkspaceKeywordPanel` (Auto-Pin & Keyword Trigger).
+  - *Cơ chế:* Khi khán giả bình luận các từ khóa như *"giá", "mua", "màu sắc", "ưu đãi"*, hệ thống tự động ghim sản phẩm lên màn hình và kích hoạt AI Avatar tư vấn cụ thể về sản phẩm đó.
+- **Section 6 — Kêu Gọi Hành Động (CTA) & Đếm Ngược Chốt Sale (1 - 2 phút):**
+  - *Module phụ trách:* `WorkspaceTacVu` -> *Mục "Kêu gọi tương tác"* (`call_to_action`).
+  - *Cơ chế:* AI đọc lời kêu gọi cấp bách: *"Khách yêu nhấn vào giỏ hàng góc trái màn hình ngay nhé, số lượng có hạn..."*.
+- **Vòng Lặp Tuần Hoàn Tự Động (Auto-Loop Endless Stream):**
+  - Sau khi hoàn thành Section 6, chuỗi tự động quay lại Section 1 với sản phẩm tiếp theo, vận hành 24/7 không cần can thiệp thủ công.
+
+### 3. Hướng Dẫn Thao Tác Cài Đặt Dành Cho Người Dùng:
+1. **Bước 1 — Chọn Nhân Vật Avatar & Giọng Đọc:** Tại tab *AIAvatarStudio*, chọn Avatar mong muốn và chọn giọng đọc AI yêu thích.
+2. **Bước 2 — Cài Đặt Kịch Bản & Thời Gian Phân Đoạn:** Tại *Workspace Tác Vụ*, nhập nội dung kịch bản cho từng phần hoặc bấm **"Nạp File"** để tải file kịch bản có sẵn.
+3. **Bước 3 — Nạp Video Sản Phẩm & Video Feedback:** Trong mục *Chốt đơn / Từ khóa*, chọn video cho từng sản phẩm và nhập thời gian phát (số giây/phút mong muốn).
+4. **Bước 4 — Bật Kết Nối TikTok Live Studio:** Lấy link Online HTTPS (`/live-stream`) dán vào TikTok Live Studio. Hệ thống sẽ tự động điều phối toàn bộ chuỗi sự kiện và phản hồi mượt mà 60 FPS 4K.
 
 ---
 

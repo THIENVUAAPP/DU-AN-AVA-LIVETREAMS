@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.1.3';
+export const APP_VERSION = '4.1.4';
 export const RELEASE_DATE = '20/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.1.4 - Chuẩn Hóa Chuỗi Kịch Bản Livestream Tự Động Đa Phân Đoạn & Vòng Lặp Bán Hàng 24/7',
+    description: '1. Quy Chuẩn Vận Hành Đa Phân Đoạn (Multi-Section Sequencer): Hỗ trợ thiết lập chuỗi sự kiện tự động tuần tự từ AI Avatar mở màn, phản hồi bình luận TikTok Live bằng Voice/Lip-sync, phát video sản phẩm, video feedback cho đến CTA chốt sale; 2. Tự Động Định Giờ & Chuyển Đoạn: Điều phối thời lượng phát từng video và tác vụ chính xác theo từng giây; 3. Khóa Chặt 100% Hệ Thống: Bảo toàn tuyệt đối mọi tab chức năng, subview và module không bị ảnh hưởng chéo.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.1.3 - Khóa Chặt Toàn Diện Các Tab Chức Năng, Subview & Cách Ly Tuyệt Đối Luồng Dữ Liệu',
     description: '1. Khóa Chặt Toàn Diện Các Tab & Subview: Cách ly hoàn toàn tất cả các tab chức năng (Idol AI, Window Capture, Game Battle, Game Bản Đồ 3D, Voice AI Brain, Livestream Studio) đảm bảo không có bất kỳ lệnh ngoài luồng nào tác động chéo; 2. Điều Hướng & Thực Thi Chuẩn Xác: Chỉ kích hoạt xử lý khi nhận đúng yêu cầu mục tiêu từ người dùng và đường link tương ứng; 3. Bảo Toàn Mã Nguồn & Trạng Thái: Đảm bảo độ ổn định 100% cho mọi module đang vận hành; 4. Tốc Độ & Độ Sắc Nét Cao Cấp: Duy trì 60 FPS 4K cho toàn bộ luồng phát TikTok Live Studio và OBS.'
