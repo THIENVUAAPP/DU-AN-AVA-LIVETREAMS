@@ -202,10 +202,32 @@ if (fs.existsSync(path.join(rootDir, 'certs'))) {
 fs.mkdirSync(path.join(winSystemDir, 'uploads'), { recursive: true });
 
 // Copy cloudflared.exe cho Windows Tunnel vào thư mục system
-const winCloudflaredSrc = path.join(rootDir, 'scripts', 'bin', 'cloudflared.exe');
-if (fs.existsSync(winCloudflaredSrc)) {
-  fs.copyFileSync(winCloudflaredSrc, path.join(winSystemDir, 'cloudflared.exe'));
-  console.log('   -> ✅ Đã tích hợp Cloudflare Tunnel (cloudflared.exe) cho Windows!');
+const winCloudflaredCandidates = [
+  path.join(rootDir, 'scripts', 'bin', 'cloudflared.exe'),
+  path.join(rootDir, '.cache_bin', 'cloudflared.exe'),
+  path.join(rootDir, 'system', 'cloudflared.exe')
+];
+let winCloudflaredFound = false;
+for (const c of winCloudflaredCandidates) {
+  if (fs.existsSync(c)) {
+    fs.copyFileSync(c, path.join(winSystemDir, 'cloudflared.exe'));
+    console.log(`   -> ✅ Đã tích hợp Cloudflare Tunnel (cloudflared.exe) cho Windows từ: ${c}`);
+    winCloudflaredFound = true;
+    break;
+  }
+}
+if (!winCloudflaredFound) {
+  try {
+    console.log('   -> Đang tải cloudflared.exe cho Windows...');
+    const dlTarget = path.join(winSystemDir, 'cloudflared.exe');
+    execSync(`curl -sL -o "${dlTarget}" "https://github.com/cloudflare/cloudflared/releases/latest/download/cloudflared-windows-amd64.exe"`);
+    fs.mkdirSync(path.join(rootDir, '.cache_bin'), { recursive: true });
+    fs.copyFileSync(dlTarget, path.join(rootDir, '.cache_bin', 'cloudflared.exe'));
+    console.log('   -> ✅ Đã tải và tích hợp Cloudflare Tunnel cho Windows thành công!');
+    winCloudflaredFound = true;
+  } catch (e) {
+    console.warn('   ⚠️ Không tải được cloudflared.exe:', e.message);
+  }
 }
 
 // Tạo file chạy EXE 1-CLICK cho Windows (Duy nhất 1 file, không trùng lặp)

@@ -2,17 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.1.0';
+export const APP_VERSION = '4.1.1';
 export const RELEASE_DATE = '20/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.1.0 - Khắc Phục Triệt Để Link Live TikTok Live Studio & Nhúng Sẵn Video Source Tức Thì 0ms',
-    description: '1. Nhúng Trực Tiếp Video Source: Server tự động nạp thẻ video src vào trang live ngay từ lần tải đầu tiên, TikTok Live Studio phát video ngay tức khắc trong 0ms; 2. Tối Ưu Hóa CORS & CSP Toàn Diện: Bổ sung cấu hình đa phương thức GET/HEAD/OPTIONS giúp TikTok Studio xác thực URL 100% hợp lệ không báo lỗi đỏ; 3. Đồng Bộ Tức Thì Thời Gian Thực: Phần mềm phát bất kỳ video nào thì luồng live chuyển đổi mượt mà 60 FPS 4K; 4. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS, Voice AI Brain, Game Battle, Game Bản Đồ.'
+    title: '⚡ Bản Cập Nhật v4.1.1 - Tích Hợp Đầy Đủ Cloudflare Tunnel Cho Windows Standalone & Nhúng Video Tự Động 100%',
+    description: '1. Đóng Gói Binary Cloudflare Windows: Tích hợp sẵn cloudflared.exe chính thức vào gói cài đặt Windows Standalone ZIP giúp mọi máy tính tự động tạo link HTTPS ngay khi mở app; 2. Tự Động Đẩy Video Sang Luồng Live: Video chọn trong app tự động nạp thẳng vào link TikTok Live Studio với tốc độ 60 FPS 4K; 3. Đồng Bộ Trực Tiếp Thời Gian Thực: Không cần thiết lập phức tạp, dán link là phát ngay tức thì; 4. Khóa Chặt 100% Toàn Bộ Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS, Voice AI Brain, Game Battle, Game Bản Đồ.'
   },
   {
-    title: '⚡ Bản Cập Nhật v4.0.9 - Tối Ưu Hóa Tuyệt Đối Đường Link TikTok Live Studio & Cơ Chế Sao Chép Chuẩn 100%',
-    description: '1. Chuẩn Hóa Link TikTok Live Studio: Loại bỏ toàn bộ ký tự rườm rà, tạo đường link HTTPS siêu sạch chuẩn 100% không bao giờ báo lỗi URL; 2. Cơ Chế Sao Chép Dự Phòng Fail-safe: Tự động bôi đen và copy link vào bộ nhớ tạm tức thì 0ms, không bao giờ bị cắt ngắn link; 3. Tích Hợp Link Dự Phòng Cloud Vercel: Thêm tùy chọn link online Vercel dự phòng tiện lợi; 4. Khóa Chặt 100% Toàn Bộ Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS, Voice AI Brain, Game Battle, Game Bản Đồ.'
+    title: '⚡ Bản Cập Nhật v4.1.0 - Khắc Phục Triệt Để Link Live TikTok Live Studio & Nhúng Sẵn Video Source Tức Thì 0ms',
+    description: '1. Nhúng Trực Tiếp Video Source: Server tự động nạp thẻ video src vào trang live ngay từ lần tải đầu tiên, TikTok Live Studio phát video ngay tức khắc trong 0ms; 2. Tối Ưu Hóa CORS & CSP Toàn Diện: Bổ sung cấu hình đa phương thức GET/HEAD/OPTIONS giúp TikTok Studio xác thực URL 100% hợp lệ không báo lỗi đỏ; 3. Đồng Bộ Tức Thì Thời Gian Thực: Phần mềm phát bất kỳ video nào thì luồng live chuyển đổi mượt mà 60 FPS 4K; 4. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS, Voice AI Brain, Game Battle, Game Bản Đồ.'
   }
 ];
 
