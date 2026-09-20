@@ -980,7 +980,7 @@ app.get([
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.1.1</title>
+  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.1.2</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -1003,21 +1003,18 @@ app.get([
     video {
       position: absolute;
       inset: 0;
-      width: 100%; height: 100%;
-      object-fit: ${fitParam};
+      width: 100vw; height: 100vh;
+      object-fit: cover;
       object-position: center center;
       background: #000;
       display: block;
       outline: none; border: none;
       image-rendering: -webkit-optimize-contrast;
-      image-rendering: crisp-edges;
       image-rendering: high-quality;
       transform: translateZ(0);
       -webkit-transform: translateZ(0);
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
-      -webkit-font-smoothing: antialiased;
-      will-change: transform;
     }
     #loadingOverlay {
       position: absolute;
@@ -1026,21 +1023,21 @@ app.get([
       flex-direction: column;
       align-items: center;
       justify-content: center;
-      background: radial-gradient(circle at center, #0f172a 0%, #020617 100%);
+      background: #000;
       color: #38bdf8;
       font-family: system-ui, -apple-system, sans-serif;
       z-index: 20;
-      transition: opacity 0.4s ease;
+      transition: opacity 0.3s ease;
       pointer-events: none;
     }
     .spinner {
-      width: 44px;
-      height: 44px;
+      width: 38px;
+      height: 38px;
       border: 3px solid rgba(56, 189, 248, 0.2);
       border-top-color: #38bdf8;
       border-radius: 50%;
       animation: spin 0.8s linear infinite;
-      margin-bottom: 12px;
+      margin-bottom: 10px;
     }
     @keyframes spin {
       to { transform: rotate(360deg); }
@@ -1048,28 +1045,23 @@ app.get([
     #controlsDock {
       position: absolute; top: 8px; right: 8px; z-index: 50;
       display: flex; align-items: center; gap: 6px;
-      background: rgba(0, 0, 0, 0.75);
+      background: rgba(0, 0, 0, 0.7);
       backdrop-filter: blur(8px);
       padding: 4px 8px; border-radius: 20px;
-      border: 1px solid rgba(6, 182, 212, 0.4);
-      opacity: 0.35; transition: opacity 0.25s ease;
+      border: 1px solid rgba(6, 182, 212, 0.3);
+      opacity: 0; transition: opacity 0.3s ease;
     }
-    #controlsDock:hover { opacity: 1; }
+    body:hover #controlsDock { opacity: 0.9; }
     .dock-btn {
-      background: rgba(255, 255, 255, 0.1);
+      background: rgba(255, 255, 255, 0.12);
       border: 1px solid rgba(255, 255, 255, 0.2);
-      color: #fff; font-size: 11px; font-weight: bold;
-      padding: 3px 8px; border-radius: 12px;
+      color: #fff; font-size: 10px; font-weight: bold;
+      padding: 3px 7px; border-radius: 10px;
       cursor: pointer; display: flex; align-items: center; gap: 4px;
-      transition: all 0.2s;
     }
-    .dock-btn:hover { background: rgba(6, 182, 212, 0.4); border-color: #06b6d4; }
+    .dock-btn:hover { background: rgba(6, 182, 212, 0.5); }
     #badge {
-      position: absolute; bottom: 8px; right: 8px;
-      background: rgba(0,0,0,0.6); color: #06b6d4;
-      font-family: monospace; font-size: 10px; font-weight: bold;
-      padding: 2px 6px; border-radius: 4px; pointer-events: none;
-      opacity: 0.7; z-index: 10;
+      display: none;
     }
   </style>
   <script src="/socket.io/socket.io.js" onerror="this.onerror=null; this.src='https://cdn.socket.io/4.7.5/socket.io.min.js';"></script>
@@ -1099,7 +1091,7 @@ app.get([
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.1.1</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.1.2</div>
   </div>
   <script>
     (function() {
@@ -1456,7 +1448,7 @@ app.get([
             }, 3000);
 
             socket.on('connect', function() {
-              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.1.1';
+              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.1.2';
               socket.emit('REQUEST_MASTER_LIVE_STATE');
             });
 
@@ -1973,7 +1965,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.1.1';
+  let ver = '4.1.2';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -2011,7 +2003,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.1.1';
+  let ver = '4.1.2';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));

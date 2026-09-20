@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.1.1';
+export const APP_VERSION = '4.1.2';
 export const RELEASE_DATE = '20/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.1.2 - Khung Hình Pristine 9:16 Tràn Viền Tinh Khiết Cho TikTok Live Studio & Tối Ưu Tải Trực Tiếp',
+    description: '1. Khung Hình Pristine 9:16 Tràn Viền: Tối ưu 100% tỷ lệ dọc 1080x1920 không viền đen, ẩn thanh điều khiển thừa giúp khung hình phát livestream sạch sẽ hoàn hảo; 2. Link Tải Trực Tiếp Tối Ưu: Phục vụ trực tiếp binary cài đặt mới nhất từ GitHub Releases/Vercel Edge, triệt tiêu hoàn toàn lỗi bot verification; 3. Đồng Bộ Tức Thì 0ms: Mọi thao tác đổi video từ phần mềm phản hồi tức thì với tốc độ 60 FPS 4K; 4. Khóa Chặt 100% Toàn Bộ Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle, Game Bản Đồ 3D.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.1.1 - Tích Hợp Đầy Đủ Cloudflare Tunnel Cho Windows Standalone & Nhúng Video Tự Động 100%',
     description: '1. Đóng Gói Binary Cloudflare Windows: Tích hợp sẵn cloudflared.exe chính thức vào gói cài đặt Windows Standalone ZIP giúp mọi máy tính tự động tạo link HTTPS ngay khi mở app; 2. Tự Động Đẩy Video Sang Luồng Live: Video chọn trong app tự động nạp thẳng vào link TikTok Live Studio với tốc độ 60 FPS 4K; 3. Đồng Bộ Trực Tiếp Thời Gian Thực: Không cần thiết lập phức tạp, dán link là phát ngay tức thì; 4. Khóa Chặt 100% Toàn Bộ Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS, Voice AI Brain, Game Battle, Game Bản Đồ.'
