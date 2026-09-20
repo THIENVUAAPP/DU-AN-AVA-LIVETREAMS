@@ -2043,6 +2043,28 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       isPlaying: true,
       aspectRatio: globalAspectRatio || '9:16'
     }, socketRef.current);
+
+    // 🚀 Nếu chưa có server URL (/uploads/...), tự động kích hoạt fastStreamUpload để lấy link server ngay trong 2ms cho TikTok Live Studio
+    if (!finalServerMediaUrl && fileBlob) {
+      fastStreamUpload(fileBlob, {
+        onInit: ({ fileUrl }) => {
+          if (fileUrl) {
+            setUserLockedMediaUrl(fileUrl);
+            try { localStorage.setItem('avalive_user_locked_media', fileUrl); } catch(e) {}
+            syncMasterLiveState({
+              stage: 'idol',
+              selectedCharacter: charItem.id,
+              characterName: charItem.name || 'AI Idol',
+              mediaUrl: fileUrl,
+              isVideo: true,
+              videoPlaybackEvent: 'play',
+              isPlaying: true,
+              aspectRatio: globalAspectRatio || '9:16'
+            }, socketRef.current);
+          }
+        }
+      }).catch(() => {});
+    }
   }, [customCharacters, globalAspectRatio]);
 
   // Nút Bật/Tắt Video trên màn hình phần mềm: độc lập 100%, dùng để xem thử / kiểm tra video
