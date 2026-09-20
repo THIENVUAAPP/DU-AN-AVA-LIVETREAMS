@@ -1020,7 +1020,7 @@ app.get([
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.0.2</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.0.3</div>
   </div>
   <script>
     (function() {
@@ -1148,11 +1148,11 @@ app.get([
         }
 
         // TỰ ĐỘNG PHÁT NGAY LẬP TỨC 0MS
-        if (!targetMuted) {
+        if (targetMuted) {
+          vid.muted = true;
+        } else {
           vid.muted = false;
           vid.volume = targetVolume || 1.0;
-        } else {
-          vid.muted = true;
         }
 
         const p = vid.play();
@@ -1160,13 +1160,19 @@ app.get([
           p.then(function() {
             updateDockUI();
           }).catch(function() {
+            // CEF Autoplay Policy fallback: phát ngay lập tức với muted để không bao giờ đen hình
             vid.muted = true;
             vid.play().then(function() {
               updateDockUI();
               if (!targetMuted) {
                 setTimeout(function() {
-                  try { vid.muted = false; vid.volume = targetVolume || 1.0; } catch(e) { vid.muted = true; }
-                }, 300);
+                  try {
+                    vid.muted = false;
+                    vid.volume = targetVolume || 1.0;
+                  } catch(e) {
+                    vid.muted = true;
+                  }
+                }, 500);
               }
             }).catch(function() {});
           });
@@ -1177,38 +1183,39 @@ app.get([
       // Tự động bảo vệ chống bị browser pause ngầm
       vid.addEventListener('pause', function() {
         if (!isStreamUserPaused) {
-          vid.muted = true;
-          vid.play().then(updateDockUI).catch(function() {});
+          vid.play().catch(function() {
+            vid.muted = true;
+            vid.play().catch(function() {});
+          });
         }
       });
 
       vid.addEventListener('canplay', function() {
         if (vid.paused && !isStreamUserPaused) {
-          vid.play().then(function() {
-            if (!targetMuted) {
-              setTimeout(function() {
-                try { vid.muted = false; vid.volume = targetVolume; } catch(e) { vid.muted = true; }
-              }, 300);
-            }
-            updateDockUI();
-          }).catch(function() {});
+          vid.play().catch(function() {
+            vid.muted = true;
+            vid.play().catch(function() {});
+          });
         }
       });
 
       vid.addEventListener('loadedmetadata', function() {
         if (vid.paused && !isStreamUserPaused) {
-          vid.play().then(function() {
-            if (!targetMuted) { vid.muted = false; vid.volume = targetVolume; }
-            updateDockUI();
-          }).catch(function() {});
+          vid.play().catch(function() {
+            vid.muted = true;
+            vid.play().catch(function() {});
+          });
         }
       });
 
       // Đảm bảo video lặp liên tục nhiều giờ liền không dừng
       vid.addEventListener('ended', function() {
         if (!isStreamUserPaused) {
-          try { vid.currentTime = 0; } catch(e) {}
-          vid.play().catch(function() {});
+          try { vid.currentTime = 0; } catch (e) {}
+          vid.play().catch(function() {
+            vid.muted = true;
+            vid.play().catch(function() {});
+          });
         }
       });
 
@@ -1224,6 +1231,18 @@ app.get([
           vid.play().catch(function() {});
         }
       });
+
+      // ⚡ CEF WATCHDOG: Kiểm tra mỗi 1 giây để bảo đảm video đang chạy 60 FPS liên tục
+      setInterval(function() {
+        if (!isStreamUserPaused && vid.src) {
+          if (vid.paused) {
+            vid.play().catch(function() {
+              vid.muted = true;
+              vid.play().catch(function() {});
+            });
+          }
+        }
+      }, 1000);
 
       function fetchLatestState() {
         fetch(window.location.origin + '/api/live-state')
@@ -1286,7 +1305,7 @@ app.get([
             }, 5000);
 
             socket.on('connect', function() {
-              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.0.2';
+              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.0.3';
               socket.emit('REQUEST_MASTER_LIVE_STATE');
             });
 
@@ -1803,7 +1822,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.0.1';
+  let ver = '4.0.3';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1841,7 +1860,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.0.1';
+  let ver = '4.0.3';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));

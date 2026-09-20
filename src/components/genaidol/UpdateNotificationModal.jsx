@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.0.2';
+export const APP_VERSION = '4.0.3';
 export const RELEASE_DATE = '20/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.0.2 - Khắc Phục Triệt Để Lỗi URL & Tối Ưu Stream Video 1GB - 50GB Dài Nhiều Tiếng Trên TikTok Live Studio (Windows & Mac)',
-    description: '1. Sửa Triệt Để Lỗi URL TikTok Live Studio: Mã hóa chuẩn RFC 3986 URI tham số video (loại bỏ 100% lỗi khoảng trắng, dấu câu hay ký tự tiếng Việt làm hỏng parser URL của TikTok Live Studio); 2. Tối Ưu Hóa HTTP 206 Streaming Chunked 4MB: Phục vụ theo khối dữ liệu tối ưu 4MB, loại bỏ hoàn toàn lỗi timeout 524 Cloudflare khi tải các video dung lượng lớn từ 1GB đến hàng chục GB dài nhiều giờ; 3. Mở Rộng Hỗ Trợ Toàn Diện Mọi Định Dạng Video: Hỗ trợ trọn vẹn MP4, WebM, MOV, MKV, AVI, TS, M4V, M3U8 siêu mượt 60 FPS không giật lag; 4. Bảo Toàn Tuyệt Đối: Khóa chặt 100% Window Capture và Bộ Não Voice AI.'
+    title: '⚡ Bản Cập Nhật v4.0.3 - Chuẩn Hóa Tự Động Phát & Chống Đứng Hình TikTok Live Studio, Tối Ưu Stream Video 50GB & Khóa Chặt 100% Hệ Thống',
+    description: '1. Khởi Chạy Tức Thì 0ms Trên TikTok Live Studio (CEF Chrome Bypass): Cơ chế Autoplay đa tầng tự động kích hoạt luồng phát mượt mà không bao giờ bị đứng hay đen hình; 2. CEF Anti-Stall Watchdog 1s: Tự động đánh thức bộ giải mã và khôi phục video tức thì nếu bị nghẽn buffer mạng; 3. Đồng Bộ Trực Tiếp Thời Gian Thực: Khi chọn bất kỳ video nào trên phần mềm, TikTok Live Studio đổi video ngay lập tức 0ms; 4. Lưu Trữ Quy Chuẩn cloudflare.md & Khóa Chặt Tuyệt Đối 100%: Bảo toàn toàn bộ các tab Window Capture, Bộ Não Voice AI và logic tính năng khác.'
+  },
+  {
+    title: '⚡ Bản Cập Nhật v4.0.2 - Khắc Phục Triệt Để Lỗi URL & Tối Ưu Stream Video 1GB - 50GB Dài Nhiều Tiếng Trên TikTok Live Studio',
+    description: '1. Sửa Triệt Để Lỗi URL TikTok Live Studio: Mã hóa chuẩn RFC 3986 URI tham số video; 2. Tối Ưu Hóa HTTP 206 Streaming Chunked 4MB: Phục vụ theo khối dữ liệu tối ưu 4MB, loại bỏ hoàn toàn lỗi timeout 524 Cloudflare; 3. Mở Rộng Hỗ Trợ Toàn Diện Mọi Định Dạng Video: MP4, WebM, MOV, MKV, AVI, TS, M4V, M3U8.'
   },
   {
     title: '⚡ Bản Cập Nhật v4.0.1 - Nâng Cấp Luồng Video TikTok Live Studio Siêu Sắc Nét 4K 60FPS & Khắc Phục Triệt Để Lỗi Kết Nối CEF',
-    description: '1. Luồng Phát Siêu Sắc Nét 4K 60 FPS (Pixel Mapping 1:1): Cấu hình tuyệt đối #stage và video tràn viền không gian thực, tối ưu hoá bộ lọc phần cứng image-rendering: high-quality và -webkit-optimize-contrast; 2. Sửa Triệt Để Lỗi Link URL / Media Error: Loại bỏ thẻ video rỗng, đồng bộ trực tiếp qua Socket.io và /api/live-state với retry tự động; 3. Bảo Toàn Tuyệt Đối Window Capture và Voice AI Brain.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v4.0.0 - Chuẩn Hóa Ưu Tiên Bộ Não Voice AI, Chống Chồng Chéo Giọng Đọc & Tối Ưu Giao Diện Web',
-    description: '1. Chuẩn Hóa Bộ Não Giọng Nói Voice AI (Ưu Tiên 100% Bộ Não); 2. Chống Chồng Chéo Giọng Đọc 100% (Single Audio Generation Lock); 3. Khắc Phục Lỗi Giao Diện Web & Code 11.'
+    description: '1. Luồng Phát Siêu Sắc Nét 4K 60 FPS (Pixel Mapping 1:1); 2. Sửa Triệt Để Lỗi Link URL / Media Error; 3. Bảo Toàn Tuyệt Đối Window Capture và Voice AI Brain.'
   }
 ];
 
