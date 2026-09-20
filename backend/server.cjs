@@ -901,6 +901,14 @@ app.get([
     if (fs.existsSync(checkFile)) {
       existsOnDisk = true;
       vParam = `/uploads/${filename}`;
+    } else {
+      try {
+        const decodedName = decodeURIComponent(filename);
+        if (fs.existsSync(path.join(uploadsDir, decodedName))) {
+          existsOnDisk = true;
+          vParam = `/uploads/${decodedName}`;
+        }
+      } catch(e) {}
     }
   }
   if (!existsOnDisk) {
@@ -931,7 +939,7 @@ app.get([
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer</title>
+  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.0.4</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -963,8 +971,8 @@ app.get([
       image-rendering: -webkit-optimize-contrast;
       image-rendering: crisp-edges;
       image-rendering: high-quality;
-      transform: translate3d(0, 0, 0);
-      -webkit-transform: translate3d(0, 0, 0);
+      transform: translateZ(0);
+      -webkit-transform: translateZ(0);
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
       -webkit-font-smoothing: antialiased;
@@ -977,7 +985,7 @@ app.get([
       backdrop-filter: blur(8px);
       padding: 4px 8px; border-radius: 20px;
       border: 1px solid rgba(6, 182, 212, 0.4);
-      opacity: 0.3; transition: opacity 0.25s ease;
+      opacity: 0.35; transition: opacity 0.25s ease;
     }
     #controlsDock:hover { opacity: 1; }
     .dock-btn {
@@ -1013,14 +1021,13 @@ app.get([
       preload="auto" 
       muted
       disableRemotePlayback
-      crossorigin="anonymous"
     ></video>
     <div id="controlsDock">
       <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập">⏸️ Dừng</button>
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.0.3</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.0.4</div>
   </div>
   <script>
     (function() {
@@ -1032,9 +1039,13 @@ app.get([
 
       let currentSrc = ${JSON.stringify(vParam)};
       let isStreamUserPaused = false;
-      let targetMuted = ${soundParam ? 'false' : 'true'};
+      let targetSoundEnabled = ${soundParam ? 'true' : 'false'};
       let targetVolume = 1.0;
       let currentFit = ${JSON.stringify(fitParam)};
+
+      // Khởi tạo video luôn bắt đầu với muted để 100% CEF TikTok Live Studio / OBS cho phép phát ngay 0ms
+      vid.muted = true;
+      vid.defaultMuted = true;
 
       setTimeout(function() { if (badge) badge.style.opacity = '0.2'; }, 6000);
 
@@ -1050,12 +1061,33 @@ app.get([
         }
       }
 
+      function tryEnableAudioSafe() {
+        if (!targetSoundEnabled) return;
+        try {
+          vid.muted = false;
+          vid.volume = targetVolume;
+          if (vid.paused && !isStreamUserPaused) {
+            // CEF chặn unmuted -> quay lại muted ngay để video tiếp tục phát 60 FPS
+            vid.muted = true;
+            vid.play().catch(function() {});
+          }
+        } catch (e) {
+          vid.muted = true;
+        }
+      }
+
       if (btnPlayPause) {
         btnPlayPause.addEventListener('click', function(e) {
           e.stopPropagation();
           if (vid.paused) {
             isStreamUserPaused = false;
-            vid.play().then(updateDockUI).catch(function() {});
+            vid.play().then(function() {
+              updateDockUI();
+              tryEnableAudioSafe();
+            }).catch(function() {
+              vid.muted = true;
+              vid.play().then(updateDockUI).catch(function() {});
+            });
           } else {
             isStreamUserPaused = true;
             vid.pause();
@@ -1067,11 +1099,18 @@ app.get([
       if (btnMuteUnmute) {
         btnMuteUnmute.addEventListener('click', function(e) {
           e.stopPropagation();
-          targetMuted = !targetMuted;
-          vid.muted = targetMuted;
-          if (!targetMuted) {
+          targetSoundEnabled = !targetSoundEnabled;
+          if (targetSoundEnabled) {
+            vid.muted = false;
             vid.volume = targetVolume;
-            if (vid.paused && !isStreamUserPaused) vid.play().catch(function() {});
+            if (vid.paused && !isStreamUserPaused) {
+              vid.play().catch(function() {
+                vid.muted = true;
+                vid.play().catch(function() {});
+              });
+            }
+          } else {
+            vid.muted = true;
           }
           updateDockUI();
         });
@@ -1147,68 +1186,49 @@ app.get([
           try { vid.currentTime = forceSeekTime; } catch(e) {}
         }
 
-        // TỰ ĐỘNG PHÁT NGAY LẬP TỨC 0MS
-        if (targetMuted) {
-          vid.muted = true;
-        } else {
-          vid.muted = false;
-          vid.volume = targetVolume || 1.0;
-        }
-
+        // Luôn kích hoạt phát với muted trước để vượt rào cản CEF 100%
+        vid.muted = true;
+        vid.defaultMuted = true;
         const p = vid.play();
         if (p !== undefined) {
           p.then(function() {
             updateDockUI();
+            if (targetSoundEnabled) {
+              setTimeout(tryEnableAudioSafe, 250);
+            }
           }).catch(function() {
-            // CEF Autoplay Policy fallback: phát ngay lập tức với muted để không bao giờ đen hình
             vid.muted = true;
             vid.play().then(function() {
               updateDockUI();
-              if (!targetMuted) {
-                setTimeout(function() {
-                  try {
-                    vid.muted = false;
-                    vid.volume = targetVolume || 1.0;
-                  } catch(e) {
-                    vid.muted = true;
-                  }
-                }, 500);
-              }
             }).catch(function() {});
           });
         }
         updateDockUI();
       }
 
-      // Tự động bảo vệ chống bị browser pause ngầm
+      // 🛡️ ANTI-PAUSE GUARDIAN: Tự động phát lại ngay nếu trình duyệt CEF vô tình pause
       vid.addEventListener('pause', function() {
         if (!isStreamUserPaused) {
-          vid.play().catch(function() {
-            vid.muted = true;
-            vid.play().catch(function() {});
-          });
+          vid.muted = true;
+          vid.play().catch(function() {});
         }
       });
 
       vid.addEventListener('canplay', function() {
         if (vid.paused && !isStreamUserPaused) {
-          vid.play().catch(function() {
-            vid.muted = true;
-            vid.play().catch(function() {});
-          });
+          vid.muted = true;
+          vid.play().catch(function() {});
         }
       });
 
       vid.addEventListener('loadedmetadata', function() {
         if (vid.paused && !isStreamUserPaused) {
-          vid.play().catch(function() {
-            vid.muted = true;
-            vid.play().catch(function() {});
-          });
+          vid.muted = true;
+          vid.play().catch(function() {});
         }
       });
 
-      // Đảm bảo video lặp liên tục nhiều giờ liền không dừng
+      // Đảm bảo video lặp liên tục nhiều giờ liền không bao giờ dừng
       vid.addEventListener('ended', function() {
         if (!isStreamUserPaused) {
           try { vid.currentTime = 0; } catch (e) {}
@@ -1232,17 +1252,30 @@ app.get([
         }
       });
 
-      // ⚡ CEF WATCHDOG: Kiểm tra mỗi 1 giây để bảo đảm video đang chạy 60 FPS liên tục
+      // ⚡ CEF WATCHDOG: Kiểm tra mỗi 500ms để bảo đảm video đang chạy 60 FPS liên tục & chống đứng hình
+      let lastObservedTime = -1;
+      let freezeCounter = 0;
       setInterval(function() {
         if (!isStreamUserPaused && vid.src) {
-          if (vid.paused) {
-            vid.play().catch(function() {
-              vid.muted = true;
-              vid.play().catch(function() {});
-            });
+          if (vid.paused || vid.ended) {
+            vid.muted = true;
+            vid.play().catch(function() {});
+          } else if (vid.readyState >= 2) {
+            if (vid.currentTime === lastObservedTime && !vid.seeking) {
+              freezeCounter++;
+              if (freezeCounter >= 3) {
+                // Video bị kẹt hình 1.5s -> kick nhẹ currentTime và play
+                try { vid.currentTime += 0.04; } catch(e) {}
+                vid.play().catch(function() {});
+                freezeCounter = 0;
+              }
+            } else {
+              freezeCounter = 0;
+              lastObservedTime = vid.currentTime;
+            }
           }
         }
-      }, 1000);
+      }, 500);
 
       function fetchLatestState() {
         fetch(window.location.origin + '/api/live-state')
@@ -1274,8 +1307,10 @@ app.get([
       }
 
       window.addEventListener('click', function() {
-        if (!targetMuted) vid.muted = false;
-        vid.volume = targetVolume;
+        if (targetSoundEnabled) {
+          vid.muted = false;
+          vid.volume = targetVolume;
+        }
         if (vid.paused && !isStreamUserPaused) vid.play().then(updateDockUI).catch(function() {});
       });
 
@@ -1305,7 +1340,7 @@ app.get([
             }, 5000);
 
             socket.on('connect', function() {
-              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.0.3';
+              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.0.4';
               socket.emit('REQUEST_MASTER_LIVE_STATE');
             });
 
@@ -1822,7 +1857,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.0.3';
+  let ver = '4.0.4';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1860,7 +1895,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.0.3';
+  let ver = '4.0.4';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
