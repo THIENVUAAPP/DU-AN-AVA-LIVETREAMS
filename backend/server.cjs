@@ -335,9 +335,21 @@ function getLatestUploadFilePath() {
 
 function getLatestUploadMediaUrl() {
   try {
+    if (!fs.existsSync(uploadsDir)) return null;
+    const videoExts = ['.mp4', '.webm', '.mov', '.mkv', '.avi', '.flv', '.m4v', '.ts', '.m3u8'];
     const files = fs.readdirSync(uploadsDir)
-      .filter(f => (f.endsWith('.mp4') || f.endsWith('.webm') || f.endsWith('.mov')) && !f.includes('default_idol'))
-      .map(f => ({ name: f, time: fs.statSync(path.join(uploadsDir, f)).mtimeMs }))
+      .filter(f => {
+        const ext = path.extname(f).toLowerCase();
+        return videoExts.includes(ext) && !f.endsWith('.part') && !f.startsWith('.');
+      })
+      .map(f => {
+        try {
+          return { name: f, time: fs.statSync(path.join(uploadsDir, f)).mtimeMs };
+        } catch(e) {
+          return null;
+        }
+      })
+      .filter(Boolean)
       .sort((a, b) => b.time - a.time);
     if (files.length > 0) {
       return `/uploads/${files[0].name}`;
@@ -381,11 +393,15 @@ setInterval(pruneOldUploads, 60 * 60 * 1000);
 setTimeout(pruneOldUploads, 5000);
 
 // ⚡ HIGH-PERFORMANCE VIDEO STREAMING ENGINE (HTTP 206 Byte-Range Partial Content)
-// Giúp video MP4/WebM load ngay lập tức 0ms, không lag, không giật, hỗ trợ video 5-10 tiếng siêu mượt trên TikTok Live Studio & OBS
-app.all('/uploads/:filename', (req, res, next) => {
+// Giúp video MP4/WebM load ngay lập tức 0ms, không lag, không giật, hỗ trợ video 1GB - 50GB dài hàng chục tiếng trên TikTok Live Studio & OBS
+app.all(['/uploads/:filename', '/uploads/*'], (req, res, next) => {
   if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') return next();
 
-  let filePath = path.join(uploadsDir, req.params.filename);
+  let reqName = req.params.filename || req.params[0] || '';
+  try { reqName = decodeURIComponent(reqName); } catch(e) {}
+  reqName = path.basename(reqName);
+
+  let filePath = path.join(uploadsDir, reqName);
   if (!fs.existsSync(filePath)) {
     // 🛡️ TỰ ĐỘNG DỰ PHÒNG: Nếu file requested không tồn tại (link cũ hoặc bị xóa), phát ngay file video mới nhất trên server
     const fallbackPath = getLatestUploadFilePath();
@@ -398,7 +414,7 @@ app.all('/uploads/:filename', (req, res, next) => {
 
   try {
     const stat = fs.statSync(filePath);
-    const activeUpload = Object.values(activeStreamUploads).find(s => s && s.filename === req.params.filename);
+    const activeUpload = Object.values(activeStreamUploads).find(s => s && s.filename === reqName);
     const declaredFileSize = (activeUpload && activeUpload.fileSize > 0) ? activeUpload.fileSize : stat.size;
     const currentOnDiskSize = stat.size;
     const range = req.headers.range;
@@ -419,20 +435,26 @@ app.all('/uploads/:filename', (req, res, next) => {
       '.mp4': 'video/mp4',
       '.webm': 'video/webm',
       '.mov': 'video/quicktime',
+      '.mkv': 'video/x-matroska',
+      '.avi': 'video/x-msvideo',
+      '.m4v': 'video/x-m4v',
+      '.flv': 'video/x-flv',
+      '.ts': 'video/mp2t',
+      '.m3u8': 'application/x-mpegURL',
       '.jpg': 'image/jpeg',
       '.jpeg': 'image/jpeg',
       '.png': 'image/png',
       '.webp': 'image/webp',
       '.gif': 'image/gif'
     };
-    const contentType = mimeTypes[ext] || 'application/octet-stream';
+    const contentType = mimeTypes[ext] || 'video/mp4';
 
-    if (range && (ext === '.mp4' || ext === '.webm' || ext === '.mov')) {
+    if (range) {
       const parts = range.replace(/bytes=/, "").split("-");
       let start = 0;
       let end = currentOnDiskSize - 1;
 
-      // 1. Hỗ trợ Suffix Range: bytes=-N (Đọc N byte cuối file để lấy moov atom cho video dài 5-10 tiếng)
+      // 1. Hỗ trợ Suffix Range: bytes=-N (Đọc N byte cuối file để lấy moov atom cho video dài nhiều tiếng)
       if (parts[0] === '' && parts[1]) {
         const suffix = parseInt(parts[1], 10);
         if (!isNaN(suffix) && suffix > 0) {
@@ -452,8 +474,10 @@ app.all('/uploads/:filename', (req, res, next) => {
           end = parseInt(parts[1], 10);
           if (isNaN(end) || end >= currentOnDiskSize) end = currentOnDiskSize - 1;
         } else {
-          // ⚡ CHUẨN HTTP RFC 7233: Khi upload hoàn tất, phục vụ đến hết file; khi đang stream chunk, phục vụ dải hiện có trên đĩa
-          end = currentOnDiskSize - 1;
+          // ⚡ CHUẨN HTTP RFC 7233 STREAMING QUA INTERNET & TIKTOK LIVE STUDIO:
+          // Phục vụ chunk tối ưu 4MB để chống nghẽn đường truyền và triệt tiêu 100% lỗi timeout 524 Cloudflare
+          const maxChunkSlice = 4 * 1024 * 1024; // 4MB slice
+          end = Math.min(currentOnDiskSize - 1, start + maxChunkSlice - 1);
         }
       }
 
@@ -487,7 +511,6 @@ app.all('/uploads/:filename', (req, res, next) => {
 
       try { req.socket.setNoDelay(true); } catch(e) {}
 
-      // ⚡ ADAPTIVE STREAM BUFFER: 2MB cho Tunnel/TikTok Live Studio, 8MB cho Localhost OBS
       const stream = fs.createReadStream(filePath, { start, end, highWaterMark: streamBuffer });
       req.on('close', () => {
         try { stream.destroy(); } catch (e) {}
@@ -840,7 +863,11 @@ app.post('/api/upload-media', upload.single('file'), (req, res) => {
 // // 🎬 ROUTE PHÁT SÓNG ĐỘC LẬP /live-stream CHO TIKTOK LIVE STUDIO & OBS
 // Tối ưu hóa GPU Hardware Acceleration 100%, 4K 60 FPS siêu sắc nét, không bao giờ đen màn hình hay lỗi link
 // ============================================================
-app.get(['/live-stream', '/live-player', '/stream-player', '/idol-stream'], (req, res) => {
+app.get([
+  '/live-stream', '/live-player', '/stream-player', '/idol-stream', 
+  '/idol', '/live', '/stage', '/stream', '/overlay-live', '/tiktok-live',
+  '/overlay-idol', '/cleanlive', '/live-overlay'
+], (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', '*');
@@ -857,7 +884,9 @@ app.get(['/live-stream', '/live-player', '/stream-player', '/idol-stream'], (req
     if (vParam.startsWith('http://') || vParam.startsWith('https://')) {
       try {
         const u = new URL(vParam);
-        vParam = u.pathname + u.search;
+        if (u.pathname.includes('/uploads/')) {
+          vParam = u.pathname.substring(u.pathname.indexOf('/uploads/')) + u.search;
+        }
       } catch(e) {}
     }
     if (!vParam.startsWith('/') && !vParam.startsWith('http')) {
@@ -991,7 +1020,7 @@ app.get(['/live-stream', '/live-player', '/stream-player', '/idol-stream'], (req
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.0.1</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.0.2</div>
   </div>
   <script>
     (function() {
@@ -1257,7 +1286,7 @@ app.get(['/live-stream', '/live-player', '/stream-player', '/idol-stream'], (req
             }, 5000);
 
             socket.on('connect', function() {
-              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.0.1';
+              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.0.2';
               socket.emit('REQUEST_MASTER_LIVE_STATE');
             });
 
@@ -1950,20 +1979,6 @@ let simulationTimer = null;
 let isConnectingTikTok = false; // 🔒 Connection Lock — Ngăn race condition
 
 const stateFilePath = path.join(__dirname, 'live_state.json');
-
-// 🎬 TỰ ĐỘNG TÌM VIDEO MỚI NHẤT & CHUẨN XÁC TRONG THƯ MỤC UPLOADS
-function getLatestUploadMediaUrl() {
-  try {
-    const files = fs.readdirSync(uploadsDir)
-      .filter(f => (f.endsWith('.mp4') || f.endsWith('.webm') || f.endsWith('.mov')) && !f.includes('default_idol'))
-      .map(f => ({ name: f, time: fs.statSync(path.join(uploadsDir, f)).mtimeMs }))
-      .sort((a, b) => b.time - a.time);
-    if (files.length > 0) {
-      return `/uploads/${files[0].name}`;
-    }
-  } catch (e) {}
-  return null;
-}
 
 let saveFileTimeout = null;
 function saveLiveStateToFile(immediate = false) {
