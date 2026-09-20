@@ -45,15 +45,24 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
   });
 
   useEffect(() => {
-    const fetchLiveMedia = () => {
-      fetch('/api/live-state')
-        .then(res => res.json())
-        .then(data => {
-          if (data && data.mediaUrl && !data.mediaUrl.startsWith('blob:')) {
-            setServerLiveMediaUrl(data.mediaUrl);
+    const fetchLiveMedia = async () => {
+      const endpoints = [
+        '/api/live-state',
+        'http://127.0.0.1:3001/api/live-state',
+        'http://localhost:3001/api/live-state'
+      ];
+      for (const ep of endpoints) {
+        try {
+          const res = await fetch(ep, { signal: AbortSignal.timeout(2000) });
+          if (res && res.ok) {
+            const data = await res.json();
+            if (data && data.mediaUrl && !data.mediaUrl.startsWith('blob:')) {
+              setServerLiveMediaUrl(data.mediaUrl);
+              break;
+            }
           }
-        })
-        .catch(() => {});
+        } catch (e) {}
+      }
     };
     fetchLiveMedia();
     const timer = setInterval(fetchLiveMedia, 3000);
@@ -314,9 +323,10 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     let baseUrl = '';
 
     // 1. Ưu tiên hàng đầu: Link Cloudflare Tunnel HTTPS (trycloudflare.com / Nền tảng thứ ba)
-    let effectiveTunnel = (tunnelData?.status === 'active' && tunnelData?.tunnelUrl && tunnelData.tunnelUrl.startsWith('https://'))
-      ? tunnelData.tunnelUrl
-      : null;
+    let effectiveTunnel = null;
+    if (tunnelData?.tunnelUrl && tunnelData.tunnelUrl.startsWith('https://')) {
+      effectiveTunnel = tunnelData.tunnelUrl;
+    }
 
     if (!effectiveTunnel && typeof window !== 'undefined') {
       try {
@@ -453,7 +463,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
               <h2 className="text-base font-black text-white tracking-wide flex items-center gap-2">
                 <span>TRUNG TÂM PHÁT SÓNG TIKTOK LIVE STUDIO & OBS</span>
                 <span className="text-[10px] bg-gradient-to-r from-cyan-500 to-blue-600 text-white px-2 py-0.5 rounded-full font-bold">
-                  v4.0.4 ONLINE
+                  v4.0.5 ONLINE
                 </span>
               </h2>
               <p className="text-xs text-gray-400 font-medium">
