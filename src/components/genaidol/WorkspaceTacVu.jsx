@@ -537,8 +537,8 @@ const getDefaultEventConfigs = () => {
   return defaults;
 };
 
-export default function WorkspaceTacVu() {
-  const [selectedEventId, setSelectedEventId] = useState('script_broadcast');
+export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
+  const [selectedEventId, setSelectedEventId] = useState(defaultEventId);
   const [showMultiAvatarModal, setShowMultiAvatarModal] = useState(false);
   
   // Khởi tạo và nạp bền vững vĩnh viễn dữ liệu người dùng đã cài đặt

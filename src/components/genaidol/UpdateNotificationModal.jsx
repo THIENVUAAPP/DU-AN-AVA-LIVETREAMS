@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.1.5';
+export const APP_VERSION = '4.1.6';
 export const RELEASE_DATE = '20/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.1.6 - Hiển Thị Trực Quan Nút Bấm Chuỗi Kịch Bản (Sequencer) & Mở Mặc Định 100%',
+    description: '1. Hiển Thị Nổi Bật Trên Thanh Điều Khiển: Bổ sung nút bấm trực tiếp "🎬 CHUỖI KỊCH BẢN" ngay trên thanh công cụ chính và menu ứng dụng giúp người dùng nhìn thấy và mở ngay lập tức; 2. Nạp Mặc Định Chuỗi Kịch Bản: Mở trực tiếp giao diện Sequencer với đầy đủ Preset mẫu khi mở Cài đặt Sự kiện; 3. Đồng Bộ Hoàn Hảo 60 FPS 4K: Giữ nguyên vẹn 100% tất cả các tab chức năng đã khóa.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.1.5 - Tích Hợp Chính Thức Trình Điều Phối Chuỗi Kịch Bản Phân Đoạn & Quản Lý Preset Đa Dạng',
     description: '1. Trình Điều Phối Chuỗi Kịch Bản Trực Quan: Bổ sung module Điều Phối Chuỗi Kịch Bản (Sequencer) ngay trong Workspace Tác Vụ, cho phép lưu trữ và chuyển đổi linh hoạt giữa nhiều Preset bán hàng (Mỹ phẩm, Thời trang, Gia dụng...); 2. Tự Động Hóa Vận Hành 24/7: Tự động điều phối chuyển bước từ AI Avatar mở màn, Q&A bình luận TikTok Live, phát video sản phẩm, video feedback đến CTA chốt sale; 3. Đồng Bộ 0ms Chuẩn 60 FPS 4K: Chuyển đổi mượt mà không độ trễ trên TikTok Live Studio và OBS; 4. Khóa Chặt 100% Toàn Bộ Module: Bảo toàn tuyệt đối mọi tab chức năng hiện có.'

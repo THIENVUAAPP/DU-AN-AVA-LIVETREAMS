@@ -4844,6 +4844,17 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         
         {/* Left Side: Settings & Payment */}
         <div className="flex items-center gap-2 shrink-0">
+          
+          {/* Nút Trực Tiếp Mở Chuỗi Kịch Bản Phân Đoạn (Sequencer) */}
+          <button
+            onClick={() => setActiveSettingsModal('workspace')}
+            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all shadow-md cursor-pointer bg-gradient-to-r from-rose-600 via-pink-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white animate-pulse"
+            title="Mở Trình Điều Phối Chuỗi Kịch Bản Phân Đoạn & Preset Livestream"
+          >
+            <Layers size={14} />
+            <span className="tracking-wide uppercase font-black">🎬 CHUỖI KỊCH BẢN</span>
+          </button>
+
           <div className="relative shrink-0">
             <button 
               onClick={() => setIsSettingsDropdownOpen(!isSettingsDropdownOpen)}
@@ -4857,6 +4868,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             {isSettingsDropdownOpen && (
               <div className={`absolute top-full left-0 mt-2 w-72 rounded-2xl shadow-2xl border z-50 p-2.5 overflow-hidden ${isDarkMode ? 'bg-[#181824]/98 border-gray-700 text-white shadow-black/80' : 'bg-white border-gray-200 text-slate-800 shadow-xl'} animate-in fade-in slide-in-from-top-2 duration-200 backdrop-blur-xl`}>
                 
+                {/* 0. CHUỖI KỊCH BẢN LIVE (SEQUENCER) */}
+                <button 
+                  onClick={() => { setActiveSettingsModal('workspace'); setIsSettingsDropdownOpen(false); }}
+                  className={`w-full text-left px-3 py-2 mb-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-rose-950/70 to-pink-900/50 hover:from-rose-600 hover:to-pink-600 text-rose-100 hover:text-white border border-rose-700/60 shadow-md' : 'bg-rose-50 hover:bg-rose-500 text-rose-800 hover:text-white border border-rose-200'}`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Layers size={16} className="text-rose-400 shrink-0" />
+                    <span className="font-black uppercase tracking-tight">🎬 Chuỗi Kịch Bản (Sequencer)</span>
+                  </div>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-rose-600 text-white shadow-xs">MỚI</span>
+                </button>
+
                 {/* 1. BỘ NÃO AI */}
                 <button 
                   onClick={() => { setActiveSettingsModal('general'); setIsSettingsDropdownOpen(false); }}
