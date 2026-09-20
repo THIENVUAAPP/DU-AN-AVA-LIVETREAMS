@@ -20,8 +20,21 @@ export default function LiveStreamStandalonePlayer() {
 
   const [videoSrc, setVideoSrc] = useState(() => {
     if (typeof window === 'undefined') return '';
+    const params = new URLSearchParams(window.location.search);
+    const v = params.get('v');
+    if (v && !v.startsWith('blob:')) return v;
+
+    const charParam = params.get('char');
+
     // ⚡ ƯU TIÊN 0: Trực tiếp lấy fileBlob hoặc Blob URL nếu cùng máy / mở từ phần mềm
     try {
+      if (charParam && window.opener && window.opener.__activeMediaBlobMap && window.opener.__activeMediaBlobMap.get(charParam)) {
+        const charBlob = window.opener.__activeMediaBlobMap.get(charParam);
+        if (charBlob instanceof Blob || charBlob instanceof File) {
+          return URL.createObjectURL(charBlob);
+        }
+      }
+
       if (window.opener) {
         if (window.opener.__activeMediaBlob && (window.opener.__activeMediaBlob instanceof Blob || window.opener.__activeMediaBlob instanceof File)) {
           return URL.createObjectURL(window.opener.__activeMediaBlob);
@@ -46,9 +59,6 @@ export default function LiveStreamStandalonePlayer() {
       }
     } catch (e) {}
 
-    const params = new URLSearchParams(window.location.search);
-    const v = params.get('v');
-    if (v && !v.startsWith('blob:')) return v;
     try {
       const activeSrc = localStorage.getItem('avalive_active_video_src');
       if (activeSrc && !activeSrc.startsWith('blob:')) return activeSrc;
@@ -432,8 +442,12 @@ export default function LiveStreamStandalonePlayer() {
           if (freezeCount >= 2) {
             // Nudge nhẹ video tiếp tục phát 0ms nếu bộ giải mã CEF bị đứng
             try {
-              vid.currentTime = (cur + 0.02) % (vid.duration || 1000);
-              vid.play().catch(() => {});
+              const dur = (typeof vid.duration === 'number' && !isNaN(vid.duration) && vid.duration > 0) ? vid.duration : 36000;
+              const nextTime = (cur + 0.02) % dur;
+              if (typeof nextTime === 'number' && !isNaN(nextTime)) {
+                vid.currentTime = nextTime;
+                vid.play().catch(() => {});
+              }
             } catch (e) {}
             freezeCount = 0;
           }
@@ -698,7 +712,7 @@ export default function LiveStreamStandalonePlayer() {
           zIndex: 10
         }}
       >
-        🔴 4K 60 FPS REALTIME v3.9.5 (TIKTOK LIVE)
+        🔴 4K 60 FPS REALTIME v3.9.6 (TIKTOK LIVE)
       </div>
     </div>
   );

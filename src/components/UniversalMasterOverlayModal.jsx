@@ -313,23 +313,37 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
   const getProjectOverlayUrl = (path) => {
     let baseUrl = '';
 
-    // 1. Ưu tiên hàng đầu: Link Cloudflare Tunnel HTTPS ĐANG HOẠT ĐỘNG THỰC TẾ
-    const effectiveTunnel = (tunnelData?.status === 'active' && tunnelData?.tunnelUrl && tunnelData.tunnelUrl.startsWith('https://'))
+    // 1. Ưu tiên hàng đầu: Link Cloudflare Tunnel HTTPS (trycloudflare.com / Nền tảng thứ ba)
+    let effectiveTunnel = (tunnelData?.status === 'active' && tunnelData?.tunnelUrl && tunnelData.tunnelUrl.startsWith('https://'))
       ? tunnelData.tunnelUrl
       : null;
 
-    if (tunnelData?.projects?.[path] && effectiveTunnel) {
-      baseUrl = tunnelData.projects[path];
-    } else if (effectiveTunnel) {
-      const targetRoute = (path === 'idol') ? 'live-stream' : path;
+    if (!effectiveTunnel && typeof window !== 'undefined') {
+      try {
+        const directTunnel = localStorage.getItem('avalive_tunnel_url');
+        if (directTunnel && directTunnel.startsWith('https://')) effectiveTunnel = directTunnel;
+        if (!effectiveTunnel) {
+          const tData = JSON.parse(localStorage.getItem('avalive_tunnel_data') || '{}');
+          if (tData.tunnelUrl && tData.tunnelUrl.startsWith('https://')) effectiveTunnel = tData.tunnelUrl;
+        }
+        if (!effectiveTunnel) {
+          const master = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
+          if (master.tunnelUrl && master.tunnelUrl.startsWith('https://')) effectiveTunnel = master.tunnelUrl;
+        }
+      } catch (e) {}
+    }
+
+    const targetRoute = (path === 'idol' || path === 'live-stream') ? 'live-stream' : path;
+
+    if (effectiveTunnel) {
       baseUrl = `${effectiveTunnel.replace(/\/$/, '')}/${targetRoute}`;
     } else {
       const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
-      if (currentOrigin && currentOrigin.startsWith('https://') && !currentOrigin.includes('localhost') && !currentOrigin.includes('127.0.0.1')) {
-        baseUrl = `${currentOrigin}/${path === 'idol' ? 'live-stream' : path}`;
+      if (currentOrigin && currentOrigin.startsWith('https://') && !currentOrigin.includes('localhost') && !currentOrigin.includes('127.0.0.1') && !currentOrigin.includes('vercel.app')) {
+        baseUrl = `${currentOrigin}/${targetRoute}`;
       } else {
-        // Fallback Online Cloud Production chính thức 100% (Vercel HTTPS luôn luôn chạy 24/7 không bao giờ lỗi 1033)
-        baseUrl = `https://avalivepro.vercel.app/${path === 'idol' ? 'live-stream' : path}`;
+        // Fallback Cloud
+        baseUrl = `https://avalivepro.vercel.app/${targetRoute}`;
       }
     }
 

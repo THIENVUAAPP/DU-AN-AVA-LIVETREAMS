@@ -30,8 +30,21 @@ export default function WindowCapturePlayer() {
 
   const [videoSrc, setVideoSrc] = useState(() => {
     if (typeof window === 'undefined') return '';
+    const params = new URLSearchParams(window.location.search);
+    const v = params.get('v');
+    if (v && !v.startsWith('blob:') && !v.startsWith('data:')) return v;
+
+    const charParam = params.get('char');
+
     // ⚡ NẠP TỨC THÌ NGUỒN VIDEO GỐC TỪ PHẦN MỀM CHÍNH (0ms, 0 byte mạng, nguyên bản siêu nét)
     try {
+      if (charParam && window.opener && window.opener.__activeMediaBlobMap && window.opener.__activeMediaBlobMap.get(charParam)) {
+        const charBlob = window.opener.__activeMediaBlobMap.get(charParam);
+        if (charBlob instanceof Blob || charBlob instanceof File) {
+          return URL.createObjectURL(charBlob);
+        }
+      }
+
       if (window.opener) {
         if (window.opener.__activeMediaBlob && (window.opener.__activeMediaBlob instanceof Blob || window.opener.__activeMediaBlob instanceof File)) {
           return URL.createObjectURL(window.opener.__activeMediaBlob);
@@ -64,9 +77,6 @@ export default function WindowCapturePlayer() {
       }
     } catch (e) {}
 
-    const params = new URLSearchParams(window.location.search);
-    const v = params.get('v');
-    if (v && !v.startsWith('blob:') && !v.startsWith('data:')) return v;
     try {
       const activeSrc = localStorage.getItem('avalive_active_video_src');
       if (activeSrc && !activeSrc.startsWith('blob:') && !activeSrc.startsWith('data:')) return activeSrc;
@@ -619,8 +629,12 @@ export default function WindowCapturePlayer() {
           if (stuckCount >= 2) {
             // Nudge nhẹ 0.01s để đánh thức GPU decoder nếu bị đứng khung hình
             try {
-              v.currentTime = (v.currentTime + 0.01) % (v.duration || 1000);
-              v.play().catch(() => {});
+              const dur = (typeof v.duration === 'number' && !isNaN(v.duration) && v.duration > 0) ? v.duration : 36000;
+              const nextTime = (v.currentTime + 0.01) % dur;
+              if (typeof nextTime === 'number' && !isNaN(nextTime)) {
+                v.currentTime = nextTime;
+                v.play().catch(() => {});
+              }
             } catch (e) {}
             stuckCount = 0;
           }
@@ -962,7 +976,7 @@ export default function WindowCapturePlayer() {
             zIndex: 10
           }}
         >
-          🔴 4K 60 FPS REALTIME v3.9.5 (OBS ZERO-COPY)
+          🔴 4K 60 FPS REALTIME v3.9.6 (OBS ZERO-COPY)
         </div>
       )}
     </div>

@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.9.5';
+export const APP_VERSION = '3.9.6';
 export const RELEASE_DATE = '20/09/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '⚡ Bản Cập Nhật v3.9.6 - Khắc Phục Triệt Để Link Cloudflare Tunnel & Video Window Capture Hỗ Trợ 1GB-50GB',
+    description: '1. Khóa Chặt Link Cloudflare Tunnel HTTPS (trycloudflare.com): Tuyệt đối không phục vụ link web Vercel không có media, đảm bảo TikTok Live Studio và OBS nạp video tức thì 0ms; 2. Phát Mượt Mọi Video 1GB - 50GB: Sửa lỗi Watchdog NaN và ưu tiên chính xác tham số URL trong Window Capture & Live Stream Player; 3. Bảo Vệ Toàn Diện Bộ Nhớ Video: Ngừng xoá file video người dùng, bảo toàn dữ liệu và tái sử dụng 100% video gốc theo đúng claude.md.'
+  },
+  {
     title: '⚡ Bản Cập Nhật v3.9.5 - Khắc Phục Triệt Để Luồng Video Tải Lên & Đồng Bộ Đa Trình Duyệt (Chrome, Safari, Cốc Cốc, OBS)',
-    description: '1. Đồng Bộ Hoàn Hảo Video Tải Lên: Sửa triệt để sự kiện chọn nhân vật/video để tự động kích hoạt syncMasterLiveState và Server HTTP URL sang Window Capture và TikTok Live Studio; 2. Tái Sử Dụng Video Gốc 100% 0ms: Kiểm tra thông minh MD5 & fileSignature để không tải lại, không lưu chồng chéo dữ liệu dù video nặng hàng chục GB; 3. Khóa Cứng Quy Chuẩn claude.md: Đảm bảo luồng phát 4K 60 FPS siêu mượt, siêu nét, chống giật lag và không đứng hình.'
+    description: '1. Đồng Bộ Hoàn Hảo Video Tải Lên; 2. Tái Sử Dụng Video Gốc 100% 0ms; 3. Khóa Cứng Quy Chuẩn claude.md.'
   },
   {
     title: '⚡ Bản Cập Nhật v3.9.4 - Đồng Bộ Đa Nền Tảng (Chrome, Safari, Cốc Cốc) & Chuẩn Hoá Zero-Overlap Media',
     description: '1. Đồng Bộ Toàn Diện Window Capture & TikTok Live Studio; 2. Zero-Overlap Media & Tái Sử Dụng File Gốc 100%; 3. Quy Chuẩn claude.md & cloud.md.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v3.9.3 - Khắc Phục Triệt Để Video Window Capture & Đồng Bộ TikTok Live Studio Tức Thì',
-    description: '1. Khắc Phục Lỗi Video Trên Window Capture; 2. Fallback Server Mạnh Mẽ; 3. Fix Port 5173 Dev → Backend 3001.'
   }
 ];
 

@@ -361,26 +361,23 @@ function pruneOldUploads() {
           return null;
         }
       })
-      .filter(Boolean)
-      .sort((a, b) => b.time - a.time);
+      .filter(Boolean);
 
-    // Giữ lại tối đa 5 file mới nhất + file đang phát sóng
-    if (files.length > 5) {
-      const filesToRemove = files.slice(5);
-      for (const item of filesToRemove) {
-        if (item.name !== activeFilename && !item.name.includes(activeFilename)) {
-          try {
-            fs.unlinkSync(item.fullPath);
-            console.log(`[AutoCleaner] 🧹 Đã dọn dẹp file video test cũ: ${item.name}`);
-          } catch (delErr) {}
-        }
+    // 🛡️ CHỈ DỌN DẸP CÁC FILE TẠM .part BỊ BỎ DỞ QUÁ 24 GIỜ (KHÔNG BAO GIỜ XOÁ VIDEO HOÀN CHỈNH CỦA NGƯỜI DÙNG)
+    const now = Date.now();
+    for (const item of files) {
+      if (item.name.includes('.part') && (now - item.time > 24 * 60 * 60 * 1000)) {
+        try {
+          fs.unlinkSync(item.fullPath);
+          console.log(`[AutoCleaner] 🧹 Đã dọn dẹp file upload tạm bị bỏ dở: ${item.name}`);
+        } catch (delErr) {}
       }
     }
   } catch (err) {}
 }
 
-// Chạy dọn dẹp định kỳ mỗi 30 phút
-setInterval(pruneOldUploads, 30 * 60 * 1000);
+// Chạy dọn dẹp định kỳ mỗi 60 phút
+setInterval(pruneOldUploads, 60 * 60 * 1000);
 setTimeout(pruneOldUploads, 5000);
 
 // ⚡ HIGH-PERFORMANCE VIDEO STREAMING ENGINE (HTTP 206 Byte-Range Partial Content)
@@ -1769,7 +1766,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '3.9.5';
+  let ver = '3.9.6';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1807,7 +1804,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '3.9.5';
+  let ver = '3.9.6';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
