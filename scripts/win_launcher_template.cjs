@@ -53,7 +53,7 @@ const child = spawn(nodeBin, ['core.cjs'], {
 child.unref();
 
 // 4. Kiểm tra cổng 3001 phản hồi HTTP trước khi mở giao diện (Tránh tuyệt đối lỗi ERR_CONNECTION_REFUSED)
-const targetUrl = 'http://localhost:3001/desktop';
+const targetUrl = 'http://localhost:3001/';
 
 function openBrowser() {
   const edge = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
@@ -92,12 +92,12 @@ function openBrowser() {
 let retries = 0;
 const checkInterval = setInterval(() => {
   retries++;
-  const req = http.get('http://127.0.0.1:3001/desktop', (res) => {
+  const req = http.get('http://127.0.0.1:3001/api/health', (res) => {
     clearInterval(checkInterval);
     openBrowser();
   });
   req.on('error', () => {
-    if (retries >= 50) { // Chờ tối đa 10 giây
+    if (retries >= 30) {
       clearInterval(checkInterval);
       openBrowser();
     }

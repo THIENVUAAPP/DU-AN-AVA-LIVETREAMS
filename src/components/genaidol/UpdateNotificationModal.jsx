@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.0.7';
+export const APP_VERSION = '4.0.8';
 export const RELEASE_DATE = '20/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.0.8 - Khắc Phục Triệt Để Lỗi Mở Ứng Dụng Trên Windows & Ổn Định 1 Đường Link Cố Định Duy Nhất TikTok Live Studio',
+    description: '1. Sửa Triệt Để Lỗi Khởi Động Windows: Khắc phục xung đột Express 5 route parser trong bundle core.cjs giúp mở ứng dụng ngay tức thì trên mọi máy Windows; 2. Cố Định 1 Đường Link Duy Nhất: Tối ưu Cloudflare Tunnel duy trì 1 đường link duy nhất cố định không bao giờ thay đổi hay ngắt kết nối; 3. Đồng Bộ Trực Tiếp Windows & Mac: Phần mềm phát video nào thì TikTok Live Studio tự động nhận diện và phát ngay siêu nét 60 FPS; 4. Khóa Chặt 100% Toàn Bộ Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS, Voice AI Brain, Game Battle, Game Bản Đồ.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.0.7 - Khắc Phục Triệt Để Mất Kết Nối Link TikTok Live Studio & Ổn Định Tuyệt Đối 100%',
     description: '1. Ổn Định Tuyệt Đối Cloudflare Tunnel: Triệt tiêu hiện tượng tự đổi link / tắt luồng sau vài phút; 2. Auto-Upload Server URL Tức Thì 2ms: Tự động tạo link server chuẩn ngay khi chọn bất kỳ video nào trên máy; 3. Đồng Bộ Đa Điểm 60 FPS: Nạp và duy trì luồng phát siêu mượt 4K, không bao giờ ngắt kết nối; 4. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS, Voice AI Brain, Game Battle, Game Bản Đồ.'
@@ -13,10 +17,6 @@ export const UPDATE_NOTES = [
   {
     title: '⚡ Bản Cập Nhật v4.0.6 - Xử Lý Triệt Để Màn Hình Đen TikTok Live Studio, Nạp Video Đa Thư Mục & Đồng Bộ Tức Thì 0ms',
     description: '1. Triệt Tiêu 100% Lỗi Màn Hình Đen: Bổ sung lớp Loading Overlay thông minh và bộ điều hướng nguồn video tức thì; 2. Đa Thư Mục Uploads Fallback: Tự động phân giải chính xác vị trí file video trên mọi môi trường độc lập (Windows/Mac/Dev); 3. Polling & Watchdog 1s Tự Động Kết Nối: Ngay khi dán link vào TikTok Live Studio, video phát ngay mượt mà 60 FPS siêu nét; 4. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS, Voice AI Brain, Game Battle, Game Bản Đồ.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v4.0.5 - Khắc Phục Triệt Để Hiển Thị Video Trên TikTok Live Studio, Đồng Bộ Đa Điểm & Khóa Chặt Hệ Thống',
-    description: '1. Đột Phá safePlay Engine: Loại bỏ xung đột AbortError Promise trên Chromium CEF, video nạp và phát ngay tức khắc 0ms; 2. Tự Động Phục Hồi Tunnel & Link Chuẩn: Quét đồng thời đa kênh (Local REST, Socket.io, Cloudflare) đảm bảo đường link luôn phát đúng video đang chạy trên app; 3. Đồng Bộ Trực Tiếp Thời Gian Thực: Phần mềm phát video nào thì TikTok Live Studio tự động chuyển đổi sang video đó siêu mượt 60 FPS; 4. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS, Voice AI Brain, Game Battle, Game Bản Đồ.'
   }
 ];
 

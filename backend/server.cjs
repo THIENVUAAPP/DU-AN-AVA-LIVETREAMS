@@ -61,15 +61,25 @@ app.use(cors());
 app.use(express.json());
 
 // Phục vụ frontend từ thư mục app hoặc dist
-const distPath = fs.existsSync(path.join(__dirname, 'app'))
-  ? path.join(__dirname, 'app')
-  : fs.existsSync(path.join(__dirname, '../app'))
-  ? path.join(__dirname, '../app')
-  : fs.existsSync(path.join(__dirname, '../dist'))
-  ? path.join(__dirname, '../dist')
-  : fs.existsSync(path.join(__dirname, './dist'))
-  ? path.join(__dirname, './dist')
-  : null;
+const candidateDistPaths = [
+  path.join(__dirname, 'app'),
+  path.join(__dirname, 'dist'),
+  path.join(process.cwd(), 'app'),
+  path.join(process.cwd(), 'dist'),
+  path.join(process.cwd(), 'system', 'app'),
+  path.join(process.cwd(), 'system', 'dist'),
+  path.join(__dirname, '../app'),
+  path.join(__dirname, '../dist'),
+  path.join(__dirname, './dist')
+];
+
+let distPath = null;
+for (const p of candidateDistPaths) {
+  if (fs.existsSync(p) && fs.existsSync(path.join(p, 'index.html'))) {
+    distPath = p;
+    break;
+  }
+}
 
 if (distPath) {
   console.log(`[AvaLive] ✅ Phục vụ Frontend Static từ: ${distPath}`);
@@ -433,10 +443,10 @@ setTimeout(pruneOldUploads, 5000);
 
 // ⚡ HIGH-PERFORMANCE VIDEO STREAMING ENGINE (HTTP 206 Byte-Range Partial Content)
 // Giúp video MP4/WebM load ngay lập tức 0ms, không lag, không giật, hỗ trợ video 1GB - 50GB dài hàng chục tiếng trên TikTok Live Studio & OBS
-app.all(['/uploads/:filename', '/uploads/*'], (req, res, next) => {
+app.all(['/uploads/:filename', /^\/uploads\/.*/], (req, res, next) => {
   if (req.method !== 'GET' && req.method !== 'HEAD' && req.method !== 'OPTIONS') return next();
 
-  let reqName = req.params.filename || req.params[0] || '';
+  let reqName = req.params.filename || req.path.replace(/^\/uploads\/?/, '') || '';
   try { reqName = decodeURIComponent(reqName); } catch(e) {}
   reqName = path.basename(reqName);
 
@@ -970,7 +980,7 @@ app.get([
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.0.7</title>
+  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.0.8</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -1089,7 +1099,7 @@ app.get([
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.0.7</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.0.8</div>
   </div>
   <script>
     (function() {
@@ -1446,7 +1456,7 @@ app.get([
             }, 3000);
 
             socket.on('connect', function() {
-              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.0.7';
+              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.0.8';
               socket.emit('REQUEST_MASTER_LIVE_STATE');
             });
 
@@ -1963,7 +1973,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.0.7';
+  let ver = '4.0.8';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -2001,7 +2011,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.0.7';
+  let ver = '4.0.8';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));

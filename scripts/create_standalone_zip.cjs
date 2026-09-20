@@ -126,7 +126,7 @@ start "" /B "%NODE_BIN%" core.cjs > server_log.txt 2>&1
 cd /d "%~dp0"
 
 :: 3. Cho server san sang tren cong 3001 (Polling kiem tra san sang)
-set "URL=http://localhost:3001/desktop"
+set "URL=http://localhost:3001/"
 set /a attempts=0
 
 :WAIT_LOOP
@@ -189,8 +189,9 @@ fs.mkdirSync(winSystemDir, { recursive: true });
 // Copy compiled backend core
 fs.copyFileSync(bundledCorePath, path.join(winSystemDir, 'core.cjs'));
 
-// Copy compiled frontend dist into system/app
+// Copy compiled frontend dist into system/app and system/dist
 execSync(`cp -R "${path.join(rootDir, 'dist')}" "${path.join(winSystemDir, 'app')}"`);
+execSync(`cp -R "${path.join(rootDir, 'dist')}" "${path.join(winSystemDir, 'dist')}"`);
 
 // Copy certs if exist
 if (fs.existsSync(path.join(rootDir, 'certs'))) {
@@ -363,8 +364,9 @@ fs.mkdirSync(macSystemDir, { recursive: true });
 // Copy compiled backend core
 fs.copyFileSync(bundledCorePath, path.join(macSystemDir, 'core.cjs'));
 
-// Copy compiled frontend dist into system/app
+// Copy compiled frontend dist into system/app and system/dist
 execSync(`cp -R "${path.join(rootDir, 'dist')}" "${path.join(macSystemDir, 'app')}"`);
+execSync(`cp -R "${path.join(rootDir, 'dist')}" "${path.join(macSystemDir, 'dist')}"`);
 
 // Copy certs if exist
 if (fs.existsSync(path.join(rootDir, 'certs'))) {
