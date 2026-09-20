@@ -370,7 +370,7 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
        if (finalMedia.includes('/uploads/')) {
          finalMedia = finalMedia.substring(finalMedia.indexOf('/uploads/'));
        }
-       baseUrl = `${baseUrl}${glue}v=${encodeURIComponent(finalMedia)}`;
+       baseUrl = `${baseUrl}${glue}v=${finalMedia}`;
        glue = '&';
     }
 

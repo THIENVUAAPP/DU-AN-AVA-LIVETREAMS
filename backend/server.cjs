@@ -839,9 +839,20 @@ app.post('/api/upload-media', upload.single('file'), (req, res) => {
 // 🎬 ROUTE PHÁT SÓNG ĐỘC LẬP /live-stream CHO TIKTOK LIVE STUDIO & OBS
 // Tối ưu hóa GPU Hardware Acceleration 100%, 4K 60 FPS siêu mượt, không bao giờ đen màn hình
 // ============================================================
-app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
+app.get(['/live-stream', '/live-player', '/stream-player', '/idol-stream'], (req, res) => {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', '*');
+  res.setHeader('X-Frame-Options', 'ALLOWALL');
+  res.setHeader('Content-Security-Policy', "default-src * 'unsafe-inline' 'unsafe-eval' data: blob: gap:; frame-ancestors *;");
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+  res.setHeader('Content-Type', 'text/html; charset=utf-8');
+
   let vParam = req.query.v || currentMasterLiveState.mediaUrl || '';
   if (vParam && typeof vParam === 'string') {
+    try {
+      vParam = decodeURIComponent(vParam);
+    } catch(e) {}
     if (vParam.startsWith('http://') || vParam.startsWith('https://')) {
       try {
         const u = new URL(vParam);
@@ -852,6 +863,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       vParam = '/' + vParam;
     }
   }
+
   let existsOnDisk = false;
   if (vParam && typeof vParam === 'string' && vParam.includes('/uploads/')) {
     const filename = vParam.substring(vParam.indexOf('/uploads/') + 9).split('?')[0];
@@ -861,12 +873,23 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       vParam = `/uploads/${filename}`;
     }
   }
-  if (!vParam || !existsOnDisk || vParam.startsWith('blob:') || vParam.includes('default_idol.mp4')) {
+  if (!existsOnDisk) {
+    if (currentMasterLiveState && currentMasterLiveState.mediaUrl && currentMasterLiveState.mediaUrl.includes('/uploads/')) {
+      const mFilename = currentMasterLiveState.mediaUrl.substring(currentMasterLiveState.mediaUrl.indexOf('/uploads/') + 9).split('?')[0];
+      if (fs.existsSync(path.join(uploadsDir, mFilename))) {
+        existsOnDisk = true;
+        vParam = `/uploads/${mFilename}`;
+      }
+    }
+  }
+  if (!existsOnDisk) {
     const latestUrl = getLatestUploadMediaUrl();
     if (latestUrl) {
       vParam = latestUrl;
+      existsOnDisk = true;
     }
   }
+
   const soundParam = req.query.sound !== '0';
   const ratioParam = req.query.ratio || '9:16';
   const fitParam = req.query.fit || 'cover';
@@ -938,7 +961,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       opacity: 0.7; z-index: 10;
     }
   </style>
-  <script src="/socket.io/socket.io.js"></script>
+  <script src="/socket.io/socket.io.js" onerror="this.onerror=null; this.src='https://cdn.socket.io/4.7.5/socket.io.min.js';"></script>
 </head>
 <body>
   <div id="stage">
@@ -949,10 +972,10 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       playsinline 
       webkit-playsinline 
       x5-video-player-type="h5" 
+      x5-playsinline
       loop 
       preload="auto" 
       muted
-      crossorigin="anonymous"
       disableRemotePlayback
     ></video>
     <div id="controlsDock">
@@ -960,7 +983,7 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v1.3.4</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v3.9.9</div>
   </div>
   <script>
     (function() {
@@ -1010,16 +1033,23 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       }
 
       function resolveUrl(url) {
-        if (!url) return '';
+        if (!url || typeof url !== 'string') return '';
         if (url.startsWith('blob:')) return '';
+        try { url = decodeURIComponent(url); } catch(e) {}
         if (url.startsWith('http://') || url.startsWith('https://')) {
-          if (url.includes('localhost:') || url.includes('127.0.0.1:')) {
+          if (url.includes('localhost:') || url.includes('127.0.0.1:') || url.includes('vercel.app')) {
             try {
               const u = new URL(url);
-              return window.location.origin + u.pathname + u.search;
+              if (u.pathname.startsWith('/uploads/')) {
+                return window.location.origin + u.pathname + u.search;
+              }
             } catch(e) {}
           }
           return url;
+        }
+        if (url.startsWith('/uploads/') || url.includes('/uploads/')) {
+          const pathPart = url.substring(url.indexOf('/uploads/'));
+          return window.location.origin + pathPart;
         }
         if (url.startsWith('/')) return window.location.origin + url;
         return window.location.origin + '/' + url;
@@ -1028,8 +1058,9 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       // 🎬 NẠP VÀ PHÁT VIDEO 4K 60 FPS LIỀN MẠCH TUYỆT ĐỐI (KHÔNG BAO GIỜ ĐEN MÀN HÌNH)
       function loadAndPlay(url, forceSeekTime) {
         if (!url) {
-          url = currentSrc || '/uploads/media-1789044811424-233037063.mp4';
+          url = currentSrc || '';
         }
+        if (!url) return;
         const fullUrl = resolveUrl(url);
         if (!fullUrl) return;
 
@@ -1121,50 +1152,6 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
         }
       });
 
-      vid.addEventListener('error', function() {
-        if (!isStreamUserPaused && currentSrc) {
-          setTimeout(function() {
-            vid.load();
-            vid.play().catch(function() {});
-          }, 300);
-        }
-      });
-
-      if (btnPlayPause) {
-        btnPlayPause.addEventListener('click', function(e) {
-          e.stopPropagation();
-          if (vid.paused) {
-            isStreamUserPaused = false;
-            vid.play().then(updateDockUI).catch(function() {});
-          } else {
-            isStreamUserPaused = true;
-            vid.pause();
-            updateDockUI();
-          }
-        });
-      }
-
-      if (btnMuteUnmute) {
-        btnMuteUnmute.addEventListener('click', function(e) {
-          e.stopPropagation();
-          targetMuted = !vid.muted;
-          vid.muted = targetMuted;
-          if (!targetMuted) {
-            vid.volume = targetVolume || 1.0;
-          }
-          updateDockUI();
-        });
-      }
-
-      if (btnFitToggle) {
-        btnFitToggle.addEventListener('click', function(e) {
-          e.stopPropagation();
-          currentFit = currentFit === 'cover' ? 'contain' : 'cover';
-          vid.style.objectFit = currentFit;
-          updateDockUI();
-        });
-      }
-
       function fetchLatestState() {
         fetch(window.location.origin + '/api/live-state')
           .then(function(res) { return res.json(); })
@@ -1185,18 +1172,6 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       vid.addEventListener('error', function() {
         console.warn('Video error occurred, attempting state recovery...');
         setTimeout(fetchLatestState, 500);
-      });
-
-      // Tự động phục hồi nếu luồng mạng bị lag mà không làm giật khung hình
-      vid.addEventListener('waiting', function() {
-        if (!isStreamUserPaused && vid.paused) {
-          vid.play().catch(function() {});
-        }
-      });
-      vid.addEventListener('stalled', function() {
-        if (!isStreamUserPaused && vid.paused) {
-          vid.play().catch(function() {});
-        }
       });
 
       fetchLatestState();
@@ -1222,50 +1197,52 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
       });
 
       try {
-        const socket = io(window.location.origin, { 
-          transports: ['websocket', 'polling'],
-          reconnection: true,
-          reconnectionAttempts: 999,
-          reconnectionDelay: 1000
-        });
+        if (typeof io !== 'undefined') {
+          const socket = io(window.location.origin, { 
+            transports: ['websocket', 'polling'],
+            reconnection: true,
+            reconnectionAttempts: 999,
+            reconnectionDelay: 1000
+          });
 
-        // Chỉ thăm dò HTTP dự phòng khi Socket mất kết nối, tiết kiệm 100% băng thông cho luồng video
-        setInterval(function() {
-          if (!socket || !socket.connected) {
-            fetchLatestState();
-          }
-        }, 10000);
+          setInterval(function() {
+            if (!socket || !socket.connected) {
+              fetchLatestState();
+            }
+          }, 10000);
 
-        socket.on('connect', function() {
-          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v1.3.4';
-          socket.emit('REQUEST_MASTER_LIVE_STATE');
-        });
+          socket.on('connect', function() {
+            if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v3.9.9';
+            socket.emit('REQUEST_MASTER_LIVE_STATE');
+          });
 
-        socket.on('disconnect', function() {
-          if (badge) badge.innerText = '🟡 RECONNECTING...';
-        });
+          socket.on('disconnect', function() {
+            if (badge) badge.innerText = '🟡 RECONNECTING...';
+          });
 
-        socket.on('MASTER_LIVE_STATE_UPDATE', function(data) {
-          if (!data) return;
-          // 🎬 ĐỒNG BỘ VIDEO TỨC THÌ 0MS: Nhận bất kỳ video mới nào từ phần mềm chính
-          if (data.mediaUrl && !isSameMedia(vid.src, data.mediaUrl)) {
-            loadAndPlay(data.mediaUrl);
-          }
-          // Luôn duy trì phát sóng liền mạch
-          if (!isStreamUserPaused && vid.paused) {
-            vid.play().then(updateDockUI).catch(function() {});
-          }
-        });
+          socket.on('MASTER_LIVE_STATE_UPDATE', function(data) {
+            if (!data) return;
+            if (data.mediaUrl && !isSameMedia(vid.src, data.mediaUrl)) {
+              loadAndPlay(data.mediaUrl);
+            }
+            if (!isStreamUserPaused && vid.paused) {
+              vid.play().then(updateDockUI).catch(function() {});
+            }
+          });
 
-        socket.on('VIDEO_PLAYBACK_CONTROL', function(control) {
-          if (!control) return;
-          // Đồng bộ đổi video khi người dùng chọn video khác
-          if (control.mediaUrl && !isSameMedia(vid.src, control.mediaUrl)) {
-            loadAndPlay(control.mediaUrl);
-          }
-        });
+          socket.on('VIDEO_PLAYBACK_CONTROL', function(control) {
+            if (!control) return;
+            if (control.mediaUrl && !isSameMedia(vid.src, control.mediaUrl)) {
+              loadAndPlay(control.mediaUrl);
+            }
+          });
+        }
+      } catch (err) {
+        console.warn('Socket connect error:', err);
+      }
 
-        if (typeof BroadcastChannel !== 'undefined') {
+      if (typeof BroadcastChannel !== 'undefined') {
+        try {
           const bc = new BroadcastChannel('avalive_master_live_stream');
           bc.onmessage = function(ev) {
             if (!ev.data) return;
@@ -1273,31 +1250,13 @@ app.get(['/live-stream', '/live-player', '/stream-player'], (req, res) => {
               loadAndPlay(ev.data.mediaUrl);
             }
           };
-        }
-
-        window.addEventListener('storage', function(e) {
-          if (e.key === 'avalive_master_live_state' || e.key === 'avalive_active_video_src') {
-            try {
-              const raw = localStorage.getItem('avalive_master_live_state');
-              if (raw) {
-                const parsed = JSON.parse(raw);
-                if (parsed.mediaUrl && !isSameMedia(vid.src, parsed.mediaUrl)) {
-                  loadAndPlay(parsed.mediaUrl);
-                }
-              }
-            } catch(err) {}
-          }
-        });
-      } catch (err) {
-        console.warn('Socket connect error:', err);
+        } catch(e) {}
       }
     })();
   </script>
 </body>
 </html>`;
 
-  res.setHeader('Content-Type', 'text/html; charset=utf-8');
-  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.send(html);
 });
 
@@ -1766,7 +1725,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '3.9.8';
+  let ver = '3.9.9';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1804,7 +1763,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '3.9.8';
+  let ver = '3.9.9';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
