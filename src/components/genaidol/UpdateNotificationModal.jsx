@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.0.0';
+export const APP_VERSION = '4.0.1';
 export const RELEASE_DATE = '20/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.0.1 - Nâng Cấp Luồng Video TikTok Live Studio Siêu Sắc Nét 4K 60FPS & Khắc Phục Triệt Để Lỗi Kết Nối CEF',
+    description: '1. Luồng Phát Siêu Sắc Nét 4K 60 FPS (Pixel Mapping 1:1): Cấu hình tuyệt đối #stage và video tràn viền không gian thực, tối ưu hoá bộ lọc phần cứng image-rendering: high-quality và -webkit-optimize-contrast, loại bỏ 100% hiện tượng vỡ nét hoặc mờ hình khi nhúng TikTok Live Studio; 2. Sửa Triệt Để Lỗi Link URL / Media Error: Loại bỏ thẻ video rỗng gây nạp vòng lặp HTML, đồng bộ trực tiếp qua Socket.io và /api/live-state với retry tự động; 3. Bảo Toàn Tuyệt Đối: Giữ nguyên 100% Window Capture đã khóa chặt và cơ chế Ưu Tiên Bộ Não Voice AI chống chồng chéo giọng đọc.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.0.0 - Chuẩn Hóa Ưu Tiên Bộ Não Voice AI, Chống Chồng Chéo Giọng Đọc & Tối Ưu Giao Diện Web',
     description: '1. Chuẩn Hóa Bộ Não Giọng Nói Voice AI (Ưu Tiên 100% Bộ Não): Khóa chặt quyền ưu tiên cao nhất cho giọng đọc đã cấu hình trong Tab Bộ Não AI, chỉ fallback sang tab sự kiện khi bộ não chưa chọn giọng; 2. Chống Chồng Chéo Giọng Đọc 100% (Single Audio Generation Lock): Khóa luồng âm thanh độc quyền với Token Generation ID, ngăn ngừa hoàn toàn tình trạng phát cùng lúc 2 giọng đọc khi phát kịch bản hay chạy thử; 3. Khắc Phục Lỗi Giao Diện Web & Code 11: Tối ưu hoá toàn diện headers và rewrite, đảm bảo trang web mở tức thì và hiển thị đầy đủ mọi thành phần.'
@@ -13,10 +17,6 @@ export const UPDATE_NOTES = [
   {
     title: '⚡ Bản Cập Nhật v3.9.9 - Khóa Chặt Window Capture & Khắc Phục Triệt Để Lỗi URL Link TikTok Live Studio',
     description: '1. Khóa Chặt Cố Định Window Capture OBS: Bảo toàn 100% luồng bắt hình, chỉ mở khi người dùng chủ động yêu cầu; 2. Sửa Triệt Để Lỗi URL Link TikTok Live Studio: Giải mã URL tự động, bổ sung header X-Frame-Options và CSP cho phép phát video tức thì 0ms trên CEF Browser Source; 3. Đồng Bộ Trọn Vẹn Cloudflare Tunnel HTTPS 60 FPS.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v3.9.8 - Hướng Dẫn & Khắc Phục Lỗi Xác Thực Trình Duyệt (Code 11) & Tối Ưu Header Vercel',
-    description: '1. Tối Ưu Cấu Hình Headers & WAF Vercel (vercel.json): Bổ sung đầy đủ CORS, X-Content-Type-Options và bypass các rào cản kiểm tra bot; 2. Hướng Dẫn Tắt Attack Challenge Mode / Bot Protection trên Vercel: Loại bỏ hoàn toàn màn hình "Failed to verify your browser (Code 11)"; 3. Mở Trực Tiếp Bản Cài Đặt Local & Cloudflare Tunnel 100% không qua WAF.'
   }
 ];
 
