@@ -168,7 +168,7 @@ export default function WindowCapturePlayer() {
     try {
       if (typeof window === 'undefined' || !window.opener || window.opener.closed) return false;
       const openerVid = window.opener.document.querySelector('video[data-main-player="true"]') || window.opener.document.querySelector('video');
-      if (openerVid && (openerVid.captureStream || openerVid.mozCaptureStream)) {
+      if (openerVid && openerVid.readyState >= 2 && openerVid.videoWidth > 0 && (openerVid.captureStream || openerVid.mozCaptureStream)) {
         const stream = openerVid.captureStream ? openerVid.captureStream() : openerVid.mozCaptureStream();
         if (stream && stream.getVideoTracks().length > 0) {
           const targetVid = videoRef.current;
@@ -315,17 +315,13 @@ export default function WindowCapturePlayer() {
 
   // Khởi động nạp video ngay tức khắc khi mở cửa sổ Window Capture
   useEffect(() => {
-    // 1. Thử direct stream clone trước (0ms siêu mượt)
-    const streamAttached = attachOpenerDirectStream();
-    if (streamAttached) return;
-
-    // 2. Thử nạp local blob
     const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     const charParam = params ? params.get('char') : null;
     const vParam = params ? params.get('v') : null;
 
+    // 1. Thử nạp local blob trước (0ms, GPU hardware decoded trực tiếp)
     tryLoadFromLocalDB(charParam || vParam || null).then(localBlob => {
-      if (localBlob && !isDirectStreamActiveRef.current) {
+      if (localBlob) {
         isHardwareLocalBlobRef.current = true;
         setVideoSrc(localBlob);
         setIsVideoLoading(false);
@@ -334,53 +330,57 @@ export default function WindowCapturePlayer() {
           videoRef.current.src = localBlob;
           videoRef.current.play().catch(() => {});
         }
-      } else if (!isDirectStreamActiveRef.current) {
-        // 3. ⚡ FALLBACK MẠNH MẼ: Nếu blob/opener đều fail → lấy URL trực tiếp từ server
-        // Ưu tiên dùng ?v= param nếu có (đã là server URL sẵn)
-        if (vParam && !vParam.startsWith('blob:')) {
-          const serverUrl = resolveUrl(vParam);
-          if (serverUrl) {
-            isHardwareLocalBlobRef.current = false;
-            setVideoSrc(serverUrl);
-            setIsVideoLoading(true);
-            if (videoRef.current) {
-              videoRef.current.srcObject = null;
-              videoRef.current.src = serverUrl;
-              videoRef.current.play().catch(() => {});
-            }
-            return;
-          }
-        }
-
-        // 4. Fallback cuối cùng: Gọi API /api/live-state để lấy mediaUrl mới nhất
-        const backendOrigin = (() => {
-          const port = window.location.port;
-          if (port === '5173' || port === '5174') {
-            return `${window.location.protocol}//${window.location.hostname}:3001`;
-          }
-          return window.location.origin;
-        })();
-
-        fetch(`${backendOrigin}/api/live-state`)
-          .then(res => res.json())
-          .then(data => {
-            if (data && data.mediaUrl && !isDirectStreamActiveRef.current) {
-              const serverUrl = resolveUrl(data.mediaUrl);
-              if (serverUrl) {
-                isHardwareLocalBlobRef.current = false;
-                setVideoSrc(serverUrl);
-                setIsVideoLoading(true);
-                if (videoRef.current) {
-                  videoRef.current.srcObject = null;
-                  videoRef.current.src = serverUrl;
-                  videoRef.current.play().catch(() => {});
-                }
-                console.log('[WindowCapture] ✅ Fallback thành công! Phát video từ server:', serverUrl);
-              }
-            }
-          })
-          .catch(() => {});
+        return;
       }
+
+      // 2. Thử direct stream clone nếu opener đang phát sẵn sàng
+      const streamAttached = attachOpenerDirectStream();
+      if (streamAttached) return;
+
+      // 3. Fallback lấy URL từ param ?v=
+      if (vParam && !vParam.startsWith('blob:')) {
+        const serverUrl = resolveUrl(vParam);
+        if (serverUrl) {
+          isHardwareLocalBlobRef.current = false;
+          setVideoSrc(serverUrl);
+          setIsVideoLoading(true);
+          if (videoRef.current) {
+            videoRef.current.srcObject = null;
+            videoRef.current.src = serverUrl;
+            videoRef.current.play().catch(() => {});
+          }
+          return;
+        }
+      }
+
+      // 4. Fallback lấy URL mới nhất từ /api/live-state
+      const backendOrigin = (() => {
+        const port = window.location.port;
+        if (port === '5173' || port === '5174') {
+          return `${window.location.protocol}//${window.location.hostname}:3001`;
+        }
+        return window.location.origin;
+      })();
+
+      fetch(`${backendOrigin}/api/live-state`)
+        .then(res => res.json())
+        .then(data => {
+          if (data && data.mediaUrl && !isDirectStreamActiveRef.current) {
+            const serverUrl = resolveUrl(data.mediaUrl);
+            if (serverUrl) {
+              isHardwareLocalBlobRef.current = false;
+              setVideoSrc(serverUrl);
+              setIsVideoLoading(true);
+              if (videoRef.current) {
+                videoRef.current.srcObject = null;
+                videoRef.current.src = serverUrl;
+                videoRef.current.play().catch(() => {});
+              }
+              console.log('[WindowCapture] ✅ Fallback thành công! Phát video từ server:', serverUrl);
+            }
+          }
+        })
+        .catch(() => {});
     });
   }, [attachOpenerDirectStream, tryLoadFromLocalDB, resolveUrl]);
 
@@ -401,11 +401,7 @@ export default function WindowCapturePlayer() {
         if (!msg) return;
 
         if ((msg.type === 'GLOBAL_MEDIA_CHANGE' || msg.type === 'RESPONSE_CURRENT_MEDIA') && (msg.fileBlob || msg.mediaUrl || msg.blobUrl || msg.characterId)) {
-          // Thử re-attach direct stream
-          const streamAttached = attachOpenerDirectStream();
-          if (streamAttached) return;
-
-          // ⚡ ƯU TIÊN: File/Blob object trực tiếp qua Structured Clone (0ms, 60 FPS chuẩn GPU)
+          // ⚡ ƯU TIÊN 1: File/Blob object trực tiếp qua Structured Clone (0ms, 60 FPS chuẩn GPU)
           if (msg.fileBlob && (msg.fileBlob instanceof Blob || msg.fileBlob instanceof File)) {
             try {
               if (activeBlobUrlRef.current) {
@@ -414,8 +410,12 @@ export default function WindowCapturePlayer() {
               const url = URL.createObjectURL(msg.fileBlob);
               activeBlobUrlRef.current = url;
               isHardwareLocalBlobRef.current = true;
+              isDirectStreamActiveRef.current = false;
+              setIsDirectStreamActive(false);
               if (videoRef.current) {
                 videoRef.current.srcObject = null;
+                videoRef.current.src = url;
+                videoRef.current.play().catch(() => {});
               }
               setVideoSrc(url);
               setIsVideoLoading(false);
@@ -425,8 +425,12 @@ export default function WindowCapturePlayer() {
             const localBlob = await tryLoadFromLocalDB(msg.characterId || msg.mediaUrl);
             if (localBlob) {
               isHardwareLocalBlobRef.current = true;
+              isDirectStreamActiveRef.current = false;
+              setIsDirectStreamActive(false);
               if (videoRef.current) {
                 videoRef.current.srcObject = null;
+                videoRef.current.src = localBlob;
+                videoRef.current.play().catch(() => {});
               }
               setVideoSrc(localBlob);
               setIsVideoLoading(false);
@@ -434,6 +438,8 @@ export default function WindowCapturePlayer() {
               const resolved = resolveUrl(msg.mediaUrl);
               if (resolved && !isSameMedia(resolved, videoSrc)) {
                 isHardwareLocalBlobRef.current = false;
+                isDirectStreamActiveRef.current = false;
+                setIsDirectStreamActive(false);
                 if (activeBlobUrlRef.current) {
                   try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
                   activeBlobUrlRef.current = null;
@@ -446,6 +452,8 @@ export default function WindowCapturePlayer() {
                 setVideoSrc(resolved);
                 setIsVideoLoading(true);
               }
+            } else {
+              attachOpenerDirectStream();
             }
           }
           if (typeof msg.currentTime === 'number' && msg.currentTime >= 0) {
@@ -976,7 +984,7 @@ export default function WindowCapturePlayer() {
             zIndex: 10
           }}
         >
-          🔴 4K 60 FPS REALTIME v3.9.6 (OBS ZERO-COPY)
+          🔴 4K 60 FPS REALTIME v3.9.7 (OBS ZERO-COPY)
         </div>
       )}
     </div>

@@ -1,7 +1,7 @@
 {
-  "name": "du-an-ava-livestreams",
+  "name": "thienvu-ava-livestreams",
   "private": true,
-  "version": "3.9.6",
+  "version": "3.9.7",
   "type": "module",
   "main": "electron-main.cjs",
   "build": {

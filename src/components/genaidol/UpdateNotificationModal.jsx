@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '3.9.6';
+export const APP_VERSION = '3.9.7';
 export const RELEASE_DATE = '20/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v3.9.7 - Xử Lý Triệt Để Lỗi Moov Atom Đuôi MP4, Nạp Tức Thì 0ms Window Capture & TikTok Live Studio',
+    description: '1. Gửi Đồng Thời Head Chunk & Tail Chunk (Moov Atom) Trong 100ms: Khắc phục triệt để lỗi HTTP 416 màn hình đen trên mọi video dung lượng từ 100MB đến 50GB; 2. Nạp Video Trực Tiếp 0ms Window Capture: Ưu tiên phát trực tiếp Blob / Server URL với Hardware Acceleration 60 FPS 4K, loại bỏ hoàn toàn hiện tượng đen khung hình; 3. Đồng Bộ Trọn Vẹn Link TikTok Live Studio: Phát sóng siêu nét, không giật lag, không đứng hình.'
+  },
   {
     title: '⚡ Bản Cập Nhật v3.9.6 - Khắc Phục Triệt Để Link Cloudflare Tunnel & Video Window Capture Hỗ Trợ 1GB-50GB',
     description: '1. Khóa Chặt Link Cloudflare Tunnel HTTPS (trycloudflare.com): Tuyệt đối không phục vụ link web Vercel không có media, đảm bảo TikTok Live Studio và OBS nạp video tức thì 0ms; 2. Phát Mượt Mọi Video 1GB - 50GB: Sửa lỗi Watchdog NaN và ưu tiên chính xác tham số URL trong Window Capture & Live Stream Player; 3. Bảo Vệ Toàn Diện Bộ Nhớ Video: Ngừng xoá file video người dùng, bảo toàn dữ liệu và tái sử dụng 100% video gốc theo đúng claude.md.'
@@ -13,10 +17,6 @@ export const UPDATE_NOTES = [
   {
     title: '⚡ Bản Cập Nhật v3.9.5 - Khắc Phục Triệt Để Luồng Video Tải Lên & Đồng Bộ Đa Trình Duyệt (Chrome, Safari, Cốc Cốc, OBS)',
     description: '1. Đồng Bộ Hoàn Hảo Video Tải Lên; 2. Tái Sử Dụng Video Gốc 100% 0ms; 3. Khóa Cứng Quy Chuẩn claude.md.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v3.9.4 - Đồng Bộ Đa Nền Tảng (Chrome, Safari, Cốc Cốc) & Chuẩn Hoá Zero-Overlap Media',
-    description: '1. Đồng Bộ Toàn Diện Window Capture & TikTok Live Studio; 2. Zero-Overlap Media & Tái Sử Dụng File Gốc 100%; 3. Quy Chuẩn claude.md & cloud.md.'
   }
 ];
 
