@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.1.7';
+export const APP_VERSION = '4.1.8';
 export const RELEASE_DATE = '20/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.1.8 - Tinh Gọn Giao Diện, Loại Bỏ Nút Bấm Trùng Lặp & Giữ Menu Chuỗi Kịch Bản Chuẩn',
+    description: '1. Tinh Gọn Giao Diện Desktop: Loại bỏ nút bấm thừa trên Top Control Bar để giao diện gọn gàng, chuyển toàn quyền truy cập Sequencer vào Menu chính; 2. Truy Cập Thuận Tiện: Duy trì tab "🎬 Chuỗi Kịch Bản Live" trong Menu chức năng và Header Navigation; 3. Khóa Chặt 100% Toàn Bộ Module: Bảo toàn tuyệt đối mọi tính năng đang vận hành (Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle, Game Bản Đồ 3D).'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.1.7 - Hiển Thị Tab Chuỗi Kịch Bản Live (Sequencer) Trực Quan Trên Menu Chính & Header',
     description: '1. Tab Menu Chính Thức: Đặt tab "🎬 Chuỗi Kịch Bản Live" trực tiếp trên Header Navbar và Menu Dropdown tài khoản giúp truy cập 1 chạm tức thì; 2. Tương Thích Hoàn Hảo Web & Máy Tính (Mac & Windows): Hiển thị đồng bộ trên mọi nền tảng; 3. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle, Game Bản Đồ 3D, Multi-Avatar.'

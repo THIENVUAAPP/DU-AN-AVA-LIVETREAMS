@@ -4844,17 +4844,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         
         {/* Left Side: Settings & Payment */}
         <div className="flex items-center gap-2 shrink-0">
-          
-          {/* Nút Trực Tiếp Mở Chuỗi Kịch Bản Phân Đoạn (Sequencer) */}
-          <button
-            onClick={() => setActiveSettingsModal('workspace')}
-            className="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-black transition-all shadow-md cursor-pointer bg-gradient-to-r from-rose-600 via-pink-600 to-indigo-600 hover:from-rose-500 hover:to-indigo-500 text-white animate-pulse"
-            title="Mở Trình Điều Phối Chuỗi Kịch Bản Phân Đoạn & Preset Livestream"
-          >
-            <Layers size={14} />
-            <span className="tracking-wide uppercase font-black">🎬 CHUỖI KỊCH BẢN</span>
-          </button>
-
           <div className="relative shrink-0">
             <button 
               onClick={() => setIsSettingsDropdownOpen(!isSettingsDropdownOpen)}
