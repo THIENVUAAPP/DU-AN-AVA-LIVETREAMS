@@ -1,22 +1,24 @@
 # 🛡️ CLOUDFLARE SPECIFICATION & QUY TẮC KHÓA CHẶT TOÀN DIỆN HỆ THỐNG (BẮT BUỘC DUY TRÌ VĨNH VIỄN)
 
 > **DỰ ÁN:** AVA LIVESTREAM VIP PRO  
-> **PHIÊN BẢN DUY TRÌ:** v4.1.2+  
+> **PHIÊN BẢN DUY TRÌ:** v4.1.3+  
 > **QUY TẮC BẤT DI BẤT DỊCH:** Tuyệt đối tuân thủ trong tất cả các lần phát triển và cập nhật phần mềm.
 
 ---
 
-## 1. 🔒 NGUYÊN TẮC KHÓA CHẶT TOÀN BỘ CÁC TAB CODE KHÔNG ĐƯỢC YÊU CẦU
+## 1. 🔒 NGUYÊN TẮC KHÓA CHẶT TOÀN BỘ CÁC TAB CODE & SUBVIEW KHÔNG ĐƯỢC YÊU CẦU
 
-1. **Khóa Chặt Cố Định Các Tab & Module Khi Chưa Có Yêu Cầu:**
+1. **Khóa Chặt Cố Định Mọi Tab Chức Năng, Subview & Module Khi Chưa Có Yêu Cầu:**
    - 🔒 **Window Capture OBS (`/window-capture` / `WindowCapturePlayer.jsx`):** Khóa chặt 100%, bảo toàn cơ chế bắt hình độc lập.
    - 🧠 **Bộ Não Voice AI (`WorkspaceTacVu.jsx` / `AIAvatarStudio.jsx`):** Khóa chặt 100% cơ chế ưu tiên giọng đọc từ Bộ Não AI, Token Single-Generation Lock chống phát chồng chéo âm thanh.
-   - ⚔️ **Game Đại Chiến Bang Hội (`/battle` / `GameChienDau.jsx`):** Khóa chặt logic game.
-   - 🚩 **Game Bản Đồ Việt Nam (`/bando` / `VietnamMapCanvas.jsx`):** Khóa chặt logic cắm cờ 3D.
+   - ⚔️ **Game Đại Chiến Bang Hội (`/battle` / `GameChienDau.jsx` / `GameBattleOverlay.jsx`):** Khóa chặt logic game.
+   - 🚩 **Game Bản Đồ Việt Nam (`/bando` / `VietnamMapCanvas.jsx` / `GameBanDoOverlay.jsx`):** Khóa chặt logic cắm cờ 3D.
    - 🛒 **AI Live Commerce & Bán Hàng (`LiveCommerceStudio.jsx`):** Khóa chặt logic chốt đơn & giỏ hàng.
    - 👥 **Đa Tài Khoản & Phân Quyền (`MultiAccountManager.jsx` / `TeamPermissionsManager.jsx`):** Khóa chặt logic quản trị.
+   - 📺 **Mọi Subview & Cửa Sổ Phụ (`CleanLiveOverlay.jsx`, `UniversalMasterOverlayModal.jsx`, `TemplateLibraryModal.jsx`...):** Khóa chặt, cách ly hoàn toàn state độc lập.
 
 2. **Chỉ Xử Lý & Nâng Cấp Đúng Nội Dung Được Yêu Cầu:**
+   - Khi nhận yêu cầu từ người dùng hoặc từ đường link đúng mục tiêu, CHỈ gửi và thực thi đúng câu lệnh vào tab/subview đó.
    - Tuyệt đối không thay đổi, can thiệp hoặc ghi đè bất kỳ logic nào ở các tab code khác để ngăn chặn 100% nguy cơ mất dữ liệu hoặc xung đột logic.
 
 ---

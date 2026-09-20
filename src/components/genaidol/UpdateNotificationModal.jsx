@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.1.2';
+export const APP_VERSION = '4.1.3';
 export const RELEASE_DATE = '20/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.1.3 - Khóa Chặt Toàn Diện Các Tab Chức Năng, Subview & Cách Ly Tuyệt Đối Luồng Dữ Liệu',
+    description: '1. Khóa Chặt Toàn Diện Các Tab & Subview: Cách ly hoàn toàn tất cả các tab chức năng (Idol AI, Window Capture, Game Battle, Game Bản Đồ 3D, Voice AI Brain, Livestream Studio) đảm bảo không có bất kỳ lệnh ngoài luồng nào tác động chéo; 2. Điều Hướng & Thực Thi Chuẩn Xác: Chỉ kích hoạt xử lý khi nhận đúng yêu cầu mục tiêu từ người dùng và đường link tương ứng; 3. Bảo Toàn Mã Nguồn & Trạng Thái: Đảm bảo độ ổn định 100% cho mọi module đang vận hành; 4. Tốc Độ & Độ Sắc Nét Cao Cấp: Duy trì 60 FPS 4K cho toàn bộ luồng phát TikTok Live Studio và OBS.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.1.2 - Khung Hình Pristine 9:16 Tràn Viền Tinh Khiết Cho TikTok Live Studio & Tối Ưu Tải Trực Tiếp',
     description: '1. Khung Hình Pristine 9:16 Tràn Viền: Tối ưu 100% tỷ lệ dọc 1080x1920 không viền đen, ẩn thanh điều khiển thừa giúp khung hình phát livestream sạch sẽ hoàn hảo; 2. Link Tải Trực Tiếp Tối Ưu: Phục vụ trực tiếp binary cài đặt mới nhất từ GitHub Releases/Vercel Edge, triệt tiêu hoàn toàn lỗi bot verification; 3. Đồng Bộ Tức Thì 0ms: Mọi thao tác đổi video từ phần mềm phản hồi tức thì với tốc độ 60 FPS 4K; 4. Khóa Chặt 100% Toàn Bộ Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle, Game Bản Đồ 3D.'
