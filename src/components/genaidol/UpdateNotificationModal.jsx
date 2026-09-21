@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.2.2';
+export const APP_VERSION = '4.2.3';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.2.3 - Tinh Gọn Header Kịch Bản, Nút Dừng Tức Thì, Video Phụ PiP & Tùy Chỉnh Font/Cỡ Chữ Đa Lớp',
+    description: '1. Tối Ưu Toolbar Sequencer Siêu Gọn Gàng: Thu gọn thanh điều khiển còn 1 hàng duy nhất cao 45px, nhường 85% không gian màn hình cho cấu hình các bước kịch bản; 2. Nút Bật / Dừng Tức Thì: Bấm Bật chạy ngay, bấm Dừng ngắt tức khắc toàn bộ timer, giọng đọc AI và video đồng bộ 0ms; 3. Lớp Video Phụ PiP (Picture-in-Picture): Mỗi bước kịch bản hỗ trợ video phụ xếp chồng lên video nền chính với tùy chọn vị trí và kích thước; 4. Tùy Biến Typography & Kích Thước: Tự do đổi font chữ tiếng Việt (Montserrat, Be Vietnam, Lexend, Impact...), cỡ chữ, màu chữ và độ phóng to ảnh banner; 5. AI Smart Jump & Trả Lời Bình Luận: Đọc hết câu rồi tạm dừng trả lời câu hỏi bán hàng quan trọng, chèn câu dẫn mượt mà và tự động nhảy đúng bước kịch bản khi khán giả hỏi; 6. Nút Live Test Sân Khấu: Xem trước trực tiếp toàn bộ các lớp xếp chồng lên Sân Khấu Live 9:16 và OBS.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.2.2 - Tự Động Liên Kết Giỏ Hàng TikTok Shop (shop.tiktok.com) & Ghim Live Thông Minh 24/7',
     description: '1. Tự Động Kết Nối & Lấy Sản Phẩm TikTok Shop: Dán đường link shop.tiktok.com để tự động đồng bộ 100% danh mục sản phẩm lên hệ thống với đầy đủ mã số (Mã #01, #02...); 2. Tự Động Ghim Theo Video Phát & Kịch Bản: Khi video hoặc kịch bản nhắc đến sản phẩm/mã số, hệ thống tự động ghim sản phẩm đó lên màn hình live; 3. Tự Động Ghim Theo Bình Luận Khán Giả: Khán giả comment hỏi mã số (mã 1, sp 2, chốt 3...) AI lập tức bắt từ khóa và ghim đúng sản phẩm lên sân khấu; 4. Đồng Bộ 0ms 4K 60 FPS: Sân khấu chính, OBS Window Capture và Link TikTok Live Studio hiển thị đồng bộ 100% thẻ ghim TikTok Shop; 5. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn mọi tab chức năng.'

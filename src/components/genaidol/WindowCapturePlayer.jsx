@@ -107,6 +107,16 @@ export default function WindowCapturePlayer() {
     }
   });
 
+  // 🎭 Overlay Đa Lớp từ Sequencer (PiP Video, Ảnh, Tiêu đề)
+  const [flowSequencerOverlay, setFlowSequencerOverlay] = useState(() => {
+    try {
+      const saved = localStorage.getItem('avalive_sequencer_overlay');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
   // 👁️ Trạng thái ẩn toàn bộ các nút / tab trên giao diện Window Capture
   const [isControlsHidden, setIsControlsHidden] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -487,6 +497,23 @@ export default function WindowCapturePlayer() {
         } else if (msg.type === 'PIN_PRODUCT_UPDATE' && msg.product) {
           setPinnedProduct(msg.product);
         }
+
+        if (msg.overlayImage || msg.overlayText || msg.secondaryMediaUrl) {
+          setFlowSequencerOverlay({
+            secondaryMediaUrl: msg.secondaryMediaUrl || null,
+            secondaryMediaPos: msg.secondaryMediaPos || 'top-right',
+            secondaryMediaScale: msg.secondaryMediaScale || 40,
+            overlayImage: msg.overlayImage || null,
+            overlayImagePos: msg.overlayImagePos || 'top-left',
+            overlayImageScale: msg.overlayImageScale || 100,
+            overlayText: msg.overlayText || null,
+            overlayTextPos: msg.overlayTextPos || 'top',
+            overlayTextStyle: msg.overlayTextStyle || 'banner',
+            overlayTextFontFamily: msg.overlayTextFontFamily || 'be_vietnam',
+            overlayTextFontSize: msg.overlayTextFontSize || 20,
+            overlayTextColor: msg.overlayTextColor || '#ffffff'
+          });
+        }
       };
     } catch (e) {}
 
@@ -521,6 +548,22 @@ export default function WindowCapturePlayer() {
         if (!state) return;
         if (state.tunnelUrl && state.tunnelUrl !== tunnelUrl) {
           setTunnelUrl(state.tunnelUrl);
+        }
+        if (state.overlayImage || state.overlayText || state.secondaryMediaUrl) {
+          setFlowSequencerOverlay({
+            secondaryMediaUrl: state.secondaryMediaUrl || null,
+            secondaryMediaPos: state.secondaryMediaPos || 'top-right',
+            secondaryMediaScale: state.secondaryMediaScale || 40,
+            overlayImage: state.overlayImage || null,
+            overlayImagePos: state.overlayImagePos || 'top-left',
+            overlayImageScale: state.overlayImageScale || 100,
+            overlayText: state.overlayText || null,
+            overlayTextPos: state.overlayTextPos || 'top',
+            overlayTextStyle: state.overlayTextStyle || 'banner',
+            overlayTextFontFamily: state.overlayTextFontFamily || 'be_vietnam',
+            overlayTextFontSize: state.overlayTextFontSize || 20,
+            overlayTextColor: state.overlayTextColor || '#ffffff'
+          });
         }
         if (state.mediaUrl || state.selectedCharacter) {
           if (state.selectedCharacter) {
@@ -1034,6 +1077,124 @@ export default function WindowCapturePlayer() {
         </div>
       )}
 
+      {/* LỚP VIDEO PHỤ PIP (PICTURE-IN-PICTURE) */}
+      {flowSequencerOverlay?.secondaryMediaUrl && !isControlsHidden && (
+        <div 
+          style={{
+            position: 'absolute',
+            zIndex: 35,
+            pointerEvents: 'none',
+            top: flowSequencerOverlay.secondaryMediaPos?.startsWith('bottom') ? undefined : '16px',
+            bottom: flowSequencerOverlay.secondaryMediaPos?.startsWith('bottom') ? '80px' : undefined,
+            left: flowSequencerOverlay.secondaryMediaPos?.endsWith('left') ? '16px' : (flowSequencerOverlay.secondaryMediaPos === 'center' ? '50%' : undefined),
+            right: flowSequencerOverlay.secondaryMediaPos?.endsWith('right') ? '16px' : undefined,
+            transform: flowSequencerOverlay.secondaryMediaPos === 'center' ? 'translateX(-50%)' : undefined,
+            width: `${flowSequencerOverlay.secondaryMediaScale || 40}%`,
+            maxWidth: '85%'
+          }}
+        >
+          <video
+            src={flowSequencerOverlay.secondaryMediaUrl}
+            autoPlay
+            loop
+            muted
+            playsInline
+            style={{
+              width: '100%',
+              height: 'auto',
+              aspectRatio: '16/9',
+              objectFit: 'cover',
+              borderRadius: '12px',
+              border: '2px solid rgba(255,255,255,0.5)',
+              boxShadow: '0 10px 25px rgba(0,0,0,0.85)'
+            }}
+          />
+        </div>
+      )}
+
+      {/* LỚP ẢNH BANNER OVERLAY */}
+      {flowSequencerOverlay?.overlayImage && !isControlsHidden && (
+        <div 
+          style={{
+            position: 'absolute',
+            zIndex: 36,
+            pointerEvents: 'none',
+            top: flowSequencerOverlay.overlayImagePos?.startsWith('bottom') ? undefined : '16px',
+            bottom: flowSequencerOverlay.overlayImagePos?.startsWith('bottom') ? '80px' : undefined,
+            left: flowSequencerOverlay.overlayImagePos?.endsWith('left') ? '16px' : (flowSequencerOverlay.overlayImagePos === 'top' || flowSequencerOverlay.overlayImagePos === 'bottom' || flowSequencerOverlay.overlayImagePos === 'center' ? '50%' : undefined),
+            right: flowSequencerOverlay.overlayImagePos?.endsWith('right') ? '16px' : undefined,
+            transform: (flowSequencerOverlay.overlayImagePos === 'top' || flowSequencerOverlay.overlayImagePos === 'bottom' || flowSequencerOverlay.overlayImagePos === 'center') ? `translateX(-50%) scale(${(flowSequencerOverlay.overlayImageScale || 100) / 100})` : `scale(${(flowSequencerOverlay.overlayImageScale || 100) / 100})`,
+            maxWidth: flowSequencerOverlay.overlayImagePos === 'top' || flowSequencerOverlay.overlayImagePos === 'bottom' ? '92%' : '140px',
+            maxHeight: flowSequencerOverlay.overlayImagePos === 'top' || flowSequencerOverlay.overlayImagePos === 'bottom' ? '120px' : '140px'
+          }}
+        >
+          <img 
+            src={flowSequencerOverlay.overlayImage} 
+            alt="Sequencer Overlay" 
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: 'contain',
+              borderRadius: '12px',
+              border: '1px solid rgba(255,255,255,0.2)',
+              filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.8))'
+            }}
+          />
+        </div>
+      )}
+
+      {/* LỚP CHỮ BANNER OVERLAY */}
+      {flowSequencerOverlay?.overlayText && !isControlsHidden && (
+        <div 
+          style={{
+            position: 'absolute',
+            zIndex: 37,
+            pointerEvents: 'none',
+            left: '12px',
+            right: '12px',
+            top: flowSequencerOverlay.overlayTextPos === 'bottom' ? undefined : (flowSequencerOverlay.overlayTextPos === 'center' ? '50%' : '16px'),
+            bottom: flowSequencerOverlay.overlayTextPos === 'bottom' ? '80px' : undefined,
+            transform: flowSequencerOverlay.overlayTextPos === 'center' ? 'translateY(-50%)' : undefined,
+            display: 'flex',
+            justifyContent: 'center'
+          }}
+        >
+          <div 
+            style={{
+              padding: '8px 14px',
+              borderRadius: '16px',
+              textAlign: 'center',
+              fontWeight: '900',
+              letterSpacing: '0.5px',
+              textTransform: 'uppercase',
+              fontFamily: flowSequencerOverlay.overlayTextFontFamily === 'montserrat' ? "'Montserrat', sans-serif" :
+                          flowSequencerOverlay.overlayTextFontFamily === 'be_vietnam' ? "'Be Vietnam Pro', sans-serif" :
+                          flowSequencerOverlay.overlayTextFontFamily === 'lexend' ? "'Lexend', sans-serif" :
+                          flowSequencerOverlay.overlayTextFontFamily === 'impact' ? "Impact, sans-serif" :
+                          flowSequencerOverlay.overlayTextFontFamily === 'inter' ? "'Inter', sans-serif" :
+                          flowSequencerOverlay.overlayTextFontFamily === 'roboto' ? "'Roboto', sans-serif" :
+                          flowSequencerOverlay.overlayTextFontFamily === 'playfair' ? "'Playfair Display', serif" :
+                          flowSequencerOverlay.overlayTextFontFamily === 'anton' ? "'Anton', sans-serif" : undefined,
+              fontSize: flowSequencerOverlay.overlayTextFontSize ? `${flowSequencerOverlay.overlayTextFontSize}px` : '14px',
+              color: flowSequencerOverlay.overlayTextColor || '#ffffff',
+              background: flowSequencerOverlay.overlayTextStyle === 'neon_cyber' ? 'rgba(2, 6, 23, 0.9)' :
+                          flowSequencerOverlay.overlayTextStyle === 'gold_luxury' ? 'linear-gradient(to right, #f59e0b, #fde047, #f59e0b)' :
+                          flowSequencerOverlay.overlayTextStyle === 'gradient_rose' ? 'linear-gradient(to right, #e11d48, #ec4899, #e11d48)' :
+                          flowSequencerOverlay.overlayTextStyle === 'minimal_dark' ? 'rgba(0,0,0,0.85)' :
+                          'linear-gradient(to right, #dc2626, #f59e0b, #dc2626)',
+              border: flowSequencerOverlay.overlayTextStyle === 'neon_cyber' ? '1px solid #22d3ee' :
+                      flowSequencerOverlay.overlayTextStyle === 'gold_luxury' ? '1px solid #fef08a' :
+                      flowSequencerOverlay.overlayTextStyle === 'gradient_rose' ? '1px solid rgba(244, 114, 182, 0.5)' :
+                      flowSequencerOverlay.overlayTextStyle === 'minimal_dark' ? '1px solid rgba(255,255,255,0.2)' :
+                      '1px solid rgba(252, 211, 77, 0.5)',
+              boxShadow: '0 8px 25px rgba(0,0,0,0.6)'
+            }}
+          >
+            {flowSequencerOverlay.overlayText}
+          </div>
+        </div>
+      )}
+
       {!isControlsHidden && (
         <div
           style={{
@@ -1052,7 +1213,7 @@ export default function WindowCapturePlayer() {
             zIndex: 10
           }}
         >
-          🔴 4K 60 FPS REALTIME v4.2.2 (OBS ZERO-COPY)
+          🔴 4K 60 FPS REALTIME v4.2.3 (OBS ZERO-COPY)
         </div>
       )}
     </div>

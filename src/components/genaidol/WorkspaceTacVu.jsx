@@ -1517,21 +1517,24 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
       <div className="flex-1 flex flex-col h-full overflow-hidden p-4">
         
         {/* Header Sự Kiện Hiện Tại */}
-        <div className="bg-white p-4 rounded-2xl border border-gray-200 shadow-xs mb-3 flex items-center justify-between">
-          <div className="flex items-center gap-3">
-            <div className="p-2.5 bg-blue-50 text-blue-600 rounded-xl">
-              {selectedEventInfo && <selectedEventInfo.icon size={22} />}
-            </div>
-            <div>
-              <h2 className="text-base font-black text-gray-900 flex items-center gap-2">
-                {selectedEventInfo?.label}
-              </h2>
-              <p className="text-xs text-gray-500 mt-0.5">
-                {selectedEventInfo?.desc}
-              </p>
+        {/* Header - Ẩn khi ở tab flow_sequencer để nhường trọn vẹn không gian cho Sequencer Toolbar */}
+        {selectedEventId !== 'flow_sequencer' && (
+          <div className="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-xs mb-3 flex items-center justify-between">
+            <div className="flex items-center gap-3">
+              <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
+                {selectedEventInfo && <selectedEventInfo.icon size={20} />}
+              </div>
+              <div>
+                <h2 className="text-sm font-black text-gray-900 flex items-center gap-2">
+                  {selectedEventInfo?.label}
+                </h2>
+                <p className="text-[11px] text-gray-500 mt-0.5">
+                  {selectedEventInfo?.desc}
+                </p>
+              </div>
             </div>
           </div>
-        </div>
+        )}
 
         {/* Scroll Body */}
         <div className="flex-1 overflow-y-auto pr-1">

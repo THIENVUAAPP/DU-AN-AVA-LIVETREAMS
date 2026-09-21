@@ -1,7 +1,7 @@
 {
-  "name": "ai-livestream-pro",
+  "name": "ai-livestream-suite",
   "private": true,
-  "version": "4.2.2",
+  "version": "4.2.3",
   "type": "module",
   "main": "electron-main.cjs",
   "build": {

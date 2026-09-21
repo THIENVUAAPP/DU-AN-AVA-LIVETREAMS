@@ -2477,24 +2477,35 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   }, [unlockAllAudio]);
 
   // 🎬 LẮNG NGHE ĐIỀU PHỐI TỪ CHUỖI KỊCH BẢN (SEQUENCER) ĐỒNG BỘ MÀN HÌNH CHÍNH, WINDOW CAPTURE & TIKTOK LIVE STUDIO
+  // 🎬 LẮNG NGHE SỰ KIỆN TỪ CHUỖI KỊCH BẢN PHÂN ĐOẠN (LIVESTREAM FLOW SEQUENCER)
   useEffect(() => {
     const handleFlowMediaUpdate = (e) => {
       const { 
         mediaUrl, scriptText, title, actionType,
-        overlayImage, overlayImagePos, overlayText, overlayTextPos, overlayTextStyle, isMediaPinned 
+        secondaryMediaUrl, secondaryMediaPos, secondaryMediaScale,
+        overlayImage, overlayImagePos, overlayImageScale, 
+        overlayText, overlayTextPos, overlayTextStyle, overlayTextFontFamily, overlayTextFontSize, overlayTextColor,
+        isMediaPinned 
       } = e.detail || {};
       if (!mediaUrl) return;
 
       setUserLockedMediaUrl(mediaUrl);
       try { localStorage.setItem('avalive_user_locked_media', mediaUrl); } catch (err) {}
 
-      // 1. Cập nhật trạng thái Overlays Đa Lớp (Ảnh, Chữ, Ghim)
+      // 1. Cập nhật trạng thái Overlays Đa Lớp (Ảnh, Chữ, Video Phụ PiP, Ghim)
       const overlayData = {
+        secondaryMediaUrl: secondaryMediaUrl || null,
+        secondaryMediaPos: secondaryMediaPos || 'top-right',
+        secondaryMediaScale: secondaryMediaScale || 40,
         overlayImage: overlayImage || null,
         overlayImagePos: overlayImagePos || 'top-left',
+        overlayImageScale: overlayImageScale || 100,
         overlayText: overlayText || null,
         overlayTextPos: overlayTextPos || 'top',
         overlayTextStyle: overlayTextStyle || 'banner',
+        overlayTextFontFamily: overlayTextFontFamily || 'be_vietnam',
+        overlayTextFontSize: overlayTextFontSize || 20,
+        overlayTextColor: overlayTextColor || '#ffffff',
         isMediaPinned: !!isMediaPinned
       };
       setFlowSequencerOverlay(overlayData);
@@ -2524,11 +2535,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         currentTime: 0,
         force: !isMediaPinned,
         source: 'sequencer',
+        secondaryMediaUrl: secondaryMediaUrl || null,
+        secondaryMediaPos: secondaryMediaPos || 'top-right',
+        secondaryMediaScale: secondaryMediaScale || 40,
         overlayImage: overlayImage || null,
         overlayImagePos: overlayImagePos || 'top-left',
+        overlayImageScale: overlayImageScale || 100,
         overlayText: overlayText || null,
         overlayTextPos: overlayTextPos || 'top',
         overlayTextStyle: overlayTextStyle || 'banner',
+        overlayTextFontFamily: overlayTextFontFamily || 'be_vietnam',
+        overlayTextFontSize: overlayTextFontSize || 20,
+        overlayTextColor: overlayTextColor || '#ffffff',
         timestamp: Date.now()
       });
 
@@ -2541,11 +2559,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         aspectRatio: globalAspectRatio || '9:16',
         stepTitle: title,
         actionType: actionType,
+        secondaryMediaUrl: secondaryMediaUrl || null,
+        secondaryMediaPos: secondaryMediaPos || 'top-right',
+        secondaryMediaScale: secondaryMediaScale || 40,
         overlayImage: overlayImage || null,
         overlayImagePos: overlayImagePos || 'top-left',
+        overlayImageScale: overlayImageScale || 100,
         overlayText: overlayText || null,
         overlayTextPos: overlayTextPos || 'top',
-        overlayTextStyle: overlayTextStyle || 'banner'
+        overlayTextStyle: overlayTextStyle || 'banner',
+        overlayTextFontFamily: overlayTextFontFamily || 'be_vietnam',
+        overlayTextFontSize: overlayTextFontSize || 20,
+        overlayTextColor: overlayTextColor || '#ffffff'
       }, socketRef.current);
 
       // 5. Tự động ghim sản phẩm giỏ hàng lên màn hình nếu phân đoạn có chứa thông tin sản phẩm
@@ -2571,11 +2596,34 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }
     };
 
+    const handleStopFlowSequencer = () => {
+      if (audioPlayerRef.current) {
+        audioPlayerRef.current.stopScript();
+        audioPlayerRef.current.clearQueue();
+      }
+      if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+        window.speechSynthesis.cancel();
+      }
+      setIsScriptLiveRunning(false);
+      setIsMasterLiveRunning(false);
+      postMasterBroadcast({
+        type: 'MASTER_PLAYBACK_STATE',
+        isPlaying: false,
+        source: 'sequencer_stop'
+      });
+      syncMasterLiveState({
+        isPlaying: false
+      }, socketRef.current);
+      showToast('⏹️ Đã dừng kịch bản chuỗi phân đoạn', 'info');
+    };
+
     window.addEventListener('avalive:update_master_media', handleFlowMediaUpdate);
     window.addEventListener('avalive_flow_step_changed', handleFlowMediaUpdate);
+    window.addEventListener('avalive:stop_flow_sequencer', handleStopFlowSequencer);
     return () => {
       window.removeEventListener('avalive:update_master_media', handleFlowMediaUpdate);
       window.removeEventListener('avalive_flow_step_changed', handleFlowMediaUpdate);
+      window.removeEventListener('avalive:stop_flow_sequencer', handleStopFlowSequencer);
     };
   }, [globalAspectRatio]);
 
@@ -2650,6 +2698,28 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       // 2. 🎯 TỰ ĐỘNG BẮT TỪ KHÓA / MÃ SẢN PHẨM & GHIM SẢN PHẨM TIKTOK SHOP (shop.tiktok.com)
       try {
         autoPinProductService.detectAndAutoPinByText(text, 'viewer_comment');
+        
+        // ⚡ AI Smart Jump: Tự động chuyển kịch bản sang bước sản phẩm tương ứng nếu khán giả hỏi
+        try {
+          const rawPresets = localStorage.getItem('aidol_flow_presets');
+          const activePresetId = localStorage.getItem('aidol_active_flow_preset_id');
+          if (rawPresets && activePresetId) {
+            const presets = JSON.parse(rawPresets);
+            const activePreset = presets.find(p => p.id === activePresetId);
+            if (activePreset && activePreset.steps && activePreset.steps.length > 0) {
+              const lowerText = text.toLowerCase();
+              const matchIdx = activePreset.steps.findIndex(s => 
+                (s.productName && lowerText.includes(s.productName.toLowerCase())) ||
+                (s.title && lowerText.includes(s.title.toLowerCase()))
+              );
+              if (matchIdx !== -1) {
+                window.dispatchEvent(new CustomEvent('avalive:sequencer_smart_jump', {
+                  detail: { stepIndex: matchIdx }
+                }));
+              }
+            }
+          }
+        } catch (jumpErr) {}
       } catch (e) {}
 
       // 3. Kích hoạt Kịch Bản Trả Lời Bình Luận & Chốt Đơn của AI Idol (theo đúng cấu trúc đã cài đặt)
@@ -4457,18 +4527,50 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             >
               {renderAiIdolLiveStage()}
 
+              {/* LỚP 1.5: VIDEO PHỤ PIP (PICTURE-IN-PICTURE) XẾP CHỒNG TỪ SEQUENCER */}
+              {flowSequencerOverlay?.secondaryMediaUrl && (
+                <div 
+                  className={`absolute z-25 transition-all duration-300 pointer-events-none ${
+                    flowSequencerOverlay.secondaryMediaPos === 'top-left' ? 'top-4 left-4' :
+                    flowSequencerOverlay.secondaryMediaPos === 'bottom-left' ? 'bottom-24 left-4' :
+                    flowSequencerOverlay.secondaryMediaPos === 'bottom-right' ? 'bottom-24 right-4' :
+                    flowSequencerOverlay.secondaryMediaPos === 'center' ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' :
+                    'top-4 right-4'
+                  }`}
+                  style={{
+                    width: `${flowSequencerOverlay.secondaryMediaScale || 40}%`,
+                    maxWidth: '85%'
+                  }}
+                >
+                  <video
+                    src={flowSequencerOverlay.secondaryMediaUrl}
+                    autoPlay
+                    loop
+                    muted
+                    playsInline
+                    className="w-full h-auto aspect-video object-cover rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.85)] border-2 border-white/50 backdrop-blur-sm"
+                  />
+                </div>
+              )}
+
               {/* LỚP 2: OVERLAY HÌNH ẢNH / BANNER / POSTER TỪ SEQUENCER */}
               {flowSequencerOverlay?.overlayImage && (
                 <div 
                   className={`absolute z-30 pointer-events-none transition-all duration-300 animate-fadeIn ${
-                    flowSequencerOverlay.overlayImagePos === 'top-right' ? 'top-4 right-4 max-w-[140px] max-h-[140px]' :
-                    flowSequencerOverlay.overlayImagePos === 'center' ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[240px] max-h-[240px]' :
-                    flowSequencerOverlay.overlayImagePos === 'bottom-left' ? 'bottom-20 left-4 max-w-[140px] max-h-[140px]' :
-                    flowSequencerOverlay.overlayImagePos === 'bottom-right' ? 'bottom-20 right-4 max-w-[140px] max-h-[140px]' :
-                    flowSequencerOverlay.overlayImagePos === 'top' ? 'top-4 inset-x-4 max-h-[120px]' :
-                    flowSequencerOverlay.overlayImagePos === 'bottom' ? 'bottom-20 inset-x-4 max-h-[120px]' :
-                    'top-4 left-4 max-w-[140px] max-h-[140px]'
+                    flowSequencerOverlay.overlayImagePos === 'top-right' ? 'top-4 right-4' :
+                    flowSequencerOverlay.overlayImagePos === 'center' ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' :
+                    flowSequencerOverlay.overlayImagePos === 'bottom-left' ? 'bottom-20 left-4' :
+                    flowSequencerOverlay.overlayImagePos === 'bottom-right' ? 'bottom-20 right-4' :
+                    flowSequencerOverlay.overlayImagePos === 'top' ? 'top-4 inset-x-4' :
+                    flowSequencerOverlay.overlayImagePos === 'bottom' ? 'bottom-20 inset-x-4' :
+                    'top-4 left-4'
                   }`}
+                  style={{
+                    maxWidth: flowSequencerOverlay.overlayImagePos === 'top' || flowSequencerOverlay.overlayImagePos === 'bottom' ? '92%' : `${Math.round(140 * ((flowSequencerOverlay.overlayImageScale || 100) / 100))}px`,
+                    maxHeight: flowSequencerOverlay.overlayImagePos === 'top' || flowSequencerOverlay.overlayImagePos === 'bottom' ? `${Math.round(120 * ((flowSequencerOverlay.overlayImageScale || 100) / 100))}px` : `${Math.round(140 * ((flowSequencerOverlay.overlayImageScale || 100) / 100))}px`,
+                    transform: `scale(${(flowSequencerOverlay.overlayImageScale || 100) / 100})`,
+                    transformOrigin: flowSequencerOverlay.overlayImagePos === 'top-right' ? 'top right' : flowSequencerOverlay.overlayImagePos === 'bottom-left' ? 'bottom left' : flowSequencerOverlay.overlayImagePos === 'bottom-right' ? 'bottom right' : flowSequencerOverlay.overlayImagePos === 'top-left' ? 'top left' : 'center'
+                  }}
                 >
                   <img 
                     src={flowSequencerOverlay.overlayImage} 
@@ -4488,7 +4590,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   }`}
                 >
                   <div 
-                    className={`py-2 px-3.5 rounded-2xl text-center text-xs sm:text-sm font-black tracking-wide uppercase transition-all ${
+                    className={`py-2 px-3.5 rounded-2xl text-center font-black tracking-wide uppercase transition-all ${
                       flowSequencerOverlay.overlayTextStyle === 'neon_cyber' 
                         ? 'bg-slate-950/90 border border-cyan-400 text-cyan-300 shadow-[0_0_25px_rgba(6,182,212,0.8)]' :
                       flowSequencerOverlay.overlayTextStyle === 'gold_luxury' 
@@ -4499,6 +4601,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                         ? 'bg-black/85 border border-white/20 text-white backdrop-blur-md shadow-2xl' :
                         'bg-gradient-to-r from-red-600 via-amber-500 to-red-600 text-white shadow-[0_0_25px_rgba(239,68,68,0.85)] border border-amber-300/50'
                     }`}
+                    style={{
+                      fontFamily: flowSequencerOverlay.overlayTextFontFamily === 'montserrat' ? "'Montserrat', sans-serif" :
+                                  flowSequencerOverlay.overlayTextFontFamily === 'be_vietnam' ? "'Be Vietnam Pro', sans-serif" :
+                                  flowSequencerOverlay.overlayTextFontFamily === 'lexend' ? "'Lexend', sans-serif" :
+                                  flowSequencerOverlay.overlayTextFontFamily === 'impact' ? "Impact, sans-serif" :
+                                  flowSequencerOverlay.overlayTextFontFamily === 'inter' ? "'Inter', sans-serif" :
+                                  flowSequencerOverlay.overlayTextFontFamily === 'roboto' ? "'Roboto', sans-serif" :
+                                  flowSequencerOverlay.overlayTextFontFamily === 'playfair' ? "'Playfair Display', serif" :
+                                  flowSequencerOverlay.overlayTextFontFamily === 'anton' ? "'Anton', sans-serif" : undefined,
+                      fontSize: flowSequencerOverlay.overlayTextFontSize ? `${flowSequencerOverlay.overlayTextFontSize}px` : undefined,
+                      color: flowSequencerOverlay.overlayTextColor || undefined
+                    }}
                   >
                     {flowSequencerOverlay.overlayText}
                   </div>
