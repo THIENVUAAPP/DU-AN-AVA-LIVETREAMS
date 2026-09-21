@@ -7008,8 +7008,8 @@ export const DEFAULT_MULTI_AVATAR_CONFIG = {
       label: 'Nhân Vật 1 (Idol Chính)',
       name: 'Ngọc Nhi',
       voiceId: 'vn_nu_idol_live',
-      idleVideo: '',
-      talkVideo: '',
+      idleVideo: '/idols/phong_studio_ngoc_trinh_4k.mp4',
+      talkVideo: '/idols/phong_studio_ngoc_trinh_4k.mp4',
       volume: 1.0,
       rate: 1.0,
       enabled: true,
@@ -7022,12 +7022,12 @@ export const DEFAULT_MULTI_AVATAR_CONFIG = {
         mode: 'green'
       },
       transform: {
-        x: 4,
-        y: 8,
-        width: 52,
-        height: 88,
-        zIndex: 10,
-        pose: 'stand', // 'stand' (Đứng), 'sit' (Ngồi), 'half' (Nửa người)
+        x: 10,
+        y: 10,
+        width: 45,
+        height: 80,
+        zIndex: 8,
+        pose: 'stand',
         objectFit: 'cover',
         borderRadius: 16
       }

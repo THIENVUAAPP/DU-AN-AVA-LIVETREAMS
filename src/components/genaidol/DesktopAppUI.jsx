@@ -6318,7 +6318,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
       {/* VoiceStudio Modal (Phòng Thu Âm Thanh & Soạn Kịch Bản Thoại) */}
       {activeSettingsModal === 'voice_studio' && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in zoom-in duration-200">
+        <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in zoom-in duration-200">
           <div className="w-full max-w-7xl h-[92vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-[#0d0d12] border border-pink-500/30 relative">
             <div className="flex items-center justify-between px-5 py-3 border-b border-white/10 bg-[#12121a]">
               <div className="flex items-center gap-2 text-pink-400 font-black text-sm">
@@ -6327,7 +6327,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               </div>
               <button 
                 onClick={() => setActiveSettingsModal(null)}
-                className="p-1.5 rounded-lg bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition-colors"
+                className="p-1.5 rounded-lg bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
                 title="Đóng"
               >
                 <X size={18} />
@@ -6343,7 +6343,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       {/* General Settings Modal */}
       {activeSettingsModal === 'general' && (
         <div 
-          className="absolute inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-2 md:p-3 animate-in fade-in zoom-in duration-200"
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/75 backdrop-blur-md p-2 md:p-3 animate-in fade-in zoom-in duration-200"
           onClick={(e) => {
             if (e.target === e.currentTarget) setActiveSettingsModal(null);
           }}
@@ -6371,7 +6371,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
       {/* Settings Modal (WorkspaceTacVu / Event Manager) */}
       {(activeSettingsModal === 'workspace' || activeSettingsModal === 'workspace_sequencer' || activeSettingsModal === 'workspace_events') && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-2 md:p-3 animate-in fade-in zoom-in duration-200">
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-2 md:p-3 animate-in fade-in zoom-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setActiveSettingsModal(null);
+          }}
+        >
           <div className={`w-[98vw] max-w-[1720px] h-[97vh] max-h-[98vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border ${isDarkMode ? 'bg-[#141419] border-gray-700' : 'bg-white border-gray-200'}`}>
             <div className={`flex items-center justify-between px-6 py-3.5 border-b shrink-0 ${isDarkMode ? 'border-gray-800' : 'border-gray-200'}`}>
               <h2 className="text-xl font-bold flex items-center gap-2">
@@ -6381,13 +6386,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               <div className="flex items-center gap-4">
                 <button 
                   onClick={() => alert("Đang kiểm tra bản cập nhật từ Admin...")}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium"
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium cursor-pointer"
                 >
                   Kiểm tra cập nhật
                 </button>
                 <button 
                   onClick={() => setActiveSettingsModal(null)}
-                  className={`p-2 rounded-lg transition-colors ${isDarkMode ? 'hover:bg-gray-800 text-gray-400 hover:text-white' : 'hover:bg-gray-100 text-gray-500 hover:text-gray-900'}`}
+                  className={`p-2 rounded-lg transition-colors cursor-pointer ${isDarkMode ? 'hover:bg-gray-800 text-gray-400 hover:text-white' : 'hover:bg-gray-100 text-gray-500 hover:text-gray-900'}`}
                 >
                   <X size={24} />
                 </button>
@@ -6402,11 +6407,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
       {/* Payment & Token Packages Modal */}
       {(activeSettingsModal === 'payment' || activeSettingsModal === 'coins') && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-200">
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in zoom-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setActiveSettingsModal(null);
+          }}
+        >
           <div className="w-full max-w-5xl h-[92vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-[#0f0f1a] border border-gray-800 relative">
             <button 
               onClick={() => setActiveSettingsModal(null)}
-              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 text-white/60 hover:bg-white/20 hover:text-white transition-colors"
+              className="absolute top-4 right-4 z-10 p-2 rounded-full bg-white/10 text-white/60 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
             >
               <X size={20} />
             </button>
@@ -6422,7 +6432,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
       {/* Auto Captcha Solver 24/7 Modal */}
       {activeSettingsModal === 'captcha' && (
-        <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in zoom-in duration-200">
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-4 animate-in fade-in zoom-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setActiveSettingsModal(null);
+          }}
+        >
           <div className="w-full max-w-5xl h-[92vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-[#0b0f19] border border-emerald-500/30 relative">
             <div className="flex items-center justify-between px-5 py-3 border-b border-emerald-500/20 bg-emerald-950/40">
               <div className="flex items-center gap-2 text-emerald-400 font-black text-sm">
@@ -6431,7 +6446,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     </div>
               <button 
                 onClick={() => setActiveSettingsModal(null)}
-                className="p-1.5 rounded-lg bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition-colors"
+                className="p-1.5 rounded-lg bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
                 title="Đóng"
               >
                 <X size={18} />

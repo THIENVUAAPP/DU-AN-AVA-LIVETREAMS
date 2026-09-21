@@ -15,6 +15,7 @@ import { SvgChromaFilters } from './MultiAvatarStudioModal';
 import { 
   getMultiAvatarConfig, 
   saveMultiAvatarConfig, 
+  DEFAULT_MULTI_AVATAR_CONFIG,
   getChromaStyle, 
   removeImageBackgroundCanvas,
   isImageMedia,
@@ -1107,7 +1108,9 @@ export default function LivestreamFlowSequencer() {
   };
 
   const currentStep = activePreset.steps[currentStepIndex] || activePreset.steps[0];
-  const safeAvatars = multiAvatarConfig?.avatars || [];
+  const safeAvatars = (multiAvatarConfig?.avatars && multiAvatarConfig.avatars.length > 0)
+    ? multiAvatarConfig.avatars
+    : DEFAULT_MULTI_AVATAR_CONFIG.avatars;
   const activeAvatarCount = multiAvatarConfig?.activeCount || 1;
   const visibleAvatars = safeAvatars.slice(0, activeAvatarCount);
 

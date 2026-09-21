@@ -1,7 +1,7 @@
 {
-  "name": "project-bolt-sb1-6bcmgq",
+  "name": "du-an-ava-livestreams",
   "private": true,
-  "version": "4.4.6",
+  "version": "4.4.7",
   "type": "module",
   "main": "electron-main.cjs",
   "build": {
