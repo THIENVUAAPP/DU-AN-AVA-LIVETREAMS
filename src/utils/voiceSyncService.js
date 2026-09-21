@@ -7152,7 +7152,7 @@ export const getChromaStyle = (chromaConfig) => {
 /**
  * ✂️ TÁCH NỀN HÌNH ẢNH TRỰC TIẾP QUA CANVAS 0ms (SIÊU SẠCH 4K & TRONG SUỐT 100%)
  */
-export const removeImageBackgroundCanvas = (imgSrc, mode = 'green', tolerance = 35) => {
+export const removeImageBackgroundCanvas = (imgSrc, mode = 'green', tolerance = 40) => {
   return new Promise((resolve, reject) => {
     if (!imgSrc) return resolve('');
     const img = new Image();
@@ -7160,62 +7160,110 @@ export const removeImageBackgroundCanvas = (imgSrc, mode = 'green', tolerance = 
     img.onload = () => {
       try {
         const canvas = document.createElement('canvas');
-        canvas.width = img.naturalWidth || img.width;
-        canvas.height = img.naturalHeight || img.height;
-        const ctx = canvas.getContext('2d');
+        const w = img.naturalWidth || img.width;
+        const h = img.naturalHeight || img.height;
+        canvas.width = w;
+        canvas.height = h;
+        const ctx = canvas.getContext('2d', { willReadFrequently: true });
         if (!ctx) return resolve(imgSrc);
 
         ctx.drawImage(img, 0, 0);
-        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const imgData = ctx.getImageData(0, 0, w, h);
         const data = imgData.data;
 
-        // Auto color sampling from corners if mode === 'auto'
-        let targetR = 0, targetG = 255, targetB = 0;
-        if (mode === 'auto') {
-          targetR = (data[0] + data[(canvas.width - 1) * 4] + data[(canvas.width * (canvas.height - 1)) * 4]) / 3;
-          targetG = (data[1] + data[(canvas.width - 1) * 4 + 1] + data[(canvas.width * (canvas.height - 1)) * 4 + 1]) / 3;
-          targetB = (data[2] + data[(canvas.width - 1) * 4 + 2] + data[(canvas.width * (canvas.height - 1)) * 4 + 2]) / 3;
+        // 1. Lấy mẫu màu từ 4 góc và đường viền (Sample border colors for ambient background detection)
+        const samplePoints = [
+          [2, 2], [Math.floor(w / 2), 2], [w - 3, 2],
+          [2, Math.floor(h / 4)], [w - 3, Math.floor(h / 4)],
+          [2, Math.floor(h / 2)], [w - 3, Math.floor(h / 2)],
+          [2, h - 3], [Math.floor(w / 2), h - 3], [w - 3, h - 3]
+        ];
+
+        let bgR = 0, bgG = 0, bgB = 0;
+        let validSamples = 0;
+        samplePoints.forEach(([sx, sy]) => {
+          if (sx >= 0 && sx < w && sy >= 0 && sy < h) {
+            const idx = (sy * w + sx) * 4;
+            bgR += data[idx];
+            bgG += data[idx + 1];
+            bgB += data[idx + 2];
+            validSamples++;
+          }
+        });
+        if (validSamples > 0) {
+          bgR = Math.round(bgR / validSamples);
+          bgG = Math.round(bgG / validSamples);
+          bgB = Math.round(bgB / validSamples);
         }
+
+        const effectiveTol = Math.max(15, Math.min(90, tolerance || 40));
 
         for (let i = 0; i < data.length; i += 4) {
           const r = data[i];
           const g = data[i + 1];
           const b = data[i + 2];
+          const alpha = data[i + 3];
+          if (alpha === 0) continue;
+
           let isBg = false;
+          let featherFactor = 0; // 0 = giữ 100%, 1 = xóa 100%, 0..1 = viền mềm mượt
 
           if (mode === 'green') {
-            // Khử phông xanh lá cây & viền ám xanh
-            if (g > 70 && g > r * 1.15 && g > b * 1.15) {
+            // Khử phông xanh lá cây & viền ám xanh (Chroma Green)
+            const greenDiff = g - Math.max(r, b);
+            if (g > 65 && greenDiff > 12) {
               isBg = true;
+              featherFactor = Math.min(1, Math.max(0, (greenDiff - 8) / 30));
             }
           } else if (mode === 'blue') {
-            // Khử phông xanh dương
-            if (b > 70 && b > r * 1.15 && b > g * 1.15) {
+            // Khử phông xanh dương (Chroma Blue)
+            const blueDiff = b - Math.max(r, g);
+            if (b > 65 && blueDiff > 12) {
               isBg = true;
+              featherFactor = Math.min(1, Math.max(0, (blueDiff - 8) / 30));
             }
-          } else if (mode === 'white') {
-            // Khử nền trắng
-            if (r > 225 && g > 225 && b > 225) {
-              isBg = true;
+          } else if (mode === 'white' || mode === 'room' || mode === 'wall') {
+            // Khử nền trắng / Tường phòng sáng / Nền phòng có vân nhẹ
+            const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+            const isSkin = (r > 120 && g > 80 && b > 60 && r > g && g > b && (r - g) > 15);
+            const isDarkClothing = (r < 70 && g < 70 && b < 70);
+            
+            // Nền trắng / tường sáng gần các góc
+            const distFromBg = Math.sqrt(Math.pow(r - bgR, 2) + Math.pow(g - bgG, 2) + Math.pow(b - bgB, 2));
+            
+            if (!isSkin && !isDarkClothing) {
+              if (luminance > 195 && (Math.max(r, g, b) - Math.min(r, g, b)) < 40) {
+                isBg = true;
+                featherFactor = Math.min(1, Math.max(0, (luminance - 180) / 45));
+              } else if (distFromBg < effectiveTol * 1.3 && (Math.max(r, g, b) - Math.min(r, g, b)) < 35) {
+                isBg = true;
+                featherFactor = Math.min(1, Math.max(0, (effectiveTol * 1.3 - distFromBg) / (effectiveTol * 0.6)));
+              }
             }
           } else if (mode === 'black') {
-            // Khử nền đen
-            if (r < 30 && g < 30 && b < 30) {
+            // Khử nền đen (Screen)
+            const maxVal = Math.max(r, g, b);
+            if (maxVal < 45) {
               isBg = true;
+              featherFactor = Math.min(1, Math.max(0, (45 - maxVal) / 25));
             }
-          } else if (mode === 'auto') {
-            const dist = Math.sqrt(
-              Math.pow(r - targetR, 2) + 
-              Math.pow(g - targetG, 2) + 
-              Math.pow(b - targetB, 2)
-            );
-            if (dist < tolerance) {
+          } else if (mode === 'auto' || mode === 'smart') {
+            // Tự động nhận diện màu nền từ góc ảnh
+            const distFromBg = Math.sqrt(Math.pow(r - bgR, 2) + Math.pow(g - bgG, 2) + Math.pow(b - bgB, 2));
+            const isSkin = (r > 120 && g > 80 && b > 60 && r > g && g > b && (r - g) > 15);
+            
+            if (!isSkin && distFromBg < effectiveTol) {
               isBg = true;
+              featherFactor = Math.min(1, Math.max(0, (effectiveTol - distFromBg) / (effectiveTol * 0.5)));
             }
           }
 
           if (isBg) {
-            data[i + 3] = 0; // Trong suốt 100%
+            if (featherFactor >= 0.9) {
+              data[i + 3] = 0; // Xóa trong suốt 100%
+            } else {
+              data[i + 3] = Math.round(data[i + 3] * (1 - featherFactor)); // Khử răng cưa viền mềm mượt
+            }
           }
         }
 

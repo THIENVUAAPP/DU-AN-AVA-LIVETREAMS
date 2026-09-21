@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.3.4';
+export const APP_VERSION = '4.3.5';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.3.5 - Chức Năng Mặc Định Theo Lời Thoại Kịch Bản, Bật/Tắt Voice Từng Bước Chuẩn 100%, Sắp Xếp Lớp Z-Index, Kéo Co Giãn Chữ 4 Chiều & Tách Nền AI Auto 4K',
+    description: '1. Thời Lượng Mặc Định Dựa Vào Lời Thoại Kịch Bản: Tự động tính toán và chuyển bước ngay khi Voice AI đọc xong kịch bản, không phụ thuộc số giây cố định; 2. Nút Bật/Tắt Voice Từng Bước Chuẩn 100%: Tắt là ngắt sạch sẽ âm thanh lập tức, mở mới được đọc; tuân thủ tuyệt đối Master Voice; 3. Sắp Xếp Lớp (Z-Index Layer Ordering): Bộ nút 🔼 Lên Lớp / 🔽 Xuống Lớp / 🔝 Lên Đỉnh / 🔻 Xuống Đáy giúp di chuyển mọi lớp video/hình ảnh/avatar/chữ linh hoạt; 4. Kéo Co Giãn Tiêu Đề Chữ 4 Chiều (8 Hướng): Bounding box 8 điểm co giãn mượt mà, tự động phóng to thu nhỏ cỡ chữ trực quan; 5. Tách Nền AI Auto & Khử Nền Sạch Sẽ 100%: Khử nền ảnh phòng/tường sáng, phông xanh lá/lam, nền đen/trắng với viền mượt khử răng cưa; 6. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn OBS Window Capture Zero-Copy, Game Battle PK, Game Bản Đồ 3D.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.3.4 - Bổ Sung Bộ Chọn Voice Riêng Cho Nhân Vật 1 Đến 5 Trong Bộ Não AI & Sửa Triệt Để Lỗi Mở Tab Chuỗi Kịch Bản',
     description: '1. Tùy Chọn Voice Riêng Cho Nhân Vật 1 Đến Nhân Vật 5 Trong Bộ Não AI: Bổ sung cấu hình 5 thẻ Voice chi tiết cho Nhân vật 1 (Idol / Host), Nhân vật 2 (Quản lý / Chốt đơn), Nhân vật 3 (BLV / Hoạt náo PK), Nhân vật 4 (Khán giả / Khách mời), Nhân vật 5 (Cố vấn chuyên môn); tùy biến riêng biệt âm lượng, tốc độ, cao độ và nút nghe thử 0ms; 2. Sửa Triệt Để Lỗi Mở Tab Chuỗi Kịch Bản (Sequencer): Khắc phục dứt điểm lỗi biến runtime khiến tab không hiển thị, đảm bảo mở tức thì 100% mượt mà; 3. Đồng Bộ Tự Động Voice AI Cho Chuỗi Kịch Bản: Khi phân vai nhân vật nào đọc thoại, hệ thống tự động nạp chính xác Voice cấu hình từ Bộ Não tương ứng; 4. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D, Luồng phát 60 FPS 4K.'
