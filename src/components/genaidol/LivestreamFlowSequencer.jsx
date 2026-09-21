@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef, useCallback } from 'react';
+import React, { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { 
   Play, Square, SkipForward, SkipBack, Plus, Trash2, Edit3, Copy, 
   Save, Download, Upload, Sparkles, Clock, Video, Mic, MessageCircle, 
