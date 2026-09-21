@@ -300,7 +300,9 @@ function fillTemplate(template, vars = {}) {
 
     const configs = getSavedEventConfigs();
     let replyText = '';
-    let shouldAction = null;
+    let currentMatchedSpecialGiftSlot = null;
+    let currentMatchedCheckoutProduct = null;
+    let isSpecialGift = false;
     const rawUserName = (payload?.name || payload?.username || 'Bạn').trim();
     const userName = cleanUserNameForSpeech(rawUserName);
     const userDisplay = (userName === 'bạn' || userName === 'Bạn') ? 'bạn' : (userName.startsWith('bạn ') || userName.startsWith('anh ') || userName.startsWith('chị ') ? userName : `bạn ${userName}`);
@@ -437,6 +439,7 @@ function fillTemplate(template, vars = {}) {
               const kws = prod.keywords.toLowerCase().split(/[;,]/).map(k => k.trim()).filter(Boolean);
               if (kws.some(k => commentText.toLowerCase().includes(k)) || (prod.productName && commentText.toLowerCase().includes(prod.productName.toLowerCase()))) {
                 isHandled = true;
+                currentMatchedCheckoutProduct = prod;
                 if (prod.sampleAnswers) {
                   bodyAnswer = fillTemplate(getRandomSample(prod.sampleAnswers), { user: userName, comment: commentText, product: prod.productName });
                 } else {
@@ -540,6 +543,7 @@ function fillTemplate(template, vars = {}) {
           const matchedSlot = specialGiftConfig.specialGiftSlots.find(s => s.active !== false && s.giftName && giftName.toLowerCase().includes(s.giftName.toLowerCase().split('(')[0].trim()));
           if (matchedSlot) {
             isSpecialGift = true;
+            currentMatchedSpecialGiftSlot = matchedSlot;
             shouldAction = 'gift_reaction';
             if (matchedSlot.sampleAnswers) {
               replyText = fillTemplate(getRandomSample(matchedSlot.sampleAnswers), { user: userName, gift_name: giftName, count });
@@ -705,11 +709,41 @@ function fillTemplate(template, vars = {}) {
         }
       }
 
-      // 12. TỰ ĐỘNG TÌM & PHÁT VIDEO CÓ SẴN TRONG KHO MEDIA (PRE-RECORDED VIDEO EVENT)
+      // 12. TỰ ĐỘNG TÌM & PHÁT VIDEO TỪ CẤU HÌNH SỰ KIỆN HOẶC KHO MEDIA (TỰ ĐỘNG KHỚP SÂN KHẤU CHÍNH)
       let matchedEventVideo = null;
-      if (Array.isArray(liveMedia) && liveMedia.length > 0) {
-        const targetCategory = currentEvConfig.videoCategory || (evKey === 'welcome' ? 'join' : evKey);
-        const targetFolder = currentEvConfig.videoFolder || '';
+      const directVideoUrl = currentEvConfig?.videoFile || currentEvConfig?.videoUrl || currentEvConfig?.supportVideoFile;
+
+      if (directVideoUrl) {
+        matchedEventVideo = {
+          id: `event_vid_${evKey}_${Date.now()}`,
+          name: currentEvConfig.videoFolder || `${evKey} Video`,
+          mediaUrl: directVideoUrl,
+          url: directVideoUrl,
+          type: 'video',
+          category: evKey
+        };
+      } else if (isSpecialGift && currentMatchedSpecialGiftSlot?.videoFile) {
+        matchedEventVideo = {
+          id: `special_gift_vid_${currentMatchedSpecialGiftSlot.id}`,
+          name: currentMatchedSpecialGiftSlot.videoFolder || currentMatchedSpecialGiftSlot.giftName,
+          mediaUrl: currentMatchedSpecialGiftSlot.videoFile,
+          url: currentMatchedSpecialGiftSlot.videoFile,
+          type: 'video',
+          category: 'special_gift'
+        };
+      } else if (currentMatchedCheckoutProduct?.videoFile || currentMatchedCheckoutProduct?.videoUrl) {
+        const prodVid = currentMatchedCheckoutProduct.videoFile || currentMatchedCheckoutProduct.videoUrl;
+        matchedEventVideo = {
+          id: `checkout_prod_vid_${currentMatchedCheckoutProduct.id}`,
+          name: currentMatchedCheckoutProduct.productName || 'Checkout Video',
+          mediaUrl: prodVid,
+          url: prodVid,
+          type: 'video',
+          category: 'checkout'
+        };
+      } else if (Array.isArray(liveMedia) && liveMedia.length > 0) {
+        const targetCategory = currentEvConfig?.videoCategory || (evKey === 'welcome' ? 'join' : evKey);
+        const targetFolder = currentEvConfig?.videoFolder || '';
 
         // Ưu tiên 1: Khớp folder người dùng chỉ định
         if (targetFolder) {
@@ -730,6 +764,18 @@ function fillTemplate(template, vars = {}) {
           setPreviousVideoItem(activeVideoItem);
         }
         setActiveVideoItem(matchedEventVideo);
+
+        // Bắn sự kiện toàn cục để Sân Khấu Chính lập tức hiển thị video sự kiện này tràn khớp màn hình
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('avalive:event_video_trigger', {
+            detail: {
+              videoUrl: matchedEventVideo.mediaUrl,
+              eventType: type,
+              eventKey: evKey,
+              name: matchedEventVideo.name
+            }
+          }));
+        }
       }
 
       // 13. PHÁT GIỌNG NÓI VOICE AI & LIP-SYNC (ƯU TIÊN 100% TAB BỘ NÃO -> FALLBACK 14 TÁC VỤ)

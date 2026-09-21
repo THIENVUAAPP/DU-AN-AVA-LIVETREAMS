@@ -558,15 +558,39 @@ export default function DesktopAppUI() {
       }
     };
 
+    const handleEventVideoTrigger = (e) => {
+      const { videoUrl, name, eventType } = e.detail || {};
+      if (videoUrl) {
+        const item = {
+          id: `ev_${Date.now()}`,
+          name: name || `${eventType} Video`,
+          mediaUrl: videoUrl,
+          url: videoUrl,
+          type: 'video'
+        };
+        setActiveVideoItem(item);
+        syncMasterLiveState({
+          stage: 'idol',
+          mediaUrl: videoUrl,
+          characterName: name || 'AI Idol Event',
+          isVideo: true,
+          videoPlaybackEvent: 'play',
+          isPlaying: true
+        }, socketRef.current);
+      }
+    };
+
     window.addEventListener('avalive_multi_avatar_changed', handleMultiAvatarChange);
     window.addEventListener('avalive_active_speaker_changed', handleSpeakerChange);
     window.addEventListener('avalive_speaker_change', handleSpeakerChange);
     window.addEventListener('avalive:master_sync_state_changed', handleMasterSyncChange);
+    window.addEventListener('avalive:event_video_trigger', handleEventVideoTrigger);
     return () => {
       window.removeEventListener('avalive_multi_avatar_changed', handleMultiAvatarChange);
       window.removeEventListener('avalive_active_speaker_changed', handleSpeakerChange);
       window.removeEventListener('avalive_speaker_change', handleSpeakerChange);
       window.removeEventListener('avalive:master_sync_state_changed', handleMasterSyncChange);
+      window.removeEventListener('avalive:event_video_trigger', handleEventVideoTrigger);
     };
   }, []);
 
@@ -1614,9 +1638,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         audioPlayerRef.current.enqueueItem(text, action, false, { voiceId, voiceChannel, isTest });
       }
       
-      // Nếu có video reaction quay sẵn thì đổi video nền ngay
-      if (preRecordedCat && baseVideoItem) {
-        // Tạm thời bỏ qua logic tìm video reaction (AIAudioPlayer sẽ gọi handleActionVideoReady sau khi LipSync xong)
+      // Tự động phát video sự kiện (Chào hỏi, Trả lời bình luận, Tặng quà, Chốt đơn...) lên Sân Khấu Chính
+      if (baseVideoItem && (baseVideoItem.mediaUrl || baseVideoItem.url)) {
+        const vidUrl = baseVideoItem.mediaUrl || baseVideoItem.url;
+        setActiveVideoItem(baseVideoItem);
+        syncMasterLiveState({
+          stage: 'idol',
+          mediaUrl: vidUrl,
+          characterName: baseVideoItem.name || 'AI Idol Event Video',
+          isVideo: true,
+          videoPlaybackEvent: 'play',
+          isPlaying: true
+        }, socketRef.current);
       }
     }
   });
@@ -4056,7 +4089,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             ref={desktopVideoRef}
             data-main-player="true"
             src={lipSyncVideoUrl} 
-            className="w-full h-full object-contain bg-black"
+            className="w-full h-full object-cover bg-black"
             autoPlay
             loop
             controls={false}
@@ -4109,7 +4142,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             ref={desktopVideoRef}
             data-main-player="true"
             src={activeVideoItem.mediaUrl} 
-            className="w-full h-full object-contain bg-black"
+            className="w-full h-full object-cover bg-black"
             autoPlay
             loop={!isProcessingEvent}
             controls={false}
@@ -4146,7 +4179,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               ref={desktopVideoRef}
               data-main-player="true"
               src={selected.url} 
-              className="w-full h-full object-contain bg-black cursor-pointer main-video-player"
+              className="w-full h-full object-cover bg-black cursor-pointer main-video-player"
               style={{ 
                 imageRendering: 'auto'
               }}
@@ -5195,14 +5228,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             {isSettingsDropdownOpen && (
               <div className={`absolute top-full left-0 mt-2 w-72 rounded-2xl shadow-2xl border z-50 p-2.5 overflow-hidden ${isDarkMode ? 'bg-[#181824]/98 border-gray-700 text-white shadow-black/80' : 'bg-white border-gray-200 text-slate-800 shadow-xl'} animate-in fade-in slide-in-from-top-2 duration-200 backdrop-blur-xl`}>
                 
-                {/* 0. CHUỖI KỊCH BẢN LIVE (SEQUENCER) */}
+                {/* 0. LUỒNG LIVE IDOL 1-4 AVATAR */}
                 <button 
-                  onClick={() => { setActiveSettingsModal('workspace'); setIsSettingsDropdownOpen(false); }}
+                  onClick={() => { setActiveSettingsModal('workspace_sequencer'); setIsSettingsDropdownOpen(false); }}
                   className={`w-full text-left px-3 py-2 mb-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-rose-950/70 to-pink-900/50 hover:from-rose-600 hover:to-pink-600 text-rose-100 hover:text-white border border-rose-700/60 shadow-md' : 'bg-rose-50 hover:bg-rose-500 text-rose-800 hover:text-white border border-rose-200'}`}
                 >
                   <div className="flex items-center gap-2.5">
                     <Layers size={16} className="text-rose-400 shrink-0" />
-                    <span className="font-black uppercase tracking-tight">🎬 Chuỗi Kịch Bản (Sequencer)</span>
+                    <span className="font-black uppercase tracking-tight">🎬 Luồng Live Idol 1-4 Avatar</span>
                   </div>
                   <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-rose-600 text-white shadow-xs">MỚI</span>
                 </button>
@@ -5218,7 +5251,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
                 {/* 2. KẾT NỐI IDOL */}
                 <button 
-                  onClick={() => { setActiveSettingsModal('workspace'); setIsSettingsDropdownOpen(false); }}
+                  onClick={() => { setActiveSettingsModal('workspace_events'); setIsSettingsDropdownOpen(false); }}
                   className={`w-full text-left px-3 py-2 mb-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-purple-900/40 to-purple-800/20 hover:from-purple-600 hover:to-purple-500 text-purple-100 hover:text-white border border-purple-800/50' : 'bg-purple-50 hover:bg-purple-500 text-purple-800 hover:text-white'}`}
                 >
                   <Radio size={16} className="text-purple-400 shrink-0" />
@@ -5817,7 +5850,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             currentVideoUrl={(isScriptLiveRunning || isConnected || showSimulator) && activeVideoItem ? activeVideoItem.mediaUrl : null}
             onActionTriggered={(e) => {
               if (e.type === 'LIPSYNC_READY') handleActionVideoReady(e.videoUrl, true);
-              if (e.type === 'LIPSYNC_ENDED') setLipSyncVideoUrl(null);
+              if (e.type === 'LIPSYNC_ENDED') {
+                setLipSyncVideoUrl(null);
+                handleVideoEnded();
+              }
+              if (e.type === 'SPEECH_ENDED') {
+                setLipSyncVideoUrl(null);
+                handleVideoEnded();
+              }
             }} 
           />
         </div>
@@ -6330,7 +6370,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       )}
 
       {/* Settings Modal (WorkspaceTacVu / Event Manager) */}
-      {activeSettingsModal === 'workspace' && (
+      {(activeSettingsModal === 'workspace' || activeSettingsModal === 'workspace_sequencer' || activeSettingsModal === 'workspace_events') && (
         <div className="absolute inset-0 z-50 flex items-center justify-center bg-black/75 backdrop-blur-md p-2 md:p-3 animate-in fade-in zoom-in duration-200">
           <div className={`w-[98vw] max-w-[1720px] h-[97vh] max-h-[98vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border ${isDarkMode ? 'bg-[#141419] border-gray-700' : 'bg-white border-gray-200'}`}>
             <div className={`flex items-center justify-between px-6 py-3.5 border-b shrink-0 ${isDarkMode ? 'border-gray-800' : 'border-gray-200'}`}>
@@ -6354,7 +6394,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     </div>
     </div>
             <div className="flex-1 overflow-auto relative">
-              <WorkspaceTacVu />
+              <WorkspaceTacVu defaultEventId={activeSettingsModal === 'workspace_events' ? 'welcome' : 'flow_sequencer'} />
     </div>
     </div>
     </div>

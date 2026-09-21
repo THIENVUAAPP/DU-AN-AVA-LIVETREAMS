@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.4.4';
+export const APP_VERSION = '4.4.5';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.4.5 - Đổi Tên Tab "Luồng Live Idol 1-4 Avatar", Tự Động Phát Video Khớp 100% Khung Sân Khấu Khi Có Sự Kiện & Sửa Triệt Để Lỗi Truy Cập Kịch Bản / Kết Nối Idol',
+    description: '1. Đổi Tên Tab Thống Nhất: Đổi tên tab chức năng thành "🎬 Luồng Live Idol 1-4 Avatar" trực quan, dễ nhớ, giữ nguyên 100% tính năng phân đoạn và bố cục 1-4 avatar; 2. Luồng Sự Kiện Tự Động Phát Video Khớp 100% Khung Sân Khấu: Khi có sự kiện (chào người mới, bình luận, quà tặng đặc biệt/thường, theo dõi, chia sẻ, cảm ơn tim, chốt đơn, nói chuyện AI, xin lỗi, im lặng/chờ...), video được tải lên từ ô sự kiện tương ứng sẽ tự động chuyển và phát trực tiếp lên Sân Khấu Chính full-frame (object-cover 100%), không hở viền; khi kết thúc sự kiện tự động trả về video nền; 3. Sửa Triệt Để Lỗi Truy Cập "Chuỗi Kịch Bản" & "Kết Nối Idol": Điều hướng chính xác và tức thì tới subview kịch bản hoặc sự kiện mà không bị báo lỗi runtime; 4. Khóa Chặt 100% Toàn Bộ Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D, Luồng phát 60 FPS 4K.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.4.4 - Đồng Bộ Sân Khấu Chính 100% Khung Hình & Sạch Rác, Đọc Trọn Bộ Kịch Bản Không Bị Ngắt & Đầy Đủ Danh Sách Giọng Đọc Voice AI Brain',
     description: '1. Sân Khấu Chính Đồng Bộ Chuẩn 100% Khung Hình (Full-Screen 100%): Khi đồng bộ từ Sân Khấu Phụ (Sequencer), video và hình ảnh chính tự động phủ kín 100% màn hình, không bị lệch hoặc bó hẹp trong khung 48%; 2. Sạch Rác 100% Sân Khấu Live: Triệt tiêu hoàn toàn tất cả các tag rác (🟢 Nhân Vật 1, Nhân Vật 2, Đang nói) trên màn hình phát live, đảm bảo khung hình sạch sẽ chuyên nghiệp; 3. Đọc Trọn Bộ Toàn Bộ Kịch Bản: Nâng cấp động cơ Voice AI đọc hết toàn bộ câu chữ trong kịch bản dài không bị dừng/ngắt giữa chừng, tự động chuyển mượt sang bước tiếp theo khi đọc xong; 4. Đầy Đủ Danh Sách Giọng Đọc Voice AI: Dropdown phân nhóm rõ ràng tất cả các giọng trong Bộ Não Voice AI Brain (Top Bán Hàng VIP, Nữ Bắc/Trung/Nam, Nam Bắc/Trung/Nam, Đa Ngôn Ngữ); 5. Khóa Chặt 100% Toàn Bộ Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D, Luồng phát 60 FPS 4K.'
