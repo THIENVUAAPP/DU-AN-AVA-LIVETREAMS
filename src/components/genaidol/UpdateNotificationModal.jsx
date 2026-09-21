@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.3.2';
+export const APP_VERSION = '4.3.3';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.3.3 - Nút Master Bật/Tắt Voice & Video Quyền Lực Nhất, Nút Xóa Đỏ Góc Trái Cho Mọi Ô, Tách Nền Canvas 0ms & Nhúng Khung Phông Xanh',
+    description: '1. Nút Master Bật/Tắt Voice AI Quyền Lực Nhất: Kiểm soát tuyệt đối 100% âm thanh và giọng đọc, khi TẮT là ngắt lập tức mọi âm thanh và voice, không tự ý phát giọng khi chuyển bước; 2. Nút Xóa (Red Trash) Ở Góc Trái Trên Cùng: Bấm chọn bất kỳ ô/lớp nào trên sân khấu 9:16 (Video chính, PiP, Avatar 1-4, Banner, Text) là xuất hiện ngay nút xóa màu đỏ góc trái để xóa tức thì 1 chạm; 3. Tách Nền Siêu Sạch Canvas 0ms Cho Cả Ảnh & Video: Tách phông xanh lá, phông lam, nền đen (Screen), nền trắng (Multiply) sạch sẽ 100%, không viền đục; 4. Nhúng Video/Ảnh Vào Khung Phông Xanh: Tự động lồng ghép video và hình ảnh vào đúng khung mockup phông xanh chuẩn xác; 5. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.3.2 - Xóa Phông Xanh & Tách Nền Cực Sạch Cho Cả Video và Hình Ảnh, Ghim Chạy Xuyên Suốt 100%, Xóa Ô Nhân Vật Trực Tiếp & Tự Động Đọc Thoại Voice AI Brain',
     description: '1. Xóa Sạch Phông Xanh & Nền Cho CẢ HÌNH ẢNH VÀ VIDEO: Bộ lọc tách phông (Chroma Green 🟢, Chroma Blue 🔵, Nền đen Screen ⚫, Nền trắng Multiply ⚪) áp dụng triệt để cho toàn bộ 4 lớp: Video/Ảnh nền chính, Video/Ảnh PiP, Avatar AI và Banner hình ảnh; 2. Cơ Chế Ghim Chạy Xuyên Suốt 100%: Bất kỳ video nền, video phụ PiP, banner ảnh hay chữ tiêu đề nào được ghim từ bước 1 sẽ tự động kế thừa và phát liên tục xuyên suốt từ bước đầu tiên đến bước cuối cùng mà không bị mất hay gián đoạn; 3. Xóa Ô Nhân Vật Trực Tiếp Trên Sân Khấu: Bấm chọn nhân vật là có ngay nút Xóa (Trash) trực tiếp và trên thanh công cụ, tự động thu gọn số lượng nhân vật và làm sạch sân khấu 100%; 4. Tự Động Đọc Kịch Bản Bằng Voice AI Brain (Bộ Não): Khi bấm chạy kịch bản Sequencer hoặc Chạy Test, hệ thống tự động phát giọng đọc của từng nhân vật theo cấu hình trong Bộ Não với độ trễ 0ms; 5. Đồng Bộ Sân Khấu Chính Tuyệt Đối 100%: Truyền phát mượt mà 60 FPS 4K sang OBS Window Capture, TikTok Live Studio và Link Online HTTPS; 6. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D.'

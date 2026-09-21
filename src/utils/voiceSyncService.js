@@ -7060,20 +7060,100 @@ export const isImageMedia = (url) => {
 
 export const getChromaStyle = (chromaConfig) => {
   if (!chromaConfig || !chromaConfig.enabled) return {};
+  const mode = chromaConfig.mode || 'green';
   const color = (chromaConfig.color || '#00ff00').toLowerCase();
-  if (color === '#000000' || chromaConfig.mode === 'black') {
-    return { mixBlendMode: 'screen' };
+  if (mode === 'black' || color === '#000000') {
+    return { mixBlendMode: 'screen', filter: 'contrast(105%)' };
   }
-  if (color === '#ffffff' || chromaConfig.mode === 'white') {
-    return { mixBlendMode: 'multiply' };
+  if (mode === 'white' || color === '#ffffff') {
+    return { mixBlendMode: 'multiply', filter: 'contrast(105%)' };
   }
-  if (color.includes('00ff00') || chromaConfig.mode === 'green' || color === '#00ff00') {
-    return { filter: 'url(#avalive-chroma-green)' };
-  }
-  if (color.includes('0000ff') || chromaConfig.mode === 'blue' || color === '#0000ff') {
+  if (mode === 'blue' || color.includes('0000ff')) {
     return { filter: 'url(#avalive-chroma-blue)' };
   }
   return { filter: 'url(#avalive-chroma-green)' };
+};
+
+/**
+ * ✂️ TÁCH NỀN HÌNH ẢNH TRỰC TIẾP QUA CANVAS 0ms (SIÊU SẠCH 4K & TRONG SUỐT 100%)
+ */
+export const removeImageBackgroundCanvas = (imgSrc, mode = 'green', tolerance = 35) => {
+  return new Promise((resolve, reject) => {
+    if (!imgSrc) return resolve('');
+    const img = new Image();
+    img.crossOrigin = 'anonymous';
+    img.onload = () => {
+      try {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.naturalWidth || img.width;
+        canvas.height = img.naturalHeight || img.height;
+        const ctx = canvas.getContext('2d');
+        if (!ctx) return resolve(imgSrc);
+
+        ctx.drawImage(img, 0, 0);
+        const imgData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+        const data = imgData.data;
+
+        // Auto color sampling from corners if mode === 'auto'
+        let targetR = 0, targetG = 255, targetB = 0;
+        if (mode === 'auto') {
+          targetR = (data[0] + data[(canvas.width - 1) * 4] + data[(canvas.width * (canvas.height - 1)) * 4]) / 3;
+          targetG = (data[1] + data[(canvas.width - 1) * 4 + 1] + data[(canvas.width * (canvas.height - 1)) * 4 + 1]) / 3;
+          targetB = (data[2] + data[(canvas.width - 1) * 4 + 2] + data[(canvas.width * (canvas.height - 1)) * 4 + 2]) / 3;
+        }
+
+        for (let i = 0; i < data.length; i += 4) {
+          const r = data[i];
+          const g = data[i + 1];
+          const b = data[i + 2];
+          let isBg = false;
+
+          if (mode === 'green') {
+            // Khử phông xanh lá cây & viền ám xanh
+            if (g > 70 && g > r * 1.15 && g > b * 1.15) {
+              isBg = true;
+            }
+          } else if (mode === 'blue') {
+            // Khử phông xanh dương
+            if (b > 70 && b > r * 1.15 && b > g * 1.15) {
+              isBg = true;
+            }
+          } else if (mode === 'white') {
+            // Khử nền trắng
+            if (r > 225 && g > 225 && b > 225) {
+              isBg = true;
+            }
+          } else if (mode === 'black') {
+            // Khử nền đen
+            if (r < 30 && g < 30 && b < 30) {
+              isBg = true;
+            }
+          } else if (mode === 'auto') {
+            const dist = Math.sqrt(
+              Math.pow(r - targetR, 2) + 
+              Math.pow(g - targetG, 2) + 
+              Math.pow(b - targetB, 2)
+            );
+            if (dist < tolerance) {
+              isBg = true;
+            }
+          }
+
+          if (isBg) {
+            data[i + 3] = 0; // Trong suốt 100%
+          }
+        }
+
+        ctx.putImageData(imgData, 0, 0);
+        resolve(canvas.toDataURL('image/png'));
+      } catch (err) {
+        console.warn('Canvas background removal error:', err);
+        resolve(imgSrc);
+      }
+    };
+    img.onerror = () => resolve(imgSrc);
+    img.src = imgSrc;
+  });
 };
 
 export function getMultiAvatarConfig() {

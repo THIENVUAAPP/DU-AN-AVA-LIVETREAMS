@@ -16,6 +16,7 @@ import {
   getMultiAvatarConfig, 
   saveMultiAvatarConfig, 
   getChromaStyle, 
+  removeImageBackgroundCanvas,
   isImageMedia,
   STUDIO_STAGE_PRESETS,
   ALL_SYSTEM_VOICES,
@@ -194,6 +195,57 @@ export default function LivestreamFlowSequencer() {
       return false;
     }
   });
+
+  // 🔊 State Bật/Tắt Voice AI Quyền Lực Nhất (Master Voice Control)
+  const [isMasterVoiceEnabled, setIsMasterVoiceEnabled] = useState(() => {
+    try {
+      const saved = localStorage.getItem('avalive_master_voice_enabled');
+      return saved !== 'false';
+    } catch (e) {
+      return true;
+    }
+  });
+
+  // Lưu trạng thái Master Voice
+  useEffect(() => {
+    try {
+      localStorage.setItem('avalive_master_voice_enabled', isMasterVoiceEnabled ? 'true' : 'false');
+    } catch (e) {}
+  }, [isMasterVoiceEnabled]);
+
+  // 🛑 LẮNG NGHE LỆNH DỪNG KHẨN CẤP / TẮT TẤT CẢ TỪ BÊN NGOÀI PHẦN MỀM
+  useEffect(() => {
+    const handleEmergencyStop = () => {
+      setIsPlayingFlow(false);
+      stopVoiceAudio();
+      setIsSpeakingPreview(false);
+      setSpeakingStepId(null);
+      if (timerRef.current) clearInterval(timerRef.current);
+    };
+
+    window.addEventListener('avalive_emergency_stop_all', handleEmergencyStop);
+    window.addEventListener('avalive:stop_all_audio_and_voice', handleEmergencyStop);
+    window.addEventListener('global-stop-demo', handleEmergencyStop);
+
+    let bc = null;
+    if (typeof BroadcastChannel !== 'undefined') {
+      try {
+        bc = new BroadcastChannel('avalive_master_live_stream');
+        bc.onmessage = (e) => {
+          if (e.data?.type === 'EMERGENCY_STOP_ALL' || (e.data?.type === 'GLOBAL_PLAYBACK_CHANGE' && !e.data.isPlaying)) {
+            handleEmergencyStop();
+          }
+        };
+      } catch (e) {}
+    }
+
+    return () => {
+      window.removeEventListener('avalive_emergency_stop_all', handleEmergencyStop);
+      window.removeEventListener('avalive:stop_all_audio_and_voice', handleEmergencyStop);
+      window.removeEventListener('global-stop-demo', handleEmergencyStop);
+      if (bc) bc.close();
+    };
+  }, []);
 
   // 🎯 State Layer Tương Tác Kéo Thả & Co Giãn 8 Điểm Trên Sân Khấu
   const [selectedLayer, setSelectedLayer] = useState({ type: 'avatar', id: 'avatar_1' });
@@ -377,8 +429,8 @@ export default function LivestreamFlowSequencer() {
     }).catch(() => {});
   };
 
-  // Khởi động hoặc chuyển bước trong chuỗi kịch bản & tự động đọc kịch bản AI Bộ Não
-  const startStep = (index, shouldPlay = true) => {
+  // Khởi động hoặc chuyển bước trong chuỗi kịch bản (chỉ đọc kịch bản khi được yêu cầu và Master Voice BẬT)
+  const startStep = (index, shouldPlay = false) => {
     if (!activePreset || !activePreset.steps || activePreset.steps.length === 0) {
       toast.error('Kịch bản chưa có phân đoạn nào!');
       return;
@@ -389,8 +441,8 @@ export default function LivestreamFlowSequencer() {
     setSecondsRemaining(step.durationSeconds || 60);
     syncStepToServer(step, safeIndex, shouldPlay);
 
-    // 🎙️ TỰ ĐỘNG PHÁT GIỌNG ĐỌC AI TỪ BỘ NÃO KHI CHẠY KỊCH BẢN
-    if (shouldPlay && step.scriptText && step.scriptText.trim()) {
+    // 🎙️ CHỈ PHÁT GIỌNG ĐỌC KHI ĐƯỢC PHÉP VÀ MASTER VOICE ĐANG BẬT
+    if (shouldPlay && isMasterVoiceEnabled && step.scriptText && step.scriptText.trim()) {
       const effectiveVoiceId = (!step.voiceId || step.voiceId === 'brain_auto')
         ? getBrainVoiceForSpeaker(step.avatarSpeaker)
         : step.voiceId;
@@ -403,7 +455,7 @@ export default function LivestreamFlowSequencer() {
         setSpeakingStepId(null);
         setIsSpeakingPreview(false);
       });
-    } else if (!step.scriptText || !step.scriptText.trim()) {
+    } else {
       stopVoiceAudio();
       setSpeakingStepId(null);
       setIsSpeakingPreview(false);
@@ -890,6 +942,72 @@ export default function LivestreamFlowSequencer() {
     }
   };
 
+  // ✂️ TÁCH NỀN TỨC THÌ (CANVAS REALTIME 0MS) CHO HÌNH ẢNH HOẶC VIDEO
+  const handleInstantCanvasBgRemoval = async (layerType, targetId = null, mode = 'green') => {
+    let targetImg = null;
+    if (layerType === 'avatar' && targetId) {
+      const av = safeAvatars.find(a => a.id === targetId);
+      targetImg = av?.talkVideo || av?.idleVideo;
+    } else if (layerType === 'main_media') {
+      targetImg = currentStep?.mediaUrl;
+    } else if (layerType === 'pip') {
+      targetImg = currentStep?.secondaryMediaUrl;
+    } else if (layerType === 'banner') {
+      targetImg = currentStep?.overlayImage;
+    }
+
+    if (!targetImg || !isImageMedia(targetImg)) {
+      // Đối với Video: Kích hoạt bộ lọc Chroma Key tương ứng
+      handleLayerChromaUpdate(layerType, targetId, { enabled: true, mode });
+      toast.info(`✨ Đã kích hoạt bộ lọc Tách Nền (${mode.toUpperCase()}) cho Video!`);
+      return;
+    }
+
+    toast.info('⏳ Đang xử lý tách nền hình ảnh siêu sạch...');
+    try {
+      const transparentDataUrl = await removeImageBackgroundCanvas(targetImg, mode);
+      if (layerType === 'avatar' && targetId) {
+        handleAvatarMediaUpload(targetId, 'talkVideo', transparentDataUrl);
+      } else if (layerType === 'main_media') {
+        handleUpdateStep(currentStep.id, 'mediaUrl', transparentDataUrl);
+      } else if (layerType === 'pip') {
+        handleUpdateStep(currentStep.id, 'secondaryMediaUrl', transparentDataUrl);
+      } else if (layerType === 'banner') {
+        handleUpdateStep(currentStep.id, 'overlayImage', transparentDataUrl);
+      }
+      toast.success('🎉 Đã tách sạch sẽ 100% nền hình ảnh trong suốt!');
+    } catch (err) {
+      handleLayerChromaUpdate(layerType, targetId, { enabled: true, mode });
+      toast.success('✨ Đã bật bộ lọc Tách Phông Xanh!');
+    }
+  };
+
+  // 📺 NHÚNG VIDEO / ẢNH VÀO KHUNG PHÔNG XANH (GREEN SCREEN FRAME EMBEDDING)
+  const handleEmbedGreenScreenFrame = (frameImgUrl, contentMediaUrl) => {
+    if (!currentStep) return;
+    const currentSteps = [...activePreset.steps];
+    const stepIdx = currentSteps.findIndex(s => s.id === currentStep.id);
+    if (stepIdx === -1) return;
+
+    const updated = {
+      ...currentSteps[stepIdx],
+      overlayImage: frameImgUrl,
+      overlayImageChromaKey: { enabled: true, mode: 'green', color: '#00ff00' },
+      overlayImageTransform: { x: 5, y: 10, width: 90, height: 80, zIndex: 30 },
+      secondaryMediaUrl: contentMediaUrl,
+      secondaryMediaChromaKey: { enabled: false, mode: 'green', color: '#00ff00' },
+      secondaryMediaTransform: { x: 12, y: 18, width: 76, height: 60, zIndex: 10 }
+    };
+    currentSteps[stepIdx] = updated;
+
+    const updatedPresets = presets.map(p => {
+      if (p.id === activePreset.id) return { ...p, steps: currentSteps };
+      return p;
+    });
+    setPresets(updatedPresets);
+    toast.success('📺 Đã nhúng Video/Ảnh vào Khung Phông Xanh chuẩn 100%!');
+  };
+
   // Tính toán Media hiển thị trên sân khấu (kèm logic ghim xuyên suốt 100%)
   const resolvedMedia = resolveStepMedia(currentStepIndex);
   const activeMediaUrl = resolvedMedia.mediaUrl;
@@ -1107,9 +1225,35 @@ export default function LivestreamFlowSequencer() {
           </div>
         </div>
 
-        {/* Nhóm Phải: Đồng Bộ Sân Khấu Chính, Chạy Test & Điều Hướng Bước */}
+        {/* Nhóm Phải: Công Tắc Master Voice AI, Đồng Bộ Sân Khấu Chính, Chạy Test & Điều Hướng Bước */}
         <div className="flex items-center gap-2 shrink-0">
           
+          {/* NÚT QUYỀN LỰC: BẬT / TẮT TẤT CẢ GIỌNG ĐỌC VOICE AI */}
+          <button
+            type="button"
+            onClick={() => {
+              const nextVoice = !isMasterVoiceEnabled;
+              setIsMasterVoiceEnabled(nextVoice);
+              if (!nextVoice) {
+                stopVoiceAudio();
+                setIsSpeakingPreview(false);
+                setSpeakingStepId(null);
+                toast.info('🔇 Đã TẮT TẤT CẢ Voice & Giọng Đọc AI');
+              } else {
+                toast.success('🔊 Đã BẬT Voice AI & Giọng Đọc AI');
+              }
+            }}
+            className={`px-2.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md cursor-pointer border ${
+              isMasterVoiceEnabled 
+                ? 'bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 border-emerald-500/50' 
+                : 'bg-rose-950/90 hover:bg-rose-900 text-rose-300 border-rose-500/50'
+            }`}
+            title={isMasterVoiceEnabled ? 'Bấm để TẮT TẤT CẢ âm thanh / giọng đọc AI' : 'Bấm để BẬT âm thanh / giọng đọc AI'}
+          >
+            {isMasterVoiceEnabled ? <Volume2 size={13} className="text-emerald-400" /> : <Volume2 size={13} className="text-rose-400 opacity-60" />}
+            <span className="hidden sm:inline">{isMasterVoiceEnabled ? 'VOICE AI: BẬT' : 'VOICE AI: TẮT'}</span>
+          </button>
+
           <button
             onClick={handleToggleMasterSync}
             className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md cursor-pointer ${
@@ -1199,7 +1343,7 @@ export default function LivestreamFlowSequencer() {
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
               </div>
 
-              {/* Lớp 1: Video / Ảnh Nền Chính (Kéo thả & Co giãn 8 hướng & Xóa Trực Tiếp & Tách Nền) */}
+              {/* Lớp 1: Video / Ảnh Nền Chính (Kéo thả & Co giãn 8 hướng & Xóa Trực Tiếp Góc Trái & Tách Nền) */}
               {activeMediaUrl && (() => {
                 const mediaTrans = getLayerCurrentTransform('main_media');
                 const isSelected = selectedLayer.type === 'main_media';
@@ -1222,7 +1366,10 @@ export default function LivestreamFlowSequencer() {
                       overflow: 'visible'
                     }}
                   >
-                    <div className="relative w-full h-full bg-black/40 overflow-hidden rounded-lg">
+                    <div 
+                      className="relative w-full h-full overflow-hidden rounded-lg"
+                      style={{ background: chromaKey?.enabled ? 'transparent' : '#000000' }}
+                    >
                       {isImageMedia(activeMediaUrl) ? (
                         <img 
                           key={activeMediaUrl}
@@ -1246,13 +1393,13 @@ export default function LivestreamFlowSequencer() {
                       )}
 
                       {isSelected && (
-                        <span className="absolute top-1 left-1 bg-black/80 text-cyan-300 text-[8px] font-black px-1.5 py-0.2 rounded border border-cyan-500/40 pointer-events-none">
+                        <span className="absolute bottom-1 right-1 bg-black/80 text-cyan-300 text-[8px] font-black px-1.5 py-0.2 rounded border border-cyan-500/40 pointer-events-none">
                           🎥 Nền Chính
                         </span>
                       )}
                     </div>
 
-                    {/* Nút Xóa Trực Tiếp Nền Khi Chọn */}
+                    {/* Nút Xóa Trực Tiếp Ở Góc Trái Trên Cùng Khi Chọn */}
                     {isSelected && (
                       <button
                         type="button"
@@ -1260,10 +1407,11 @@ export default function LivestreamFlowSequencer() {
                           e.stopPropagation();
                           handleDeleteLayerFromStep(currentStep.id, 'main_media');
                         }}
-                        className="absolute -top-2 -right-2 p-1 bg-rose-600 hover:bg-rose-500 text-white rounded-full shadow-lg z-50 cursor-pointer"
-                        title="Xóa Video Nền Chính"
+                        className="absolute -top-2.5 -left-2.5 px-2 py-0.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full shadow-2xl z-50 cursor-pointer flex items-center gap-1 border border-white text-[9px] font-black"
+                        title="Xóa Video/Ảnh Nền Chính"
                       >
                         <Trash2 size={10} />
+                        <span>Xóa Nền</span>
                       </button>
                     )}
 
@@ -1275,62 +1423,69 @@ export default function LivestreamFlowSequencer() {
                       >
                         <button
                           type="button"
-                          onClick={() => handleLayerChromaUpdate('main_media', null, { enabled: !(chromaKey?.enabled) })}
+                          onClick={() => handleInstantCanvasBgRemoval('main_media', null, chromaKey?.mode || 'green')}
                           className={`px-1.5 py-0.5 rounded-lg text-[9px] font-black flex items-center gap-0.5 cursor-pointer transition-all ${
                             chromaKey?.enabled 
                               ? 'bg-emerald-500 text-black shadow-xs ring-1 ring-emerald-300' 
                               : 'bg-slate-800 hover:bg-slate-700 text-gray-300'
                           }`}
-                          title="Bật/Tắt tách phông nền"
+                          title="Tách phông nền sạch sẽ 100%"
                         >
                           <Scissors size={10} />
                           <span>{chromaKey?.enabled ? '✨ Đã Tách Nền' : 'Tách Nền'}</span>
                         </button>
 
-                        {chromaKey?.enabled && (
-                          <div className="flex items-center gap-0.5 bg-slate-900 p-0.5 rounded-lg border border-slate-700">
-                            <button
-                              type="button"
-                              onClick={() => handleLayerChromaUpdate('main_media', null, { mode: 'green', color: '#00ff00' })}
-                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                                (!chromaKey.mode || chromaKey.mode === 'green') ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'
-                              }`}
-                              title="Tách phông xanh lá cây"
-                            >
-                              🟢 Lá
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleLayerChromaUpdate('main_media', null, { mode: 'blue', color: '#0000ff' })}
-                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                                chromaKey.mode === 'blue' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
-                              }`}
-                              title="Tách phông xanh dương"
-                            >
-                              🔵 Lam
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleLayerChromaUpdate('main_media', null, { mode: 'black', color: '#000000' })}
-                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                                chromaKey.mode === 'black' ? 'bg-gray-700 text-cyan-300' : 'text-gray-400 hover:text-white'
-                              }`}
-                              title="Tách nền đen (Screen)"
-                            >
-                              ⚫ Đen
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleLayerChromaUpdate('main_media', null, { mode: 'white', color: '#ffffff' })}
-                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                                chromaKey.mode === 'white' ? 'bg-white text-black' : 'text-gray-400 hover:text-white'
-                              }`}
-                              title="Tách nền trắng (Multiply)"
-                            >
-                              ⚪ Trắng
-                            </button>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-0.5 bg-slate-900 p-0.5 rounded-lg border border-slate-700">
+                          <button
+                            type="button"
+                            onClick={() => handleInstantCanvasBgRemoval('main_media', null, 'green')}
+                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                              (!chromaKey?.mode || chromaKey?.mode === 'green') ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'
+                            }`}
+                            title="Tách phông xanh lá cây"
+                          >
+                            🟢 Lá
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleInstantCanvasBgRemoval('main_media', null, 'blue')}
+                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                              chromaKey?.mode === 'blue' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                            }`}
+                            title="Tách phông xanh dương"
+                          >
+                            🔵 Lam
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleInstantCanvasBgRemoval('main_media', null, 'black')}
+                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                              chromaKey?.mode === 'black' ? 'bg-gray-700 text-cyan-300' : 'text-gray-400 hover:text-white'
+                            }`}
+                            title="Tách nền đen (Screen)"
+                          >
+                            ⚫ Đen
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleInstantCanvasBgRemoval('main_media', null, 'white')}
+                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                              chromaKey?.mode === 'white' ? 'bg-white text-black' : 'text-gray-400 hover:text-white'
+                            }`}
+                            title="Tách nền trắng (Multiply)"
+                          >
+                            ⚪ Trắng
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteLayerFromStep(currentStep.id, 'main_media')}
+                          className="px-1.5 py-0.5 rounded-lg text-[9px] font-black bg-rose-950/80 hover:bg-rose-900 text-rose-300 hover:text-white border border-rose-600/40 flex items-center gap-0.5 cursor-pointer"
+                        >
+                          <Trash2 size={10} />
+                          <span>Xóa</span>
+                        </button>
                       </div>
                     )}
 
@@ -1351,7 +1506,7 @@ export default function LivestreamFlowSequencer() {
                 );
               })()}
 
-              {/* Lớp 1.5: Video Phụ PiP (Picture-in-Picture) - Có Nút Xóa Trực Tiếp & Tách Nền */}
+              {/* Lớp 1.5: Video Phụ PiP (Picture-in-Picture) - Có Nút Xóa Trực Tiếp Góc Trái & Tách Nền */}
               {activeSecondaryMediaUrl && (() => {
                 const pipTrans = getLayerCurrentTransform('pip');
                 const isSelected = selectedLayer.type === 'pip';
@@ -1374,7 +1529,10 @@ export default function LivestreamFlowSequencer() {
                       overflow: 'visible'
                     }}
                   >
-                    <div className="relative w-full h-full bg-black/40 rounded-xl overflow-hidden">
+                    <div 
+                      className="relative w-full h-full rounded-xl overflow-hidden"
+                      style={{ background: chromaKey?.enabled ? 'transparent' : '#000000' }}
+                    >
                       {isImageMedia(activeSecondaryMediaUrl) ? (
                         <img 
                           src={activeSecondaryMediaUrl} 
@@ -1394,12 +1552,12 @@ export default function LivestreamFlowSequencer() {
                           style={chromaStyle}
                         />
                       )}
-                      <span className="absolute top-1 left-1 bg-indigo-600/90 text-white text-[8px] font-black px-1.5 py-0.2 rounded">
+                      <span className="absolute bottom-1 right-1 bg-indigo-600/90 text-white text-[8px] font-black px-1.5 py-0.2 rounded">
                         🎬 PiP
                       </span>
                     </div>
 
-                    {/* Nút Xóa Trực Tiếp Trên Sân Khấu Khi Chọn */}
+                    {/* Nút Xóa Trực Tiếp Ở Góc Trái Trên Cùng Khi Chọn */}
                     {isSelected && (
                       <button
                         type="button"
@@ -1407,10 +1565,11 @@ export default function LivestreamFlowSequencer() {
                           e.stopPropagation();
                           handleDeleteLayerFromStep(currentStep.id, 'pip');
                         }}
-                        className="absolute -top-2 -right-2 p-1 bg-rose-600 hover:bg-rose-500 text-white rounded-full shadow-lg z-50 cursor-pointer"
+                        className="absolute -top-2.5 -left-2.5 px-2 py-0.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full shadow-2xl z-50 cursor-pointer flex items-center gap-1 border border-white text-[9px] font-black"
                         title="Xóa Video PiP"
                       >
                         <Trash2 size={10} />
+                        <span>Xóa PiP</span>
                       </button>
                     )}
 
@@ -1422,62 +1581,69 @@ export default function LivestreamFlowSequencer() {
                       >
                         <button
                           type="button"
-                          onClick={() => handleLayerChromaUpdate('pip', null, { enabled: !(chromaKey?.enabled) })}
+                          onClick={() => handleInstantCanvasBgRemoval('pip', null, chromaKey?.mode || 'green')}
                           className={`px-1.5 py-0.5 rounded-lg text-[9px] font-black flex items-center gap-0.5 cursor-pointer transition-all ${
                             chromaKey?.enabled 
                               ? 'bg-emerald-500 text-black shadow-xs ring-1 ring-emerald-300' 
                               : 'bg-slate-800 hover:bg-slate-700 text-gray-300'
                           }`}
-                          title="Bật/Tắt tách phông nền"
+                          title="Tách phông nền"
                         >
                           <Scissors size={10} />
                           <span>{chromaKey?.enabled ? '✨ Đã Tách Nền' : 'Tách Nền'}</span>
                         </button>
 
-                        {chromaKey?.enabled && (
-                          <div className="flex items-center gap-0.5 bg-slate-900 p-0.5 rounded-lg border border-slate-700">
-                            <button
-                              type="button"
-                              onClick={() => handleLayerChromaUpdate('pip', null, { mode: 'green', color: '#00ff00' })}
-                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                                (!chromaKey.mode || chromaKey.mode === 'green') ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'
-                              }`}
-                              title="Tách phông xanh lá cây"
-                            >
-                              🟢 Lá
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleLayerChromaUpdate('pip', null, { mode: 'blue', color: '#0000ff' })}
-                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                                chromaKey.mode === 'blue' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
-                              }`}
-                              title="Tách phông xanh dương"
-                            >
-                              🔵 Lam
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleLayerChromaUpdate('pip', null, { mode: 'black', color: '#000000' })}
-                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                                chromaKey.mode === 'black' ? 'bg-gray-700 text-cyan-300' : 'text-gray-400 hover:text-white'
-                              }`}
-                              title="Tách nền đen (Screen)"
-                            >
-                              ⚫ Đen
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleLayerChromaUpdate('pip', null, { mode: 'white', color: '#ffffff' })}
-                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                                chromaKey.mode === 'white' ? 'bg-white text-black' : 'text-gray-400 hover:text-white'
-                              }`}
-                              title="Tách nền trắng (Multiply)"
-                            >
-                              ⚪ Trắng
-                            </button>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-0.5 bg-slate-900 p-0.5 rounded-lg border border-slate-700">
+                          <button
+                            type="button"
+                            onClick={() => handleInstantCanvasBgRemoval('pip', null, 'green')}
+                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                              (!chromaKey?.mode || chromaKey?.mode === 'green') ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'
+                            }`}
+                            title="Tách phông xanh lá cây"
+                          >
+                            🟢 Lá
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleInstantCanvasBgRemoval('pip', null, 'blue')}
+                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                              chromaKey?.mode === 'blue' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                            }`}
+                            title="Tách phông xanh dương"
+                          >
+                            🔵 Lam
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleInstantCanvasBgRemoval('pip', null, 'black')}
+                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                              chromaKey?.mode === 'black' ? 'bg-gray-700 text-cyan-300' : 'text-gray-400 hover:text-white'
+                            }`}
+                            title="Tách nền đen (Screen)"
+                          >
+                            ⚫ Đen
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleInstantCanvasBgRemoval('pip', null, 'white')}
+                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                              chromaKey?.mode === 'white' ? 'bg-white text-black' : 'text-gray-400 hover:text-white'
+                            }`}
+                            title="Tách nền trắng (Multiply)"
+                          >
+                            ⚪ Trắng
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteLayerFromStep(currentStep.id, 'pip')}
+                          className="px-1.5 py-0.5 rounded-lg text-[9px] font-black bg-rose-950/80 hover:bg-rose-900 text-rose-300 hover:text-white border border-rose-600/40 flex items-center gap-0.5 cursor-pointer"
+                        >
+                          <Trash2 size={10} />
+                          <span>Xóa</span>
+                        </button>
                       </div>
                     )}
 
@@ -1498,7 +1664,7 @@ export default function LivestreamFlowSequencer() {
                 );
               })()}
 
-              {/* Lớp 2: 1 Đến 4 Avatar AI (Interactive Drag & 8-Point Resize Handles & Direct Stage Upload & Xóa Trực Tiếp) */}
+              {/* Lớp 2: 1 Đến 4 Avatar AI (Interactive Drag & 8-Point Resize Handles & Direct Stage Upload & Xóa Trực Tiếp Góc Trái) */}
               {visibleAvatars.map((av, avIdx) => {
                 const isCurrentSpeaker = (currentStep?.avatarSpeaker === av.id) || (currentStep?.avatarSpeaker === 'all') || (!currentStep?.avatarSpeaker && avIdx === 0);
                 const transform = getLayerCurrentTransform('avatar', av.id);
@@ -1528,7 +1694,10 @@ export default function LivestreamFlowSequencer() {
                       overflow: 'visible'
                     }}
                   >
-                    <div className="relative w-full h-full rounded-[16px] overflow-hidden">
+                    <div 
+                      className="relative w-full h-full rounded-[16px] overflow-hidden"
+                      style={{ background: av?.chromaKey?.enabled ? 'transparent' : '#000000' }}
+                    >
                       {vidSrc && isImageMedia(vidSrc) ? (
                         <img 
                           src={vidSrc} 
@@ -1557,7 +1726,7 @@ export default function LivestreamFlowSequencer() {
                       </div>
                     </div>
 
-                    {/* Nút Xóa Trực Tiếp Avatar Khỏi Sân Khấu Khi Chọn */}
+                    {/* Nút Xóa Trực Tiếp Avatar Ở Góc Trái Trên Cùng Khi Chọn */}
                     {isSelected && (
                       <button
                         type="button"
@@ -1565,10 +1734,11 @@ export default function LivestreamFlowSequencer() {
                           e.stopPropagation();
                           handleDeleteAvatarLayer(av.id);
                         }}
-                        className="absolute -top-2 -right-2 p-1 bg-rose-600 hover:bg-rose-500 text-white rounded-full shadow-lg z-50 cursor-pointer"
+                        className="absolute -top-2.5 -left-2.5 px-2 py-0.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full shadow-2xl z-50 cursor-pointer flex items-center gap-1 border border-white text-[9px] font-black"
                         title="Xóa Nhân Vật Khỏi Sân Khấu"
                       >
                         <Trash2 size={10} />
+                        <span>Xóa Avatar</span>
                       </button>
                     )}
 
@@ -1581,7 +1751,7 @@ export default function LivestreamFlowSequencer() {
                         {/* Nút Bật/Tắt Xóa Phông Xanh */}
                         <button
                           type="button"
-                          onClick={() => handleAvatarChromaUpdate(av.id, { enabled: !(av.chromaKey?.enabled) })}
+                          onClick={() => handleInstantCanvasBgRemoval('avatar', av.id, av.chromaKey?.mode || 'green')}
                           className={`px-1.5 py-0.5 rounded-lg text-[9px] font-black flex items-center gap-0.5 cursor-pointer transition-all ${
                             av.chromaKey?.enabled 
                               ? 'bg-emerald-500 text-black shadow-xs ring-1 ring-emerald-300' 
@@ -1593,51 +1763,48 @@ export default function LivestreamFlowSequencer() {
                           <span>{av.chromaKey?.enabled ? '✨ Đã Tách Nền' : 'Tách Nền'}</span>
                         </button>
 
-                        {/* Các chế độ tách phông: Xanh Lá, Xanh Dương, Nền Đen, Nền Trắng */}
-                        {av.chromaKey?.enabled && (
-                          <div className="flex items-center gap-0.5 bg-slate-900 p-0.5 rounded-lg border border-slate-700">
-                            <button
-                              type="button"
-                              onClick={() => handleAvatarChromaUpdate(av.id, { mode: 'green', color: '#00ff00' })}
-                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                                (!av.chromaKey.mode || av.chromaKey.mode === 'green') ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'
-                              }`}
-                              title="Tách phông xanh lá cây"
-                            >
-                              🟢 Lá
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleAvatarChromaUpdate(av.id, { mode: 'blue', color: '#0000ff' })}
-                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                                av.chromaKey.mode === 'blue' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
-                              }`}
-                              title="Tách phông xanh dương"
-                            >
-                              🔵 Lam
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleAvatarChromaUpdate(av.id, { mode: 'black', color: '#000000' })}
-                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                                av.chromaKey.mode === 'black' ? 'bg-gray-700 text-cyan-300' : 'text-gray-400 hover:text-white'
-                              }`}
-                              title="Tách nền đen (Screen)"
-                            >
-                              ⚫ Đen
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleAvatarChromaUpdate(av.id, { mode: 'white', color: '#ffffff' })}
-                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                                av.chromaKey.mode === 'white' ? 'bg-white text-black' : 'text-gray-400 hover:text-white'
-                              }`}
-                              title="Tách nền trắng (Multiply)"
-                            >
-                              ⚪ Trắng
-                            </button>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-0.5 bg-slate-900 p-0.5 rounded-lg border border-slate-700">
+                          <button
+                            type="button"
+                            onClick={() => handleInstantCanvasBgRemoval('avatar', av.id, 'green')}
+                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                              (!av.chromaKey?.mode || av.chromaKey?.mode === 'green') ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'
+                            }`}
+                            title="Tách phông xanh lá cây"
+                          >
+                            🟢 Lá
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleInstantCanvasBgRemoval('avatar', av.id, 'blue')}
+                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                              av.chromaKey?.mode === 'blue' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                            }`}
+                            title="Tách phông xanh dương"
+                          >
+                            🔵 Lam
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleInstantCanvasBgRemoval('avatar', av.id, 'black')}
+                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                              av.chromaKey?.mode === 'black' ? 'bg-gray-700 text-cyan-300' : 'text-gray-400 hover:text-white'
+                            }`}
+                            title="Tách nền đen (Screen)"
+                          >
+                            ⚫ Đen
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleInstantCanvasBgRemoval('avatar', av.id, 'white')}
+                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                              av.chromaKey?.mode === 'white' ? 'bg-white text-black' : 'text-gray-400 hover:text-white'
+                            }`}
+                            title="Tách nền trắng (Multiply)"
+                          >
+                            ⚪ Trắng
+                          </button>
+                        </div>
 
                         <div className="h-3 w-px bg-slate-700 mx-0.5" />
 
@@ -1683,7 +1850,7 @@ export default function LivestreamFlowSequencer() {
                 );
               })}
 
-              {/* Lớp 3: Banner Hình Ảnh / Poster Deal - Có Nút Xóa Trực Tiếp & Tách Nền */}
+              {/* Lớp 3: Banner Hình Ảnh / Poster Deal - Có Nút Xóa Trực Tiếp Góc Trái & Tách Nền */}
               {activeOverlayImage && (() => {
                 const bannerTrans = getLayerCurrentTransform('banner');
                 const isSelected = selectedLayer.type === 'banner';
@@ -1713,7 +1880,7 @@ export default function LivestreamFlowSequencer() {
                       style={chromaStyle}
                     />
 
-                    {/* Nút Xóa Trực Tiếp Trên Sân Khấu Khi Chọn */}
+                    {/* Nút Xóa Trực Tiếp Ở Góc Trái Trên Cùng Khi Chọn */}
                     {isSelected && (
                       <button
                         type="button"
@@ -1721,10 +1888,11 @@ export default function LivestreamFlowSequencer() {
                           e.stopPropagation();
                           handleDeleteLayerFromStep(currentStep.id, 'banner');
                         }}
-                        className="absolute -top-2 -right-2 p-1 bg-rose-600 hover:bg-rose-500 text-white rounded-full shadow-lg z-50 cursor-pointer"
+                        className="absolute -top-2.5 -left-2.5 px-2 py-0.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full shadow-2xl z-50 cursor-pointer flex items-center gap-1 border border-white text-[9px] font-black"
                         title="Xóa Ảnh Banner"
                       >
                         <Trash2 size={10} />
+                        <span>Xóa Banner</span>
                       </button>
                     )}
 
@@ -1736,62 +1904,69 @@ export default function LivestreamFlowSequencer() {
                       >
                         <button
                           type="button"
-                          onClick={() => handleLayerChromaUpdate('banner', null, { enabled: !(chromaKey?.enabled) })}
+                          onClick={() => handleInstantCanvasBgRemoval('banner', null, chromaKey?.mode || 'green')}
                           className={`px-1.5 py-0.5 rounded-lg text-[9px] font-black flex items-center gap-0.5 cursor-pointer transition-all ${
                             chromaKey?.enabled 
                               ? 'bg-emerald-500 text-black shadow-xs ring-1 ring-emerald-300' 
                               : 'bg-slate-800 hover:bg-slate-700 text-gray-300'
                           }`}
-                          title="Bật/Tắt tách phông nền"
+                          title="Tách phông nền"
                         >
                           <Scissors size={10} />
                           <span>{chromaKey?.enabled ? '✨ Đã Tách Nền' : 'Tách Nền'}</span>
                         </button>
 
-                        {chromaKey?.enabled && (
-                          <div className="flex items-center gap-0.5 bg-slate-900 p-0.5 rounded-lg border border-slate-700">
-                            <button
-                              type="button"
-                              onClick={() => handleLayerChromaUpdate('banner', null, { mode: 'green', color: '#00ff00' })}
-                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                                (!chromaKey.mode || chromaKey.mode === 'green') ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'
-                              }`}
-                              title="Tách phông xanh lá cây"
-                            >
-                              🟢 Lá
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleLayerChromaUpdate('banner', null, { mode: 'blue', color: '#0000ff' })}
-                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                                chromaKey.mode === 'blue' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
-                              }`}
-                              title="Tách phông xanh dương"
-                            >
-                              🔵 Lam
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleLayerChromaUpdate('banner', null, { mode: 'black', color: '#000000' })}
-                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                                chromaKey.mode === 'black' ? 'bg-gray-700 text-cyan-300' : 'text-gray-400 hover:text-white'
-                              }`}
-                              title="Tách nền đen (Screen)"
-                            >
-                              ⚫ Đen
-                            </button>
-                            <button
-                              type="button"
-                              onClick={() => handleLayerChromaUpdate('banner', null, { mode: 'white', color: '#ffffff' })}
-                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                                chromaKey.mode === 'white' ? 'bg-white text-black' : 'text-gray-400 hover:text-white'
-                              }`}
-                              title="Tách nền trắng (Multiply)"
-                            >
-                              ⚪ Trắng
-                            </button>
-                          </div>
-                        )}
+                        <div className="flex items-center gap-0.5 bg-slate-900 p-0.5 rounded-lg border border-slate-700">
+                          <button
+                            type="button"
+                            onClick={() => handleInstantCanvasBgRemoval('banner', null, 'green')}
+                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                              (!chromaKey?.mode || chromaKey?.mode === 'green') ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'
+                            }`}
+                            title="Tách phông xanh lá cây"
+                          >
+                            🟢 Lá
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleInstantCanvasBgRemoval('banner', null, 'blue')}
+                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                              chromaKey?.mode === 'blue' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                            }`}
+                            title="Tách phông xanh dương"
+                          >
+                            🔵 Lam
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleInstantCanvasBgRemoval('banner', null, 'black')}
+                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                              chromaKey?.mode === 'black' ? 'bg-gray-700 text-cyan-300' : 'text-gray-400 hover:text-white'
+                            }`}
+                            title="Tách nền đen (Screen)"
+                          >
+                            ⚫ Đen
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleInstantCanvasBgRemoval('banner', null, 'white')}
+                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                              chromaKey?.mode === 'white' ? 'bg-white text-black' : 'text-gray-400 hover:text-white'
+                            }`}
+                            title="Tách nền trắng (Multiply)"
+                          >
+                            ⚪ Trắng
+                          </button>
+                        </div>
+
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteLayerFromStep(currentStep.id, 'banner')}
+                          className="px-1.5 py-0.5 rounded-lg text-[9px] font-black bg-rose-950/80 hover:bg-rose-900 text-rose-300 hover:text-white border border-rose-600/40 flex items-center gap-0.5 cursor-pointer"
+                        >
+                          <Trash2 size={10} />
+                          <span>Xóa</span>
+                        </button>
                       </div>
                     )}
 
@@ -1808,7 +1983,7 @@ export default function LivestreamFlowSequencer() {
                 );
               })()}
 
-              {/* Lớp 4: Tiêu Đề Chữ Typography Xếp Chồng - Có Nút Xóa Trực Tiếp */}
+              {/* Lớp 4: Tiêu Đề Chữ Typography Xếp Chồng - Có Nút Xóa Trực Tiếp Góc Trái */}
               {activeOverlayText && (() => {
                 const textTrans = getLayerCurrentTransform('text');
                 const isSelected = selectedLayer.type === 'text';
@@ -1838,7 +2013,7 @@ export default function LivestreamFlowSequencer() {
                       {activeOverlayText}
                     </div>
 
-                    {/* Nút Xóa Trực Tiếp Trên Sân Khấu Khi Chọn */}
+                    {/* Nút Xóa Trực Tiếp Ở Góc Trái Trên Cùng Khi Chọn */}
                     {isSelected && (
                       <button
                         type="button"
@@ -1846,10 +2021,11 @@ export default function LivestreamFlowSequencer() {
                           e.stopPropagation();
                           handleDeleteLayerFromStep(currentStep.id, 'text');
                         }}
-                        className="absolute -top-2 -right-2 p-1 bg-rose-600 hover:bg-rose-500 text-white rounded-full shadow-lg z-50 cursor-pointer"
+                        className="absolute -top-2.5 -left-2.5 px-2 py-0.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full shadow-2xl z-50 cursor-pointer flex items-center gap-1 border border-white text-[9px] font-black"
                         title="Xóa Chữ Tiêu Đề"
                       >
                         <Trash2 size={10} />
+                        <span>Xóa Chữ</span>
                       </button>
                     )}
 
@@ -2081,18 +2257,48 @@ export default function LivestreamFlowSequencer() {
                         onClick={() => {
                           setCurrentStepIndex(idx);
                           setSecondsRemaining(step.durationSeconds || 60);
-                          syncStepToServer(step, idx, true);
-                          toast.success(`👁️ Đang hiển thị Bước ${idx + 1} trên Sân khấu 9:16!`);
+                          syncStepToServer(step, idx, false);
+                          toast.success(`👁️ Đang hiển thị Bước ${idx + 1} trên Sân khấu 9:16! (Chỉ hiển thị hình ảnh/video, không tự phát giọng)`);
                         }}
                         className={`px-2.5 py-1 text-white font-black text-[10px] rounded-lg shadow-xs flex items-center gap-1 cursor-pointer transition-all ${
                           isSelected 
                             ? 'bg-cyan-500 text-black font-black ring-1 ring-white' 
                             : 'bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500'
                         }`}
-                        title="Xem trước toàn bộ bố cục & media của bước này trên Sân Khấu 9:16"
+                        title="Xem trước bố cục & media bước này trên Sân Khấu 9:16 (Không phát voice)"
                       >
                         <Eye size={12} />
                         <span>{isSelected ? 'Đang Xem' : 'Xem Bước Này'}</span>
+                      </button>
+
+                      {/* Nút Chạy Test Riêng Cho Bước Này */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          if (speakingStepId === step.id || (isPlaying && currentStepIndex === idx)) {
+                            stopFlow();
+                          } else {
+                            startStep(idx, true);
+                          }
+                        }}
+                        className={`px-2.5 py-1 font-black text-[10px] rounded-lg shadow-xs flex items-center gap-1 cursor-pointer transition-all ${
+                          (isPlaying && currentStepIndex === idx)
+                            ? 'bg-rose-600 text-white animate-pulse'
+                            : 'bg-indigo-600 hover:bg-indigo-500 text-white'
+                        }`}
+                        title="Chạy test giọng đọc và thời gian riêng cho bước này"
+                      >
+                        {(isPlaying && currentStepIndex === idx) ? (
+                          <>
+                            <Square size={11} className="fill-white" />
+                            <span>Dừng Test</span>
+                          </>
+                        ) : (
+                          <>
+                            <Play size={11} className="fill-white" />
+                            <span>Chạy Test</span>
+                          </>
+                        )}
                       </button>
 
                       {/* Mũi tên Mở Rộng / Thu Gọn kèm Badge Tên Tab */}
