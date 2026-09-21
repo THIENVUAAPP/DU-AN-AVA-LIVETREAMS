@@ -9,7 +9,7 @@
   "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1790001414407,
+  "updatedAt": 1790002864387,
   "flvUrl": null,
   "isConnected": false,
   "type": "MASTER_LIVE_STATE_UPDATE",
@@ -20,7 +20,7 @@
   "isVideoAudioMuted": false,
   "videoVolume": 1,
   "clearMedia": false,
-  "tunnelUrl": "https://influenced-responsible-buttons-sue.trycloudflare.com",
+  "tunnelUrl": "https://dom-hall-sink-kinds.trycloudflare.com",
   "isMuted": false,
   "pinnedProduct": {
     "id": 1,
@@ -47,7 +47,7 @@
   "productPrice": null,
   "overlayImage": null,
   "overlayImagePos": "top-left",
-  "overlayText": null,
+  "overlayText": "🌸 CHÀO MỪNG ĐẾN VỚI PHIÊN LIVESTREAM",
   "overlayTextPos": "top",
   "overlayTextStyle": "fire_sale",
   "isMediaPinned": false,
@@ -62,11 +62,5 @@
   "voiceId": "brain_auto",
   "secondaryMediaTransform": null,
   "overlayImageTransform": null,
-  "overlayTextTransform": {
-    "x": 7,
-    "y": 18,
-    "width": 90,
-    "height": 12,
-    "zIndex": 30
-  }
+  "overlayTextTransform": null
 }

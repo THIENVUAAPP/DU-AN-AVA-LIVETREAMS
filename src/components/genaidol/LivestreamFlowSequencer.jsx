@@ -665,7 +665,7 @@ export default function LivestreamFlowSequencer() {
           const nextIndex = safeIndex + 1;
           if (nextIndex < activePreset.steps.length) {
             startStep(nextIndex, true);
-          } else if (activePreset.loop) {
+          } else if (activePreset.loop !== false) {
             startStep(0, true);
           } else {
             setIsPlayingFlow(false);
@@ -702,7 +702,7 @@ export default function LivestreamFlowSequencer() {
           if (nextIndex < activePreset.steps.length) {
             startStep(nextIndex, true);
           } else {
-            if (activePreset.loop) {
+            if (activePreset.loop !== false) {
               startStep(0, true);
             } else {
               setIsPlayingFlow(false);
@@ -720,7 +720,7 @@ export default function LivestreamFlowSequencer() {
     };
   }, [isPlayingFlow, currentStepIndex, activePreset, isSpeakingPreview]);
 
-  // 🛑 DỪNG TỨC THÌ 100% VÀ TẮT MỌI ÂM THANH / GIỌNG NÓI
+  // 🛑 TẠM DỪNG CHẠY LIVE
   const handleStopFlow = () => {
     setIsPlayingFlow(false);
     stopVoiceAudio();
@@ -730,15 +730,20 @@ export default function LivestreamFlowSequencer() {
     toast.info('⏹️ Đã tạm dừng kịch bản & tắt toàn bộ âm thanh');
   };
 
-  // ▶️ BẮT ĐẦU CHẠY LIVE
+  // ▶️ BẮT ĐẦU CHẠY LIVE (ĐỒNG BỘ 100% RA SÂN KHẤU CHÍNH)
   const handleStartFlow = () => {
     if (!activePreset || !activePreset.steps || activePreset.steps.length === 0) {
       toast.error('Chưa có kịch bản hoặc phân đoạn nào để chạy!');
       return;
     }
     setIsPlayingFlow(true);
+    setIsMasterSynced(true);
+    try { localStorage.setItem('avalive_master_sync_active', 'true'); } catch (e) {}
+    window.dispatchEvent(new CustomEvent('avalive:master_sync_state_changed', { 
+      detail: { isSynced: true } 
+    }));
     startStep(currentStepIndex, true);
-    toast.success(`🎬 Bắt đầu chạy kịch bản: ${activePreset.name}`);
+    toast.success(`🎬 Bắt đầu chạy kịch bản: ${activePreset.name} (Đồng bộ ra Sân Khấu Chính 100%)`);
   };
 
   // 📡 BẬT / TẮT ĐỒNG BỘ RA SÂN KHẤU CHÍNH (ẢNH 3 & ẢNH 4)
@@ -783,7 +788,7 @@ export default function LivestreamFlowSequencer() {
 
   // 🔼 DI CHUYỂN LỚP LÊN TRÊN (Bring Forward)
   const handleLayerBringForward = () => {
-    if (!currentStep || !selectedLayer) return;
+    if (!currentStep || !selectedLayer?.type) return;
     const curTrans = getLayerCurrentTransform(selectedLayer.type, selectedLayer.id);
     const updated = { ...curTrans, zIndex: (curTrans.zIndex || 10) + 5 };
     handleUpdateStepTransform(currentStep.id, selectedLayer.type, updated, selectedLayer.id);
@@ -792,7 +797,7 @@ export default function LivestreamFlowSequencer() {
 
   // 🔽 DI CHUYỂN LỚP XUỐNG DƯỚI (Send Backward)
   const handleLayerSendBackward = () => {
-    if (!currentStep || !selectedLayer) return;
+    if (!currentStep || !selectedLayer?.type) return;
     const curTrans = getLayerCurrentTransform(selectedLayer.type, selectedLayer.id);
     const updated = { ...curTrans, zIndex: Math.max(1, (curTrans.zIndex || 10) - 5) };
     handleUpdateStepTransform(currentStep.id, selectedLayer.type, updated, selectedLayer.id);
@@ -801,7 +806,7 @@ export default function LivestreamFlowSequencer() {
 
   // 🔝 ĐƯA LÊN ĐỈNH (Bring to Front)
   const handleLayerBringToFront = () => {
-    if (!currentStep || !selectedLayer) return;
+    if (!currentStep || !selectedLayer?.type) return;
     const curTrans = getLayerCurrentTransform(selectedLayer.type, selectedLayer.id);
     const updated = { ...curTrans, zIndex: 60 };
     handleUpdateStepTransform(currentStep.id, selectedLayer.type, updated, selectedLayer.id);
@@ -810,7 +815,7 @@ export default function LivestreamFlowSequencer() {
 
   // 🔻 ĐƯA XUỐNG ĐÁY (Send to Back)
   const handleLayerSendToBack = () => {
-    if (!currentStep || !selectedLayer) return;
+    if (!currentStep || !selectedLayer?.type) return;
     const curTrans = getLayerCurrentTransform(selectedLayer.type, selectedLayer.id);
     const updated = { ...curTrans, zIndex: 1 };
     handleUpdateStepTransform(currentStep.id, selectedLayer.type, updated, selectedLayer.id);
@@ -1473,7 +1478,7 @@ export default function LivestreamFlowSequencer() {
 
   // Căn giữa nhanh đối tượng đang chọn
   const handleCenterSelectedLayer = () => {
-    if (isStageLocked || !currentStep || !selectedLayer) return;
+    if (isStageLocked || !currentStep || !selectedLayer?.type) return;
     pushUndoSnapshot();
     const curTrans = getLayerCurrentTransform(selectedLayer.type, selectedLayer.id);
     const w = curTrans.width || 50;
@@ -1487,7 +1492,7 @@ export default function LivestreamFlowSequencer() {
 
   // Tràn toàn bộ khung đối tượng đang chọn
   const handleFillSelectedLayer = () => {
-    if (isStageLocked || !currentStep || !selectedLayer) return;
+    if (isStageLocked || !currentStep || !selectedLayer?.type) return;
     pushUndoSnapshot();
     const updated = {
       x: 0,
@@ -1691,13 +1696,13 @@ export default function LivestreamFlowSequencer() {
         <div className="w-full lg:w-[32%] xl:w-[30%] flex flex-col h-full bg-[#0d101e] rounded-2xl border border-indigo-900/40 p-2 shadow-2xl shrink-0 overflow-hidden min-h-0 relative">
           
           {/* 🌟 THANH CÔNG CỤ LỚP XẾP HÀNG NGANG GỌN GÀNG NẰM TRONG KHUNG SÂN KHẤU (Ảnh số 1) */}
-          {selectedLayer.type ? (
+          {selectedLayer?.type ? (
             <div 
               className="w-full flex items-center justify-between gap-1 bg-slate-950/95 backdrop-blur-md px-1.5 py-1 rounded-xl border border-cyan-400 shadow-xl mb-1.5 shrink-0 animate-in fade-in slide-in-from-top-1 duration-200"
               onClick={(e) => e.stopPropagation()}
             >
               <span className="px-1.5 py-0.5 rounded-md bg-cyan-950 text-[9px] font-black text-cyan-300 border border-cyan-500/40 uppercase shrink-0" title={`Lớp: ${selectedLayer.type}`}>
-                {selectedLayer.type === 'avatar' ? `AV${selectedLayer.id}` : selectedLayer.type === 'main_media' ? 'NỀN' : selectedLayer.type === 'pip' ? 'PIP' : selectedLayer.type === 'banner' ? 'ẢNH' : 'CHỮ'}
+                {selectedLayer.type === 'avatar' ? `AV${selectedLayer.id || '1'}` : selectedLayer.type === 'main_media' ? 'NỀN' : selectedLayer.type === 'pip' ? 'PIP' : selectedLayer.type === 'banner' ? 'ẢNH' : 'CHỮ'}
               </span>
 
               <div className="flex items-center gap-0.5 shrink-0">
@@ -1762,7 +1767,7 @@ export default function LivestreamFlowSequencer() {
                 {/* Đóng Chọn */}
                 <button
                   type="button"
-                  onClick={() => setSelectedLayer({ type: null, id: null })}
+                  onClick={() => setSelectedLayer(null)}
                   className="p-0.5 rounded text-gray-400 hover:text-white cursor-pointer"
                   title="Đóng chọn"
                 >
