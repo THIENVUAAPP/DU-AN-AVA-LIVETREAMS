@@ -2511,9 +2511,26 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         actionType: actionType
       }, socketRef.current);
 
-      // 4. Phát Giọng Nói AI (Voice) đọc thuyết minh/tư vấn theo kịch bản của phân đoạn này
+      // 4. Tự động ghim sản phẩm giỏ hàng lên màn hình nếu phân đoạn có chứa thông tin sản phẩm
+      if (e.detail?.productName) {
+        const productObj = {
+          name: e.detail.productName,
+          price: e.detail.productPrice || 'Flash Sale Độc Quyền',
+          oldPrice: e.detail.productDiscount || '',
+          image: e.detail.productImg || mediaUrl,
+          badge: '📌 DEAL PHÂN ĐOẠN'
+        };
+        setLivePinnedProduct(productObj);
+        try { localStorage.setItem('avalive_current_pinned_product', JSON.stringify(productObj)); } catch (err) {}
+      }
+
+      // 5. Phát Giọng Nói AI (Voice) đọc thuyết minh/tư vấn theo kịch bản của phân đoạn này
       if (scriptText && scriptText.trim() && audioPlayerRef.current) {
         audioPlayerRef.current.startScript(scriptText.trim());
+      }
+
+      if (title) {
+        showToast(`🎬 Sequencer chuyển sang: ${title}`, 'success');
       }
     };
 

@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.1.9';
+export const APP_VERSION = '4.2.0';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.2.0 - Tự Động Kích Hoạt Đa Năng Phân Đoạn Sequencer: Video, Avatar, Giọng Đọc & Ghim Giỏ Hàng',
+    description: '1. Tự Động Hóa Vận Hành Toàn Diện: Mỗi phân đoạn kịch bản tự động kích hoạt chuyển video, đổi cảnh, đọc thuyết minh AI và ghim sản phẩm giỏ hàng lên sân khấu theo đúng thời lượng cài đặt; 2. Đồng Bộ Tức Thì 0ms: Sân khấu phần mềm hiển thị trực tiếp và truyền thẳng sang OBS Window Capture cùng Link Online TikTok Live Studio (/live-stream); 3. Chuẩn Tỷ Lệ 9:16 Không Viền Đen: Tự động căn chỉnh vừa khít khung live; 4. Khóa Chặt 100% Hệ Thống: Bảo toàn tuyệt đối mọi tính năng khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.1.9 - Đồng Bộ Hoàn Hảo Chuỗi Kịch Bản Sequencer Với Màn Hình Live, Window Capture & Link TikTok Studio',
     description: '1. Đồng Bộ Trực Tiếp Màn Hình Chính: Khi chuỗi kịch bản phân đoạn chạy, video trên Màn hình chính (Ảnh 3) tự động chuyển đổi theo đúng mốc thời gian cài đặt; 2. Phát Tức Thì Sang Window Capture & Link TikTok Live: OBS Window Capture và Link Online HTTPS (/live-stream) tự động nhận video chuyển cảnh 0ms vừa khít khung hình 9:16; 3. Thuyết Minh Giọng Đọc AI Đồng Thời: Nhân vật/MC AI đọc thuyết minh liên tục theo kịch bản trong khi phát video sản phẩm và review; 4. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle, Game Bản Đồ 3D.'

@@ -1,4 +1,4 @@
-import{ac as O}from"./vendor-icons-Bw8Peyyf.js";import{M as P,C as A}from"./mixin-BY5xW4uI.js";import{H as h}from"./index-DuVEY2su.js";import"./vendor-supabase-Cz-Vy19d.js";import"./vendor-three-D5cdGfmC.js";const x=t=>class extends t{static shadowRootOptions={...t.shadowRootOptions};static getTemplateHTML=(e,s={})=>{const{src:f,...T}=e;return`
+import{ac as O}from"./vendor-icons-Bw8Peyyf.js";import{M as P,C as A}from"./mixin-BY5xW4uI.js";import{H as h}from"./index-U9a8QSfs.js";import"./vendor-supabase-Cz-Vy19d.js";import"./vendor-three-D5cdGfmC.js";const x=t=>class extends t{static shadowRootOptions={...t.shadowRootOptions};static getTemplateHTML=(e,s={})=>{const{src:f,...T}=e;return`
         <script type="application/json" id="config">
           ${JSON.stringify(s.config||{})}
         <\/script>

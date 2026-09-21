@@ -265,22 +265,30 @@ export default function LivestreamFlowSequencer() {
     } catch (e) {}
   }, [presets, activePresetId]);
 
-  // Đẩy video của bước hiện tại lên Server Live State để đồng bộ TikTok Live Studio & OBS
-  const syncStepToServer = (step) => {
+  // Đẩy video và dữ liệu phân đoạn của bước hiện tại lên Server Live State để đồng bộ TikTok Live Studio & OBS
+  const syncStepToServer = (step, index = 0) => {
     if (!step) return;
     const mediaToPlay = step.mediaUrl || step.lipsyncUrl || '/idols/phong_studio_ngoc_trinh_4k.mp4';
     
-    // Phát event đồng bộ toàn cục
+    // Phát event đồng bộ toàn cục cho Màn hình chính (DesktopAppUI), Window Capture và Audio Voice
     window.dispatchEvent(new CustomEvent('avalive:update_master_media', {
       detail: {
         mediaUrl: mediaToPlay,
         title: step.title,
         actionType: step.actionType,
-        scriptText: step.scriptText
+        scriptText: step.scriptText,
+        durationSeconds: step.durationSeconds || 60,
+        stepIndex: index + 1,
+        totalSteps: activePreset?.steps?.length || 1,
+        presetName: activePreset?.name || 'Kịch bản Sequencer',
+        productName: step.productName || null,
+        productPrice: step.productPrice || null,
+        productDiscount: step.productDiscount || null,
+        productImg: step.productImg || null
       }
     }));
 
-    // Gửi request đồng bộ tới backend server
+    // Gửi request đồng bộ tức thì tới backend server
     fetch('/api/live-state', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -290,6 +298,9 @@ export default function LivestreamFlowSequencer() {
         activeTab: 'flow_sequencer',
         stepTitle: step.title,
         actionType: step.actionType,
+        scriptText: step.scriptText,
+        productName: step.productName || null,
+        productPrice: step.productPrice || null,
         fit: 'cover',
         sound: true,
         updatedAt: Date.now()
@@ -307,7 +318,7 @@ export default function LivestreamFlowSequencer() {
     const step = activePreset.steps[safeIndex];
     setCurrentStepIndex(safeIndex);
     setSecondsRemaining(step.durationSeconds || 60);
-    syncStepToServer(step);
+    syncStepToServer(step, safeIndex);
   };
 
   // Timer điều phối chuỗi phân đoạn tự động
