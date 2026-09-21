@@ -7008,8 +7008,8 @@ export const DEFAULT_MULTI_AVATAR_CONFIG = {
       label: 'Nhân Vật 1 (Idol Chính)',
       name: 'Ngọc Nhi',
       voiceId: 'vn_nu_idol_live',
-      idleVideo: '/idols/phong_studio_ngoc_trinh_4k.mp4',
-      talkVideo: '/idols/phong_studio_ngoc_trinh_4k.mp4',
+      idleVideo: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+      talkVideo: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4',
       volume: 1.0,
       rate: 1.0,
       enabled: true,
@@ -7039,8 +7039,8 @@ export const DEFAULT_MULTI_AVATAR_CONFIG = {
       label: 'Nhân Vật 2 (Trợ Lý / Quản Lý)',
       name: 'Quốc Cường',
       voiceId: 'vn_nam_quanly_uyquyen',
-      idleVideo: '',
-      talkVideo: '',
+      idleVideo: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4',
+      talkVideo: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4',
       volume: 1.0,
       rate: 1.05,
       enabled: true,
@@ -7321,6 +7321,8 @@ export function getMultiAvatarConfig() {
           return {
             ...defaultAv,
             ...matched,
+            idleVideo: (matched.idleVideo && !matched.idleVideo.startsWith('/idols/')) ? matched.idleVideo : defaultAv.idleVideo,
+            talkVideo: (matched.talkVideo && !matched.talkVideo.startsWith('/idols/')) ? matched.talkVideo : defaultAv.talkVideo,
             chromaKey: {
               ...defaultAv.chromaKey,
               ...(matched.chromaKey || {})

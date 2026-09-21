@@ -48,7 +48,15 @@ import ShopeeLiveConnectModal from './ShopeeLiveConnectModal';
 import autoPinProductService from '../../utils/autoPinProductService';
 import { generateAiKnowledgeScript } from '../../utils/aiScriptGenerator';
 
-const CHARACTERS = {};
+const CHARACTERS = {
+  default_idol: {
+    id: 'default_idol',
+    name: 'Idol Ngọc Nhi 👑 (4K Live 60FPS)',
+    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    mediaUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+    type: 'video'
+  }
+};
 
 // 📡 SINGLETON BROADCAST CHANNELS (Tái sử dụng vĩnh viễn, chống rò rỉ bộ nhớ khi phát nhiều giờ)
 let globalMasterBc = null;
@@ -4111,7 +4119,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         (userLockedMediaUrl ? { id: 'locked_video', name: 'Video Đang Phát', url: userLockedMediaUrl, mediaUrl: userLockedMediaUrl, type: 'video' } : null) ||
         (selectedCharacter && CHARACTERS[selectedCharacter]?.url ? { id: selectedCharacter, ...CHARACTERS[selectedCharacter] } : null) || 
         (customCharacters.find(c => c.url || c.mediaUrl) || null) || 
-        (Object.entries(CHARACTERS).find(([k, v]) => v.url)?.[1] ? { id: Object.entries(CHARACTERS).find(([k, v]) => v.url)[0], ...Object.entries(CHARACTERS).find(([k, v]) => v.url)[1] } : null);
+        (Object.entries(CHARACTERS).find(([k, v]) => v.url)?.[1] ? { id: Object.entries(CHARACTERS).find(([k, v]) => v.url)[0], ...Object.entries(CHARACTERS).find(([k, v]) => v.url)[1] } : null) ||
+        CHARACTERS.default_idol;
 
       if (selected) {
         const resolvedUrl = selected.url || selected.mediaUrl;
@@ -4158,17 +4167,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }
   
       if (!selected || !selected.url) {
-        return (
-          <div 
-            onClick={() => fileInputRef.current?.click()}
-            className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-[#101018] to-[#0a0a0f] text-white p-6 cursor-pointer border-2 border-dashed border-gray-700/60 hover:border-blue-500/80 transition-all group select-none"
-          >
-             <div className="w-16 h-16 rounded-2xl bg-blue-600/15 group-hover:bg-blue-600/30 border border-blue-500/30 flex items-center justify-center mb-3 text-blue-400 shadow-lg">
-               <Plus size={30} />
-             </div>
-             <h3 className="text-base font-bold text-white mb-1">Tải Ảnh / Video Idol Của Bạn</h3>
-          </div>
-        );
+        selected = CHARACTERS.default_idol;
       }
   
       if (selected.type === 'video') {
@@ -5230,8 +5229,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 
                 {/* 0. LUỒNG LIVE IDOL 1-4 AVATAR */}
                 <button 
-                  onClick={() => { setActiveSettingsModal('workspace_sequencer'); setIsSettingsDropdownOpen(false); }}
-                  className={`w-full text-left px-3 py-2 mb-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-rose-950/70 to-pink-900/50 hover:from-rose-600 hover:to-pink-600 text-rose-100 hover:text-white border border-rose-700/60 shadow-md' : 'bg-rose-50 hover:bg-rose-500 text-rose-800 hover:text-white border border-rose-200'}`}
+                  type="button"
+                  onClick={(e) => { 
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setActiveSettingsModal('workspace_sequencer'); 
+                    setIsSettingsDropdownOpen(false); 
+                  }}
+                  className={`w-full text-left px-3 py-2 mb-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2.5 cursor-pointer ${isDarkMode ? 'bg-gradient-to-r from-rose-950/70 to-pink-900/50 hover:from-rose-600 hover:to-pink-600 text-rose-100 hover:text-white border border-rose-700/60 shadow-md' : 'bg-rose-50 hover:bg-rose-500 text-rose-800 hover:text-white border border-rose-200'}`}
                 >
                   <div className="flex items-center gap-2.5">
                     <Layers size={16} className="text-rose-400 shrink-0" />
@@ -6381,7 +6386,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             <div className={`flex items-center justify-between px-6 py-3.5 border-b shrink-0 ${isDarkMode ? 'border-gray-800' : 'border-gray-200'}`}>
               <h2 className="text-xl font-bold flex items-center gap-2">
                 <Settings className="text-blue-500" />
-                Cài đặt Hệ thống Sự kiện Livestream
+                <span>
+                  {activeSettingsModal === 'workspace_sequencer' 
+                    ? '🎬 Luồng Live Idol 1–4 Avatar & Kịch Bản Phân Đoạn Live' 
+                    : 'Cài đặt Hệ thống Sự kiện Livestream'}
+                </span>
               </h2>
               <div className="flex items-center gap-4">
                 <button 
@@ -6399,7 +6408,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     </div>
     </div>
             <div className="flex-1 overflow-auto relative">
-              <WorkspaceTacVu defaultEventId={activeSettingsModal === 'workspace_events' ? 'welcome' : 'flow_sequencer'} />
+              <WorkspaceTacVu 
+                key={activeSettingsModal}
+                defaultEventId={activeSettingsModal === 'workspace_events' ? 'welcome' : 'flow_sequencer'} 
+              />
     </div>
     </div>
     </div>
