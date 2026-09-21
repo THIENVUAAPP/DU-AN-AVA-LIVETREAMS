@@ -398,7 +398,16 @@ export default function LivestreamFlowSequencer() {
     window.dispatchEvent(new CustomEvent('avalive:update_master_media', { detail: payload }));
     window.dispatchEvent(new CustomEvent('avalive_flow_step_changed', { detail: payload }));
     if (step.avatarSpeaker) {
-      window.dispatchEvent(new CustomEvent('avalive:speaker_change', { detail: { speakerId: step.avatarSpeaker } }));
+      window.dispatchEvent(new CustomEvent('avalive:speaker_change', { detail: { speakerId: step.avatarSpeaker, avatarId: step.avatarSpeaker, isSpeaking: isLivePlaying } }));
+      window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', { detail: { speakerId: step.avatarSpeaker, avatarId: step.avatarSpeaker, isSpeaking: isLivePlaying } }));
+    }
+    if (multiAvatarConfig && multiAvatarConfig.enabled) {
+      window.dispatchEvent(new CustomEvent('avalive_multi_avatar_changed', {
+        detail: {
+          ...multiAvatarConfig,
+          activeSpeakerId: step.avatarSpeaker || 'avatar_1'
+        }
+      }));
     }
 
     // 3. Gửi sang Backend API Live State
@@ -2504,6 +2513,9 @@ export default function LivestreamFlowSequencer() {
                       <button
                         type="button"
                         onClick={() => {
+                          stopVoiceAudio();
+                          setIsSpeakingPreview(false);
+                          setSpeakingStepId(null);
                           setCurrentStepIndex(idx);
                           setSecondsRemaining(step.durationSeconds || 60);
                           syncStepToServer(step, idx, false);

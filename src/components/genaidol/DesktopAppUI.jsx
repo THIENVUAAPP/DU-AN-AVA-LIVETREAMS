@@ -2586,11 +2586,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         try { localStorage.setItem('avalive_current_pinned_product', JSON.stringify(productObj)); } catch (err) {}
       }
 
-      // 6. Phát Giọng Nói AI (Voice) đọc thuyết minh/tư vấn theo kịch bản của phân đoạn này
-      if (scriptText && scriptText.trim() && audioPlayerRef.current) {
-        audioPlayerRef.current.startScript(scriptText.trim());
-      }
-
       if (title) {
         showToast(`🎬 Sequencer chuyển sang: ${title}`, 'success');
       }
@@ -3775,8 +3770,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       );
     }
 
-    // 0.1 MULTI-AVATAR STUDIO CANVAS (2-4 CHARACTERS)
-    if (multiAvatarConfig?.enabled && multiAvatarConfig?.activeCount >= 2) {
+    // 0.1 MULTI-AVATAR STUDIO CANVAS (1-4 CHARACTERS)
+    if (multiAvatarConfig?.enabled && multiAvatarConfig?.activeCount >= 1) {
       const activeList = (multiAvatarConfig.avatars || [])
         .filter(a => a.enabled)
         .slice(0, multiAvatarConfig.activeCount);
@@ -3784,7 +3779,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       const isGridOnly = multiAvatarConfig.layoutMode === 'grid';
 
       if (isGridOnly) {
-        const gridClass = count === 2 
+        const gridClass = count === 1
+          ? 'w-full h-full p-1 bg-black flex items-center justify-center'
+          : count === 2 
           ? 'grid grid-cols-2 w-full h-full gap-1 p-1 bg-black'
           : count === 3 
           ? 'grid grid-cols-3 w-full h-full gap-1 p-1 bg-black'
