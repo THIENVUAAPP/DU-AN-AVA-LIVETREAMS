@@ -7,7 +7,7 @@ import {
   Zap, Star, Tag, Eye, Info, FileText, Image as ImageIcon, Type, Pin, 
   Maximize2, Sliders, Check, X, Palette, Move, Monitor, Wand2,
   FolderOpen, Scaling, UserCheck, RefreshCw, Smartphone, ArrowUpToLine, 
-  ArrowDownToLine, Lock, Unlock, EyeOff, LayoutGrid, Radio
+  ArrowDownToLine, Lock, Unlock, EyeOff, LayoutGrid, Radio, Scissors
 } from 'lucide-react';
 import UniversalMediaPicker from './UniversalMediaPicker';
 import { readUniversalFile } from '../../utils/universalDocumentParser';
@@ -19,12 +19,14 @@ import {
   isImageMedia,
   STUDIO_STAGE_PRESETS,
   ALL_SYSTEM_VOICES,
+  getSavedVoiceConfig,
   previewVoiceAudio,
   stopVoiceAudio
 } from '../../utils/voiceSyncService';
 
-// 🎙️ Danh sách các Giọng Đọc AI Tiếng Việt Top 1
+// 🎙️ Danh sách các Giọng Đọc AI Tiếng Việt Top 1 & Đồng Bộ Bộ Não Voice AI Brain
 export const CURATED_STUDIO_VOICES = [
+  { id: 'brain_auto', name: '🧠 Giọng Bộ Não Voice AI (Tự Động Theo Nhân Vật)' },
   { id: 'free_vi_female', name: 'Hoài My 👑 (Nữ Trong Trẻo - Bán Hàng/MC)' },
   { id: 'vi_female_south_1', name: 'Hà My 🌸 (Nữ Miền Nam Dễ Thương)' },
   { id: 'free_vi_male', name: 'Tuấn Kiệt 🎙️ (Nam Trầm Ấm - MC Livestream)' },
@@ -180,6 +182,7 @@ export default function LivestreamFlowSequencer() {
   const [secondsRemaining, setSecondsRemaining] = useState(60);
   const [expandedStepId, setExpandedStepId] = useState(null);
   const [isSpeakingPreview, setIsSpeakingPreview] = useState(false);
+  const [speakingStepId, setSpeakingStepId] = useState(null);
   const [showPresetModal, setShowPresetModal] = useState(false);
   const [presetNameInput, setPresetNameInput] = useState('');
 
@@ -360,8 +363,11 @@ export default function LivestreamFlowSequencer() {
   // 🛑 DỪNG TỨC THÌ 100% VÀ TẮT MỌI ÂM THANH / GIỌNG NÓI
   const handleStopFlow = () => {
     setIsPlayingFlow(false);
+    stopVoiceAudio();
+    setIsSpeakingPreview(false);
+    setSpeakingStepId(null);
     if (timerRef.current) clearInterval(timerRef.current);
-    toast.info('⏹️ Đã tạm dừng kịch bản');
+    toast.info('⏹️ Đã tạm dừng kịch bản & tắt toàn bộ âm thanh');
   };
 
   // ▶️ BẮT ĐẦU CHẠY LIVE
@@ -616,6 +622,16 @@ export default function LivestreamFlowSequencer() {
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Tự động chuyển ngay sang bước này để hiển thị trên Sân Khấu 9:16
+    const stepIdx = activePreset?.steps?.findIndex(s => s.id === stepId);
+    if (stepIdx !== undefined && stepIdx >= 0) {
+      setCurrentStepIndex(stepIdx);
+      const stepObj = activePreset.steps[stepIdx];
+      if (stepObj) {
+        setSecondsRemaining(stepObj.durationSeconds || 60);
+      }
+    }
+
     try {
       const objectUrl = URL.createObjectURL(file);
       handleUpdateStep(stepId, targetField, objectUrl);
@@ -630,6 +646,50 @@ export default function LivestreamFlowSequencer() {
     }
     e.target.value = '';
   };
+
+  // ✂️ CẬP NHẬT CHẾ ĐỘ XÓA PHÔNG XANH / NỀN ĐEN / NỀN TRẮNG CHO AVATAR ĐANG CHỌN
+  const handleAvatarChromaUpdate = (avatarId, updates) => {
+    const updated = {
+      ...multiAvatarConfig,
+      avatars: (multiAvatarConfig?.avatars || []).map(a => {
+        if (a.id === avatarId) {
+          const currentChroma = a.chromaKey || { enabled: false, color: '#00ff00', mode: 'green' };
+          return {
+            ...a,
+            chromaKey: {
+              ...currentChroma,
+              ...updates
+            }
+          };
+        }
+        return a;
+      })
+    };
+    setMultiAvatarConfig(updated);
+    saveMultiAvatarConfig(updated);
+    toast.success(`✨ Đã cập nhật Xóa Phông cho Avatar ${avatarId.toUpperCase()}!`);
+  };
+
+  // 🧠 Ánh xạ giọng đọc từ BỘ NÃO VOICE AI BRAIN cho từng nhân vật
+  const getBrainVoiceForSpeaker = useCallback((speakerId) => {
+    try {
+      const voiceCfg = getSavedVoiceConfig();
+      if (speakerId === 'avatar_1') return voiceCfg.idolVoice?.id || 'free_vi_female';
+      if (speakerId === 'avatar_2') return voiceCfg.managerVoice?.id || 'vi_male_south_1';
+      if (speakerId === 'avatar_3') return voiceCfg.gameBlvVoice?.id || 'free_vi_male';
+      if (speakerId === 'avatar_4') return voiceCfg.commentVoice?.id || 'vi_female_south_1';
+      return voiceCfg.idolVoice?.id || 'free_vi_female';
+    } catch (e) {
+      return 'free_vi_female';
+    }
+  }, []);
+
+  // 🧠 Lấy tên hiển thị giọng đọc từ Bộ Não Voice AI Brain
+  const getBrainVoiceNameForSpeaker = useCallback((speakerId) => {
+    const vId = getBrainVoiceForSpeaker(speakerId);
+    const found = ALL_SYSTEM_VOICES.find(v => v.id === vId) || CURATED_STUDIO_VOICES.find(v => v.id === vId);
+    return found?.name || 'Hoài My 👑 (Nữ Chuẩn Mực)';
+  }, [getBrainVoiceForSpeaker]);
 
   // 📄 Nạp file kịch bản đa định dạng (.md, .txt, .docx, .pdf, .json, .xlsx)
   const handleFileUpload = async (stepId, e) => {
@@ -825,22 +885,31 @@ export default function LivestreamFlowSequencer() {
     toast.success('📏 Đã mở rộng tràn khung!');
   };
 
-  // Đọc thử giọng AI 0ms
-  const handleTestVoiceSpeech = (text, voiceId = 'free_vi_female') => {
+  // 🎙️ ĐỌC THỬ GIỌNG AI BỘ NÃO (VOICE AI BRAIN) 0MS THỜI GIAN THỰC
+  const handleTestVoiceSpeech = (stepId, text, voiceId = 'brain_auto', speakerId = 'avatar_1') => {
     if (!text || !text.trim()) {
       toast.error('Chưa có lời thoại để đọc thử!');
       return;
     }
-    if (isSpeakingPreview) {
+    if (speakingStepId === stepId || isSpeakingPreview) {
       stopVoiceAudio();
       setIsSpeakingPreview(false);
+      setSpeakingStepId(null);
+      toast.info('⏹️ Đã dừng giọng đọc');
       return;
     }
+    
+    const effectiveVoiceId = (!voiceId || voiceId === 'brain_auto') 
+      ? getBrainVoiceForSpeaker(speakerId) 
+      : voiceId;
+
     setIsSpeakingPreview(true);
-    previewVoiceAudio(voiceId || 'free_vi_female', text);
-    setTimeout(() => {
+    setSpeakingStepId(stepId);
+
+    previewVoiceAudio(effectiveVoiceId, text, () => {
       setIsSpeakingPreview(false);
-    }, 8000);
+      setSpeakingStepId(null);
+    });
   };
 
   return (
@@ -1185,15 +1254,79 @@ export default function LivestreamFlowSequencer() {
                       </div>
                     </div>
 
-                    {/* Mini Toolbar Trực Tiếp Nạp File Từ Máy Khi Chọn Avatar Trên Sân Khấu */}
+                    {/* Mini Toolbar Trực Tiếp Tách Phông Xanh & Nạp Media Khi Chọn Avatar Trên Sân Khấu */}
                     {isSelected && (
                       <div 
-                        className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-1 z-50 bg-slate-900/95 px-2 py-0.5 rounded-lg border border-cyan-400 shadow-xl whitespace-nowrap"
+                        className="absolute -bottom-11 left-1/2 -translate-x-1/2 flex items-center gap-1 z-50 bg-slate-950/95 backdrop-blur-md px-2 py-1 rounded-xl border border-cyan-400 shadow-2xl whitespace-nowrap"
                         onClick={(e) => e.stopPropagation()}
                       >
-                        <label className="text-[9px] font-black text-cyan-300 hover:text-white cursor-pointer flex items-center gap-1">
+                        {/* Nút Bật/Tắt Xóa Phông Xanh */}
+                        <button
+                          type="button"
+                          onClick={() => handleAvatarChromaUpdate(av.id, { enabled: !(av.chromaKey?.enabled) })}
+                          className={`px-1.5 py-0.5 rounded-lg text-[9px] font-black flex items-center gap-0.5 cursor-pointer transition-all ${
+                            av.chromaKey?.enabled 
+                              ? 'bg-emerald-500 text-black shadow-xs ring-1 ring-emerald-300' 
+                              : 'bg-slate-800 hover:bg-slate-700 text-gray-300'
+                          }`}
+                          title="Bật/Tắt tách phông nền cho Avatar này"
+                        >
+                          <Scissors size={10} />
+                          <span>{av.chromaKey?.enabled ? '✨ Đã Tách Nền' : 'Tách Nền'}</span>
+                        </button>
+
+                        {/* Các chế độ tách phông: Xanh Lá, Xanh Dương, Nền Đen, Nền Trắng */}
+                        {av.chromaKey?.enabled && (
+                          <div className="flex items-center gap-0.5 bg-slate-900 p-0.5 rounded-lg border border-slate-700">
+                            <button
+                              type="button"
+                              onClick={() => handleAvatarChromaUpdate(av.id, { mode: 'green', color: '#00ff00' })}
+                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                                (!av.chromaKey.mode || av.chromaKey.mode === 'green') ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'
+                              }`}
+                              title="Tách phông xanh lá cây"
+                            >
+                              🟢 Lá
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleAvatarChromaUpdate(av.id, { mode: 'blue', color: '#0000ff' })}
+                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                                av.chromaKey.mode === 'blue' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                              }`}
+                              title="Tách phông xanh dương"
+                            >
+                              🔵 Lam
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleAvatarChromaUpdate(av.id, { mode: 'black', color: '#000000' })}
+                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                                av.chromaKey.mode === 'black' ? 'bg-gray-700 text-cyan-300' : 'text-gray-400 hover:text-white'
+                              }`}
+                              title="Tách nền đen (Screen)"
+                            >
+                              ⚫ Đen
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleAvatarChromaUpdate(av.id, { mode: 'white', color: '#ffffff' })}
+                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                                av.chromaKey.mode === 'white' ? 'bg-white text-black' : 'text-gray-400 hover:text-white'
+                              }`}
+                              title="Tách nền trắng (Multiply)"
+                            >
+                              ⚪ Trắng
+                            </button>
+                          </div>
+                        )}
+
+                        <div className="h-3 w-px bg-slate-700 mx-0.5" />
+
+                        {/* Nút Nạp Media Cho Avatar */}
+                        <label className="text-[9px] font-black text-cyan-300 hover:text-white cursor-pointer flex items-center gap-1 bg-cyan-950/80 px-1.5 py-0.5 rounded-lg border border-cyan-500/40">
                           <Upload size={10} />
-                          <span>Tải Media Cho Avatar</span>
+                          <span>Tải Video/Ảnh</span>
                           <input 
                             type="file" 
                             accept="video/*,image/*" 
@@ -1471,20 +1604,24 @@ export default function LivestreamFlowSequencer() {
                   }}
                   className={`rounded-2xl border transition-all overflow-hidden cursor-pointer ${
                     isCurrentExecuting 
-                      ? 'bg-blue-950/40 border-blue-500 shadow-lg ring-2 ring-blue-400/40' 
+                      ? 'bg-blue-950/60 border-blue-400 shadow-2xl ring-2 ring-blue-400/50' 
                       : isSelected
-                      ? 'bg-slate-800/90 border-cyan-500 shadow-md ring-1 ring-cyan-400/40'
+                      ? 'bg-slate-900/95 border-cyan-400 shadow-2xl ring-2 ring-cyan-500/40'
                       : 'bg-slate-800/40 border-slate-700/70 hover:border-slate-600 shadow-xs'
                   }`}
                 >
                   {/* HEADER CỦA BƯỚC */}
-                  <div className="p-2 bg-slate-800/90 border-b border-slate-700/80 flex flex-wrap items-center justify-between gap-2">
+                  <div className={`p-2 border-b flex flex-wrap items-center justify-between gap-2 transition-colors ${
+                    isSelected ? 'bg-cyan-950/40 border-cyan-500/40' : 'bg-slate-800/90 border-slate-700/80'
+                  }`}>
                     
-                    {/* Cột Trái: Số bước, Tên bước & Phân loại */}
+                    {/* Cột Trái: Số bước, Tên bước & Phân loại & Badge Đang Chiếu */}
                     <div className="flex items-center gap-2 flex-1 min-w-[200px]">
                       <div className={`w-6 h-6 rounded-lg font-black text-xs flex items-center justify-center shrink-0 ${
                         isCurrentExecuting 
-                          ? 'bg-cyan-500 text-black animate-bounce' 
+                          ? 'bg-cyan-400 text-black animate-bounce' 
+                          : isSelected
+                          ? 'bg-cyan-500 text-black font-black'
                           : 'bg-indigo-600 text-white shadow-xs'
                       }`}>
                         {idx + 1}
@@ -1501,6 +1638,13 @@ export default function LivestreamFlowSequencer() {
                         <ActionIcon size={10} />
                         <span>{actionConfig.label.split(' ')[1] || 'Tác vụ'}</span>
                       </span>
+
+                      {isSelected && (
+                        <span className="hidden sm:inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[9px] font-black bg-cyan-500/20 text-cyan-300 border border-cyan-400/50 animate-pulse shrink-0">
+                          <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
+                          <span>🟢 ĐANG HIỂN THỊ SÂN KHẤU 9:16</span>
+                        </span>
+                      )}
                     </div>
 
                     {/* Cột Phải: Phân Vai Avatar Nói, Thời lượng & Nút Thao Tác */}
@@ -1510,11 +1654,12 @@ export default function LivestreamFlowSequencer() {
                         value={step.avatarSpeaker || 'avatar_1'}
                         onChange={(e) => handleUpdateStep(step.id, 'avatarSpeaker', e.target.value)}
                         className="bg-slate-900 text-cyan-300 text-[11px] font-bold px-2 py-1 rounded-lg border border-cyan-500/40 outline-none cursor-pointer"
+                        title="Chọn nhân vật đọc lời thoại và xuất hiện ở bước này"
                       >
-                        <option value="avatar_1">🗣️ Nhân Vật 1</option>
-                        <option value="avatar_2">🗣️ Nhân Vật 2</option>
-                        <option value="avatar_3">🗣️ Nhân Vật 3</option>
-                        <option value="avatar_4">🗣️ Nhân Vật 4</option>
+                        <option value="avatar_1">🗣️ Nhân Vật 1 (Idol)</option>
+                        <option value="avatar_2">🗣️ Nhân Vật 2 (Quản Lý)</option>
+                        <option value="avatar_3">🗣️ Nhân Vật 3 (BLV Game)</option>
+                        <option value="avatar_4">🗣️ Nhân Vật 4 (Khán Giả)</option>
                         <option value="all">👥 Cả Nhóm Cùng Nói</option>
                       </select>
 
@@ -1539,11 +1684,15 @@ export default function LivestreamFlowSequencer() {
                           syncStepToServer(step, idx, true);
                           toast.success(`👁️ Đang hiển thị Bước ${idx + 1} trên Sân khấu 9:16!`);
                         }}
-                        className="px-2.5 py-1 bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white font-black text-[10px] rounded-lg shadow-xs flex items-center gap-1 cursor-pointer"
+                        className={`px-2.5 py-1 text-white font-black text-[10px] rounded-lg shadow-xs flex items-center gap-1 cursor-pointer transition-all ${
+                          isSelected 
+                            ? 'bg-cyan-500 text-black font-black ring-1 ring-white' 
+                            : 'bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500'
+                        }`}
                         title="Xem trước toàn bộ bố cục & media của bước này trên Sân Khấu 9:16"
                       >
                         <Eye size={12} />
-                        <span>Xem Bước Này</span>
+                        <span>{isSelected ? 'Đang Xem' : 'Xem Bước Này'}</span>
                       </button>
 
                       {/* Mũi tên Mở Rộng / Thu Gọn kèm Badge Tên Tab */}
@@ -1594,7 +1743,7 @@ export default function LivestreamFlowSequencer() {
                           <div className="flex items-center gap-1 bg-slate-900 px-2 py-0.5 rounded-lg border border-purple-500/40">
                             <Mic size={11} className="text-purple-400 shrink-0" />
                             <select
-                              value={step.voiceId || 'free_vi_female'}
+                              value={step.voiceId || 'brain_auto'}
                               onChange={(e) => handleUpdateStep(step.id, 'voiceId', e.target.value)}
                               className="bg-transparent text-purple-300 text-[10px] font-bold outline-none cursor-pointer max-w-[150px] sm:max-w-[200px] truncate"
                               title="Chọn giọng đọc AI cho nhân vật ở bước này"
@@ -1605,14 +1754,36 @@ export default function LivestreamFlowSequencer() {
                             </select>
                           </div>
 
+                          {/* Badge Giọng Bộ Não */}
+                          {(!step.voiceId || step.voiceId === 'brain_auto') && (
+                            <span className="text-[9px] font-bold text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-500/30 truncate max-w-[140px]" title="Giọng mặc định lấy trực tiếp từ Cấu hình Bộ Não Voice AI">
+                              🧠 {getBrainVoiceNameForSpeaker(step.avatarSpeaker).split(' ')[0]}
+                            </span>
+                          )}
+
+                          {/* Nút Đọc Thử AI / Dừng Đọc với Animation Sóng Âm */}
                           <button
                             type="button"
-                            onClick={() => handleTestVoiceSpeech(step.scriptText, step.voiceId)}
-                            className="px-2 py-0.5 rounded-lg bg-indigo-900/60 hover:bg-indigo-800 text-cyan-300 border border-indigo-700/50 text-[10px] font-bold flex items-center gap-1 cursor-pointer shadow-xs"
-                            title="Nghe thử giọng đọc AI cho đoạn này"
+                            onClick={() => handleTestVoiceSpeech(step.id, step.scriptText, step.voiceId, step.avatarSpeaker)}
+                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-all ${
+                              speakingStepId === step.id 
+                                ? 'bg-rose-600 text-white animate-pulse ring-1 ring-rose-300' 
+                                : 'bg-indigo-900/80 hover:bg-indigo-800 text-cyan-300 border border-indigo-700/50'
+                            }`}
+                            title="Nghe thử giọng đọc AI cho đoạn này từ Bộ Não Voice AI"
                           >
-                            <Volume2 size={11} />
-                            <span>Đọc Thử AI</span>
+                            {speakingStepId === step.id ? (
+                              <>
+                                <Square size={10} className="fill-white" />
+                                <span className="font-mono">⏹️ Dừng Đọc</span>
+                                <span className="text-[9px] text-yellow-300 animate-bounce"> ▂▃▅</span>
+                              </>
+                            ) : (
+                              <>
+                                <Volume2 size={11} />
+                                <span>Đọc Thử AI</span>
+                              </>
+                            )}
                           </button>
 
                           <label className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-[10px] font-bold flex items-center gap-1 cursor-pointer">
@@ -1622,7 +1793,7 @@ export default function LivestreamFlowSequencer() {
                               type="file" 
                               accept=".md,.txt,.docx,.pdf,.json,.xlsx"
                               onChange={(e) => handleFileUpload(step.id, e)}
-                              className="hidden"
+                              className="hidden" 
                             />
                           </label>
                         </div>
