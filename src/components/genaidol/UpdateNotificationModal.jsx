@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.2.4';
+export const APP_VERSION = '4.2.5';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.2.5 - Bố Cục Sân Khấu Trình Chiếu Cột Trái, Bảng Điều Khiển Cột Phải & Nút Đồng Bộ Sân Khấu Riêng Biệt',
+    description: '1. Thiết Kế 2 Cột Trực Quan (Split 2-Column Stage & Control): Toàn bộ Sân khấu trình chiếu Mock Live Stage 9:16 nằm cố định ở Cột Trái, nhường toàn bộ Cột Phải cho Bảng điều khiển kịch bản từng bước và cấu hình Studio 1-4 Avatar; 2. Nút "📡 ĐỒNG BỘ RA SÂN KHẤU CHÍNH" Riêng Biệt: Tách biệt hoàn toàn giữa việc Căn chỉnh / Test nội bộ và Phát trực tiếp ra màn hình chính, OBS Window Capture và Link TikTok Live Studio; 3. Đồng Bộ Đa Lớp Trực Quan: Click vào bất kỳ bước nào ở cột phải, sân khấu cột trái lập tức chuyển video nền chính, video phụ PiP, avatar đọc thoại, hiệu ứng glow nói, banner chữ neon và sản phẩm TikTok Shop; 4. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle, Game Bản Đồ 3D; 5. 60 FPS 4K Không Độ Trễ: Đảm bảo độ mượt mà cao nhất trên mọi nền tảng.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.2.4 - Hợp Nhất Hoàn Hảo Studio 1–4 Avatar & Chuỗi Kịch Bản Live Đa Phân Đoạn (Pro)',
     description: '1. Hợp Nhất 1 Tab Duy Nhất "🎬 Studio 1–4 Avatar & Kịch Bản Live": Tích hợp trọn vẹn sức mạnh Studio 1-4 nhân vật và Chuỗi kịch bản phân đoạn 24/7 trong một giao diện tinh gọn, thông minh, dễ dùng bậc nhất; 2. Hỗ Trợ Đầy Đủ 1 Đến 4 Avatar AI: Tùy biến linh hoạt số lượng từ 1 người bán hàng độc diễn, 2 người chốt đơn, 3 người hoạt náo PK đến 4 người talkshow; 3. Thanh Điều Hướng 3 Phân Hệ (Subview Switcher): Chuyển đổi 1 chạm mượt mà giữa [🎬 Kịch Bản Từng Bước], [👥 Bố Cục Studio 1-4 Avatar] và [📚 Kho Mẫu Kịch Bản 1-4 Người]; 4. Chọn Avatar Đọc Thoại Riêng Cho Từng Bước: Từng phân đoạn kịch bản cho phép chỉ định chính xác Avatar nào đọc thoại và nhép miệng (Avatar 1, Avatar 2, Avatar 3, Avatar 4 hoặc Cả nhóm); 5. Kho Mẫu Kịch Bản Có Sẵn "Nạp 1 Click": Thư viện kịch bản đa dạng ngành nghề với nút nạp nhanh tự động chuyển thành chuỗi kịch bản phân đoạn; 6. Đồng Bộ 0ms 4K 60 FPS Trực Tiếp: Bật/Dừng tức thì 100%, đồng bộ tuyệt đối với Sân khấu live 9:16, OBS Window Capture và Link TikTok Live Studio.'

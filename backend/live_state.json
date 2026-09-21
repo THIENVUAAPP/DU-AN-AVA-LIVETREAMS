@@ -9,18 +9,18 @@
   "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1789957082942,
+  "updatedAt": 1789958189391,
   "flvUrl": null,
   "isConnected": false,
   "type": "MASTER_LIVE_STATE_UPDATE",
   "currentLang": "vi",
   "selectedCharacter": "custom_1789952529374",
   "isUserExplicitMediaLocked": true,
-  "videoCurrentTime": 0.000241,
+  "videoCurrentTime": 0,
   "isVideoAudioMuted": false,
   "videoVolume": 1,
   "clearMedia": false,
-  "tunnelUrl": "https://devon-tennis-ultra-lenses.trycloudflare.com",
+  "tunnelUrl": "https://mark-kidney-maritime-resorts.trycloudflare.com",
   "isMuted": false,
   "pinnedProduct": {
     "id": 1,
@@ -33,7 +33,7 @@
     "stock": 99,
     "keywords": "ava live;ava;phần mềm ava live;phần mềm livestream ai;livestream ai;livestream bằng ai;nhân vật",
     "storeUrl": "https://shop.tiktok.com",
-    "pinnedAt": 1789956970237,
+    "pinnedAt": 1789958187140,
     "triggerSource": "🎬 Nhắc từ khóa: \"nhân vật\""
   },
   "currentMedia": "/idols/phong_studio_ngoc_trinh_4k.mp4",
@@ -57,5 +57,6 @@
   "overlayImageScale": 100,
   "overlayTextFontFamily": "be_vietnam",
   "overlayTextFontSize": 20,
-  "overlayTextColor": "#ffffff"
+  "overlayTextColor": "#ffffff",
+  "avatarSpeaker": "avatar_1"
 }
