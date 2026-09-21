@@ -2500,9 +2500,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     const handleFlowMediaUpdate = (e) => {
       const { 
         mediaUrl, scriptText, title, actionType,
-        secondaryMediaUrl, secondaryMediaPos, secondaryMediaScale,
-        overlayImage, overlayImagePos, overlayImageScale, 
-        overlayText, overlayTextPos, overlayTextStyle, overlayTextFontFamily, overlayTextFontSize, overlayTextColor,
+        secondaryMediaUrl, secondaryMediaPos, secondaryMediaScale, secondaryMediaTransform, secondaryMediaChromaKey,
+        overlayImage, overlayImagePos, overlayImageScale, overlayImageTransform, overlayImageChromaKey,
+        overlayText, overlayTextPos, overlayTextStyle, overlayTextFontFamily, overlayTextFontSize, overlayTextColor, overlayTextTransform,
+        mainMediaTransform, mainMediaChromaKey, avatarTransforms,
         isMediaPinned 
       } = e.detail || {};
       if (!mediaUrl) return;
@@ -2515,15 +2516,23 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         secondaryMediaUrl: secondaryMediaUrl || null,
         secondaryMediaPos: secondaryMediaPos || 'top-right',
         secondaryMediaScale: secondaryMediaScale || 40,
+        secondaryMediaTransform: secondaryMediaTransform || null,
+        secondaryMediaChromaKey: secondaryMediaChromaKey || null,
         overlayImage: overlayImage || null,
         overlayImagePos: overlayImagePos || 'top-left',
         overlayImageScale: overlayImageScale || 100,
+        overlayImageTransform: overlayImageTransform || null,
+        overlayImageChromaKey: overlayImageChromaKey || null,
         overlayText: overlayText || null,
         overlayTextPos: overlayTextPos || 'top',
         overlayTextStyle: overlayTextStyle || 'banner',
         overlayTextFontFamily: overlayTextFontFamily || 'be_vietnam',
         overlayTextFontSize: overlayTextFontSize || 20,
         overlayTextColor: overlayTextColor || '#ffffff',
+        overlayTextTransform: overlayTextTransform || null,
+        mainMediaTransform: mainMediaTransform || null,
+        mainMediaChromaKey: mainMediaChromaKey || null,
+        avatarTransforms: avatarTransforms || null,
         isMediaPinned: !!isMediaPinned
       };
       setFlowSequencerOverlay(overlayData);
@@ -2560,15 +2569,23 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         secondaryMediaUrl: secondaryMediaUrl || null,
         secondaryMediaPos: secondaryMediaPos || 'top-right',
         secondaryMediaScale: secondaryMediaScale || 40,
+        secondaryMediaTransform: secondaryMediaTransform || null,
+        secondaryMediaChromaKey: secondaryMediaChromaKey || null,
         overlayImage: overlayImage || null,
         overlayImagePos: overlayImagePos || 'top-left',
         overlayImageScale: overlayImageScale || 100,
+        overlayImageTransform: overlayImageTransform || null,
+        overlayImageChromaKey: overlayImageChromaKey || null,
         overlayText: overlayText || null,
         overlayTextPos: overlayTextPos || 'top',
         overlayTextStyle: overlayTextStyle || 'banner',
         overlayTextFontFamily: overlayTextFontFamily || 'be_vietnam',
         overlayTextFontSize: overlayTextFontSize || 20,
         overlayTextColor: overlayTextColor || '#ffffff',
+        overlayTextTransform: overlayTextTransform || null,
+        mainMediaTransform: mainMediaTransform || null,
+        mainMediaChromaKey: mainMediaChromaKey || null,
+        avatarTransforms: avatarTransforms || null,
         timestamp: Date.now()
       });
 
@@ -3796,44 +3813,60 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     if (isMasterStageSynced && multiAvatarConfig?.enabled && multiAvatarConfig?.activeCount >= 1) {
       const activeList = (multiAvatarConfig.avatars || [])
         .filter(a => a.enabled)
-        .slice(0, multiAvatarConfig.activeCount);
-      const count = activeList.length;
-      const isGridOnly = multiAvatarConfig.layoutMode === 'grid';
+        .slice(0, multiAvatarConfig.activeCount)
+        .map((avatar, idx) => {
+          const isSpeakingNow = isSpeakerActive && (
+            activeSpeakerId === avatar.id || 
+            activeSpeakerId === avatar.role || 
+            (avatar.id === 'avatar_1' && (activeSpeakerId === 'idol' || !activeSpeakerId))
+          );
+          const customMatch = (customCharacters && Array.isArray(customCharacters)) 
+            ? customCharacters.find(c => c.id === selectedCharacter && (c.url || c.mediaUrl)) 
+            : null;
+          const fallbackUrl = customMatch?.url || userLockedMediaUrl || '';
+          
+          const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || '';
+          const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || '';
+          const vidSrc = isSpeakingNow 
+            ? (talkSrc || idleSrc || (idx === 0 ? fallbackUrl : '')) 
+            : (idleSrc || talkSrc || (idx === 0 ? fallbackUrl : ''));
+          
+          return {
+            ...avatar,
+            resolvedVidSrc: vidSrc,
+            isSpeakingNow
+          };
+        })
+        .filter(a => !!a.resolvedVidSrc); // Triệt tiêu hoàn toàn bất kỳ ô nào không có video/ảnh
 
-      if (isGridOnly) {
-        const gridClass = count === 1
-          ? 'w-full h-full p-1 bg-black flex items-center justify-center'
-          : count === 2 
-          ? 'grid grid-cols-2 w-full h-full gap-1 p-1 bg-black'
-          : count === 3 
-          ? 'grid grid-cols-3 w-full h-full gap-1 p-1 bg-black'
-          : 'grid grid-cols-2 grid-rows-2 w-full h-full gap-1 p-1 bg-black';
+      if (activeList.length > 0) {
+        const isGridOnly = multiAvatarConfig.layoutMode === 'grid';
+        const count = activeList.length;
 
-        return (
-          <div className={gridClass}>
-            {activeList.map((avatar, idx) => {
-              const isSpeakingNow = isSpeakerActive && (activeSpeakerId === avatar.id || (!activeSpeakerId && avatar.id === 'idol'));
-              const customMatch = (customCharacters && Array.isArray(customCharacters)) 
-                ? customCharacters.find(c => c.id === selectedCharacter && (c.url || c.mediaUrl)) 
-                : null;
-              const fallbackUrl = customMatch?.url || userLockedMediaUrl || '';
-              
-              const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || '';
-              const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || '';
-              const vidSrc = isSpeakingNow 
-                ? (talkSrc || idleSrc || (idx === 0 ? fallbackUrl : '')) 
-                : (idleSrc || talkSrc || (idx === 0 ? fallbackUrl : ''));
-              const isImg = isImageMedia(vidSrc);
+        if (isGridOnly) {
+          const gridClass = count === 1
+            ? 'w-full h-full p-1 bg-black flex items-center justify-center'
+            : count === 2 
+            ? 'grid grid-cols-2 w-full h-full gap-1 p-1 bg-black'
+            : count === 3 
+            ? 'grid grid-cols-3 w-full h-full gap-1 p-1 bg-black'
+            : 'grid grid-cols-2 grid-rows-2 w-full h-full gap-1 p-1 bg-black';
 
-              return (
-                <div 
-                  key={avatar.id} 
-                  className={`relative w-full h-full overflow-hidden rounded-lg bg-slate-950 flex items-center justify-center transition-all duration-300 ${
-                    isSpeakingNow ? 'ring-2 ring-amber-400/80 shadow-[0_0_20px_rgba(251,191,36,0.4)] z-10' : 'opacity-95'
-                  }`}
-                >
-                  {vidSrc ? (
-                    isImg ? (
+          return (
+            <div className={gridClass}>
+              {activeList.map((avatar) => {
+                const isSpeakingNow = avatar.isSpeakingNow;
+                const vidSrc = avatar.resolvedVidSrc;
+                const isImg = isImageMedia(vidSrc);
+
+                return (
+                  <div 
+                    key={avatar.id} 
+                    className={`relative w-full h-full overflow-hidden rounded-lg bg-slate-950 flex items-center justify-center transition-all duration-300 ${
+                      isSpeakingNow ? 'ring-2 ring-amber-400/80 shadow-[0_0_20px_rgba(251,191,36,0.4)] z-10' : 'opacity-95'
+                    }`}
+                  >
+                    {isImg ? (
                       <img 
                         src={vidSrc}
                         alt={avatar.name}
@@ -3850,159 +3883,139 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                         controls={false}
                         className="w-full h-full object-cover bg-black select-none pointer-events-none"
                       />
-                    )
-                  ) : (
-                    <div className="text-center p-3 text-white/70 text-xs">
-                      <span className="text-lg block mb-1">🎭</span>
-                      <span className="font-bold">{avatar.name}</span>
-                    </div>
-                  )}
-
-                  <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm border border-white/10 text-[10px] font-bold text-white shadow-sm">
-                    <span className={`w-2 h-2 rounded-full ${isSpeakingNow ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'}`} />
-                    <span className="truncate max-w-[100px]">{avatar.name}</span>
-                    {isSpeakingNow && (
-                      <span className="text-amber-300 text-[9px] font-black uppercase tracking-wider">Đang nói</span>
                     )}
+
+                    <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm border border-white/10 text-[10px] font-bold text-white shadow-sm">
+                      <span className={`w-2 h-2 rounded-full ${isSpeakingNow ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'}`} />
+                      <span className="truncate max-w-[100px]">{avatar.name}</span>
+                      {isSpeakingNow && (
+                        <span className="text-amber-300 text-[9px] font-black uppercase tracking-wider">Đang nói</span>
+                      )}
+                    </div>
                   </div>
+                );
+              })}
+            </div>
+          );
+        }
+
+        // Freeform Visual Studio Stage Canvas
+        return (
+          <div 
+            className="relative w-full h-full overflow-hidden bg-cover bg-center"
+            style={{
+              backgroundColor: multiAvatarConfig.backgroundColor || '#0a0c14'
+            }}
+          >
+            {/* Studio Transformed Background Layer */}
+            {multiAvatarConfig.backgroundUrl && (
+              <div
+                className="absolute pointer-events-none"
+                style={{
+                  left: `${multiAvatarConfig.backgroundTransform?.x ?? 0}%`,
+                  top: `${multiAvatarConfig.backgroundTransform?.y ?? 0}%`,
+                  width: `${multiAvatarConfig.backgroundTransform?.width ?? 100}%`,
+                  height: `${multiAvatarConfig.backgroundTransform?.height ?? 100}%`,
+                  transform: (multiAvatarConfig.backgroundTransform?.scale && multiAvatarConfig.backgroundTransform?.scale !== 100)
+                    ? `scale(${multiAvatarConfig.backgroundTransform.scale / 100})`
+                    : 'none',
+                  transformOrigin: 'center center',
+                  zIndex: 0
+                }}
+              >
+                <img 
+                  src={multiAvatarConfig.backgroundUrl}
+                  alt="Studio Background"
+                  className="w-full h-full"
+                  style={{
+                    objectFit: multiAvatarConfig.backgroundTransform?.objectFit || 'cover',
+                    filter: `${multiAvatarConfig.backgroundTransform?.blur ? `blur(${multiAvatarConfig.backgroundTransform.blur}px)` : ''} ${multiAvatarConfig.backgroundTransform?.brightness ? `brightness(${multiAvatarConfig.backgroundTransform.brightness}%)` : ''}`.trim() || 'none'
+                  }}
+                />
+              </div>
+            )}
+            {/* Extra Custom Image / Media Layers */}
+            {(multiAvatarConfig.extraImageLayers || []).map(layer => {
+              const isImg = layer.type !== 'video' && (isImageMedia(layer.url) || !layer.type);
+              const chromaStyle = getChromaStyle(layer.chromaKey);
+              return (
+                <div
+                  key={layer.id}
+                  className="absolute overflow-hidden pointer-events-none"
+                  style={{
+                    left: `${layer.x ?? 20}%`,
+                    top: `${layer.y ?? 20}%`,
+                    width: `${layer.width ?? 30}%`,
+                    height: `${layer.height ?? 30}%`,
+                    zIndex: layer.zIndex || 10,
+                    borderRadius: `${layer.borderRadius ?? 0}px`,
+                    ...chromaStyle
+                  }}
+                >
+                  {isImg ? (
+                    <img
+                      src={layer.url}
+                      alt={layer.name || 'Extra Layer'}
+                      className="w-full h-full bg-transparent select-none"
+                      style={{
+                        objectFit: layer.objectFit || 'contain',
+                        ...chromaStyle
+                      }}
+                    />
+                  ) : (
+                    <video
+                      src={layer.url}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full bg-transparent select-none"
+                      style={{
+                        objectFit: layer.objectFit || 'contain',
+                        ...chromaStyle
+                      }}
+                    />
+                  )}
                 </div>
               );
             })}
-          </div>
-        );
-      }
 
-      // Freeform Visual Studio Stage Canvas
-      return (
-        <div 
-          className="relative w-full h-full overflow-hidden bg-cover bg-center"
-          style={{
-            backgroundColor: multiAvatarConfig.backgroundColor || '#0a0c14'
-          }}
-        >
-          {/* Studio Transformed Background Layer */}
-          {multiAvatarConfig.backgroundUrl && (
-            <div
-              className="absolute pointer-events-none"
-              style={{
-                left: `${multiAvatarConfig.backgroundTransform?.x ?? 0}%`,
-                top: `${multiAvatarConfig.backgroundTransform?.y ?? 0}%`,
-                width: `${multiAvatarConfig.backgroundTransform?.width ?? 100}%`,
-                height: `${multiAvatarConfig.backgroundTransform?.height ?? 100}%`,
-                transform: (multiAvatarConfig.backgroundTransform?.scale && multiAvatarConfig.backgroundTransform?.scale !== 100)
-                  ? `scale(${multiAvatarConfig.backgroundTransform.scale / 100})`
-                  : 'none',
-                transformOrigin: 'center center',
-                zIndex: 0
-              }}
-            >
-              <img 
-                src={multiAvatarConfig.backgroundUrl}
-                alt="Studio Background"
-                className="w-full h-full"
-                style={{
-                  objectFit: multiAvatarConfig.backgroundTransform?.objectFit || 'cover',
-                  filter: `${multiAvatarConfig.backgroundTransform?.blur ? `blur(${multiAvatarConfig.backgroundTransform.blur}px)` : ''} ${multiAvatarConfig.backgroundTransform?.brightness ? `brightness(${multiAvatarConfig.backgroundTransform.brightness}%)` : ''}`.trim() || 'none'
-                }}
-              />
-            </div>
-          )}
-          {/* Extra Custom Image / Media Layers (Nhiều hình ảnh khác nhau trên sân khấu) */}
-          {(multiAvatarConfig.extraImageLayers || []).map(layer => {
-            const isImg = layer.type !== 'video' && (isImageMedia(layer.url) || !layer.type);
-            const chromaStyle = getChromaStyle(layer.chromaKey);
-            return (
-              <div
-                key={layer.id}
-                className="absolute overflow-hidden pointer-events-none"
-                style={{
-                  left: `${layer.x ?? 20}%`,
-                  top: `${layer.y ?? 20}%`,
-                  width: `${layer.width ?? 30}%`,
-                  height: `${layer.height ?? 30}%`,
-                  zIndex: layer.zIndex || 10,
-                  borderRadius: `${layer.borderRadius ?? 0}px`,
-                  ...chromaStyle
-                }}
-              >
-                {isImg ? (
-                  <img
-                    src={layer.url}
-                    alt={layer.name || 'Extra Layer'}
-                    className="w-full h-full bg-transparent select-none"
-                    style={{
-                      objectFit: layer.objectFit || 'contain',
-                      ...chromaStyle
-                    }}
-                  />
-                ) : (
-                  <video
-                    src={layer.url}
-                    autoPlay
-                    loop
-                    muted
-                    playsInline
-                    className="w-full h-full bg-transparent select-none"
-                    style={{
-                      objectFit: layer.objectFit || 'contain',
-                      ...chromaStyle
-                    }}
-                  />
-                )}
-              </div>
-            );
-          })}
+            {activeList.map((avatar, idx) => {
+              const vidSrc = avatar.resolvedVidSrc;
+              const isSpeakingNow = avatar.isSpeakingNow;
+              const transform = avatar.transform || { 
+                x: idx === 0 ? 4 : idx === 1 ? 48 : idx === 2 ? 25 : 65, 
+                y: idx === 0 ? 8 : idx === 1 ? 28 : idx === 2 ? 60 : 10, 
+                width: 48, 
+                height: 75, 
+                zIndex: 5, 
+                pose: 'stand', 
+                objectFit: 'cover',
+                borderRadius: 16
+              };
+              const isImg = isImageMedia(vidSrc);
+              const chromaStyle = getChromaStyle(avatar.chromaKey || multiAvatarConfig.chromaKey);
 
-          {activeList.map((avatar, idx) => {
-            const transform = avatar.transform || { 
-              x: idx === 0 ? 4 : idx === 1 ? 48 : idx === 2 ? 25 : 65, 
-              y: idx === 0 ? 8 : idx === 1 ? 28 : idx === 2 ? 60 : 10, 
-              width: 48, 
-              height: 75, 
-              zIndex: 5, 
-              pose: 'stand', 
-              objectFit: 'cover',
-              borderRadius: 16
-            };
-            const isSpeakingNow = isSpeakerActive && (
-              activeSpeakerId === avatar.id || 
-              activeSpeakerId === avatar.role || 
-              (avatar.id === 'avatar_1' && (activeSpeakerId === 'idol' || !activeSpeakerId))
-            );
-            const customMatch = (customCharacters && Array.isArray(customCharacters)) 
-              ? customCharacters.find(c => c.id === selectedCharacter && (c.url || c.mediaUrl)) 
-              : null;
-            const fallbackUrl = customMatch?.url || userLockedMediaUrl || '';
-            
-            const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || '';
-            const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || '';
-            const vidSrc = isSpeakingNow 
-              ? (talkSrc || idleSrc || (idx === 0 ? fallbackUrl : '')) 
-              : (idleSrc || talkSrc || (idx === 0 ? fallbackUrl : ''));
-            const isImg = isImageMedia(vidSrc);
-            const chromaStyle = getChromaStyle(avatar.chromaKey || multiAvatarConfig.chromaKey);
-
-            return (
-              <div 
-                key={avatar.id} 
-                className={`absolute overflow-hidden transition-all duration-300 flex flex-col justify-between ${
-                  isSpeakingNow ? 'ring-2 ring-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.6)] z-20 scale-102' : ''
-                }`}
-                style={{
-                  left: `${transform.x ?? (idx === 0 ? 4 : idx === 1 ? 48 : 25)}%`,
-                  top: `${transform.y ?? (idx === 0 ? 8 : idx === 1 ? 28 : 50)}%`,
-                  width: `${transform.width ?? 48}%`,
-                  height: `${transform.height ?? 75}%`,
-                  zIndex: isSpeakingNow ? (transform.zIndex || 5) + 10 : (transform.zIndex || 5),
-                  borderRadius: `${transform.borderRadius ?? 16}px`
-                }}
-              >
+              return (
                 <div 
-                  className="w-full h-full overflow-hidden rounded-[inherit] bg-transparent"
-                  style={chromaStyle}
+                  key={avatar.id} 
+                  className={`absolute overflow-hidden transition-all duration-300 flex flex-col justify-between ${
+                    isSpeakingNow ? 'ring-2 ring-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.6)] z-20 scale-102' : ''
+                  }`}
+                  style={{
+                    left: `${transform.x ?? (idx === 0 ? 4 : idx === 1 ? 48 : 25)}%`,
+                    top: `${transform.y ?? (idx === 0 ? 8 : idx === 1 ? 28 : 50)}%`,
+                    width: `${transform.width ?? 48}%`,
+                    height: `${transform.height ?? 75}%`,
+                    zIndex: isSpeakingNow ? (transform.zIndex || 5) + 10 : (transform.zIndex || 5),
+                    borderRadius: `${transform.borderRadius ?? 16}px`
+                  }}
                 >
-                  {vidSrc ? (
-                    isImg ? (
+                  <div 
+                    className="w-full h-full overflow-hidden rounded-[inherit] bg-transparent"
+                    style={chromaStyle}
+                  >
+                    {isImg ? (
                       <img
                         src={vidSrc}
                         alt={avatar.name}
@@ -4032,28 +4045,23 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                           ...chromaStyle
                         }}
                       />
-                    )
-                  ) : (
-                    <div className="w-full h-full bg-slate-900/80 flex flex-col items-center justify-center p-2 text-center text-white border border-white/10">
-                      <span className="text-xl mb-1">{transform.pose === 'sit' ? '🪑' : transform.pose === 'sit_desk' ? '🛋️' : '🧍'}</span>
-                      <span className="text-[11px] font-black">{avatar.name}</span>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
 
-                {/* Speaker Active Tag Pill */}
-                <div className="absolute bottom-1.5 left-1.5 z-20 flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/75 backdrop-blur-sm border border-white/10 text-[9px] font-black text-white shadow-sm pointer-events-none">
-                  <span className={`w-1.5 h-1.5 rounded-full ${isSpeakingNow ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'}`} />
-                  <span className="truncate max-w-[90px]">{avatar.name}</span>
-                  {isSpeakingNow && (
-                    <span className="text-amber-300 text-[8px] uppercase tracking-wider font-black">Nói</span>
-                  )}
+                  {/* Speaker Active Tag Pill */}
+                  <div className="absolute bottom-1.5 left-1.5 z-20 flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/75 backdrop-blur-sm border border-white/10 text-[9px] font-black text-white shadow-sm pointer-events-none">
+                    <span className={`w-1.5 h-1.5 rounded-full ${isSpeakingNow ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'}`} />
+                    <span className="truncate max-w-[90px]">{avatar.name}</span>
+                    {isSpeakingNow && (
+                      <span className="text-amber-300 text-[8px] uppercase tracking-wider font-black">Nói</span>
+                    )}
+                  </div>
                 </div>
-              </div>
-            );
-          })}
-        </div>
-      );
+              );
+            })}
+          </div>
+        );
+      }
     }
 
     const renderMainCharacter = () => {
@@ -4547,7 +4555,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               {renderAiIdolLiveStage()}
 
               {/* LỚP 1.5: VIDEO PHỤ PIP (PICTURE-IN-PICTURE) XẾP CHỒNG TỪ SEQUENCER (ẢNH 4) */}
-              {flowSequencerOverlay?.secondaryMediaUrl && (() => {
+              {isMasterStageSynced && flowSequencerOverlay?.secondaryMediaUrl && (() => {
                 const pipTrans = flowSequencerOverlay.secondaryMediaTransform || {
                   x: flowSequencerOverlay.secondaryMediaPos === 'top-left' ? 4 : flowSequencerOverlay.secondaryMediaPos === 'bottom-left' ? 4 : flowSequencerOverlay.secondaryMediaPos === 'bottom-right' ? 55 : 55,
                   y: flowSequencerOverlay.secondaryMediaPos === 'bottom-left' || flowSequencerOverlay.secondaryMediaPos === 'bottom-right' ? 70 : 4,
@@ -4583,7 +4591,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               })()}
 
               {/* LỚP 2: OVERLAY HÌNH ẢNH / BANNER / POSTER TỪ SEQUENCER (ẢNH 4) */}
-              {flowSequencerOverlay?.overlayImage && (() => {
+              {isMasterStageSynced && flowSequencerOverlay?.overlayImage && (() => {
                 const bannerTrans = flowSequencerOverlay.overlayImageTransform || {
                   x: flowSequencerOverlay.overlayImagePos === 'top-right' ? 65 : flowSequencerOverlay.overlayImagePos === 'bottom-left' ? 4 : flowSequencerOverlay.overlayImagePos === 'bottom-right' ? 65 : 4,
                   y: flowSequencerOverlay.overlayImagePos === 'bottom-left' || flowSequencerOverlay.overlayImagePos === 'bottom-right' ? 70 : 4,
@@ -4616,7 +4624,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               })()}
 
               {/* LỚP 3: OVERLAY TIÊU ĐỀ / CHỮ NỔI BẬT TỪ SEQUENCER (ẢNH 4) */}
-              {flowSequencerOverlay?.overlayText && (() => {
+              {isMasterStageSynced && flowSequencerOverlay?.overlayText && (() => {
                 const textTrans = flowSequencerOverlay.overlayTextTransform || {
                   x: 4,
                   y: 5,

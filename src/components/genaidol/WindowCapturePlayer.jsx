@@ -503,15 +503,20 @@ export default function WindowCapturePlayer() {
             secondaryMediaUrl: msg.secondaryMediaUrl || null,
             secondaryMediaPos: msg.secondaryMediaPos || 'top-right',
             secondaryMediaScale: msg.secondaryMediaScale || 40,
+            secondaryMediaTransform: msg.secondaryMediaTransform || null,
+            secondaryMediaChromaKey: msg.secondaryMediaChromaKey || null,
             overlayImage: msg.overlayImage || null,
             overlayImagePos: msg.overlayImagePos || 'top-left',
             overlayImageScale: msg.overlayImageScale || 100,
+            overlayImageTransform: msg.overlayImageTransform || null,
+            overlayImageChromaKey: msg.overlayImageChromaKey || null,
             overlayText: msg.overlayText || null,
             overlayTextPos: msg.overlayTextPos || 'top',
             overlayTextStyle: msg.overlayTextStyle || 'banner',
             overlayTextFontFamily: msg.overlayTextFontFamily || 'be_vietnam',
             overlayTextFontSize: msg.overlayTextFontSize || 20,
-            overlayTextColor: msg.overlayTextColor || '#ffffff'
+            overlayTextColor: msg.overlayTextColor || '#ffffff',
+            overlayTextTransform: msg.overlayTextTransform || null
           });
         }
       };
@@ -554,15 +559,20 @@ export default function WindowCapturePlayer() {
             secondaryMediaUrl: state.secondaryMediaUrl || null,
             secondaryMediaPos: state.secondaryMediaPos || 'top-right',
             secondaryMediaScale: state.secondaryMediaScale || 40,
+            secondaryMediaTransform: state.secondaryMediaTransform || null,
+            secondaryMediaChromaKey: state.secondaryMediaChromaKey || null,
             overlayImage: state.overlayImage || null,
             overlayImagePos: state.overlayImagePos || 'top-left',
             overlayImageScale: state.overlayImageScale || 100,
+            overlayImageTransform: state.overlayImageTransform || null,
+            overlayImageChromaKey: state.overlayImageChromaKey || null,
             overlayText: state.overlayText || null,
             overlayTextPos: state.overlayTextPos || 'top',
             overlayTextStyle: state.overlayTextStyle || 'banner',
             overlayTextFontFamily: state.overlayTextFontFamily || 'be_vietnam',
             overlayTextFontSize: state.overlayTextFontSize || 20,
-            overlayTextColor: state.overlayTextColor || '#ffffff'
+            overlayTextColor: state.overlayTextColor || '#ffffff',
+            overlayTextTransform: state.overlayTextTransform || null
           });
         }
         if (state.mediaUrl || state.selectedCharacter) {
@@ -1078,89 +1088,129 @@ export default function WindowCapturePlayer() {
       )}
 
       {/* LỚP VIDEO PHỤ PIP (PICTURE-IN-PICTURE) */}
-      {flowSequencerOverlay?.secondaryMediaUrl && !isControlsHidden && (
-        <div 
-          style={{
-            position: 'absolute',
-            zIndex: 35,
-            pointerEvents: 'none',
-            top: flowSequencerOverlay.secondaryMediaPos?.startsWith('bottom') ? undefined : '16px',
-            bottom: flowSequencerOverlay.secondaryMediaPos?.startsWith('bottom') ? '80px' : undefined,
-            left: flowSequencerOverlay.secondaryMediaPos?.endsWith('left') ? '16px' : (flowSequencerOverlay.secondaryMediaPos === 'center' ? '50%' : undefined),
-            right: flowSequencerOverlay.secondaryMediaPos?.endsWith('right') ? '16px' : undefined,
-            transform: flowSequencerOverlay.secondaryMediaPos === 'center' ? 'translateX(-50%)' : undefined,
-            width: `${flowSequencerOverlay.secondaryMediaScale || 40}%`,
-            maxWidth: '85%'
-          }}
-        >
-          <video
-            src={flowSequencerOverlay.secondaryMediaUrl}
-            autoPlay
-            loop
-            muted
-            playsInline
-            style={{
-              width: '100%',
-              height: 'auto',
-              aspectRatio: '16/9',
-              objectFit: 'cover',
-              borderRadius: '12px',
-              border: '2px solid rgba(255,255,255,0.5)',
-              boxShadow: '0 10px 25px rgba(0,0,0,0.85)'
-            }}
-          />
-        </div>
-      )}
+      {flowSequencerOverlay?.secondaryMediaUrl && !isControlsHidden && (() => {
+        const trans = flowSequencerOverlay.secondaryMediaTransform;
+        const chroma = getChromaStyle(flowSequencerOverlay.secondaryMediaChromaKey);
+        const style = trans ? {
+          position: 'absolute',
+          zIndex: trans.zIndex || 35,
+          pointerEvents: 'none',
+          left: `${trans.x}%`,
+          top: `${trans.y}%`,
+          width: `${trans.width}%`,
+          height: trans.height ? `${trans.height}%` : 'auto',
+          ...chroma
+        } : {
+          position: 'absolute',
+          zIndex: 35,
+          pointerEvents: 'none',
+          top: flowSequencerOverlay.secondaryMediaPos?.startsWith('bottom') ? undefined : '16px',
+          bottom: flowSequencerOverlay.secondaryMediaPos?.startsWith('bottom') ? '80px' : undefined,
+          left: flowSequencerOverlay.secondaryMediaPos?.endsWith('left') ? '16px' : (flowSequencerOverlay.secondaryMediaPos === 'center' ? '50%' : undefined),
+          right: flowSequencerOverlay.secondaryMediaPos?.endsWith('right') ? '16px' : undefined,
+          transform: flowSequencerOverlay.secondaryMediaPos === 'center' ? 'translateX(-50%)' : undefined,
+          width: `${flowSequencerOverlay.secondaryMediaScale || 40}%`,
+          maxWidth: '85%',
+          ...chroma
+        };
+
+        return (
+          <div style={style}>
+            <video
+              src={flowSequencerOverlay.secondaryMediaUrl}
+              autoPlay
+              loop
+              muted
+              playsInline
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'cover',
+                borderRadius: '12px',
+                border: '2px solid rgba(255,255,255,0.5)',
+                boxShadow: '0 10px 25px rgba(0,0,0,0.85)',
+                ...chroma
+              }}
+            />
+          </div>
+        );
+      })()}
 
       {/* LỚP ẢNH BANNER OVERLAY */}
-      {flowSequencerOverlay?.overlayImage && !isControlsHidden && (
-        <div 
-          style={{
-            position: 'absolute',
-            zIndex: 36,
-            pointerEvents: 'none',
-            top: flowSequencerOverlay.overlayImagePos?.startsWith('bottom') ? undefined : '16px',
-            bottom: flowSequencerOverlay.overlayImagePos?.startsWith('bottom') ? '80px' : undefined,
-            left: flowSequencerOverlay.overlayImagePos?.endsWith('left') ? '16px' : (flowSequencerOverlay.overlayImagePos === 'top' || flowSequencerOverlay.overlayImagePos === 'bottom' || flowSequencerOverlay.overlayImagePos === 'center' ? '50%' : undefined),
-            right: flowSequencerOverlay.overlayImagePos?.endsWith('right') ? '16px' : undefined,
-            transform: (flowSequencerOverlay.overlayImagePos === 'top' || flowSequencerOverlay.overlayImagePos === 'bottom' || flowSequencerOverlay.overlayImagePos === 'center') ? `translateX(-50%) scale(${(flowSequencerOverlay.overlayImageScale || 100) / 100})` : `scale(${(flowSequencerOverlay.overlayImageScale || 100) / 100})`,
-            maxWidth: flowSequencerOverlay.overlayImagePos === 'top' || flowSequencerOverlay.overlayImagePos === 'bottom' ? '92%' : '140px',
-            maxHeight: flowSequencerOverlay.overlayImagePos === 'top' || flowSequencerOverlay.overlayImagePos === 'bottom' ? '120px' : '140px'
-          }}
-        >
-          <img 
-            src={flowSequencerOverlay.overlayImage} 
-            alt="Sequencer Overlay" 
-            style={{
-              width: '100%',
-              height: '100%',
-              objectFit: 'contain',
-              borderRadius: '12px',
-              border: '1px solid rgba(255,255,255,0.2)',
-              filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.8))'
-            }}
-          />
-        </div>
-      )}
+      {flowSequencerOverlay?.overlayImage && !isControlsHidden && (() => {
+        const trans = flowSequencerOverlay.overlayImageTransform;
+        const chroma = getChromaStyle(flowSequencerOverlay.overlayImageChromaKey);
+        const style = trans ? {
+          position: 'absolute',
+          zIndex: trans.zIndex || 36,
+          pointerEvents: 'none',
+          left: `${trans.x}%`,
+          top: `${trans.y}%`,
+          width: `${trans.width}%`,
+          height: trans.height ? `${trans.height}%` : 'auto',
+          ...chroma
+        } : {
+          position: 'absolute',
+          zIndex: 36,
+          pointerEvents: 'none',
+          top: flowSequencerOverlay.overlayImagePos?.startsWith('bottom') ? undefined : '16px',
+          bottom: flowSequencerOverlay.overlayImagePos?.startsWith('bottom') ? '80px' : undefined,
+          left: flowSequencerOverlay.overlayImagePos?.endsWith('left') ? '16px' : (flowSequencerOverlay.overlayImagePos === 'top' || flowSequencerOverlay.overlayImagePos === 'bottom' || flowSequencerOverlay.overlayImagePos === 'center' ? '50%' : undefined),
+          right: flowSequencerOverlay.overlayImagePos?.endsWith('right') ? '16px' : undefined,
+          transform: (flowSequencerOverlay.overlayImagePos === 'top' || flowSequencerOverlay.overlayImagePos === 'bottom' || flowSequencerOverlay.overlayImagePos === 'center') ? `translateX(-50%) scale(${(flowSequencerOverlay.overlayImageScale || 100) / 100})` : `scale(${(flowSequencerOverlay.overlayImageScale || 100) / 100})`,
+          maxWidth: flowSequencerOverlay.overlayImagePos === 'top' || flowSequencerOverlay.overlayImagePos === 'bottom' ? '92%' : '140px',
+          maxHeight: flowSequencerOverlay.overlayImagePos === 'top' || flowSequencerOverlay.overlayImagePos === 'bottom' ? '120px' : '140px',
+          ...chroma
+        };
+
+        return (
+          <div style={style}>
+            <img 
+              src={flowSequencerOverlay.overlayImage} 
+              alt="Sequencer Overlay" 
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: 'contain',
+                borderRadius: '12px',
+                border: '1px solid rgba(255,255,255,0.2)',
+                filter: 'drop-shadow(0 10px 20px rgba(0,0,0,0.8))',
+                ...chroma
+              }}
+            />
+          </div>
+        );
+      })()}
 
       {/* LỚP CHỮ BANNER OVERLAY */}
-      {flowSequencerOverlay?.overlayText && !isControlsHidden && (
-        <div 
-          style={{
-            position: 'absolute',
-            zIndex: 37,
-            pointerEvents: 'none',
-            left: '12px',
-            right: '12px',
-            top: flowSequencerOverlay.overlayTextPos === 'bottom' ? undefined : (flowSequencerOverlay.overlayTextPos === 'center' ? '50%' : '16px'),
-            bottom: flowSequencerOverlay.overlayTextPos === 'bottom' ? '80px' : undefined,
-            transform: flowSequencerOverlay.overlayTextPos === 'center' ? 'translateY(-50%)' : undefined,
-            display: 'flex',
-            justifyContent: 'center'
-          }}
-        >
-          <div 
-            style={{
+      {flowSequencerOverlay?.overlayText && !isControlsHidden && (() => {
+        const trans = flowSequencerOverlay.overlayTextTransform;
+        const style = trans ? {
+          position: 'absolute',
+          zIndex: trans.zIndex || 37,
+          pointerEvents: 'none',
+          left: `${trans.x}%`,
+          top: `${trans.y}%`,
+          width: `${trans.width}%`,
+          display: 'flex',
+          justifyContent: 'center'
+        } : {
+          position: 'absolute',
+          zIndex: 37,
+          pointerEvents: 'none',
+          left: '12px',
+          right: '12px',
+          top: flowSequencerOverlay.overlayTextPos === 'bottom' ? undefined : (flowSequencerOverlay.overlayTextPos === 'center' ? '50%' : '16px'),
+          bottom: flowSequencerOverlay.overlayTextPos === 'bottom' ? '80px' : undefined,
+          transform: flowSequencerOverlay.overlayTextPos === 'center' ? 'translateY(-50%)' : undefined,
+          display: 'flex',
+          justifyContent: 'center'
+        };
+
+        return (
+          <div style={style}>
+            <div 
+              style={{
               padding: '8px 14px',
               borderRadius: '16px',
               textAlign: 'center',
@@ -1193,7 +1243,8 @@ export default function WindowCapturePlayer() {
             {flowSequencerOverlay.overlayText}
           </div>
         </div>
-      )}
+      );
+    })()}
 
       {!isControlsHidden && (
         <div
@@ -1213,7 +1264,7 @@ export default function WindowCapturePlayer() {
             zIndex: 10
           }}
         >
-          🔴 4K 60 FPS REALTIME v4.4.1 (OBS ZERO-COPY)
+          🔴 4K 60 FPS REALTIME v4.4.2 (OBS ZERO-COPY)
         </div>
       )}
     </div>

@@ -277,15 +277,27 @@ export default function LivestreamFlowSequencer() {
     } catch (e) {}
   }, [presets, activePresetId]);
 
-  // 🔍 HÀM GIẢI QUYẾT MEDIA GHIM XUYÊN SUỐT TỪ ĐẦU ĐẾN CUỐI KỊCH BẢN
+  // 🔍 HÀM GIẢI QUYẾT MEDIA & TỌA ĐỘ BỐ CỤC GHIM XUYÊN SUỐT TỪ ĐẦU ĐẾN CUỐI KỊCH BẢN (100% BẢO TOÀN HIỆN TRẠNG)
   const resolveStepMedia = useCallback((stepIndex) => {
     const steps = activePreset?.steps || [];
     if (steps.length === 0) {
       return {
         mediaUrl: multiAvatarConfig?.backgroundUrl || '/idols/phong_studio_ngoc_trinh_4k.mp4',
+        mainMediaTransform: null,
+        mainMediaChromaKey: null,
         secondaryMediaUrl: null,
+        secondaryMediaTransform: null,
+        secondaryMediaChromaKey: null,
         overlayImage: null,
-        overlayText: null
+        overlayImageTransform: null,
+        overlayImageChromaKey: null,
+        overlayText: null,
+        overlayTextTransform: null,
+        overlayTextStyle: 'fire_sale',
+        overlayTextFontFamily: 'be_vietnam',
+        overlayTextFontSize: 20,
+        overlayTextColor: '#ffffff',
+        avatarTransforms: null
       };
     }
     const safeIdx = Math.max(0, Math.min(stepIndex, steps.length - 1));
@@ -293,15 +305,22 @@ export default function LivestreamFlowSequencer() {
 
     // 1. Video / Ảnh Nền Chính
     let mediaUrl = targetStep?.mediaUrl;
+    let mainMediaTransform = targetStep?.mainMediaTransform || null;
+    let mainMediaChromaKey = targetStep?.mainMediaChromaKey || null;
     if (!mediaUrl || !mediaUrl.trim()) {
       // Tìm ngược lại từ bước hiện tại về bước 0 để tìm bước gần nhất được Ghim
       const pinnedStep = steps.slice(0, safeIdx + 1).reverse().find(s => s.isMediaPinned && s.mediaUrl && s.mediaUrl.trim());
       if (pinnedStep) {
         mediaUrl = pinnedStep.mediaUrl;
+        if (!mainMediaTransform) mainMediaTransform = pinnedStep.mainMediaTransform || null;
+        if (!mainMediaChromaKey) mainMediaChromaKey = pinnedStep.mainMediaChromaKey || null;
       } else {
-        // Tìm bất kỳ bước nào trong kịch bản có ghim
         const anyPinned = steps.find(s => s.isMediaPinned && s.mediaUrl && s.mediaUrl.trim());
-        if (anyPinned) mediaUrl = anyPinned.mediaUrl;
+        if (anyPinned) {
+          mediaUrl = anyPinned.mediaUrl;
+          if (!mainMediaTransform) mainMediaTransform = anyPinned.mainMediaTransform || null;
+          if (!mainMediaChromaKey) mainMediaChromaKey = anyPinned.mainMediaChromaKey || null;
+        }
       }
     }
     if (!mediaUrl || !mediaUrl.trim()) {
@@ -310,26 +329,76 @@ export default function LivestreamFlowSequencer() {
 
     // 2. Video Phụ PiP (Picture-in-Picture)
     let secondaryMediaUrl = targetStep?.secondaryMediaUrl;
+    let secondaryMediaTransform = targetStep?.secondaryMediaTransform || null;
+    let secondaryMediaChromaKey = targetStep?.secondaryMediaChromaKey || null;
     if (!secondaryMediaUrl || !secondaryMediaUrl.trim()) {
       const pinnedStep = steps.slice(0, safeIdx + 1).reverse().find(s => s.isSecondaryMediaPinned && s.secondaryMediaUrl && s.secondaryMediaUrl.trim());
-      if (pinnedStep) secondaryMediaUrl = pinnedStep.secondaryMediaUrl;
+      if (pinnedStep) {
+        secondaryMediaUrl = pinnedStep.secondaryMediaUrl;
+        if (!secondaryMediaTransform) secondaryMediaTransform = pinnedStep.secondaryMediaTransform || null;
+        if (!secondaryMediaChromaKey) secondaryMediaChromaKey = pinnedStep.secondaryMediaChromaKey || null;
+      }
     }
 
     // 3. Banner / Poster Hình Ảnh
     let overlayImage = targetStep?.overlayImage;
+    let overlayImageTransform = targetStep?.overlayImageTransform || null;
+    let overlayImageChromaKey = targetStep?.overlayImageChromaKey || null;
     if (!overlayImage || !overlayImage.trim()) {
       const pinnedStep = steps.slice(0, safeIdx + 1).reverse().find(s => s.isOverlayImagePinned && s.overlayImage && s.overlayImage.trim());
-      if (pinnedStep) overlayImage = pinnedStep.overlayImage;
+      if (pinnedStep) {
+        overlayImage = pinnedStep.overlayImage;
+        if (!overlayImageTransform) overlayImageTransform = pinnedStep.overlayImageTransform || null;
+        if (!overlayImageChromaKey) overlayImageChromaKey = pinnedStep.overlayImageChromaKey || null;
+      }
     }
 
     // 4. Tiêu Đề Chữ Typography
     let overlayText = targetStep?.overlayText;
+    let overlayTextTransform = targetStep?.overlayTextTransform || null;
+    let overlayTextStyle = targetStep?.overlayTextStyle || 'fire_sale';
+    let overlayTextFontFamily = targetStep?.overlayTextFontFamily || 'be_vietnam';
+    let overlayTextFontSize = targetStep?.overlayTextFontSize || 20;
+    let overlayTextColor = targetStep?.overlayTextColor || '#ffffff';
     if (!overlayText || !overlayText.trim()) {
       const pinnedStep = steps.slice(0, safeIdx + 1).reverse().find(s => s.isOverlayTextPinned && s.overlayText && s.overlayText.trim());
-      if (pinnedStep) overlayText = pinnedStep.overlayText;
+      if (pinnedStep) {
+        overlayText = pinnedStep.overlayText;
+        if (!overlayTextTransform) overlayTextTransform = pinnedStep.overlayTextTransform || null;
+        overlayTextStyle = pinnedStep.overlayTextStyle || overlayTextStyle;
+        overlayTextFontFamily = pinnedStep.overlayTextFontFamily || overlayTextFontFamily;
+        overlayTextFontSize = pinnedStep.overlayTextFontSize || overlayTextFontSize;
+        overlayTextColor = pinnedStep.overlayTextColor || overlayTextColor;
+      }
     }
 
-    return { mediaUrl, secondaryMediaUrl, overlayImage, overlayText };
+    // 5. Bố Cục Vị Trí Các Avatar (Avatar Transforms)
+    let avatarTransforms = targetStep?.avatarTransforms || null;
+    if (!avatarTransforms) {
+      const pinnedStep = steps.slice(0, safeIdx + 1).reverse().find(s => s.avatarTransforms && Object.keys(s.avatarTransforms).length > 0);
+      if (pinnedStep) {
+        avatarTransforms = pinnedStep.avatarTransforms;
+      }
+    }
+
+    return { 
+      mediaUrl, 
+      mainMediaTransform, 
+      mainMediaChromaKey,
+      secondaryMediaUrl, 
+      secondaryMediaTransform, 
+      secondaryMediaChromaKey,
+      overlayImage, 
+      overlayImageTransform, 
+      overlayImageChromaKey,
+      overlayText, 
+      overlayTextTransform, 
+      overlayTextStyle, 
+      overlayTextFontFamily, 
+      overlayTextFontSize, 
+      overlayTextColor,
+      avatarTransforms
+    };
   }, [activePreset, multiAvatarConfig]);
 
   // 📡 Đẩy video và dữ liệu phân đoạn của bước hiện tại lên Sân khấu chính (OBS / TikTok Live / Master)
@@ -353,21 +422,22 @@ export default function LivestreamFlowSequencer() {
       stepIndex: index + 1,
       totalSteps: activePreset?.steps?.length || 1,
       presetName: activePreset?.name || 'Kịch bản Sequencer',
-      mainMediaTransform: step.mainMediaTransform || null,
-      mainMediaChromaKey: step.mainMediaChromaKey || null,
+      mainMediaTransform: resolved.mainMediaTransform || step.mainMediaTransform || null,
+      mainMediaChromaKey: resolved.mainMediaChromaKey || step.mainMediaChromaKey || null,
       secondaryMediaUrl: secondaryToPlay || null,
-      secondaryMediaTransform: step.secondaryMediaTransform || null,
-      secondaryMediaChromaKey: step.secondaryMediaChromaKey || null,
+      secondaryMediaTransform: resolved.secondaryMediaTransform || step.secondaryMediaTransform || null,
+      secondaryMediaChromaKey: resolved.secondaryMediaChromaKey || step.secondaryMediaChromaKey || null,
       overlayImage: overlayImgToPlay || null,
-      overlayImageTransform: step.overlayImageTransform || null,
-      overlayImageChromaKey: step.overlayImageChromaKey || null,
+      overlayImageTransform: resolved.overlayImageTransform || step.overlayImageTransform || null,
+      overlayImageChromaKey: resolved.overlayImageChromaKey || step.overlayImageChromaKey || null,
       overlayText: overlayTxtToPlay || null,
-      overlayTextStyle: step.overlayTextStyle || 'fire_sale',
-      overlayTextFontFamily: step.overlayTextFontFamily || 'be_vietnam',
-      overlayTextFontSize: step.overlayTextFontSize || 20,
-      overlayTextTransform: step.overlayTextTransform || null,
+      overlayTextStyle: resolved.overlayTextStyle || step.overlayTextStyle || 'fire_sale',
+      overlayTextFontFamily: resolved.overlayTextFontFamily || step.overlayTextFontFamily || 'be_vietnam',
+      overlayTextFontSize: resolved.overlayTextFontSize || step.overlayTextFontSize || 20,
+      overlayTextColor: resolved.overlayTextColor || step.overlayTextColor || '#ffffff',
+      overlayTextTransform: resolved.overlayTextTransform || step.overlayTextTransform || null,
       avatarSpeaker: step.avatarSpeaker || 'avatar_1',
-      avatarTransforms: step.avatarTransforms || null,
+      avatarTransforms: resolved.avatarTransforms || step.avatarTransforms || null,
       isMediaPinned: !!step.isMediaPinned,
       isPlaying: isLivePlaying
     };
@@ -384,12 +454,18 @@ export default function LivestreamFlowSequencer() {
         currentTime: 0,
         source: 'sequencer',
         secondaryMediaUrl: secondaryToPlay || null,
+        secondaryMediaTransform: resolved.secondaryMediaTransform || null,
+        secondaryMediaChromaKey: resolved.secondaryMediaChromaKey || null,
         overlayImage: overlayImgToPlay || null,
+        overlayImageTransform: resolved.overlayImageTransform || null,
+        overlayImageChromaKey: resolved.overlayImageChromaKey || null,
         overlayText: overlayTxtToPlay || null,
-        overlayTextStyle: step.overlayTextStyle || 'fire_sale',
-        overlayTextFontFamily: step.overlayTextFontFamily || 'be_vietnam',
-        overlayTextFontSize: step.overlayTextFontSize || 20,
+        overlayTextStyle: resolved.overlayTextStyle || step.overlayTextStyle || 'fire_sale',
+        overlayTextFontFamily: resolved.overlayTextFontFamily || step.overlayTextFontFamily || 'be_vietnam',
+        overlayTextFontSize: resolved.overlayTextFontSize || step.overlayTextFontSize || 20,
+        overlayTextTransform: resolved.overlayTextTransform || null,
         avatarSpeaker: step.avatarSpeaker || 'avatar_1',
+        avatarTransforms: resolved.avatarTransforms || null,
         timestamp: Date.now()
       });
     } catch (e) {}
@@ -424,11 +500,14 @@ export default function LivestreamFlowSequencer() {
         voiceId: step.voiceId || 'brain_auto',
         avatarSpeaker: step.avatarSpeaker || 'avatar_1',
         secondaryMediaUrl: secondaryToPlay || null,
+        secondaryMediaTransform: resolved.secondaryMediaTransform || null,
         overlayImage: overlayImgToPlay || null,
+        overlayImageTransform: resolved.overlayImageTransform || null,
         overlayText: overlayTxtToPlay || null,
-        overlayTextStyle: step.overlayTextStyle || 'fire_sale',
-        overlayTextFontFamily: step.overlayTextFontFamily || 'be_vietnam',
-        overlayTextFontSize: step.overlayTextFontSize || 20,
+        overlayTextStyle: resolved.overlayTextStyle || step.overlayTextStyle || 'fire_sale',
+        overlayTextFontFamily: resolved.overlayTextFontFamily || step.overlayTextFontFamily || 'be_vietnam',
+        overlayTextFontSize: resolved.overlayTextFontSize || step.overlayTextFontSize || 20,
+        overlayTextTransform: resolved.overlayTextTransform || null,
         isMediaPinned: !!step.isMediaPinned,
         isPlaying: isLivePlaying,
         fit: 'cover',
@@ -729,28 +808,37 @@ export default function LivestreamFlowSequencer() {
     toast.success(`📐 Đã áp dụng bố cục: ${preset.name || layoutKey}`);
   };
 
-  // Thêm một bước mới vào kịch bản
+  // Thêm một bước mới vào kịch bản (Kế thừa nguyên hiện trạng các layer đã ghim & bố cục)
   const handleAddStep = () => {
+    const prevStep = activePreset.steps[activePreset.steps.length - 1];
     const newStep = {
       id: `step_${Date.now()}`,
       title: `Bước ${activePreset.steps.length + 1}: Phân đoạn mới`,
-      actionType: 'avatar_talk',
-      avatarSpeaker: 'avatar_1',
-      voiceId: 'free_vi_female',
+      actionType: prevStep?.actionType || 'avatar_talk',
+      avatarSpeaker: prevStep?.avatarSpeaker || 'avatar_1',
+      voiceId: prevStep?.voiceId || 'free_vi_female',
       durationSeconds: 60,
       scriptText: 'Xin chào quý vị khán giả và các bạn đang theo dõi phiên livestream...',
-      mediaUrl: '',
-      mainMediaTransform: { x: 0, y: 0, width: 100, height: 100, zIndex: 1 },
-      secondaryMediaUrl: '',
-      overlayImage: '',
-      overlayText: '',
-      overlayTextStyle: 'fire_sale',
-      overlayTextFontSize: 20,
-      overlayTextFontFamily: 'be_vietnam',
-      isMediaPinned: false,
-      isOverlayImagePinned: false,
-      isOverlayTextPinned: false,
-      isSecondaryMediaPinned: false
+      mediaUrl: prevStep?.isMediaPinned ? (prevStep.mediaUrl || '') : '',
+      mainMediaTransform: prevStep?.mainMediaTransform ? { ...prevStep.mainMediaTransform } : { x: 0, y: 0, width: 100, height: 100, zIndex: 1 },
+      mainMediaChromaKey: prevStep?.mainMediaChromaKey ? { ...prevStep.mainMediaChromaKey } : null,
+      secondaryMediaUrl: prevStep?.isSecondaryMediaPinned ? (prevStep.secondaryMediaUrl || '') : '',
+      secondaryMediaTransform: prevStep?.secondaryMediaTransform ? { ...prevStep.secondaryMediaTransform } : null,
+      secondaryMediaChromaKey: prevStep?.secondaryMediaChromaKey ? { ...prevStep.secondaryMediaChromaKey } : null,
+      overlayImage: prevStep?.isOverlayImagePinned ? (prevStep.overlayImage || '') : '',
+      overlayImageTransform: prevStep?.overlayImageTransform ? { ...prevStep.overlayImageTransform } : null,
+      overlayImageChromaKey: prevStep?.overlayImageChromaKey ? { ...prevStep.overlayImageChromaKey } : null,
+      overlayText: prevStep?.isOverlayTextPinned ? (prevStep.overlayText || '') : '',
+      overlayTextTransform: prevStep?.overlayTextTransform ? { ...prevStep.overlayTextTransform } : null,
+      overlayTextStyle: prevStep?.overlayTextStyle || 'fire_sale',
+      overlayTextFontSize: prevStep?.overlayTextFontSize || 20,
+      overlayTextFontFamily: prevStep?.overlayTextFontFamily || 'be_vietnam',
+      overlayTextColor: prevStep?.overlayTextColor || '#ffffff',
+      avatarTransforms: prevStep?.avatarTransforms ? JSON.parse(JSON.stringify(prevStep.avatarTransforms)) : null,
+      isMediaPinned: !!prevStep?.isMediaPinned,
+      isSecondaryMediaPinned: !!prevStep?.isSecondaryMediaPinned,
+      isOverlayImagePinned: !!prevStep?.isOverlayImagePinned,
+      isOverlayTextPinned: !!prevStep?.isOverlayTextPinned
     };
 
     setPresets(prev => prev.map(p => {
@@ -760,7 +848,7 @@ export default function LivestreamFlowSequencer() {
         steps: [...p.steps, newStep]
       };
     }));
-    toast.success(`➕ Đã thêm Bước ${activePreset.steps.length + 1}`);
+    toast.success(`➕ Đã thêm Bước ${activePreset.steps.length + 1} (Kế thừa hiện trạng ghim)`);
   };
 
   // Xóa bước
@@ -1016,17 +1104,21 @@ export default function LivestreamFlowSequencer() {
       }
       return {};
     }
-    if (layerType === 'main_media' && currentStep?.mainMediaChromaKey?.enabled) {
-      return getChromaStyle(currentStep.mainMediaChromaKey);
+    const resolved = resolveStepMedia(currentStepIndex);
+    if (layerType === 'main_media') {
+      const chroma = currentStep?.mainMediaChromaKey || resolved.mainMediaChromaKey;
+      if (chroma?.enabled) return getChromaStyle(chroma);
     }
-    if (layerType === 'pip' && currentStep?.secondaryMediaChromaKey?.enabled) {
-      return getChromaStyle(currentStep.secondaryMediaChromaKey);
+    if (layerType === 'pip') {
+      const chroma = currentStep?.secondaryMediaChromaKey || resolved.secondaryMediaChromaKey;
+      if (chroma?.enabled) return getChromaStyle(chroma);
     }
-    if (layerType === 'banner' && currentStep?.overlayImageChromaKey?.enabled) {
-      return getChromaStyle(currentStep.overlayImageChromaKey);
+    if (layerType === 'banner') {
+      const chroma = currentStep?.overlayImageChromaKey || resolved.overlayImageChromaKey;
+      if (chroma?.enabled) return getChromaStyle(chroma);
     }
     return {};
-  }, [safeAvatars, currentStep]);
+  }, [safeAvatars, currentStep, currentStepIndex, resolveStepMedia]);
 
   // ✂️ CẬP NHẬT CHROMA KEY / XÓA NỀN CHO BẤT KỲ LỚP NÀO
   const handleLayerChromaUpdate = (layerType, targetId, updates) => {
@@ -1130,31 +1222,39 @@ export default function LivestreamFlowSequencer() {
       if (currentStep.avatarTransforms && currentStep.avatarTransforms[avatarId]) {
         return currentStep.avatarTransforms[avatarId];
       }
+      const steps = activePreset?.steps || [];
+      const safeIdx = Math.max(0, Math.min(currentStepIndex, steps.length - 1));
+      const prevWithAvatarTransform = steps.slice(0, safeIdx).reverse().find(s => s.avatarTransforms && s.avatarTransforms[avatarId]);
+      if (prevWithAvatarTransform) {
+        return prevWithAvatarTransform.avatarTransforms[avatarId];
+      }
       const avObj = safeAvatars.find(a => a.id === avatarId);
       if (avObj && avObj.transform) return avObj.transform;
       const avIdx = safeAvatars.findIndex(a => a.id === avatarId);
-      const safeIdx = avIdx >= 0 ? avIdx : 0;
-      return { x: 5 + safeIdx * 24, y: 15, width: 45, height: 75, zIndex: 10 + safeIdx };
+      const safeIdxAv = avIdx >= 0 ? avIdx : 0;
+      return { x: 5 + safeIdxAv * 24, y: 15, width: 45, height: 75, zIndex: 10 + safeIdxAv };
     }
 
+    const resolved = resolveStepMedia(currentStepIndex);
+
     if (layerType === 'main_media') {
-      return currentStep.mainMediaTransform || { x: 0, y: 0, width: 100, height: 100, zIndex: 1 };
+      return currentStep.mainMediaTransform || resolved.mainMediaTransform || { x: 0, y: 0, width: 100, height: 100, zIndex: 1 };
     }
 
     if (layerType === 'pip') {
-      return currentStep.secondaryMediaTransform || { x: 55, y: 8, width: 40, height: 25, zIndex: 20 };
+      return currentStep.secondaryMediaTransform || resolved.secondaryMediaTransform || { x: 55, y: 8, width: 40, height: 25, zIndex: 20 };
     }
 
     if (layerType === 'banner') {
-      return currentStep.overlayImageTransform || { x: 10, y: 12, width: 80, height: 20, zIndex: 25 };
+      return currentStep.overlayImageTransform || resolved.overlayImageTransform || { x: 10, y: 12, width: 80, height: 20, zIndex: 25 };
     }
 
     if (layerType === 'text') {
-      return currentStep.overlayTextTransform || { x: 5, y: 5, width: 90, height: 12, zIndex: 30 };
+      return currentStep.overlayTextTransform || resolved.overlayTextTransform || { x: 5, y: 5, width: 90, height: 12, zIndex: 30 };
     }
 
     return { x: 10, y: 10, width: 80, height: 20, zIndex: 10 };
-  }, [currentStep, safeAvatars]);
+  }, [currentStep, currentStepIndex, activePreset, safeAvatars, resolveStepMedia]);
 
   const handlePointerDown = (e, layerType, avatarId = null, handle = null) => {
     e.stopPropagation();
@@ -1504,10 +1604,30 @@ export default function LivestreamFlowSequencer() {
           ) : (
             /* Badge Trạng Thái Nhỏ Gọn Khi Không Chọn Lớp */
             <div className="w-full flex items-center justify-between pb-1 mb-1 border-b border-indigo-900/40 shrink-0">
-              <span className="text-[10px] font-black text-cyan-300 flex items-center gap-1">
-                <Smartphone size={12} className="text-cyan-400" />
-                <span>SÂN KHẤU 9:16</span>
-              </span>
+              <div className="flex items-center gap-1.5">
+                <span className="text-[10px] font-black text-cyan-300 flex items-center gap-1">
+                  <Smartphone size={12} className="text-cyan-400" />
+                  <span>SÂN KHẤU 9:16</span>
+                </span>
+                {/* ⏯️ Nút Bật/Tắt Dừng Tất Cả Video Trên Sân Khấu Phụ */}
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = !isStageMediaPaused;
+                    setIsStageMediaPaused(next);
+                    toast.info(next ? '⏸️ Đã DỪNG tất cả video trên Sân Khấu' : '▶️ Đã TIẾP TỤC phát tất cả video');
+                  }}
+                  className={`px-1.5 py-0.5 rounded-md text-[8.5px] font-black transition-all flex items-center gap-0.5 cursor-pointer border ${
+                    isStageMediaPaused 
+                      ? 'bg-amber-950/90 hover:bg-amber-900 text-amber-300 border-amber-500/60 shadow-xs animate-pulse' 
+                      : 'bg-slate-800 hover:bg-slate-700 text-cyan-300 border-slate-700'
+                  }`}
+                  title="Bật/Tắt (Dừng/Phát) tất cả video trên Sân Khấu Phụ"
+                >
+                  {isStageMediaPaused ? <Play size={8.5} className="fill-amber-300" /> : <Square size={8.5} className="fill-cyan-300" />}
+                  <span>{isStageMediaPaused ? 'Phát Video' : 'Dừng Video'}</span>
+                </button>
+              </div>
               <div className="flex items-center gap-1">
                 <span className="px-1.5 py-0.2 rounded text-[9px] font-mono font-black bg-indigo-950 text-amber-300 border border-indigo-500/40">
                   {currentStepIndex + 1}/{activePreset.steps.length}
@@ -1570,12 +1690,18 @@ export default function LivestreamFlowSequencer() {
                       ) : (
                         <video 
                           key={activeMediaUrl || 'default_bg'}
+                          ref={el => {
+                            if (el) {
+                              if (isStageMediaPaused) el.pause();
+                              else el.play().catch(() => {});
+                            }
+                          }}
                           src={activeMediaUrl || '/idols/phong_studio_ngoc_trinh_4k.mp4'} 
-                          autoPlay 
+                          autoPlay={!isStageMediaPaused} 
                           loop 
                           muted 
                           playsInline 
-                          onCanPlay={(e) => { e.target.play().catch(() => {}); }}
+                          onCanPlay={(e) => { if (!isStageMediaPaused) e.target.play().catch(() => {}); }}
                           className="w-full h-full object-cover pointer-events-none"
                           style={chromaStyle}
                         />
@@ -1612,7 +1738,7 @@ export default function LivestreamFlowSequencer() {
                           <Upload size={9} />
                           <span>Tải Nền</span>
                           <input 
-                            type="file" 
+                             type="file" 
                             accept="video/*,image/*" 
                             onChange={(e) => handleDirectMediaUpload(currentStep.id, 'mediaUrl', e)}
                             className="hidden" 
@@ -1620,8 +1746,6 @@ export default function LivestreamFlowSequencer() {
                         </label>
                       </>
                     )}
-
-
 
                     {/* 8 Điểm Resize Handles Khi Được Chọn */}
                     {isSelected && (
@@ -1676,12 +1800,18 @@ export default function LivestreamFlowSequencer() {
                         />
                       ) : (
                         <video 
+                          ref={el => {
+                            if (el) {
+                              if (isStageMediaPaused) el.pause();
+                              else el.play().catch(() => {});
+                            }
+                          }}
                           src={activeSecondaryMediaUrl} 
-                          autoPlay 
+                          autoPlay={!isStageMediaPaused} 
                           loop 
                           muted 
                           playsInline 
-                          onCanPlay={(e) => { e.target.play().catch(() => {}); }}
+                          onCanPlay={(e) => { if (!isStageMediaPaused) e.target.play().catch(() => {}); }}
                           className="w-full h-full object-cover pointer-events-none"
                           style={chromaStyle}
                         />
@@ -1723,8 +1853,6 @@ export default function LivestreamFlowSequencer() {
                         </label>
                       </>
                     )}
-
-
 
                     {/* 8 Điểm Resize Handles Khi Được Chọn */}
                     {isSelected && (
@@ -1786,12 +1914,18 @@ export default function LivestreamFlowSequencer() {
                         />
                       ) : (
                         <video 
+                          ref={el => {
+                            if (el) {
+                              if (isStageMediaPaused) el.pause();
+                              else el.play().catch(() => {});
+                            }
+                          }}
                           src={vidSrc || '/idols/phong_studio_ngoc_trinh_4k.mp4'} 
-                          autoPlay 
+                          autoPlay={!isStageMediaPaused} 
                           loop 
                           muted 
                           playsInline 
-                          onCanPlay={(e) => { e.target.play().catch(() => {}); }}
+                          onCanPlay={(e) => { if (!isStageMediaPaused) e.target.play().catch(() => {}); }}
                           className="w-full h-full object-cover pointer-events-none"
                           style={chromaStyle}
                         />
@@ -2096,6 +2230,23 @@ export default function LivestreamFlowSequencer() {
                   title="Khóa và áp dụng vị trí hiện tại cho toàn bộ các bước"
                 >
                   <Lock size={9.5} /> Khóa
+                </button>
+                <button
+                  type="button"
+                  onClick={() => {
+                    const next = !isStageMediaPaused;
+                    setIsStageMediaPaused(next);
+                    toast.info(next ? '⏸️ Đã DỪNG tất cả video trên Sân Khấu' : '▶️ Đã TIẾP TỤC phát tất cả video');
+                  }}
+                  className={`px-1.5 py-1 rounded-md font-black text-[9px] border cursor-pointer flex items-center justify-center gap-0.5 whitespace-nowrap shadow-xs ${
+                    isStageMediaPaused 
+                      ? 'bg-amber-950 hover:bg-amber-900 text-amber-300 border-amber-500/60 animate-pulse' 
+                      : 'bg-slate-800 hover:bg-slate-700 text-cyan-300 border-slate-700'
+                  }`}
+                  title="Tắt/Mở (Dừng/Phát) tất cả video trên Sân Khấu"
+                >
+                  {isStageMediaPaused ? <Play size={9.5} className="fill-amber-300" /> : <Square size={9.5} className="fill-cyan-300" />}
+                  <span>{isStageMediaPaused ? 'Phát' : 'Dừng'}</span>
                 </button>
               </div>
 
