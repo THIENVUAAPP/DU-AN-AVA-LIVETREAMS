@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.2.8';
+export const APP_VERSION = '4.2.9';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.2.9 - Sân Khấu Sạch 100% Không Dữ Liệu Rác, Xóa Layer Trực Tiếp 8 Điểm, 20 Font & 20 Typography Sang Trọng, Ghim Xuyên Suốt & Toolbar 1 Hàng',
+    description: '1. Sân Khấu Sạch 100% Không Dữ Liệu Rác: Loại bỏ triệt để mọi dữ liệu placeholder, thẻ giỏ hàng hay text rác; chỉ hiển thị chính xác những gì người dùng thêm vào; 2. Nút Xóa Layer Trực Tiếp Trên Sân Khấu: Bấm chọn bất kỳ layer nào (Avatar, Video PiP, Banner ảnh, Text chữ) sẽ hiển thị nút Xóa tức thì khỏi bước; 3. 20 Phông Chữ & 20 Màu Sắc Typography: Thư viện 20 font chữ Việt hóa & 20 preset màu sắc (Neon Cyber, Gold Hoàng Gia, Flash Sale Đỏ Lửa, v.v.); 4. Chức Năng Ghim Layer Xuyên Suốt: Nút ghim 📌 cho từng layer (Video chính, PiP, Banner, Text) giúp chạy liên tục từ đầu đến cuối phiên live hoặc chỉ trong bước; 5. Tinh Gọn Bảng Điều Khiển: Xóa bỏ thanh mẫu kịch bản có sẵn, nạp 100% file từ máy tính, rút gọn thanh căn chỉnh sân khấu còn đúng 1 hàng duy nhất và khóa bố cục 100% hoạt động.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.2.8 - Sân Khấu 9:16 Kéo Dài Toàn Chiều Cao, Kéo Thả & Co Giãn 8 Điểm Cố Định Theo Bước, Nạp File Trực Tiếp & Kịch Bản .MD',
     description: '1. Sân Khấu Live 9:16 Dọc Chuẩn Smartphone Toàn Chiều Cao: Chuẩn hóa khung hình dọc điện thoại 9:16 kéo dài từ trên xuống dưới, không bị vuông ngắn; 2. Kéo Thả & Co Giãn 8 Điểm Đa Lớp (8-Point Resize & Drag): Bấm vào bất kỳ lớp nào (Avatar AI, Video phụ PiP, Banner Deal, Tiêu đề chữ neon) trên sân khấu để kéo thả và co giãn linh hoạt; 3. Tự Động Lưu Cố Định Vị Trí Từng Bước (Per-Step Persistence): Vị trí và kích thước các lớp được lưu cố định theo từng bước, không bị nhảy lệch khi chuyển bước; 4. Tải Media Trực Tiếp Từ Máy Tính (Không Cần Link): Tải video/ảnh trực tiếp từ máy tính nạp thẳng 100% lên sân khấu 9:16 tức thì 0ms; 5. Tách Khung Kịch Bản Riêng & Đọc File .MD: Ô kịch bản AI rộng rãi, hỗ trợ nạp file .md, .docx, .txt, .pdf và nghe thử giọng đọc AI 0ms; 6. Khóa Chặt 100% Hệ Thống: Bảo toàn tuyệt đối mọi module khác.'
