@@ -567,8 +567,35 @@ export default function DesktopAppUI() {
       }
     };
 
+    const handleIdleVideoUpdate = (e) => {
+      const { videoUrl } = e.detail || {};
+      if (videoUrl) {
+        setUserLockedMediaUrl(videoUrl);
+        try {
+          localStorage.setItem('avalive_user_locked_media', videoUrl);
+          localStorage.setItem('aidol_idle_media_url', videoUrl);
+        } catch (err) {}
+        const item = {
+          id: `idle_${Date.now()}`,
+          name: 'Video Chờ (Idle Studio)',
+          mediaUrl: videoUrl,
+          url: videoUrl,
+          type: 'video'
+        };
+        setActiveVideoItem(item);
+        syncMasterLiveState({
+          stage: 'idol',
+          mediaUrl: videoUrl,
+          characterName: 'Video Chờ (Idle Studio)',
+          isVideo: true,
+          videoPlaybackEvent: 'play',
+          isPlaying: true
+        }, socketRef.current);
+      }
+    };
+
     const handleEventVideoTrigger = (e) => {
-      const { videoUrl, name, eventType } = e.detail || {};
+      const { videoUrl, name, eventType, isPreRecorded, muteSourceVideo } = e.detail || {};
       if (videoUrl) {
         const item = {
           id: `ev_${Date.now()}`,
@@ -578,6 +605,13 @@ export default function DesktopAppUI() {
           type: 'video'
         };
         setActiveVideoItem(item);
+        if (isPreRecorded) {
+          // Video có sẵn âm thanh / voice -> Bật âm thanh gốc cho video
+          if (desktopVideoRef.current) {
+            desktopVideoRef.current.muted = muteSourceVideo === true;
+            desktopVideoRef.current.volume = 1.0;
+          }
+        }
         syncMasterLiveState({
           stage: 'idol',
           mediaUrl: videoUrl,
@@ -594,12 +628,14 @@ export default function DesktopAppUI() {
     window.addEventListener('avalive_speaker_change', handleSpeakerChange);
     window.addEventListener('avalive:master_sync_state_changed', handleMasterSyncChange);
     window.addEventListener('avalive:event_video_trigger', handleEventVideoTrigger);
+    window.addEventListener('avalive:idle_video_updated', handleIdleVideoUpdate);
     return () => {
       window.removeEventListener('avalive_multi_avatar_changed', handleMultiAvatarChange);
       window.removeEventListener('avalive_active_speaker_changed', handleSpeakerChange);
       window.removeEventListener('avalive_speaker_change', handleSpeakerChange);
       window.removeEventListener('avalive:master_sync_state_changed', handleMasterSyncChange);
       window.removeEventListener('avalive:event_video_trigger', handleEventVideoTrigger);
+      window.removeEventListener('avalive:idle_video_updated', handleIdleVideoUpdate);
     };
   }, []);
 

@@ -33,14 +33,46 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack 
     load();
   }, []);
 
+  // Lắng nghe cập nhật video chờ (Idle video) từ Workspace Tác Vụ
+  useEffect(() => {
+    const handleIdleUpdate = (e) => {
+      const { videoUrl } = e.detail || {};
+      if (videoUrl) {
+        setActiveVideoItem({
+          id: 'custom_idle_video',
+          name: 'Video Chờ Mặc Định',
+          mediaUrl: videoUrl,
+          url: videoUrl,
+          type: 'video'
+        });
+      }
+    };
+    window.addEventListener('avalive:idle_video_updated', handleIdleUpdate);
+    return () => {
+      window.removeEventListener('avalive:idle_video_updated', handleIdleUpdate);
+    };
+  }, []);
+
   // Xử lý khi bắt đầu kết nối Live
   useEffect(() => {
     if (isConnected) {
-      // Tìm video 'story' (chế độ chờ)
-      const storyItems = liveMedia.filter(i => i.category === 'story' && i.type === 'video');
-      if (storyItems.length > 0) {
-        // Chọn random hoặc video đầu tiên
-        setActiveVideoItem(storyItems[Math.floor(Math.random() * storyItems.length)]);
+      const configs = getSavedEventConfigs();
+      const customIdleVid = configs.idle?.videoFile || configs.idle?.videoUrl || configs.idle?.supportVideoFile || (typeof localStorage !== 'undefined' ? (localStorage.getItem('aidol_idle_media_url') || localStorage.getItem('avalive_user_locked_media')) : null);
+      if (customIdleVid) {
+        setActiveVideoItem({
+          id: 'custom_idle_video',
+          name: 'Video Chờ Mặc Định',
+          mediaUrl: customIdleVid,
+          url: customIdleVid,
+          type: 'video'
+        });
+      } else {
+        // Tìm video 'story' / 'idle' (chế độ chờ)
+        const storyItems = liveMedia.filter(i => (i.category === 'story' || i.category === 'idle') && i.type === 'video');
+        if (storyItems.length > 0) {
+          // Chọn random hoặc video đầu tiên
+          setActiveVideoItem(storyItems[Math.floor(Math.random() * storyItems.length)]);
+        }
       }
       resetIdleTimer();
     } else {
@@ -759,6 +791,9 @@ function fillTemplate(template, vars = {}) {
         }
       }
 
+      const isPreRecorded = currentEvConfig?.videoMode === 'prerecorded' || (!currentEvConfig?.useVoice && !!matchedEventVideo);
+      const muteSourceVideo = currentEvConfig?.muteSourceVideo === true;
+
       if (matchedEventVideo) {
         if (!previousVideoItem && activeVideoItem && activeVideoItem.id !== matchedEventVideo.id) {
           setPreviousVideoItem(activeVideoItem);
@@ -772,7 +807,9 @@ function fillTemplate(template, vars = {}) {
               videoUrl: matchedEventVideo.mediaUrl,
               eventType: type,
               eventKey: evKey,
-              name: matchedEventVideo.name
+              name: matchedEventVideo.name,
+              isPreRecorded,
+              muteSourceVideo
             }
           }));
         }
@@ -786,7 +823,8 @@ function fillTemplate(template, vars = {}) {
       const isCommentType = type === 'COMMENT';
       const isCommentMeaningful = isCommentType ? isMeaningfulCommercialOrEngagingComment(payload?.text || payload?.comment || '') : true;
 
-      const shouldSpeakVoice = !isCommentVoiceDisabled && (isTestMode || (isCommentType ? isCommentMeaningful : true)) && ((currentEvConfig.useVoice !== false) || isTestMode);
+      // Nếu video là loại có sẵn Voice (Pre-recorded), không phát Voice AI đè lên
+      const shouldSpeakVoice = !isPreRecorded && !isCommentVoiceDisabled && (isTestMode || (isCommentType ? isCommentMeaningful : true)) && ((currentEvConfig.useVoice !== false) || isTestMode);
       const shouldSendChat = !isCommentTextDisabled;
       const targetVoiceRole = isTestMode ? 'idol' : (currentEvConfig.ttsVoiceRole || (evKey === 'comment' ? 'comment' : evKey === 'checkout' ? 'manager' : 'idol'));
       const effectiveVoice = resolveEffectiveVoice(targetVoiceRole, isTestMode ? null : currentEvConfig.voiceId, currentEvConfig.avatarId);
@@ -839,11 +877,21 @@ function fillTemplate(template, vars = {}) {
 
   const handleVideoEnded = () => {
     setIsProcessingEvent(false);
+    const configs = getSavedEventConfigs();
+    const idleVid = configs.idle?.videoFile || configs.idle?.videoUrl || configs.idle?.supportVideoFile || (typeof localStorage !== 'undefined' ? (localStorage.getItem('aidol_idle_media_url') || localStorage.getItem('avalive_user_locked_media')) : null);
     if (lipSyncVideoUrl) {
       setLipSyncVideoUrl(null); // Trở về video nền
     } else if (previousVideoItem) {
       setActiveVideoItem(previousVideoItem);
       setPreviousVideoItem(null);
+    } else if (idleVid) {
+      setActiveVideoItem({
+        id: 'idle_bg_video',
+        name: 'Video Chờ (Idle Studio)',
+        mediaUrl: idleVid,
+        url: idleVid,
+        type: 'video'
+      });
     } else {
       // Về mặc định video gốc mà người dùng đã chọn
       setActiveVideoItem(null);

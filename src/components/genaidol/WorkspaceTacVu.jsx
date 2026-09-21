@@ -670,7 +670,31 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
       const json = JSON.stringify(eventConfigs);
       localStorage.setItem('aidol_event_configs', json);
       localStorage.setItem('aidol_event_configs_backup', json);
-      alert('✅ Đã bảo lưu toàn bộ cấu hình sự kiện & kịch bản thành công vĩnh viễn!');
+
+      // 🎬 TỰ ĐỘNG CẬP NHẬT VIDEO CHỜ (IDLE VIDEO) RA SÂN KHẤU CHÍNH KHI LƯU CẤU HÌNH
+      const idleVid = eventConfigs.idle?.videoFile || eventConfigs.idle?.videoUrl || eventConfigs.idle?.supportVideoFile;
+      if (idleVid) {
+        try {
+          localStorage.setItem('avalive_user_locked_media', idleVid);
+          localStorage.setItem('aidol_idle_media_url', idleVid);
+        } catch (err) {}
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('avalive:idle_video_updated', {
+            detail: { videoUrl: idleVid, eventConfigs }
+          }));
+          window.dispatchEvent(new CustomEvent('avalive_event_configs_updated', {
+            detail: { eventConfigs }
+          }));
+        }
+      } else {
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('avalive_event_configs_updated', {
+            detail: { eventConfigs }
+          }));
+        }
+      }
+
+      alert('✅ Đã bảo lưu toàn bộ cấu hình 14 tác vụ sự kiện & đồng bộ Sân Khấu Chính thành công vĩnh viễn!');
     } catch (e) {
       alert('Lỗi lưu cấu hình: ' + e.message);
     }
@@ -3530,6 +3554,36 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                         <option value="call_to_action">📢 call_to_action - Kêu Gọi Tương Tác Giờ Vàng</option>
                         <option value="custom_action">🎬 custom_action - Động Tác / Sự Kiện Tùy Chỉnh</option>
                       </select>
+                    </div>
+
+                    {/* Lựa chọn Chế độ Phát Video: Nhép Miệng vs Video Có Sẵn Âm Thanh/Voice */}
+                    <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 p-3 bg-blue-50/60 rounded-xl border border-blue-200">
+                      <div className="flex flex-col">
+                        <span className="text-xs font-bold text-blue-900 flex items-center gap-1.5">
+                          <span>⚡ Kiểu Phát Video Khớp Sân Khấu Sự Kiện:</span>
+                        </span>
+                        <span className="text-[11px] text-gray-600 mt-0.5">
+                          {currentConfig.videoMode === 'prerecorded' 
+                            ? '🎬 Video Có Sẵn Voice/Âm Thanh: Phát trực tiếp âm thanh gốc của video khi sự kiện nổ ra, không dùng Voice AI đọc đè.'
+                            : '👄 Video Nhép Miệng AI: Tự động nhép miệng khớp 100% theo giọng đọc Voice AI trả lời/chào/cảm ơn.'}
+                        </span>
+                      </div>
+                      <div className="flex items-center gap-2 shrink-0">
+                        <button 
+                          type="button" 
+                          onClick={() => handleSimpleChange('videoMode', 'lipsync')} 
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all border ${currentConfig.videoMode !== 'prerecorded' ? 'bg-blue-600 text-white border-blue-600 shadow-xs' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                        >
+                          👄 Nhép Miệng + Voice AI
+                        </button>
+                        <button 
+                          type="button" 
+                          onClick={() => handleSimpleChange('videoMode', 'prerecorded')} 
+                          className={`px-3 py-1.5 rounded-lg text-xs font-bold cursor-pointer transition-all border ${currentConfig.videoMode === 'prerecorded' ? 'bg-purple-600 text-white border-purple-600 shadow-xs' : 'bg-white text-gray-700 border-gray-300 hover:bg-gray-50'}`}
+                        >
+                          🎬 Video Có Sẵn Voice
+                        </button>
+                      </div>
                     </div>
                     
                     <div className="border-t border-gray-200 pt-3">

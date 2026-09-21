@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.5.2';
+export const APP_VERSION = '4.5.3';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.5.3 - Đồng Bộ 14 Tác Vụ Sự Kiện Ra Sân Khấu Chính 100%, Video Chờ Tự Động & Hỗ Trợ Nhép Miệng / Video Có Sẵn Voice Siêu Mượt',
+    description: '1. Đồng Bộ 14 Tác Vụ Sự Kiện Khớp 100% Sân Khấu Chính: Tất cả 14 tab tác vụ sự kiện (Kịch bản Idol, Chốt đơn, Quà đặc biệt, Quà thường, Bình luận, Theo dõi, Chia sẻ, Cảm ơn Tim, Chào người mới, Kêu gọi tương tác, Nói chuyện AI, Xin lỗi, Im lặng/Chờ) mở ra tự động 0ms, chuyển video siêu mượt mà và khớp trọn vẹn khung hình Sân Khấu Chính; 2. Video Chờ Tự Động: Khi người dùng nạp video chờ (Idle/Im lặng) và lưu cấu hình, video chờ lập tức hiển thị làm nền trên Sân Khấu Chính và tự động trả về video chờ khi kết thúc sự kiện; 3. Tùy Chọn Kiểu Phát Video (Nhép Miệng vs Có Sẵn Voice): Cho phép chọn giữa "👄 Nhép Miệng + Voice AI" (nhép miệng khẩu hình khớp 100% theo giọng đọc AI) và "🎬 Video Có Sẵn Voice" (phát trực tiếp âm thanh gốc của video mà không đọc đè); 4. Khóa Chặt 100% Toàn Bộ Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D, Luồng phát online HTTPS Cloudflare Tunnel.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.5.2 - Sửa Lỗi Chồng Chéo Thông Tin Bước, Tách Biệt Nút Xóa Phông AI & Xóa Khung, Bổ Sung Undo/Redo & Đồng Bộ Sân Khấu Chính 100%',
     description: '1. Sửa Lỗi Chồng Chéo Thông Tin Bước Kịch Bản (Ảnh 1): Sắp xếp lại Step Header tinh gọn, tách biệt hoàn toàn giữa nhãn hiển thị sân khấu và dropdown chọn Nhân vật/Idol nói, không còn bị đè chữ; 2. Tách Biệt Tuyệt Đối Xóa Phông Nền AI vs Xóa Khung (Ảnh 2): Nút "🪄 Tách Nền AI (Xóa Phông)" tự động xóa sạch nền mọi màu sắc (xanh, đen, trắng, phòng...) giữ nguyên 100% người/avatar/vật thể; còn nút "🗑️ Xóa Khung" cho phép xóa media khỏi layer; 3. Thêm Nút Xóa Khung & Phím Tắt Undo/Redo (Ảnh 3): Tích hợp nút "🗑️ Xóa Khung" trực tiếp trên từng Bounding Box và bộ đôi nút ↩️ Hoàn tác (Undo Ctrl+Z) / ↪️ Làm lại (Redo Ctrl+Y) trên thanh công cụ để chống xóa nhầm; 4. Đồng Bộ Sân Khấu Chính 100%: Mọi chuyển động, video chính/phụ, avatar 1-4, banner, text và voice AI được đồng bộ chuẩn xác ra Sân Khấu Chính, OBS Window Capture và Link Online HTTPS; 5. Khóa Chặt 100% Toàn Bộ Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D, Luồng phát online HTTPS Cloudflare Tunnel.'
