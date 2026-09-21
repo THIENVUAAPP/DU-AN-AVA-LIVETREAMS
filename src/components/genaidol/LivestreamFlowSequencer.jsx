@@ -6,7 +6,7 @@ import {
   ChevronUp, ChevronDown, RotateCcw, Bot, Volume2, Users, ShieldCheck, 
   Zap, Star, Tag, Eye, Info, FileText, Image as ImageIcon, Type, Pin, 
   Maximize2, Sliders, Check, X, Palette, Move, Monitor, Wand2,
-  FolderOpen, Scaling, UserCheck, RefreshCw, Smartphone
+  FolderOpen, Scaling, UserCheck, RefreshCw, Smartphone, ArrowUpToLine, ArrowDownToLine
 } from 'lucide-react';
 import UniversalMediaPicker, { SAMPLE_IDOL_VIDEOS } from './UniversalMediaPicker';
 import { readUniversalFile } from '../../utils/universalDocumentParser';
@@ -41,13 +41,13 @@ const toast = {
 
 // 🎯 Danh mục các loại hành động trong kịch bản
 export const ACTION_TYPES = [
-  { id: 'avatar_talk', label: '🗣️ AI Avatar Mở Màn & Chia Sẻ', icon: Bot, color: 'text-purple-600', bg: 'bg-purple-500/10 border-purple-500/30', desc: 'Avatar AI xuất hiện nhép miệng đọc kịch bản giới thiệu theo giọng nói AI.' },
-  { id: 'tiktok_qa', label: '💬 AI Trả Lời Bình Luận TikTok Live', icon: MessageCircle, color: 'text-blue-600', bg: 'bg-blue-500/10 border-blue-500/30', desc: 'Lắng nghe bình luận TikTok và tự động phản hồi bằng Voice AI hoặc Avatar Lip-sync.' },
-  { id: 'product_video', label: '🎬 Phát Video Giới Thiệu Sản Phẩm', icon: Video, color: 'text-emerald-600', bg: 'bg-emerald-500/10 border-emerald-500/30', desc: 'Tự động phát video cận cảnh sản phẩm, tính năng và công dụng.' },
-  { id: 'feedback_video', label: '⭐ Phát Video Feedback / Review Khách Hàng', icon: Film, color: 'text-amber-600', bg: 'bg-amber-500/10 border-amber-500/30', desc: 'Phát video cảm nhận, bằng chứng và đánh giá thực tế của người dùng cũ.' },
-  { id: 'keyword_consult', label: '🏷️ Avatar Tư Vấn & Bắt Từ Khóa Giỏ Hàng', icon: ShoppingCart, color: 'text-indigo-600', bg: 'bg-indigo-500/10 border-indigo-500/30', desc: 'Bắt từ khóa (giá, mua, size) để tự động ghim sản phẩm và chuyển Avatar tư vấn.' },
-  { id: 'cta_sale', label: '🔥 Kêu Gọi Hành Động (CTA) & Chốt Sale', icon: Megaphone, color: 'text-rose-600', bg: 'bg-rose-500/10 border-rose-500/30', desc: 'Đọc thông báo ưu đãi có hạn, đếm ngược thời gian và kêu gọi bấm vào giỏ hàng.' },
-  { id: 'custom_video', label: '📹 Phát Video Tùy Chọn Bất Kỳ', icon: Video, color: 'text-cyan-600', bg: 'bg-cyan-500/10 border-cyan-500/30', desc: 'Phát bất kỳ video nào từ máy tính hoặc link kho lưu trữ.' }
+  { id: 'avatar_talk', label: '🗣️ AI Avatar Mở Màn & Chia Sẻ', icon: Bot, color: 'text-purple-400', bg: 'bg-purple-500/15 border-purple-500/40', desc: 'Avatar AI xuất hiện nhép miệng đọc kịch bản giới thiệu theo giọng nói AI.' },
+  { id: 'tiktok_qa', label: '💬 AI Trả Lời Bình Luận TikTok Live', icon: MessageCircle, color: 'text-blue-400', bg: 'bg-blue-500/15 border-blue-500/40', desc: 'Lắng nghe bình luận TikTok và tự động phản hồi bằng Voice AI hoặc Avatar Lip-sync.' },
+  { id: 'product_video', label: '🎬 Phát Video Giới Thiệu Sản Phẩm', icon: Video, color: 'text-emerald-400', bg: 'bg-emerald-500/15 border-emerald-500/40', desc: 'Tự động phát video cận cảnh sản phẩm, tính năng và công dụng.' },
+  { id: 'feedback_video', label: '⭐ Phát Video Feedback / Review Khách Hàng', icon: Film, color: 'text-amber-400', bg: 'bg-amber-500/15 border-amber-500/40', desc: 'Phát video cảm nhận, bằng chứng và đánh giá thực tế của người dùng cũ.' },
+  { id: 'keyword_consult', label: '🏷️ Avatar Tư Vấn & Bắt Từ Khóa Giỏ Hàng', icon: ShoppingCart, color: 'text-indigo-400', bg: 'bg-indigo-500/15 border-indigo-500/40', desc: 'Bắt từ khóa (giá, mua, size) để tự động ghim sản phẩm và chuyển Avatar tư vấn.' },
+  { id: 'cta_sale', label: '🔥 Kêu Gọi Hành Động (CTA) & Chốt Sale', icon: Megaphone, color: 'text-rose-400', bg: 'bg-rose-500/15 border-rose-500/40', desc: 'Đọc thông báo ưu đãi có hạn, đếm ngược thời gian và kêu gọi bấm vào giỏ hàng.' },
+  { id: 'custom_video', label: '📹 Phát Video Tùy Chọn Bất Kỳ', icon: Video, color: 'text-cyan-400', bg: 'bg-cyan-500/15 border-cyan-500/40', desc: 'Phát bất kỳ video nào từ máy tính hoặc link kho lưu trữ.' }
 ];
 
 // 🔤 Danh sách Phông Chữ hỗ trợ
@@ -64,7 +64,7 @@ export const FONT_FAMILIES = [
 export const DEFAULT_PRESETS = [
   {
     id: 'preset_1person_sales',
-    name: '👤 Preset 1 Người: Idol Độc Diễn Bán Hàng & Chốt Deal',
+    name: '👤 Kịch Bản 1 Người: Idol Độc Diễn Bán Hàng & Chốt Deal',
     category: '1 Người (Solo)',
     avatarCount: 1,
     description: 'Quy trình 6 bước tự động từ Idol mở màn, tư vấn, phát video SP, feedback đến chốt sale giỏ hàng.',
@@ -187,7 +187,7 @@ export const DEFAULT_PRESETS = [
   },
   {
     id: 'preset_2person_sales',
-    name: '🔥 Preset 2 Người: Idol Live + Trợ Lý Thúc Giục Chốt Đơn',
+    name: '🔥 Kịch Bản 2 Người: Idol Live + Trợ Lý Thúc Giục Chốt Đơn',
     category: '2 Người (Duo)',
     avatarCount: 2,
     description: 'Avatar 1 (Idol) chia sẻ sản phẩm, Avatar 2 (Trợ lý) liên tục tạo hiệu ứng FOMO chốt sale.',
@@ -243,7 +243,7 @@ export const DEFAULT_PRESETS = [
   },
   {
     id: 'preset_3person_pk',
-    name: '🎮 Preset 3 Người: Idol + Trợ Lý + BLV Game PK Hoạt Náo',
+    name: '🎮 Kịch Bản 3 Người: Idol + Trợ Lý + BLV Game PK Hoạt Náo',
     category: '3 Người (Trio)',
     avatarCount: 3,
     description: '3 nhân vật phối hợp: Idol tương tác, Trợ lý chăm đơn, BLV Game hô hào tăng tương tác & quà tặng.',
@@ -297,7 +297,7 @@ export const DEFAULT_PRESETS = [
   },
   {
     id: 'preset_4person_talkshow',
-    name: '🎙️ Preset 4 Người: Talkshow Đa Chiều & Chuyên Gia Phân Tích',
+    name: '🎙️ Kịch Bản 4 Người: Talkshow Đa Chiều & Chuyên Gia Phân Tích',
     category: '4 Người (Quad)',
     avatarCount: 4,
     description: '4 nhân vật phân vai tuần tự: Host dẫn dắt, 2 Chuyên gia tư vấn và 1 Trợ lý tổng hợp ý kiến.',
@@ -380,13 +380,13 @@ export default function LivestreamFlowSequencer() {
   const [secondsRemaining, setSecondsRemaining] = useState(0);
   const [expandedStepId, setExpandedStepId] = useState(null);
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
-  const [mediaPickerTarget, setMediaPickerTarget] = useState('mediaUrl'); // 'mediaUrl', 'secondaryMediaUrl', or 'overlayImage'
+  const [mediaPickerTarget, setMediaPickerTarget] = useState('mediaUrl');
   const [mediaPickerStepId, setMediaPickerStepId] = useState(null);
   const [mediaPickerAvatarId, setMediaPickerAvatarId] = useState(null);
   const [presetNameInput, setPresetNameInput] = useState('');
   const [showPresetModal, setShowPresetModal] = useState(false);
 
-  // 📡 State Đồng Bộ Ra Sân Khấu Chính Phần Mềm & OBS (Bật = Phát ra ngoài, Tắt = Chạy test & setup nội bộ)
+  // 📡 State Đồng Bộ Ra Sân Khấu Chính Phần Mềm & OBS
   const [isMasterSynced, setIsMasterSynced] = useState(false);
 
   // 👥 Cấu hình Multi-Avatar 1-4 người đồng bộ từ hệ thống
@@ -398,9 +398,12 @@ export default function LivestreamFlowSequencer() {
     }
   });
 
-  // State đối tượng Avatar đang được chọn trên Sân khấu để chỉnh sửa nhanh
+  // State đối tượng Avatar đang được chọn trên Sân khấu để kéo thả / co giãn
   const [selectedAvatarId, setSelectedAvatarId] = useState('avatar_1');
-
+  const [isDraggingAvatar, setIsDraggingAvatar] = useState(false);
+  const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
+  const [dragStartTransform, setDragStartTransform] = useState({ x: 0, y: 0, width: 45, height: 75 });
+  const stageRef = useRef(null);
   const timerRef = useRef(null);
 
   // Lắng nghe thay đổi cấu hình avatar từ hệ thống
@@ -751,7 +754,7 @@ export default function LivestreamFlowSequencer() {
       setActivePresetId(newPreset.id);
       setCurrentStepIndex(0);
       setSecondsRemaining(newPreset.steps[0]?.durationSeconds || 60);
-      toast.success(`⚡ Đã nạp & chia ${newPreset.steps.length} bước kịch bản cho ${template.avatarCount || 1} nhân vật!`);
+      toast.success(`⚡ Đã nạp & tự động chia ${newPreset.steps.length} bước kịch bản cho ${template.avatarCount || 1} nhân vật!`);
       return;
     }
 
@@ -914,12 +917,12 @@ export default function LivestreamFlowSequencer() {
         };
         setMultiAvatarConfig(updated);
         saveMultiAvatarConfig(updated);
-        toast.success(`🎬 Đã đổi video cho #${targetAv.name || mediaPickerAvatarId}`);
+        toast.success(`🎬 Đã nạp video cho #${targetAv.name || mediaPickerAvatarId}`);
       }
       setMediaPickerAvatarId(null);
     } else if (mediaPickerStepId) {
       handleUpdateStep(mediaPickerStepId, mediaPickerTarget, selectedUrl);
-      toast.success(`🎬 Đã chọn media cho bước: ${item.title || 'Tệp mẫu'}`);
+      toast.success(`🎬 Đã nạp media lên Sân Khấu: ${item.title || 'Tệp mẫu'}`);
     }
     setMediaPickerOpen(false);
   };
@@ -935,19 +938,69 @@ export default function LivestreamFlowSequencer() {
     startStep(next, isPlayingFlow);
   };
 
+  // Căn chỉnh nhanh đối tượng Avatar trên sân khấu
+  const handleCenterAvatar = (avatarId) => {
+    const safeAvatarsList = multiAvatarConfig.avatars || [];
+    const updated = {
+      ...multiAvatarConfig,
+      avatars: safeAvatarsList.map(av => {
+        if (av.id === avatarId) {
+          const w = av.transform?.width || 45;
+          return {
+            ...av,
+            transform: {
+              ...(av.transform || {}),
+              x: Math.max(0, Math.round((100 - w) / 2)),
+              y: 15
+            }
+          };
+        }
+        return av;
+      })
+    };
+    setMultiAvatarConfig(updated);
+    saveMultiAvatarConfig(updated);
+    toast.success('📐 Đã căn giữa nhân vật!');
+  };
+
+  const handleFillAvatar = (avatarId) => {
+    const safeAvatarsList = multiAvatarConfig.avatars || [];
+    const updated = {
+      ...multiAvatarConfig,
+      avatars: safeAvatarsList.map(av => {
+        if (av.id === avatarId) {
+          return {
+            ...av,
+            transform: {
+              ...(av.transform || {}),
+              x: 0,
+              y: 0,
+              width: 100,
+              height: 100
+            }
+          };
+        }
+        return av;
+      })
+    };
+    setMultiAvatarConfig(updated);
+    saveMultiAvatarConfig(updated);
+    toast.success('📐 Đã mở rộng tràn khung!');
+  };
+
   const currentStep = activePreset.steps[currentStepIndex] || activePreset.steps[0];
   const safeAvatars = multiAvatarConfig?.avatars || [];
   const activeAvatarCount = multiAvatarConfig?.activeCount || 1;
   const visibleAvatars = safeAvatars.slice(0, activeAvatarCount);
 
   return (
-    <div className="w-full h-full flex flex-col bg-slate-950 text-gray-100 overflow-hidden select-none font-sans">
+    <div className="w-full h-full min-h-0 flex flex-col bg-[#0b0d14] text-gray-100 overflow-hidden select-none font-sans">
       <SvgChromaFilters />
 
       {/* ========================================================================= */}
       {/* 🚀 TOP TOOLBAR: THANH ĐIỀU KHIỂN ĐỈNH CAO TINH GỌN (CAO 45PX) */}
       {/* ========================================================================= */}
-      <div className="bg-slate-900/95 border-b border-indigo-900/50 px-3.5 py-1.5 flex items-center justify-between gap-2.5 shrink-0 z-20">
+      <div className="bg-[#121524] border-b border-indigo-900/50 px-3.5 py-1.5 flex items-center justify-between gap-2.5 shrink-0 z-20 shadow-md">
         
         {/* Nhóm Trái: Logo, Tiêu đề & Chọn Preset */}
         <div className="flex items-center gap-2 min-w-0">
@@ -968,7 +1021,7 @@ export default function LivestreamFlowSequencer() {
                 const target = presets.find(p => p.id === e.target.value);
                 if (target?.steps?.[0]) setSecondsRemaining(target.steps[0].durationSeconds || 60);
               }}
-              className="bg-slate-800 text-white text-xs font-bold px-2.5 py-1 rounded-lg border border-slate-700 outline-none focus:border-indigo-500 max-w-[190px] sm:max-w-[260px] truncate"
+              className="bg-slate-800 text-white text-xs font-bold px-2.5 py-1 rounded-lg border border-slate-700 outline-none focus:border-indigo-500 max-w-[190px] sm:max-w-[260px] truncate cursor-pointer"
             >
               {presets.map(p => (
                 <option key={p.id} value={p.id}>{p.name}</option>
@@ -977,7 +1030,7 @@ export default function LivestreamFlowSequencer() {
 
             <button
               onClick={() => setShowPresetModal(true)}
-              className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-300 border border-slate-700 text-xs font-bold"
+              className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-300 border border-slate-700 text-xs font-bold cursor-pointer"
               title="Thêm kịch bản mới"
             >
               <Plus size={13} />
@@ -996,7 +1049,7 @@ export default function LivestreamFlowSequencer() {
                 ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white ring-2 ring-emerald-400 animate-pulse' 
                 : 'bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border border-indigo-700/60'
             }`}
-            title={isMasterSynced ? 'Đang phát ra Sân Khấu Chính / OBS / TikTok Live' : 'Bấm để phát dữ liệu ra Sân Khấu Chính / OBS / TikTok Live'}
+            title={isMasterSynced ? 'Đang phát trực tiếp ra Sân Khấu Chính / OBS / TikTok Live' : 'Bấm để phát dữ liệu ra Sân Khấu Chính / OBS / TikTok Live'}
           >
             <Monitor size={13} />
             <span className="hidden md:inline">
@@ -1025,13 +1078,13 @@ export default function LivestreamFlowSequencer() {
 
           {/* Bộ Điều Hướng Bước Nhanh */}
           <div className="hidden sm:flex items-center gap-1 bg-slate-800/90 px-1.5 py-0.5 rounded-lg border border-slate-700">
-            <button onClick={handlePrevStep} className="p-1 hover:text-cyan-400" title="Bước trước">
+            <button onClick={handlePrevStep} className="p-1 hover:text-cyan-400 cursor-pointer" title="Bước trước">
               <SkipBack size={12} />
             </button>
             <span className="text-[11px] font-mono font-bold text-cyan-300 px-1">
               {currentStepIndex + 1}/{activePreset.steps.length}
             </span>
-            <button onClick={handleNextStep} className="p-1 hover:text-cyan-400" title="Bước sau">
+            <button onClick={handleNextStep} className="p-1 hover:text-cyan-400 cursor-pointer" title="Bước sau">
               <SkipForward size={12} />
             </button>
           </div>
@@ -1047,14 +1100,14 @@ export default function LivestreamFlowSequencer() {
         {/* ========================================================================= */}
         {/* 📱 CỘT TRÁI (LEFT PANEL - CHIẾM 40%): SÂN KHẤU BIỂU DIỄN 9:16 STUDIO 1-4 AVATAR */}
         {/* ========================================================================= */}
-        <div className="w-full lg:w-[40%] xl:w-[40%] flex flex-col h-full bg-slate-900/90 rounded-2xl border border-indigo-900/40 p-2.5 shadow-2xl shrink-0 overflow-hidden">
+        <div className="w-full lg:w-[40%] xl:w-[40%] flex flex-col h-full bg-[#111422] rounded-2xl border border-indigo-900/40 p-2.5 shadow-2xl shrink-0 overflow-hidden min-h-0">
           
           {/* Header Sân Khấu Preview */}
           <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-indigo-900/40 shrink-0">
             <div className="flex items-center gap-1.5">
-              <span className="w-2 h-2 rounded-full bg-cyan-400 animate-ping" />
+              <Smartphone size={14} className="text-cyan-400" />
               <span className="text-xs font-black text-white tracking-wide">
-                SÂN KHẤU STUDIO 1–4 AVATAR (9:16)
+                SÂN KHẤU LIVE 9:16 ĐIỆN THOẠI
               </span>
             </div>
             <div className="flex items-center gap-1.5">
@@ -1067,12 +1120,17 @@ export default function LivestreamFlowSequencer() {
             </div>
           </div>
 
-          {/* KHUNG SÂN KHẤU CHUẨN 9:16 DỌC (PHONE SCREEN FRAMEWORK) */}
-          <div className="flex-1 flex items-center justify-center min-h-0 overflow-hidden relative">
+          {/* KHUNG SÂN KHẤU CHUẨN 9:16 DỌC (PHONE SCREEN FRAMEWORK - FULL HEIGHT TỪ TRÊN XUỐNG DƯỚI) */}
+          <div ref={stageRef} className="flex-1 w-full h-full flex items-center justify-center min-h-0 overflow-hidden relative">
             <div 
-              className="relative w-full h-full max-h-full aspect-[9/16] bg-black rounded-2xl overflow-hidden shadow-2xl border border-cyan-500/30 flex items-center justify-center mx-auto select-none"
+              className="relative w-full h-full max-h-full aspect-[9/16] bg-black rounded-2xl overflow-hidden shadow-2xl border-2 border-cyan-500/40 flex items-center justify-center mx-auto select-none"
               style={{ maxHeight: '100%' }}
             >
+              {/* Dynamic Island / Notch Mockup Top */}
+              <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-20 h-3.5 bg-black/90 rounded-full border border-white/10 z-45 flex items-center justify-center pointer-events-none">
+                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+              </div>
+
               {/* Lớp 1: Video / Ảnh Nền Chính (Main Background Media) */}
               {currentStep?.mediaUrl && isImageMedia(currentStep.mediaUrl) ? (
                 <img 
@@ -1097,10 +1155,10 @@ export default function LivestreamFlowSequencer() {
               {currentStep?.secondaryMediaUrl && (
                 <div 
                   className={`absolute z-20 overflow-hidden rounded-xl border-2 border-indigo-400 shadow-xl pointer-events-none transition-all ${
-                    currentStep.secondaryMediaPos === 'top-left' ? 'top-3 left-3' :
-                    currentStep.secondaryMediaPos === 'bottom-left' ? 'bottom-16 left-3' :
-                    currentStep.secondaryMediaPos === 'bottom-right' ? 'bottom-16 right-3' :
-                    'top-3 right-3'
+                    currentStep.secondaryMediaPos === 'top-left' ? 'top-6 left-3' :
+                    currentStep.secondaryMediaPos === 'bottom-left' ? 'bottom-20 left-3' :
+                    currentStep.secondaryMediaPos === 'bottom-right' ? 'bottom-20 right-3' :
+                    'top-6 right-3'
                   }`}
                   style={{ width: `${currentStep.secondaryMediaScale || 40}%` }}
                 >
@@ -1120,7 +1178,7 @@ export default function LivestreamFlowSequencer() {
                 </div>
               )}
 
-              {/* Lớp 2: 1 Đến 4 Avatar AI (Studio Multi-Avatar) */}
+              {/* Lớp 2: 1 Đến 4 Avatar AI (Interactive Drag & Visual Live) */}
               {visibleAvatars.map((av, avIdx) => {
                 const isCurrentSpeaker = (currentStep?.avatarSpeaker === av.id) || (currentStep?.avatarSpeaker === 'all') || (!currentStep?.avatarSpeaker && avIdx === 0);
                 const transform = av.transform || { x: 10 + avIdx * 22, y: 15, width: 45, height: 75, zIndex: 1 };
@@ -1132,7 +1190,7 @@ export default function LivestreamFlowSequencer() {
                   <div 
                     key={av.id}
                     onClick={() => setSelectedAvatarId(av.id)}
-                    className={`absolute z-10 transition-all duration-300 cursor-pointer ${
+                    className={`absolute z-10 transition-all duration-200 cursor-pointer ${
                       isCurrentSpeaker 
                         ? 'ring-2 ring-cyan-400 shadow-lg shadow-cyan-500/40' 
                         : isSelected
@@ -1145,7 +1203,7 @@ export default function LivestreamFlowSequencer() {
                       width: `${transform.width ?? 45}%`,
                       height: `${transform.height ?? 75}%`,
                       zIndex: transform.zIndex || (avIdx + 1),
-                      borderRadius: '12px',
+                      borderRadius: '14px',
                       overflow: 'hidden'
                     }}
                   >
@@ -1184,9 +1242,9 @@ export default function LivestreamFlowSequencer() {
                           setMediaPickerAvatarId(av.id);
                           setMediaPickerOpen(true);
                         }}
-                        className="px-1.5 py-0.5 rounded bg-blue-600 hover:bg-blue-500 text-[8px] font-bold text-white shadow-md"
+                        className="px-1.5 py-0.5 rounded bg-blue-600 hover:bg-blue-500 text-[8px] font-bold text-white shadow-md cursor-pointer"
                       >
-                        Đổi File
+                        Đổi Clip
                       </button>
                     </div>
                   </div>
@@ -1197,13 +1255,13 @@ export default function LivestreamFlowSequencer() {
               {currentStep?.overlayImage && (
                 <div 
                   className={`absolute z-25 pointer-events-none transition-all ${
-                    currentStep.overlayImagePos === 'top-right' ? 'top-3 right-3' :
+                    currentStep.overlayImagePos === 'top-right' ? 'top-6 right-3' :
                     currentStep.overlayImagePos === 'center' ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' :
                     currentStep.overlayImagePos === 'bottom-left' ? 'bottom-20 left-3' :
                     currentStep.overlayImagePos === 'bottom-right' ? 'bottom-20 right-3' :
-                    currentStep.overlayImagePos === 'top' ? 'top-3 left-3 right-3' :
+                    currentStep.overlayImagePos === 'top' ? 'top-6 left-3 right-3' :
                     currentStep.overlayImagePos === 'bottom' ? 'bottom-20 left-3 right-3' :
-                    'top-3 left-3'
+                    'top-6 left-3'
                   }`}
                   style={{ width: `${Math.min(90, (currentStep.overlayImageScale || 100) * 0.4)}%` }}
                 >
@@ -1221,7 +1279,7 @@ export default function LivestreamFlowSequencer() {
                   className={`absolute z-30 pointer-events-none px-3 py-1 text-center transition-all ${
                     currentStep.overlayTextPos === 'bottom' ? 'bottom-24 left-3 right-3' :
                     currentStep.overlayTextPos === 'center' ? 'top-1/2 left-3 right-3 -translate-y-1/2' :
-                    'top-3 left-3 right-3'
+                    'top-6 left-3 right-3'
                   }`}
                 >
                   <div className={`inline-block px-3 py-1 rounded-xl font-black shadow-2xl tracking-wide ${
@@ -1269,7 +1327,7 @@ export default function LivestreamFlowSequencer() {
               )}
 
               {/* Tag Trạng Thái Live Preview */}
-              <div className="absolute top-2 left-2 z-40 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-xs text-[9px] font-bold text-white border border-white/20 flex items-center gap-1 pointer-events-none">
+              <div className="absolute top-6 left-2 z-40 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-xs text-[9px] font-bold text-white border border-white/20 flex items-center gap-1 pointer-events-none">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span>Live 9:16</span>
               </div>
@@ -1285,7 +1343,7 @@ export default function LivestreamFlowSequencer() {
                 <button
                   type="button"
                   onClick={() => handleApplyPresetLayout('sales_duo')}
-                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-[10px] border border-slate-700"
+                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-[10px] border border-slate-700 cursor-pointer"
                   title="Bố cục 2 người chốt đơn"
                 >
                   🛍️ Bán Hàng
@@ -1293,7 +1351,7 @@ export default function LivestreamFlowSequencer() {
                 <button
                   type="button"
                   onClick={() => handleApplyPresetLayout('game_pk')}
-                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-purple-300 font-bold text-[10px] border border-slate-700"
+                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-purple-300 font-bold text-[10px] border border-slate-700 cursor-pointer"
                   title="Bố cục PK"
                 >
                   ⚔️ PK Đấu
@@ -1301,10 +1359,26 @@ export default function LivestreamFlowSequencer() {
                 <button
                   type="button"
                   onClick={() => handleApplyPresetLayout('grid_split')}
-                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-[10px] border border-slate-700"
+                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-[10px] border border-slate-700 cursor-pointer"
                   title="Chia khung đều"
                 >
                   🔲 Chia Khung
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleCenterAvatar(selectedAvatarId)}
+                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-300 font-bold text-[10px] border border-slate-700 cursor-pointer"
+                  title="Căn giữa nhân vật đang chọn"
+                >
+                  <Scaling size={11} className="inline mr-0.5" /> Giữa
+                </button>
+                <button
+                  type="button"
+                  onClick={() => handleFillAvatar(selectedAvatarId)}
+                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-blue-300 font-bold text-[10px] border border-slate-700 cursor-pointer"
+                  title="Tràn toàn khung hình"
+                >
+                  <Maximize2 size={11} className="inline mr-0.5" /> Tràn
                 </button>
               </div>
 
@@ -1315,7 +1389,7 @@ export default function LivestreamFlowSequencer() {
             </div>
 
             <p className="text-[9px] text-gray-400 text-center font-medium leading-tight">
-              💡 Sân khấu 9:16 đồng bộ trực tiếp với các bước kịch bản & vị trí Avatar. Bấm <strong>"Đồng Bộ Ra Sân Khấu Chính"</strong> khi muốn phát thật.
+              💡 Sân khấu 9:16 hiển thị trực quan toàn bộ các lớp (Video, 1–4 Avatar, Banner, Text, TikTok Shop). Bấm <strong>"Đồng Bộ Ra Sân Khấu Chính"</strong> khi phát thật.
             </p>
           </div>
 
@@ -1324,12 +1398,12 @@ export default function LivestreamFlowSequencer() {
         {/* ========================================================================= */}
         {/* 📋 CỘT PHẢI (RIGHT PANEL - CHIẾM 60%): BẢNG ĐIỀU KHIỂN & KỊCH BẢN TỪNG BƯỚC */}
         {/* ========================================================================= */}
-        <div className="flex-1 flex flex-col h-full bg-slate-900/80 rounded-2xl border border-indigo-900/40 overflow-hidden shadow-xl min-w-0">
+        <div className="flex-1 flex flex-col h-full bg-[#111422] rounded-2xl border border-indigo-900/40 overflow-hidden shadow-xl min-w-0">
           
           {/* ===================================================================== */}
           {/* 🌟 THANH CẤU HÌNH THÔNG MINH ĐỈNH CỘT PHẢI (AVATAR COUNT & TEMPLATES) */}
           {/* ===================================================================== */}
-          <div className="bg-slate-900/95 border-b border-indigo-900/50 p-2.5 space-y-2 shrink-0">
+          <div className="bg-[#161a2e] border-b border-indigo-900/50 p-2.5 space-y-2 shrink-0">
             
             <div className="flex flex-wrap items-center justify-between gap-2">
               
@@ -1385,10 +1459,10 @@ export default function LivestreamFlowSequencer() {
                     key={p.id}
                     type="button"
                     onClick={() => handleApplyScriptTemplate(p)}
-                    className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-indigo-900/60 text-slate-300 hover:text-white text-[11px] font-bold border border-slate-700/80 transition-all truncate max-w-[200px]"
+                    className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-indigo-900/60 text-slate-300 hover:text-white text-[11px] font-bold border border-slate-700/80 transition-all truncate max-w-[210px] cursor-pointer"
                     title={p.description}
                   >
-                    {p.name.split(':')[1] || p.name}
+                    {p.name}
                   </button>
                 ))}
                 
@@ -1397,9 +1471,9 @@ export default function LivestreamFlowSequencer() {
                     key={tpl.id}
                     type="button"
                     onClick={() => handleApplyScriptTemplate(tpl)}
-                    className="px-2 py-0.5 rounded-lg bg-indigo-950/70 hover:bg-indigo-800 text-indigo-300 hover:text-white text-[11px] font-bold border border-indigo-700/50 transition-all truncate max-w-[190px]"
+                    className="px-2 py-0.5 rounded-lg bg-indigo-950/70 hover:bg-indigo-800 text-indigo-300 hover:text-white text-[11px] font-bold border border-indigo-700/50 transition-all truncate max-w-[200px] cursor-pointer"
                   >
-                    ⚡ {tpl.title.split(':')[1] || tpl.title}
+                    ⚡ {tpl.title}
                   </button>
                 ))}
               </div>
@@ -1469,7 +1543,7 @@ export default function LivestreamFlowSequencer() {
                       <select
                         value={step.avatarSpeaker || 'avatar_1'}
                         onChange={(e) => handleUpdateStep(step.id, 'avatarSpeaker', e.target.value)}
-                        className="bg-slate-900 text-cyan-300 text-[11px] font-bold px-2 py-1 rounded-lg border border-cyan-500/40 outline-none"
+                        className="bg-slate-900 text-cyan-300 text-[11px] font-bold px-2 py-1 rounded-lg border border-cyan-500/40 outline-none cursor-pointer"
                       >
                         <option value="avatar_1">🗣️ Avatar 1 (Idol)</option>
                         <option value="avatar_2">🗣️ Avatar 2 (Trợ Lý)</option>
@@ -1512,7 +1586,7 @@ export default function LivestreamFlowSequencer() {
                       <button
                         type="button"
                         onClick={() => setExpandedStepId(isExpanded ? null : step.id)}
-                        className="p-1 text-gray-400 hover:text-white rounded bg-slate-900 border border-slate-700"
+                        className="p-1 text-gray-400 hover:text-white rounded bg-slate-900 border border-slate-700 cursor-pointer"
                         title="Mở rộng cài đặt"
                       >
                         {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
@@ -1522,7 +1596,7 @@ export default function LivestreamFlowSequencer() {
                       <button
                         type="button"
                         onClick={() => handleDuplicateStep(step)}
-                        className="p-1 text-gray-400 hover:text-indigo-300 rounded bg-slate-900 border border-slate-700"
+                        className="p-1 text-gray-400 hover:text-indigo-300 rounded bg-slate-900 border border-slate-700 cursor-pointer"
                         title="Nhân bản bước này"
                       >
                         <Copy size={12} />
@@ -1532,7 +1606,7 @@ export default function LivestreamFlowSequencer() {
                       <button
                         type="button"
                         onClick={() => handleDeleteStep(step.id)}
-                        className="p-1 text-gray-400 hover:text-rose-400 rounded bg-slate-900 border border-slate-700"
+                        className="p-1 text-gray-400 hover:text-rose-400 rounded bg-slate-900 border border-slate-700 cursor-pointer"
                         title="Xóa bước này"
                       >
                         <Trash2 size={12} />
@@ -1563,7 +1637,7 @@ export default function LivestreamFlowSequencer() {
                             previewVoiceAudio('vi-VN-Standard-A', step.scriptText);
                           }
                         }}
-                        className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 text-xs shrink-0"
+                        className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 text-xs shrink-0 cursor-pointer"
                         title="Đọc thử lời thoại ngay"
                       >
                         <Volume2 size={14} />
@@ -1611,9 +1685,9 @@ export default function LivestreamFlowSequencer() {
                                   setMediaPickerAvatarId(null);
                                   setMediaPickerOpen(true);
                                 }}
-                                className="px-2 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold rounded-lg shrink-0"
+                                className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold rounded-lg shrink-0 cursor-pointer"
                               >
-                                Mẫu
+                                Tải / Mẫu
                               </button>
                             </div>
                           </div>
@@ -1634,7 +1708,7 @@ export default function LivestreamFlowSequencer() {
                               <select
                                 value={step.secondaryMediaPos || 'top-right'}
                                 onChange={(e) => handleUpdateStep(step.id, 'secondaryMediaPos', e.target.value)}
-                                className="bg-slate-900 text-white text-[10px] p-1.5 rounded-lg border border-slate-700"
+                                className="bg-slate-900 text-white text-[10px] p-1.5 rounded-lg border border-slate-700 cursor-pointer"
                               >
                                 <option value="top-right">Góc Phải Trên</option>
                                 <option value="top-left">Góc Trái Trên</option>
@@ -1662,7 +1736,7 @@ export default function LivestreamFlowSequencer() {
                               <select
                                 value={step.overlayTextStyle || 'banner'}
                                 onChange={(e) => handleUpdateStep(step.id, 'overlayTextStyle', e.target.value)}
-                                className="bg-slate-900 text-white text-[10px] p-1.5 rounded-lg border border-slate-700"
+                                className="bg-slate-900 text-white text-[10px] p-1.5 rounded-lg border border-slate-700 cursor-pointer"
                               >
                                 <option value="banner">Banner Đỏ Vàng</option>
                                 <option value="neon_cyber">Neon Cyber Xanh</option>
@@ -1769,7 +1843,7 @@ export default function LivestreamFlowSequencer() {
                   setShowPresetModal(false);
                   setPresetNameInput('');
                 }}
-                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-gray-300 text-xs font-bold"
+                className="px-4 py-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-gray-300 text-xs font-bold cursor-pointer"
               >
                 Hủy
               </button>
@@ -1808,7 +1882,7 @@ export default function LivestreamFlowSequencer() {
                   setPresetNameInput('');
                   toast.success(`✨ Đã tạo kịch bản: ${newPreset.name}`);
                 }}
-                className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-black"
+                className="px-4 py-2 rounded-xl bg-cyan-500 hover:bg-cyan-400 text-black text-xs font-black cursor-pointer"
               >
                 Tạo Ngay
               </button>

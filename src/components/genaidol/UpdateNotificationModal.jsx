@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.2.6';
+export const APP_VERSION = '4.2.7';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.2.7 - Chuẩn Hóa Sân Khấu Điện Thoại 9:16 Kéo Dài Toàn Màn Hình & Tự Động Nạp Video/Layer Lên Sân Khấu',
+    description: '1. Sân Khấu Điện Thoại 9:16 Toàn Chiều Cao: Chuẩn hóa khung hình dọc điện thoại kéo dài từ trên đỉnh xuống đáy màn hình với viền bo góc kim loại và Dynamic Island; 2. Nạp Video & Media Trực Tiếp 100% Lên Sân Khấu: Bấm chọn/tải bất kỳ clip video nào là lập tức nhảy lên hiển thị trên Sân Khấu 9:16 và tự động xếp chồng theo lớp (Lớp nền chính, Video phụ PiP, Avatar AI 1-4, Banner Deal, Text Neon, TikTok Shop); 3. Căn Chỉnh & Co Giãn Linh Hoạt: Tích hợp nút Căn giữa, Tràn khung hình, Bố cục nhanh trực tiếp dưới sân khấu; 4. Sắp Xếp & Lặp Lại Timeline 24/7: Cứ chạy hoàn thành một bước là tự động hiển thị bước tiếp theo và lặp lại liên tục; 5. Khóa Chặt 100% Toàn Bộ Module Khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.2.6 - Hợp Nhất 1 Tab Duy Nhất: Sân Khấu 9:16 Cột Trái 40% & Bảng Kịch Bản Tự Động Chia Vai 1–4 Người Cột Phải 60%',
     description: '1. Sân Khấu Live 9:16 Cột Trái (Chiếm 40% Màn Hình): Khung hình dọc điện thoại chuẩn 9:16 tích hợp trọn vẹn sức mạnh Studio 1-4 Avatar và Preview kịch bản từng bước (Video nền, Avatar nói/chờ, video phụ PiP, banner ảnh deal, tiêu đề chữ neon, giỏ hàng TikTok Shop); 2. Hợp Nhất 1 Tab Duy Nhất Cột Phải (Chiếm 60% Màn Hình): Xóa bỏ tab rời rạc, tích hợp Bộ chọn 1-4 người, Bố cục nhanh và Kho mẫu kịch bản tự động chia vai trực tiếp trên đầu bảng điều khiển; 3. Tự Động Chia Kịch Bản Cho Từng Nhân Vật: Chọn số lượng người hoặc mẫu kịch bản là hệ thống tự động sinh các bước và phân vai (Avatar 1, Avatar 2, Avatar 3, Avatar 4) đọc thoại tương ứng; 4. Đồng Bộ 0ms Chuẩn 4K 60 FPS: Nút "Đồng Bộ Ra Sân Khấu Chính" tách biệt hoàn toàn giữa Test nội bộ và Phát sóng thật; 5. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn mọi module khác.'
