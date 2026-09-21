@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.5.5';
+export const APP_VERSION = '4.5.6';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.5.5 - Sửa Triệt Để Lỗi TypeError (Reading \'type\'), Khóa/Mở Khóa Mượt Mà 100%, Xóa Sạch Khung Trả Sân Khấu Trống & Tự Động Lặp Lại Kịch Bản Live Ra Sân Khấu Chính',
-    description: '1. Sửa Dứt Điểm Lỗi TypeError: Cannot read properties of null (reading \'type\') (Ảnh 1): Bổ sung kiểm tra an toàn null-safety 100% cho mọi truy cập selectedLayer, giúp thao tác xóa khung, chọn lớp, đóng chọn không bao giờ bị báo lỗi runtime; 2. Sửa Triệt Để Tính Năng Khóa / Mở Khóa Sân Khấu (Ảnh 2): Nút công tắc [🔒 Đã Khóa / 🔓 Khóa] hoạt động trơn tru 100%, khi khóa sẽ cố định toàn bộ các layer và ẩn mọi viền chọn/handles để chống click nhầm, mở khóa cho phép tinh chỉnh bình thường; 3. Xóa Khung Sạch Sẽ Trả Lại Sân Khấu Trống: Khi bấm Xóa Khung, khung hình và nội dung layer biến mất hoàn toàn 100%, trả lại mặt bằng sân khấu phụ sạch sẽ để người dùng đưa các khung khác lên tùy ý; 4. Tự Động Lặp Lại Kịch Bản Vĩnh Viễn (Endless Loop): Khi bấm Phát Live, kịch bản chạy tuần tự từng bước theo đúng cài đặt và tự động lặp lại liên tục từ bước đầu khi chạy hết cho đến khi người dùng chủ động tắt; 5. Đồng Bộ Toàn Bộ Sân Khấu Phụ Ra Sân Khấu Chính 100%: Mọi thành phần (Video nền, PiP, Avatar 1-4, Banner Deal, Tiêu đề chữ Typography, Chroma Key AI) lập tức đẩy ra Sân Khấu Chính của phần mềm, Window Capture OBS Zero-Copy và Link Online HTTPS; 6. Tối Ưu Bảng Cập Nhật Gọn Gàng: Chỉ hiển thị duy nhất bản cập nhật mới nhất cho người dùng; 7. Khóa Chặt 100% Toàn Bộ Hệ Thống.'
+    title: '⚡ Bản Cập Nhật v4.5.6 - Sửa Triệt Để Đồng Bộ Video/Ảnh Từ Sân Khấu Phụ Ra Sân Khấu Chính Khi Phát Live',
+    description: '1. Sửa Dứt Điểm Lỗi Đồng Bộ Video/Ảnh: Khi bấm Phát Live, toàn bộ video nền, ảnh idol, avatar 1-4 trên sân khấu phụ giờ đây được đồng bộ 100% và hiển thị đúng trên sân khấu chính (trước đây chỉ có tiêu đề chữ xuất hiện, video/ảnh bị đen hoàn toàn); 2. Ưu Tiên Đúng Media Từ Sequencer: Khi đang trong chế độ Phát Live Đồng Bộ, sân khấu chính ưu tiên video từ kịch bản live thay vì giữ lại nhân vật cũ đã chọn trước đó; 3. Tái Hiện Nguyên Xi Freeform Canvas: Toàn bộ cấu trúc đa lớp (video nền + avatar + PiP + banner + text) được tái hiện đúng vị trí và kích thước giống sân khấu phụ 100%; 4. Đồng Bộ Avatar Transform: Vị trí, kích thước và zIndex của từng avatar trên sân khấu phụ được đồng bộ chính xác sang sân khấu chính mỗi khi chuyển bước kịch bản; 5. Sân Khấu Chính Độc Lập Khi Không Sync: Khi tắt đồng bộ, sân khấu chính hoạt động hoàn toàn độc lập như trước; 6. Khóa Chặt 100% Toàn Bộ Hệ Thống.'
   }
 ];
 

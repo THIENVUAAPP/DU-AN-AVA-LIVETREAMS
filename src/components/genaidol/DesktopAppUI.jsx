@@ -2618,6 +2618,25 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       setFlowSequencerOverlay(overlayData);
       try { localStorage.setItem('avalive_sequencer_overlay', JSON.stringify(overlayData)); } catch (err) {}
 
+      // 1b. 🔄 Đồng bộ avatarTransforms từ bước hiện tại vào multiAvatarConfig
+      // Đây đảm bảo vị trí/size/zIndex của từng avatar trên sân khấu chính khớp 100% với sân khấu phụ
+      if (avatarTransforms && typeof avatarTransforms === 'object' && Object.keys(avatarTransforms).length > 0) {
+        setMultiAvatarConfig(prev => {
+          const updatedAvatars = (prev?.avatars || []).map(av => {
+            const stepTrans = avatarTransforms[av.id];
+            if (stepTrans) {
+              return { ...av, transform: stepTrans };
+            }
+            return av;
+          });
+          return {
+            ...prev,
+            avatars: updatedAvatars,
+            activeCount: prev?.activeCount || 1
+          };
+        });
+      }
+
       // 2. Cập nhật trực tiếp Video & Media trên Màn hình chính của Phần mềm (Sân Khấu Chính)
       if (mediaUrl) {
         setUserLockedMediaUrl(mediaUrl);
@@ -3890,7 +3909,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     }
 
     // 0.1 MULTI-AVATAR STUDIO CANVAS (1-4 CHARACTERS) — CHỈ KÍCH HOẠT KHI ĐƯỢC ĐỒNG BỘ TỪ STUDIO / SEQUENCER
-    if (isMasterStageSynced && multiAvatarConfig?.enabled && multiAvatarConfig?.activeCount >= 1) {
+    // 🎬 KHI isMasterStageSynced=true: Luôn render canvas này dù enabled=false để tái hiện nguyên xi sân khấu phụ
+    if (isMasterStageSynced && multiAvatarConfig?.activeCount >= 1) {
       const activeList = (multiAvatarConfig.avatars || [])
         .filter(a => a.enabled)
         .slice(0, multiAvatarConfig.activeCount)
@@ -3918,6 +3938,38 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           };
         })
         .filter(a => !!a.resolvedVidSrc); // Triệt tiêu hoàn toàn bất kỳ ô nào không có video/ảnh
+
+      // 🎬 KHI SYNC MÀ KHÔNG CÓ AVATAR VIDEO: Vẫn render Freeform Canvas với video nền từ sequencer
+      if (activeList.length === 0 && isMasterStageSynced && userLockedMediaUrl) {
+        const bgIsImage = isImageMedia(userLockedMediaUrl);
+        return (
+          <div
+            className="relative w-full h-full overflow-hidden bg-black"
+          >
+            {bgIsImage ? (
+              <img
+                key={userLockedMediaUrl}
+                src={userLockedMediaUrl}
+                alt="Stage Background"
+                className="w-full h-full object-cover pointer-events-none select-none"
+              />
+            ) : (
+              <video
+                key={userLockedMediaUrl}
+                ref={desktopVideoRef}
+                data-main-player="true"
+                src={userLockedMediaUrl}
+                autoPlay
+                loop
+                muted={liveAudioMuted}
+                playsInline
+                controls={false}
+                className="w-full h-full object-cover bg-black pointer-events-none select-none"
+              />
+            )}
+          </div>
+        );
+      }
 
       if (activeList.length > 0) {
         const isGridOnly = multiAvatarConfig.layoutMode === 'grid';
@@ -4154,7 +4206,22 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       const customMatch = (customCharacters && Array.isArray(customCharacters)) 
         ? customCharacters.find(c => c.id === selectedCharacter && (c.url || c.mediaUrl)) 
         : null;
-      let selected = customMatch || 
+
+      // 🎬 KHI ĐANG ĐỒNG BỘ TỪ SEQUENCER (PHÁT LIVE): ƯU TIÊN VIDEO/ẢNH TỪ SEQUENCER TRƯỚC
+      // Lý do: userLockedMediaUrl được set bởi handleFlowMediaUpdate khi bấm Phát Live.
+      // customMatch là nhân vật cũ đã chọn, không phải video từ kịch bản live.
+      const sequencerLockedMedia = isMasterStageSynced && userLockedMediaUrl
+        ? { 
+            id: 'sequencer_video', 
+            name: 'Kịch Bản Live Đang Phát', 
+            url: userLockedMediaUrl, 
+            mediaUrl: userLockedMediaUrl, 
+            type: (userLockedMediaUrl.match(/\.(png|jpg|jpeg|gif|webp|svg)([\?#].*)?$/i) || userLockedMediaUrl.startsWith('data:image/')) ? 'image' : 'video'
+          }
+        : null;
+
+      let selected = sequencerLockedMedia ||
+        customMatch || 
         (userLockedMediaUrl ? { id: 'locked_video', name: 'Video Đang Phát', url: userLockedMediaUrl, mediaUrl: userLockedMediaUrl, type: 'video' } : null) ||
         (selectedCharacter && CHARACTERS[selectedCharacter]?.url ? { id: selectedCharacter, ...CHARACTERS[selectedCharacter] } : null) || 
         (customCharacters.find(c => c.url || c.mediaUrl) || null) || 

@@ -3,13 +3,13 @@
   "aspectRatio": "9:16",
   "characterId": "linhanh_4k",
   "characterName": "Idol Ngọc Nhi 👑 (4K Live 60FPS)",
-  "mediaUrl": "/uploads/media-1789992469740-80719549.mp4",
+  "mediaUrl": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
   "isVideo": true,
   "videoPlaybackEvent": "play",
   "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1790002864387,
+  "updatedAt": 1790003505004,
   "flvUrl": null,
   "isConnected": false,
   "type": "MASTER_LIVE_STATE_UPDATE",
@@ -62,5 +62,11 @@
   "voiceId": "brain_auto",
   "secondaryMediaTransform": null,
   "overlayImageTransform": null,
-  "overlayTextTransform": null
+  "overlayTextTransform": {
+    "x": 4,
+    "y": 81,
+    "width": 90,
+    "height": 12,
+    "zIndex": 30
+  }
 }
