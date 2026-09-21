@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.5.3';
+export const APP_VERSION = '4.5.4';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.5.4 - Hoàn Thiện Nút Xóa Khung Biến Mất 100%, Xóa Sạch Phông Nền AI Trong Suốt, Khóa / Mở Khóa Sân Khấu & Undo/Redo Toàn Diện',
+    description: '1. Nút Xóa Khung / Xóa Layer Biến Mất 100% (Ảnh 1): Bấm Xóa Khung lập tức xóa sạch layer tương ứng (nền chính, PiP, avatar, banner, chữ) khỏi Sân Khấu Phụ, không còn viền, ô trống hay handle nào; 2. Nút Bật/Tắt Khóa Sân Khấu (🔒 Đã Khóa / 🔓 Khóa) (Ảnh 2): Chuyển nút Khóa thành công tắc bật/tắt tiện lợi; khi Khóa, toàn bộ mọi khung và layer được cố định tuyệt đối, ẩn toàn bộ viền chọn và handles chống click nhầm; bấm Mở Khóa để tiếp tục tinh chỉnh; 3. Undo / Redo Phục Hồi Toàn Bộ Mọi Thao Tác (Ảnh 3): Bộ đôi nút Quay Lại (Ctrl+Z) và Tiến Tới (Ctrl+Y) hoàn nguyên 100% tất cả thao tác (xóa nền, xóa khung, di chuyển, resize, nạp video/ảnh, đổi text, đổi bước...); 4. Tách Sạch Sẽ Phông Nền AI Trong Suốt: Nâng cấp thuật toán tách nền AI zero-alpha despill, xóa sạch 100% mọi loại phông nền (xanh lá, xanh dương, đen, trắng, tường phòng...) giữ nguyên nhân vật/sản phẩm sắc nét; 5. Cô Lập Âm Thanh: Khi xem bước trên Sân Khấu Phụ chỉ hiển thị hình ảnh/video, tuyệt đối không tự ý phát voice; chỉ phát voice khi bấm Nghe Thử Voice hoặc Chạy Kịch Bản Live; 6. Khóa Chặt 100% Toàn Bộ Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D, Luồng phát online HTTPS Cloudflare Tunnel.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.5.3 - Đồng Bộ 14 Tác Vụ Sự Kiện Ra Sân Khấu Chính 100%, Video Chờ Tự Động & Hỗ Trợ Nhép Miệng / Video Có Sẵn Voice Siêu Mượt',
     description: '1. Đồng Bộ 14 Tác Vụ Sự Kiện Khớp 100% Sân Khấu Chính: Tất cả 14 tab tác vụ sự kiện (Kịch bản Idol, Chốt đơn, Quà đặc biệt, Quà thường, Bình luận, Theo dõi, Chia sẻ, Cảm ơn Tim, Chào người mới, Kêu gọi tương tác, Nói chuyện AI, Xin lỗi, Im lặng/Chờ) mở ra tự động 0ms, chuyển video siêu mượt mà và khớp trọn vẹn khung hình Sân Khấu Chính; 2. Video Chờ Tự Động: Khi người dùng nạp video chờ (Idle/Im lặng) và lưu cấu hình, video chờ lập tức hiển thị làm nền trên Sân Khấu Chính và tự động trả về video chờ khi kết thúc sự kiện; 3. Tùy Chọn Kiểu Phát Video (Nhép Miệng vs Có Sẵn Voice): Cho phép chọn giữa "👄 Nhép Miệng + Voice AI" (nhép miệng khẩu hình khớp 100% theo giọng đọc AI) và "🎬 Video Có Sẵn Voice" (phát trực tiếp âm thanh gốc của video mà không đọc đè); 4. Khóa Chặt 100% Toàn Bộ Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D, Luồng phát online HTTPS Cloudflare Tunnel.'

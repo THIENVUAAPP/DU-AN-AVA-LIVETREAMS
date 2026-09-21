@@ -7206,46 +7206,38 @@ export const removeImageBackgroundCanvas = (imgSrc, mode = 'green', tolerance = 
           if (alpha === 0) continue;
 
           let isBg = false;
-          let featherFactor = 0; // 0 = giữ 100%, 1 = xóa 100%, 0..1 = viền mềm mượt
 
           if (mode === 'green') {
             // Khử phông xanh lá cây & viền ám xanh (Chroma Green)
             const greenDiff = g - Math.max(r, b);
-            if (g > 65 && greenDiff > 12) {
+            if ((g > 60 && greenDiff > 8) || (g > 100 && g > r * 1.15 && g > b * 1.15)) {
               isBg = true;
-              featherFactor = Math.min(1, Math.max(0, (greenDiff - 8) / 30));
             }
           } else if (mode === 'blue') {
             // Khử phông xanh dương (Chroma Blue)
             const blueDiff = b - Math.max(r, g);
-            if (b > 65 && blueDiff > 12) {
+            if ((b > 60 && blueDiff > 8) || (b > 100 && b > r * 1.15 && b > g * 1.15)) {
               isBg = true;
-              featherFactor = Math.min(1, Math.max(0, (blueDiff - 8) / 30));
             }
           } else if (mode === 'white' || mode === 'room' || mode === 'wall') {
             // Khử nền trắng / Tường phòng sáng / Nền phòng có vân nhẹ
             const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
             const isSkin = (r > 120 && g > 80 && b > 60 && r > g && g > b && (r - g) > 15);
-            const isDarkClothing = (r < 70 && g < 70 && b < 70);
-            
-            // Nền trắng / tường sáng gần các góc
+            const isDarkClothing = (r < 60 && g < 60 && b < 60);
             const distFromBg = Math.sqrt(Math.pow(r - bgR, 2) + Math.pow(g - bgG, 2) + Math.pow(b - bgB, 2));
             
             if (!isSkin && !isDarkClothing) {
-              if (luminance > 195 && (Math.max(r, g, b) - Math.min(r, g, b)) < 40) {
+              if (luminance > 185 && (Math.max(r, g, b) - Math.min(r, g, b)) < 45) {
                 isBg = true;
-                featherFactor = Math.min(1, Math.max(0, (luminance - 180) / 45));
-              } else if (distFromBg < effectiveTol * 1.3 && (Math.max(r, g, b) - Math.min(r, g, b)) < 35) {
+              } else if (distFromBg < effectiveTol * 1.4) {
                 isBg = true;
-                featherFactor = Math.min(1, Math.max(0, (effectiveTol * 1.3 - distFromBg) / (effectiveTol * 0.6)));
               }
             }
           } else if (mode === 'black') {
             // Khử nền đen (Screen)
             const maxVal = Math.max(r, g, b);
-            if (maxVal < 45) {
+            if (maxVal < 40) {
               isBg = true;
-              featherFactor = Math.min(1, Math.max(0, (45 - maxVal) / 25));
             }
           } else if (mode === 'auto' || mode === 'smart') {
             // 🪄 TỰ ĐỘNG XÓA TẤT CẢ CÁC LOẠI NỀN (LÁ, LAM, TRẮNG/PHÒNG, ĐEN, TƯỜNG)
@@ -7253,37 +7245,33 @@ export const removeImageBackgroundCanvas = (imgSrc, mode = 'green', tolerance = 
             const blueDiff = b - Math.max(r, g);
             const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
             const isSkin = (r > 120 && g > 80 && b > 60 && r > g && g > b && (r - g) > 15);
-            const isDarkClothing = (r < 70 && g < 70 && b < 70);
+            const isDarkClothing = (r < 60 && g < 60 && b < 60);
             const distFromBg = Math.sqrt(Math.pow(r - bgR, 2) + Math.pow(g - bgG, 2) + Math.pow(b - bgB, 2));
 
-            if (g > 65 && greenDiff > 12) {
+            if ((g > 60 && greenDiff > 8) || (g > 100 && g > r * 1.15 && g > b * 1.15)) {
               // Phông xanh lá
               isBg = true;
-              featherFactor = Math.min(1, Math.max(0, (greenDiff - 8) / 30));
-            } else if (b > 65 && blueDiff > 12) {
+            } else if ((b > 60 && blueDiff > 8) || (b > 100 && b > r * 1.15 && b > g * 1.15)) {
               // Phông xanh dương
               isBg = true;
-              featherFactor = Math.min(1, Math.max(0, (blueDiff - 8) / 30));
-            } else if (!isSkin && !isDarkClothing && luminance > 195 && (Math.max(r, g, b) - Math.min(r, g, b)) < 40) {
+            } else if (!isSkin && !isDarkClothing && luminance > 185 && (Math.max(r, g, b) - Math.min(r, g, b)) < 45) {
               // Nền trắng / tường sáng
               isBg = true;
-              featherFactor = Math.min(1, Math.max(0, (luminance - 180) / 45));
             } else if (Math.max(r, g, b) < 40) {
               // Nền đen
               isBg = true;
-              featherFactor = Math.min(1, Math.max(0, (40 - Math.max(r, g, b)) / 25));
-            } else if (!isSkin && distFromBg < effectiveTol * 1.2) {
+            } else if (!isSkin && !isDarkClothing && distFromBg < effectiveTol * 1.4) {
               // Nền tường / phòng ambient theo góc
               isBg = true;
-              featherFactor = Math.min(1, Math.max(0, (effectiveTol * 1.2 - distFromBg) / (effectiveTol * 0.5)));
             }
           }
 
           if (isBg) {
-            if (featherFactor >= 0.9) {
-              data[i + 3] = 0; // Xóa trong suốt 100%
-            } else {
-              data[i + 3] = Math.round(data[i + 3] * (1 - featherFactor)); // Khử răng cưa viền mềm mượt
+            data[i + 3] = 0; // Xóa sạch sẽ 100% trong suốt (Zero background residue)
+          } else {
+            // Khử viền ám màu xanh (Color Despill) cho người/vật thể
+            if (g > Math.max(r, b) && (g - Math.max(r, b)) > 5) {
+              data[i + 1] = Math.round((r + b) / 2);
             }
           }
         }
