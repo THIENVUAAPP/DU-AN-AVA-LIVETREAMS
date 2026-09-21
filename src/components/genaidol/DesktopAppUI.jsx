@@ -2647,7 +2647,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         bandoEngine.handleUserComment(text, author);
       } catch (e) {}
 
-      // 2. Kích hoạt Kịch Bản Trả Lời Bình Luận & Chốt Đơn của AI Idol (theo đúng cấu trúc đã cài đặt)
+      // 2. 🎯 TỰ ĐỘNG BẮT TỪ KHÓA / MÃ SẢN PHẨM & GHIM SẢN PHẨM TIKTOK SHOP (shop.tiktok.com)
+      try {
+        autoPinProductService.detectAndAutoPinByText(text, 'viewer_comment');
+      } catch (e) {}
+
+      // 3. Kích hoạt Kịch Bản Trả Lời Bình Luận & Chốt Đơn của AI Idol (theo đúng cấu trúc đã cài đặt)
       const now = Date.now();
       if (now - lastAiCommentTime.current > 2500) {
         lastAiCommentTime.current = now;
@@ -4500,36 +4505,55 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 </div>
               )}
 
-              {/* OVERLAY SẢN PHẨM ĐANG GHIM TỰ ĐỘNG BỞI AI TRÊN DESKTOP PREVIEW */}
+              {/* OVERLAY SẢN PHẨM ĐANG GHIM TỰ ĐỘNG TỪ TIKTOK SHOP (shop.tiktok.com) */}
               {livePinnedProduct && (
-                <div className="absolute bottom-4 left-4 z-40 max-w-[280px] sm:max-w-[320px] pointer-events-auto transition-all animate-bounce-subtle">
-                  <div className="bg-black/90 backdrop-blur-md border border-red-500/80 rounded-2xl p-2.5 flex items-center gap-2.5 shadow-[0_8px_20px_rgba(239,68,68,0.5)] text-white">
-                    <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-white/20 bg-black">
-                      <img src={livePinnedProduct.image} alt={livePinnedProduct.name} className="w-full h-full object-cover" />
-                      <span className="absolute top-0 left-0 bg-red-600 text-white text-[7px] font-black px-1 py-0.2 rounded-br uppercase tracking-wider">📌 GHIM</span>
+                <div className="absolute bottom-4 left-4 z-40 max-w-[290px] sm:max-w-[340px] pointer-events-auto transition-all animate-bounce-subtle">
+                  <div className="bg-slate-950/95 backdrop-blur-md border border-rose-500/80 rounded-2xl p-2.5 shadow-[0_10px_25px_rgba(244,63,94,0.45)] text-white space-y-1.5">
+                    {/* Header TikTok Shop */}
+                    <div className="flex items-center justify-between border-b border-white/10 pb-1">
+                      <span className="text-[9px] font-black text-rose-400 flex items-center gap-1 uppercase tracking-wider">
+                        <span>🎵 TIKTOK SHOP</span>
+                        <span className="text-gray-400">• shop.tiktok.com</span>
+                      </span>
+                      {livePinnedProduct.triggerSource && (
+                        <span className="text-[8px] font-bold text-amber-300 bg-amber-500/20 px-1.5 py-0.2 rounded border border-amber-500/30 truncate max-w-[140px]">
+                          {livePinnedProduct.triggerSource.includes('comment') ? '💬 Khách hỏi' :
+                           livePinnedProduct.triggerSource.includes('video') ? '🎬 Theo video' :
+                           livePinnedProduct.triggerSource.includes('sequencer') ? '⚡ Kịch bản Live' : '🔥 Auto Pin'}
+                        </span>
+                      )}
                     </div>
-                    <div className="min-w-0 flex-1 text-left">
-                      <h4 className="text-[11px] font-black text-white truncate">{livePinnedProduct.name}</h4>
-                      <div className="flex items-baseline gap-1.5 mt-0.5">
-                        <span className="text-xs font-black text-red-400 font-mono">{livePinnedProduct.price}</span>
-                        {livePinnedProduct.oldPrice && (
-                          <span className="text-[9px] text-gray-400 line-through font-mono">{livePinnedProduct.oldPrice}</span>
-                        )}
+
+                    <div className="flex items-center gap-2.5">
+                      <div className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-white/20 bg-black">
+                        <img src={livePinnedProduct.image} alt={livePinnedProduct.name} className="w-full h-full object-cover" />
+                        <span className="absolute top-0 left-0 bg-rose-600 text-white text-[7px] font-black px-1 py-0.2 rounded-br uppercase tracking-wider">
+                          {livePinnedProduct.id ? `MÃ #${livePinnedProduct.id}` : '📌 GHIM'}
+                        </span>
                       </div>
-                      <div className="text-[8px] text-amber-300 font-bold flex items-center gap-1 mt-0.5">
-                        <span>🔥 {livePinnedProduct.badge || 'DEAL ĐỘC QUYỀN LIVE'}</span>
+                      <div className="min-w-0 flex-1 text-left">
+                        <h4 className="text-[11px] font-black text-white truncate">{livePinnedProduct.name}</h4>
+                        <div className="flex items-baseline gap-1.5 mt-0.5">
+                          <span className="text-xs font-black text-rose-400 font-mono">{livePinnedProduct.price}</span>
+                          {livePinnedProduct.oldPrice && (
+                            <span className="text-[9px] text-gray-400 line-through font-mono">{livePinnedProduct.oldPrice}</span>
+                          )}
+                        </div>
+                        <div className="text-[8px] text-amber-300 font-bold flex items-center gap-1 mt-0.5">
+                          <span>🔥 {livePinnedProduct.badge || 'DEAL TIKTOK SHOP'}</span>
+                        </div>
                       </div>
+                      <button
+                        onClick={() => {
+                          setLivePinnedProduct(null);
+                          localStorage.removeItem('avalive_current_pinned_product');
+                        }}
+                        className="text-gray-400 hover:text-white p-1 rounded-md text-xs cursor-pointer self-start"
+                        title="Bỏ ghim"
+                      >
+                        ✕
+                      </button>
                     </div>
-                    <button
-                      onClick={() => {
-                        setLivePinnedProduct(null);
-                        localStorage.removeItem('avalive_current_pinned_product');
-                      }}
-                      className="text-gray-400 hover:text-white p-1 rounded-md text-xs cursor-pointer"
-                      title="Bỏ ghim"
-                    >
-                      ✕
-                    </button>
                   </div>
                 </div>
               )}

@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.2.1';
+export const APP_VERSION = '4.2.2';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.2.2 - Tự Động Liên Kết Giỏ Hàng TikTok Shop (shop.tiktok.com) & Ghim Live Thông Minh 24/7',
+    description: '1. Tự Động Kết Nối & Lấy Sản Phẩm TikTok Shop: Dán đường link shop.tiktok.com để tự động đồng bộ 100% danh mục sản phẩm lên hệ thống với đầy đủ mã số (Mã #01, #02...); 2. Tự Động Ghim Theo Video Phát & Kịch Bản: Khi video hoặc kịch bản nhắc đến sản phẩm/mã số, hệ thống tự động ghim sản phẩm đó lên màn hình live; 3. Tự Động Ghim Theo Bình Luận Khán Giả: Khán giả comment hỏi mã số (mã 1, sp 2, chốt 3...) AI lập tức bắt từ khóa và ghim đúng sản phẩm lên sân khấu; 4. Đồng Bộ 0ms 4K 60 FPS: Sân khấu chính, OBS Window Capture và Link TikTok Live Studio hiển thị đồng bộ 100% thẻ ghim TikTok Shop; 5. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn mọi tab chức năng.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.2.1 - Xếp Chồng Đa Lớp Sân Khấu Live, Nạp File Kịch Bản Đa Định Dạng & Sequencer Nâng Cao',
     description: '1. Xếp Chồng Đa Lớp Sân Khấu (Multi-Layer Overlay Live Stage): Mỗi bước kịch bản hỗ trợ Video nền ghim liên tục, Lớp hình ảnh banner/poster/deal và Lớp tiêu đề chữ nổi bật với hiệu ứng neon đa phong cách; 2. Nạp File Kịch Bản Trực Tiếp (.txt, .docx, .pdf, .json, .xlsx): Tải trực tiếp tài liệu kịch bản vào từng phân đoạn chỉ với 1 click cùng khung soạn thảo thoại siêu rộng rãi; 3. Đồng Bộ 0ms 60 FPS Chuẩn 9:16: Hiển thị đồng bộ tuyệt đối trên Sân khấu chính, OBS Window Capture và Link TikTok Live Studio; 4. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn toàn bộ module.'

@@ -77,6 +77,36 @@ export default function LiveCommerceStudio({ isLive }) {
   const [replyTargetPlatform, setReplyTargetPlatform] = useState('🎵 TikTok Shop');
   const [replyTargetProduct, setReplyTargetProduct] = useState(pinnedProduct ? pinnedProduct.name : 'Áo Khoác Chống Nước AvaLive Pro');
 
+  // TikTok Shop Link State & Sync Engine
+  const [tiktokShopUrlInput, setTiktokShopUrlInput] = useState(() => {
+    try {
+      return localStorage.getItem('avalive_tiktok_shop_url') || 'https://shop.tiktok.com';
+    } catch (e) {
+      return 'https://shop.tiktok.com';
+    }
+  });
+  const [isSyncingTikTokShop, setIsSyncingTikTokShop] = useState(false);
+
+  const handleSyncTikTokShop = async () => {
+    if (!tiktokShopUrlInput.trim()) return;
+    setIsSyncingTikTokShop(true);
+    try {
+      const syncedProducts = await autoPinProductService.syncFromTikTokShopUrl(tiktokShopUrlInput.trim());
+      if (syncedProducts && syncedProducts.length > 0) {
+        setLiveSessions(prev => prev.map(s => s.id === activeSessionId ? {
+          ...s,
+          platform: '🎵 TikTok Shop (shop.tiktok.com)',
+          products: syncedProducts
+        } : s));
+        if (syncedProducts[0]) {
+          setPinnedProductId(syncedProducts[0].id);
+          autoPinProductService.pinProduct(syncedProducts[0], 'tiktok_shop_sync');
+        }
+      }
+    } catch (e) {}
+    setIsSyncingTikTokShop(false);
+  };
+
   // Auto Pin AI State
   const [autoPinAiEnabled, setAutoPinAiEnabled] = useState(() => autoPinProductService.autoPinEnabled);
 
@@ -463,6 +493,37 @@ export default function LiveCommerceStudio({ isLive }) {
               <Trash2 className="w-4 h-4" />
             </button>
           )}
+        </div>
+      </div>
+
+      {/* 🎵 KHU VỰC LIÊN KẾT & TỰ ĐỘNG LẤY GIỎ HÀNG TIKTOK SHOP (shop.tiktok.com) */}
+      <div className="glass-panel p-5 rounded-3xl border border-indigo-500/40 bg-gradient-to-r from-indigo-950/40 via-purple-950/30 to-slate-900/60 space-y-3 shadow-xl">
+        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2">
+          <label className="text-xs font-black text-white flex items-center gap-2">
+            <span className="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-ping" />
+            <span className="text-emerald-300">🎵 LIÊN KẾT TIKTOK SHOP (shop.tiktok.com) — TỰ ĐỘNG LẤY SẢN PHẨM & GHIM LIVE:</span>
+          </label>
+          <span className="text-[10px] font-bold text-gray-300 bg-white/10 px-2.5 py-0.5 rounded-full border border-white/15">
+            Tự động ghim khi khán giả hỏi mã SP hoặc video phát đến
+          </span>
+        </div>
+
+        <div className="flex flex-col sm:flex-row items-center gap-3">
+          <input 
+            type="text" 
+            value={tiktokShopUrlInput}
+            onChange={(e) => setTiktokShopUrlInput(e.target.value)}
+            className="flex-1 bg-[#0A0A0A] border border-indigo-500/40 rounded-2xl px-4 py-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-indigo-400 font-mono"
+            placeholder="Dán link shop.tiktok.com hoặc seller-vn.tiktok.com của bạn vào đây..."
+          />
+          <button 
+            onClick={handleSyncTikTokShop}
+            disabled={isSyncingTikTokShop}
+            className="px-5 py-3 rounded-2xl bg-gradient-to-r from-emerald-600 to-teal-500 hover:from-emerald-500 hover:to-teal-400 text-white font-black text-xs shadow-glow-emerald transition-all cursor-pointer whitespace-nowrap flex items-center gap-2"
+          >
+            <RefreshCw className={`w-4 h-4 ${isSyncingTikTokShop ? 'animate-spin' : ''}`} />
+            <span>{isSyncingTikTokShop ? 'ĐANG KẾT NỐI SHOP...' : '⚡ TỰ ĐỘNG ĐỒNG BỘ GIỎ HÀNG'}</span>
+          </button>
         </div>
       </div>
 

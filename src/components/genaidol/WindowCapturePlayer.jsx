@@ -97,6 +97,16 @@ export default function WindowCapturePlayer() {
   const [isVideoLoading, setIsVideoLoading] = useState(false);
   const [isPlaybackActive, setIsPlaybackActive] = useState(false);
 
+  // 📌 Sản phẩm ghim từ TikTok Shop (shop.tiktok.com)
+  const [pinnedProduct, setPinnedProduct] = useState(() => {
+    try {
+      const saved = localStorage.getItem('avalive_current_pinned_product');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
   // 👁️ Trạng thái ẩn toàn bộ các nút / tab trên giao diện Window Capture
   const [isControlsHidden, setIsControlsHidden] = useState(() => {
     if (typeof window === 'undefined') return false;
@@ -474,6 +484,8 @@ export default function WindowCapturePlayer() {
           if (typeof msg.currentTime === 'number') {
             applyTimeSync(msg.currentTime);
           }
+        } else if (msg.type === 'PIN_PRODUCT_UPDATE' && msg.product) {
+          setPinnedProduct(msg.product);
         }
       };
     } catch (e) {}
@@ -966,6 +978,62 @@ export default function WindowCapturePlayer() {
         </div>
       )}
 
+      {/* 📌 THẺ GHIM SẢN PHẨM TIKTOK SHOP TRÊN WINDOW CAPTURE 4K */}
+      {pinnedProduct && !isControlsHidden && (
+        <div style={{
+          position: 'absolute',
+          bottom: '16px',
+          left: '16px',
+          zIndex: 40,
+          maxWidth: '320px',
+          background: 'rgba(5, 7, 12, 0.95)',
+          backdropFilter: 'blur(12px)',
+          border: '1px solid rgba(244, 63, 94, 0.8)',
+          borderRadius: '16px',
+          padding: '10px',
+          boxShadow: '0 10px 30px rgba(0,0,0,0.85)',
+          color: '#fff',
+          display: 'flex',
+          flexDirection: 'column',
+          gap: '6px',
+          pointerEvents: 'none'
+        }}>
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '4px' }}>
+            <span style={{ fontSize: '9px', fontWeight: '900', color: '#fb7185', display: 'flex', alignItems: 'center', gap: '4px' }}>
+              🎵 TIKTOK SHOP • shop.tiktok.com
+            </span>
+            {pinnedProduct.triggerSource && (
+              <span style={{ fontSize: '8px', fontWeight: 'bold', color: '#fde047', background: 'rgba(234, 179, 8, 0.2)', padding: '2px 6px', borderRadius: '4px' }}>
+                {pinnedProduct.triggerSource.includes('comment') ? '💬 Khách hỏi' :
+                 pinnedProduct.triggerSource.includes('video') ? '🎬 Theo video' : '⚡ Flash Sale Live'}
+              </span>
+            )}
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+            <div style={{ position: 'relative', width: '48px', height: '48px', borderRadius: '10px', overflow: 'hidden', flexShrink: 0, border: '1px solid rgba(255,255,255,0.2)', background: '#000' }}>
+              <img src={pinnedProduct.image} alt={pinnedProduct.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+              <span style={{ position: 'absolute', top: 0, left: 0, background: '#e11d48', color: '#fff', fontSize: '7px', fontWeight: '900', padding: '1px 3px', borderBottomRightRadius: '4px' }}>
+                {pinnedProduct.id ? `MÃ #${pinnedProduct.id}` : '📌 GHIM'}
+              </span>
+            </div>
+            <div style={{ flex: 1, minWidth: 0, textAlign: 'left' }}>
+              <div style={{ fontSize: '11px', fontWeight: '900', color: '#fff', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                {pinnedProduct.name}
+              </div>
+              <div style={{ display: 'flex', alignItems: 'baseline', gap: '6px', marginTop: '2px' }}>
+                <span style={{ fontSize: '12px', fontWeight: '900', color: '#fb7185', fontFamily: 'monospace' }}>{pinnedProduct.price}</span>
+                {pinnedProduct.oldPrice && (
+                  <span style={{ fontSize: '9px', color: '#94a3b8', textDecoration: 'line-through', fontFamily: 'monospace' }}>{pinnedProduct.oldPrice}</span>
+                )}
+              </div>
+              <div style={{ fontSize: '8px', color: '#fde047', fontWeight: 'bold', marginTop: '2px' }}>
+                🔥 {pinnedProduct.badge || 'DEAL TIKTOK SHOP'}
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
       {!isControlsHidden && (
         <div
           style={{
@@ -984,7 +1052,7 @@ export default function WindowCapturePlayer() {
             zIndex: 10
           }}
         >
-          🔴 4K 60 FPS REALTIME v4.2.1 (OBS ZERO-COPY)
+          🔴 4K 60 FPS REALTIME v4.2.2 (OBS ZERO-COPY)
         </div>
       )}
     </div>
