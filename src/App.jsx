@@ -333,14 +333,15 @@ export default function App() {
           <EnterprisePayment setActiveTab={setActiveTab} />
         )}
 
+        {activeTab === "flow-sequencer" && (
+          <div className="w-full h-[85vh] bg-[#0E0E17] rounded-3xl p-4 border border-rose-500/30 overflow-y-auto shadow-2xl">
+            <LivestreamFlowSequencer />
+          </div>
+        )}
+
         {/* WORKSPACE VIP STUDIO MODE (When User IS Logged In) - ALL MODULES UNLOCKED */}
         {currentUser && (
           <>
-            {activeTab === "flow-sequencer" && (
-              <div className="w-full h-[85vh] bg-[#0E0E17] rounded-3xl p-4 border border-rose-500/30 overflow-y-auto shadow-2xl">
-                <LivestreamFlowSequencer />
-              </div>
-            )}
 
             {activeTab === "broadcast" && (
               <ProductionStudio isLive={isLive} aiAvatarFeatureEnabled={aiAvatarFeatureEnabled} setActiveTab={setActiveTab} currentUser={currentUser} />

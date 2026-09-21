@@ -7,7 +7,7 @@ import {
   Zap, Star, Tag, Eye, Info, FileText, Image as ImageIcon, Type, Pin, 
   Maximize2, Sliders, Check, X, Palette, Move, Monitor, Wand2,
   FolderOpen, Scaling, UserCheck, RefreshCw, Smartphone, ArrowUpToLine, 
-  ArrowDownToLine, Lock, Unlock, EyeOff, LayoutGrid, Radio, Scissors
+  ArrowDownToLine, ArrowUp, ArrowDown, Lock, Unlock, EyeOff, LayoutGrid, Radio, Scissors
 } from 'lucide-react';
 import UniversalMediaPicker from './UniversalMediaPicker';
 import { readUniversalFile } from '../../utils/universalDocumentParser';
@@ -2282,7 +2282,7 @@ export default function LivestreamFlowSequencer() {
                           {/* Badge Giọng Bộ Não */}
                           {(!step.voiceId || step.voiceId === 'brain_auto') && (
                             <span className="text-[10px] font-bold text-amber-300 bg-amber-950/70 px-2 py-1 rounded-md border border-amber-500/30 truncate max-w-[150px]" title="Giọng mặc định lấy trực tiếp từ Cấu hình Bộ Não Voice AI">
-                              🧠 {getBrainVoiceNameForSpeaker(step.avatarSpeaker).split(' ')[0]}
+                              🧠 {(getBrainVoiceNameForSpeaker(step.avatarSpeaker) || 'Hoài My').split(' ')[0]}
                             </span>
                           )}
 

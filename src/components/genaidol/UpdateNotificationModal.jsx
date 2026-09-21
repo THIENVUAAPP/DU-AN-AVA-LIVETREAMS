@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.3.7';
+export const APP_VERSION = '4.3.8';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.3.8 - Sửa Triệt Để Lỗi Mở Tab Chuỗi Kịch Bản (Sequencer), Đảm Bảo Mở Tức Thì 100% & Hoạt Động Trơn Tru Mọi Nền Tảng',
+    description: '1. Khắc Phục Triệt Để Lỗi Mở Tab Chuỗi Kịch Bản: Bổ sung đầy đủ các thành phần điều hướng lớp, xử lý dứt điểm lỗi runtime khiến tab không vào được, đảm bảo bấm vào mở tức thì 100% mượt mà; 2. Mở Tab Tự Do Cho Mọi Người Dùng: Bỏ chặn điều kiện tài khoản khi truy cập Chuỗi Kịch Bản từ thanh menu và Header; 3. Giữ Nguyên Toàn Bộ Giao Diện v4.3.7: 1 Nút Xóa Nền AI ngoài khung hình video, Tỷ lệ 7/3 ô Lời Thoại kịch bản to gấp 3 lần, Hiển thị rõ ràng nút Cài Đặt & Xóa Bước, Tinh gọn 1 nút Nghe Thử Voice; 4. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D, Luồng phát 60 FPS 4K.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.3.7 - Gom 1 Nút Xóa Nền AI Ngoài Khung Video, Tỷ Lệ 7/3 Kịch Bản To Gấp 3 Lần, Hiện Rõ Ô Cài Đặt & Nút Xóa Bước, Đồng Bộ Studio 1–4 Avatar 100%',
     description: '1. Gom 1 Nút Xóa Nền AI Ngoài Khung Video: Xóa bỏ tất cả các nút phông xanh rườm rà trong video, tích hợp 1 nút duy nhất "🪄 Xóa Nền AI" tự động tách mọi loại nền (xanh lá, xanh dương, nền đen, nền trắng, tường phòng) nằm ở thanh công cụ nổi bên ngoài khung hình; 2. Tinh Chỉnh Tỷ Lệ 7/3 & Khung Kịch Bản To Gấp 3 Lần: Thu gọn Sân khấu còn 30%, nhường 70% không gian cho Bảng Kịch Bản với khung nhập lời thoại rộng rãi gấp 3 lần, dễ đọc và dễ biên tập; 3. Hiển Thị 100% Nút Cài Đặt & Nút Xóa Bước Màu Đỏ: Tối ưu hàng nút điều khiển, đảm bảo nút Cài Đặt và Xóa bước luôn hiển thị rõ ràng, không bị che khuất; 4. Rút Gọn 1 Nút Nghe Thử Voice Duy Nhất: Tinh gọn chỉ 1 nút "Nghe Thử Voice" theo yêu cầu, khi chạy kịch bản thì từng phân đoạn tự động đọc thoại; 5. Đồng Bộ Sân Khấu Studio 1–4 Avatar Chuẩn Tuyệt Đối: Mọi thay đổi về nhân vật, nền, layer, vị trí trong Studio 1-4 Avatar đều được đồng bộ tức thì 100% ra Sân Khấu Chính, OBS Window Capture và Link Online HTTPS; 6. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D.'
