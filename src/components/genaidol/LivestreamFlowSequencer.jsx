@@ -578,14 +578,26 @@ export default function LivestreamFlowSequencer() {
       });
     } catch (e) {}
 
-    // 2. Custom Events nội bộ
-    window.dispatchEvent(new CustomEvent('avalive:update_master_media', { detail: payload }));
-    window.dispatchEvent(new CustomEvent('avalive_flow_step_changed', { detail: payload }));
+    // 2. Custom Events nội bộ — GỬI TOÀN BỘ multiAvatarConfig KỂ CẢ KHI enabled=false
+    // ⚡ Fix: Đây là root cause khiến video/ảnh/avatar không đồng bộ ra sân khấu chính
+    const fullSyncPayload = {
+      ...payload,
+      multiAvatarConfig: multiAvatarConfig ? {
+        ...multiAvatarConfig,
+        activeSpeakerId: step.avatarSpeaker || 'avatar_1',
+        // Đánh dấu đây là dữ liệu từ sequencer để sân khấu chính ưu tiên render đúng
+        fromSequencer: true,
+        syncedAt: Date.now()
+      } : null
+    };
+    window.dispatchEvent(new CustomEvent('avalive:update_master_media', { detail: fullSyncPayload }));
+    window.dispatchEvent(new CustomEvent('avalive_flow_step_changed', { detail: fullSyncPayload }));
     if (step.avatarSpeaker) {
       window.dispatchEvent(new CustomEvent('avalive:speaker_change', { detail: { speakerId: step.avatarSpeaker, avatarId: step.avatarSpeaker, isSpeaking: isLivePlaying } }));
       window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', { detail: { speakerId: step.avatarSpeaker, avatarId: step.avatarSpeaker, isSpeaking: isLivePlaying } }));
     }
-    if (multiAvatarConfig && multiAvatarConfig.enabled) {
+    // Luôn dispatch multiAvatarConfig kể cả enabled=false để sân khấu chính tái hiện đúng canvas
+    if (multiAvatarConfig) {
       window.dispatchEvent(new CustomEvent('avalive_multi_avatar_changed', {
         detail: {
           ...multiAvatarConfig,

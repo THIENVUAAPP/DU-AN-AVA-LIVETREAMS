@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.5.6';
+export const APP_VERSION = '4.5.7';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.5.6 - Sửa Triệt Để Đồng Bộ Video/Ảnh Từ Sân Khấu Phụ Ra Sân Khấu Chính Khi Phát Live',
-    description: '1. Sửa Dứt Điểm Lỗi Đồng Bộ Video/Ảnh: Khi bấm Phát Live, toàn bộ video nền, ảnh idol, avatar 1-4 trên sân khấu phụ giờ đây được đồng bộ 100% và hiển thị đúng trên sân khấu chính (trước đây chỉ có tiêu đề chữ xuất hiện, video/ảnh bị đen hoàn toàn); 2. Ưu Tiên Đúng Media Từ Sequencer: Khi đang trong chế độ Phát Live Đồng Bộ, sân khấu chính ưu tiên video từ kịch bản live thay vì giữ lại nhân vật cũ đã chọn trước đó; 3. Tái Hiện Nguyên Xi Freeform Canvas: Toàn bộ cấu trúc đa lớp (video nền + avatar + PiP + banner + text) được tái hiện đúng vị trí và kích thước giống sân khấu phụ 100%; 4. Đồng Bộ Avatar Transform: Vị trí, kích thước và zIndex của từng avatar trên sân khấu phụ được đồng bộ chính xác sang sân khấu chính mỗi khi chuyển bước kịch bản; 5. Sân Khấu Chính Độc Lập Khi Không Sync: Khi tắt đồng bộ, sân khấu chính hoạt động hoàn toàn độc lập như trước; 6. Khóa Chặt 100% Toàn Bộ Hệ Thống.'
+    title: '⚡ Bản Cập Nhật v4.5.7 - Đồng Bộ Tức Thì TOÀN BỘ Canvas Sân Khấu Phụ → Sân Khấu Chính Khi Bấm Phát Live',
+    description: '1. Gửi Toàn Bộ multiAvatarConfig Kể Cả enabled=false: Sân khấu phụ giờ luôn đẩy đầy đủ cấu hình (video nền, avatar 1-4, extra layers, positions, transforms) ra sân khấu chính kể cả khi Multi-Avatar Studio chưa được bật; 2. Render Background Video/Ảnh Đầy Đủ: Sân khấu chính tự động hiển thị video nền chính từ bước kịch bản hiện tại; nếu không có backgroundUrl thì fallback sang userLockedMediaUrl — không bao giờ bị màn đen; 3. Apply Toàn Bộ Canvas Từ Sequencer: Khi nhận event từ sequencer (fromSequencer=true), sân khấu chính apply đầy đủ toàn bộ config thay vì chỉ merge transforms; 4. Render Canvas Dù activeCount=0 hoặc enabled=false: Khi đang đồng bộ (_syncedFromSequencer=true), sân khấu chính luôn render Freeform Canvas đúng với bố cục sân khấu phụ; 5. Extra Layers + Positions Giữ Nguyên 100%: Toàn bộ lớp extra (ảnh, video, overlay text, banner) với đúng vị trí x/y/width/height/zIndex được tái hiện chính xác; 6. Khóa Chặt 100% Toàn Bộ Hệ Thống.'
   }
 ];
 

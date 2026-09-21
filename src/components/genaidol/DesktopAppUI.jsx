@@ -2618,9 +2618,20 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       setFlowSequencerOverlay(overlayData);
       try { localStorage.setItem('avalive_sequencer_overlay', JSON.stringify(overlayData)); } catch (err) {}
 
-      // 1b. 🔄 Đồng bộ avatarTransforms từ bước hiện tại vào multiAvatarConfig
-      // Đây đảm bảo vị trí/size/zIndex của từng avatar trên sân khấu chính khớp 100% với sân khấu phụ
-      if (avatarTransforms && typeof avatarTransforms === 'object' && Object.keys(avatarTransforms).length > 0) {
+      // 1b. 🔄 Đồng bộ TOÀN BỘ multiAvatarConfig từ sequencer vào sân khấu chính
+      // ⚡ FIX CỐT LÕI: Nếu payload có multiAvatarConfig (fromSequencer=true), apply toàn bộ để
+      // sân khấu chính tái hiện đúng 100% canvas của sân khấu phụ (video, ảnh, vị trí, kích thước)
+      const incomingMultiConfig = (e.detail || {}).multiAvatarConfig;
+      if (incomingMultiConfig && incomingMultiConfig.fromSequencer) {
+        // Apply toàn bộ cấu hình từ sequencer — giữ nguyên tất cả vị trí, avatar, video
+        setMultiAvatarConfig({
+          ...incomingMultiConfig,
+          // Đảm bảo sân khấu chính luôn render canvas kể cả enabled=false ở sân khấu phụ
+          _syncedFromSequencer: true,
+          _syncedAt: incomingMultiConfig.syncedAt || Date.now()
+        });
+      } else if (avatarTransforms && typeof avatarTransforms === 'object' && Object.keys(avatarTransforms).length > 0) {
+        // Fallback: chỉ merge transforms nếu không có multiAvatarConfig đầy đủ
         setMultiAvatarConfig(prev => {
           const updatedAvatars = (prev?.avatars || []).map(av => {
             const stepTrans = avatarTransforms[av.id];
@@ -3909,8 +3920,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     }
 
     // 0.1 MULTI-AVATAR STUDIO CANVAS (1-4 CHARACTERS) — CHỈ KÍCH HOẠT KHI ĐƯỢC ĐỒNG BỘ TỪ STUDIO / SEQUENCER
-    // 🎬 KHI isMasterStageSynced=true: Luôn render canvas này dù enabled=false để tái hiện nguyên xi sân khấu phụ
-    if (isMasterStageSynced && multiAvatarConfig?.activeCount >= 1) {
+    // 🎬 KHI _syncedFromSequencer=true: Luôn render canvas dù activeCount=0 hoặc enabled=false
+    // Lý do: multiAvatarConfig từ sequencer có thể có enabled=false nhưng vẫn chứa avatar video data
+    const isSyncedCanvas = isMasterStageSynced && (
+      multiAvatarConfig?.activeCount >= 1 || 
+      multiAvatarConfig?._syncedFromSequencer === true
+    );
+    if (isSyncedCanvas) {
       const activeList = (multiAvatarConfig.avatars || [])
         .filter(a => a.enabled)
         .slice(0, multiAvatarConfig.activeCount)
@@ -4031,33 +4047,56 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               backgroundColor: multiAvatarConfig.backgroundColor || '#0a0c14'
             }}
           >
-            {/* Studio Transformed Background Layer */}
-            {multiAvatarConfig.backgroundUrl && (
-              <div
-                className="absolute pointer-events-none"
-                style={{
-                  left: `${multiAvatarConfig.backgroundTransform?.x ?? 0}%`,
-                  top: `${multiAvatarConfig.backgroundTransform?.y ?? 0}%`,
-                  width: `${multiAvatarConfig.backgroundTransform?.width ?? 100}%`,
-                  height: `${multiAvatarConfig.backgroundTransform?.height ?? 100}%`,
-                  transform: (multiAvatarConfig.backgroundTransform?.scale && multiAvatarConfig.backgroundTransform?.scale !== 100)
-                    ? `scale(${multiAvatarConfig.backgroundTransform.scale / 100})`
-                    : 'none',
-                  transformOrigin: 'center center',
-                  zIndex: 0
-                }}
-              >
-                <img 
-                  src={multiAvatarConfig.backgroundUrl}
-                  alt="Studio Background"
-                  className="w-full h-full"
+            {/* Studio Transformed Background Layer — dùng backgroundUrl hoặc fallback sang userLockedMediaUrl */}
+            {(multiAvatarConfig.backgroundUrl || (isMasterStageSynced && userLockedMediaUrl)) && (() => {
+              const bgSrc = multiAvatarConfig.backgroundUrl || userLockedMediaUrl;
+              const bgIsVideo = !isImageMedia(bgSrc);
+              return (
+                <div
+                  className="absolute pointer-events-none"
                   style={{
-                    objectFit: multiAvatarConfig.backgroundTransform?.objectFit || 'cover',
-                    filter: `${multiAvatarConfig.backgroundTransform?.blur ? `blur(${multiAvatarConfig.backgroundTransform.blur}px)` : ''} ${multiAvatarConfig.backgroundTransform?.brightness ? `brightness(${multiAvatarConfig.backgroundTransform.brightness}%)` : ''}`.trim() || 'none'
+                    left: `${multiAvatarConfig.backgroundTransform?.x ?? 0}%`,
+                    top: `${multiAvatarConfig.backgroundTransform?.y ?? 0}%`,
+                    width: `${multiAvatarConfig.backgroundTransform?.width ?? 100}%`,
+                    height: `${multiAvatarConfig.backgroundTransform?.height ?? 100}%`,
+                    transform: (multiAvatarConfig.backgroundTransform?.scale && multiAvatarConfig.backgroundTransform?.scale !== 100)
+                      ? `scale(${multiAvatarConfig.backgroundTransform.scale / 100})`
+                      : 'none',
+                    transformOrigin: 'center center',
+                    zIndex: 0
                   }}
-                />
-              </div>
-            )}
+                >
+                  {bgIsVideo ? (
+                    <video
+                      key={bgSrc}
+                      ref={desktopVideoRef}
+                      data-main-player="true"
+                      src={bgSrc}
+                      autoPlay
+                      loop
+                      muted={liveAudioMuted}
+                      playsInline
+                      controls={false}
+                      className="w-full h-full bg-black select-none"
+                      style={{
+                        objectFit: multiAvatarConfig.backgroundTransform?.objectFit || 'cover',
+                        filter: `${multiAvatarConfig.backgroundTransform?.blur ? `blur(${multiAvatarConfig.backgroundTransform.blur}px)` : ''} ${multiAvatarConfig.backgroundTransform?.brightness ? `brightness(${multiAvatarConfig.backgroundTransform.brightness}%)` : ''}`.trim() || 'none'
+                      }}
+                    />
+                  ) : (
+                    <img 
+                      src={bgSrc}
+                      alt="Studio Background"
+                      className="w-full h-full"
+                      style={{
+                        objectFit: multiAvatarConfig.backgroundTransform?.objectFit || 'cover',
+                        filter: `${multiAvatarConfig.backgroundTransform?.blur ? `blur(${multiAvatarConfig.backgroundTransform.blur}px)` : ''} ${multiAvatarConfig.backgroundTransform?.brightness ? `brightness(${multiAvatarConfig.backgroundTransform.brightness}%)` : ''}`.trim() || 'none'
+                      }}
+                    />
+                  )}
+                </div>
+              );
+            })()}
             {/* Extra Custom Image / Media Layers */}
             {(multiAvatarConfig.extraImageLayers || []).map(layer => {
               const isImg = layer.type !== 'video' && (isImageMedia(layer.url) || !layer.type);
