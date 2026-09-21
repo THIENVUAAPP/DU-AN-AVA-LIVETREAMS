@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.3.1';
+export const APP_VERSION = '4.3.2';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.3.2 - Xóa Phông Xanh & Tách Nền Cực Sạch Cho Cả Video và Hình Ảnh, Ghim Chạy Xuyên Suốt 100%, Xóa Ô Nhân Vật Trực Tiếp & Tự Động Đọc Thoại Voice AI Brain',
+    description: '1. Xóa Sạch Phông Xanh & Nền Cho CẢ HÌNH ẢNH VÀ VIDEO: Bộ lọc tách phông (Chroma Green 🟢, Chroma Blue 🔵, Nền đen Screen ⚫, Nền trắng Multiply ⚪) áp dụng triệt để cho toàn bộ 4 lớp: Video/Ảnh nền chính, Video/Ảnh PiP, Avatar AI và Banner hình ảnh; 2. Cơ Chế Ghim Chạy Xuyên Suốt 100%: Bất kỳ video nền, video phụ PiP, banner ảnh hay chữ tiêu đề nào được ghim từ bước 1 sẽ tự động kế thừa và phát liên tục xuyên suốt từ bước đầu tiên đến bước cuối cùng mà không bị mất hay gián đoạn; 3. Xóa Ô Nhân Vật Trực Tiếp Trên Sân Khấu: Bấm chọn nhân vật là có ngay nút Xóa (Trash) trực tiếp và trên thanh công cụ, tự động thu gọn số lượng nhân vật và làm sạch sân khấu 100%; 4. Tự Động Đọc Kịch Bản Bằng Voice AI Brain (Bộ Não): Khi bấm chạy kịch bản Sequencer hoặc Chạy Test, hệ thống tự động phát giọng đọc của từng nhân vật theo cấu hình trong Bộ Não với độ trễ 0ms; 5. Đồng Bộ Sân Khấu Chính Tuyệt Đối 100%: Truyền phát mượt mà 60 FPS 4K sang OBS Window Capture, TikTok Live Studio và Link Online HTTPS; 6. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.3.1 - Xóa Phông Xanh & Phông Nền Cực Sạch 4K, Tự Động Đồng Bộ Giọng Đọc Bộ Não (Voice AI Brain), Nạp Media Trực Tiếp & Làm Nổi Bật Bước Đang Chiếu',
     description: '1. Xóa Sạch Phông Xanh / Nền Cực Kỳ Sạch: Tích hợp bộ lọc Chroma Key chuyên nghiệp trực tiếp cho từng Avatar trên Sân khấu 9:16 (Xanh lá cây, Xanh dương, Nền đen Screen, Nền trắng Multiply), quét sạch triệt để không bị lem hay ám viền tóc; 2. Đồng Bộ Giọng Đọc Bộ Não (Voice AI Brain) Tự Động Theo Nhân Vật: Tự động ánh xạ giọng đọc từ cấu hình Bộ Não cho Avatar 1 (Idol), Avatar 2 (Quản lý), Avatar 3 (BLV Game PK), Avatar 4 (Khán giả); 3. Nút Đọc Thử AI 0ms Với Sóng Âm Trực Quan: Bấm là nghe ngay giọng đọc thật từ Bộ Não với hiệu ứng sóng âm đang đọc và nút Dừng tức thì; 4. Nạp Media Trực Tiếp Nhảy Ngay Lên Sân Khấu 9:16: Tải bất kỳ video/ảnh nào từ máy tính là hệ thống chuyển ngay sang bước đó và hiển thị trực tiếp trên Sân Khấu Cột Trái; 5. Làm Nổi Bật Bước Đang Chiếu Rõ Ràng: Viền sáng phát quang kèm badge "🟢 ĐANG HIỂN THỊ SÂN KHẤU 9:16" giúp người dùng kiểm soát chính xác phân đoạn đang phát; 6. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D.'

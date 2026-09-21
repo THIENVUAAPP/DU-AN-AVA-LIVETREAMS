@@ -225,52 +225,90 @@ export default function LivestreamFlowSequencer() {
     } catch (e) {}
   }, [presets, activePresetId]);
 
-  // Đẩy video và dữ liệu phân đoạn của bước hiện tại lên Sân khấu chính (khi đã BẬT đồng bộ)
+  // 🔍 HÀM GIẢI QUYẾT MEDIA GHIM XUYÊN SUỐT TỪ ĐẦU ĐẾN CUỐI KỊCH BẢN
+  const resolveStepMedia = useCallback((stepIndex) => {
+    const steps = activePreset?.steps || [];
+    if (steps.length === 0) {
+      return {
+        mediaUrl: multiAvatarConfig?.backgroundUrl || '/idols/phong_studio_ngoc_trinh_4k.mp4',
+        secondaryMediaUrl: null,
+        overlayImage: null,
+        overlayText: null
+      };
+    }
+    const safeIdx = Math.max(0, Math.min(stepIndex, steps.length - 1));
+    const targetStep = steps[safeIdx] || steps[0];
+
+    // 1. Video / Ảnh Nền Chính
+    let mediaUrl = targetStep?.mediaUrl;
+    if (!mediaUrl || !mediaUrl.trim()) {
+      // Tìm ngược lại từ bước hiện tại về bước 0 để tìm bước gần nhất được Ghim
+      const pinnedStep = steps.slice(0, safeIdx + 1).reverse().find(s => s.isMediaPinned && s.mediaUrl && s.mediaUrl.trim());
+      if (pinnedStep) {
+        mediaUrl = pinnedStep.mediaUrl;
+      } else {
+        // Tìm bất kỳ bước nào trong kịch bản có ghim
+        const anyPinned = steps.find(s => s.isMediaPinned && s.mediaUrl && s.mediaUrl.trim());
+        if (anyPinned) mediaUrl = anyPinned.mediaUrl;
+      }
+    }
+    if (!mediaUrl || !mediaUrl.trim()) {
+      mediaUrl = multiAvatarConfig?.backgroundUrl || '/idols/phong_studio_ngoc_trinh_4k.mp4';
+    }
+
+    // 2. Video Phụ PiP (Picture-in-Picture)
+    let secondaryMediaUrl = targetStep?.secondaryMediaUrl;
+    if (!secondaryMediaUrl || !secondaryMediaUrl.trim()) {
+      const pinnedStep = steps.slice(0, safeIdx + 1).reverse().find(s => s.isSecondaryMediaPinned && s.secondaryMediaUrl && s.secondaryMediaUrl.trim());
+      if (pinnedStep) secondaryMediaUrl = pinnedStep.secondaryMediaUrl;
+    }
+
+    // 3. Banner / Poster Hình Ảnh
+    let overlayImage = targetStep?.overlayImage;
+    if (!overlayImage || !overlayImage.trim()) {
+      const pinnedStep = steps.slice(0, safeIdx + 1).reverse().find(s => s.isOverlayImagePinned && s.overlayImage && s.overlayImage.trim());
+      if (pinnedStep) overlayImage = pinnedStep.overlayImage;
+    }
+
+    // 4. Tiêu Đề Chữ Typography
+    let overlayText = targetStep?.overlayText;
+    if (!overlayText || !overlayText.trim()) {
+      const pinnedStep = steps.slice(0, safeIdx + 1).reverse().find(s => s.isOverlayTextPinned && s.overlayText && s.overlayText.trim());
+      if (pinnedStep) overlayText = pinnedStep.overlayText;
+    }
+
+    return { mediaUrl, secondaryMediaUrl, overlayImage, overlayText };
+  }, [activePreset, multiAvatarConfig]);
+
+  // 📡 Đẩy video và dữ liệu phân đoạn của bước hiện tại lên Sân khấu chính (OBS / TikTok Live / Master)
   const syncStepToServer = (step, index = 0, isLivePlaying = true) => {
     if (!step) return;
     
-    // Kiểm tra media ghim từ các bước trước nếu bước hiện tại để trống
-    let mediaToPlay = step.mediaUrl;
-    let overlayImgToPlay = step.overlayImage;
-    let overlayTxtToPlay = step.overlayText;
-    let secondaryToPlay = step.secondaryMediaUrl;
+    const resolved = resolveStepMedia(index);
+    const mediaToPlay = resolved.mediaUrl;
+    const secondaryToPlay = resolved.secondaryMediaUrl;
+    const overlayImgToPlay = resolved.overlayImage;
+    const overlayTxtToPlay = resolved.overlayText;
 
-    if (!mediaToPlay && activePreset?.steps) {
-      const pinnedStep = activePreset.steps.slice(0, index + 1).reverse().find(s => s.isMediaPinned && s.mediaUrl);
-      if (pinnedStep) mediaToPlay = pinnedStep.mediaUrl;
-    }
-    if (!overlayImgToPlay && activePreset?.steps) {
-      const pinnedStep = activePreset.steps.slice(0, index + 1).reverse().find(s => s.isOverlayImagePinned && s.overlayImage);
-      if (pinnedStep) overlayImgToPlay = pinnedStep.overlayImage;
-    }
-    if (!overlayTxtToPlay && activePreset?.steps) {
-      const pinnedStep = activePreset.steps.slice(0, index + 1).reverse().find(s => s.isOverlayTextPinned && s.overlayText);
-      if (pinnedStep) overlayTxtToPlay = pinnedStep.overlayText;
-    }
-    if (!secondaryToPlay && activePreset?.steps) {
-      const pinnedStep = activePreset.steps.slice(0, index + 1).reverse().find(s => s.isSecondaryMediaPinned && s.secondaryMediaUrl);
-      if (pinnedStep) secondaryToPlay = pinnedStep.secondaryMediaUrl;
-    }
-
-    if (!mediaToPlay) {
-      mediaToPlay = multiAvatarConfig?.backgroundUrl || '/idols/phong_studio_ngoc_trinh_4k.mp4';
-    }
-    
     const payload = {
       mediaUrl: mediaToPlay,
+      blobUrl: mediaToPlay,
       title: step.title,
       actionType: step.actionType,
       scriptText: step.scriptText || '',
-      voiceId: step.voiceId || 'free_vi_female',
+      voiceId: step.voiceId || 'brain_auto',
       durationSeconds: step.durationSeconds || 60,
       stepIndex: index + 1,
       totalSteps: activePreset?.steps?.length || 1,
       presetName: activePreset?.name || 'Kịch bản Sequencer',
       mainMediaTransform: step.mainMediaTransform || null,
+      mainMediaChromaKey: step.mainMediaChromaKey || null,
       secondaryMediaUrl: secondaryToPlay || null,
       secondaryMediaTransform: step.secondaryMediaTransform || null,
+      secondaryMediaChromaKey: step.secondaryMediaChromaKey || null,
       overlayImage: overlayImgToPlay || null,
       overlayImageTransform: step.overlayImageTransform || null,
+      overlayImageChromaKey: step.overlayImageChromaKey || null,
       overlayText: overlayTxtToPlay || null,
       overlayTextStyle: step.overlayTextStyle || 'fire_sale',
       overlayTextFontFamily: step.overlayTextFontFamily || 'be_vietnam',
@@ -282,40 +320,64 @@ export default function LivestreamFlowSequencer() {
       isPlaying: isLivePlaying
     };
 
-    if (isMasterSynced) {
-      window.dispatchEvent(new CustomEvent('avalive:update_master_media', { detail: payload }));
-      if (step.avatarSpeaker) {
-        window.dispatchEvent(new CustomEvent('avalive:speaker_change', { detail: { speakerId: step.avatarSpeaker } }));
-      }
-      fetch('/api/live-state', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mediaUrl: mediaToPlay,
-          currentMedia: mediaToPlay,
-          activeTab: 'flow_sequencer',
-          stepTitle: step.title,
-          actionType: step.actionType,
-          scriptText: step.scriptText,
-          voiceId: step.voiceId || 'free_vi_female',
-          avatarSpeaker: step.avatarSpeaker || 'avatar_1',
-          secondaryMediaUrl: secondaryToPlay || null,
-          overlayImage: overlayImgToPlay || null,
-          overlayText: overlayTxtToPlay || null,
-          overlayTextStyle: step.overlayTextStyle || 'fire_sale',
-          overlayTextFontFamily: step.overlayTextFontFamily || 'be_vietnam',
-          overlayTextFontSize: step.overlayTextFontSize || 20,
-          isMediaPinned: !!step.isMediaPinned,
-          isPlaying: isLivePlaying,
-          fit: 'cover',
-          sound: true,
-          updatedAt: Date.now()
-        })
-      }).catch(() => {});
+    // 1. BroadcastChannel trực tiếp cho Window Capture OBS & TikTok Live Studio
+    try {
+      const bc = new BroadcastChannel('avalive_master_live_stream');
+      bc.postMessage({
+        type: 'GLOBAL_MEDIA_CHANGE',
+        mediaUrl: mediaToPlay,
+        blobUrl: mediaToPlay,
+        isVideo: !isImageMedia(mediaToPlay),
+        isPlaying: isLivePlaying,
+        currentTime: 0,
+        source: 'sequencer',
+        secondaryMediaUrl: secondaryToPlay || null,
+        overlayImage: overlayImgToPlay || null,
+        overlayText: overlayTxtToPlay || null,
+        overlayTextStyle: step.overlayTextStyle || 'fire_sale',
+        overlayTextFontFamily: step.overlayTextFontFamily || 'be_vietnam',
+        overlayTextFontSize: step.overlayTextFontSize || 20,
+        avatarSpeaker: step.avatarSpeaker || 'avatar_1',
+        timestamp: Date.now()
+      });
+    } catch (e) {}
+
+    // 2. Custom Events nội bộ
+    window.dispatchEvent(new CustomEvent('avalive:update_master_media', { detail: payload }));
+    window.dispatchEvent(new CustomEvent('avalive_flow_step_changed', { detail: payload }));
+    if (step.avatarSpeaker) {
+      window.dispatchEvent(new CustomEvent('avalive:speaker_change', { detail: { speakerId: step.avatarSpeaker } }));
     }
+
+    // 3. Gửi sang Backend API Live State
+    fetch('/api/live-state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mediaUrl: mediaToPlay,
+        currentMedia: mediaToPlay,
+        activeTab: 'flow_sequencer',
+        stepTitle: step.title,
+        actionType: step.actionType,
+        scriptText: step.scriptText,
+        voiceId: step.voiceId || 'brain_auto',
+        avatarSpeaker: step.avatarSpeaker || 'avatar_1',
+        secondaryMediaUrl: secondaryToPlay || null,
+        overlayImage: overlayImgToPlay || null,
+        overlayText: overlayTxtToPlay || null,
+        overlayTextStyle: step.overlayTextStyle || 'fire_sale',
+        overlayTextFontFamily: step.overlayTextFontFamily || 'be_vietnam',
+        overlayTextFontSize: step.overlayTextFontSize || 20,
+        isMediaPinned: !!step.isMediaPinned,
+        isPlaying: isLivePlaying,
+        fit: 'cover',
+        sound: true,
+        updatedAt: Date.now()
+      })
+    }).catch(() => {});
   };
 
-  // Khởi động hoặc chuyển bước trong chuỗi kịch bản
+  // Khởi động hoặc chuyển bước trong chuỗi kịch bản & tự động đọc kịch bản AI Bộ Não
   const startStep = (index, shouldPlay = true) => {
     if (!activePreset || !activePreset.steps || activePreset.steps.length === 0) {
       toast.error('Kịch bản chưa có phân đoạn nào!');
@@ -326,6 +388,26 @@ export default function LivestreamFlowSequencer() {
     setCurrentStepIndex(safeIndex);
     setSecondsRemaining(step.durationSeconds || 60);
     syncStepToServer(step, safeIndex, shouldPlay);
+
+    // 🎙️ TỰ ĐỘNG PHÁT GIỌNG ĐỌC AI TỪ BỘ NÃO KHI CHẠY KỊCH BẢN
+    if (shouldPlay && step.scriptText && step.scriptText.trim()) {
+      const effectiveVoiceId = (!step.voiceId || step.voiceId === 'brain_auto')
+        ? getBrainVoiceForSpeaker(step.avatarSpeaker)
+        : step.voiceId;
+      
+      stopVoiceAudio();
+      setSpeakingStepId(step.id);
+      setIsSpeakingPreview(true);
+
+      previewVoiceAudio(effectiveVoiceId, step.scriptText.trim(), () => {
+        setSpeakingStepId(null);
+        setIsSpeakingPreview(false);
+      });
+    } else if (!step.scriptText || !step.scriptText.trim()) {
+      stopVoiceAudio();
+      setSpeakingStepId(null);
+      setIsSpeakingPreview(false);
+    }
   };
 
   // Timer điều phối chuỗi phân đoạn tự động
@@ -720,31 +802,100 @@ export default function LivestreamFlowSequencer() {
     startStep(next, isPlayingFlow);
   };
 
+  // 🗑️ XÓA TRỰC TIẾP Ô NHÂN VẬT KHỎI SÂN KHẤU
+  const handleDeleteAvatarLayer = (avatarId) => {
+    const existingAvatars = (multiAvatarConfig?.avatars && multiAvatarConfig.avatars.length > 0)
+      ? [...multiAvatarConfig.avatars]
+      : [
+          { id: 'avatar_1', name: 'Nhân Vật 1', talkVideo: '', idleVideo: '', voiceId: 'vi-VN-Standard-A', chromaKey: { enabled: false, mode: 'green', color: '#00ff00' } },
+          { id: 'avatar_2', name: 'Nhân Vật 2', talkVideo: '', idleVideo: '', voiceId: 'vi-VN-Standard-B', chromaKey: { enabled: false, mode: 'green', color: '#00ff00' } },
+          { id: 'avatar_3', name: 'Nhân Vật 3', talkVideo: '', idleVideo: '', voiceId: 'vi-VN-Standard-C', chromaKey: { enabled: false, mode: 'green', color: '#00ff00' } },
+          { id: 'avatar_4', name: 'Nhân Vật 4', talkVideo: '', idleVideo: '', voiceId: 'vi-VN-Standard-D', chromaKey: { enabled: false, mode: 'green', color: '#00ff00' } }
+        ];
+
+    const targetIdx = existingAvatars.findIndex(a => a.id === avatarId);
+    let updatedAvatars = [...existingAvatars];
+    if (targetIdx >= 0) {
+      const [removed] = updatedAvatars.splice(targetIdx, 1);
+      updatedAvatars.push({
+        ...removed,
+        name: `Nhân Vật ${updatedAvatars.length + 1}`,
+        talkVideo: '',
+        idleVideo: '',
+        chromaKey: { enabled: false, mode: 'green', color: '#00ff00' }
+      });
+      updatedAvatars = updatedAvatars.map((a, idx) => ({
+        ...a,
+        id: `avatar_${idx + 1}`,
+        name: a.name.startsWith('Nhân Vật') ? `Nhân Vật ${idx + 1}` : a.name
+      }));
+    }
+
+    const currentCount = multiAvatarConfig?.activeCount || 1;
+    const newCount = Math.max(1, currentCount - 1);
+
+    const updated = {
+      ...multiAvatarConfig,
+      activeCount: newCount,
+      avatars: updatedAvatars
+    };
+    setMultiAvatarConfig(updated);
+    saveMultiAvatarConfig(updated);
+    setSelectedLayer({ type: 'avatar', id: 'avatar_1' });
+    toast.info(`🗑️ Đã xóa ô Avatar khỏi Sân Khấu!`);
+  };
+
   const currentStep = activePreset.steps[currentStepIndex] || activePreset.steps[0];
   const safeAvatars = multiAvatarConfig?.avatars || [];
   const activeAvatarCount = multiAvatarConfig?.activeCount || 1;
   const visibleAvatars = safeAvatars.slice(0, activeAvatarCount);
 
-  // Tính toán Media hiển thị trên sân khấu (kèm logic ghim nếu bước hiện tại không nạp)
-  const activeMediaUrl = currentStep?.mediaUrl || (() => {
-    const pinnedStep = activePreset?.steps?.slice(0, currentStepIndex + 1).reverse().find(s => s.isMediaPinned && s.mediaUrl);
-    return pinnedStep?.mediaUrl || multiAvatarConfig?.backgroundUrl || '/idols/phong_studio_ngoc_trinh_4k.mp4';
-  })();
+  // ✂️ LẤY STYLE CHROMA KEY / XÓA NỀN CHO BẤT KỲ LỚP NÀO
+  const getLayerChromaStyle = useCallback((layerType, avatarId = null) => {
+    if (layerType === 'avatar' && avatarId) {
+      const av = safeAvatars.find(a => a.id === avatarId);
+      if (av?.chromaKey?.enabled) {
+        return getChromaStyle(av.chromaKey);
+      }
+      return {};
+    }
+    if (layerType === 'main_media' && currentStep?.mainMediaChromaKey?.enabled) {
+      return getChromaStyle(currentStep.mainMediaChromaKey);
+    }
+    if (layerType === 'pip' && currentStep?.secondaryMediaChromaKey?.enabled) {
+      return getChromaStyle(currentStep.secondaryMediaChromaKey);
+    }
+    if (layerType === 'banner' && currentStep?.overlayImageChromaKey?.enabled) {
+      return getChromaStyle(currentStep.overlayImageChromaKey);
+    }
+    return {};
+  }, [safeAvatars, currentStep]);
 
-  const activeSecondaryMediaUrl = currentStep?.secondaryMediaUrl || (() => {
-    const pinnedStep = activePreset?.steps?.slice(0, currentStepIndex + 1).reverse().find(s => s.isSecondaryMediaPinned && s.secondaryMediaUrl);
-    return pinnedStep?.secondaryMediaUrl || null;
-  })();
+  // ✂️ CẬP NHẬT CHROMA KEY / XÓA NỀN CHO BẤT KỲ LỚP NÀO
+  const handleLayerChromaUpdate = (layerType, targetId, updates) => {
+    if (layerType === 'avatar' && targetId) {
+      handleAvatarChromaUpdate(targetId, updates);
+    } else if (layerType === 'main_media') {
+      const current = currentStep?.mainMediaChromaKey || { enabled: false, mode: 'green', color: '#00ff00' };
+      handleUpdateStep(currentStep.id, 'mainMediaChromaKey', { ...current, ...updates });
+      toast.success('✨ Đã cập nhật Tách Phông cho Video/Ảnh Nền!');
+    } else if (layerType === 'pip') {
+      const current = currentStep?.secondaryMediaChromaKey || { enabled: false, mode: 'green', color: '#00ff00' };
+      handleUpdateStep(currentStep.id, 'secondaryMediaChromaKey', { ...current, ...updates });
+      toast.success('✨ Đã cập nhật Tách Phông cho Video PiP!');
+    } else if (layerType === 'banner') {
+      const current = currentStep?.overlayImageChromaKey || { enabled: false, mode: 'green', color: '#00ff00' };
+      handleUpdateStep(currentStep.id, 'overlayImageChromaKey', { ...current, ...updates });
+      toast.success('✨ Đã cập nhật Tách Phông cho Ảnh Banner!');
+    }
+  };
 
-  const activeOverlayImage = currentStep?.overlayImage || (() => {
-    const pinnedStep = activePreset?.steps?.slice(0, currentStepIndex + 1).reverse().find(s => s.isOverlayImagePinned && s.overlayImage);
-    return pinnedStep?.overlayImage || null;
-  })();
-
-  const activeOverlayText = currentStep?.overlayText || (() => {
-    const pinnedStep = activePreset?.steps?.slice(0, currentStepIndex + 1).reverse().find(s => s.isOverlayTextPinned && s.overlayText);
-    return pinnedStep?.overlayText || null;
-  })();
+  // Tính toán Media hiển thị trên sân khấu (kèm logic ghim xuyên suốt 100%)
+  const resolvedMedia = resolveStepMedia(currentStepIndex);
+  const activeMediaUrl = resolvedMedia.mediaUrl;
+  const activeSecondaryMediaUrl = resolvedMedia.secondaryMediaUrl;
+  const activeOverlayImage = resolvedMedia.overlayImage;
+  const activeOverlayText = resolvedMedia.overlayText;
 
   // =========================================================================
   // 🖐️ BỘ XỬ LÝ KÉO THẢ & CO GIÃN 8 ĐIỂM TRỰC TIẾP TRÊN SÂN KHẤU 9:16
@@ -1048,10 +1199,12 @@ export default function LivestreamFlowSequencer() {
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
               </div>
 
-              {/* Lớp 1: Video / Ảnh Nền Chính (Kéo thả & Co giãn 8 hướng & Xóa Trực Tiếp) */}
+              {/* Lớp 1: Video / Ảnh Nền Chính (Kéo thả & Co giãn 8 hướng & Xóa Trực Tiếp & Tách Nền) */}
               {activeMediaUrl && (() => {
                 const mediaTrans = getLayerCurrentTransform('main_media');
                 const isSelected = selectedLayer.type === 'main_media';
+                const chromaStyle = getLayerChromaStyle('main_media');
+                const chromaKey = currentStep?.mainMediaChromaKey;
 
                 return (
                   <div
@@ -1065,16 +1218,18 @@ export default function LivestreamFlowSequencer() {
                       top: `${mediaTrans.y}%`,
                       width: `${mediaTrans.width}%`,
                       height: `${mediaTrans.height}%`,
-                      zIndex: mediaTrans.zIndex || 1
+                      zIndex: mediaTrans.zIndex || 1,
+                      overflow: 'visible'
                     }}
                   >
-                    <div className="relative w-full h-full bg-black overflow-hidden">
+                    <div className="relative w-full h-full bg-black/40 overflow-hidden rounded-lg">
                       {isImageMedia(activeMediaUrl) ? (
                         <img 
                           key={activeMediaUrl}
                           src={activeMediaUrl} 
                           alt="Stage BG"
                           className="w-full h-full object-cover pointer-events-none"
+                          style={chromaStyle}
                         />
                       ) : (
                         <video 
@@ -1086,12 +1241,13 @@ export default function LivestreamFlowSequencer() {
                           playsInline 
                           onCanPlay={(e) => { e.target.play().catch(() => {}); }}
                           className="w-full h-full object-cover pointer-events-none"
+                          style={chromaStyle}
                         />
                       )}
 
                       {isSelected && (
                         <span className="absolute top-1 left-1 bg-black/80 text-cyan-300 text-[8px] font-black px-1.5 py-0.2 rounded border border-cyan-500/40 pointer-events-none">
-                          🎥 Video Nền (8 Hướng)
+                          🎥 Nền Chính
                         </span>
                       )}
                     </div>
@@ -1104,11 +1260,78 @@ export default function LivestreamFlowSequencer() {
                           e.stopPropagation();
                           handleDeleteLayerFromStep(currentStep.id, 'main_media');
                         }}
-                        className="absolute top-1 right-1 p-1 bg-rose-600 hover:bg-rose-500 text-white rounded-full shadow-lg z-50 cursor-pointer"
+                        className="absolute -top-2 -right-2 p-1 bg-rose-600 hover:bg-rose-500 text-white rounded-full shadow-lg z-50 cursor-pointer"
                         title="Xóa Video Nền Chính"
                       >
                         <Trash2 size={10} />
                       </button>
+                    )}
+
+                    {/* Floating Chroma Toolbar Cho Nền Chính */}
+                    {isSelected && (
+                      <div 
+                        className="absolute -bottom-11 left-1/2 -translate-x-1/2 flex items-center gap-1 z-50 bg-slate-950/95 backdrop-blur-md px-2 py-1 rounded-xl border border-cyan-400 shadow-2xl whitespace-nowrap"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => handleLayerChromaUpdate('main_media', null, { enabled: !(chromaKey?.enabled) })}
+                          className={`px-1.5 py-0.5 rounded-lg text-[9px] font-black flex items-center gap-0.5 cursor-pointer transition-all ${
+                            chromaKey?.enabled 
+                              ? 'bg-emerald-500 text-black shadow-xs ring-1 ring-emerald-300' 
+                              : 'bg-slate-800 hover:bg-slate-700 text-gray-300'
+                          }`}
+                          title="Bật/Tắt tách phông nền"
+                        >
+                          <Scissors size={10} />
+                          <span>{chromaKey?.enabled ? '✨ Đã Tách Nền' : 'Tách Nền'}</span>
+                        </button>
+
+                        {chromaKey?.enabled && (
+                          <div className="flex items-center gap-0.5 bg-slate-900 p-0.5 rounded-lg border border-slate-700">
+                            <button
+                              type="button"
+                              onClick={() => handleLayerChromaUpdate('main_media', null, { mode: 'green', color: '#00ff00' })}
+                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                                (!chromaKey.mode || chromaKey.mode === 'green') ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'
+                              }`}
+                              title="Tách phông xanh lá cây"
+                            >
+                              🟢 Lá
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleLayerChromaUpdate('main_media', null, { mode: 'blue', color: '#0000ff' })}
+                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                                chromaKey.mode === 'blue' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                              }`}
+                              title="Tách phông xanh dương"
+                            >
+                              🔵 Lam
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleLayerChromaUpdate('main_media', null, { mode: 'black', color: '#000000' })}
+                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                                chromaKey.mode === 'black' ? 'bg-gray-700 text-cyan-300' : 'text-gray-400 hover:text-white'
+                              }`}
+                              title="Tách nền đen (Screen)"
+                            >
+                              ⚫ Đen
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleLayerChromaUpdate('main_media', null, { mode: 'white', color: '#ffffff' })}
+                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                                chromaKey.mode === 'white' ? 'bg-white text-black' : 'text-gray-400 hover:text-white'
+                              }`}
+                              title="Tách nền trắng (Multiply)"
+                            >
+                              ⚪ Trắng
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     )}
 
                     {/* 8 Điểm Resize Handles Khi Được Chọn */}
@@ -1128,16 +1351,18 @@ export default function LivestreamFlowSequencer() {
                 );
               })()}
 
-              {/* Lớp 1.5: Video Phụ PiP (Picture-in-Picture) - Có Nút Xóa Trực Tiếp */}
+              {/* Lớp 1.5: Video Phụ PiP (Picture-in-Picture) - Có Nút Xóa Trực Tiếp & Tách Nền */}
               {activeSecondaryMediaUrl && (() => {
                 const pipTrans = getLayerCurrentTransform('pip');
                 const isSelected = selectedLayer.type === 'pip';
+                const chromaStyle = getLayerChromaStyle('pip');
+                const chromaKey = currentStep?.secondaryMediaChromaKey;
 
                 return (
                   <div 
                     onMouseDown={(e) => handlePointerDown(e, 'pip', null, null)}
                     onTouchStart={(e) => handlePointerDown(e, 'pip', null, null)}
-                    className={`absolute overflow-hidden rounded-xl shadow-2xl transition-shadow cursor-move ${
+                    className={`absolute rounded-xl shadow-2xl transition-shadow cursor-move ${
                       isSelected ? 'ring-2 ring-indigo-400 border-2 border-indigo-400 z-20' : 'border border-indigo-500/50'
                     }`}
                     style={{
@@ -1145,19 +1370,30 @@ export default function LivestreamFlowSequencer() {
                       top: `${pipTrans.y}%`,
                       width: `${pipTrans.width}%`,
                       height: `${pipTrans.height}%`,
-                      zIndex: pipTrans.zIndex || 20
+                      zIndex: pipTrans.zIndex || 20,
+                      overflow: 'visible'
                     }}
                   >
-                    <div className="relative w-full h-full bg-black">
-                      <video 
-                        src={activeSecondaryMediaUrl} 
-                        autoPlay 
-                        loop 
-                        muted 
-                        playsInline 
-                        onCanPlay={(e) => { e.target.play().catch(() => {}); }}
-                        className="w-full h-full object-cover pointer-events-none"
-                      />
+                    <div className="relative w-full h-full bg-black/40 rounded-xl overflow-hidden">
+                      {isImageMedia(activeSecondaryMediaUrl) ? (
+                        <img 
+                          src={activeSecondaryMediaUrl} 
+                          alt="PiP Media" 
+                          className="w-full h-full object-cover pointer-events-none"
+                          style={chromaStyle}
+                        />
+                      ) : (
+                        <video 
+                          src={activeSecondaryMediaUrl} 
+                          autoPlay 
+                          loop 
+                          muted 
+                          playsInline 
+                          onCanPlay={(e) => { e.target.play().catch(() => {}); }}
+                          className="w-full h-full object-cover pointer-events-none"
+                          style={chromaStyle}
+                        />
+                      )}
                       <span className="absolute top-1 left-1 bg-indigo-600/90 text-white text-[8px] font-black px-1.5 py-0.2 rounded">
                         🎬 PiP
                       </span>
@@ -1171,11 +1407,78 @@ export default function LivestreamFlowSequencer() {
                           e.stopPropagation();
                           handleDeleteLayerFromStep(currentStep.id, 'pip');
                         }}
-                        className="absolute top-1 right-1 p-1 bg-rose-600 hover:bg-rose-500 text-white rounded-full shadow-lg z-50 cursor-pointer"
+                        className="absolute -top-2 -right-2 p-1 bg-rose-600 hover:bg-rose-500 text-white rounded-full shadow-lg z-50 cursor-pointer"
                         title="Xóa Video PiP"
                       >
                         <Trash2 size={10} />
                       </button>
+                    )}
+
+                    {/* Floating Chroma Toolbar Cho PiP */}
+                    {isSelected && (
+                      <div 
+                        className="absolute -bottom-11 left-1/2 -translate-x-1/2 flex items-center gap-1 z-50 bg-slate-950/95 backdrop-blur-md px-2 py-1 rounded-xl border border-indigo-400 shadow-2xl whitespace-nowrap"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => handleLayerChromaUpdate('pip', null, { enabled: !(chromaKey?.enabled) })}
+                          className={`px-1.5 py-0.5 rounded-lg text-[9px] font-black flex items-center gap-0.5 cursor-pointer transition-all ${
+                            chromaKey?.enabled 
+                              ? 'bg-emerald-500 text-black shadow-xs ring-1 ring-emerald-300' 
+                              : 'bg-slate-800 hover:bg-slate-700 text-gray-300'
+                          }`}
+                          title="Bật/Tắt tách phông nền"
+                        >
+                          <Scissors size={10} />
+                          <span>{chromaKey?.enabled ? '✨ Đã Tách Nền' : 'Tách Nền'}</span>
+                        </button>
+
+                        {chromaKey?.enabled && (
+                          <div className="flex items-center gap-0.5 bg-slate-900 p-0.5 rounded-lg border border-slate-700">
+                            <button
+                              type="button"
+                              onClick={() => handleLayerChromaUpdate('pip', null, { mode: 'green', color: '#00ff00' })}
+                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                                (!chromaKey.mode || chromaKey.mode === 'green') ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'
+                              }`}
+                              title="Tách phông xanh lá cây"
+                            >
+                              🟢 Lá
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleLayerChromaUpdate('pip', null, { mode: 'blue', color: '#0000ff' })}
+                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                                chromaKey.mode === 'blue' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                              }`}
+                              title="Tách phông xanh dương"
+                            >
+                              🔵 Lam
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleLayerChromaUpdate('pip', null, { mode: 'black', color: '#000000' })}
+                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                                chromaKey.mode === 'black' ? 'bg-gray-700 text-cyan-300' : 'text-gray-400 hover:text-white'
+                              }`}
+                              title="Tách nền đen (Screen)"
+                            >
+                              ⚫ Đen
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleLayerChromaUpdate('pip', null, { mode: 'white', color: '#ffffff' })}
+                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                                chromaKey.mode === 'white' ? 'bg-white text-black' : 'text-gray-400 hover:text-white'
+                              }`}
+                              title="Tách nền trắng (Multiply)"
+                            >
+                              ⚪ Trắng
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     )}
 
                     {/* 8 Điểm Resize Handles Khi Được Chọn */}
@@ -1195,12 +1498,12 @@ export default function LivestreamFlowSequencer() {
                 );
               })()}
 
-              {/* Lớp 2: 1 Đến 4 Avatar AI (Interactive Drag & 8-Point Resize Handles & Direct Stage Upload) */}
+              {/* Lớp 2: 1 Đến 4 Avatar AI (Interactive Drag & 8-Point Resize Handles & Direct Stage Upload & Xóa Trực Tiếp) */}
               {visibleAvatars.map((av, avIdx) => {
                 const isCurrentSpeaker = (currentStep?.avatarSpeaker === av.id) || (currentStep?.avatarSpeaker === 'all') || (!currentStep?.avatarSpeaker && avIdx === 0);
                 const transform = getLayerCurrentTransform('avatar', av.id);
                 const vidSrc = isCurrentSpeaker ? (av.talkVideo || av.idleVideo || activeMediaUrl) : (av.idleVideo || av.talkVideo || activeMediaUrl);
-                const chromaStyle = av.chromaKey?.enabled ? getChromaStyle(av.chromaKey) : {};
+                const chromaStyle = getLayerChromaStyle('avatar', av.id);
                 const isSelected = selectedLayer.type === 'avatar' && selectedLayer.id === av.id;
 
                 return (
@@ -1254,7 +1557,22 @@ export default function LivestreamFlowSequencer() {
                       </div>
                     </div>
 
-                    {/* Mini Toolbar Trực Tiếp Tách Phông Xanh & Nạp Media Khi Chọn Avatar Trên Sân Khấu */}
+                    {/* Nút Xóa Trực Tiếp Avatar Khỏi Sân Khấu Khi Chọn */}
+                    {isSelected && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteAvatarLayer(av.id);
+                        }}
+                        className="absolute -top-2 -right-2 p-1 bg-rose-600 hover:bg-rose-500 text-white rounded-full shadow-lg z-50 cursor-pointer"
+                        title="Xóa Nhân Vật Khỏi Sân Khấu"
+                      >
+                        <Trash2 size={10} />
+                      </button>
+                    )}
+
+                    {/* Mini Toolbar Trực Tiếp Tách Phông Xanh & Nạp Media & Xóa Khi Chọn Avatar Trên Sân Khấu */}
                     {isSelected && (
                       <div 
                         className="absolute -bottom-11 left-1/2 -translate-x-1/2 flex items-center gap-1 z-50 bg-slate-950/95 backdrop-blur-md px-2 py-1 rounded-xl border border-cyan-400 shadow-2xl whitespace-nowrap"
@@ -1334,6 +1652,17 @@ export default function LivestreamFlowSequencer() {
                             className="hidden" 
                           />
                         </label>
+
+                        {/* Nút Xóa Avatar Khỏi Sân Khấu */}
+                        <button
+                          type="button"
+                          onClick={() => handleDeleteAvatarLayer(av.id)}
+                          className="px-1.5 py-0.5 rounded-lg text-[9px] font-black bg-rose-950/80 hover:bg-rose-900 text-rose-300 hover:text-white border border-rose-600/40 flex items-center gap-0.5 cursor-pointer"
+                          title="Xóa nhân vật này khỏi sân khấu"
+                        >
+                          <Trash2 size={10} />
+                          <span>Xóa</span>
+                        </button>
                       </div>
                     )}
 
@@ -1354,10 +1683,12 @@ export default function LivestreamFlowSequencer() {
                 );
               })}
 
-              {/* Lớp 3: Banner Hình Ảnh / Poster Deal - Có Nút Xóa Trực Tiếp */}
+              {/* Lớp 3: Banner Hình Ảnh / Poster Deal - Có Nút Xóa Trực Tiếp & Tách Nền */}
               {activeOverlayImage && (() => {
                 const bannerTrans = getLayerCurrentTransform('banner');
                 const isSelected = selectedLayer.type === 'banner';
+                const chromaStyle = getLayerChromaStyle('banner');
+                const chromaKey = currentStep?.overlayImageChromaKey;
 
                 return (
                   <div 
@@ -1371,13 +1702,15 @@ export default function LivestreamFlowSequencer() {
                       top: `${bannerTrans.y}%`,
                       width: `${bannerTrans.width}%`,
                       height: `${bannerTrans.height}%`,
-                      zIndex: bannerTrans.zIndex || 25
+                      zIndex: bannerTrans.zIndex || 25,
+                      overflow: 'visible'
                     }}
                   >
                     <img 
                       src={activeOverlayImage} 
                       alt="Overlay Banner" 
                       className="w-full h-full object-contain drop-shadow-xl pointer-events-none rounded-lg"
+                      style={chromaStyle}
                     />
 
                     {/* Nút Xóa Trực Tiếp Trên Sân Khấu Khi Chọn */}
@@ -1393,6 +1726,73 @@ export default function LivestreamFlowSequencer() {
                       >
                         <Trash2 size={10} />
                       </button>
+                    )}
+
+                    {/* Floating Chroma Toolbar Cho Banner */}
+                    {isSelected && (
+                      <div 
+                        className="absolute -bottom-11 left-1/2 -translate-x-1/2 flex items-center gap-1 z-50 bg-slate-950/95 backdrop-blur-md px-2 py-1 rounded-xl border border-amber-400 shadow-2xl whitespace-nowrap"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <button
+                          type="button"
+                          onClick={() => handleLayerChromaUpdate('banner', null, { enabled: !(chromaKey?.enabled) })}
+                          className={`px-1.5 py-0.5 rounded-lg text-[9px] font-black flex items-center gap-0.5 cursor-pointer transition-all ${
+                            chromaKey?.enabled 
+                              ? 'bg-emerald-500 text-black shadow-xs ring-1 ring-emerald-300' 
+                              : 'bg-slate-800 hover:bg-slate-700 text-gray-300'
+                          }`}
+                          title="Bật/Tắt tách phông nền"
+                        >
+                          <Scissors size={10} />
+                          <span>{chromaKey?.enabled ? '✨ Đã Tách Nền' : 'Tách Nền'}</span>
+                        </button>
+
+                        {chromaKey?.enabled && (
+                          <div className="flex items-center gap-0.5 bg-slate-900 p-0.5 rounded-lg border border-slate-700">
+                            <button
+                              type="button"
+                              onClick={() => handleLayerChromaUpdate('banner', null, { mode: 'green', color: '#00ff00' })}
+                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                                (!chromaKey.mode || chromaKey.mode === 'green') ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'
+                              }`}
+                              title="Tách phông xanh lá cây"
+                            >
+                              🟢 Lá
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleLayerChromaUpdate('banner', null, { mode: 'blue', color: '#0000ff' })}
+                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                                chromaKey.mode === 'blue' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
+                              }`}
+                              title="Tách phông xanh dương"
+                            >
+                              🔵 Lam
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleLayerChromaUpdate('banner', null, { mode: 'black', color: '#000000' })}
+                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                                chromaKey.mode === 'black' ? 'bg-gray-700 text-cyan-300' : 'text-gray-400 hover:text-white'
+                              }`}
+                              title="Tách nền đen (Screen)"
+                            >
+                              ⚫ Đen
+                            </button>
+                            <button
+                              type="button"
+                              onClick={() => handleLayerChromaUpdate('banner', null, { mode: 'white', color: '#ffffff' })}
+                              className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
+                                chromaKey.mode === 'white' ? 'bg-white text-black' : 'text-gray-400 hover:text-white'
+                              }`}
+                              title="Tách nền trắng (Multiply)"
+                            >
+                              ⚪ Trắng
+                            </button>
+                          </div>
+                        )}
+                      </div>
                     )}
 
                     {/* 8 Điểm Resize Handles Khi Được Chọn */}
