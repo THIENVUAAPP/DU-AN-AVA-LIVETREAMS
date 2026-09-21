@@ -2227,16 +2227,34 @@ IDOL MỈM CƯỜI + GESTURE
         updated.commentVoiceRate = prev.commentVoiceRate !== undefined ? prev.commentVoiceRate : (voice.rate || 1.0);
         updated.commentVoicePitch = prev.commentVoicePitch !== undefined ? prev.commentVoicePitch : (voice.pitch || 1.0);
         notifyAssigned(`💬 Đã gán "${voice.name}" làm Giọng Trả Lời Bình Luận!`);
+      } else if (role.startsWith('avatar_')) {
+        const num = role.replace('avatar_', '');
+        updated[`avatar${num}VoiceId`] = voice.id;
+        updated[`avatar${num}VoiceEnabled`] = true;
+        updated[`avatar${num}VoiceVolume`] = prev[`avatar${num}VoiceVolume`] !== undefined ? prev[`avatar${num}VoiceVolume`] : (voice.volume || 1.0);
+        updated[`avatar${num}VoiceRate`] = prev[`avatar${num}VoiceRate`] !== undefined ? prev[`avatar${num}VoiceRate`] : (voice.rate || 1.0);
+        updated[`avatar${num}VoicePitch`] = prev[`avatar${num}VoicePitch`] !== undefined ? prev[`avatar${num}VoicePitch`] : (voice.pitch || 1.0);
+        if (num === '1') updated.mainVoiceId = voice.id;
+        if (num === '2') updated.assistantVoiceId = voice.id;
+        notifyAssigned(`🎭 Đã gán "${voice.name}" cho Nhân Vật ${num}!`);
       }
 
       try {
-        const idolMatch = ALL_SYSTEM_VOICES.find(v => v.id === updated.mainVoiceId) || voice;
-        const managerMatch = ALL_SYSTEM_VOICES.find(v => v.id === updated.assistantVoiceId);
-        const commentMatch = ALL_SYSTEM_VOICES.find(v => v.id === (updated.commentVoiceId || updated.mainVoiceId));
+        const idolMatch = ALL_SYSTEM_VOICES.find(v => v.id === (updated.avatar1VoiceId || updated.mainVoiceId)) || voice;
+        const managerMatch = ALL_SYSTEM_VOICES.find(v => v.id === (updated.avatar2VoiceId || updated.assistantVoiceId));
+        const commentMatch = ALL_SYSTEM_VOICES.find(v => v.id === (updated.avatar4VoiceId || updated.commentVoiceId || updated.mainVoiceId));
+        const av3Match = ALL_SYSTEM_VOICES.find(v => v.id === (updated.avatar3VoiceId || updated.gameVoiceId));
+        const av5Match = ALL_SYSTEM_VOICES.find(v => v.id === updated.avatar5VoiceId);
+
         saveDualVoiceConfig({
           idolVoice: idolMatch ? { ...idolMatch, role: 'idol', enabled: updated.mainVoiceEnabled !== false, volume: Number(updated.mainVoiceVolume || 1.0), rate: Number(updated.mainVoiceRate || 1.0), pitch: Number(updated.mainVoicePitch || 1.0) } : undefined,
           managerVoice: managerMatch ? { ...managerMatch, role: 'manager', enabled: updated.assistantEnabled !== false, volume: Number(updated.assistantVoiceVolume || 1.0), rate: Number(updated.assistantVoiceRate || 1.0), pitch: Number(updated.assistantVoicePitch || 1.0) } : undefined,
-          commentVoice: commentMatch ? { ...commentMatch, role: 'comment', enabled: updated.commentVoiceEnabled !== false, volume: Number(updated.commentVoiceVolume || updated.mainVoiceVolume || 1.0), rate: Number(updated.commentVoiceRate || updated.mainVoiceRate || 1.0), pitch: Number(updated.commentVoicePitch || updated.mainVoicePitch || 1.0) } : undefined
+          commentVoice: commentMatch ? { ...commentMatch, role: 'comment', enabled: updated.commentVoiceEnabled !== false, volume: Number(updated.commentVoiceVolume || updated.mainVoiceVolume || 1.0), rate: Number(updated.commentVoiceRate || updated.mainVoiceRate || 1.0), pitch: Number(updated.commentVoicePitch || updated.mainVoicePitch || 1.0) } : undefined,
+          avatar1Voice: idolMatch ? { ...idolMatch, role: 'avatar_1', enabled: true, volume: Number(updated.avatar1VoiceVolume || updated.mainVoiceVolume || 1.0), rate: Number(updated.avatar1VoiceRate || updated.mainVoiceRate || 1.0), pitch: Number(updated.avatar1VoicePitch || updated.mainVoicePitch || 1.0) } : undefined,
+          avatar2Voice: managerMatch ? { ...managerMatch, role: 'avatar_2', enabled: true, volume: Number(updated.avatar2VoiceVolume || updated.assistantVoiceVolume || 1.0), rate: Number(updated.avatar2VoiceRate || updated.assistantVoiceRate || 1.0), pitch: Number(updated.avatar2VoicePitch || updated.assistantVoicePitch || 1.0) } : undefined,
+          avatar3Voice: av3Match ? { ...av3Match, role: 'avatar_3', enabled: true, volume: Number(updated.avatar3VoiceVolume || 1.0), rate: Number(updated.avatar3VoiceRate || 1.0), pitch: Number(updated.avatar3VoicePitch || 1.0) } : undefined,
+          avatar4Voice: commentMatch ? { ...commentMatch, role: 'avatar_4', enabled: true, volume: Number(updated.avatar4VoiceVolume || 1.0), rate: Number(updated.avatar4VoiceRate || 1.0), pitch: Number(updated.avatar4VoicePitch || 1.0) } : undefined,
+          avatar5Voice: av5Match ? { ...av5Match, role: 'avatar_5', enabled: true, volume: Number(updated.avatar5VoiceVolume || 1.0), rate: Number(updated.avatar5VoiceRate || 1.0), pitch: Number(updated.avatar5VoicePitch || 1.0) } : undefined
         });
         localStorage.setItem('aidol_general_settings', JSON.stringify(updated));
       } catch (e) {}
@@ -2260,18 +2278,36 @@ IDOL MỈM CƯỜI + GESTURE
     let pitch = 1.0;
     let sample = '';
 
-    if (role === 'idol') {
-      targetVoice = allVoices.find(v => v.id === settings.mainVoiceId) || ALL_SYSTEM_VOICES[0];
-      vol = settings.mainVoiceVolume !== undefined ? Number(settings.mainVoiceVolume) : 1.0;
-      rate = settings.mainVoiceRate !== undefined ? Number(settings.mainVoiceRate) : 1.0;
-      pitch = settings.mainVoicePitch !== undefined ? Number(settings.mainVoicePitch) : 1.0;
-      sample = 'Xin chào tất cả mọi người! Hôm nay mình sẽ chia sẻ những điều tuyệt vời nhất cùng cả nhà nhé!';
-    } else if (role === 'assistant') {
-      targetVoice = allVoices.find(v => v.id === settings.assistantVoiceId) || allVoices.find(v => v.id === 'vn_nam_quanly_uyquyen') || ALL_SYSTEM_VOICES.find(v => v.id === 'vn_nam_quanly_uyquyen') || ALL_SYSTEM_VOICES[1] || ALL_SYSTEM_VOICES[0];
-      vol = settings.assistantVoiceVolume !== undefined ? Number(settings.assistantVoiceVolume) : 1.0;
-      rate = settings.assistantVoiceRate !== undefined ? Number(settings.assistantVoiceRate) : 1.0;
-      pitch = settings.assistantVoicePitch !== undefined ? Number(settings.assistantVoicePitch) : 1.0;
-      sample = 'Dạ em chào anh chị! Em là trợ lý phòng live, em đã ghim giỏ hàng và sẵn sàng hỗ trợ ạ!';
+    if (role === 'idol' || role === 'avatar_1') {
+      targetVoice = allVoices.find(v => v.id === (settings.avatar1VoiceId || settings.mainVoiceId)) || ALL_SYSTEM_VOICES[0];
+      vol = settings.avatar1VoiceVolume !== undefined ? Number(settings.avatar1VoiceVolume) : (settings.mainVoiceVolume !== undefined ? Number(settings.mainVoiceVolume) : 1.0);
+      rate = settings.avatar1VoiceRate !== undefined ? Number(settings.avatar1VoiceRate) : (settings.mainVoiceRate !== undefined ? Number(settings.mainVoiceRate) : 1.0);
+      pitch = settings.avatar1VoicePitch !== undefined ? Number(settings.avatar1VoicePitch) : (settings.mainVoicePitch !== undefined ? Number(settings.mainVoicePitch) : 1.0);
+      sample = 'Xin chào tất cả mọi người! Em là Nhân Vật 1 - Idol Live Chính, chúc cả nhà buổi live tràn ngập niềm vui nhé!';
+    } else if (role === 'assistant' || role === 'avatar_2') {
+      targetVoice = allVoices.find(v => v.id === (settings.avatar2VoiceId || settings.assistantVoiceId)) || allVoices.find(v => v.id === 'vn_nam_quanly_uyquyen') || ALL_SYSTEM_VOICES.find(v => v.id === 'vn_nam_quanly_uyquyen') || ALL_SYSTEM_VOICES[1] || ALL_SYSTEM_VOICES[0];
+      vol = settings.avatar2VoiceVolume !== undefined ? Number(settings.avatar2VoiceVolume) : (settings.assistantVoiceVolume !== undefined ? Number(settings.assistantVoiceVolume) : 1.0);
+      rate = settings.avatar2VoiceRate !== undefined ? Number(settings.avatar2VoiceRate) : (settings.assistantVoiceRate !== undefined ? Number(settings.assistantVoiceRate) : 1.0);
+      pitch = settings.avatar2VoicePitch !== undefined ? Number(settings.avatar2VoicePitch) : (settings.assistantVoicePitch !== undefined ? Number(settings.assistantVoicePitch) : 1.0);
+      sample = 'Dạ em chào anh chị! Em là Nhân Vật 2 - Quản Lý / Trợ Lý phòng live, giỏ hàng đã sẵn sàng hỗ trợ ạ!';
+    } else if (role === 'avatar_3') {
+      targetVoice = allVoices.find(v => v.id === (settings.avatar3VoiceId || settings.gameVoiceId)) || ALL_SYSTEM_VOICES.find(v => v.id === 'vn_nam_blv_bungno') || ALL_SYSTEM_VOICES[2] || ALL_SYSTEM_VOICES[0];
+      vol = settings.avatar3VoiceVolume !== undefined ? Number(settings.avatar3VoiceVolume) : 1.0;
+      rate = settings.avatar3VoiceRate !== undefined ? Number(settings.avatar3VoiceRate) : 1.0;
+      pitch = settings.avatar3VoicePitch !== undefined ? Number(settings.avatar3VoicePitch) : 1.0;
+      sample = 'Chào anh em! Tôi là Nhân Vật 3 - BLV Game PK và Hoạt Náo, chuẩn bị bùng nổ năng lượng nhé!';
+    } else if (role === 'avatar_4') {
+      targetVoice = allVoices.find(v => v.id === (settings.avatar4VoiceId || settings.commentVoiceId)) || ALL_SYSTEM_VOICES.find(v => v.id === 'vi_female_south_1') || ALL_SYSTEM_VOICES[0];
+      vol = settings.avatar4VoiceVolume !== undefined ? Number(settings.avatar4VoiceVolume) : 1.0;
+      rate = settings.avatar4VoiceRate !== undefined ? Number(settings.avatar4VoiceRate) : 1.0;
+      pitch = settings.avatar4VoicePitch !== undefined ? Number(settings.avatar4VoicePitch) : 1.0;
+      sample = 'Dạ em chào mọi người! Em là Nhân Vật 4 - Khách Mời / Khán Giả, rất vui được tham gia cùng phòng live!';
+    } else if (role === 'avatar_5') {
+      targetVoice = allVoices.find(v => v.id === settings.avatar5VoiceId) || ALL_SYSTEM_VOICES.find(v => v.id === 'vi_female_north_1') || ALL_SYSTEM_VOICES[0];
+      vol = settings.avatar5VoiceVolume !== undefined ? Number(settings.avatar5VoiceVolume) : 1.0;
+      rate = settings.avatar5VoiceRate !== undefined ? Number(settings.avatar5VoiceRate) : 1.0;
+      pitch = settings.avatar5VoicePitch !== undefined ? Number(settings.avatar5VoicePitch) : 1.0;
+      sample = 'Xin kính chào quý vị khán giả! Tôi là Nhân Vật 5 - Cố Vấn Chuyên Môn, xin chia sẻ các phân tích hôm nay.';
     } else if (role === 'comment') {
       targetVoice = allVoices.find(v => v.id === (settings.commentVoiceId || settings.mainVoiceId)) || ALL_SYSTEM_VOICES[0];
       vol = settings.commentVoiceVolume !== undefined ? Number(settings.commentVoiceVolume) : (settings.mainVoiceVolume !== undefined ? Number(settings.mainVoiceVolume) : 1.0);
@@ -4269,7 +4305,8 @@ IDOL MỈM CƯỜI + GESTURE
                 const commentVoiceObj = allAvail.find(v => v.id === (settings.commentVoiceId || settings.mainVoiceId)) || idolVoiceObj;
 
                 return (
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <>
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     {/* 1. Tùy chỉnh Giọng Idol Live Chính */}
                     <div className="bg-white border-2 border-blue-200 rounded-xl shadow-sm overflow-hidden p-4 space-y-4">
                       <div className="border-b border-gray-200 pb-2 flex items-center justify-between">
@@ -4534,6 +4571,149 @@ IDOL MỈM CƯỜI + GESTURE
                       </div>
                     </div>
                   </div>
+
+                  {/* 🌟 PHÂN KHU ĐẶC BIỆT: CẤU HÌNH GIỌNG ĐỌC CHO TỪNG NHÂN VẬT 1 ĐẾN 5 (BỘ NÃO AI) */}
+                  <div className="mt-6 pt-5 border-t-2 border-indigo-200 bg-gradient-to-br from-indigo-50/70 via-purple-50/50 to-pink-50/50 rounded-2xl p-4 border border-indigo-200 shadow-sm space-y-4">
+                    <div className="flex items-center justify-between flex-wrap gap-2">
+                      <div className="flex items-center gap-2">
+                        <Users className="text-indigo-600" size={20} />
+                        <div>
+                          <h4 className="text-sm font-black text-indigo-950 uppercase tracking-wide flex items-center gap-2">
+                            <span>👥 CẤU HÌNH GIỌNG ĐỌC BỘ NÃO CHO NHÂN VẬT 1 ĐẾN 5</span>
+                            <span className="text-[10px] bg-indigo-600 text-white px-2 py-0.5 rounded-full font-bold">1–5 AVATAR</span>
+                          </h4>
+                          <p className="text-[11px] text-indigo-700 font-medium">
+                            Tự do chọn giọng đọc AI cho từng nhân vật. Hệ thống Chuỗi Kịch Bản (Sequencer) và Studio 1–4 Avatar sẽ tự động đồng bộ giọng chuẩn xác 100%!
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 xl:grid-cols-5 gap-3">
+                      {[
+                        { num: 1, id: 'avatar_1', roleName: 'Nhân Vật 1 (Idol Chính)', badgeColor: 'bg-blue-600 text-white', borderColor: 'border-blue-300', defaultVoice: 'free_vi_female' },
+                        { num: 2, id: 'avatar_2', roleName: 'Nhân Vật 2 (Quản Lý)', badgeColor: 'bg-red-600 text-white', borderColor: 'border-red-300', defaultVoice: 'vn_nam_quanly_uyquyen' },
+                        { num: 3, id: 'avatar_3', roleName: 'Nhân Vật 3 (BLV Game/PK)', badgeColor: 'bg-emerald-600 text-white', borderColor: 'border-emerald-300', defaultVoice: 'vn_nam_blv_bungno' },
+                        { num: 4, id: 'avatar_4', roleName: 'Nhân Vật 4 (Khán Giả)', badgeColor: 'bg-purple-600 text-white', borderColor: 'border-purple-300', defaultVoice: 'vi_female_south_1' },
+                        { num: 5, id: 'avatar_5', roleName: 'Nhân Vật 5 (Cố Vấn)', badgeColor: 'bg-amber-600 text-white', borderColor: 'border-amber-300', defaultVoice: 'vi_female_north_1' },
+                      ].map(char => {
+                        const voiceIdKey = `avatar${char.num}VoiceId`;
+                        const volKey = `avatar${char.num}VoiceVolume`;
+                        const rateKey = `avatar${char.num}VoiceRate`;
+                        const pitchKey = `avatar${char.num}VoicePitch`;
+                        
+                        const curVoiceId = settings[voiceIdKey] || (char.num === 1 ? settings.mainVoiceId : char.num === 2 ? settings.assistantVoiceId : char.num === 3 ? settings.gameVoiceId : char.num === 4 ? settings.commentVoiceId : char.defaultVoice);
+                        const curVoiceObj = allAvail.find(v => v.id === curVoiceId) || ALL_SYSTEM_VOICES.find(v => v.id === curVoiceId) || ALL_SYSTEM_VOICES[0];
+                        const curVol = settings[volKey] !== undefined ? settings[volKey] : (char.num === 1 ? (settings.mainVoiceVolume || 1.0) : char.num === 2 ? (settings.assistantVoiceVolume || 1.0) : 1.0);
+                        const curRate = settings[rateKey] !== undefined ? settings[rateKey] : (char.num === 1 ? (settings.mainVoiceRate || 1.0) : char.num === 2 ? (settings.assistantVoiceRate || 1.0) : 1.0);
+                        const curPitch = settings[pitchKey] !== undefined ? settings[pitchKey] : (char.num === 1 ? (settings.mainVoicePitch || 1.0) : char.num === 2 ? (settings.assistantVoicePitch || 1.0) : 1.0);
+
+                        return (
+                          <div key={char.id} className={`bg-white rounded-xl border-2 ${char.borderColor} p-3 shadow-xs space-y-2.5 flex flex-col justify-between`}>
+                            <div>
+                              <div className="flex items-center justify-between pb-1.5 border-b border-gray-100">
+                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${char.badgeColor}`}>
+                                  NV {char.num}
+                                </span>
+                                <button
+                                  type="button"
+                                  onClick={() => handlePreviewRoleVoice(char.id)}
+                                  className={`px-2 py-1 rounded-lg text-[10px] font-black transition-all flex items-center gap-1 cursor-pointer active:scale-95 ${
+                                    previewingRole === char.id
+                                      ? 'bg-rose-600 text-white animate-pulse'
+                                      : 'bg-indigo-600 hover:bg-indigo-700 text-white'
+                                  }`}
+                                  title={`Nghe thử giọng của Nhân Vật ${char.num}`}
+                                >
+                                  {previewingRole === char.id ? (
+                                    <>
+                                      <Loader2 size={10} className="animate-spin" />
+                                      <span>Dừng</span>
+                                    </>
+                                  ) : (
+                                    <>
+                                      <Volume2 size={10} />
+                                      <span>Nghe Thử</span>
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+
+                              <div className="mt-1.5">
+                                <label className="text-[10px] font-bold text-gray-700 block mb-0.5">{char.roleName}:</label>
+                                <select
+                                  value={curVoiceId}
+                                  onChange={(e) => {
+                                    const selectedV = allAvail.find(v => v.id === e.target.value) || ALL_SYSTEM_VOICES.find(v => v.id === e.target.value);
+                                    if (selectedV) handleAssignVoice(char.id, selectedV);
+                                  }}
+                                  className="w-full bg-gray-50 border border-gray-300 text-gray-900 text-[11px] font-bold p-1.5 rounded-lg focus:border-indigo-500 outline-none cursor-pointer truncate"
+                                >
+                                  {ALL_SYSTEM_VOICES.map(v => (
+                                    <option key={v.id} value={v.id}>{v.name}</option>
+                                  ))}
+                                </select>
+                              </div>
+                            </div>
+
+                            <div className="space-y-1.5 pt-1 border-t border-gray-100 text-[10px]">
+                              <div>
+                                <div className="flex justify-between text-gray-600 font-semibold">
+                                  <span>Âm lượng:</span>
+                                  <span className="font-black text-indigo-600">{Math.round(Number(curVol) * 100)}%</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min="0"
+                                  max="2"
+                                  step="0.1"
+                                  name={volKey}
+                                  value={curVol}
+                                  onChange={handleChange}
+                                  className="w-full accent-indigo-600 h-1.5"
+                                />
+                              </div>
+
+                              <div>
+                                <div className="flex justify-between text-gray-600 font-semibold">
+                                  <span>Tốc độ:</span>
+                                  <span className="font-black text-indigo-600">{curRate}x</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min="0.5"
+                                  max="2"
+                                  step="0.1"
+                                  name={rateKey}
+                                  value={curRate}
+                                  onChange={handleChange}
+                                  className="w-full accent-indigo-600 h-1.5"
+                                />
+                              </div>
+
+                              <div>
+                                <div className="flex justify-between text-gray-600 font-semibold">
+                                  <span>Cao độ:</span>
+                                  <span className="font-black text-indigo-600">{curPitch}</span>
+                                </div>
+                                <input
+                                  type="range"
+                                  min="0.5"
+                                  max="2"
+                                  step="0.1"
+                                  name={pitchKey}
+                                  value={curPitch}
+                                  onChange={handleChange}
+                                  className="w-full accent-indigo-600 h-1.5"
+                                />
+                              </div>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      </div>
+                    </div>
+                  </>
                 );
               })()}
             </div>

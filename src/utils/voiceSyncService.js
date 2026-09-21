@@ -6806,6 +6806,81 @@ export const DEFAULT_VOICE_CONFIG = {
     edgePitch: '+22%',
     edgeRate: '+24%',
   },
+  avatar1Voice: {
+    id: 'free_vi_female',
+    name: 'Hoài My 👑 (Nữ - Nhân Vật 1 Idol Chính)',
+    provider: 'system',
+    tier: 'pro',
+    gender: 'Female',
+    role: 'avatar_1',
+    pitch: 1.04,
+    rate: 1.02,
+    volume: 1.0,
+    enabled: true,
+    sampleText: 'Dạ em Hoài My xin chào cả nhà yêu đang xem livestream nha!',
+    edgePitch: '+4%',
+    edgeRate: '+2%',
+  },
+  avatar2Voice: {
+    id: 'vn_nam_quanly_uyquyen',
+    name: 'Quốc Cường 👑 (Nam - Nhân Vật 2 Quản Lý / Trợ Lý)',
+    provider: 'system',
+    tier: 'pro',
+    gender: 'Male',
+    role: 'avatar_2',
+    pitch: 1.0,
+    rate: 1.05,
+    volume: 1.0,
+    enabled: true,
+    sampleText: 'Hệ thống đã nhận đơn thành công, các bạn kiểm tra tin nhắn xác nhận nhé!',
+    edgePitch: '-14%',
+    edgeRate: '+10%',
+  },
+  avatar3Voice: {
+    id: 'vn_nam_blv_bungno',
+    name: 'Quang Huy 👑 (Nam - Nhân Vật 3 BLV Game / Hoạt Náo)',
+    provider: 'system',
+    tier: 'pro',
+    gender: 'Male',
+    role: 'avatar_3',
+    pitch: 1.0,
+    rate: 1.1,
+    volume: 1.0,
+    enabled: true,
+    sampleText: 'Trận đấu đang vô cùng kịch tính! Hãy cùng cổ vũ hết mình nào anh em!',
+    edgePitch: '+22%',
+    edgeRate: '+24%',
+  },
+  avatar4Voice: {
+    id: 'vi_female_south_1',
+    name: 'Hà My 🌸 (Nữ - Nhân Vật 4 Khách Mời / Khán Giả)',
+    provider: 'system',
+    tier: 'pro',
+    gender: 'Female',
+    role: 'avatar_4',
+    pitch: 1.0,
+    rate: 1.0,
+    volume: 1.0,
+    enabled: true,
+    sampleText: 'Dạ em chào mọi người, hôm nay rất vui được tham gia cùng phòng live!',
+    edgePitch: '0%',
+    edgeRate: '0%',
+  },
+  avatar5Voice: {
+    id: 'vi_female_north_1',
+    name: 'Lan Phương 💎 (Nữ - Nhân Vật 5 Cố Vấn / Chuyên Gia)',
+    provider: 'system',
+    tier: 'pro',
+    gender: 'Female',
+    role: 'avatar_5',
+    pitch: 1.0,
+    rate: 1.0,
+    volume: 1.0,
+    enabled: true,
+    sampleText: 'Xin chào quý vị khán giả, tôi xin chia sẻ một số góc nhìn chuyên môn về sản phẩm hôm nay.',
+    edgePitch: '0%',
+    edgeRate: '0%',
+  },
   generalVoice: {
     id: 'free_vi_female',
     name: 'Hoài My 👑 (Nữ 20-28t - Quốc Dân Trong Trẻo [Toàn Quốc])',
@@ -7402,6 +7477,25 @@ export function getSavedVoiceConfig() {
           };
         }
       }
+      
+      // Đồng bộ riêng cho 5 Nhân Vật từ Bộ Não AI (Nhân vật 1 -> Nhân vật 5)
+      for (let i = 1; i <= 5; i++) {
+        const keyId = `avatar${i}VoiceId`;
+        const vId = g[keyId] || (i === 1 ? g.mainVoiceId : i === 2 ? g.assistantVoiceId : i === 3 ? g.gameVoiceId : i === 4 ? g.commentVoiceId : null);
+        if (vId) {
+          const match = ALL_SYSTEM_VOICES.find(v => v.id === vId);
+          if (match) {
+            baseConfig[`avatar${i}Voice`] = {
+              ...match,
+              role: `avatar_${i}`,
+              enabled: g[`avatar${i}VoiceEnabled`] !== false,
+              volume: g[`avatar${i}VoiceVolume`] !== undefined ? Number(g[`avatar${i}VoiceVolume`]) : 1.0,
+              rate: g[`avatar${i}VoiceRate`] !== undefined ? Number(g[`avatar${i}VoiceRate`]) : 1.0,
+              pitch: g[`avatar${i}VoicePitch`] !== undefined ? Number(g[`avatar${i}VoicePitch`]) : 1.0
+            };
+          }
+        }
+      }
     }
   } catch (e) {
     console.warn('Lỗi đồng bộ general settings voice:', e);
@@ -7430,16 +7524,27 @@ export function getElevenLabsApiKey() {
 
 export function updateActiveVoiceAudio(role, voiceObj) {
   const current = getSavedVoiceConfig();
-  if (role === 'idol') current.idolVoice = { ...current.idolVoice, ...voiceObj };
-  else if (role === 'manager' || role === 'assistant') current.managerVoice = { ...current.managerVoice, ...voiceObj };
-  else if (role === 'game') current.gameBlvVoice = { ...current.gameBlvVoice, ...voiceObj };
-  else if (role === 'comment') current.commentVoice = { ...current.commentVoice, ...voiceObj };
+  if (role === 'idol' || role === 'avatar_1') {
+    current.idolVoice = { ...current.idolVoice, ...voiceObj };
+    current.avatar1Voice = { ...current.avatar1Voice, ...voiceObj };
+  } else if (role === 'manager' || role === 'assistant' || role === 'avatar_2') {
+    current.managerVoice = { ...current.managerVoice, ...voiceObj };
+    current.avatar2Voice = { ...current.avatar2Voice, ...voiceObj };
+  } else if (role === 'game' || role === 'avatar_3') {
+    current.gameBlvVoice = { ...current.gameBlvVoice, ...voiceObj };
+    current.avatar3Voice = { ...current.avatar3Voice, ...voiceObj };
+  } else if (role === 'comment' || role === 'avatar_4') {
+    current.commentVoice = { ...current.commentVoice, ...voiceObj };
+    current.avatar4Voice = { ...current.avatar4Voice, ...voiceObj };
+  } else if (role === 'avatar_5') {
+    current.avatar5Voice = { ...current.avatar5Voice, ...voiceObj };
+  }
   saveVoiceConfig(current);
 }
 
 /**
  * ⚡ BỘ PHÂN GIẢI GIỌNG NÓI ĐA TẦNG (VOICE PRIORITY RESOLVER)
- * - ƯU TIÊN SỐ 1 (BỘ NÃO AI CHÍNH - CAO NHẤT 100%): Giọng đọc đã cài đặt trong Tab BỘ NÃO AI (idolVoice, managerVoice, commentVoice, gameBlvVoice/gameVoice).
+ * - ƯU TIÊN SỐ 1 (BỘ NÃO AI CHÍNH - CAO NHẤT 100%): Giọng đọc đã cài đặt trong Tab BỘ NÃO AI (idolVoice, managerVoice, commentVoice, gameBlvVoice/gameVoice, avatar1Voice - avatar5Voice).
  * - ƯU TIÊN SỐ 2 (PHỤ / TÁC VỤ SỰ KIỆN): Chỉ khi trong BỘ NÃO AI chưa setup hoặc chưa chọn giọng đọc thì mới sử dụng giọng từ các tab sự kiện/14 tác vụ.
  * - ƯU TIÊN SỐ 3: Fallback về giọng mặc định của hệ thống.
  * - TUYỆT ĐỐI KHÔNG CHỒNG CHÉO: Luôn phát duy nhất đúng 1 giọng được chọn.
@@ -7451,26 +7556,28 @@ export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId 
 
   let brainVoice = null;
 
-  // 1. Phân giải theo ID Avatar nhân vật cụ thể đã cấu hình trong Bộ Não AI
+  // 1. Phân giải theo ID Avatar nhân vật 1 - 5 cụ thể đã cấu hình trong Bộ Não AI
   if (normalizedAvatarId === 'avatar_1' || normalizedRole === 'avatar_1') {
-    brainVoice = dualConfig.idolVoice;
+    brainVoice = dualConfig.avatar1Voice || dualConfig.idolVoice;
   } else if (normalizedAvatarId === 'avatar_2' || normalizedRole === 'avatar_2') {
-    brainVoice = dualConfig.managerVoice || dualConfig.idolVoice;
+    brainVoice = dualConfig.avatar2Voice || dualConfig.managerVoice || dualConfig.idolVoice;
   } else if (normalizedAvatarId === 'avatar_3' || normalizedRole === 'avatar_3') {
-    brainVoice = dualConfig.gameBlvVoice || dualConfig.gameVoice || dualConfig.commentVoice || dualConfig.idolVoice;
+    brainVoice = dualConfig.avatar3Voice || dualConfig.gameBlvVoice || dualConfig.gameVoice || dualConfig.commentVoice || dualConfig.idolVoice;
   } else if (normalizedAvatarId === 'avatar_4' || normalizedRole === 'avatar_4') {
-    brainVoice = dualConfig.managerVoice || dualConfig.idolVoice;
+    brainVoice = dualConfig.avatar4Voice || dualConfig.commentVoice || dualConfig.managerVoice || dualConfig.idolVoice;
+  } else if (normalizedAvatarId === 'avatar_5' || normalizedRole === 'avatar_5') {
+    brainVoice = dualConfig.avatar5Voice || dualConfig.idolVoice;
   }
   // 2. Phân giải theo vai trò / kênh tác vụ
   else if (normalizedRole === 'comment' || normalizedRole === 'ask_reply' || normalizedRole === 'qna' || normalizedRole === 'binhluan' || normalizedRole === 'hoi_dap') {
-    brainVoice = dualConfig.commentVoice || dualConfig.idolVoice;
+    brainVoice = dualConfig.avatar4Voice || dualConfig.commentVoice || dualConfig.idolVoice;
   } else if (normalizedRole === 'manager' || normalizedRole === 'assistant' || normalizedRole === 'checkout' || normalizedRole === 'purchase' || normalizedRole === 'troly' || normalizedRole === 'quanly' || normalizedRole === 'chot_don') {
-    brainVoice = dualConfig.managerVoice || dualConfig.idolVoice;
+    brainVoice = dualConfig.avatar2Voice || dualConfig.managerVoice || dualConfig.idolVoice;
   } else if (normalizedRole === 'game' || normalizedRole === 'battle' || normalizedRole === 'bando' || normalizedRole === 'blv' || normalizedRole === 'pk') {
-    brainVoice = dualConfig.gameBlvVoice || dualConfig.gameVoice || dualConfig.idolVoice;
+    brainVoice = dualConfig.avatar3Voice || dualConfig.gameBlvVoice || dualConfig.gameVoice || dualConfig.idolVoice;
   } else {
     // idol, welcome, gift, follow, like, script, talking, idle, apology, call_to_action, general
-    brainVoice = dualConfig.idolVoice;
+    brainVoice = dualConfig.avatar1Voice || dualConfig.idolVoice;
   }
 
   // 🎯 ƯU TIÊN SỐ 1 (CAO NHẤT): CẤU HÌNH TRONG TAB BỘ NÃO AI

@@ -804,15 +804,16 @@ export default function LivestreamFlowSequencer() {
     toast.success(`✨ Đã cập nhật Xóa Phông cho Avatar ${avatarId.toUpperCase()}!`);
   };
 
-  // 🧠 Ánh xạ giọng đọc từ BỘ NÃO VOICE AI BRAIN cho từng nhân vật
+  // 🧠 Ánh xạ giọng đọc từ BỘ NÃO VOICE AI BRAIN cho từng nhân vật 1 - 5
   const getBrainVoiceForSpeaker = useCallback((speakerId) => {
     try {
       const voiceCfg = getSavedVoiceConfig();
-      if (speakerId === 'avatar_1') return voiceCfg.idolVoice?.id || 'free_vi_female';
-      if (speakerId === 'avatar_2') return voiceCfg.managerVoice?.id || 'vi_male_south_1';
-      if (speakerId === 'avatar_3') return voiceCfg.gameBlvVoice?.id || 'free_vi_male';
-      if (speakerId === 'avatar_4') return voiceCfg.commentVoice?.id || 'vi_female_south_1';
-      return voiceCfg.idolVoice?.id || 'free_vi_female';
+      if (speakerId === 'avatar_1') return voiceCfg.avatar1Voice?.id || voiceCfg.idolVoice?.id || 'free_vi_female';
+      if (speakerId === 'avatar_2') return voiceCfg.avatar2Voice?.id || voiceCfg.managerVoice?.id || 'vn_nam_quanly_uyquyen';
+      if (speakerId === 'avatar_3') return voiceCfg.avatar3Voice?.id || voiceCfg.gameBlvVoice?.id || 'vn_nam_blv_bungno';
+      if (speakerId === 'avatar_4') return voiceCfg.avatar4Voice?.id || voiceCfg.commentVoice?.id || 'vi_female_south_1';
+      if (speakerId === 'avatar_5') return voiceCfg.avatar5Voice?.id || 'vi_female_north_1';
+      return voiceCfg.avatar1Voice?.id || voiceCfg.idolVoice?.id || 'free_vi_female';
     } catch (e) {
       return 'free_vi_female';
     }
@@ -2236,6 +2237,7 @@ export default function LivestreamFlowSequencer() {
                         <option value="avatar_2">🗣️ Nhân Vật 2 (Quản Lý)</option>
                         <option value="avatar_3">🗣️ Nhân Vật 3 (BLV Game)</option>
                         <option value="avatar_4">🗣️ Nhân Vật 4 (Khán Giả)</option>
+                        <option value="avatar_5">🗣️ Nhân Vật 5 (Cố Vấn / Khách Mời)</option>
                         <option value="all">👥 Cả Nhóm Cùng Nói</option>
                       </select>
 
@@ -2275,20 +2277,20 @@ export default function LivestreamFlowSequencer() {
                       <button
                         type="button"
                         onClick={() => {
-                          if (speakingStepId === step.id || (isPlaying && currentStepIndex === idx)) {
-                            stopFlow();
+                          if (speakingStepId === step.id || (isPlayingFlow && currentStepIndex === idx)) {
+                            handleStopFlow();
                           } else {
                             startStep(idx, true);
                           }
                         }}
                         className={`px-2.5 py-1 font-black text-[10px] rounded-lg shadow-xs flex items-center gap-1 cursor-pointer transition-all ${
-                          (isPlaying && currentStepIndex === idx)
+                          (isPlayingFlow && currentStepIndex === idx)
                             ? 'bg-rose-600 text-white animate-pulse'
                             : 'bg-indigo-600 hover:bg-indigo-500 text-white'
                         }`}
                         title="Chạy test giọng đọc và thời gian riêng cho bước này"
                       >
-                        {(isPlaying && currentStepIndex === idx) ? (
+                        {(isPlayingFlow && currentStepIndex === idx) ? (
                           <>
                             <Square size={11} className="fill-white" />
                             <span>Dừng Test</span>

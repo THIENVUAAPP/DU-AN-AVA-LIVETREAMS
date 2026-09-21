@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.3.3';
+export const APP_VERSION = '4.3.4';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.3.4 - Bổ Sung Bộ Chọn Voice Riêng Cho Nhân Vật 1 Đến 5 Trong Bộ Não AI & Sửa Triệt Để Lỗi Mở Tab Chuỗi Kịch Bản',
+    description: '1. Tùy Chọn Voice Riêng Cho Nhân Vật 1 Đến Nhân Vật 5 Trong Bộ Não AI: Bổ sung cấu hình 5 thẻ Voice chi tiết cho Nhân vật 1 (Idol / Host), Nhân vật 2 (Quản lý / Chốt đơn), Nhân vật 3 (BLV / Hoạt náo PK), Nhân vật 4 (Khán giả / Khách mời), Nhân vật 5 (Cố vấn chuyên môn); tùy biến riêng biệt âm lượng, tốc độ, cao độ và nút nghe thử 0ms; 2. Sửa Triệt Để Lỗi Mở Tab Chuỗi Kịch Bản (Sequencer): Khắc phục dứt điểm lỗi biến runtime khiến tab không hiển thị, đảm bảo mở tức thì 100% mượt mà; 3. Đồng Bộ Tự Động Voice AI Cho Chuỗi Kịch Bản: Khi phân vai nhân vật nào đọc thoại, hệ thống tự động nạp chính xác Voice cấu hình từ Bộ Não tương ứng; 4. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D, Luồng phát 60 FPS 4K.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.3.3 - Nút Master Bật/Tắt Voice & Video Quyền Lực Nhất, Nút Xóa Đỏ Góc Trái Cho Mọi Ô, Tách Nền Canvas 0ms & Nhúng Khung Phông Xanh',
     description: '1. Nút Master Bật/Tắt Voice AI Quyền Lực Nhất: Kiểm soát tuyệt đối 100% âm thanh và giọng đọc, khi TẮT là ngắt lập tức mọi âm thanh và voice, không tự ý phát giọng khi chuyển bước; 2. Nút Xóa (Red Trash) Ở Góc Trái Trên Cùng: Bấm chọn bất kỳ ô/lớp nào trên sân khấu 9:16 (Video chính, PiP, Avatar 1-4, Banner, Text) là xuất hiện ngay nút xóa màu đỏ góc trái để xóa tức thì 1 chạm; 3. Tách Nền Siêu Sạch Canvas 0ms Cho Cả Ảnh & Video: Tách phông xanh lá, phông lam, nền đen (Screen), nền trắng (Multiply) sạch sẽ 100%, không viền đục; 4. Nhúng Video/Ảnh Vào Khung Phông Xanh: Tự động lồng ghép video và hình ảnh vào đúng khung mockup phông xanh chuẩn xác; 5. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D.'
