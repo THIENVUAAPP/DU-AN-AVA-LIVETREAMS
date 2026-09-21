@@ -554,17 +554,30 @@ export default function LivestreamFlowSequencer() {
     toast.success(`🎬 Bắt đầu chạy kịch bản: ${activePreset.name}`);
   };
 
-  // 📡 BẬT / TẮT ĐỒNG BỘ RA SÂN KHẤU CHÍNH
+  // 📡 BẬT / TẮT ĐỒNG BỘ RA SÂN KHẤU CHÍNH (ẢNH 3 & ẢNH 4)
   const handleToggleMasterSync = () => {
     const nextSync = !isMasterSynced;
     setIsMasterSynced(nextSync);
+    try {
+      if (nextSync) {
+        localStorage.setItem('avalive_master_sync_active', 'true');
+      } else {
+        localStorage.removeItem('avalive_master_sync_active');
+      }
+    } catch (e) {}
+
+    window.dispatchEvent(new CustomEvent('avalive:master_sync_state_changed', { 
+      detail: { isSynced: nextSync } 
+    }));
+
     if (nextSync) {
-      toast.success('📡 ĐÃ BẬT ĐỒNG BỘ: Sân Khấu Chính / OBS / TikTok Live Studio');
+      toast.success('📡 ĐÃ BẬT ĐỒNG BỘ: Toàn bộ Sân Khấu Phụ (Ảnh 4) đang phát ra Sân Khấu Chính!');
       if (activePreset?.steps?.[currentStepIndex]) {
         syncStepToServer(activePreset.steps[currentStepIndex], currentStepIndex, isPlayingFlow);
       }
     } else {
-      toast.info('📴 Đã ngắt đồng bộ ra Sân Khấu Chính');
+      window.dispatchEvent(new CustomEvent('avalive:stop_flow_sequencer'));
+      toast.info('📴 Đã ngắt đồng bộ ra Sân Khấu Chính (Trở về giao diện độc lập)');
     }
   };
 
