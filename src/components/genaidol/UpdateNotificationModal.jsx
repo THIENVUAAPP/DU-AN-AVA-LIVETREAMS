@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.2.0';
+export const APP_VERSION = '4.2.1';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.2.1 - Xếp Chồng Đa Lớp Sân Khấu Live, Nạp File Kịch Bản Đa Định Dạng & Sequencer Nâng Cao',
+    description: '1. Xếp Chồng Đa Lớp Sân Khấu (Multi-Layer Overlay Live Stage): Mỗi bước kịch bản hỗ trợ Video nền ghim liên tục, Lớp hình ảnh banner/poster/deal và Lớp tiêu đề chữ nổi bật với hiệu ứng neon đa phong cách; 2. Nạp File Kịch Bản Trực Tiếp (.txt, .docx, .pdf, .json, .xlsx): Tải trực tiếp tài liệu kịch bản vào từng phân đoạn chỉ với 1 click cùng khung soạn thảo thoại siêu rộng rãi; 3. Đồng Bộ 0ms 60 FPS Chuẩn 9:16: Hiển thị đồng bộ tuyệt đối trên Sân khấu chính, OBS Window Capture và Link TikTok Live Studio; 4. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn toàn bộ module.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.2.0 - Tự Động Kích Hoạt Đa Năng Phân Đoạn Sequencer: Video, Avatar, Giọng Đọc & Ghim Giỏ Hàng',
     description: '1. Tự Động Hóa Vận Hành Toàn Diện: Mỗi phân đoạn kịch bản tự động kích hoạt chuyển video, đổi cảnh, đọc thuyết minh AI và ghim sản phẩm giỏ hàng lên sân khấu theo đúng thời lượng cài đặt; 2. Đồng Bộ Tức Thì 0ms: Sân khấu phần mềm hiển thị trực tiếp và truyền thẳng sang OBS Window Capture cùng Link Online TikTok Live Studio (/live-stream); 3. Chuẩn Tỷ Lệ 9:16 Không Viền Đen: Tự động căn chỉnh vừa khít khung live; 4. Khóa Chặt 100% Hệ Thống: Bảo toàn tuyệt đối mọi tính năng khác.'

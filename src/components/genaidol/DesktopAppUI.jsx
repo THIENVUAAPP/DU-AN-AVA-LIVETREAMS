@@ -1613,6 +1613,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     }
   });
 
+  // 🎭 OVERLAY ĐA LỚP TỪ SEQUENCER (HÌNH ẢNH / BANNER / TIÊU ĐỀ KHUYẾN MÃI)
+  const [flowSequencerOverlay, setFlowSequencerOverlay] = useState(() => {
+    try {
+      const saved = localStorage.getItem('avalive_sequencer_overlay');
+      return saved ? JSON.parse(saved) : null;
+    } catch (e) {
+      return null;
+    }
+  });
+
   useEffect(() => {
     const handlePinnedProductUpdate = (e) => {
       if (e?.detail?.product) {
@@ -2469,16 +2479,33 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   // 🎬 LẮNG NGHE ĐIỀU PHỐI TỪ CHUỖI KỊCH BẢN (SEQUENCER) ĐỒNG BỘ MÀN HÌNH CHÍNH, WINDOW CAPTURE & TIKTOK LIVE STUDIO
   useEffect(() => {
     const handleFlowMediaUpdate = (e) => {
-      const { mediaUrl, scriptText, title, actionType } = e.detail || {};
+      const { 
+        mediaUrl, scriptText, title, actionType,
+        overlayImage, overlayImagePos, overlayText, overlayTextPos, overlayTextStyle, isMediaPinned 
+      } = e.detail || {};
       if (!mediaUrl) return;
 
       setUserLockedMediaUrl(mediaUrl);
       try { localStorage.setItem('avalive_user_locked_media', mediaUrl); } catch (err) {}
 
-      // 1. Cập nhật trực tiếp Video trên Màn hình chính của Phần mềm (Ảnh số 3)
+      // 1. Cập nhật trạng thái Overlays Đa Lớp (Ảnh, Chữ, Ghim)
+      const overlayData = {
+        overlayImage: overlayImage || null,
+        overlayImagePos: overlayImagePos || 'top-left',
+        overlayText: overlayText || null,
+        overlayTextPos: overlayTextPos || 'top',
+        overlayTextStyle: overlayTextStyle || 'banner',
+        isMediaPinned: !!isMediaPinned
+      };
+      setFlowSequencerOverlay(overlayData);
+      try { localStorage.setItem('avalive_sequencer_overlay', JSON.stringify(overlayData)); } catch (err) {}
+
+      // 2. Cập nhật trực tiếp Video trên Màn hình chính của Phần mềm (Ảnh số 3)
       if (desktopVideoRef.current) {
         if (desktopVideoRef.current.src !== mediaUrl) {
           desktopVideoRef.current.src = mediaUrl;
+          desktopVideoRef.current.currentTime = 0;
+        } else if (!isMediaPinned) {
           desktopVideoRef.current.currentTime = 0;
         }
         desktopVideoRef.current.dataset.userPaused = 'false';
@@ -2487,7 +2514,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       setIsVideoPlaying(true);
       setIsMasterLiveRunning(true);
 
-      // 2. Đồng bộ 0ms sang Cửa sổ Window Capture OBS qua BroadcastChannel
+      // 3. Đồng bộ 0ms sang Cửa sổ Window Capture OBS qua BroadcastChannel
       postMasterBroadcast({
         type: 'GLOBAL_MEDIA_CHANGE',
         mediaUrl: mediaUrl,
@@ -2495,12 +2522,17 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         isVideo: true,
         isPlaying: true,
         currentTime: 0,
-        force: true,
+        force: !isMediaPinned,
         source: 'sequencer',
+        overlayImage: overlayImage || null,
+        overlayImagePos: overlayImagePos || 'top-left',
+        overlayText: overlayText || null,
+        overlayTextPos: overlayTextPos || 'top',
+        overlayTextStyle: overlayTextStyle || 'banner',
         timestamp: Date.now()
       });
 
-      // 3. Đồng bộ 0ms sang Đường Link Online HTTPS (TikTok Live Studio /live-stream) qua Backend
+      // 4. Đồng bộ 0ms sang Đường Link Online HTTPS (TikTok Live Studio /live-stream) qua Backend
       syncMasterLiveState({
         stage: 'idol',
         mediaUrl: mediaUrl,
@@ -2508,10 +2540,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         isPlaying: true,
         aspectRatio: globalAspectRatio || '9:16',
         stepTitle: title,
-        actionType: actionType
+        actionType: actionType,
+        overlayImage: overlayImage || null,
+        overlayImagePos: overlayImagePos || 'top-left',
+        overlayText: overlayText || null,
+        overlayTextPos: overlayTextPos || 'top',
+        overlayTextStyle: overlayTextStyle || 'banner'
       }, socketRef.current);
 
-      // 4. Tự động ghim sản phẩm giỏ hàng lên màn hình nếu phân đoạn có chứa thông tin sản phẩm
+      // 5. Tự động ghim sản phẩm giỏ hàng lên màn hình nếu phân đoạn có chứa thông tin sản phẩm
       if (e.detail?.productName) {
         const productObj = {
           name: e.detail.productName,
@@ -2524,7 +2561,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         try { localStorage.setItem('avalive_current_pinned_product', JSON.stringify(productObj)); } catch (err) {}
       }
 
-      // 5. Phát Giọng Nói AI (Voice) đọc thuyết minh/tư vấn theo kịch bản của phân đoạn này
+      // 6. Phát Giọng Nói AI (Voice) đọc thuyết minh/tư vấn theo kịch bản của phân đoạn này
       if (scriptText && scriptText.trim() && audioPlayerRef.current) {
         audioPlayerRef.current.startScript(scriptText.trim());
       }
@@ -4414,6 +4451,54 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               }`}
             >
               {renderAiIdolLiveStage()}
+
+              {/* LỚP 2: OVERLAY HÌNH ẢNH / BANNER / POSTER TỪ SEQUENCER */}
+              {flowSequencerOverlay?.overlayImage && (
+                <div 
+                  className={`absolute z-30 pointer-events-none transition-all duration-300 animate-fadeIn ${
+                    flowSequencerOverlay.overlayImagePos === 'top-right' ? 'top-4 right-4 max-w-[140px] max-h-[140px]' :
+                    flowSequencerOverlay.overlayImagePos === 'center' ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 max-w-[240px] max-h-[240px]' :
+                    flowSequencerOverlay.overlayImagePos === 'bottom-left' ? 'bottom-20 left-4 max-w-[140px] max-h-[140px]' :
+                    flowSequencerOverlay.overlayImagePos === 'bottom-right' ? 'bottom-20 right-4 max-w-[140px] max-h-[140px]' :
+                    flowSequencerOverlay.overlayImagePos === 'top' ? 'top-4 inset-x-4 max-h-[120px]' :
+                    flowSequencerOverlay.overlayImagePos === 'bottom' ? 'bottom-20 inset-x-4 max-h-[120px]' :
+                    'top-4 left-4 max-w-[140px] max-h-[140px]'
+                  }`}
+                >
+                  <img 
+                    src={flowSequencerOverlay.overlayImage} 
+                    alt="Sequencer Overlay" 
+                    className="w-full h-full object-contain rounded-xl drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] border border-white/20"
+                  />
+                </div>
+              )}
+
+              {/* LỚP 3: OVERLAY TIÊU ĐỀ / CHỮ NỔI BẬT TỪ SEQUENCER */}
+              {flowSequencerOverlay?.overlayText && (
+                <div 
+                  className={`absolute z-35 pointer-events-none transition-all duration-300 animate-fadeIn px-2 ${
+                    flowSequencerOverlay.overlayTextPos === 'center' ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full max-w-[92%]' :
+                    flowSequencerOverlay.overlayTextPos === 'bottom' ? 'bottom-20 inset-x-3 w-auto' :
+                    'top-4 inset-x-3 w-auto'
+                  }`}
+                >
+                  <div 
+                    className={`py-2 px-3.5 rounded-2xl text-center text-xs sm:text-sm font-black tracking-wide uppercase transition-all ${
+                      flowSequencerOverlay.overlayTextStyle === 'neon_cyber' 
+                        ? 'bg-slate-950/90 border border-cyan-400 text-cyan-300 shadow-[0_0_25px_rgba(6,182,212,0.8)]' :
+                      flowSequencerOverlay.overlayTextStyle === 'gold_luxury' 
+                        ? 'bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500 text-slate-950 shadow-[0_0_25px_rgba(251,191,36,0.9)] border border-yellow-200' :
+                      flowSequencerOverlay.overlayTextStyle === 'gradient_rose' 
+                        ? 'bg-gradient-to-r from-rose-600 via-pink-500 to-rose-600 text-white shadow-[0_0_25px_rgba(244,63,94,0.8)] border border-pink-300/40' :
+                      flowSequencerOverlay.overlayTextStyle === 'minimal_dark' 
+                        ? 'bg-black/85 border border-white/20 text-white backdrop-blur-md shadow-2xl' :
+                        'bg-gradient-to-r from-red-600 via-amber-500 to-red-600 text-white shadow-[0_0_25px_rgba(239,68,68,0.85)] border border-amber-300/50'
+                    }`}
+                  >
+                    {flowSequencerOverlay.overlayText}
+                  </div>
+                </div>
+              )}
 
               {/* OVERLAY SẢN PHẨM ĐANG GHIM TỰ ĐỘNG BỞI AI TRÊN DESKTOP PREVIEW */}
               {livePinnedProduct && (

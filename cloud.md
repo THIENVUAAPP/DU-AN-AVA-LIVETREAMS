@@ -1,7 +1,7 @@
 # ☁️ QUY CHUẨN ĐỒNG BỘ DỮ LIỆU CLOUD & CHỐNG TRÙNG LẶP MEDIA (ZERO-OVERLAP STORAGE SPEC)
 
 > **DỰ ÁN:** AVA LIVESTREAM VIP PRO  
-> **PHIÊN BẢN:** v4.2.0  
+> **PHIÊN BẢN:** v4.2.1  
 > **MỤC TIÊU:** Tối ưu hóa hiệu năng, triệt tiêu hoàn toàn tình trạng trùng lặp file/video, tiết kiệm 100% dung lượng bộ nhớ máy tính, đảm bảo phát mượt 60 FPS trên Window Capture OBS và TikTok Live Studio trên mọi nền tảng trình duyệt (Chrome, Safari, Cốc Cốc, Edge).
 
 ---

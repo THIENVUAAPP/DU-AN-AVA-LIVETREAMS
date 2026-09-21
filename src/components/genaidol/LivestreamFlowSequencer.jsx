@@ -4,9 +4,11 @@ import {
   Save, Download, Upload, Sparkles, Clock, Video, Mic, MessageCircle, 
   ShoppingCart, Megaphone, Film, Layers, CheckCircle2, AlertCircle, 
   ChevronUp, ChevronDown, RotateCcw, Bot, Volume2, Users, ShieldCheck, 
-  Zap, Star, Tag, Eye, Info
+  Zap, Star, Tag, Eye, Info, FileText, Image as ImageIcon, Type, Pin, 
+  Maximize2, Sliders, Check, X
 } from 'lucide-react';
 import UniversalMediaPicker, { SAMPLE_IDOL_VIDEOS } from './UniversalMediaPicker';
+import { readUniversalFile } from '../../utils/universalDocumentParser';
 
 const toast = {
   success: (message) => {
@@ -50,18 +52,26 @@ export const DEFAULT_PRESETS = [
         mediaUrl: '/idols/phong_studio_ngoc_trinh_4k.mp4',
         lipsyncUrl: '/idols/phong_studio_ngoc_trinh_4k.mp4',
         voiceMode: 'avatar_lipsync',
-        commentHandling: 'ai_brain'
+        commentHandling: 'ai_brain',
+        overlayText: '🌸 CHÀO MỪNG ĐẾN VỚI PHIÊN LIVE LÀN DA CĂNG BÓNG',
+        overlayTextPos: 'top',
+        overlayTextStyle: 'banner',
+        isMediaPinned: true
       },
       {
         id: 's2',
         title: 'Bước 2: AI Tự Động Trả Lời Bình Luận & Tư Vấn Loại Da',
         actionType: 'tiktok_qa',
         durationSeconds: 120,
-        scriptText: '',
+        scriptText: 'Các chị em cứ thoải mái để lại comment loại da (da dầu, da khô, da nhạy cảm) để em tư vấn routine chuẩn y khoa nha!',
         mediaUrl: '/idols/phong_studio_ngoc_trinh_4k.mp4',
         lipsyncUrl: '/idols/phong_studio_ngoc_trinh_4k.mp4',
         voiceMode: 'avatar_lipsync',
-        commentHandling: 'ai_brain'
+        commentHandling: 'ai_brain',
+        overlayText: '💬 ĐỂ LẠI BÌNH LUẬN ĐỂ ĐƯỢC TƯ VẤN ROUTINE MIỄN PHÍ',
+        overlayTextPos: 'top',
+        overlayTextStyle: 'neon_cyber',
+        isMediaPinned: true
       },
       {
         id: 's3',
@@ -70,9 +80,14 @@ export const DEFAULT_PRESETS = [
         durationSeconds: 60,
         productName: 'Serum Tinh Chất Căng Bóng 30ml',
         productPrice: '299.000đ',
+        productDiscount: '599.000đ',
         mediaUrl: '/idols/phong_studio_mai_phuong_thuy_4k.mp4',
         voiceMode: 'background_voice',
-        commentHandling: 'ai_voice_only'
+        commentHandling: 'ai_voice_only',
+        overlayText: '🔥 SERUM PHỤC HỒI CHUYÊN SÂU - FLASH SALE 50%',
+        overlayTextPos: 'top',
+        overlayTextStyle: 'gold_luxury',
+        isMediaPinned: false
       },
       {
         id: 's4',
@@ -81,7 +96,11 @@ export const DEFAULT_PRESETS = [
         durationSeconds: 45,
         mediaUrl: '/idols/phong_studio_linh_ka_4k.mp4',
         voiceMode: 'background_voice',
-        commentHandling: 'ai_voice_only'
+        commentHandling: 'ai_voice_only',
+        overlayText: '⭐ 99% KHÁCH HÀNG HÀI LÒNG SAU 7 NGÀY SỬ DỤNG',
+        overlayTextPos: 'top',
+        overlayTextStyle: 'banner',
+        isMediaPinned: false
       },
       {
         id: 's5',
@@ -92,7 +111,11 @@ export const DEFAULT_PRESETS = [
         mediaUrl: '/idols/phong_studio_ngoc_trinh_4k.mp4',
         lipsyncUrl: '/idols/phong_studio_ngoc_trinh_4k.mp4',
         voiceMode: 'avatar_lipsync',
-        commentHandling: 'ai_brain'
+        commentHandling: 'ai_brain',
+        overlayText: '⚡ COMMENT "MUA" HOẶC "GIÁ" ĐỂ NHẬN ƯU ĐÃI NGAY',
+        overlayTextPos: 'top',
+        overlayTextStyle: 'neon_cyber',
+        isMediaPinned: true
       },
       {
         id: 's6',
@@ -103,7 +126,11 @@ export const DEFAULT_PRESETS = [
         mediaUrl: '/idols/phong_studio_ngoc_trinh_4k.mp4',
         lipsyncUrl: '/idols/phong_studio_ngoc_trinh_4k.mp4',
         voiceMode: 'avatar_lipsync',
-        commentHandling: 'ai_brain'
+        commentHandling: 'ai_brain',
+        overlayText: '⏰ CHỈ CÒN 10 SUẤT CUỐI CÙNG - BẤM GIỎ HÀNG SĂN NGAY!',
+        overlayTextPos: 'top',
+        overlayTextStyle: 'banner',
+        isMediaPinned: true
       }
     ]
   },
@@ -123,7 +150,11 @@ export const DEFAULT_PRESETS = [
         mediaUrl: '/idols/phong_studio_mai_phuong_thuy_4k.mp4',
         lipsyncUrl: '/idols/phong_studio_mai_phuong_thuy_4k.mp4',
         voiceMode: 'avatar_lipsync',
-        commentHandling: 'ai_brain'
+        commentHandling: 'ai_brain',
+        overlayText: '👗 BST VÁY ĐẦM THIẾT KẾ MỚI NHẤT 2026',
+        overlayTextPos: 'top',
+        overlayTextStyle: 'gradient_rose',
+        isMediaPinned: true
       },
       {
         id: 's2',
@@ -132,9 +163,14 @@ export const DEFAULT_PRESETS = [
         durationSeconds: 75,
         productName: 'Đầm Lụa Thiết Kế Sang Trọng',
         productPrice: '389.000đ',
+        productDiscount: '690.000đ',
         mediaUrl: '/idols/phong_studio_linh_ka_4k.mp4',
         voiceMode: 'background_voice',
-        commentHandling: 'ai_voice_only'
+        commentHandling: 'ai_voice_only',
+        overlayText: '✨ FORM DÁNG CHUẨN TÔN EO - TẶNG KÈM DÂY NỊT CAO CẤP',
+        overlayTextPos: 'top',
+        overlayTextStyle: 'gold_luxury',
+        isMediaPinned: false
       },
       {
         id: 's3',
@@ -145,7 +181,11 @@ export const DEFAULT_PRESETS = [
         mediaUrl: '/idols/phong_studio_mai_phuong_thuy_4k.mp4',
         lipsyncUrl: '/idols/phong_studio_mai_phuong_thuy_4k.mp4',
         voiceMode: 'avatar_lipsync',
-        commentHandling: 'ai_brain'
+        commentHandling: 'ai_brain',
+        overlayText: '📏 COMMENT CHIỀU CAO + CÂN NẶNG ĐỂ TƯ VẤN SIZE CHUẨN',
+        overlayTextPos: 'top',
+        overlayTextStyle: 'neon_cyber',
+        isMediaPinned: true
       },
       {
         id: 's4',
@@ -154,7 +194,11 @@ export const DEFAULT_PRESETS = [
         durationSeconds: 45,
         mediaUrl: '/idols/phong_studio_ngoc_trinh_4k.mp4',
         voiceMode: 'background_voice',
-        commentHandling: 'ai_voice_only'
+        commentHandling: 'ai_voice_only',
+        overlayText: '❤️ REVIEW KHÁCH YÊU NHẬN HÀNG THỰC TẾ SIÊU ĐẸP',
+        overlayTextPos: 'top',
+        overlayTextStyle: 'banner',
+        isMediaPinned: false
       },
       {
         id: 's5',
@@ -165,7 +209,11 @@ export const DEFAULT_PRESETS = [
         mediaUrl: '/idols/phong_studio_mai_phuong_thuy_4k.mp4',
         lipsyncUrl: '/idols/phong_studio_mai_phuong_thuy_4k.mp4',
         voiceMode: 'avatar_lipsync',
-        commentHandling: 'ai_brain'
+        commentHandling: 'ai_brain',
+        overlayText: '🎁 MIỄN PHÍ GIAO HÀNG TOÀN QUỐC CHO 20 ĐƠN ĐẦU TIÊN',
+        overlayTextPos: 'top',
+        overlayTextStyle: 'banner',
+        isMediaPinned: true
       }
     ]
   },
@@ -185,7 +233,11 @@ export const DEFAULT_PRESETS = [
         mediaUrl: '/idols/phong_studio_linh_ka_4k.mp4',
         lipsyncUrl: '/idols/phong_studio_linh_ka_4k.mp4',
         voiceMode: 'avatar_lipsync',
-        commentHandling: 'ai_brain'
+        commentHandling: 'ai_brain',
+        overlayText: '🍳 TIỆN ÍCH GIA ĐỤNG THÔNG MINH - CHÍNH HÃNG 100%',
+        overlayTextPos: 'top',
+        overlayTextStyle: 'banner',
+        isMediaPinned: true
       },
       {
         id: 's2',
@@ -194,9 +246,14 @@ export const DEFAULT_PRESETS = [
         durationSeconds: 90,
         productName: 'Máy Hút Bụi Cầm Tay Đa Năng Không Dây',
         productPrice: '450.000đ',
+        productDiscount: '890.000đ',
         mediaUrl: '/idols/phong_studio_ngoc_trinh_4k.mp4',
         voiceMode: 'background_voice',
-        commentHandling: 'ai_voice_only'
+        commentHandling: 'ai_voice_only',
+        overlayText: '💪 TEST LỰC HÚT SIÊU MẠNH - BẢO HÀNH 1 ĐỔI 1',
+        overlayTextPos: 'top',
+        overlayTextStyle: 'gold_luxury',
+        isMediaPinned: false
       },
       {
         id: 's3',
@@ -205,7 +262,11 @@ export const DEFAULT_PRESETS = [
         durationSeconds: 45,
         mediaUrl: '/idols/phong_studio_mai_phuong_thuy_4k.mp4',
         voiceMode: 'background_voice',
-        commentHandling: 'ai_voice_only'
+        commentHandling: 'ai_voice_only',
+        overlayText: '⭐ HƠN 10.000 HỘ GIA ĐÌNH ĐÃ TIN DÙNG',
+        overlayTextPos: 'top',
+        overlayTextStyle: 'banner',
+        isMediaPinned: false
       },
       {
         id: 's4',
@@ -216,7 +277,11 @@ export const DEFAULT_PRESETS = [
         mediaUrl: '/idols/phong_studio_linh_ka_4k.mp4',
         lipsyncUrl: '/idols/phong_studio_linh_ka_4k.mp4',
         voiceMode: 'avatar_lipsync',
-        commentHandling: 'ai_brain'
+        commentHandling: 'ai_brain',
+        overlayText: '🛡️ BẢO HÀNH CHÍNH HÃNG 12 THÁNG - LỖI 1 ĐỔI 1',
+        overlayTextPos: 'top',
+        overlayTextStyle: 'banner',
+        isMediaPinned: true
       }
     ]
   }
@@ -249,13 +314,15 @@ export default function LivestreamFlowSequencer() {
   const [isPlayingFlow, setIsPlayingFlow] = useState(false);
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
   const [secondsRemaining, setSecondsRemaining] = useState(0);
+  const [expandedStepId, setExpandedStepId] = useState(null);
   const [editingStep, setEditingStep] = useState(null);
   const [mediaPickerOpen, setMediaPickerOpen] = useState(false);
-  const [mediaPickerTarget, setMediaPickerTarget] = useState('mediaUrl'); // 'mediaUrl' or 'lipsyncUrl'
+  const [mediaPickerTarget, setMediaPickerTarget] = useState('mediaUrl'); // 'mediaUrl' or 'overlayImage'
   const [presetNameInput, setPresetNameInput] = useState('');
   const [showPresetModal, setShowPresetModal] = useState(false);
 
   const timerRef = useRef(null);
+  const fileInputRefMap = useRef({});
 
   // Lưu presets vào localStorage khi có thay đổi
   useEffect(() => {
@@ -270,22 +337,30 @@ export default function LivestreamFlowSequencer() {
     if (!step) return;
     const mediaToPlay = step.mediaUrl || step.lipsyncUrl || '/idols/phong_studio_ngoc_trinh_4k.mp4';
     
+    const payload = {
+      mediaUrl: mediaToPlay,
+      title: step.title,
+      actionType: step.actionType,
+      scriptText: step.scriptText || '',
+      durationSeconds: step.durationSeconds || 60,
+      stepIndex: index + 1,
+      totalSteps: activePreset?.steps?.length || 1,
+      presetName: activePreset?.name || 'Kịch bản Sequencer',
+      productName: step.productName || null,
+      productPrice: step.productPrice || null,
+      productDiscount: step.productDiscount || null,
+      productImg: step.productImg || null,
+      overlayImage: step.overlayImage || null,
+      overlayImagePos: step.overlayImagePos || 'top-left',
+      overlayText: step.overlayText || null,
+      overlayTextPos: step.overlayTextPos || 'top',
+      overlayTextStyle: step.overlayTextStyle || 'banner',
+      isMediaPinned: !!step.isMediaPinned
+    };
+
     // Phát event đồng bộ toàn cục cho Màn hình chính (DesktopAppUI), Window Capture và Audio Voice
     window.dispatchEvent(new CustomEvent('avalive:update_master_media', {
-      detail: {
-        mediaUrl: mediaToPlay,
-        title: step.title,
-        actionType: step.actionType,
-        scriptText: step.scriptText,
-        durationSeconds: step.durationSeconds || 60,
-        stepIndex: index + 1,
-        totalSteps: activePreset?.steps?.length || 1,
-        presetName: activePreset?.name || 'Kịch bản Sequencer',
-        productName: step.productName || null,
-        productPrice: step.productPrice || null,
-        productDiscount: step.productDiscount || null,
-        productImg: step.productImg || null
-      }
+      detail: payload
     }));
 
     // Gửi request đồng bộ tức thì tới backend server
@@ -301,6 +376,12 @@ export default function LivestreamFlowSequencer() {
         scriptText: step.scriptText,
         productName: step.productName || null,
         productPrice: step.productPrice || null,
+        overlayImage: step.overlayImage || null,
+        overlayImagePos: step.overlayImagePos || 'top-left',
+        overlayText: step.overlayText || null,
+        overlayTextPos: step.overlayTextPos || 'top',
+        overlayTextStyle: step.overlayTextStyle || 'banner',
+        isMediaPinned: !!step.isMediaPinned,
         fit: 'cover',
         sound: true,
         updatedAt: Date.now()
@@ -363,7 +444,7 @@ export default function LivestreamFlowSequencer() {
       if (secondsRemaining <= 0) {
         startStep(currentStepIndex);
       } else {
-        syncStepToServer(activePreset.steps[currentStepIndex]);
+        syncStepToServer(activePreset.steps[currentStepIndex], currentStepIndex);
       }
       toast.success('▶️ Đã bắt đầu chạy chuỗi kịch bản phân đoạn tự động!');
     } else {
@@ -403,7 +484,11 @@ export default function LivestreamFlowSequencer() {
           mediaUrl: '/idols/phong_studio_ngoc_trinh_4k.mp4',
           lipsyncUrl: '/idols/phong_studio_ngoc_trinh_4k.mp4',
           voiceMode: 'avatar_lipsync',
-          commentHandling: 'ai_brain'
+          commentHandling: 'ai_brain',
+          overlayText: '🎉 CHÀO MỪNG ĐẾN VỚI PHIÊN LIVE',
+          overlayTextPos: 'top',
+          overlayTextStyle: 'banner',
+          isMediaPinned: true
         }
       ]
     };
@@ -446,10 +531,15 @@ export default function LivestreamFlowSequencer() {
       mediaUrl: '/idols/phong_studio_ngoc_trinh_4k.mp4',
       lipsyncUrl: '/idols/phong_studio_ngoc_trinh_4k.mp4',
       voiceMode: 'avatar_lipsync',
-      commentHandling: 'ai_brain'
+      commentHandling: 'ai_brain',
+      overlayText: '',
+      overlayTextPos: 'top',
+      overlayTextStyle: 'banner',
+      isMediaPinned: false
     };
     const updated = { ...activePreset, steps: [...activePreset.steps, newStep] };
     setPresets(presets.map(p => p.id === activePreset.id ? updated : p));
+    setExpandedStepId(newStep.id);
     toast.success('Đã thêm phân đoạn mới vào kịch bản!');
   };
 
@@ -481,6 +571,27 @@ export default function LivestreamFlowSequencer() {
     setPresets(presets.map(p => p.id === activePreset.id ? updatedPreset : p));
   };
 
+  // Đọc file kịch bản đa định dạng (.txt, .docx, .pdf, .json, .xlsx, .csv, .md)
+  const handleScriptFileUpload = async (stepId, e) => {
+    const file = e.target?.files?.[0];
+    if (!file) return;
+    try {
+      toast.success(`Đang đọc file: ${file.name}...`);
+      const parsed = await readUniversalFile(file);
+      const content = Array.isArray(parsed) ? parsed.join('\n') : String(parsed || '');
+      if (content.trim()) {
+        handleUpdateStep(stepId, 'scriptText', content.trim());
+        toast.success(`✅ Đã nạp thành công ${content.trim().length} ký tự vào kịch bản bước!`);
+      } else {
+        toast.error('Không tìm thấy nội dung văn bản hợp lệ trong file!');
+      }
+    } catch (err) {
+      console.error('Lỗi nạp file kịch bản:', err);
+      toast.error('Không thể đọc file: ' + (err.message || ''));
+    }
+    e.target.value = '';
+  };
+
   const currentStep = activePreset.steps[currentStepIndex] || activePreset.steps[0];
   const totalDuration = activePreset.steps.reduce((sum, s) => sum + (Number(s.durationSeconds) || 0), 0);
 
@@ -501,7 +612,7 @@ export default function LivestreamFlowSequencer() {
               </span>
             </div>
             <p className="text-xs text-gray-300">
-              Lưu trữ nhiều phong cách bán hàng, tự động chuyển phân đoạn theo thời gian trên TikTok Live Studio & OBS
+              Lưu trữ kịch bản bán hàng đa lớp, tự động phát video nền, ảnh banner & tiêu đề theo thời gian trên TikTok Live Studio & OBS
             </p>
           </div>
         </div>
@@ -586,7 +697,7 @@ export default function LivestreamFlowSequencer() {
         <div className="flex items-center gap-4 text-xs">
           <div className="flex items-center gap-2 bg-white px-3.5 py-2 rounded-xl border border-gray-200 shadow-2xs">
             <span className="text-gray-500 font-bold">Đang ở:</span>
-            <span className="font-black text-blue-600">
+            <span className="font-black text-blue-600 truncate max-w-[200px]">
               Bước {currentStepIndex + 1}/{activePreset.steps.length}: {currentStep?.title}
             </span>
           </div>
@@ -620,40 +731,42 @@ export default function LivestreamFlowSequencer() {
       </div>
 
       {/* 3. DANH SÁCH CÁC BƯỚC PHÂN ĐOẠN TRONG KỊCH BẢN */}
-      <div className="flex-1 overflow-y-auto p-4 space-y-3">
+      <div className="flex-1 overflow-y-auto p-4 space-y-4">
         {activePreset.steps.map((step, idx) => {
           const actionConfig = ACTION_TYPES.find(a => a.id === step.actionType) || ACTION_TYPES[0];
           const ActionIcon = actionConfig.icon;
           const isCurrentExecuting = isPlayingFlow && currentStepIndex === idx;
+          const isExpanded = expandedStepId === step.id;
 
           return (
             <div 
               key={step.id}
-              className={`p-4 rounded-2xl border transition-all ${
+              className={`rounded-2xl border transition-all overflow-hidden ${
                 isCurrentExecuting 
                   ? 'bg-blue-50/80 border-blue-500 shadow-md ring-2 ring-blue-400/30' 
                   : 'bg-white border-gray-200 hover:border-gray-300 shadow-2xs'
               }`}
             >
-              <div className="flex flex-col lg:flex-row lg:items-center justify-between gap-3">
+              {/* Header của Bước */}
+              <div className="p-3.5 bg-gray-50/80 border-b border-gray-200/80 flex flex-col lg:flex-row lg:items-center justify-between gap-3">
                 
                 {/* Cột Trái: Thứ tự bước, Tiêu đề & Loại hành động */}
                 <div className="flex items-start gap-3 flex-1">
                   <div className={`w-8 h-8 rounded-xl font-black text-xs flex items-center justify-center shrink-0 ${
                     isCurrentExecuting 
                       ? 'bg-blue-600 text-white animate-bounce' 
-                      : 'bg-gray-100 text-gray-700'
+                      : 'bg-indigo-600 text-white shadow-xs'
                   }`}>
                     {idx + 1}
                   </div>
 
-                  <div className="space-y-1.5 flex-1">
+                  <div className="space-y-1 flex-1">
                     <div className="flex items-center gap-2 flex-wrap">
                       <input 
                         type="text"
                         value={step.title}
                         onChange={(e) => handleUpdateStep(step.id, 'title', e.target.value)}
-                        className="font-bold text-sm text-gray-900 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 focus:bg-white px-1.5 py-0.5 rounded outline-none transition-all w-full sm:w-auto"
+                        className="font-black text-sm text-gray-900 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-blue-500 focus:bg-white px-1.5 py-0.5 rounded outline-none transition-all w-full sm:w-auto"
                       />
                       <span className={`inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[11px] font-bold border ${actionConfig.bg} ${actionConfig.color}`}>
                         <ActionIcon size={12} />
@@ -661,25 +774,17 @@ export default function LivestreamFlowSequencer() {
                       </span>
                     </div>
 
-                    <p className="text-xs text-gray-500">
+                    <p className="text-[11px] text-gray-500">
                       {actionConfig.desc}
                     </p>
-
-                    {/* Kịch bản văn bản hoặc ghi chú */}
-                    {step.scriptText && (
-                      <div className="p-2.5 rounded-xl bg-gray-50 border border-gray-200 text-xs text-gray-700 italic flex items-start gap-2 mt-2">
-                        <span className="text-blue-500 font-bold shrink-0">Thoại:</span>
-                        <p className="line-clamp-2">{step.scriptText}</p>
-                      </div>
-                    )}
                   </div>
                 </div>
 
-                {/* Cột Phải: Cấu hình thời gian, Video, và Nút thao tác */}
-                <div className="flex items-center gap-3 shrink-0 self-end lg:self-center">
+                {/* Cột Phải: Cấu hình thời gian, Chọn Video, và Nút thao tác */}
+                <div className="flex items-center gap-2 shrink-0 self-end lg:self-center flex-wrap">
                   
                   {/* Cài đặt thời lượng (giây) */}
-                  <div className="flex items-center gap-1.5 bg-gray-50 px-2.5 py-1.5 rounded-xl border border-gray-200 text-xs">
+                  <div className="flex items-center gap-1.5 bg-white px-2.5 py-1.5 rounded-xl border border-gray-300 text-xs shadow-2xs">
                     <Clock size={13} className="text-gray-500" />
                     <input 
                       type="number"
@@ -687,7 +792,7 @@ export default function LivestreamFlowSequencer() {
                       max="3600"
                       value={step.durationSeconds}
                       onChange={(e) => handleUpdateStep(step.id, 'durationSeconds', Number(e.target.value))}
-                      className="w-12 text-center font-bold text-gray-800 bg-white border border-gray-300 rounded px-1 py-0.5 outline-none focus:border-blue-500"
+                      className="w-12 text-center font-bold text-gray-800 bg-gray-50 border border-gray-300 rounded px-1 py-0.5 outline-none focus:border-blue-500"
                     />
                     <span className="text-gray-500 font-medium">giây</span>
                   </div>
@@ -696,35 +801,49 @@ export default function LivestreamFlowSequencer() {
                   <select
                     value={step.actionType}
                     onChange={(e) => handleUpdateStep(step.id, 'actionType', e.target.value)}
-                    className="text-xs font-bold text-gray-700 bg-gray-50 hover:bg-gray-100 border border-gray-300 rounded-xl px-2.5 py-1.5 outline-none cursor-pointer"
+                    className="text-xs font-bold text-gray-700 bg-white hover:bg-gray-50 border border-gray-300 rounded-xl px-2.5 py-1.5 outline-none cursor-pointer shadow-2xs"
                   >
                     {ACTION_TYPES.map(a => (
                       <option key={a.id} value={a.id}>{a.label}</option>
                     ))}
                   </select>
 
-                  {/* Nút Chọn Video Cho Phân Đoạn */}
+                  {/* Nút Chọn Video Nền */}
                   <button
                     onClick={() => {
                       setEditingStep(step);
                       setMediaPickerTarget('mediaUrl');
                       setMediaPickerOpen(true);
                     }}
-                    className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer"
-                    title="Chọn Video cho bước này"
+                    className="px-2.5 py-1.5 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer shadow-2xs"
+                    title="Chọn Video Nền cho bước này"
                   >
                     <Video size={13} />
-                    <span className="truncate max-w-[80px]">
+                    <span className="truncate max-w-[85px]">
                       {step.mediaUrl ? 'Đổi Video' : 'Chọn Video'}
                     </span>
                   </button>
 
+                  {/* Nút Mở Rộng / Thu Gọn Cấu Hình Đa Lớp */}
+                  <button
+                    onClick={() => setExpandedStepId(isExpanded ? null : step.id)}
+                    className={`px-2.5 py-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-1 cursor-pointer border ${
+                      isExpanded 
+                        ? 'bg-indigo-600 text-white border-indigo-600 shadow-xs' 
+                        : 'bg-white hover:bg-gray-100 text-gray-700 border-gray-300'
+                    }`}
+                    title="Cấu hình kịch bản thoại & lớp hình ảnh, tiêu đề, sản phẩm"
+                  >
+                    <Sliders size={13} />
+                    <span>{isExpanded ? 'Thu Gọn' : 'Đa Lớp & Thoại'}</span>
+                  </button>
+
                   {/* Nút Di Chuyển Lên/Xuống */}
-                  <div className="flex flex-col gap-0.5">
+                  <div className="flex items-center gap-0.5 bg-white border border-gray-300 rounded-xl px-1">
                     <button
                       disabled={idx === 0}
                       onClick={() => handleMoveStep(idx, -1)}
-                      className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30 cursor-pointer"
+                      className="p-1 text-gray-500 hover:text-gray-900 disabled:opacity-30 cursor-pointer"
                       title="Chuyển lên trên"
                     >
                       <ChevronUp size={13} />
@@ -732,7 +851,7 @@ export default function LivestreamFlowSequencer() {
                     <button
                       disabled={idx === activePreset.steps.length - 1}
                       onClick={() => handleMoveStep(idx, 1)}
-                      className="p-1 text-gray-400 hover:text-gray-700 disabled:opacity-30 cursor-pointer"
+                      className="p-1 text-gray-500 hover:text-gray-900 disabled:opacity-30 cursor-pointer"
                       title="Chuyển xuống dưới"
                     >
                       <ChevronDown size={13} />
@@ -742,13 +861,213 @@ export default function LivestreamFlowSequencer() {
                   {/* Nút Xóa Bước */}
                   <button
                     onClick={() => handleDeleteStep(step.id)}
-                    className="p-1.5 text-gray-400 hover:text-rose-600 rounded-lg hover:bg-rose-50 transition-colors cursor-pointer"
+                    className="p-1.5 text-gray-400 hover:text-rose-600 rounded-xl hover:bg-rose-50 transition-colors cursor-pointer"
                     title="Xóa bước này"
                   >
                     <Trash2 size={14} />
                   </button>
-
                 </div>
+              </div>
+
+              {/* Phần Thân Bước: Kịch Bản Thoại Rộng Rãi & Nạp File Kịch Bản (Luôn hiển thị) */}
+              <div className="p-4 space-y-3 bg-white">
+                
+                {/* 1. KHU VỰC KỊCH BẢN THOẠI RỘNG RÃI & TẢI FILE UNIVERSAL */}
+                <div className="space-y-1.5">
+                  <div className="flex items-center justify-between">
+                    <label className="text-xs font-black text-gray-800 flex items-center gap-1.5">
+                      <FileText size={14} className="text-indigo-600" />
+                      <span>Kịch Bản Thoại Cho Bước Này (Voice AI & Lip-sync Đọc Tự Động):</span>
+                    </label>
+
+                    {/* NÚT TẢI FILE KỊCH BẢN ĐA ĐỊNH DẠNG */}
+                    <div className="flex items-center gap-2">
+                      <input 
+                        type="file"
+                        ref={el => fileInputRefMap.current[step.id] = el}
+                        accept=".txt,.docx,.doc,.pdf,.json,.xlsx,.csv,.md"
+                        className="hidden"
+                        onChange={(e) => handleScriptFileUpload(step.id, e)}
+                      />
+                      <button
+                        onClick={() => fileInputRefMap.current[step.id]?.click()}
+                        className="px-2.5 py-1 bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 rounded-lg text-xs font-bold transition-all flex items-center gap-1.5 cursor-pointer shadow-2xs"
+                        title="Tải tệp Word (.docx), PDF (.pdf), Text (.txt), JSON, Excel để nạp kịch bản vào bước này"
+                      >
+                        <Upload size={12} />
+                        <span>Tải File Kịch Bản (.docx, .pdf, .txt, .json)</span>
+                      </button>
+                    </div>
+                  </div>
+
+                  {/* TEXTAREA THOẠI SIÊU RỘNG RÃI & DỄ ĐỌC */}
+                  <textarea
+                    rows={3}
+                    value={step.scriptText || ''}
+                    onChange={(e) => handleUpdateStep(step.id, 'scriptText', e.target.value)}
+                    placeholder="Nhập hoặc tải file nội dung kịch bản cho bước này (AI sẽ tự động đọc diễn cảm và trả lời khán giả)..."
+                    className="w-full px-3.5 py-2.5 text-xs sm:text-sm font-medium text-gray-800 bg-slate-50/70 border border-gray-300 rounded-xl outline-none focus:border-indigo-500 focus:bg-white transition-all resize-y leading-relaxed shadow-inner"
+                  />
+                </div>
+
+                {/* 2. KHU VỰC CẤU HÌNH XẾP CHỒNG ĐA LỚP TRÊN SÂN KHẤU (HIỂN THỊ CHI TIẾT KHI MỞ RỘNG) */}
+                {isExpanded && (
+                  <div className="mt-3 pt-3 border-t border-gray-200 space-y-3 bg-indigo-50/30 -mx-4 -mb-4 p-4 rounded-b-2xl animate-fadeIn">
+                    <h4 className="text-xs font-black text-indigo-950 flex items-center gap-1.5">
+                      <Layers size={14} className="text-indigo-600" />
+                      <span>Cấu Hình Xếp Chồng Đa Lớp Trên Sân Khấu (Live Stage Overlay 9:16)</span>
+                    </h4>
+
+                    <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
+                      
+                      {/* LỚP 1: VIDEO NỀN & TÙY CHỌN GHIM PHÁT LIÊN TỤC */}
+                      <div className="p-3 bg-white rounded-xl border border-indigo-100 shadow-2xs space-y-2">
+                        <span className="text-[11px] font-black text-gray-700 flex items-center gap-1">
+                          <Video size={13} className="text-blue-500" /> Lớp 1: Video / Media Nền
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <button
+                            onClick={() => {
+                              setEditingStep(step);
+                              setMediaPickerTarget('mediaUrl');
+                              setMediaPickerOpen(true);
+                            }}
+                            className="flex-1 py-1.5 px-2 bg-gray-50 hover:bg-gray-100 border border-gray-300 rounded-lg text-xs font-bold text-gray-700 truncate text-left"
+                          >
+                            {step.mediaUrl ? '📹 ' + step.mediaUrl.split('/').pop() : 'Chọn Video...'}
+                          </button>
+                        </div>
+                        <label className="flex items-center gap-2 cursor-pointer pt-1">
+                          <input 
+                            type="checkbox"
+                            checked={!!step.isMediaPinned}
+                            onChange={(e) => handleUpdateStep(step.id, 'isMediaPinned', e.target.checked)}
+                            className="w-4 h-4 text-indigo-600 rounded border-gray-300 focus:ring-indigo-500 cursor-pointer"
+                          />
+                          <span className="text-[11px] font-bold text-gray-700 flex items-center gap-1">
+                            <Pin size={11} className="text-amber-500" /> Ghim video phát liên tục (Không reset)
+                          </span>
+                        </label>
+                      </div>
+
+                      {/* LỚP 2: HÌNH ẢNH / BANNER / POSTER XẾP CHỒNG */}
+                      <div className="p-3 bg-white rounded-xl border border-indigo-100 shadow-2xs space-y-2">
+                        <span className="text-[11px] font-black text-gray-700 flex items-center gap-1">
+                          <ImageIcon size={13} className="text-emerald-500" /> Lớp 2: Hình Ảnh / Poster / Deal
+                        </span>
+                        <div className="flex items-center gap-2">
+                          <input 
+                            type="text"
+                            placeholder="Nhập URL ảnh hoặc chọn..."
+                            value={step.overlayImage || ''}
+                            onChange={(e) => handleUpdateStep(step.id, 'overlayImage', e.target.value)}
+                            className="flex-1 px-2 py-1 bg-gray-50 border border-gray-300 rounded-lg text-xs font-medium outline-none focus:border-indigo-500"
+                          />
+                          {step.overlayImage && (
+                            <button
+                              onClick={() => handleUpdateStep(step.id, 'overlayImage', '')}
+                              className="p-1 text-gray-400 hover:text-rose-600"
+                              title="Xóa ảnh"
+                            >
+                              <X size={13} />
+                            </button>
+                          )}
+                        </div>
+                        <div className="flex items-center gap-1 text-[10px]">
+                          <span className="text-gray-500 font-bold">Vị trí ảnh:</span>
+                          <select
+                            value={step.overlayImagePos || 'top-left'}
+                            onChange={(e) => handleUpdateStep(step.id, 'overlayImagePos', e.target.value)}
+                            className="flex-1 bg-gray-50 border border-gray-300 rounded px-1.5 py-0.5 font-bold text-gray-700 outline-none cursor-pointer"
+                          >
+                            <option value="top-left">Góc Trên Trái</option>
+                            <option value="top-right">Góc Trên Phải</option>
+                            <option value="center">Chính Giữa</option>
+                            <option value="bottom-left">Góc Dưới Trái</option>
+                            <option value="bottom-right">Góc Dưới Phải</option>
+                            <option value="top">Toàn Chiều Ngang Trên</option>
+                            <option value="bottom">Toàn Chiều Ngang Dưới</option>
+                          </select>
+                        </div>
+                      </div>
+
+                      {/* LỚP 3: TIÊU ĐỀ / CHỮ NỔI BẬT (HEADLINE BANNER) */}
+                      <div className="p-3 bg-white rounded-xl border border-indigo-100 shadow-2xs space-y-2">
+                        <span className="text-[11px] font-black text-gray-700 flex items-center gap-1">
+                          <Type size={13} className="text-rose-500" /> Lớp 3: Tiêu Đề / Chữ Nổi Bật
+                        </span>
+                        <input 
+                          type="text"
+                          placeholder="Ví dụ: 🔥 FLASH SALE 50% - DUY NHẤT HÔM NAY..."
+                          value={step.overlayText || ''}
+                          onChange={(e) => handleUpdateStep(step.id, 'overlayText', e.target.value)}
+                          className="w-full px-2 py-1 bg-gray-50 border border-gray-300 rounded-lg text-xs font-bold outline-none focus:border-indigo-500"
+                        />
+                        <div className="grid grid-cols-2 gap-1 text-[10px]">
+                          <div>
+                            <span className="text-gray-500 font-bold">Vị trí chữ:</span>
+                            <select
+                              value={step.overlayTextPos || 'top'}
+                              onChange={(e) => handleUpdateStep(step.id, 'overlayTextPos', e.target.value)}
+                              className="w-full bg-gray-50 border border-gray-300 rounded px-1 py-0.5 font-bold text-gray-700 outline-none cursor-pointer mt-0.5"
+                            >
+                              <option value="top">Đầu Sân Khấu (Top)</option>
+                              <option value="center">Chính Giữa (Center)</option>
+                              <option value="bottom">Đáy Sân Khấu (Bottom)</option>
+                            </select>
+                          </div>
+                          <div>
+                            <span className="text-gray-500 font-bold">Phong cách:</span>
+                            <select
+                              value={step.overlayTextStyle || 'banner'}
+                              onChange={(e) => handleUpdateStep(step.id, 'overlayTextStyle', e.target.value)}
+                              className="w-full bg-gray-50 border border-gray-300 rounded px-1 py-0.5 font-bold text-gray-700 outline-none cursor-pointer mt-0.5"
+                            >
+                              <option value="banner">🔥 Vàng Đỏ Neon</option>
+                              <option value="neon_cyber">⚡ Cyber Cyan</option>
+                              <option value="gold_luxury">👑 Hoàng Gia Gold</option>
+                              <option value="gradient_rose">🌸 Hồng Pastel</option>
+                              <option value="minimal_dark">🖤 Kính Tối Dark Glass</option>
+                            </select>
+                          </div>
+                        </div>
+                      </div>
+
+                    </div>
+
+                    {/* LỚP 4: THÔNG TIN SẢN PHẨM GHIM DEAL TRÊN LIVE */}
+                    <div className="p-3 bg-white rounded-xl border border-indigo-100 shadow-2xs">
+                      <span className="text-[11px] font-black text-gray-700 flex items-center gap-1 mb-2">
+                        <ShoppingCart size={13} className="text-indigo-600" /> Lớp 4: Ghim Sản Phẩm / Deal Giỏ Hàng Trực Tiếp
+                      </span>
+                      <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                        <input 
+                          type="text"
+                          placeholder="Tên sản phẩm (VD: Serum Căng Bóng 30ml)..."
+                          value={step.productName || ''}
+                          onChange={(e) => handleUpdateStep(step.id, 'productName', e.target.value)}
+                          className="px-2 py-1 bg-gray-50 border border-gray-300 rounded-lg text-xs font-medium outline-none focus:border-indigo-500"
+                        />
+                        <input 
+                          type="text"
+                          placeholder="Giá bán live (VD: 299.000đ)..."
+                          value={step.productPrice || ''}
+                          onChange={(e) => handleUpdateStep(step.id, 'productPrice', e.target.value)}
+                          className="px-2 py-1 bg-gray-50 border border-gray-300 rounded-lg text-xs font-bold text-rose-600 outline-none focus:border-indigo-500"
+                        />
+                        <input 
+                          type="text"
+                          placeholder="Giá gốc gạch ngang (VD: 599.000đ)..."
+                          value={step.productDiscount || ''}
+                          onChange={(e) => handleUpdateStep(step.id, 'productDiscount', e.target.value)}
+                          className="px-2 py-1 bg-gray-50 border border-gray-300 rounded-lg text-xs text-gray-500 line-through outline-none focus:border-indigo-500"
+                        />
+                      </div>
+                    </div>
+
+                  </div>
+                )}
+
               </div>
             </div>
           );
@@ -776,7 +1095,7 @@ export default function LivestreamFlowSequencer() {
             <div className="flex justify-end gap-2 pt-2">
               <button
                 onClick={() => setShowPresetModal(false)}
-                className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl"
+                className="px-4 py-2 text-xs font-bold text-gray-600 hover:bg-gray-100 rounded-xl cursor-pointer"
               >
                 Hủy
               </button>
@@ -799,7 +1118,7 @@ export default function LivestreamFlowSequencer() {
           onSelectMedia={(url) => {
             handleUpdateStep(editingStep.id, mediaPickerTarget, url);
             setMediaPickerOpen(false);
-            toast.success('Đã cập nhật video cho phân đoạn!');
+            toast.success('Đã cập nhật media cho phân đoạn!');
           }}
         />
       )}
