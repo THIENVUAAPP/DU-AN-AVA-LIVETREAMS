@@ -9,7 +9,7 @@
   "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1789998767785,
+  "updatedAt": 1789999465903,
   "flvUrl": null,
   "isConnected": false,
   "type": "MASTER_LIVE_STATE_UPDATE",
@@ -36,13 +36,13 @@
     "pinnedAt": 1789969095664,
     "triggerSource": "🎬 Nhắc từ khóa: \"nhân vật\""
   },
-  "currentMedia": "/idols/phong_studio_ngoc_trinh_4k.mp4",
+  "currentMedia": "https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4",
   "activeTab": "flow_sequencer",
   "stepTitle": "Bước 1: Avatar AI Chào Khán Giả & Mở Đầu Live",
   "actionType": "avatar_talk",
   "fit": "cover",
   "sound": true,
-  "scriptText": "Chào mừng tất cả các tình yêu đã có mặt trong phiên livestream làm đẹp đặc biệt ngày hôm nay của shop em nha!\nCác chị đẹp ơi, ai đang lướt qua phiên live thì cho em xin một nút thả tim và một lượt chia sẻ để nhận quà mở bát đầu live nào!\nHôm nay shop em mang đến cho cả nhà một siêu phẩm chăm sóc sắc đẹp và nâng tầm khí chất cực kỳ đỉnh cao luôn ạ!\nĐó chính là Bộ Đôi Tinh Chất Serum Tế Bào Gốc Phục Hồi Da Trẻ Hóa và Nước Hoa Pháp Cao Cấp lưu hương suốt 12 giờ đồng hồ!\nChị nào mà da đang bị khô ráp, thâm sạm, không đều màu hoặc bắt đầu xuất hiện nếp nhăn lão hóa thì nhất định không được bỏ qua live này nhé!\nChỉ sau đúng 7 ngày sử dụng, làn da của các chị sẽ căng bóng, mịn màng và mướt như da em bé luôn ạ!\nDuy nhất trong phiên livestream ngày hôm nay, giảm sốc 50% chỉ còn 890.000đ tặng kèm kem dưỡng ẩm mini và freeship toàn quốc!\nBên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày, bấm vào Giỏ Hàng góc trái săn ngay nhé!",
+  "scriptText": "Dạ em xin chào tất cả mọi người đã vào xem phiên livestream hôm nay nha! Các bạn bấm thả tim và bình luận để nhận ưu đãi đặc biệt nhé!",
   "productName": null,
   "productPrice": null,
   "overlayImage": null,
@@ -59,14 +59,14 @@
   "overlayTextFontSize": 20,
   "overlayTextColor": "#ffffff",
   "avatarSpeaker": "avatar_1",
-  "voiceId": "free_vi_male",
+  "voiceId": "brain_auto",
   "secondaryMediaTransform": null,
   "overlayImageTransform": null,
   "overlayTextTransform": {
-    "x": 4,
-    "y": 8,
+    "x": 7,
+    "y": 18,
     "width": 90,
     "height": 12,
-    "zIndex": 60
+    "zIndex": 30
   }
 }

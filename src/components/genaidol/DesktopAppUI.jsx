@@ -2548,10 +2548,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         mainMediaTransform, mainMediaChromaKey, avatarTransforms,
         isMediaPinned 
       } = e.detail || {};
-      if (!mediaUrl) return;
+      const effectiveMediaUrl = mediaUrl || userLockedMediaUrl || CHARACTERS.default_idol.url;
+      setIsMasterStageSynced(true);
+      try { localStorage.setItem('avalive_master_sync_active', 'true'); } catch (e) {}
 
-      setUserLockedMediaUrl(mediaUrl);
-      try { localStorage.setItem('avalive_user_locked_media', mediaUrl); } catch (err) {}
+      setUserLockedMediaUrl(effectiveMediaUrl);
+      try { localStorage.setItem('avalive_user_locked_media', effectiveMediaUrl); } catch (err) {}
 
       // 1. Cập nhật trạng thái Overlays Đa Lớp (Ảnh, Chữ, Video Phụ PiP, Ghim)
       const overlayData = {
