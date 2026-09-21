@@ -1513,11 +1513,11 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
       </div>
 
       {/* 2. Nội dung Chi tiết Cài đặt Sự Kiện (Bên phải) */}
-      <div className="flex-1 flex flex-col h-full overflow-hidden p-4">
+      <div className={`flex-1 flex flex-col h-full overflow-hidden ${(selectedEventId === 'flow_sequencer' || selectedEventId === 'multi_avatar_studio') ? 'p-0' : 'p-4'}`}>
         
         {/* Header Sự Kiện Hiện Tại */}
         {/* Header - Ẩn khi ở tab flow_sequencer để nhường trọn vẹn không gian cho Sequencer Toolbar */}
-        {selectedEventId !== 'flow_sequencer' && (
+        {selectedEventId !== 'flow_sequencer' && selectedEventId !== 'multi_avatar_studio' && (
           <div className="bg-white p-3.5 rounded-2xl border border-gray-200 shadow-xs mb-3 flex items-center justify-between">
             <div className="flex items-center gap-3">
               <div className="p-2 bg-blue-50 text-blue-600 rounded-xl">
@@ -1536,14 +1536,14 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
         )}
 
         {/* Scroll Body */}
-        <div className="flex-1 overflow-y-auto pr-1">
+        <div className={`flex-1 min-h-0 ${(selectedEventId === 'flow_sequencer' || selectedEventId === 'multi_avatar_studio') ? 'h-full overflow-hidden flex flex-col' : 'overflow-y-auto pr-1'}`}>
 
           {/* ========================================================================= */}
           {/* ========================================================================= */}
           {/* 0. STUDIO 1–4 AVATAR & CHUỖI KỊCH BẢN PHÂN ĐOẠN LIVE TỰ ĐỘNG */}
           {/* ========================================================================= */}
           {(selectedEventId === 'flow_sequencer' || selectedEventId === 'multi_avatar_studio') ? (
-            <div className="h-full flex flex-col">
+            <div className="h-full w-full flex flex-col min-h-0 overflow-hidden">
               <LivestreamFlowSequencer />
             </div>
           ) : selectedEventId === 'special_gift' ? (

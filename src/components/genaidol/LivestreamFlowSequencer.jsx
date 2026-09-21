@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { 
   Play, Square, SkipForward, SkipBack, Plus, Trash2, Edit3, Copy, 
   Save, Download, Upload, Sparkles, Clock, Video, Mic, MessageCircle, 
@@ -6,7 +6,8 @@ import {
   ChevronUp, ChevronDown, RotateCcw, Bot, Volume2, Users, ShieldCheck, 
   Zap, Star, Tag, Eye, Info, FileText, Image as ImageIcon, Type, Pin, 
   Maximize2, Sliders, Check, X, Palette, Move, Monitor, Wand2,
-  FolderOpen, Scaling, UserCheck, RefreshCw, Smartphone, ArrowUpToLine, ArrowDownToLine
+  FolderOpen, Scaling, UserCheck, RefreshCw, Smartphone, ArrowUpToLine, 
+  ArrowDownToLine, Lock, Unlock, EyeOff, LayoutGrid, Radio
 } from 'lucide-react';
 import UniversalMediaPicker, { SAMPLE_IDOL_VIDEOS } from './UniversalMediaPicker';
 import { readUniversalFile } from '../../utils/universalDocumentParser';
@@ -385,6 +386,7 @@ export default function LivestreamFlowSequencer() {
   const [mediaPickerAvatarId, setMediaPickerAvatarId] = useState(null);
   const [presetNameInput, setPresetNameInput] = useState('');
   const [showPresetModal, setShowPresetModal] = useState(false);
+  const [isSpeakingPreview, setIsSpeakingPreview] = useState(false);
 
   // 📡 State Đồng Bộ Ra Sân Khấu Chính Phần Mềm & OBS
   const [isMasterSynced, setIsMasterSynced] = useState(false);
@@ -398,12 +400,12 @@ export default function LivestreamFlowSequencer() {
     }
   });
 
-  // State đối tượng Avatar đang được chọn trên Sân khấu để kéo thả / co giãn
-  const [selectedAvatarId, setSelectedAvatarId] = useState('avatar_1');
-  const [isDraggingAvatar, setIsDraggingAvatar] = useState(false);
-  const [dragStartPos, setDragStartPos] = useState({ x: 0, y: 0 });
-  const [dragStartTransform, setDragStartTransform] = useState({ x: 0, y: 0, width: 45, height: 75 });
-  const stageRef = useRef(null);
+  // 🎯 State Layer Tương Tác Kéo Thả & Co Giãn 8 Điểm Trên Sân Khấu
+  // selectedLayer: { type: 'avatar' | 'pip' | 'banner' | 'text', id?: string }
+  const [selectedLayer, setSelectedLayer] = useState({ type: 'avatar', id: 'avatar_1' });
+  const [dragState, setDragState] = useState(null); // { handle: string | null, startX, startY, initialTransform }
+
+  const stageInnerRef = useRef(null);
   const timerRef = useRef(null);
 
   // Lắng nghe thay đổi cấu hình avatar từ hệ thống
@@ -479,17 +481,21 @@ export default function LivestreamFlowSequencer() {
       secondaryMediaUrl: step.secondaryMediaUrl || null,
       secondaryMediaPos: step.secondaryMediaPos || 'top-right',
       secondaryMediaScale: step.secondaryMediaScale || 40,
+      secondaryMediaTransform: step.secondaryMediaTransform || null,
       secondaryMediaMuted: step.secondaryMediaMuted !== false,
       overlayImage: step.overlayImage || null,
       overlayImagePos: step.overlayImagePos || 'top-left',
       overlayImageScale: step.overlayImageScale || 100,
+      overlayImageTransform: step.overlayImageTransform || null,
       overlayText: step.overlayText || null,
       overlayTextPos: step.overlayTextPos || 'top',
       overlayTextStyle: step.overlayTextStyle || 'banner',
       overlayTextFontFamily: step.overlayTextFontFamily || 'be_vietnam',
       overlayTextFontSize: step.overlayTextFontSize || 20,
       overlayTextColor: step.overlayTextColor || '#ffffff',
+      overlayTextTransform: step.overlayTextTransform || null,
       avatarSpeaker: step.avatarSpeaker || 'avatar_1',
+      avatarTransforms: step.avatarTransforms || null,
       isMediaPinned: !!step.isMediaPinned,
       isPlaying: isLivePlaying
     };
@@ -644,16 +650,20 @@ export default function LivestreamFlowSequencer() {
         secondaryMediaUrl: step.secondaryMediaUrl || null,
         secondaryMediaPos: step.secondaryMediaPos || 'top-right',
         secondaryMediaScale: step.secondaryMediaScale || 40,
+        secondaryMediaTransform: step.secondaryMediaTransform || null,
         overlayImage: step.overlayImage || null,
         overlayImagePos: step.overlayImagePos || 'top-left',
         overlayImageScale: step.overlayImageScale || 100,
+        overlayImageTransform: step.overlayImageTransform || null,
         overlayText: step.overlayText || null,
         overlayTextPos: step.overlayTextPos || 'top',
         overlayTextStyle: step.overlayTextStyle || 'banner',
         overlayTextFontFamily: step.overlayTextFontFamily || 'be_vietnam',
         overlayTextFontSize: step.overlayTextFontSize || 20,
         overlayTextColor: step.overlayTextColor || '#ffffff',
+        overlayTextTransform: step.overlayTextTransform || null,
         avatarSpeaker: step.avatarSpeaker || 'avatar_1',
+        avatarTransforms: step.avatarTransforms || null,
         isMediaPinned: !!step.isMediaPinned,
         isPlaying: true
       };
@@ -714,21 +724,83 @@ export default function LivestreamFlowSequencer() {
     toast.success(`👥 Đã chuyển sang chế độ ${count} Avatar AI`);
   };
 
+  // Cập nhật thông tin bước
+  const handleUpdateStep = (stepId, field, value) => {
+    setPresets(prev => prev.map(p => {
+      if (p.id !== activePresetId) return p;
+      return {
+        ...p,
+        steps: p.steps.map(s => {
+          if (s.id !== stepId) return s;
+          return { ...s, [field]: value };
+        })
+      };
+    }));
+  };
+
+  // Cập nhật tọa độ transform riêng của một layer trong bước hiện tại (Persistence per step)
+  const handleUpdateStepTransform = (stepId, layerType, transformData, avatarId = null) => {
+    setPresets(prev => prev.map(p => {
+      if (p.id !== activePresetId) return p;
+      return {
+        ...p,
+        steps: p.steps.map(s => {
+          if (s.id !== stepId) return s;
+          if (layerType === 'avatar' && avatarId) {
+            return {
+              ...s,
+              avatarTransforms: {
+                ...(s.avatarTransforms || {}),
+                [avatarId]: transformData
+              }
+            };
+          } else if (layerType === 'pip') {
+            return { ...s, secondaryMediaTransform: transformData };
+          } else if (layerType === 'banner') {
+            return { ...s, overlayImageTransform: transformData };
+          } else if (layerType === 'text') {
+            return { ...s, overlayTextTransform: transformData };
+          }
+          return s;
+        })
+      };
+    }));
+  };
+
+  // Áp dụng vị trí các lớp hiện tại cho toàn bộ các bước trong kịch bản
+  const handleApplyLayoutToAllSteps = () => {
+    const currentStepObj = activePreset.steps[currentStepIndex];
+    if (!currentStepObj) return;
+
+    setPresets(prev => prev.map(p => {
+      if (p.id !== activePresetId) return p;
+      return {
+        ...p,
+        steps: p.steps.map(s => ({
+          ...s,
+          avatarTransforms: currentStepObj.avatarTransforms ? JSON.parse(JSON.stringify(currentStepObj.avatarTransforms)) : s.avatarTransforms,
+          secondaryMediaTransform: currentStepObj.secondaryMediaTransform ? { ...currentStepObj.secondaryMediaTransform } : s.secondaryMediaTransform,
+          overlayImageTransform: currentStepObj.overlayImageTransform ? { ...currentStepObj.overlayImageTransform } : s.overlayImageTransform,
+          overlayTextTransform: currentStepObj.overlayTextTransform ? { ...currentStepObj.overlayTextTransform } : s.overlayTextTransform
+        }))
+      };
+    }));
+    toast.success('🔒 Đã lưu & cố định vị trí các lớp cho TOÀN BỘ các bước!');
+  };
+
   // 🔲 Áp dụng bố cục nhanh cho sân khấu (Solo, Bán hàng, Tọa đàm, PK, Chia khung)
   const handleApplyPresetLayout = (layoutKey) => {
     const preset = STUDIO_STAGE_PRESETS[layoutKey];
     if (!preset || !preset.transforms) return;
-    const safeAvatarsList = multiAvatarConfig.avatars || [];
-    const updated = {
-      ...multiAvatarConfig,
-      layoutMode: layoutKey,
-      avatars: safeAvatarsList.map(av => {
-        const trans = preset.transforms[av.id];
-        return trans ? { ...av, transform: { ...(av.transform || {}), ...trans } } : av;
-      })
-    };
-    setMultiAvatarConfig(updated);
-    saveMultiAvatarConfig(updated);
+    const currentStepObj = activePreset.steps[currentStepIndex];
+    if (!currentStepObj) return;
+
+    const newTransforms = {};
+    Object.keys(preset.transforms).forEach(avKey => {
+      newTransforms[avKey] = { ...preset.transforms[avKey], zIndex: 10 };
+    });
+
+    handleUpdateStep(currentStepObj.id, 'avatarTransforms', newTransforms);
     toast.success(`📐 Đã áp dụng bố cục: ${preset.name || layoutKey}`);
   };
 
@@ -784,7 +856,6 @@ export default function LivestreamFlowSequencer() {
           actionType: idx === 0 ? 'avatar_talk' : idx === lines.length - 1 ? 'cta_sale' : 'avatar_talk',
           avatarSpeaker: speaker,
           durationSeconds: 45,
-          scriptText: cleanText,
           mediaUrl: '/idols/phong_studio_ngoc_trinh_4k.mp4',
           overlayText: `✨ BƯỚC ${idx + 1} - ${speaker.toUpperCase()}`,
           overlayTextStyle: idx % 2 === 0 ? 'banner' : 'neon_cyber'
@@ -807,20 +878,6 @@ export default function LivestreamFlowSequencer() {
       setSecondsRemaining(generatedSteps[0]?.durationSeconds || 60);
       toast.success(`⚡ Đã tự động chia kịch bản thành ${generatedSteps.length} bước cho ${template.count} nhân vật!`);
     }
-  };
-
-  // Cập nhật thông tin bước
-  const handleUpdateStep = (stepId, field, value) => {
-    setPresets(prev => prev.map(p => {
-      if (p.id !== activePresetId) return p;
-      return {
-        ...p,
-        steps: p.steps.map(s => {
-          if (s.id !== stepId) return s;
-          return { ...s, [field]: value };
-        })
-      };
-    }));
   };
 
   // Thêm một bước mới vào kịch bản
@@ -887,7 +944,27 @@ export default function LivestreamFlowSequencer() {
     toast.success('📋 Đã nhân bản bước!');
   };
 
-  // Nạp file kịch bản (.txt, .docx, .pdf, .json, .xlsx)
+  // 📂 TẢI MEDIA TRỰC TIẾP TỪ MÁY TÍNH (VIDEO / ẢNH) -> HIỂN THỊ NGAY TRÊN SÂN KHẤU 9:16
+  const handleDirectMediaUpload = (stepId, targetField, e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const objectUrl = URL.createObjectURL(file);
+      handleUpdateStep(stepId, targetField, objectUrl);
+      toast.success(`🎬 Đã nạp trực tiếp "${file.name}" lên Sân Khấu 9:16!`);
+    } catch (err) {
+      const reader = new FileReader();
+      reader.onload = (uploadEvent) => {
+        handleUpdateStep(stepId, targetField, uploadEvent.target?.result);
+        toast.success(`🎬 Đã nạp trực tiếp "${file.name}" lên Sân Khấu 9:16!`);
+      };
+      reader.readAsDataURL(file);
+    }
+    e.target.value = '';
+  };
+
+  // 📄 Nạp file kịch bản đa định dạng (.md, .txt, .docx, .pdf, .json, .xlsx)
   const handleFileUpload = async (stepId, e) => {
     const file = e.target.files?.[0];
     if (!file) return;
@@ -895,7 +972,7 @@ export default function LivestreamFlowSequencer() {
       const result = await readUniversalFile(file);
       if (result && result.text) {
         handleUpdateStep(stepId, 'scriptText', result.text);
-        toast.success(`📄 Đã nạp thành công ${file.name}!`);
+        toast.success(`📄 Đã nạp thành công kịch bản từ ${file.name}!`);
       } else {
         toast.error('Không thể đọc nội dung file văn bản!');
       }
@@ -938,76 +1015,181 @@ export default function LivestreamFlowSequencer() {
     startStep(next, isPlayingFlow);
   };
 
-  // Căn chỉnh nhanh đối tượng Avatar trên sân khấu
-  const handleCenterAvatar = (avatarId) => {
-    const safeAvatarsList = multiAvatarConfig.avatars || [];
-    const updated = {
-      ...multiAvatarConfig,
-      avatars: safeAvatarsList.map(av => {
-        if (av.id === avatarId) {
-          const w = av.transform?.width || 45;
-          return {
-            ...av,
-            transform: {
-              ...(av.transform || {}),
-              x: Math.max(0, Math.round((100 - w) / 2)),
-              y: 15
-            }
-          };
-        }
-        return av;
-      })
-    };
-    setMultiAvatarConfig(updated);
-    saveMultiAvatarConfig(updated);
-    toast.success('📐 Đã căn giữa nhân vật!');
-  };
-
-  const handleFillAvatar = (avatarId) => {
-    const safeAvatarsList = multiAvatarConfig.avatars || [];
-    const updated = {
-      ...multiAvatarConfig,
-      avatars: safeAvatarsList.map(av => {
-        if (av.id === avatarId) {
-          return {
-            ...av,
-            transform: {
-              ...(av.transform || {}),
-              x: 0,
-              y: 0,
-              width: 100,
-              height: 100
-            }
-          };
-        }
-        return av;
-      })
-    };
-    setMultiAvatarConfig(updated);
-    saveMultiAvatarConfig(updated);
-    toast.success('📐 Đã mở rộng tràn khung!');
-  };
-
   const currentStep = activePreset.steps[currentStepIndex] || activePreset.steps[0];
   const safeAvatars = multiAvatarConfig?.avatars || [];
   const activeAvatarCount = multiAvatarConfig?.activeCount || 1;
   const visibleAvatars = safeAvatars.slice(0, activeAvatarCount);
 
+  // =========================================================================
+  // 🖐️ BỘ XỬ LÝ KÉO THẢ & CO GIÃN 8 ĐIỂM TRỰC TIẾP TRÊN SÂN KHẤU 9:16
+  // =========================================================================
+  const getLayerCurrentTransform = useCallback((layerType, avatarId = null) => {
+    if (!currentStep) return { x: 10, y: 15, width: 45, height: 75, zIndex: 10 };
+    
+    if (layerType === 'avatar' && avatarId) {
+      if (currentStep.avatarTransforms && currentStep.avatarTransforms[avatarId]) {
+        return currentStep.avatarTransforms[avatarId];
+      }
+      const avObj = safeAvatars.find(a => a.id === avatarId);
+      if (avObj && avObj.transform) return avObj.transform;
+      const avIdx = safeAvatars.findIndex(a => a.id === avatarId);
+      const safeIdx = avIdx >= 0 ? avIdx : 0;
+      return { x: 5 + safeIdx * 24, y: 15, width: 45, height: 75, zIndex: 10 + safeIdx };
+    }
+
+    if (layerType === 'pip') {
+      return currentStep.secondaryMediaTransform || { x: 55, y: 5, width: 40, height: 25, zIndex: 20 };
+    }
+
+    if (layerType === 'banner') {
+      return currentStep.overlayImageTransform || { x: 10, y: 12, width: 80, height: 20, zIndex: 25 };
+    }
+
+    if (layerType === 'text') {
+      return currentStep.overlayTextTransform || { x: 5, y: 4, width: 90, height: 12, zIndex: 30 };
+    }
+
+    return { x: 10, y: 10, width: 80, height: 20, zIndex: 10 };
+  }, [currentStep, safeAvatars]);
+
+  const handlePointerDown = (e, layerType, avatarId = null, handle = null) => {
+    e.stopPropagation();
+    e.preventDefault();
+
+    setSelectedLayer({ type: layerType, id: avatarId });
+    const initialTransform = getLayerCurrentTransform(layerType, avatarId);
+
+    setDragState({
+      handle, // null nếu đang kéo toàn bộ, 'nw', 'ne', 'sw', 'se', 'n', 's', 'e', 'w' nếu co giãn
+      startX: e.clientX || e.touches?.[0]?.clientX || 0,
+      startY: e.clientY || e.touches?.[0]?.clientY || 0,
+      initialTransform: { ...initialTransform },
+      layerType,
+      avatarId
+    });
+  };
+
+  useEffect(() => {
+    if (!dragState) return;
+
+    const handlePointerMove = (e) => {
+      if (!stageInnerRef.current) return;
+      const stageRect = stageInnerRef.current.getBoundingClientRect();
+      const curX = e.clientX || e.touches?.[0]?.clientX || 0;
+      const curY = e.clientY || e.touches?.[0]?.clientY || 0;
+
+      const deltaXPercent = ((curX - dragState.startX) / stageRect.width) * 100;
+      const deltaYPercent = ((curY - dragState.startY) / stageRect.height) * 100;
+
+      const { initialTransform, handle, layerType, avatarId } = dragState;
+      let newTransform = { ...initialTransform };
+
+      if (!handle) {
+        // Kéo di chuyển toàn bộ đối tượng (Move)
+        newTransform.x = Math.round(Math.max(-50, Math.min(100, initialTransform.x + deltaXPercent)));
+        newTransform.y = Math.round(Math.max(-50, Math.min(100, initialTransform.y + deltaYPercent)));
+      } else {
+        // Co giãn theo 8 điểm (Resize)
+        if (handle.includes('e')) {
+          newTransform.width = Math.round(Math.max(10, Math.min(100, initialTransform.width + deltaXPercent)));
+        }
+        if (handle.includes('s')) {
+          newTransform.height = Math.round(Math.max(5, Math.min(100, initialTransform.height + deltaYPercent)));
+        }
+        if (handle.includes('w')) {
+          const clampedDelta = Math.min(initialTransform.width - 10, deltaXPercent);
+          newTransform.x = Math.round(initialTransform.x + clampedDelta);
+          newTransform.width = Math.round(initialTransform.width - clampedDelta);
+        }
+        if (handle.includes('n')) {
+          const clampedDelta = Math.min(initialTransform.height - 5, deltaYPercent);
+          newTransform.y = Math.round(initialTransform.y + clampedDelta);
+          newTransform.height = Math.round(initialTransform.height - clampedDelta);
+        }
+      }
+
+      if (currentStep) {
+        handleUpdateStepTransform(currentStep.id, layerType, newTransform, avatarId);
+      }
+    };
+
+    const handlePointerUp = () => {
+      setDragState(null);
+    };
+
+    window.addEventListener('mousemove', handlePointerMove);
+    window.addEventListener('mouseup', handlePointerUp);
+    window.addEventListener('touchmove', handlePointerMove, { passive: false });
+    window.addEventListener('touchend', handlePointerUp);
+
+    return () => {
+      window.removeEventListener('mousemove', handlePointerMove);
+      window.removeEventListener('mouseup', handlePointerUp);
+      window.removeEventListener('touchmove', handlePointerMove);
+      window.removeEventListener('touchend', handlePointerUp);
+    };
+  }, [dragState, currentStep]);
+
+  // Căn giữa nhanh đối tượng đang chọn
+  const handleCenterSelectedLayer = () => {
+    if (!currentStep || !selectedLayer) return;
+    const curTrans = getLayerCurrentTransform(selectedLayer.type, selectedLayer.id);
+    const w = curTrans.width || 50;
+    const updated = {
+      ...curTrans,
+      x: Math.max(0, Math.round((100 - w) / 2))
+    };
+    handleUpdateStepTransform(currentStep.id, selectedLayer.type, updated, selectedLayer.id);
+    toast.success('📐 Đã căn giữa đối tượng!');
+  };
+
+  // Tràn toàn bộ khung đối tượng đang chọn
+  const handleFillSelectedLayer = () => {
+    if (!currentStep || !selectedLayer) return;
+    const updated = {
+      x: 0,
+      y: 0,
+      width: 100,
+      height: 100,
+      zIndex: 10
+    };
+    handleUpdateStepTransform(currentStep.id, selectedLayer.type, updated, selectedLayer.id);
+    toast.success('📏 Đã mở rộng tràn toàn bộ khung 9:16!');
+  };
+
+  // Đọc thử giọng AI 0ms
+  const handleTestVoiceSpeech = (text) => {
+    if (!text || !text.trim()) {
+      toast.error('Chưa có lời thoại để đọc thử!');
+      return;
+    }
+    if (isSpeakingPreview) {
+      stopVoiceAudio();
+      setIsSpeakingPreview(false);
+      return;
+    }
+    setIsSpeakingPreview(true);
+    previewVoiceAudio('vi-VN-Standard-A', text);
+    setTimeout(() => {
+      setIsSpeakingPreview(false);
+    }, 8000);
+  };
+
   return (
-    <div className="w-full h-full min-h-0 flex flex-col bg-[#0b0d14] text-gray-100 overflow-hidden select-none font-sans">
+    <div className="w-full h-full min-h-0 flex flex-col bg-[#080a10] text-gray-100 overflow-hidden select-none font-sans">
       <SvgChromaFilters />
 
       {/* ========================================================================= */}
-      {/* 🚀 TOP TOOLBAR: THANH ĐIỀU KHIỂN ĐỈNH CAO TINH GỌN (CAO 45PX) */}
+      {/* 🚀 TOP TOOLBAR: THANH ĐIỀU KHIỂN ĐỈNH CAO TINH GỌN (CAO 44PX) */}
       {/* ========================================================================= */}
-      <div className="bg-[#121524] border-b border-indigo-900/50 px-3.5 py-1.5 flex items-center justify-between gap-2.5 shrink-0 z-20 shadow-md">
+      <div className="bg-[#101322] border-b border-indigo-900/50 px-3 py-1.5 flex items-center justify-between gap-2.5 shrink-0 z-20 shadow-md">
         
         {/* Nhóm Trái: Logo, Tiêu đề & Chọn Preset */}
         <div className="flex items-center gap-2 min-w-0">
           <div className="flex items-center gap-1.5 px-2.5 py-1 rounded-xl bg-gradient-to-r from-rose-500/20 via-indigo-500/20 to-cyan-500/20 border border-indigo-500/30">
-            <Layers className="w-4 h-4 text-rose-400 shrink-0" />
-            <span className="font-black text-xs text-transparent bg-clip-text bg-gradient-to-r from-rose-300 via-indigo-200 to-cyan-300 tracking-wide hidden sm:inline">
-              STUDIO 1–4 AVATAR & LIVE
+            <Layers className="w-4 h-4 text-cyan-400 shrink-0" />
+            <span className="font-black text-xs text-transparent bg-clip-text bg-gradient-to-r from-cyan-300 via-indigo-200 to-rose-300 tracking-wide hidden sm:inline">
+              STUDIO 1–4 AVATAR & PHÂN ĐOẠN LIVE
             </span>
           </div>
 
@@ -1031,7 +1213,7 @@ export default function LivestreamFlowSequencer() {
             <button
               onClick={() => setShowPresetModal(true)}
               className="p-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-300 border border-slate-700 text-xs font-bold cursor-pointer"
-              title="Thêm kịch bản mới"
+              title="Tạo bộ kịch bản mới"
             >
               <Plus size={13} />
             </button>
@@ -1041,7 +1223,7 @@ export default function LivestreamFlowSequencer() {
         {/* Nhóm Phải: Nút Đồng Bộ Sân Khấu Chính & Nút Chạy Test Nội Bộ */}
         <div className="flex items-center gap-2 shrink-0">
           
-          {/* NÚT ĐỒNG BỘ RA SÂN KHẤU CHÍNH */}
+          {/* NÚT ĐỒNG BỘ RA SÂN KHẤU CHÍNH / OBS / TIKTOK LIVE STUDIO */}
           <button
             onClick={handleToggleMasterSync}
             className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md cursor-pointer ${
@@ -1095,15 +1277,15 @@ export default function LivestreamFlowSequencer() {
       {/* ========================================================================= */}
       {/* 🌟 BODY CHÍNH 2 CỘT: CỘT TRÁI 40% SÂN KHẤU 9:16 + CỘT PHẢI 60% BẢNG ĐIỀU KHIỂN */}
       {/* ========================================================================= */}
-      <div className="flex-1 flex flex-col lg:flex-row p-2.5 gap-2.5 overflow-hidden min-h-0">
+      <div className="flex-1 flex flex-col lg:flex-row p-2 gap-2 overflow-hidden min-h-0">
         
         {/* ========================================================================= */}
-        {/* 📱 CỘT TRÁI (LEFT PANEL - CHIẾM 40%): SÂN KHẤU BIỂU DIỄN 9:16 STUDIO 1-4 AVATAR */}
+        {/* 📱 CỘT TRÁI (LEFT PANEL - CHIẾM 40%): SÂN KHẤU BIỂU DIỄN 9:16 DỌC ĐIỆN THOẠI FULL HEIGHT */}
         {/* ========================================================================= */}
-        <div className="w-full lg:w-[40%] xl:w-[40%] flex flex-col h-full bg-[#111422] rounded-2xl border border-indigo-900/40 p-2.5 shadow-2xl shrink-0 overflow-hidden min-h-0">
+        <div className="w-full lg:w-[42%] xl:w-[40%] flex flex-col h-full bg-[#0d101e] rounded-2xl border border-indigo-900/40 p-2 shadow-2xl shrink-0 overflow-hidden min-h-0">
           
           {/* Header Sân Khấu Preview */}
-          <div className="flex items-center justify-between pb-1.5 mb-1.5 border-b border-indigo-900/40 shrink-0">
+          <div className="flex items-center justify-between pb-1.5 mb-1 border-b border-indigo-900/40 shrink-0">
             <div className="flex items-center gap-1.5">
               <Smartphone size={14} className="text-cyan-400" />
               <span className="text-xs font-black text-white tracking-wide">
@@ -1120,15 +1302,17 @@ export default function LivestreamFlowSequencer() {
             </div>
           </div>
 
-          {/* KHUNG SÂN KHẤU CHUẨN 9:16 DỌC (PHONE SCREEN FRAMEWORK - FULL HEIGHT TỪ TRÊN XUỐNG DƯỚI) */}
-          <div ref={stageRef} className="flex-1 w-full h-full flex items-center justify-center min-h-0 overflow-hidden relative">
+          {/* KHUNG SÂN KHẤU CHUẨN 9:16 DỌC ĐIỆN THOẠI (FULL HEIGHT - KÉO DÀI TỪ TRÊN XUỐNG DƯỚI) */}
+          <div className="flex-1 w-full h-full min-h-0 flex items-center justify-center relative overflow-hidden py-0.5">
             <div 
-              className="relative w-full h-full max-h-full aspect-[9/16] bg-black rounded-2xl overflow-hidden shadow-2xl border-2 border-cyan-500/40 flex items-center justify-center mx-auto select-none"
+              ref={stageInnerRef}
+              className="relative h-full max-h-full aspect-[9/16] bg-black rounded-[28px] border-[3.5px] border-slate-700/80 ring-2 ring-cyan-500/40 shadow-2xl overflow-hidden flex flex-col mx-auto select-none"
               style={{ maxHeight: '100%' }}
             >
               {/* Dynamic Island / Notch Mockup Top */}
-              <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-20 h-3.5 bg-black/90 rounded-full border border-white/10 z-45 flex items-center justify-center pointer-events-none">
+              <div className="absolute top-1.5 left-1/2 -translate-x-1/2 w-20 h-3.5 bg-black/95 rounded-full border border-white/10 z-50 flex items-center justify-between px-2 pointer-events-none">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
+                <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
               </div>
 
               {/* Lớp 1: Video / Ảnh Nền Chính (Main Background Media) */}
@@ -1137,7 +1321,7 @@ export default function LivestreamFlowSequencer() {
                   key={currentStep.mediaUrl}
                   src={currentStep.mediaUrl} 
                   alt="Stage BG"
-                  className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                  className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
                 />
               ) : (
                 <video 
@@ -1147,161 +1331,215 @@ export default function LivestreamFlowSequencer() {
                   loop 
                   muted 
                   playsInline 
-                  className="absolute inset-0 w-full h-full object-cover pointer-events-none"
+                  className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
                 />
               )}
 
-              {/* Lớp 1.5: Video Phụ PiP (Picture-in-Picture) */}
-              {currentStep?.secondaryMediaUrl && (
-                <div 
-                  className={`absolute z-20 overflow-hidden rounded-xl border-2 border-indigo-400 shadow-xl pointer-events-none transition-all ${
-                    currentStep.secondaryMediaPos === 'top-left' ? 'top-6 left-3' :
-                    currentStep.secondaryMediaPos === 'bottom-left' ? 'bottom-20 left-3' :
-                    currentStep.secondaryMediaPos === 'bottom-right' ? 'bottom-20 right-3' :
-                    'top-6 right-3'
-                  }`}
-                  style={{ width: `${currentStep.secondaryMediaScale || 40}%` }}
-                >
-                  <div className="relative aspect-video bg-black">
-                    <video 
-                      src={currentStep.secondaryMediaUrl} 
-                      autoPlay 
-                      loop 
-                      muted 
-                      playsInline 
-                      className="w-full h-full object-cover"
-                    />
-                    <span className="absolute top-1 left-1 bg-indigo-600/90 text-white text-[8px] font-black px-1.5 py-0.2 rounded">
-                      🎬 PiP
-                    </span>
-                  </div>
-                </div>
-              )}
-
-              {/* Lớp 2: 1 Đến 4 Avatar AI (Interactive Drag & Visual Live) */}
-              {visibleAvatars.map((av, avIdx) => {
-                const isCurrentSpeaker = (currentStep?.avatarSpeaker === av.id) || (currentStep?.avatarSpeaker === 'all') || (!currentStep?.avatarSpeaker && avIdx === 0);
-                const transform = av.transform || { x: 10 + avIdx * 22, y: 15, width: 45, height: 75, zIndex: 1 };
-                const vidSrc = isCurrentSpeaker ? (av.talkVideo || av.idleVideo || currentStep?.mediaUrl) : (av.idleVideo || av.talkVideo || currentStep?.mediaUrl);
-                const chromaStyle = av.chromaKey?.enabled ? getChromaStyle(av.chromaKey) : {};
-                const isSelected = selectedAvatarId === av.id;
+              {/* Lớp 1.5: Video Phụ PiP (Picture-in-Picture) - Kéo Thả & Co Giãn */}
+              {currentStep?.secondaryMediaUrl && (() => {
+                const pipTrans = getLayerCurrentTransform('pip');
+                const isSelected = selectedLayer.type === 'pip';
 
                 return (
                   <div 
-                    key={av.id}
-                    onClick={() => setSelectedAvatarId(av.id)}
-                    className={`absolute z-10 transition-all duration-200 cursor-pointer ${
-                      isCurrentSpeaker 
-                        ? 'ring-2 ring-cyan-400 shadow-lg shadow-cyan-500/40' 
-                        : isSelected
-                        ? 'ring-2 ring-amber-400'
-                        : 'opacity-90 hover:opacity-100'
+                    onMouseDown={(e) => handlePointerDown(e, 'pip', null, null)}
+                    onTouchStart={(e) => handlePointerDown(e, 'pip', null, null)}
+                    className={`absolute overflow-hidden rounded-xl shadow-2xl transition-shadow cursor-move ${
+                      isSelected ? 'ring-2 ring-indigo-400 border-2 border-indigo-400' : 'border border-indigo-500/50'
                     }`}
                     style={{
-                      left: `${transform.x ?? (10 + avIdx * 22)}%`,
-                      top: `${transform.y ?? 15}%`,
-                      width: `${transform.width ?? 45}%`,
-                      height: `${transform.height ?? 75}%`,
-                      zIndex: transform.zIndex || (avIdx + 1),
-                      borderRadius: '14px',
-                      overflow: 'hidden'
+                      left: `${pipTrans.x}%`,
+                      top: `${pipTrans.y}%`,
+                      width: `${pipTrans.width}%`,
+                      height: `${pipTrans.height}%`,
+                      zIndex: pipTrans.zIndex || 20
                     }}
                   >
-                    {vidSrc && isImageMedia(vidSrc) ? (
-                      <img 
-                        src={vidSrc} 
-                        alt={av.name} 
-                        className="w-full h-full object-cover"
-                        style={chromaStyle}
-                      />
-                    ) : (
+                    <div className="relative w-full h-full bg-black">
                       <video 
-                        src={vidSrc || '/idols/phong_studio_ngoc_trinh_4k.mp4'} 
+                        src={currentStep.secondaryMediaUrl} 
                         autoPlay 
                         loop 
                         muted 
                         playsInline 
-                        className="w-full h-full object-cover"
-                        style={chromaStyle}
+                        className="w-full h-full object-cover pointer-events-none"
                       />
+                      <span className="absolute top-1 left-1 bg-indigo-600/90 text-white text-[8px] font-black px-1.5 py-0.2 rounded">
+                        🎬 PiP
+                      </span>
+                    </div>
+
+                    {/* 8 Điểm Resize Handles Khi Được Chọn */}
+                    {isSelected && (
+                      <>
+                        <div onMouseDown={(e) => handlePointerDown(e, 'pip', null, 'nw')} onTouchStart={(e) => handlePointerDown(e, 'pip', null, 'nw')} className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-indigo-400 rounded-full cursor-nw-resize z-50 shadow-md border border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'pip', null, 'ne')} onTouchStart={(e) => handlePointerDown(e, 'pip', null, 'ne')} className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-indigo-400 rounded-full cursor-ne-resize z-50 shadow-md border border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'pip', null, 'sw')} onTouchStart={(e) => handlePointerDown(e, 'pip', null, 'sw')} className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-indigo-400 rounded-full cursor-sw-resize z-50 shadow-md border border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'pip', null, 'se')} onTouchStart={(e) => handlePointerDown(e, 'pip', null, 'se')} className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-indigo-400 rounded-full cursor-se-resize z-50 shadow-md border border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'pip', null, 'n')} onTouchStart={(e) => handlePointerDown(e, 'pip', null, 'n')} className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-indigo-400 rounded-full cursor-n-resize z-50 shadow-md border border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'pip', null, 's')} onTouchStart={(e) => handlePointerDown(e, 'pip', null, 's')} className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-indigo-400 rounded-full cursor-s-resize z-50 shadow-md border border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'pip', null, 'w')} onTouchStart={(e) => handlePointerDown(e, 'pip', null, 'w')} className="absolute top-1/2 -left-1.5 -translate-y-1/2 w-3 h-3 bg-indigo-400 rounded-full cursor-w-resize z-50 shadow-md border border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'pip', null, 'e')} onTouchStart={(e) => handlePointerDown(e, 'pip', null, 'e')} className="absolute top-1/2 -right-1.5 -translate-y-1/2 w-3 h-3 bg-indigo-400 rounded-full cursor-e-resize z-50 shadow-md border border-white" />
+                      </>
                     )}
+                  </div>
+                );
+              })()}
 
-                    {/* Badge Tên & Loa Nói Của Avatar */}
-                    <div className="absolute top-1 left-1 bg-black/85 backdrop-blur-xs text-white text-[8px] font-black px-1.5 py-0.5 rounded flex items-center gap-1 border border-white/20">
-                      <span className={`w-1.5 h-1.5 rounded-full ${isCurrentSpeaker ? 'bg-cyan-400 animate-ping' : 'bg-gray-400'}`} />
-                      <span>#{avIdx + 1} {av.name}</span>
-                      {isCurrentSpeaker && <Volume2 size={9} className="text-cyan-300 animate-bounce" />}
+              {/* Lớp 2: 1 Đến 4 Avatar AI (Interactive Drag & 8-Point Resize Handles) */}
+              {visibleAvatars.map((av, avIdx) => {
+                const isCurrentSpeaker = (currentStep?.avatarSpeaker === av.id) || (currentStep?.avatarSpeaker === 'all') || (!currentStep?.avatarSpeaker && avIdx === 0);
+                const transform = getLayerCurrentTransform('avatar', av.id);
+                const vidSrc = isCurrentSpeaker ? (av.talkVideo || av.idleVideo || currentStep?.mediaUrl) : (av.idleVideo || av.talkVideo || currentStep?.mediaUrl);
+                const chromaStyle = av.chromaKey?.enabled ? getChromaStyle(av.chromaKey) : {};
+                const isSelected = selectedLayer.type === 'avatar' && selectedLayer.id === av.id;
+
+                return (
+                  <div 
+                    key={av.id}
+                    onMouseDown={(e) => handlePointerDown(e, 'avatar', av.id, null)}
+                    onTouchStart={(e) => handlePointerDown(e, 'avatar', av.id, null)}
+                    className={`absolute transition-shadow cursor-move ${
+                      isSelected 
+                        ? 'ring-2 ring-cyan-400 shadow-xl shadow-cyan-500/30' 
+                        : isCurrentSpeaker
+                        ? 'ring-1.5 ring-emerald-400/80 shadow-md'
+                        : 'hover:ring-1 hover:ring-white/40'
+                    }`}
+                    style={{
+                      left: `${transform.x}%`,
+                      top: `${transform.y}%`,
+                      width: `${transform.width}%`,
+                      height: `${transform.height}%`,
+                      zIndex: transform.zIndex || (10 + avIdx),
+                      borderRadius: '16px',
+                      overflow: 'visible'
+                    }}
+                  >
+                    <div className="relative w-full h-full rounded-[16px] overflow-hidden">
+                      {vidSrc && isImageMedia(vidSrc) ? (
+                        <img 
+                          src={vidSrc} 
+                          alt={av.name} 
+                          className="w-full h-full object-cover pointer-events-none"
+                          style={chromaStyle}
+                        />
+                      ) : (
+                        <video 
+                          src={vidSrc || '/idols/phong_studio_ngoc_trinh_4k.mp4'} 
+                          autoPlay 
+                          loop 
+                          muted 
+                          playsInline 
+                          className="w-full h-full object-cover pointer-events-none"
+                          style={chromaStyle}
+                        />
+                      )}
+
+                      {/* Badge Tên & Loa Nói Của Avatar */}
+                      <div className="absolute top-1 left-1 bg-black/85 backdrop-blur-xs text-white text-[8px] font-black px-1.5 py-0.5 rounded flex items-center gap-1 border border-white/20 pointer-events-none">
+                        <span className={`w-1.5 h-1.5 rounded-full ${isCurrentSpeaker ? 'bg-cyan-400 animate-ping' : 'bg-gray-400'}`} />
+                        <span>#{avIdx + 1} {av.name}</span>
+                        {isCurrentSpeaker && <Volume2 size={9} className="text-cyan-300 animate-bounce" />}
+                      </div>
                     </div>
 
-                    {/* Quick Button Tải Media Trực Tiếp Khi Click Vào Avatar */}
-                    <div className="absolute bottom-1 right-1 opacity-0 hover:opacity-100 transition-opacity">
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          setMediaPickerAvatarId(av.id);
-                          setMediaPickerOpen(true);
-                        }}
-                        className="px-1.5 py-0.5 rounded bg-blue-600 hover:bg-blue-500 text-[8px] font-bold text-white shadow-md cursor-pointer"
-                      >
-                        Đổi Clip
-                      </button>
-                    </div>
+                    {/* 8 Điểm Resize Handles Khi Được Chọn */}
+                    {isSelected && (
+                      <>
+                        <div onMouseDown={(e) => handlePointerDown(e, 'avatar', av.id, 'nw')} onTouchStart={(e) => handlePointerDown(e, 'avatar', av.id, 'nw')} className="absolute -top-1.5 -left-1.5 w-3.5 h-3.5 bg-cyan-400 rounded-full cursor-nw-resize z-50 shadow-md border-2 border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'avatar', av.id, 'ne')} onTouchStart={(e) => handlePointerDown(e, 'avatar', av.id, 'ne')} className="absolute -top-1.5 -right-1.5 w-3.5 h-3.5 bg-cyan-400 rounded-full cursor-ne-resize z-50 shadow-md border-2 border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'avatar', av.id, 'sw')} onTouchStart={(e) => handlePointerDown(e, 'avatar', av.id, 'sw')} className="absolute -bottom-1.5 -left-1.5 w-3.5 h-3.5 bg-cyan-400 rounded-full cursor-sw-resize z-50 shadow-md border-2 border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'avatar', av.id, 'se')} onTouchStart={(e) => handlePointerDown(e, 'avatar', av.id, 'se')} className="absolute -bottom-1.5 -right-1.5 w-3.5 h-3.5 bg-cyan-400 rounded-full cursor-se-resize z-50 shadow-md border-2 border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'avatar', av.id, 'n')} onTouchStart={(e) => handlePointerDown(e, 'avatar', av.id, 'n')} className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3.5 h-3.5 bg-cyan-400 rounded-full cursor-n-resize z-50 shadow-md border-2 border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'avatar', av.id, 's')} onTouchStart={(e) => handlePointerDown(e, 'avatar', av.id, 's')} className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3.5 h-3.5 bg-cyan-400 rounded-full cursor-s-resize z-50 shadow-md border-2 border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'avatar', av.id, 'w')} onTouchStart={(e) => handlePointerDown(e, 'avatar', av.id, 'w')} className="absolute top-1/2 -left-1.5 -translate-y-1/2 w-3.5 h-3.5 bg-cyan-400 rounded-full cursor-w-resize z-50 shadow-md border-2 border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'avatar', av.id, 'e')} onTouchStart={(e) => handlePointerDown(e, 'avatar', av.id, 'e')} className="absolute top-1/2 -right-1.5 -translate-y-1/2 w-3.5 h-3.5 bg-cyan-400 rounded-full cursor-e-resize z-50 shadow-md border-2 border-white" />
+                      </>
+                    )}
                   </div>
                 );
               })}
 
-              {/* Lớp 3: Banner Hình Ảnh / Poster Deal */}
-              {currentStep?.overlayImage && (
-                <div 
-                  className={`absolute z-25 pointer-events-none transition-all ${
-                    currentStep.overlayImagePos === 'top-right' ? 'top-6 right-3' :
-                    currentStep.overlayImagePos === 'center' ? 'top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2' :
-                    currentStep.overlayImagePos === 'bottom-left' ? 'bottom-20 left-3' :
-                    currentStep.overlayImagePos === 'bottom-right' ? 'bottom-20 right-3' :
-                    currentStep.overlayImagePos === 'top' ? 'top-6 left-3 right-3' :
-                    currentStep.overlayImagePos === 'bottom' ? 'bottom-20 left-3 right-3' :
-                    'top-6 left-3'
-                  }`}
-                  style={{ width: `${Math.min(90, (currentStep.overlayImageScale || 100) * 0.4)}%` }}
-                >
-                  <img 
-                    src={currentStep.overlayImage} 
-                    alt="Overlay Banner" 
-                    className="w-full h-auto max-h-32 object-contain drop-shadow-xl rounded-lg"
-                  />
-                </div>
-              )}
+              {/* Lớp 3: Banner Hình Ảnh / Poster Deal - Kéo Thả & Co Giãn */}
+              {currentStep?.overlayImage && (() => {
+                const bannerTrans = getLayerCurrentTransform('banner');
+                const isSelected = selectedLayer.type === 'banner';
 
-              {/* Lớp 4: Tiêu Đề Chữ Typography Xếp Chồng */}
-              {currentStep?.overlayText && (
-                <div 
-                  className={`absolute z-30 pointer-events-none px-3 py-1 text-center transition-all ${
-                    currentStep.overlayTextPos === 'bottom' ? 'bottom-24 left-3 right-3' :
-                    currentStep.overlayTextPos === 'center' ? 'top-1/2 left-3 right-3 -translate-y-1/2' :
-                    'top-6 left-3 right-3'
-                  }`}
-                >
-                  <div className={`inline-block px-3 py-1 rounded-xl font-black shadow-2xl tracking-wide ${
-                    currentStep.overlayTextStyle === 'neon_cyber' ? 'bg-black/85 text-cyan-300 border-2 border-cyan-400 shadow-cyan-500/50' :
-                    currentStep.overlayTextStyle === 'gold_luxury' ? 'bg-gradient-to-r from-amber-500 to-yellow-300 text-slate-950 border border-yellow-200' :
-                    currentStep.overlayTextStyle === 'gradient_rose' ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white' :
-                    currentStep.overlayTextStyle === 'minimal_dark' ? 'bg-slate-900/90 text-white border border-slate-700' :
-                    'bg-gradient-to-r from-rose-600 via-red-500 to-amber-500 text-white border border-yellow-300/40'
-                  }`}
-                  style={{
-                    fontSize: `${Math.max(10, Math.min(18, (currentStep.overlayTextFontSize || 20) * 0.65))}px`,
-                    fontFamily: FONT_FAMILIES.find(f => f.id === currentStep.overlayTextFontFamily)?.font || 'inherit'
-                  }}
+                return (
+                  <div 
+                    onMouseDown={(e) => handlePointerDown(e, 'banner', null, null)}
+                    onTouchStart={(e) => handlePointerDown(e, 'banner', null, null)}
+                    className={`absolute transition-shadow cursor-move ${
+                      isSelected ? 'ring-2 ring-amber-400 rounded-xl' : ''
+                    }`}
+                    style={{
+                      left: `${bannerTrans.x}%`,
+                      top: `${bannerTrans.y}%`,
+                      width: `${bannerTrans.width}%`,
+                      height: `${bannerTrans.height}%`,
+                      zIndex: bannerTrans.zIndex || 25
+                    }}
                   >
-                    {currentStep.overlayText}
+                    <img 
+                      src={currentStep.overlayImage} 
+                      alt="Overlay Banner" 
+                      className="w-full h-full object-contain drop-shadow-xl pointer-events-none rounded-lg"
+                    />
+
+                    {/* 8 Điểm Resize Handles Khi Được Chọn */}
+                    {isSelected && (
+                      <>
+                        <div onMouseDown={(e) => handlePointerDown(e, 'banner', null, 'nw')} onTouchStart={(e) => handlePointerDown(e, 'banner', null, 'nw')} className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-amber-400 rounded-full cursor-nw-resize z-50 shadow-md border border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'banner', null, 'ne')} onTouchStart={(e) => handlePointerDown(e, 'banner', null, 'ne')} className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-amber-400 rounded-full cursor-ne-resize z-50 shadow-md border border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'banner', null, 'sw')} onTouchStart={(e) => handlePointerDown(e, 'banner', null, 'sw')} className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-amber-400 rounded-full cursor-sw-resize z-50 shadow-md border border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'banner', null, 'se')} onTouchStart={(e) => handlePointerDown(e, 'banner', null, 'se')} className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-amber-400 rounded-full cursor-se-resize z-50 shadow-md border border-white" />
+                      </>
+                    )}
                   </div>
-                </div>
-              )}
+                );
+              })()}
+
+              {/* Lớp 4: Tiêu Đề Chữ Typography Xếp Chồng - Kéo Thả */}
+              {currentStep?.overlayText && (() => {
+                const textTrans = getLayerCurrentTransform('text');
+                const isSelected = selectedLayer.type === 'text';
+
+                return (
+                  <div 
+                    onMouseDown={(e) => handlePointerDown(e, 'text', null, null)}
+                    onTouchStart={(e) => handlePointerDown(e, 'text', null, null)}
+                    className={`absolute text-center cursor-move transition-shadow ${
+                      isSelected ? 'ring-2 ring-rose-400 rounded-xl' : ''
+                    }`}
+                    style={{
+                      left: `${textTrans.x}%`,
+                      top: `${textTrans.y}%`,
+                      width: `${textTrans.width}%`,
+                      zIndex: textTrans.zIndex || 30
+                    }}
+                  >
+                    <div className={`inline-block w-full px-2.5 py-1 rounded-xl font-black shadow-2xl tracking-wide ${
+                      currentStep.overlayTextStyle === 'neon_cyber' ? 'bg-black/85 text-cyan-300 border-2 border-cyan-400 shadow-cyan-500/50' :
+                      currentStep.overlayTextStyle === 'gold_luxury' ? 'bg-gradient-to-r from-amber-500 to-yellow-300 text-slate-950 border border-yellow-200' :
+                      currentStep.overlayTextStyle === 'gradient_rose' ? 'bg-gradient-to-r from-rose-500 to-pink-500 text-white' :
+                      currentStep.overlayTextStyle === 'minimal_dark' ? 'bg-slate-900/90 text-white border border-slate-700' :
+                      'bg-gradient-to-r from-rose-600 via-red-500 to-amber-500 text-white border border-yellow-300/40'
+                    }`}
+                    style={{
+                      fontSize: `${Math.max(10, Math.min(18, (currentStep.overlayTextFontSize || 20) * 0.65))}px`,
+                      fontFamily: FONT_FAMILIES.find(f => f.id === currentStep.overlayTextFontFamily)?.font || 'inherit'
+                    }}
+                    >
+                      {currentStep.overlayText}
+                    </div>
+                  </div>
+                );
+              })()}
 
               {/* Lớp 5: Thẻ Ghim Giỏ Hàng TikTok Shop */}
               {currentStep?.productName && (
-                <div className="absolute bottom-2 left-2 right-2 z-35 bg-white/95 backdrop-blur-md rounded-xl p-2 border border-rose-200 shadow-2xl flex items-center gap-2 text-slate-900">
+                <div className="absolute bottom-2.5 left-2 right-2 z-40 bg-white/95 backdrop-blur-md rounded-xl p-2 border border-rose-200 shadow-2xl flex items-center gap-2 text-slate-900 pointer-events-none">
                   <div className="w-8 h-8 rounded-lg bg-rose-50 border border-rose-200 flex items-center justify-center shrink-0 text-rose-600 font-bold text-xs">
                     <ShoppingCart size={15} />
                   </div>
@@ -1327,23 +1565,26 @@ export default function LivestreamFlowSequencer() {
               )}
 
               {/* Tag Trạng Thái Live Preview */}
-              <div className="absolute top-6 left-2 z-40 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-xs text-[9px] font-bold text-white border border-white/20 flex items-center gap-1 pointer-events-none">
+              <div className="absolute top-5 left-2 z-40 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-xs text-[9px] font-bold text-white border border-white/20 flex items-center gap-1 pointer-events-none">
                 <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
                 <span>Live 9:16</span>
               </div>
+
+              {/* Bottom Home Indicator Bar */}
+              <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-20 h-1 bg-white/30 rounded-full z-50 pointer-events-none" />
             </div>
           </div>
 
-          {/* THANH THAO TÁC NHANH DƯỚI SÂN KHẤU */}
-          <div className="pt-2 mt-2 border-t border-indigo-900/40 space-y-1.5 shrink-0">
+          {/* THANH THAO TÁC CĂN CHỈNH VỊ TRÍ NHANH */}
+          <div className="pt-1.5 mt-1 border-t border-indigo-900/40 space-y-1 shrink-0">
             <div className="flex items-center justify-between gap-1">
               
               {/* Bố cục nhanh */}
-              <div className="flex items-center gap-1">
+              <div className="flex items-center gap-1 flex-wrap">
                 <button
                   type="button"
                   onClick={() => handleApplyPresetLayout('sales_duo')}
-                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-[10px] border border-slate-700 cursor-pointer"
+                  className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 font-bold text-[10px] border border-slate-700 cursor-pointer"
                   title="Bố cục 2 người chốt đơn"
                 >
                   🛍️ Bán Hàng
@@ -1351,45 +1592,45 @@ export default function LivestreamFlowSequencer() {
                 <button
                   type="button"
                   onClick={() => handleApplyPresetLayout('game_pk')}
-                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-purple-300 font-bold text-[10px] border border-slate-700 cursor-pointer"
+                  className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-purple-300 font-bold text-[10px] border border-slate-700 cursor-pointer"
                   title="Bố cục PK"
                 >
                   ⚔️ PK Đấu
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleApplyPresetLayout('grid_split')}
-                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 font-bold text-[10px] border border-slate-700 cursor-pointer"
-                  title="Chia khung đều"
-                >
-                  🔲 Chia Khung
-                </button>
-                <button
-                  type="button"
-                  onClick={() => handleCenterAvatar(selectedAvatarId)}
-                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-300 font-bold text-[10px] border border-slate-700 cursor-pointer"
-                  title="Căn giữa nhân vật đang chọn"
+                  onClick={handleCenterSelectedLayer}
+                  className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-300 font-bold text-[10px] border border-slate-700 cursor-pointer"
+                  title="Căn giữa đối tượng đang chọn"
                 >
                   <Scaling size={11} className="inline mr-0.5" /> Giữa
                 </button>
                 <button
                   type="button"
-                  onClick={() => handleFillAvatar(selectedAvatarId)}
-                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-blue-300 font-bold text-[10px] border border-slate-700 cursor-pointer"
+                  onClick={handleFillSelectedLayer}
+                  className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-blue-300 font-bold text-[10px] border border-slate-700 cursor-pointer"
                   title="Tràn toàn khung hình"
                 >
                   <Maximize2 size={11} className="inline mr-0.5" /> Tràn
                 </button>
+                <button
+                  type="button"
+                  onClick={handleApplyLayoutToAllSteps}
+                  className="px-2 py-0.5 rounded-lg bg-indigo-900/60 hover:bg-indigo-800 text-amber-300 font-bold text-[10px] border border-indigo-700/60 cursor-pointer"
+                  title="Áp dụng vị trí này cho tất cả các bước"
+                >
+                  <Lock size={10} className="inline mr-0.5" /> Khóa Tất Cả
+                </button>
               </div>
 
               {/* Thông tin Avatar đang nói ở bước này */}
-              <div className="text-[10px] font-bold text-indigo-300 truncate max-w-[140px] text-right">
+              <div className="text-[10px] font-bold text-indigo-300 truncate max-w-[130px] text-right">
                 🗣️ Nói: {currentStep?.avatarSpeaker?.toUpperCase() || 'AVATAR_1'}
               </div>
             </div>
 
             <p className="text-[9px] text-gray-400 text-center font-medium leading-tight">
-              💡 Sân khấu 9:16 hiển thị trực quan toàn bộ các lớp (Video, 1–4 Avatar, Banner, Text, TikTok Shop). Bấm <strong>"Đồng Bộ Ra Sân Khấu Chính"</strong> khi phát thật.
+              💡 Bấm vào từng đối tượng trên sân khấu để kéo thả và co giãn 8 điểm. Vị trí được <strong>tự động lưu cố định theo từng bước</strong>.
             </p>
           </div>
 
@@ -1398,12 +1639,12 @@ export default function LivestreamFlowSequencer() {
         {/* ========================================================================= */}
         {/* 📋 CỘT PHẢI (RIGHT PANEL - CHIẾM 60%): BẢNG ĐIỀU KHIỂN & KỊCH BẢN TỪNG BƯỚC */}
         {/* ========================================================================= */}
-        <div className="flex-1 flex flex-col h-full bg-[#111422] rounded-2xl border border-indigo-900/40 overflow-hidden shadow-xl min-w-0">
+        <div className="flex-1 flex flex-col h-full bg-[#0d101e] rounded-2xl border border-indigo-900/40 overflow-hidden shadow-xl min-w-0">
           
           {/* ===================================================================== */}
           {/* 🌟 THANH CẤU HÌNH THÔNG MINH ĐỈNH CỘT PHẢI (AVATAR COUNT & TEMPLATES) */}
           {/* ===================================================================== */}
-          <div className="bg-[#161a2e] border-b border-indigo-900/50 p-2.5 space-y-2 shrink-0">
+          <div className="bg-[#13172c] border-b border-indigo-900/50 p-2 space-y-1.5 shrink-0">
             
             <div className="flex flex-wrap items-center justify-between gap-2">
               
@@ -1432,7 +1673,7 @@ export default function LivestreamFlowSequencer() {
                 </div>
               </div>
 
-              {/* 2. Nút Thêm Bước & Nạp File */}
+              {/* 2. Nút Thêm Bước */}
               <div className="flex items-center gap-1.5">
                 <button
                   type="button"
@@ -1440,17 +1681,17 @@ export default function LivestreamFlowSequencer() {
                   className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white font-black text-xs rounded-xl shadow-md transition-all flex items-center gap-1 cursor-pointer"
                 >
                   <Plus size={13} />
-                  <span>+ Thêm Bước</span>
+                  <span>+ Thêm Bước Mới</span>
                 </button>
               </div>
 
             </div>
 
-            {/* 3. Bộ Nạp Kịch Bản Mẫu Tự Động Chia Vai (Smart Script Templates) */}
+            {/* 3. Bộ Nạp Kịch Bản Mẫu Tự Động Chia Vai */}
             <div className="flex flex-wrap items-center gap-1.5 pt-1 border-t border-slate-800/80">
               <span className="text-[11px] font-black text-amber-400 flex items-center gap-1 shrink-0">
                 <Sparkles size={12} />
-                <span>Mẫu Kịch Bản Chia Vai:</span>
+                <span>Mẫu Kịch Bản Có Sẵn:</span>
               </span>
 
               <div className="flex items-center gap-1 flex-wrap flex-1">
@@ -1484,7 +1725,7 @@ export default function LivestreamFlowSequencer() {
           {/* ===================================================================== */}
           {/* 📋 DANH SÁCH CÁC BƯỚC KỊCH BẢN (STEPS LIST 1 -> 10+) */}
           {/* ===================================================================== */}
-          <div className="flex-1 overflow-y-auto p-3 space-y-3">
+          <div className="flex-1 overflow-y-auto p-2.5 space-y-2.5">
             {activePreset.steps.map((step, idx) => {
               const actionConfig = ACTION_TYPES.find(a => a.id === step.actionType) || ACTION_TYPES[0];
               const ActionIcon = actionConfig.icon;
@@ -1511,7 +1752,7 @@ export default function LivestreamFlowSequencer() {
                   }`}
                 >
                   {/* HEADER CỦA BƯỚC */}
-                  <div className="p-2.5 bg-slate-800/90 border-b border-slate-700/80 flex flex-wrap items-center justify-between gap-2">
+                  <div className="p-2 bg-slate-800/90 border-b border-slate-700/80 flex flex-wrap items-center justify-between gap-2">
                     
                     {/* Cột Trái: Số bước, Tên bước & Phân loại */}
                     <div className="flex items-center gap-2 flex-1 min-w-[220px]">
@@ -1615,40 +1856,57 @@ export default function LivestreamFlowSequencer() {
 
                   </div>
 
-                  {/* NỘI DUNG TÓM TẮT KỊCH BẢN & LỜI THOẠI */}
+                  {/* NỘI DUNG CHÍNH: KHUNG KỊCH BẢN & LỜI THOẠI AI ĐƯỢC TÁCH RIÊNG BIỆT */}
                   <div className="p-2.5 space-y-2">
-                    <div className="flex items-start gap-2">
-                      <div className="flex-1">
-                        <textarea
-                          value={step.scriptText || ''}
-                          onChange={(e) => handleUpdateStep(step.id, 'scriptText', e.target.value)}
-                          placeholder="Nhập lời thoại của nhân vật / kịch bản AI cho bước này..."
-                          rows={isExpanded ? 3 : 1}
-                          className="w-full bg-slate-950/80 text-gray-200 text-xs p-2 rounded-xl border border-slate-800 focus:border-cyan-500 outline-none resize-y transition-all"
-                        />
+                    
+                    {/* KHUNG SOẠN THẢO KỊCH BẢN & LỜI THOẠI AI NẰM RIÊNG RÕ RÀNG */}
+                    <div className="bg-slate-950/70 p-2.5 rounded-xl border border-indigo-900/40 space-y-1.5">
+                      <div className="flex items-center justify-between">
+                        <span className="text-[10px] font-black uppercase text-cyan-300 flex items-center gap-1">
+                          <FileText size={11} />
+                          <span>Lời Thoại & Kịch Bản AI Phân Đoạn Này:</span>
+                        </span>
+
+                        <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                          {/* Nút Đọc thử giọng AI */}
+                          <button
+                            type="button"
+                            onClick={() => handleTestVoiceSpeech(step.scriptText)}
+                            className="px-2 py-0.5 rounded-lg bg-indigo-900/60 hover:bg-indigo-800 text-cyan-300 border border-indigo-700/50 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                            title="Nghe thử giọng đọc AI cho đoạn này"
+                          >
+                            <Volume2 size={11} />
+                            <span>Đọc Thử AI</span>
+                          </button>
+
+                          {/* Nút Nạp File Kịch Bản Đa Định Dạng (.md, .docx, .txt, .pdf) */}
+                          <label className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-[10px] font-bold flex items-center gap-1 cursor-pointer">
+                            <Upload size={11} />
+                            <span>Nạp File (.md, .txt, .docx, .pdf)</span>
+                            <input 
+                              type="file" 
+                              accept=".md,.txt,.docx,.pdf,.json,.xlsx"
+                              onChange={(e) => handleFileUpload(step.id, e)}
+                              className="hidden"
+                            />
+                          </label>
+                        </div>
                       </div>
 
-                      {/* Nút đọc thử 0ms */}
-                      <button
-                        type="button"
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          if (step.scriptText) {
-                            previewVoiceAudio('vi-VN-Standard-A', step.scriptText);
-                          }
-                        }}
-                        className="p-2 rounded-xl bg-slate-800 hover:bg-slate-700 text-cyan-300 border border-slate-700 text-xs shrink-0 cursor-pointer"
-                        title="Đọc thử lời thoại ngay"
-                      >
-                        <Volume2 size={14} />
-                      </button>
+                      <textarea
+                        value={step.scriptText || ''}
+                        onChange={(e) => handleUpdateStep(step.id, 'scriptText', e.target.value)}
+                        placeholder="Nhập lời thoại của nhân vật / kịch bản AI cho bước này hoặc bấm nút Nạp File (.md, .docx, .txt, .pdf)..."
+                        rows={isExpanded ? 4 : 2}
+                        className="w-full bg-slate-900 text-gray-100 text-xs p-2 rounded-lg border border-slate-800 focus:border-cyan-500 outline-none resize-y transition-all font-medium leading-relaxed"
+                      />
                     </div>
 
                     {/* CHI TIẾT CẤU HÌNH KHI MỞ RỘNG (EXPANDED) */}
                     {isExpanded && (
-                      <div className="pt-2 border-t border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-3 text-xs" onClick={(e) => e.stopPropagation()}>
+                      <div className="pt-2 border-t border-slate-800 grid grid-cols-1 md:grid-cols-2 gap-2.5 text-xs" onClick={(e) => e.stopPropagation()}>
                         
-                        {/* Cột Trái: Loại hành động & Media Nền */}
+                        {/* Cột Trái: Loại hành động & Tải Media Trực Tiếp Từ Máy Tính */}
                         <div className="space-y-2 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
                           <div>
                             <label className="text-[10px] font-black uppercase text-gray-400 block mb-1">
@@ -1665,18 +1923,23 @@ export default function LivestreamFlowSequencer() {
                             </select>
                           </div>
 
+                          {/* 📂 NẠP VIDEO / ẢNH NỀN CHÍNH (HOÀN TOÀN TẢI TỪ MÁY TÍNH + THƯ VIỆN MẪU) */}
                           <div>
                             <label className="text-[10px] font-black uppercase text-gray-400 block mb-1">
                               Video / Ảnh Nền Chính:
                             </label>
-                            <div className="flex items-center gap-1.5">
-                              <input 
-                                type="text"
-                                value={step.mediaUrl || ''}
-                                onChange={(e) => handleUpdateStep(step.id, 'mediaUrl', e.target.value)}
-                                placeholder="Đường link video hoặc ảnh..."
-                                className="flex-1 bg-slate-900 text-gray-200 text-[11px] p-1.5 rounded-lg border border-slate-700 truncate"
-                              />
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <label className="px-2.5 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-black text-[11px] font-black rounded-lg cursor-pointer flex items-center gap-1 shadow-sm">
+                                <Upload size={12} />
+                                <span>Tải Từ Máy Tính</span>
+                                <input 
+                                  type="file" 
+                                  accept="video/*,image/*" 
+                                  onChange={(e) => handleDirectMediaUpload(step.id, 'mediaUrl', e)} 
+                                  className="hidden" 
+                                />
+                              </label>
+
                               <button
                                 type="button"
                                 onClick={() => {
@@ -1685,42 +1948,78 @@ export default function LivestreamFlowSequencer() {
                                   setMediaPickerAvatarId(null);
                                   setMediaPickerOpen(true);
                                 }}
-                                className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold rounded-lg shrink-0 cursor-pointer"
+                                className="px-2.5 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-bold rounded-lg cursor-pointer flex items-center gap-1"
                               >
-                                Tải / Mẫu
+                                <Sparkles size={12} />
+                                <span>Chọn Từ Mẫu 4K</span>
                               </button>
+
+                              {step.mediaUrl && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateStep(step.id, 'mediaUrl', '')}
+                                  className="p-1.5 bg-slate-800 hover:bg-rose-900/60 text-rose-300 rounded-lg text-[10px] font-bold"
+                                  title="Gỡ bỏ media này"
+                                >
+                                  <X size={12} />
+                                </button>
+                              )}
                             </div>
+                            {step.mediaUrl && (
+                              <div className="text-[10px] text-cyan-300 font-mono truncate mt-1 bg-slate-900 p-1 rounded border border-slate-800">
+                                📁 Media: {step.mediaUrl.startsWith('blob:') ? 'Tệp đã tải từ máy tính' : step.mediaUrl}
+                              </div>
+                            )}
                           </div>
 
-                          {/* Video Phụ PiP */}
+                          {/* 🎬 VIDEO PHỤ XẾP CHỒNG (PiP) */}
                           <div>
                             <label className="text-[10px] font-black uppercase text-gray-400 block mb-1">
                               Video Phụ Xếp Chồng (PiP):
                             </label>
-                            <div className="flex items-center gap-1.5">
-                              <input 
-                                type="text"
-                                value={step.secondaryMediaUrl || ''}
-                                onChange={(e) => handleUpdateStep(step.id, 'secondaryMediaUrl', e.target.value)}
-                                placeholder="Link video phụ PiP..."
-                                className="flex-1 bg-slate-900 text-gray-200 text-[11px] p-1.5 rounded-lg border border-slate-700 truncate"
-                              />
-                              <select
-                                value={step.secondaryMediaPos || 'top-right'}
-                                onChange={(e) => handleUpdateStep(step.id, 'secondaryMediaPos', e.target.value)}
-                                className="bg-slate-900 text-white text-[10px] p-1.5 rounded-lg border border-slate-700 cursor-pointer"
+                            <div className="flex items-center gap-1.5 flex-wrap">
+                              <label className="px-2.5 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-bold rounded-lg cursor-pointer flex items-center gap-1 border border-slate-700">
+                                <Upload size={12} />
+                                <span>Tải Video PiP</span>
+                                <input 
+                                  type="file" 
+                                  accept="video/*" 
+                                  onChange={(e) => handleDirectMediaUpload(step.id, 'secondaryMediaUrl', e)} 
+                                  className="hidden" 
+                                />
+                              </label>
+
+                              <button
+                                type="button"
+                                onClick={() => {
+                                  setMediaPickerStepId(step.id);
+                                  setMediaPickerTarget('secondaryMediaUrl');
+                                  setMediaPickerAvatarId(null);
+                                  setMediaPickerOpen(true);
+                                }}
+                                className="px-2.5 py-1.5 bg-indigo-950 hover:bg-indigo-900 text-indigo-300 text-[11px] font-bold rounded-lg cursor-pointer border border-indigo-700/60"
                               >
-                                <option value="top-right">Góc Phải Trên</option>
-                                <option value="top-left">Góc Trái Trên</option>
-                                <option value="bottom-right">Góc Phải Dưới</option>
-                                <option value="bottom-left">Góc Trái Dưới</option>
-                              </select>
+                                Mẫu PiP
+                              </button>
+
+                              {step.secondaryMediaUrl && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateStep(step.id, 'secondaryMediaUrl', '')}
+                                  className="p-1.5 bg-slate-800 hover:bg-rose-900/60 text-rose-300 rounded-lg text-[10px]"
+                                  title="Gỡ video PiP"
+                                >
+                                  <X size={12} />
+                                </button>
+                              )}
                             </div>
                           </div>
                         </div>
 
-                        {/* Cột Phải: Tiêu Đề Neon & Ghim TikTok Shop */}
+                        {/* Cột Phải: Tiêu Đề Neon & Banner Deal & Ghim TikTok Shop */}
                         <div className="space-y-2 bg-slate-950/60 p-2.5 rounded-xl border border-slate-800">
+                          
+                          {/* TIÊU ĐỀ CHỮ NỔI BẬT */}
                           <div>
                             <label className="text-[10px] font-black uppercase text-gray-400 block mb-1">
                               Tiêu Đề Chữ Nổi Bật (Typography):
@@ -1746,7 +2045,37 @@ export default function LivestreamFlowSequencer() {
                             </div>
                           </div>
 
-                          {/* Ghim Sản Phẩm TikTok Shop */}
+                          {/* 🖼️ TẢI BANNER / POSTER DEAL FLASH SALE TRỰC TIẾP TỪ MÁY */}
+                          <div>
+                            <label className="text-[10px] font-black uppercase text-gray-400 block mb-1">
+                              Banner Hình Ảnh / Poster Deal:
+                            </label>
+                            <div className="flex items-center gap-1.5">
+                              <label className="px-2.5 py-1 bg-slate-800 hover:bg-slate-700 text-amber-300 text-[11px] font-bold rounded-lg cursor-pointer flex items-center gap-1 border border-slate-700">
+                                <Upload size={12} />
+                                <span>Tải Ảnh Banner Từ Máy</span>
+                                <input 
+                                  type="file" 
+                                  accept="image/*" 
+                                  onChange={(e) => handleDirectMediaUpload(step.id, 'overlayImage', e)} 
+                                  className="hidden" 
+                                />
+                              </label>
+
+                              {step.overlayImage && (
+                                <button
+                                  type="button"
+                                  onClick={() => handleUpdateStep(step.id, 'overlayImage', '')}
+                                  className="p-1 bg-slate-800 hover:bg-rose-900/60 text-rose-300 rounded text-[10px]"
+                                  title="Gỡ ảnh banner"
+                                >
+                                  <X size={12} />
+                                </button>
+                              )}
+                            </div>
+                          </div>
+
+                          {/* GHIM SẢN PHẨM TIKTOK SHOP */}
                           <div>
                             <label className="text-[10px] font-black uppercase text-gray-400 block mb-1">
                               Ghim Sản Phẩm TikTok Shop:
@@ -1769,19 +2098,6 @@ export default function LivestreamFlowSequencer() {
                             </div>
                           </div>
 
-                          {/* Nạp File Văn Bản */}
-                          <div className="pt-1">
-                            <label className="px-2.5 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-gray-300 font-bold text-[11px] border border-slate-700 cursor-pointer flex items-center justify-center gap-1">
-                              <Upload size={12} />
-                              <span>Nạp File Kịch Bản (.txt, .docx, .pdf)</span>
-                              <input 
-                                type="file" 
-                                accept=".txt,.docx,.pdf,.json,.xlsx"
-                                onChange={(e) => handleFileUpload(step.id, e)}
-                                className="hidden"
-                              />
-                            </label>
-                          </div>
                         </div>
 
                       </div>

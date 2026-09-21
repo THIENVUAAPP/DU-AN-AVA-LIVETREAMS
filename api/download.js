@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     }
 
     // Đọc phiên bản mới nhất từ package.json hoặc fallback version hiện tại
-    let currentVersion = '4.2.7';
+    let currentVersion = '4.2.8';
     try {
       const fs = await import('fs');
       const path = await import('path');

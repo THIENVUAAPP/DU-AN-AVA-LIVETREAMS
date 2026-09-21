@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.2.7';
+export const APP_VERSION = '4.2.8';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.2.8 - Sân Khấu 9:16 Kéo Dài Toàn Chiều Cao, Kéo Thả & Co Giãn 8 Điểm Cố Định Theo Bước, Nạp File Trực Tiếp & Kịch Bản .MD',
+    description: '1. Sân Khấu Live 9:16 Dọc Chuẩn Smartphone Toàn Chiều Cao: Chuẩn hóa khung hình dọc điện thoại 9:16 kéo dài từ trên xuống dưới, không bị vuông ngắn; 2. Kéo Thả & Co Giãn 8 Điểm Đa Lớp (8-Point Resize & Drag): Bấm vào bất kỳ lớp nào (Avatar AI, Video phụ PiP, Banner Deal, Tiêu đề chữ neon) trên sân khấu để kéo thả và co giãn linh hoạt; 3. Tự Động Lưu Cố Định Vị Trí Từng Bước (Per-Step Persistence): Vị trí và kích thước các lớp được lưu cố định theo từng bước, không bị nhảy lệch khi chuyển bước; 4. Tải Media Trực Tiếp Từ Máy Tính (Không Cần Link): Tải video/ảnh trực tiếp từ máy tính nạp thẳng 100% lên sân khấu 9:16 tức thì 0ms; 5. Tách Khung Kịch Bản Riêng & Đọc File .MD: Ô kịch bản AI rộng rãi, hỗ trợ nạp file .md, .docx, .txt, .pdf và nghe thử giọng đọc AI 0ms; 6. Khóa Chặt 100% Hệ Thống: Bảo toàn tuyệt đối mọi module khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.2.7 - Chuẩn Hóa Sân Khấu Điện Thoại 9:16 Kéo Dài Toàn Màn Hình & Tự Động Nạp Video/Layer Lên Sân Khấu',
     description: '1. Sân Khấu Điện Thoại 9:16 Toàn Chiều Cao: Chuẩn hóa khung hình dọc điện thoại kéo dài từ trên đỉnh xuống đáy màn hình với viền bo góc kim loại và Dynamic Island; 2. Nạp Video & Media Trực Tiếp 100% Lên Sân Khấu: Bấm chọn/tải bất kỳ clip video nào là lập tức nhảy lên hiển thị trên Sân Khấu 9:16 và tự động xếp chồng theo lớp (Lớp nền chính, Video phụ PiP, Avatar AI 1-4, Banner Deal, Text Neon, TikTok Shop); 3. Căn Chỉnh & Co Giãn Linh Hoạt: Tích hợp nút Căn giữa, Tràn khung hình, Bố cục nhanh trực tiếp dưới sân khấu; 4. Sắp Xếp & Lặp Lại Timeline 24/7: Cứ chạy hoàn thành một bước là tự động hiển thị bước tiếp theo và lặp lại liên tục; 5. Khóa Chặt 100% Toàn Bộ Module Khác.'
