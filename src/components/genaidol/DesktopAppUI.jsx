@@ -5350,27 +5350,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   {isGameBanDoActive && <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-emerald-500 text-white">ĐANG CHẠY</span>}
                 </button>
 
-                {/* 7. LUỒNG LIVE IDOL 1–4 AVATAR */}
-                <button 
-                  onClick={() => {
-                    setActiveSettingsModal('workspace_sequencer');
-                    setIsSettingsDropdownOpen(false);
-                  }}
-                  className={`w-full text-left px-3 py-2 mb-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2.5 ${
-                    multiAvatarConfig?.enabled 
-                      ? (isDarkMode ? 'bg-gradient-to-r from-cyan-900/60 to-blue-900/60 text-cyan-200 border border-cyan-400' : 'bg-cyan-100 text-cyan-900 border border-cyan-300')
-                      : (isDarkMode ? 'bg-cyan-950/40 hover:bg-cyan-900/60 text-cyan-200 border border-cyan-800/40' : 'bg-cyan-50 hover:bg-cyan-500 text-cyan-800 hover:text-white')
-                  }`}
-                  title="Mở Luồng Live Idol 1–4 Avatar (Bố cục nhiều nhân vật & Kịch bản)"
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Users size={16} className="text-cyan-400 shrink-0" />
-                    <span>🎬 Luồng Live Idol 1–4 Avatar</span>
-                  </div>
-                  {multiAvatarConfig?.enabled && <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-cyan-500 text-white">{multiAvatarConfig.activeCount || 1} Avatar</span>}
-                </button>
-
-                {/* 8. LIVE AI IDOL (MÀN HÌNH ĐƠN) */}
+                {/* 7. LIVE AI IDOL (MÀN HÌNH ĐƠN) */}
                 <button 
                   onClick={() => {
                     setIsGameBattleActive(false);

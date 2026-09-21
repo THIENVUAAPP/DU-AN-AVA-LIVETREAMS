@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.4.8';
+export const APP_VERSION = '4.4.9';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.4.8 - Khắc Phục Triệt Để Lỗi Mở Tab & Tự Động Nạp Video AI Idol Avatar 4K Sẵn Có',
-    description: '1. Sửa Dứt Điểm Lỗi Mở Tab: Tối ưu hoá toàn bộ sự kiện click và gắn key động cho Modal Luồng Live Idol 1-4 Avatar, đảm bảo bấm nút là mở ngay lập tức trên toàn màn hình; 2. Tự Động Nạp Sẵn Video AI Idol 4K 60FPS: Tích hợp trực tiếp video AI Idol avatar trực tuyến tốc độ cao, không bao giờ bị trống hay báo lỗi thiếu video trên sân khấu; 3. Khóa chặt 100% tất cả các module khác.'
+    title: '⚡ Bản Cập Nhật v4.4.9 - Loại Bỏ Nút Trùng Lặp Trên Menu & Tối Ưu Mở Ngay Tab Luồng Live Idol 1-4 Avatar',
+    description: '1. Loại Bỏ Nút Trùng Lặp: Đã dọn dẹp và xóa bỏ hoàn toàn nút bấm dư thừa trên Menu Dropdown theo đúng yêu cầu; 2. Sửa Triệt Để Lỗi Mở Tab: Tối ưu nút "🎬 Luồng Live Idol 1-4 Avatar" mở thẳng vào Sequencer đa avatar; 3. Khóa chặt 100% tất cả các module hệ thống.'
   },
   {
     title: '⚡ Bản Cập Nhật v4.4.6 - Khắc Phục Triệt Để Lỗi Bấm Luồng Avatar & Thống Nhất Truy Cập Luồng Live Idol 1-4 Avatar',

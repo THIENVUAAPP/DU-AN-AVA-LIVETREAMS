@@ -131,8 +131,8 @@ export const DEFAULT_PRESETS = [
         avatarSpeaker: 'avatar_1',
         durationSeconds: 60,
         scriptText: 'Dạ em xin chào tất cả mọi người đã vào xem phiên livestream hôm nay nha! Các bạn bấm thả tim và bình luận để nhận ưu đãi đặc biệt nhé!',
-        mediaUrl: '/idols/phong_studio_ngoc_trinh_4k.mp4',
-        lipsyncUrl: '/idols/phong_studio_ngoc_trinh_4k.mp4',
+        mediaUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+        lipsyncUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
         voiceMode: 'avatar_lipsync',
         commentHandling: 'ai_brain',
         overlayText: '🌸 CHÀO MỪNG ĐẾN VỚI PHIÊN LIVESTREAM',
@@ -284,7 +284,7 @@ export default function LivestreamFlowSequencer() {
     const steps = activePreset?.steps || [];
     if (steps.length === 0) {
       return {
-        mediaUrl: multiAvatarConfig?.backgroundUrl || '/idols/phong_studio_ngoc_trinh_4k.mp4',
+        mediaUrl: multiAvatarConfig?.backgroundUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
         mainMediaTransform: null,
         mainMediaChromaKey: null,
         secondaryMediaUrl: null,
@@ -326,7 +326,7 @@ export default function LivestreamFlowSequencer() {
       }
     }
     if (!mediaUrl || !mediaUrl.trim()) {
-      mediaUrl = multiAvatarConfig?.backgroundUrl || '/idols/phong_studio_ngoc_trinh_4k.mp4';
+      mediaUrl = multiAvatarConfig?.backgroundUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4';
     }
 
     // 2. Video Phụ PiP (Picture-in-Picture)
@@ -1715,7 +1715,7 @@ export default function LivestreamFlowSequencer() {
                               else el.play().catch(() => {});
                             }
                           }}
-                          src={activeMediaUrl || '/idols/phong_studio_ngoc_trinh_4k.mp4'} 
+                          src={activeMediaUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'} 
                           autoPlay={!isStageMediaPaused} 
                           loop 
                           muted 
@@ -1939,7 +1939,7 @@ export default function LivestreamFlowSequencer() {
                               else el.play().catch(() => {});
                             }
                           }}
-                          src={vidSrc || '/idols/phong_studio_ngoc_trinh_4k.mp4'} 
+                          src={vidSrc || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4'} 
                           autoPlay={!isStageMediaPaused} 
                           loop 
                           muted 
