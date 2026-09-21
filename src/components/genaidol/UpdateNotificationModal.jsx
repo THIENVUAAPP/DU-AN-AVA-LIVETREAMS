@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.2.3';
+export const APP_VERSION = '4.2.4';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.2.4 - Hợp Nhất Hoàn Hảo Studio 1–4 Avatar & Chuỗi Kịch Bản Live Đa Phân Đoạn (Pro)',
+    description: '1. Hợp Nhất 1 Tab Duy Nhất "🎬 Studio 1–4 Avatar & Kịch Bản Live": Tích hợp trọn vẹn sức mạnh Studio 1-4 nhân vật và Chuỗi kịch bản phân đoạn 24/7 trong một giao diện tinh gọn, thông minh, dễ dùng bậc nhất; 2. Hỗ Trợ Đầy Đủ 1 Đến 4 Avatar AI: Tùy biến linh hoạt số lượng từ 1 người bán hàng độc diễn, 2 người chốt đơn, 3 người hoạt náo PK đến 4 người talkshow; 3. Thanh Điều Hướng 3 Phân Hệ (Subview Switcher): Chuyển đổi 1 chạm mượt mà giữa [🎬 Kịch Bản Từng Bước], [👥 Bố Cục Studio 1-4 Avatar] và [📚 Kho Mẫu Kịch Bản 1-4 Người]; 4. Chọn Avatar Đọc Thoại Riêng Cho Từng Bước: Từng phân đoạn kịch bản cho phép chỉ định chính xác Avatar nào đọc thoại và nhép miệng (Avatar 1, Avatar 2, Avatar 3, Avatar 4 hoặc Cả nhóm); 5. Kho Mẫu Kịch Bản Có Sẵn "Nạp 1 Click": Thư viện kịch bản đa dạng ngành nghề với nút nạp nhanh tự động chuyển thành chuỗi kịch bản phân đoạn; 6. Đồng Bộ 0ms 4K 60 FPS Trực Tiếp: Bật/Dừng tức thì 100%, đồng bộ tuyệt đối với Sân khấu live 9:16, OBS Window Capture và Link TikTok Live Studio.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.2.3 - Tinh Gọn Header Kịch Bản, Nút Dừng Tức Thì, Video Phụ PiP & Tùy Chỉnh Font/Cỡ Chữ Đa Lớp',
     description: '1. Tối Ưu Toolbar Sequencer Siêu Gọn Gàng: Thu gọn thanh điều khiển còn 1 hàng duy nhất cao 45px, nhường 85% không gian màn hình cho cấu hình các bước kịch bản; 2. Nút Bật / Dừng Tức Thì: Bấm Bật chạy ngay, bấm Dừng ngắt tức khắc toàn bộ timer, giọng đọc AI và video đồng bộ 0ms; 3. Lớp Video Phụ PiP (Picture-in-Picture): Mỗi bước kịch bản hỗ trợ video phụ xếp chồng lên video nền chính với tùy chọn vị trí và kích thước; 4. Tùy Biến Typography & Kích Thước: Tự do đổi font chữ tiếng Việt (Montserrat, Be Vietnam, Lexend, Impact...), cỡ chữ, màu chữ và độ phóng to ảnh banner; 5. AI Smart Jump & Trả Lời Bình Luận: Đọc hết câu rồi tạm dừng trả lời câu hỏi bán hàng quan trọng, chèn câu dẫn mượt mà và tự động nhảy đúng bước kịch bản khi khán giả hỏi; 6. Nút Live Test Sân Khấu: Xem trước trực tiếp toàn bộ các lớp xếp chồng lên Sân Khấu Live 9:16 và OBS.'

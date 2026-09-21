@@ -78,6 +78,15 @@ export const SvgChromaFilters = () => (
 
 export const SCRIPT_TEMPLATES = [
   {
+    id: 'single_sales',
+    title: '👤 Kịch Bản 1 Người: Idol Live Độc Diễn Bán Hàng & Chốt Đơn',
+    count: 1,
+    desc: 'Idol tự tin dẫn dắt toàn bộ phiên live, vừa giới thiệu sản phẩm vừa trả lời comment và giục khách chốt deal giỏ hàng.',
+    script: `[Idol]: Dạ em xin chào tất cả mọi người đã đến với phiên livestream hôm nay nha!
+[Idol]: Hôm nay bên em có chương trình Flash Sale độc quyền giảm giá đến 50% cho tất cả các mã sản phẩm hot nhất!
+[Idol]: Mọi người nhanh tay bấm ngay vào nút Giỏ Hàng ở góc trái màn hình để săn deal hời và voucher freeship liền tay nha!`
+  },
+  {
     id: 'dual_sales',
     title: '🔥 Kịch Bản 2 Người: Idol Live + Trợ Lý Thúc Giục Chốt Đơn',
     count: 2,
@@ -152,7 +161,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
   }, []);
 
   const safeAvatars = (config.avatars && config.avatars.length > 0) ? config.avatars : DEFAULT_MULTI_AVATAR_CONFIG.avatars;
-  const activeCount = Math.min(4, Math.max(2, config.activeCount || 2));
+  const activeCount = Math.min(4, Math.max(1, config.activeCount || 1));
   const activeAvatars = safeAvatars.slice(0, activeCount);
   const extraImageLayers = Array.isArray(config.extraImageLayers) ? config.extraImageLayers : [];
   
@@ -168,9 +177,9 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     setConfig(updated);
     saveMultiAvatarConfig(updated);
     if (nextVal) {
-      toast.success('✅ Đã BẬT chế độ Studio 2–4 Avatar cho phòng Live!');
+      toast.success('✅ Đã BẬT chế độ Studio 1–4 Avatar cho phòng Live!');
     } else {
-      toast.info('⏹️ Đã TẮT Studio 2–4 Avatar, phòng Live trở về 1 Avatar tiêu chuẩn.');
+      toast.info('⏹️ Đã TẮT Studio 1–4 Avatar, phòng Live trở về 1 Avatar tiêu chuẩn.');
     }
   };
 
@@ -996,7 +1005,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                   <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
                   <span className="relative inline-flex rounded-full h-2 w-2 bg-emerald-300"></span>
                 </span>
-                <span>✅ BẬT 2-4 AVATAR</span>
+                <span>✅ BẬT 1-4 AVATAR</span>
               </>
             ) : (
               <>
@@ -1009,7 +1018,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
           <div className="flex items-center gap-1">
             <span className="text-[11px] font-black text-gray-500 uppercase">Nhân vật:</span>
             <div className="flex items-center gap-1 bg-slate-100 dark:bg-black/40 p-0.5 rounded-xl border border-gray-300 dark:border-gray-700">
-              {[2, 3, 4].map(num => (
+              {[1, 2, 3, 4].map(num => (
                 <button
                   key={num}
                   type="button"
@@ -1020,7 +1029,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                       : 'text-gray-600 dark:text-gray-300 hover:text-blue-600'
                   }`}
                 >
-                  {num === 2 ? '👥 2 Người' : num === 3 ? '👨‍👩‍👦 3 Người' : '🌟 4 Người'}
+                  {num === 1 ? '👤 1 Người' : num === 2 ? '👥 2 Người' : num === 3 ? '👨‍👩‍👦 3 Người' : '🌟 4 Người'}
                 </button>
               ))}
             </div>

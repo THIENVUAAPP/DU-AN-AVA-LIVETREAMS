@@ -1,7 +1,7 @@
 {
-  "name": "ai-livestream-suite",
+  "name": "project-bolt-sb1-prmg8wvd",
   "private": true,
-  "version": "4.2.3",
+  "version": "4.2.4",
   "type": "module",
   "main": "electron-main.cjs",
   "build": {

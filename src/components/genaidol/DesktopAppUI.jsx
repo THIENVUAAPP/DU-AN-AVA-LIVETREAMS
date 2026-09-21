@@ -5273,7 +5273,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   {isGameBanDoActive && <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-emerald-500 text-white">ĐANG CHẠY</span>}
                 </button>
 
-                {/* 7. STUDIO 2–4 AVATAR */}
+                {/* 7. STUDIO 1–4 AVATAR & KỊCH BẢN LIVE */}
                 <button 
                   onClick={() => {
                     setShowMultiAvatarStudioModal(true);
@@ -5284,13 +5284,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       ? (isDarkMode ? 'bg-gradient-to-r from-cyan-900/60 to-blue-900/60 text-cyan-200 border border-cyan-400' : 'bg-cyan-100 text-cyan-900 border border-cyan-300')
                       : (isDarkMode ? 'bg-cyan-950/40 hover:bg-cyan-900/60 text-cyan-200 border border-cyan-800/40' : 'bg-cyan-50 hover:bg-cyan-500 text-cyan-800 hover:text-white')
                   }`}
-                  title="Mở Studio 2–4 Avatar (Đối thoại nhiều nhân vật)"
+                  title="Mở Studio 1–4 Avatar (Bố cục nhiều nhân vật & Kịch bản)"
                 >
                   <div className="flex items-center gap-2.5">
                     <Users size={16} className="text-cyan-400 shrink-0" />
-                    <span>Studio 2–4 Avatar (Đối Thoại AI)</span>
+                    <span>Studio 1–4 Avatar & Kịch Bản Live</span>
                   </div>
-                  {multiAvatarConfig?.enabled && <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-cyan-500 text-white">{multiAvatarConfig.activeCount || 2} Avatar</span>}
+                  {multiAvatarConfig?.enabled && <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-cyan-500 text-white">{multiAvatarConfig.activeCount || 1} Avatar</span>}
                 </button>
 
                 {/* 8. LIVE AI IDOL (MÀN HÌNH ĐƠN) */}

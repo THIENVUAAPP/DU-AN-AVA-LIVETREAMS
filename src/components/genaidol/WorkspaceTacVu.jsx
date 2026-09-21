@@ -87,8 +87,7 @@ function UniversalFileUploadButton({
 }
 
 const EVENTS = [
-  { id: 'flow_sequencer', label: '🎬 Chuỗi Kịch Bản Live Đa Phân Đoạn', icon: Layers, color: 'text-rose-500', desc: 'Điều phối chuỗi sự kiện phân đoạn tự động 24/7: Avatar chào mở màn -> Trả lời comment TikTok -> Chiếu video sản phẩm -> Chiếu video feedback -> Tư vấn ghim giỏ hàng -> CTA chốt sale. Hỗ trợ lưu trữ & chuyển đổi nhiều Preset linh hoạt.' },
-  { id: 'multi_avatar_studio', label: '👥 Studio 2–4 Avatar', icon: Users, color: 'text-purple-600', desc: 'Thiết lập phiên livestream tương tác 2, 3 hoặc 4 Nhân Vật AI đồng thời với Giọng Đọc, Video Lắng Nghe và Video Nhép Miệng Lip-sync độc lập.' },
+  { id: 'flow_sequencer', label: '🎬 Studio 1–4 Avatar & Kịch Bản Live', icon: Layers, color: 'text-rose-500', desc: 'Studio tương tác 1 đến 4 Avatar AI kết hợp chuỗi kịch bản phân đoạn tự động 24/7 (Đổi cảnh video, Bố cục 1-4 Avatar, Hình ảnh, Giọng đọc AI, Ghim giỏ hàng TikTok Shop).' },
   { id: 'script_broadcast', label: '📜 Kịch bản Idol', icon: FileText, color: 'text-indigo-600', desc: 'Thiết lập kịch bản bán hàng tuần tự (Fixed Script) hoặc bộ não AI tư vấn từ Kho Tri Thức Doanh Nghiệp.' },
   { id: 'checkout', label: '🛒 Chốt đơn', icon: ShoppingCart, color: 'text-blue-500', desc: 'Khai báo các sản phẩm có trong giỏ hàng để AI tự động nhận diện từ khóa, phát video minh họa và tư vấn chốt đơn cho từng sản phẩm.' },
   { id: 'special_gift', label: 'Quà tặng Đặc biệt', icon: Sparkles, color: 'text-yellow-500', desc: 'Tạo ra các phản ứng độc đáo và ấn tượng cho những món quà giá trị (Sư tử, Du thuyền...) để tri ân những người hâm mộ lớn.' },
@@ -1541,22 +1540,11 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
 
           {/* ========================================================================= */}
           {/* ========================================================================= */}
-          {/* 0. CHUỖI KỊCH BẢN PHÂN ĐOẠN (MULTI-SECTION SEQUENCER & PRESETS) */}
+          {/* 0. STUDIO 1–4 AVATAR & CHUỖI KỊCH BẢN PHÂN ĐOẠN LIVE TỰ ĐỘNG */}
           {/* ========================================================================= */}
-          {selectedEventId === 'flow_sequencer' ? (
+          {(selectedEventId === 'flow_sequencer' || selectedEventId === 'multi_avatar_studio') ? (
             <div className="h-full flex flex-col">
               <LivestreamFlowSequencer />
-            </div>
-          ) : selectedEventId === 'multi_avatar_studio' ? (
-            <div className="h-full flex flex-col">
-              <MultiAvatarStudioPanel 
-                isEmbedded={true}
-                onApplyScriptTemplate={(scriptText, count) => {
-                  handleUpdateActiveScriptTab('fixedScriptText', scriptText);
-                  setSelectedEventId('script_broadcast');
-                  toast.success(`✨ Đã nạp kịch bản ${count} nhân vật vào tab Kịch Bản!`);
-                }}
-              />
             </div>
           ) : selectedEventId === 'special_gift' ? (
             /* ========================================================================= */
@@ -3690,7 +3678,7 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
         </div>
 
         {/* Footer Save & Export/Import Buttons */}
-        {selectedEventId !== 'multi_avatar_studio' && (
+        {selectedEventId !== 'multi_avatar_studio' && selectedEventId !== 'flow_sequencer' && (
           <div className="mt-3 flex flex-col sm:flex-row gap-2">
             <button 
               onClick={handleSave}
