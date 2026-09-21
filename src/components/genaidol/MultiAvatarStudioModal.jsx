@@ -725,9 +725,35 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     const updated = { ...config, enabled: true };
     setConfig(updated);
     saveMultiAvatarConfig(updated);
+    
+    // 1. Dispatch Custom Event nội bộ
     window.dispatchEvent(new CustomEvent('avalive_multi_avatar_changed', { detail: updated }));
+    
+    // 2. BroadcastChannel cho OBS Window Capture & TikTok Live Studio
+    try {
+      const bc = new BroadcastChannel('avalive_master_live_stream');
+      bc.postMessage({
+        type: 'MULTI_AVATAR_UPDATE',
+        config: updated,
+        mediaUrl: updated.backgroundUrl || '',
+        timestamp: Date.now()
+      });
+    } catch (e) {}
+
+    // 3. Đẩy lên Backend Live State cho Online Player
+    fetch('/api/live-state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        activeTab: 'multi_avatar',
+        multiAvatarConfig: updated,
+        mediaUrl: updated.backgroundUrl || '',
+        updatedAt: Date.now()
+      })
+    }).catch(() => {});
+
     setSavedSuccess(true);
-    toast.success('✨ Đã lưu & đồng bộ chế độ Studio 1–4 Avatar ra Sân Khấu Chính!');
+    toast.success('✨ Đã lưu & đồng bộ 100% Studio 1–4 Avatar ra Sân Khấu Chính!');
     setTimeout(() => {
       setSavedSuccess(false);
       if (onClose) onClose();

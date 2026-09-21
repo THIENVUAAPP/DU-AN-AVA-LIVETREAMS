@@ -319,7 +319,19 @@ function fillTemplate(template, vars = {}) {
                   type === 'APOLOGY' ? 'apology' : 
                   type === 'CALL_TO_ACTION' ? 'call_to_action' : '';
 
-    const currentEvConfig = evKey ? (configs[evKey] || {}) : {};
+    // 🛡️ BẢO VỆ TUYỆT ĐỐI: CHỈ THỰC THI SỰ KIỆN & ĐỌC BÌNH LUẬN KHI PHIÊN LIVE ĐANG PHÁT HOẶC TEST THỦ CÔNG
+    // Tuyệt đối không tự ý đọc bình luận, chào hỏi hay chốt đơn khi chưa mở Live
+    const isLiveBroadcasting = isConnected === true || 
+      (typeof window !== 'undefined' && (
+        window.__isLiveBroadcasting === true ||
+        localStorage.getItem('avalive_is_live') === 'true' ||
+        localStorage.getItem('avalive_live_active') === 'true' ||
+        sessionStorage.getItem('avalive_is_live') === 'true'
+      ));
+
+    if (!isLiveBroadcasting && !isTestMode) {
+      return;
+    }
 
     // 🛡️ CHẶN 100% BÌNH LUẬN VÀ SỰ KIỆN XEN VÀO KHI ĐANG CHẠY THỬ KỊCH BẢN (SCRIPT PREVIEW / TESTER)
     // Đảm bảo kịch bản chạy thử được đọc liên tục, trọn vẹn, không ngắt quãng

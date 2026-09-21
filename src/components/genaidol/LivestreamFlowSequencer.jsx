@@ -1408,21 +1408,21 @@ export default function LivestreamFlowSequencer() {
         {/* ========================================================================= */}
         <div className="w-full lg:w-[32%] xl:w-[30%] flex flex-col h-full bg-[#0d101e] rounded-2xl border border-indigo-900/40 p-2 shadow-2xl shrink-0 overflow-hidden min-h-0 relative">
           
-          {/* 🌟 THANH CÔNG CỤ LỚP XẾP HÀNG NGANG NẰM PHÍA TRÊN SÂN KHẤU (Ảnh số 1 & Ảnh số 4) */}
+          {/* 🌟 THANH CÔNG CỤ LỚP XẾP HÀNG NGANG GỌN GÀNG NẰM TRONG KHUNG SÂN KHẤU (Ảnh số 1) */}
           {selectedLayer.type ? (
             <div 
-              className="w-full flex items-center justify-between gap-1 bg-slate-950/95 backdrop-blur-md px-2 py-1 rounded-xl border border-cyan-400 shadow-xl mb-1.5 shrink-0 animate-in fade-in slide-in-from-top-1 duration-200"
+              className="w-full flex items-center justify-between gap-1 bg-slate-950/95 backdrop-blur-md px-1.5 py-1 rounded-xl border border-cyan-400 shadow-xl mb-1.5 shrink-0 animate-in fade-in slide-in-from-top-1 duration-200"
               onClick={(e) => e.stopPropagation()}
             >
-              <span className="text-[10px] font-black text-cyan-300 uppercase tracking-wider truncate shrink-0">
-                {selectedLayer.type === 'avatar' ? `Avatar ${selectedLayer.id}` : selectedLayer.type === 'main_media' ? 'Nền Chính' : selectedLayer.type === 'pip' ? 'Video PiP' : selectedLayer.type === 'banner' ? 'Banner' : 'Chữ'}
+              <span className="px-1.5 py-0.5 rounded-md bg-cyan-950 text-[9px] font-black text-cyan-300 border border-cyan-500/40 uppercase shrink-0" title={`Lớp: ${selectedLayer.type}`}>
+                {selectedLayer.type === 'avatar' ? `AV${selectedLayer.id}` : selectedLayer.type === 'main_media' ? 'NỀN' : selectedLayer.type === 'pip' ? 'PIP' : selectedLayer.type === 'banner' ? 'ẢNH' : 'CHỮ'}
               </span>
 
-              <div className="flex items-center gap-1 shrink-0">
+              <div className="flex items-center gap-0.5 shrink-0">
                 {/* 📁 Nút Tải Video/Ảnh (Ảnh 4) */}
                 {selectedLayer.type !== 'text' && (
-                  <label className="px-1.5 py-1 rounded-lg text-[9px] font-black bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-0.5 cursor-pointer shadow-xs" title="Tải Video/Ảnh từ máy tính lên">
-                    <Upload size={10} />
+                  <label className="px-1.5 py-0.5 rounded-md text-[8.5px] font-black bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-0.5 cursor-pointer shadow-xs whitespace-nowrap" title="Tải Video/Ảnh từ máy tính lên">
+                    <Upload size={9} />
                     <span>Tải Lên</span>
                     <input 
                       type="file" 
@@ -1438,10 +1438,10 @@ export default function LivestreamFlowSequencer() {
                   <button
                     type="button"
                     onClick={() => handleInstantCanvasBgRemoval(selectedLayer.type, selectedLayer.id, 'auto')}
-                    className="px-1.5 py-1 rounded-lg text-[9px] font-black bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white flex items-center gap-0.5 cursor-pointer shadow-xs"
+                    className="px-1.5 py-0.5 rounded-md text-[8.5px] font-black bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white flex items-center gap-0.5 cursor-pointer shadow-xs whitespace-nowrap"
                     title="Tự động tách mọi loại nền"
                   >
-                    <Wand2 size={10} />
+                    <Wand2 size={9} />
                     <span>Xóa Nền</span>
                   </button>
                 )}
@@ -1450,19 +1450,19 @@ export default function LivestreamFlowSequencer() {
                 <button
                   type="button"
                   onClick={handleLayerBringForward}
-                  className="px-1 py-1 rounded text-[9px] font-bold bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-slate-700 flex items-center gap-0.5 cursor-pointer"
+                  className="px-1 py-0.5 rounded text-[8.5px] font-bold bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-slate-700 flex items-center gap-0.5 cursor-pointer"
                   title="Đưa lên trên 1 lớp"
                 >
-                  <ArrowUp size={9} />
+                  <ArrowUp size={8.5} />
                   <span>Lên</span>
                 </button>
                 <button
                   type="button"
                   onClick={handleLayerSendBackward}
-                  className="px-1 py-1 rounded text-[9px] font-bold bg-slate-900 hover:bg-slate-800 text-amber-300 border border-slate-700 flex items-center gap-0.5 cursor-pointer"
+                  className="px-1 py-0.5 rounded text-[8.5px] font-bold bg-slate-900 hover:bg-slate-800 text-amber-300 border border-slate-700 flex items-center gap-0.5 cursor-pointer"
                   title="Đưa xuống dưới 1 lớp"
                 >
-                  <ArrowDown size={9} />
+                  <ArrowDown size={8.5} />
                   <span>Xuống</span>
                 </button>
 
@@ -1470,10 +1470,10 @@ export default function LivestreamFlowSequencer() {
                 <button
                   type="button"
                   onClick={() => handleDeleteLayerFromStep(currentStep.id, selectedLayer.type, selectedLayer.id)}
-                  className="px-1.5 py-1 rounded-lg text-[9px] font-black bg-rose-950/80 hover:bg-rose-900 text-rose-300 hover:text-white border border-rose-600/40 flex items-center gap-0.5 cursor-pointer"
+                  className="px-1.5 py-0.5 rounded-md text-[8.5px] font-black bg-rose-950/80 hover:bg-rose-900 text-rose-300 hover:text-white border border-rose-600/40 flex items-center gap-0.5 cursor-pointer"
                   title="Xóa lớp này"
                 >
-                  <Trash2 size={10} />
+                  <Trash2 size={8.5} />
                   <span>Xóa</span>
                 </button>
 
@@ -1481,10 +1481,10 @@ export default function LivestreamFlowSequencer() {
                 <button
                   type="button"
                   onClick={() => setSelectedLayer({ type: null, id: null })}
-                  className="p-1 rounded text-gray-400 hover:text-white cursor-pointer"
+                  className="p-0.5 rounded text-gray-400 hover:text-white cursor-pointer"
                   title="Đóng chọn"
                 >
-                  <X size={11} />
+                  <X size={10} />
                 </button>
               </div>
             </div>
@@ -2038,57 +2038,57 @@ export default function LivestreamFlowSequencer() {
 
           </div>
 
-          {/* 🌟 THANH THAO TÁC CĂN CHỈNH VỊ TRÍ GỌN GÀNG ĐÚNG 1 HÀNG DUY NHẤT (ẢNH 5) */}
+          {/* 🌟 THANH THAO TÁC CĂN CHỈNH VỊ TRÍ GỌN GÀNG ĐÚNG 1 HÀNG DUY NHẤT (ẢNH 2 & ẢNH 5) */}
           <div className="pt-1 mt-1 border-t border-indigo-900/40 shrink-0">
-            <div className="flex items-center justify-between gap-1 py-0.5">
+            <div className="flex items-center justify-between gap-0.5 py-0.5 w-full">
               
               {/* 5 Nút Thao Tác Chuẩn 1 Hàng */}
-              <div className="flex items-center gap-1 flex-1 min-w-0">
+              <div className="flex items-center gap-0.5 flex-1 min-w-0">
                 <button
                   type="button"
                   onClick={() => handleApplyPresetLayout('sales_duo')}
-                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-cyan-300 font-black text-[10px] border border-slate-700 cursor-pointer flex items-center justify-center gap-0.5 whitespace-nowrap shadow-xs"
+                  className="px-1.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-cyan-300 font-black text-[9px] border border-slate-700 cursor-pointer flex items-center justify-center gap-0.5 whitespace-nowrap shadow-xs"
                   title="Bố cục 2 người bán hàng"
                 >
-                  🛍️ Bán Hàng
+                  🛍️ Bán
                 </button>
                 <button
                   type="button"
                   onClick={() => handleApplyPresetLayout('game_pk')}
-                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-purple-300 font-black text-[10px] border border-slate-700 cursor-pointer flex items-center justify-center gap-0.5 whitespace-nowrap shadow-xs"
+                  className="px-1.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-purple-300 font-black text-[9px] border border-slate-700 cursor-pointer flex items-center justify-center gap-0.5 whitespace-nowrap shadow-xs"
                   title="Bố cục PK đối kháng"
                 >
-                  ⚔️ PK Đấu
+                  ⚔️ PK
                 </button>
                 <button
                   type="button"
                   onClick={handleCenterSelectedLayer}
-                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-emerald-300 font-black text-[10px] border border-slate-700 cursor-pointer flex items-center justify-center gap-0.5 whitespace-nowrap shadow-xs"
+                  className="px-1.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-emerald-300 font-black text-[9px] border border-slate-700 cursor-pointer flex items-center justify-center gap-0.5 whitespace-nowrap shadow-xs"
                   title="Căn giữa đối tượng đang chọn"
                 >
-                  <Scaling size={11} /> Giữa
+                  <Scaling size={9.5} /> Giữa
                 </button>
                 <button
                   type="button"
                   onClick={handleFillSelectedLayer}
-                  className="px-2 py-1 rounded-lg bg-slate-800 hover:bg-slate-700 text-blue-300 font-black text-[10px] border border-slate-700 cursor-pointer flex items-center justify-center gap-0.5 whitespace-nowrap shadow-xs"
+                  className="px-1.5 py-1 rounded-md bg-slate-800 hover:bg-slate-700 text-blue-300 font-black text-[9px] border border-slate-700 cursor-pointer flex items-center justify-center gap-0.5 whitespace-nowrap shadow-xs"
                   title="Tràn toàn khung hình sân khấu"
                 >
-                  <Maximize2 size={11} /> Tràn
+                  <Maximize2 size={9.5} /> Tràn
                 </button>
                 <button
                   type="button"
                   onClick={handleApplyLayoutToAllSteps}
-                  className="px-2 py-1 rounded-lg bg-indigo-900/90 hover:bg-indigo-800 text-amber-300 font-black text-[10px] border border-amber-400/40 cursor-pointer flex items-center justify-center gap-1 whitespace-nowrap shadow-xs"
+                  className="px-1.5 py-1 rounded-md bg-indigo-900/90 hover:bg-indigo-800 text-amber-300 font-black text-[9px] border border-amber-400/40 cursor-pointer flex items-center justify-center gap-0.5 whitespace-nowrap shadow-xs"
                   title="Khóa và áp dụng vị trí hiện tại cho toàn bộ các bước"
                 >
-                  <Lock size={11} /> Khóa
+                  <Lock size={9.5} /> Khóa
                 </button>
               </div>
 
-              {/* Thông tin Avatar đang nói */}
-              <div className="text-[10px] font-black text-indigo-300 truncate shrink-0 bg-slate-900/90 px-2 py-1 rounded-lg border border-slate-800" title={`Nhân vật nói: ${currentStep?.avatarSpeaker?.toUpperCase() || 'AVATAR_1'}`}>
-                🗣️ {currentStep?.avatarSpeaker?.toUpperCase() || 'AVATAR_1'}
+              {/* Thông tin Avatar đang nói (Rút gọn) */}
+              <div className="text-[9px] font-black text-indigo-300 truncate shrink-0 bg-slate-900/90 px-1.5 py-1 rounded-md border border-slate-800" title={`Nhân vật nói: ${currentStep?.avatarSpeaker?.toUpperCase() || 'AVATAR_1'}`}>
+                🗣️ AV{currentStep?.avatarSpeaker?.replace(/[^0-9]/g, '') || '1'}
               </div>
             </div>
           </div>

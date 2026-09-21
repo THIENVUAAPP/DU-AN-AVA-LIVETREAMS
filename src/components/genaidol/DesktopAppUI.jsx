@@ -2511,8 +2511,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       setFlowSequencerOverlay(overlayData);
       try { localStorage.setItem('avalive_sequencer_overlay', JSON.stringify(overlayData)); } catch (err) {}
 
-      // 2. Cập nhật trực tiếp Video trên Màn hình chính của Phần mềm (Ảnh số 3)
-      if (desktopVideoRef.current) {
+      // 2. Cập nhật trực tiếp Video & Media trên Màn hình chính của Phần mềm (Sân Khấu Chính)
+      if (mediaUrl) {
+        setUserLockedMediaUrl(mediaUrl);
+        setUserLockedMedia(mediaUrl);
+      }
+      if (desktopVideoRef.current && mediaUrl) {
         if (desktopVideoRef.current.src !== mediaUrl) {
           desktopVideoRef.current.src = mediaUrl;
           desktopVideoRef.current.currentTime = 0;

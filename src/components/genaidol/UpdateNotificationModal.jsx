@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.3.9';
+export const APP_VERSION = '4.4.0';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.4.0 - Bảo Vệ Sự Kiện & Bình Luận Chỉ Đọc Khi Phát Live, Gom Gọn Thanh Công Cụ Nằm Trong Khung Sân Khấu, Chống Chồng Chéo Nút & Đồng Bộ Sân Khấu Chính 100%',
+    description: '1. Chỉ Đọc Bình Luận & Kích Hoạt Sự Kiện Khi Phát Live: Khóa chặt toàn bộ tiến trình đọc bình luận, chào người mới, chốt sale... chỉ cho phép thực thi khi người dùng chính thức phát Live hoặc Test thủ công; 2. Gom Gọn Thanh Công Cụ Ngang Nằm Trọn Trong Khung Sân Khấu (Ảnh 1): Bỏ chữ Avatar dài dòng, thu nhỏ gọn nhãn lớp và các nút thao tác để hiển thị đầy đủ 100% bên trong khung, triệt tiêu hoàn toàn tràn viền; 3. Tinh Gọn Thanh Điều Khiển Dưới Sân Khấu Chống Chồng Chéo (Ảnh 2): Rút gọn 5 nút bấm và nhãn Avatar nói, loại bỏ 100% tình trạng đè chữ hay tràn lề mé bên phải; 4. Đồng Bộ Toàn Diện Từ Studio 1–4 Avatar Ra Sân Khấu Chính: Khi bấm Đồng Bộ hoặc Bấm Chạy kịch bản trong Studio 1–4 Avatar / Sequencer, toàn bộ video, hình ảnh, nhân vật, tiêu đề sẽ lập tức hiển thị đồng bộ ra Sân Khấu Chính, OBS Window Capture và Link Online HTTPS; 5. Khóa Chặt 100% Toàn Bộ Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D, Luồng phát 60 FPS 4K.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.3.9 - Xếp Thanh Công Cụ Ngang Trên Sân Khấu, Rút Gọn Tiêu Đề Gọn Gàng, Nút Tải Video/Ảnh Trên Bounding Box & Tinh Gọn 1 Hàng Nút Dưới',
     description: '1. Thanh Công Cụ Lớp Xếp Ngang Trên Sân Khấu (Ảnh 1 & 3): Dời toàn bộ công cụ lớp (Xóa Nền AI, Lên, Xuống, Xóa Lớp, Đóng) thành hàng ngang nằm phía trên khung Sân khấu, xóa bỏ thanh tiêu đề cồng kềnh giúp giao diện thoáng đãng và dễ thao tác; 2. Rút Gọn Tiêu Đề Kịch Bản Cực Kỳ Tinh Gọn (Ảnh 2): Thu gọn phần tiêu đề trên cùng chỉ còn "🎬 Kịch Bản Live" kèm dropdown chọn kịch bản nhỏ gọn, xóa sạch các ô chữ dư thừa; 3. Nút Tải Video/Ảnh Trực Tiếp Trên Bounding Box (Ảnh 4): Bổ sung nút 📁 Tải Video/Ảnh trực tiếp trên khung bao (Bounding Box) khi chọn bất kỳ Avatar, Video Chính, Video PiP hay Banner nào để thay thế media ngay tức thì; 4. Tinh Gọn Thanh Nút Điều Khiển 1 Hàng Duy Nhất (Ảnh 5): Bố trí chuẩn xác 5 nút chức năng (🛍️ Bán Hàng, ⚔️ PK Đấu, 🎯 Giữa, 🔲 Tràn, 🔒 Khóa) nằm gọn gàng trên 1 hàng duy nhất không bị cuộn ngang; 5. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D, Luồng phát 60 FPS 4K.'
