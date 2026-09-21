@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.3.8';
+export const APP_VERSION = '4.3.9';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.3.9 - Xếp Thanh Công Cụ Ngang Trên Sân Khấu, Rút Gọn Tiêu Đề Gọn Gàng, Nút Tải Video/Ảnh Trên Bounding Box & Tinh Gọn 1 Hàng Nút Dưới',
+    description: '1. Thanh Công Cụ Lớp Xếp Ngang Trên Sân Khấu (Ảnh 1 & 3): Dời toàn bộ công cụ lớp (Xóa Nền AI, Lên, Xuống, Xóa Lớp, Đóng) thành hàng ngang nằm phía trên khung Sân khấu, xóa bỏ thanh tiêu đề cồng kềnh giúp giao diện thoáng đãng và dễ thao tác; 2. Rút Gọn Tiêu Đề Kịch Bản Cực Kỳ Tinh Gọn (Ảnh 2): Thu gọn phần tiêu đề trên cùng chỉ còn "🎬 Kịch Bản Live" kèm dropdown chọn kịch bản nhỏ gọn, xóa sạch các ô chữ dư thừa; 3. Nút Tải Video/Ảnh Trực Tiếp Trên Bounding Box (Ảnh 4): Bổ sung nút 📁 Tải Video/Ảnh trực tiếp trên khung bao (Bounding Box) khi chọn bất kỳ Avatar, Video Chính, Video PiP hay Banner nào để thay thế media ngay tức thì; 4. Tinh Gọn Thanh Nút Điều Khiển 1 Hàng Duy Nhất (Ảnh 5): Bố trí chuẩn xác 5 nút chức năng (🛍️ Bán Hàng, ⚔️ PK Đấu, 🎯 Giữa, 🔲 Tràn, 🔒 Khóa) nằm gọn gàng trên 1 hàng duy nhất không bị cuộn ngang; 5. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D, Luồng phát 60 FPS 4K.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.3.8 - Sửa Triệt Để Lỗi Mở Tab Chuỗi Kịch Bản (Sequencer), Đảm Bảo Mở Tức Thì 100% & Hoạt Động Trơn Tru Mọi Nền Tảng',
     description: '1. Khắc Phục Triệt Để Lỗi Mở Tab Chuỗi Kịch Bản: Bổ sung đầy đủ các thành phần điều hướng lớp, xử lý dứt điểm lỗi runtime khiến tab không vào được, đảm bảo bấm vào mở tức thì 100% mượt mà; 2. Mở Tab Tự Do Cho Mọi Người Dùng: Bỏ chặn điều kiện tài khoản khi truy cập Chuỗi Kịch Bản từ thanh menu và Header; 3. Giữ Nguyên Toàn Bộ Giao Diện v4.3.7: 1 Nút Xóa Nền AI ngoài khung hình video, Tỷ lệ 7/3 ô Lời Thoại kịch bản to gấp 3 lần, Hiển thị rõ ràng nút Cài Đặt & Xóa Bước, Tinh gọn 1 nút Nghe Thử Voice; 4. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D, Luồng phát 60 FPS 4K.'
