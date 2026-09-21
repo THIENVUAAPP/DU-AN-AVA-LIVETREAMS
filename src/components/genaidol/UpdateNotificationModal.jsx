@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.4.3';
+export const APP_VERSION = '4.4.4';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.4.4 - Đồng Bộ Sân Khấu Chính 100% Khung Hình & Sạch Rác, Đọc Trọn Bộ Kịch Bản Không Bị Ngắt & Đầy Đủ Danh Sách Giọng Đọc Voice AI Brain',
+    description: '1. Sân Khấu Chính Đồng Bộ Chuẩn 100% Khung Hình (Full-Screen 100%): Khi đồng bộ từ Sân Khấu Phụ (Sequencer), video và hình ảnh chính tự động phủ kín 100% màn hình, không bị lệch hoặc bó hẹp trong khung 48%; 2. Sạch Rác 100% Sân Khấu Live: Triệt tiêu hoàn toàn tất cả các tag rác (🟢 Nhân Vật 1, Nhân Vật 2, Đang nói) trên màn hình phát live, đảm bảo khung hình sạch sẽ chuyên nghiệp; 3. Đọc Trọn Bộ Toàn Bộ Kịch Bản: Nâng cấp động cơ Voice AI đọc hết toàn bộ câu chữ trong kịch bản dài không bị dừng/ngắt giữa chừng, tự động chuyển mượt sang bước tiếp theo khi đọc xong; 4. Đầy Đủ Danh Sách Giọng Đọc Voice AI: Dropdown phân nhóm rõ ràng tất cả các giọng trong Bộ Não Voice AI Brain (Top Bán Hàng VIP, Nữ Bắc/Trung/Nam, Nam Bắc/Trung/Nam, Đa Ngôn Ngữ); 5. Khóa Chặt 100% Toàn Bộ Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D, Luồng phát 60 FPS 4K.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.4.3 - Khắc Phục Triệt Để Lỗi Truy Cập Chuỗi Kịch Bản (Sequencer)',
     description: '1. Khắc Phục Triệt Để Lỗi Chuỗi Kịch Bản: Sửa lỗi crash khi mở tab Chuỗi Kịch Bản (Sequencer), đảm bảo mở mượt mà 100%; 2. Nút Bật/Tắt Dừng & Phát Tất Cả Video trên Sân Khấu Phụ: Cho phép tạm dừng hoặc tiếp tục phát toàn bộ luồng video trên sân khấu phụ tức thì; 3. Sân Khấu Chính Độc Lập 100%: Triệt tiêu hoàn toàn ô trống hoặc tag "Nhân vật 2", tự do phát video/ảnh độc lập toàn màn hình; 4. Giữ Nguyên Hiện Trạng Layer Ghim: Khi chuyển giữa các bước kịch bản, các layer được ghim giữ nguyên 100% toạ độ x/y, kích thước scale và tách nền AI chromaKey; 5. Khóa Chặt 100% Các Module Khác: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK và Game Bản Đồ 3D.'

@@ -1019,6 +1019,21 @@ export default function LivestreamFlowSequencer() {
     return found?.name || 'Hoài My 👑 (Nữ Chuẩn Mực)';
   }, [getBrainVoiceForSpeaker]);
 
+  // 🎙️ Toàn bộ danh sách Giọng Đọc AI Phân Nhóm từ Bộ Não Voice AI
+  const categorizedVoiceList = useMemo(() => {
+    const vipVoices = ALL_SYSTEM_VOICES.filter(v => v.tier === 'pro' || v.badge?.includes('VIP') || v.id.startsWith('free_') || v.id.startsWith('vn_'));
+    const femaleVoices = ALL_SYSTEM_VOICES.filter(v => v.gender === 'Female' && !vipVoices.some(vip => vip.id === v.id) && (v.lang?.startsWith('vi') || v.region === 'vi'));
+    const maleVoices = ALL_SYSTEM_VOICES.filter(v => v.gender === 'Male' && !vipVoices.some(vip => vip.id === v.id) && (v.lang?.startsWith('vi') || v.region === 'vi'));
+    const otherVoices = ALL_SYSTEM_VOICES.filter(v => !vipVoices.some(vip => vip.id === v.id) && !femaleVoices.some(f => f.id === v.id) && !maleVoices.some(m => m.id === v.id));
+
+    return {
+      vipVoices,
+      femaleVoices,
+      maleVoices,
+      otherVoices
+    };
+  }, []);
+
   // 📄 Nạp file kịch bản đa định dạng (.md, .txt, .docx, .pdf, .json, .xlsx)
   const handleFileUpload = async (stepId, e) => {
     const file = e.target.files?.[0];
@@ -2508,12 +2523,52 @@ export default function LivestreamFlowSequencer() {
                             <select
                               value={step.voiceId || 'brain_auto'}
                               onChange={(e) => handleUpdateStep(step.id, 'voiceId', e.target.value)}
-                              className="bg-transparent text-purple-300 text-xs font-bold outline-none cursor-pointer max-w-[160px] sm:max-w-[220px] truncate"
+                              className="bg-transparent text-purple-300 text-xs font-bold outline-none cursor-pointer max-w-[160px] sm:max-w-[240px] truncate"
                               title="Chọn giọng đọc AI cho nhân vật ở bước này"
                             >
-                              {CURATED_STUDIO_VOICES.map(v => (
-                                <option key={v.id} value={v.id} className="bg-slate-900 text-white">{v.name}</option>
-                              ))}
+                              <option value="brain_auto" className="bg-slate-900 text-amber-300 font-bold">
+                                🧠 Giọng Bộ Não Voice AI (Tự Động Theo Nhân Vật)
+                              </option>
+
+                              {categorizedVoiceList.vipVoices.length > 0 && (
+                                <optgroup label="👑 Top Bán Hàng & MC Livestream VIP" className="bg-slate-900 text-amber-400 font-bold">
+                                  {categorizedVoiceList.vipVoices.map(v => (
+                                    <option key={v.id} value={v.id} className="bg-slate-900 text-white font-normal">
+                                      {v.name}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              )}
+
+                              {categorizedVoiceList.femaleVoices.length > 0 && (
+                                <optgroup label="🌸 Giọng Nữ Tiếng Việt (Bắc - Trung - Nam)" className="bg-slate-900 text-pink-400 font-bold">
+                                  {categorizedVoiceList.femaleVoices.map(v => (
+                                    <option key={v.id} value={v.id} className="bg-slate-900 text-white font-normal">
+                                      {v.name}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              )}
+
+                              {categorizedVoiceList.maleVoices.length > 0 && (
+                                <optgroup label="🎙️ Giọng Nam Tiếng Việt (Bắc - Trung - Nam)" className="bg-slate-900 text-cyan-400 font-bold">
+                                  {categorizedVoiceList.maleVoices.map(v => (
+                                    <option key={v.id} value={v.id} className="bg-slate-900 text-white font-normal">
+                                      {v.name}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              )}
+
+                              {categorizedVoiceList.otherVoices.length > 0 && (
+                                <optgroup label="🌐 Giọng Đa Ngôn Ngữ & Quốc Tế" className="bg-slate-900 text-indigo-400 font-bold">
+                                  {categorizedVoiceList.otherVoices.map(v => (
+                                    <option key={v.id} value={v.id} className="bg-slate-900 text-white font-normal">
+                                      {v.name}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              )}
                             </select>
                           </div>
 

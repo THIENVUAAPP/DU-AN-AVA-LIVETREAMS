@@ -3884,14 +3884,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                         className="w-full h-full object-cover bg-black select-none pointer-events-none"
                       />
                     )}
-
-                    <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm border border-white/10 text-[10px] font-bold text-white shadow-sm">
-                      <span className={`w-2 h-2 rounded-full ${isSpeakingNow ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'}`} />
-                      <span className="truncate max-w-[100px]">{avatar.name}</span>
-                      {isSpeakingNow && (
-                        <span className="text-amber-300 text-[9px] font-black uppercase tracking-wider">Đang nói</span>
-                      )}
-                    </div>
                   </div>
                 );
               })}
@@ -3899,7 +3891,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           );
         }
 
-        // Freeform Visual Studio Stage Canvas
+        // Freeform Visual Studio Stage Canvas (Tái hiện 100% nguyên xi Sân Khấu Phụ khi Đồng Bộ)
         return (
           <div 
             className="relative w-full h-full overflow-hidden bg-cover bg-center"
@@ -3983,32 +3975,34 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             {activeList.map((avatar, idx) => {
               const vidSrc = avatar.resolvedVidSrc;
               const isSpeakingNow = avatar.isSpeakingNow;
-              const transform = avatar.transform || { 
-                x: idx === 0 ? 4 : idx === 1 ? 48 : idx === 2 ? 25 : 65, 
-                y: idx === 0 ? 8 : idx === 1 ? 28 : idx === 2 ? 60 : 10, 
-                width: 48, 
-                height: 75, 
-                zIndex: 5, 
-                pose: 'stand', 
-                objectFit: 'cover',
-                borderRadius: 16
-              };
+              // Nếu là nhân vật đơn hoặc nhân vật 1 trên sân khấu chính: Hiển thị Full Màn Hình 100% (trừ khi có toạ độ tuỳ chỉnh riêng của multi-avatar 2-4 người)
+              const isSoloOrPrimary = activeList.length === 1 || (idx === 0 && (!avatar.transform || (avatar.transform.x === 4 && avatar.transform.y === 8 && avatar.transform.width === 48)));
+              const transform = isSoloOrPrimary
+                ? { x: 0, y: 0, width: 100, height: 100, zIndex: 5, pose: 'stand', objectFit: 'cover', borderRadius: 0 }
+                : (avatar.transform || { 
+                    x: idx === 1 ? 55 : idx === 2 ? 25 : 65, 
+                    y: idx === 1 ? 25 : idx === 2 ? 60 : 10, 
+                    width: 42, 
+                    height: 65, 
+                    zIndex: 6, 
+                    pose: 'stand', 
+                    objectFit: 'cover',
+                    borderRadius: 12
+                  });
               const isImg = isImageMedia(vidSrc);
               const chromaStyle = getChromaStyle(avatar.chromaKey || multiAvatarConfig.chromaKey);
 
               return (
                 <div 
                   key={avatar.id} 
-                  className={`absolute overflow-hidden transition-all duration-300 flex flex-col justify-between ${
-                    isSpeakingNow ? 'ring-2 ring-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.6)] z-20 scale-102' : ''
-                  }`}
+                  className="absolute overflow-hidden transition-all duration-300 pointer-events-none"
                   style={{
-                    left: `${transform.x ?? (idx === 0 ? 4 : idx === 1 ? 48 : 25)}%`,
-                    top: `${transform.y ?? (idx === 0 ? 8 : idx === 1 ? 28 : 50)}%`,
-                    width: `${transform.width ?? 48}%`,
-                    height: `${transform.height ?? 75}%`,
-                    zIndex: isSpeakingNow ? (transform.zIndex || 5) + 10 : (transform.zIndex || 5),
-                    borderRadius: `${transform.borderRadius ?? 16}px`
+                    left: `${transform.x ?? 0}%`,
+                    top: `${transform.y ?? 0}%`,
+                    width: `${transform.width ?? 100}%`,
+                    height: `${transform.height ?? 100}%`,
+                    zIndex: isSpeakingNow ? (transform.zIndex || 5) + 5 : (transform.zIndex || 5),
+                    borderRadius: `${transform.borderRadius ?? 0}px`
                   }}
                 >
                   <div 
@@ -4045,15 +4039,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                           ...chromaStyle
                         }}
                       />
-                    )}
-                  </div>
-
-                  {/* Speaker Active Tag Pill */}
-                  <div className="absolute bottom-1.5 left-1.5 z-20 flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/75 backdrop-blur-sm border border-white/10 text-[9px] font-black text-white shadow-sm pointer-events-none">
-                    <span className={`w-1.5 h-1.5 rounded-full ${isSpeakingNow ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'}`} />
-                    <span className="truncate max-w-[90px]">{avatar.name}</span>
-                    {isSpeakingNow && (
-                      <span className="text-amber-300 text-[8px] uppercase tracking-wider font-black">Nói</span>
                     )}
                   </div>
                 </div>

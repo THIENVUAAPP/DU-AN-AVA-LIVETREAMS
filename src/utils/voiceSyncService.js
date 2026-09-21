@@ -8481,7 +8481,7 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
     for (let attempt = 0; attempt < 2; attempt++) {
       for (const endpoint of endpointCandidates) {
         let controller = new AbortController();
-        let timeoutId = setTimeout(() => controller.abort(), 8000);
+        let timeoutId = setTimeout(() => controller.abort(), 35000);
         try {
           let res = await fetch(endpoint, {
             method: 'POST',
@@ -8493,7 +8493,7 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
           if (!res || !res.ok) {
             clearTimeout(timeoutId);
             controller = new AbortController();
-            timeoutId = setTimeout(() => controller.abort(), 8000);
+            timeoutId = setTimeout(() => controller.abort(), 35000);
             const getUrl = endpoint.includes('?') ? `${endpoint}&${ttsQuery}` : `${endpoint}?${ttsQuery}`;
             res = await fetch(getUrl, { signal: controller.signal }).catch(() => null);
           }

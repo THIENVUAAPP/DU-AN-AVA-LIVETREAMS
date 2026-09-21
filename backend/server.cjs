@@ -980,7 +980,7 @@ app.get([
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.4.3</title>
+  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.4.4</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -1091,7 +1091,7 @@ app.get([
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.4.3</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.4.4</div>
   </div>
   <script>
     (function() {
@@ -1448,7 +1448,7 @@ app.get([
             }, 3000);
 
             socket.on('connect', function() {
-              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.4.3';
+              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.4.4';
               socket.emit('REQUEST_MASTER_LIVE_STATE');
             });
 
@@ -1965,7 +1965,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.4.3';
+  let ver = '4.4.4';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -2003,7 +2003,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.4.3';
+  let ver = '4.4.4';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -3535,12 +3535,103 @@ function releaseEdgeTtsSlot() {
   }
 }
 
+// Helper tải TTS từ Google Translate theo từng đoạn ngắn và ghép lại trọn vẹn 100%
+async function fetchGoogleTranslateTTSBuffer(fullText, lang = 'vi') {
+  if (!fullText || !fullText.trim()) return null;
+  const cleanLang = (lang || 'vi').toLowerCase().startsWith('vi') ? 'vi' : (lang || 'vi');
+  
+  // Tách text thành các câu / cụm từ không quá 180 ký tự
+  const rawChunks = [];
+  const sentences = fullText.split(/([.!?\n\r]+)/).filter(Boolean);
+  let curChunk = '';
+  
+  for (let i = 0; i < sentences.length; i++) {
+    const part = sentences[i];
+    if ((curChunk + part).length <= 180) {
+      curChunk += part;
+    } else {
+      if (curChunk.trim()) rawChunks.push(curChunk.trim());
+      if (part.length <= 180) {
+        curChunk = part;
+      } else {
+        // Tách nhỏ hơn theo dấu phẩy hoặc khoảng trắng
+        const subWords = part.split(/\s+/);
+        let subChunk = '';
+        for (const w of subWords) {
+          if ((subChunk + ' ' + w).length <= 180) {
+            subChunk = (subChunk + ' ' + w).trim();
+          } else {
+            if (subChunk.trim()) rawChunks.push(subChunk.trim());
+            subChunk = w;
+          }
+        }
+        curChunk = subChunk;
+      }
+    }
+  }
+  if (curChunk.trim()) rawChunks.push(curChunk.trim());
+  if (rawChunks.length === 0) rawChunks.push(fullText.slice(0, 180));
+
+  const audioBuffers = [];
+  for (const chunk of rawChunks) {
+    try {
+      const encodedText = encodeURIComponent(chunk);
+      const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=${encodeURIComponent(cleanLang)}&client=tw-ob`;
+      const buf = await new Promise((resolve, reject) => {
+        const req = https.get(ttsUrl, {
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
+            'Accept': 'audio/mpeg'
+          },
+          timeout: 10000
+        }, (proxyRes) => {
+          if (proxyRes.statusCode !== 200) return resolve(null);
+          const parts = [];
+          proxyRes.on('data', d => parts.push(d));
+          proxyRes.on('end', () => resolve(Buffer.concat(parts)));
+        });
+        req.on('error', () => resolve(null));
+        req.on('timeout', () => { req.destroy(); resolve(null); });
+      });
+      if (buf && buf.length > 0) audioBuffers.push(buf);
+    } catch (e) {}
+  }
+
+  return audioBuffers.length > 0 ? Buffer.concat(audioBuffers) : null;
+}
+
+// 🎙️ Microsoft Azure Neural Voice Synthesis Core (Hỗ trợ trọn bộ kịch bản dài không giới hạn)
 async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+0Hz', rate = '+0%' }) {
   if (!EdgeTTS) return null;
+  if (!text || !text.trim()) return null;
   const neuralVoice = resolveNeuralVoice(voice, gender, lang);
   const safePitch = normalizeTtsPitch(pitch);
   const safeRate = normalizeTtsRate(rate);
   const processedText = humanizeTextForBackendTTS(text, gender, lang) || text;
+
+  // Nếu kịch bản dài trên 1000 ký tự: chia thành các đoạn nhỏ để EdgeTTS xử lý siêu mượt
+  if (processedText.length > 1000) {
+    const textSegments = [];
+    const rawParagraphs = processedText.split(/([.\n\r]+)/).filter(Boolean);
+    let curSeg = '';
+    for (const p of rawParagraphs) {
+      if ((curSeg + p).length <= 800) {
+        curSeg += p;
+      } else {
+        if (curSeg.trim()) textSegments.push(curSeg.trim());
+        curSeg = p;
+      }
+    }
+    if (curSeg.trim()) textSegments.push(curSeg.trim());
+
+    const segmentBuffers = [];
+    for (const seg of textSegments) {
+      const segBuf = await synthesizeNeuralTTSBuffer({ text: seg, voice, gender, lang, pitch, rate });
+      if (segBuf) segmentBuffers.push(segBuf);
+    }
+    if (segmentBuffers.length > 0) return Buffer.concat(segmentBuffers);
+  }
+
   const tmpFile = path.join(os.tmpdir(), `tts_${Date.now()}_${Math.random().toString(36).slice(2)}.mp3`);
 
   await acquireEdgeTtsSlot();
@@ -3553,7 +3644,7 @@ async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+
           pitch: safePitch,
           rate: safeRate,
           outputFormat: 'audio-24khz-48kbitrate-mono-mp3',
-          timeout: 3500
+          timeout: 25000 // Tăng timeout lên 25s đảm bảo đọc trọn bộ kịch bản dài
         });
         await tts.ttsPromise(processedText, tmpFile);
         if (fs.existsSync(tmpFile)) {
@@ -3565,7 +3656,7 @@ async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+
         if (fs.existsSync(tmpFile)) {
           try { fs.unlinkSync(tmpFile); } catch (e) {}
         }
-        if (attempt === 0) await new Promise(r => setTimeout(r, 60));
+        if (attempt === 0) await new Promise(r => setTimeout(r, 100));
       }
     }
   } finally {
@@ -3574,7 +3665,7 @@ async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+
   return null;
 }
 
-// TTS Proxy with Ultra-Fast In-Memory Cache & Multi-Tier Fallback
+// TTS Proxy with Ultra-Fast In-Memory Cache & Multi-Tier Fallback (Đọc Trọn Bộ Kịch Bản)
 app.get('/api/tts', async (req, res) => {
   const text = (req.query.text || '').toString().trim();
   const voice = (req.query.voice || '').toString().trim();
@@ -3606,35 +3697,20 @@ app.get('/api/tts', async (req, res) => {
     return res.send(neuralBuffer);
   }
 
-  // 2. Dự phòng Google Translate TTS khi mạng ngoại tuyến
-  const encodedText = encodeURIComponent(text.slice(0, 200));
-  const encodedLang = encodeURIComponent(lang.toLowerCase().startsWith('vi') ? 'vi' : (lang || 'vi'));
-  const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=${encodedLang}&client=tw-ob`;
-
-  https.get(ttsUrl, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Accept': 'audio/mpeg'
+  // 2. Dự phòng Google Translate TTS khi mạng ngoại tuyến (Đọc toàn bộ không cắt ngắn)
+  const fallbackBuffer = await fetchGoogleTranslateTTSBuffer(text, lang);
+  if (fallbackBuffer) {
+    if (ttsAudioBufferCache.size > 500) {
+      const first = ttsAudioBufferCache.keys().next().value;
+      ttsAudioBufferCache.delete(first);
     }
-  }, (proxyRes) => {
-    if (proxyRes.statusCode !== 200) return res.status(proxyRes.statusCode).send('Failed TTS');
-    const chunks = [];
-    proxyRes.on('data', chunk => chunks.push(chunk));
-    proxyRes.on('end', () => {
-      const buffer = Buffer.concat(chunks);
-      if (ttsAudioBufferCache.size > 500) {
-        const first = ttsAudioBufferCache.keys().next().value;
-        ttsAudioBufferCache.delete(first);
-      }
-      ttsAudioBufferCache.set(cacheKey, buffer);
-      res.setHeader('Content-Type', 'audio/mpeg');
-      res.setHeader('Cache-Control', 'public, max-age=86400');
-      res.send(buffer);
-    });
-  }).on('error', (err) => {
-    console.warn('TTS proxy error:', err);
-    res.status(500).send('TTS error');
-  });
+    ttsAudioBufferCache.set(cacheKey, fallbackBuffer);
+    res.setHeader('Content-Type', 'audio/mpeg');
+    res.setHeader('Cache-Control', 'public, max-age=86400');
+    return res.send(fallbackBuffer);
+  }
+
+  res.status(500).send('TTS service unavailable');
 });
 
 app.post('/api/tts', async (req, res) => {
@@ -3660,28 +3736,18 @@ app.post('/api/tts', async (req, res) => {
     return res.json({ success: true, audioBase64: neuralBuffer.toString('base64') });
   }
 
-  // 2. Fallback Google Translate TTS
-  const encodedText = encodeURIComponent(txt.slice(0, 200));
-  const encodedLang = encodeURIComponent((lang || 'vi').toLowerCase().startsWith('vi') ? 'vi' : (lang || 'vi'));
-  const ttsUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=${encodedLang}&client=tw-ob`;
-
-  https.get(ttsUrl, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36',
-      'Accept': 'audio/mpeg'
+  // 2. Fallback Google Translate TTS (Đọc toàn bộ không cắt ngắn)
+  const fallbackBuffer = await fetchGoogleTranslateTTSBuffer(txt, lang);
+  if (fallbackBuffer) {
+    if (ttsAudioBufferCache.size > 500) {
+      const first = ttsAudioBufferCache.keys().next().value;
+      ttsAudioBufferCache.delete(first);
     }
-  }, (proxyRes) => {
-    const chunks = [];
-    proxyRes.on('data', chunk => chunks.push(chunk));
-    proxyRes.on('end', () => {
-      const buffer = Buffer.concat(chunks);
-      const audioBase64 = buffer.toString('base64');
-      res.json({ success: true, audioBase64 });
-    });
-  }).on('error', (err) => {
-    console.warn('POST TTS proxy error:', err);
-    res.status(500).json({ error: err.message });
-  });
+    ttsAudioBufferCache.set(cacheKey, fallbackBuffer);
+    return res.json({ success: true, audioBase64: fallbackBuffer.toString('base64') });
+  }
+
+  res.status(500).json({ error: 'TTS service unavailable' });
 });
 
 // AI Script Generation
