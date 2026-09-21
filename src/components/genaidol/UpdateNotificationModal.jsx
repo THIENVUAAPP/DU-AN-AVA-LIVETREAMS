@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.4.2';
+export const APP_VERSION = '4.4.3';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.4.2 - Sân Khấu Chính Độc Lập 100%, Nút Dừng/Phát Video & Giữ Nguyên Hiện Trạng Layer Ghim',
-    description: '1. Sân Khấu Chính Độc Lập 100%: Triệt tiêu hoàn toàn ô trống hoặc tag "Nhân vật 2" khi chưa đồng bộ hoặc khi avatar không có video. Người dùng tải video/ảnh lên phát độc lập toàn màn hình; 2. Nút Bật/Tắt Dừng & Phát Tất Cả Video trên Sân Khấu Phụ: Cho phép tạm dừng hoặc tiếp tục phát toàn bộ luồng video trên sân khấu phụ nhanh chóng; 3. Giữ Nguyên Hiện Trạng Tuyệt Đối Cho Layer Ghim: Khi chuyển giữa các bước kịch bản, các layer được ghim (Video nền, PiP, Avatar 1-4, Banner, Tiêu đề chữ) được bảo toàn 100% toạ độ x/y, kích thước scale và tách nền AI chromaKey; 4. Đồng Bộ Toàn Diện Ra Sân Khấu Chính: Khi bật đồng bộ, toàn bộ phối cảnh và kịch bản từ Sân Khấu Phụ truyền trực tiếp 0ms ra Sân Khấu Chính, Window Capture OBS và TikTok Live Studio; 5. Khóa Chặt 100% Các Module Khác: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK và Game Bản Đồ 3D.'
+    title: '⚡ Bản Cập Nhật v4.4.3 - Khắc Phục Triệt Để Lỗi Truy Cập Chuỗi Kịch Bản (Sequencer)',
+    description: '1. Khắc Phục Triệt Để Lỗi Chuỗi Kịch Bản: Sửa lỗi crash khi mở tab Chuỗi Kịch Bản (Sequencer), đảm bảo mở mượt mà 100%; 2. Nút Bật/Tắt Dừng & Phát Tất Cả Video trên Sân Khấu Phụ: Cho phép tạm dừng hoặc tiếp tục phát toàn bộ luồng video trên sân khấu phụ tức thì; 3. Sân Khấu Chính Độc Lập 100%: Triệt tiêu hoàn toàn ô trống hoặc tag "Nhân vật 2", tự do phát video/ảnh độc lập toàn màn hình; 4. Giữ Nguyên Hiện Trạng Layer Ghim: Khi chuyển giữa các bước kịch bản, các layer được ghim giữ nguyên 100% toạ độ x/y, kích thước scale và tách nền AI chromaKey; 5. Khóa Chặt 100% Các Module Khác: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK và Game Bản Đồ 3D.'
   },
   {
     title: '⚡ Bản Cập Nhật v4.4.1 - Sân Khấu Chính Độc Lập 100% (Loại Bỏ Ô Nhân Vật 2 Khi Chưa Đồng Bộ) & Đồng Bộ Toàn Diện Sân Khấu Phụ Ra Sân Khấu Chính',

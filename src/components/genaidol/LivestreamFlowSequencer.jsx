@@ -186,6 +186,7 @@ export default function LivestreamFlowSequencer() {
   const [speakingStepId, setSpeakingStepId] = useState(null);
   const [showPresetModal, setShowPresetModal] = useState(false);
   const [presetNameInput, setPresetNameInput] = useState('');
+  const [isStageMediaPaused, setIsStageMediaPaused] = useState(false);
 
   // 📡 State Đồng Bộ Ra Sân Khấu Chính (OBS / TikTok Live Studio)
   const [isMasterSynced, setIsMasterSynced] = useState(() => {
