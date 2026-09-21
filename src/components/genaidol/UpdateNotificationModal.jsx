@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.2.9';
+export const APP_VERSION = '4.3.0';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.3.0 - Co Giãn 8 Hướng Video Nền Chính, Nạp Video/Ảnh Trực Tiếp Cho Nhân Vật Trên Sân Khấu, Bộ Chọn Voice AI Brain Từng Bước & Hiển Thị Đa Lớp 100%',
+    description: '1. Video Nền Chính Co Giãn 8 Hướng & Kéo Thả: Video/ảnh nền chính có thể kéo thả di chuyển tự do, thu nhỏ, mở rộng tràn khung và co giãn 8 điểm trực quan; 2. Nạp Video/Ảnh Trực Tiếp Cho Nhân Vật Ngay Trên Sân Khấu: Bấm chọn bất kỳ Avatar nào trên Sân Khấu 9:16 sẽ có nút tải file trực tiếp từ máy tính gán ngay cho nhân vật đó; 3. Bộ Chọn Giọng Đọc AI (Voice AI Brain) Từng Bước: Tích hợp trực tiếp danh sách giọng đọc AI Tiếng Việt Top 1 cho từng phân đoạn kịch bản và nhân vật, nút Đọc Thử AI 0ms; 4. Hiển Thị 100% Media Tải Lên: Xử lý an toàn thẻ video/hình ảnh, loại bỏ hoàn toàn hiện tượng viền rỗng hoặc màn hình đen khi tải từ máy tính; 5. Nút "👁️ Xem Bước Này" Nạp Ngay Lên Sân Khấu: Bấm là hiển thị ngay toàn bộ bố cục, layer và video của bước đó lên màn hình 9:16; 6. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.2.9 - Sân Khấu Sạch 100% Không Dữ Liệu Rác, Xóa Layer Trực Tiếp 8 Điểm, 20 Font & 20 Typography Sang Trọng, Ghim Xuyên Suốt & Toolbar 1 Hàng',
     description: '1. Sân Khấu Sạch 100% Không Dữ Liệu Rác: Loại bỏ triệt để mọi dữ liệu placeholder, thẻ giỏ hàng hay text rác; chỉ hiển thị chính xác những gì người dùng thêm vào; 2. Nút Xóa Layer Trực Tiếp Trên Sân Khấu: Bấm chọn bất kỳ layer nào (Avatar, Video PiP, Banner ảnh, Text chữ) sẽ hiển thị nút Xóa tức thì khỏi bước; 3. 20 Phông Chữ & 20 Màu Sắc Typography: Thư viện 20 font chữ Việt hóa & 20 preset màu sắc (Neon Cyber, Gold Hoàng Gia, Flash Sale Đỏ Lửa, v.v.); 4. Chức Năng Ghim Layer Xuyên Suốt: Nút ghim 📌 cho từng layer (Video chính, PiP, Banner, Text) giúp chạy liên tục từ đầu đến cuối phiên live hoặc chỉ trong bước; 5. Tinh Gọn Bảng Điều Khiển: Xóa bỏ thanh mẫu kịch bản có sẵn, nạp 100% file từ máy tính, rút gọn thanh căn chỉnh sân khấu còn đúng 1 hàng duy nhất và khóa bố cục 100% hoạt động.'

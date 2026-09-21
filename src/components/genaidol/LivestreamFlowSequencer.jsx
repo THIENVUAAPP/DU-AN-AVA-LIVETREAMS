@@ -18,9 +18,21 @@ import {
   getChromaStyle, 
   isImageMedia,
   STUDIO_STAGE_PRESETS,
+  ALL_SYSTEM_VOICES,
   previewVoiceAudio,
   stopVoiceAudio
 } from '../../utils/voiceSyncService';
+
+// 🎙️ Danh sách các Giọng Đọc AI Tiếng Việt Top 1
+export const CURATED_STUDIO_VOICES = [
+  { id: 'free_vi_female', name: 'Hoài My 👑 (Nữ Trong Trẻo - Bán Hàng/MC)' },
+  { id: 'vi_female_south_1', name: 'Hà My 🌸 (Nữ Miền Nam Dễ Thương)' },
+  { id: 'free_vi_male', name: 'Tuấn Kiệt 🎙️ (Nam Trầm Ấm - MC Livestream)' },
+  { id: 'vi_male_south_1', name: 'Nam Phong ⚡ (Nam Miền Nam Năng Động)' },
+  { id: 'vi_female_north_1', name: 'Lan Phương 💎 (Nữ Hà Nội Chuẩn Mực)' },
+  { id: 'vi-VN-Standard-A', name: 'Ngọc Trinh ✨ (Nữ Thanh Lịch Pro)' },
+  { id: 'vi-VN-Standard-B', name: 'Minh Quân 🚀 (Nam Chững Chạc)' }
+];
 
 const toast = {
   success: (message) => {
@@ -246,10 +258,12 @@ export default function LivestreamFlowSequencer() {
       title: step.title,
       actionType: step.actionType,
       scriptText: step.scriptText || '',
+      voiceId: step.voiceId || 'free_vi_female',
       durationSeconds: step.durationSeconds || 60,
       stepIndex: index + 1,
       totalSteps: activePreset?.steps?.length || 1,
       presetName: activePreset?.name || 'Kịch bản Sequencer',
+      mainMediaTransform: step.mainMediaTransform || null,
       secondaryMediaUrl: secondaryToPlay || null,
       secondaryMediaTransform: step.secondaryMediaTransform || null,
       overlayImage: overlayImgToPlay || null,
@@ -280,6 +294,7 @@ export default function LivestreamFlowSequencer() {
           stepTitle: step.title,
           actionType: step.actionType,
           scriptText: step.scriptText,
+          voiceId: step.voiceId || 'free_vi_female',
           avatarSpeaker: step.avatarSpeaker || 'avatar_1',
           secondaryMediaUrl: secondaryToPlay || null,
           overlayImage: overlayImgToPlay || null,
@@ -323,14 +338,12 @@ export default function LivestreamFlowSequencer() {
           const nextIndex = currentStepIndex + 1;
           if (nextIndex < activePreset.steps.length) {
             startStep(nextIndex, true);
-            toast.success(`🎬 Chuyển sang bước ${nextIndex + 1}: ${activePreset.steps[nextIndex].title}`);
           } else {
             if (activePreset.loop) {
               startStep(0, true);
-              toast.success(`🔄 Lặp lại kịch bản: ${activePreset.name}`);
             } else {
-              handleStopFlow();
-              toast.success('🎉 Đã hoàn thành chuỗi kịch bản!');
+              setIsPlayingFlow(false);
+              toast.success('🎉 Đã hoàn thành kịch bản!');
             }
           }
           return 0;
@@ -346,60 +359,33 @@ export default function LivestreamFlowSequencer() {
 
   // 🛑 DỪNG TỨC THÌ 100% VÀ TẮT MỌI ÂM THANH / GIỌNG NÓI
   const handleStopFlow = () => {
-    if (timerRef.current) clearInterval(timerRef.current);
     setIsPlayingFlow(false);
-    setIsSpeakingPreview(false);
-    stopVoiceAudio();
-    
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('avalive:stop_flow_sequencer'));
-      if (window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
-      window.__isScriptLiveRunning = false;
-      try { localStorage.setItem('aidol_is_script_live_running', 'false'); } catch (e) {}
-    }
-
-    fetch('/api/live-state', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        activeTab: 'flow_sequencer',
-        isPlaying: false,
-        updatedAt: Date.now()
-      })
-    }).catch(() => {});
-
-    toast.success('⏹️ ĐÃ DỪNG TOÀN BỘ CHUỖI KỊCH BẢN & GIỌNG NÓI!');
+    if (timerRef.current) clearInterval(timerRef.current);
+    toast.info('⏹️ Đã tạm dừng kịch bản');
   };
 
   // ▶️ BẮT ĐẦU CHẠY LIVE
   const handleStartFlow = () => {
+    if (!activePreset || !activePreset.steps || activePreset.steps.length === 0) {
+      toast.error('Chưa có kịch bản hoặc phân đoạn nào để chạy!');
+      return;
+    }
     setIsPlayingFlow(true);
-    if (typeof window !== 'undefined') {
-      window.__isScriptLiveRunning = true;
-      try { localStorage.setItem('aidol_is_script_live_running', 'true'); } catch (e) {}
-    }
-    if (secondsRemaining <= 0) {
-      startStep(currentStepIndex, true);
-    } else {
-      syncStepToServer(activePreset.steps[currentStepIndex], currentStepIndex, true);
-    }
-    toast.success('▶️ BẮT ĐẦU PHÁT CHUỖI KỊCH BẢN!');
+    startStep(currentStepIndex, true);
+    toast.success(`🎬 Bắt đầu chạy kịch bản: ${activePreset.name}`);
   };
 
   // 📡 BẬT / TẮT ĐỒNG BỘ RA SÂN KHẤU CHÍNH
   const handleToggleMasterSync = () => {
-    if (!isMasterSynced) {
-      setIsMasterSynced(true);
-      try { localStorage.setItem('aidol_master_live_synced', 'true'); } catch (e) {}
-      const step = activePreset.steps[currentStepIndex] || activePreset.steps[0];
-      syncStepToServer(step, currentStepIndex, true);
-      toast.success('📡 ĐÃ BẬT ĐỒNG BỘ: Phát trực tiếp ra Sân Khấu Chính, OBS và TikTok Live Studio!');
+    const nextSync = !isMasterSynced;
+    setIsMasterSynced(nextSync);
+    if (nextSync) {
+      toast.success('📡 ĐÃ BẬT ĐỒNG BỘ: Sân Khấu Chính / OBS / TikTok Live Studio');
+      if (activePreset?.steps?.[currentStepIndex]) {
+        syncStepToServer(activePreset.steps[currentStepIndex], currentStepIndex, isPlayingFlow);
+      }
     } else {
-      setIsMasterSynced(false);
-      try { localStorage.setItem('aidol_master_live_synced', 'false'); } catch (e) {}
-      toast.info('🔒 ĐÃ TẮT ĐỒNG BỘ: Quay lại chế độ Căn chỉnh & Chạy test nội bộ.');
+      toast.info('📴 Đã ngắt đồng bộ ra Sân Khấu Chính');
     }
   };
 
@@ -407,12 +393,11 @@ export default function LivestreamFlowSequencer() {
   const handleChangeAvatarCount = (count) => {
     const updated = {
       ...multiAvatarConfig,
-      activeCount: count,
-      enabled: true
+      activeCount: count
     };
     setMultiAvatarConfig(updated);
     saveMultiAvatarConfig(updated);
-    toast.success(`👥 Đã chọn chế độ ${count} Nhân Vật`);
+    toast.success(`👥 Đã chuyển sân khấu sang chế độ: ${count} Nhân vật!`);
   };
 
   // Cập nhật thông tin bước
@@ -421,10 +406,7 @@ export default function LivestreamFlowSequencer() {
       if (p.id !== activePresetId) return p;
       return {
         ...p,
-        steps: p.steps.map(s => {
-          if (s.id !== stepId) return s;
-          return { ...s, [field]: value };
-        })
+        steps: p.steps.map(s => s.id === stepId ? { ...s, [field]: value } : s)
       };
     }));
   };
@@ -464,6 +446,8 @@ export default function LivestreamFlowSequencer() {
                 [avatarId]: transformData
               }
             };
+          } else if (layerType === 'main_media') {
+            return { ...s, mainMediaTransform: transformData };
           } else if (layerType === 'pip') {
             return { ...s, secondaryMediaTransform: transformData };
           } else if (layerType === 'banner') {
@@ -489,6 +473,7 @@ export default function LivestreamFlowSequencer() {
         steps: p.steps.map(s => ({
           ...s,
           avatarTransforms: currentStepObj.avatarTransforms ? JSON.parse(JSON.stringify(currentStepObj.avatarTransforms)) : s.avatarTransforms,
+          mainMediaTransform: currentStepObj.mainMediaTransform ? { ...currentStepObj.mainMediaTransform } : s.mainMediaTransform,
           secondaryMediaTransform: currentStepObj.secondaryMediaTransform ? { ...currentStepObj.secondaryMediaTransform } : s.secondaryMediaTransform,
           overlayImageTransform: currentStepObj.overlayImageTransform ? { ...currentStepObj.overlayImageTransform } : s.overlayImageTransform,
           overlayTextTransform: currentStepObj.overlayTextTransform ? { ...currentStepObj.overlayTextTransform } : s.overlayTextTransform
@@ -521,9 +506,11 @@ export default function LivestreamFlowSequencer() {
       title: `Bước ${activePreset.steps.length + 1}: Phân đoạn mới`,
       actionType: 'avatar_talk',
       avatarSpeaker: 'avatar_1',
+      voiceId: 'free_vi_female',
       durationSeconds: 60,
       scriptText: 'Xin chào quý vị khán giả và các bạn đang theo dõi phiên livestream...',
       mediaUrl: '',
+      mainMediaTransform: { x: 0, y: 0, width: 100, height: 100, zIndex: 1 },
       secondaryMediaUrl: '',
       overlayImage: '',
       overlayText: '',
@@ -577,6 +564,51 @@ export default function LivestreamFlowSequencer() {
       return { ...p, steps: newSteps };
     }));
     toast.success('📋 Đã nhân bản bước!');
+  };
+
+  // 🎭 Tải Media Trực Tiếp Từ Máy Tính Gán Vào Avatar Đang Chọn Trên Sân Khấu
+  const handleDirectAvatarMediaUpload = (avatarId, e) => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+
+    try {
+      const objectUrl = URL.createObjectURL(file);
+      const updated = {
+        ...multiAvatarConfig,
+        avatars: (multiAvatarConfig?.avatars || []).map(a => {
+          if (a.id === avatarId) {
+            return {
+              ...a,
+              talkVideo: objectUrl,
+              idleVideo: objectUrl
+            };
+          }
+          return a;
+        })
+      };
+      setMultiAvatarConfig(updated);
+      saveMultiAvatarConfig(updated);
+      toast.success(`🎭 Đã nạp "${file.name}" cho Avatar ${avatarId.toUpperCase()}!`);
+    } catch (err) {
+      const reader = new FileReader();
+      reader.onload = (ev) => {
+        const dataUrl = ev.target?.result;
+        const updated = {
+          ...multiAvatarConfig,
+          avatars: (multiAvatarConfig?.avatars || []).map(a => {
+            if (a.id === avatarId) {
+              return { ...a, talkVideo: dataUrl, idleVideo: dataUrl };
+            }
+            return a;
+          })
+        };
+        setMultiAvatarConfig(updated);
+        saveMultiAvatarConfig(updated);
+        toast.success(`🎭 Đã nạp "${file.name}" cho Avatar ${avatarId.toUpperCase()}!`);
+      };
+      reader.readAsDataURL(file);
+    }
+    e.target.value = '';
   };
 
   // 📂 TẢI MEDIA TRỰC TIẾP TỪ MÁY TÍNH (VIDEO / ẢNH) -> NẠP NGAY LÊN SÂN KHẤU 9:16
@@ -669,6 +701,10 @@ export default function LivestreamFlowSequencer() {
       const avIdx = safeAvatars.findIndex(a => a.id === avatarId);
       const safeIdx = avIdx >= 0 ? avIdx : 0;
       return { x: 5 + safeIdx * 24, y: 15, width: 45, height: 75, zIndex: 10 + safeIdx };
+    }
+
+    if (layerType === 'main_media') {
+      return currentStep.mainMediaTransform || { x: 0, y: 0, width: 100, height: 100, zIndex: 1 };
     }
 
     if (layerType === 'pip') {
@@ -790,7 +826,7 @@ export default function LivestreamFlowSequencer() {
   };
 
   // Đọc thử giọng AI 0ms
-  const handleTestVoiceSpeech = (text) => {
+  const handleTestVoiceSpeech = (text, voiceId = 'free_vi_female') => {
     if (!text || !text.trim()) {
       toast.error('Chưa có lời thoại để đọc thử!');
       return;
@@ -801,7 +837,7 @@ export default function LivestreamFlowSequencer() {
       return;
     }
     setIsSpeakingPreview(true);
-    previewVoiceAudio('vi-VN-Standard-A', text);
+    previewVoiceAudio(voiceId || 'free_vi_female', text);
     setTimeout(() => {
       setIsSpeakingPreview(false);
     }, 8000);
@@ -943,25 +979,85 @@ export default function LivestreamFlowSequencer() {
                 <span className="w-1.5 h-1.5 rounded-full bg-blue-400" />
               </div>
 
-              {/* Lớp 1: Video / Ảnh Nền Chính */}
-              {activeMediaUrl && isImageMedia(activeMediaUrl) ? (
-                <img 
-                  key={activeMediaUrl}
-                  src={activeMediaUrl} 
-                  alt="Stage BG"
-                  className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
-                />
-              ) : (
-                <video 
-                  key={activeMediaUrl || 'default_bg'}
-                  src={activeMediaUrl || '/idols/phong_studio_ngoc_trinh_4k.mp4'} 
-                  autoPlay 
-                  loop 
-                  muted 
-                  playsInline 
-                  className="absolute inset-0 w-full h-full object-cover pointer-events-none z-0"
-                />
-              )}
+              {/* Lớp 1: Video / Ảnh Nền Chính (Kéo thả & Co giãn 8 hướng & Xóa Trực Tiếp) */}
+              {activeMediaUrl && (() => {
+                const mediaTrans = getLayerCurrentTransform('main_media');
+                const isSelected = selectedLayer.type === 'main_media';
+
+                return (
+                  <div
+                    onMouseDown={(e) => handlePointerDown(e, 'main_media', null, null)}
+                    onTouchStart={(e) => handlePointerDown(e, 'main_media', null, null)}
+                    className={`absolute transition-shadow cursor-move select-none ${
+                      isSelected ? 'ring-2 ring-cyan-400 shadow-2xl z-20' : 'z-0'
+                    }`}
+                    style={{
+                      left: `${mediaTrans.x}%`,
+                      top: `${mediaTrans.y}%`,
+                      width: `${mediaTrans.width}%`,
+                      height: `${mediaTrans.height}%`,
+                      zIndex: mediaTrans.zIndex || 1
+                    }}
+                  >
+                    <div className="relative w-full h-full bg-black overflow-hidden">
+                      {isImageMedia(activeMediaUrl) ? (
+                        <img 
+                          key={activeMediaUrl}
+                          src={activeMediaUrl} 
+                          alt="Stage BG"
+                          className="w-full h-full object-cover pointer-events-none"
+                        />
+                      ) : (
+                        <video 
+                          key={activeMediaUrl || 'default_bg'}
+                          src={activeMediaUrl || '/idols/phong_studio_ngoc_trinh_4k.mp4'} 
+                          autoPlay 
+                          loop 
+                          muted 
+                          playsInline 
+                          onCanPlay={(e) => { e.target.play().catch(() => {}); }}
+                          className="w-full h-full object-cover pointer-events-none"
+                        />
+                      )}
+
+                      {isSelected && (
+                        <span className="absolute top-1 left-1 bg-black/80 text-cyan-300 text-[8px] font-black px-1.5 py-0.2 rounded border border-cyan-500/40 pointer-events-none">
+                          🎥 Video Nền (8 Hướng)
+                        </span>
+                      )}
+                    </div>
+
+                    {/* Nút Xóa Trực Tiếp Nền Khi Chọn */}
+                    {isSelected && (
+                      <button
+                        type="button"
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          handleDeleteLayerFromStep(currentStep.id, 'main_media');
+                        }}
+                        className="absolute top-1 right-1 p-1 bg-rose-600 hover:bg-rose-500 text-white rounded-full shadow-lg z-50 cursor-pointer"
+                        title="Xóa Video Nền Chính"
+                      >
+                        <Trash2 size={10} />
+                      </button>
+                    )}
+
+                    {/* 8 Điểm Resize Handles Khi Được Chọn */}
+                    {isSelected && (
+                      <>
+                        <div onMouseDown={(e) => handlePointerDown(e, 'main_media', null, 'nw')} onTouchStart={(e) => handlePointerDown(e, 'main_media', null, 'nw')} className="absolute -top-1.5 -left-1.5 w-3 h-3 bg-cyan-400 rounded-full cursor-nw-resize z-50 shadow-md border border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'main_media', null, 'ne')} onTouchStart={(e) => handlePointerDown(e, 'main_media', null, 'ne')} className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-cyan-400 rounded-full cursor-ne-resize z-50 shadow-md border border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'main_media', null, 'sw')} onTouchStart={(e) => handlePointerDown(e, 'main_media', null, 'sw')} className="absolute -bottom-1.5 -left-1.5 w-3 h-3 bg-cyan-400 rounded-full cursor-sw-resize z-50 shadow-md border border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'main_media', null, 'se')} onTouchStart={(e) => handlePointerDown(e, 'main_media', null, 'se')} className="absolute -bottom-1.5 -right-1.5 w-3 h-3 bg-cyan-400 rounded-full cursor-se-resize z-50 shadow-md border border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'main_media', null, 'n')} onTouchStart={(e) => handlePointerDown(e, 'main_media', null, 'n')} className="absolute -top-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-cyan-400 rounded-full cursor-n-resize z-50 shadow-md border border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'main_media', null, 's')} onTouchStart={(e) => handlePointerDown(e, 'main_media', null, 's')} className="absolute -bottom-1.5 left-1/2 -translate-x-1/2 w-3 h-3 bg-cyan-400 rounded-full cursor-s-resize z-50 shadow-md border border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'main_media', null, 'w')} onTouchStart={(e) => handlePointerDown(e, 'main_media', null, 'w')} className="absolute top-1/2 -left-1.5 -translate-y-1/2 w-3 h-3 bg-cyan-400 rounded-full cursor-w-resize z-50 shadow-md border border-white" />
+                        <div onMouseDown={(e) => handlePointerDown(e, 'main_media', null, 'e')} onTouchStart={(e) => handlePointerDown(e, 'main_media', null, 'e')} className="absolute top-1/2 -right-1.5 -translate-y-1/2 w-3 h-3 bg-cyan-400 rounded-full cursor-e-resize z-50 shadow-md border border-white" />
+                      </>
+                    )}
+                  </div>
+                );
+              })()}
 
               {/* Lớp 1.5: Video Phụ PiP (Picture-in-Picture) - Có Nút Xóa Trực Tiếp */}
               {activeSecondaryMediaUrl && (() => {
@@ -973,7 +1069,7 @@ export default function LivestreamFlowSequencer() {
                     onMouseDown={(e) => handlePointerDown(e, 'pip', null, null)}
                     onTouchStart={(e) => handlePointerDown(e, 'pip', null, null)}
                     className={`absolute overflow-hidden rounded-xl shadow-2xl transition-shadow cursor-move ${
-                      isSelected ? 'ring-2 ring-indigo-400 border-2 border-indigo-400' : 'border border-indigo-500/50'
+                      isSelected ? 'ring-2 ring-indigo-400 border-2 border-indigo-400 z-20' : 'border border-indigo-500/50'
                     }`}
                     style={{
                       left: `${pipTrans.x}%`,
@@ -990,6 +1086,7 @@ export default function LivestreamFlowSequencer() {
                         loop 
                         muted 
                         playsInline 
+                        onCanPlay={(e) => { e.target.play().catch(() => {}); }}
                         className="w-full h-full object-cover pointer-events-none"
                       />
                       <span className="absolute top-1 left-1 bg-indigo-600/90 text-white text-[8px] font-black px-1.5 py-0.2 rounded">
@@ -1029,7 +1126,7 @@ export default function LivestreamFlowSequencer() {
                 );
               })()}
 
-              {/* Lớp 2: 1 Đến 4 Avatar AI (Interactive Drag & 8-Point Resize Handles) */}
+              {/* Lớp 2: 1 Đến 4 Avatar AI (Interactive Drag & 8-Point Resize Handles & Direct Stage Upload) */}
               {visibleAvatars.map((av, avIdx) => {
                 const isCurrentSpeaker = (currentStep?.avatarSpeaker === av.id) || (currentStep?.avatarSpeaker === 'all') || (!currentStep?.avatarSpeaker && avIdx === 0);
                 const transform = getLayerCurrentTransform('avatar', av.id);
@@ -1044,7 +1141,7 @@ export default function LivestreamFlowSequencer() {
                     onTouchStart={(e) => handlePointerDown(e, 'avatar', av.id, null)}
                     className={`absolute transition-shadow cursor-move ${
                       isSelected 
-                        ? 'ring-2 ring-cyan-400 shadow-xl shadow-cyan-500/30' 
+                        ? 'ring-2 ring-cyan-400 shadow-xl shadow-cyan-500/30 z-20' 
                         : isCurrentSpeaker
                         ? 'ring-1.5 ring-emerald-400/80 shadow-md'
                         : 'hover:ring-1 hover:ring-white/40'
@@ -1074,6 +1171,7 @@ export default function LivestreamFlowSequencer() {
                           loop 
                           muted 
                           playsInline 
+                          onCanPlay={(e) => { e.target.play().catch(() => {}); }}
                           className="w-full h-full object-cover pointer-events-none"
                           style={chromaStyle}
                         />
@@ -1086,6 +1184,25 @@ export default function LivestreamFlowSequencer() {
                         {isCurrentSpeaker && <Volume2 size={9} className="text-cyan-300 animate-bounce" />}
                       </div>
                     </div>
+
+                    {/* Mini Toolbar Trực Tiếp Nạp File Từ Máy Khi Chọn Avatar Trên Sân Khấu */}
+                    {isSelected && (
+                      <div 
+                        className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-1 z-50 bg-slate-900/95 px-2 py-0.5 rounded-lg border border-cyan-400 shadow-xl whitespace-nowrap"
+                        onClick={(e) => e.stopPropagation()}
+                      >
+                        <label className="text-[9px] font-black text-cyan-300 hover:text-white cursor-pointer flex items-center gap-1">
+                          <Upload size={10} />
+                          <span>Tải Media Cho Avatar</span>
+                          <input 
+                            type="file" 
+                            accept="video/*,image/*" 
+                            onChange={(e) => handleDirectAvatarMediaUpload(av.id, e)} 
+                            className="hidden" 
+                          />
+                        </label>
+                      </div>
+                    )}
 
                     {/* 8 Điểm Resize Handles Khi Được Chọn */}
                     {isSelected && (
@@ -1420,13 +1537,13 @@ export default function LivestreamFlowSequencer() {
                           setCurrentStepIndex(idx);
                           setSecondsRemaining(step.durationSeconds || 60);
                           syncStepToServer(step, idx, true);
-                          toast.success(`👁️ Đang hiển thị Bước ${idx + 1} trên Sân khấu!`);
+                          toast.success(`👁️ Đang hiển thị Bước ${idx + 1} trên Sân khấu 9:16!`);
                         }}
-                        className="px-2 py-1 bg-cyan-600 hover:bg-cyan-500 text-black font-black text-[10px] rounded-lg shadow-xs flex items-center gap-1 cursor-pointer"
-                        title="Xem trước bước này trên sân khấu"
+                        className="px-2.5 py-1 bg-gradient-to-r from-cyan-600 to-teal-600 hover:from-cyan-500 hover:to-teal-500 text-white font-black text-[10px] rounded-lg shadow-xs flex items-center gap-1 cursor-pointer"
+                        title="Xem trước toàn bộ bố cục & media của bước này trên Sân Khấu 9:16"
                       >
-                        <Eye size={11} />
-                        <span>Xem</span>
+                        <Eye size={12} />
+                        <span>Xem Bước Này</span>
                       </button>
 
                       {/* Mũi tên Mở Rộng / Thu Gọn kèm Badge Tên Tab */}
@@ -1465,17 +1582,33 @@ export default function LivestreamFlowSequencer() {
                   <div className="p-2.5 space-y-2">
                     
                     <div className="bg-slate-950/70 p-2.5 rounded-xl border border-indigo-900/40 space-y-1.5">
-                      <div className="flex items-center justify-between">
+                      <div className="flex items-center justify-between flex-wrap gap-1.5">
                         <span className="text-[10px] font-black uppercase text-cyan-300 flex items-center gap-1">
                           <FileText size={11} />
-                          <span>Lời Thoại & Kịch Bản AI Bước Này:</span>
+                          <span>Lời Thoại & Giọng Đọc AI:</span>
                         </span>
 
-                        <div className="flex items-center gap-1.5" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center gap-1.5 flex-wrap" onClick={(e) => e.stopPropagation()}>
+                          
+                          {/* Bộ Chọn Giọng Đọc Voice AI Brain */}
+                          <div className="flex items-center gap-1 bg-slate-900 px-2 py-0.5 rounded-lg border border-purple-500/40">
+                            <Mic size={11} className="text-purple-400 shrink-0" />
+                            <select
+                              value={step.voiceId || 'free_vi_female'}
+                              onChange={(e) => handleUpdateStep(step.id, 'voiceId', e.target.value)}
+                              className="bg-transparent text-purple-300 text-[10px] font-bold outline-none cursor-pointer max-w-[150px] sm:max-w-[200px] truncate"
+                              title="Chọn giọng đọc AI cho nhân vật ở bước này"
+                            >
+                              {CURATED_STUDIO_VOICES.map(v => (
+                                <option key={v.id} value={v.id} className="bg-slate-900 text-white">{v.name}</option>
+                              ))}
+                            </select>
+                          </div>
+
                           <button
                             type="button"
-                            onClick={() => handleTestVoiceSpeech(step.scriptText)}
-                            className="px-2 py-0.5 rounded-lg bg-indigo-900/60 hover:bg-indigo-800 text-cyan-300 border border-indigo-700/50 text-[10px] font-bold flex items-center gap-1 cursor-pointer"
+                            onClick={() => handleTestVoiceSpeech(step.scriptText, step.voiceId)}
+                            className="px-2 py-0.5 rounded-lg bg-indigo-900/60 hover:bg-indigo-800 text-cyan-300 border border-indigo-700/50 text-[10px] font-bold flex items-center gap-1 cursor-pointer shadow-xs"
                             title="Nghe thử giọng đọc AI cho đoạn này"
                           >
                             <Volume2 size={11} />
