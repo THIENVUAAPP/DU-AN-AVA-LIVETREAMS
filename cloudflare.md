@@ -1,7 +1,7 @@
 # 🛡️ CLOUDFLARE SPECIFICATION & QUY TẮC KHÓA CHẶT TOÀN DIỆN HỆ THỐNG (BẮT BUỘC DUY TRÌ VĨNH VIỄN)
 
 > **DỰ ÁN:** AVA LIVESTREAM VIP PRO  
-> **PHIÊN BẢN DUY TRÌ:** v4.2.5+  
+> **PHIÊN BẢN DUY TRÌ:** v4.2.6+  
 > **QUY TẮC BẤT DI BẤT DỊCH:** Tuyệt đối tuân thủ trong tất cả các lần phát triển và cập nhật phần mềm.
 
 ---

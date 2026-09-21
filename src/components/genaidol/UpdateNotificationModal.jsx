@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.2.5';
+export const APP_VERSION = '4.2.6';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.2.6 - Hợp Nhất 1 Tab Duy Nhất: Sân Khấu 9:16 Cột Trái 40% & Bảng Kịch Bản Tự Động Chia Vai 1–4 Người Cột Phải 60%',
+    description: '1. Sân Khấu Live 9:16 Cột Trái (Chiếm 40% Màn Hình): Khung hình dọc điện thoại chuẩn 9:16 tích hợp trọn vẹn sức mạnh Studio 1-4 Avatar và Preview kịch bản từng bước (Video nền, Avatar nói/chờ, video phụ PiP, banner ảnh deal, tiêu đề chữ neon, giỏ hàng TikTok Shop); 2. Hợp Nhất 1 Tab Duy Nhất Cột Phải (Chiếm 60% Màn Hình): Xóa bỏ tab rời rạc, tích hợp Bộ chọn 1-4 người, Bố cục nhanh và Kho mẫu kịch bản tự động chia vai trực tiếp trên đầu bảng điều khiển; 3. Tự Động Chia Kịch Bản Cho Từng Nhân Vật: Chọn số lượng người hoặc mẫu kịch bản là hệ thống tự động sinh các bước và phân vai (Avatar 1, Avatar 2, Avatar 3, Avatar 4) đọc thoại tương ứng; 4. Đồng Bộ 0ms Chuẩn 4K 60 FPS: Nút "Đồng Bộ Ra Sân Khấu Chính" tách biệt hoàn toàn giữa Test nội bộ và Phát sóng thật; 5. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn mọi module khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.2.5 - Bố Cục Sân Khấu Trình Chiếu Cột Trái, Bảng Điều Khiển Cột Phải & Nút Đồng Bộ Sân Khấu Riêng Biệt',
     description: '1. Thiết Kế 2 Cột Trực Quan (Split 2-Column Stage & Control): Toàn bộ Sân khấu trình chiếu Mock Live Stage 9:16 nằm cố định ở Cột Trái, nhường toàn bộ Cột Phải cho Bảng điều khiển kịch bản từng bước và cấu hình Studio 1-4 Avatar; 2. Nút "📡 ĐỒNG BỘ RA SÂN KHẤU CHÍNH" Riêng Biệt: Tách biệt hoàn toàn giữa việc Căn chỉnh / Test nội bộ và Phát trực tiếp ra màn hình chính, OBS Window Capture và Link TikTok Live Studio; 3. Đồng Bộ Đa Lớp Trực Quan: Click vào bất kỳ bước nào ở cột phải, sân khấu cột trái lập tức chuyển video nền chính, video phụ PiP, avatar đọc thoại, hiệu ứng glow nói, banner chữ neon và sản phẩm TikTok Shop; 4. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle, Game Bản Đồ 3D; 5. 60 FPS 4K Không Độ Trễ: Đảm bảo độ mượt mà cao nhất trên mọi nền tảng.'
