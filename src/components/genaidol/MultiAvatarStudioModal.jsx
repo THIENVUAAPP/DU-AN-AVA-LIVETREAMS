@@ -725,8 +725,9 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     const updated = { ...config, enabled: true };
     setConfig(updated);
     saveMultiAvatarConfig(updated);
+    window.dispatchEvent(new CustomEvent('avalive_multi_avatar_changed', { detail: updated }));
     setSavedSuccess(true);
-    toast.success('✨ Đã lưu và kích hoạt chế độ Studio 2–4 Avatar cho phòng Live!');
+    toast.success('✨ Đã lưu & đồng bộ chế độ Studio 1–4 Avatar ra Sân Khấu Chính!');
     setTimeout(() => {
       setSavedSuccess(false);
       if (onClose) onClose();

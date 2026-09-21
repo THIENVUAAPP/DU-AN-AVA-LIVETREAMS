@@ -7248,13 +7248,34 @@ export const removeImageBackgroundCanvas = (imgSrc, mode = 'green', tolerance = 
               featherFactor = Math.min(1, Math.max(0, (45 - maxVal) / 25));
             }
           } else if (mode === 'auto' || mode === 'smart') {
-            // Tự động nhận diện màu nền từ góc ảnh
-            const distFromBg = Math.sqrt(Math.pow(r - bgR, 2) + Math.pow(g - bgG, 2) + Math.pow(b - bgB, 2));
+            // 🪄 TỰ ĐỘNG XÓA TẤT CẢ CÁC LOẠI NỀN (LÁ, LAM, TRẮNG/PHÒNG, ĐEN, TƯỜNG)
+            const greenDiff = g - Math.max(r, b);
+            const blueDiff = b - Math.max(r, g);
+            const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
             const isSkin = (r > 120 && g > 80 && b > 60 && r > g && g > b && (r - g) > 15);
-            
-            if (!isSkin && distFromBg < effectiveTol) {
+            const isDarkClothing = (r < 70 && g < 70 && b < 70);
+            const distFromBg = Math.sqrt(Math.pow(r - bgR, 2) + Math.pow(g - bgG, 2) + Math.pow(b - bgB, 2));
+
+            if (g > 65 && greenDiff > 12) {
+              // Phông xanh lá
               isBg = true;
-              featherFactor = Math.min(1, Math.max(0, (effectiveTol - distFromBg) / (effectiveTol * 0.5)));
+              featherFactor = Math.min(1, Math.max(0, (greenDiff - 8) / 30));
+            } else if (b > 65 && blueDiff > 12) {
+              // Phông xanh dương
+              isBg = true;
+              featherFactor = Math.min(1, Math.max(0, (blueDiff - 8) / 30));
+            } else if (!isSkin && !isDarkClothing && luminance > 195 && (Math.max(r, g, b) - Math.min(r, g, b)) < 40) {
+              // Nền trắng / tường sáng
+              isBg = true;
+              featherFactor = Math.min(1, Math.max(0, (luminance - 180) / 45));
+            } else if (Math.max(r, g, b) < 40) {
+              // Nền đen
+              isBg = true;
+              featherFactor = Math.min(1, Math.max(0, (40 - Math.max(r, g, b)) / 25));
+            } else if (!isSkin && distFromBg < effectiveTol * 1.2) {
+              // Nền tường / phòng ambient theo góc
+              isBg = true;
+              featherFactor = Math.min(1, Math.max(0, (effectiveTol * 1.2 - distFromBg) / (effectiveTol * 0.5)));
             }
           }
 

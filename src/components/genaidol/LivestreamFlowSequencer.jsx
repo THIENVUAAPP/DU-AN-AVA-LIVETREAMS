@@ -572,10 +572,12 @@ export default function LivestreamFlowSequencer() {
   const handleChangeAvatarCount = (count) => {
     const updated = {
       ...multiAvatarConfig,
+      enabled: true,
       activeCount: count
     };
     setMultiAvatarConfig(updated);
     saveMultiAvatarConfig(updated);
+    window.dispatchEvent(new CustomEvent('avalive_multi_avatar_changed', { detail: updated }));
     toast.success(`👥 Đã chuyển sân khấu sang chế độ: ${count} Nhân vật!`);
   };
 
@@ -1388,9 +1390,9 @@ export default function LivestreamFlowSequencer() {
       <div className="flex-1 flex flex-col lg:flex-row p-2 gap-2 overflow-hidden min-h-0">
         
         {/* ========================================================================= */}
-        {/* 📱 CỘT TRÁI (LEFT PANEL - 40%): SÂN KHẤU LIVE 9:16 SẠCH 100% & XÓA TRỰC TIẾP */}
+        {/* 📱 CỘT TRÁI (LEFT PANEL - 30%): SÂN KHẤU LIVE 9:16 SẠCH 100% & XÓA TRỰC TIẾP */}
         {/* ========================================================================= */}
-        <div className="w-full lg:w-[42%] xl:w-[40%] flex flex-col h-full bg-[#0d101e] rounded-2xl border border-indigo-900/40 p-2 shadow-2xl shrink-0 overflow-hidden min-h-0">
+        <div className="w-full lg:w-[32%] xl:w-[30%] flex flex-col h-full bg-[#0d101e] rounded-2xl border border-indigo-900/40 p-2 shadow-2xl shrink-0 overflow-hidden min-h-0 relative">
           
           {/* Header Sân Khấu Preview */}
           <div className="flex items-center justify-between pb-1.5 mb-1 border-b border-indigo-900/40 shrink-0">
@@ -1495,95 +1497,7 @@ export default function LivestreamFlowSequencer() {
                       </button>
                     )}
 
-                    {/* Floating Chroma Toolbar Cho Nền Chính */}
-                    {isSelected && (
-                      <div 
-                        className="absolute -bottom-11 left-1/2 -translate-x-1/2 flex items-center gap-1 z-50 bg-slate-950/95 backdrop-blur-md px-2 py-1 rounded-xl border border-cyan-400 shadow-2xl whitespace-nowrap"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => handleInstantCanvasBgRemoval('main_media', null, 'auto')}
-                          className="px-1.5 py-0.5 rounded-lg text-[9px] font-black bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center gap-0.5 cursor-pointer shadow-xs"
-                          title="Tự động nhận diện & tách sạch sẽ nền phòng / tường / phông"
-                        >
-                          <Wand2 size={10} />
-                          <span>🪄 Auto AI</span>
-                        </button>
 
-                        <div className="flex items-center gap-0.5 bg-slate-900 p-0.5 rounded-lg border border-slate-700">
-                          <button
-                            type="button"
-                            onClick={() => handleInstantCanvasBgRemoval('main_media', null, 'green')}
-                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                              (!chromaKey?.mode || chromaKey?.mode === 'green') ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'
-                            }`}
-                            title="Tách phông xanh lá cây"
-                          >
-                            🟢 Lá
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleInstantCanvasBgRemoval('main_media', null, 'blue')}
-                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                              chromaKey?.mode === 'blue' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
-                            }`}
-                            title="Tách phông xanh dương"
-                          >
-                            🔵 Lam
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleInstantCanvasBgRemoval('main_media', null, 'white')}
-                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                              chromaKey?.mode === 'white' ? 'bg-white text-black' : 'text-gray-400 hover:text-white'
-                            }`}
-                            title="Tách nền trắng / tường phòng sáng"
-                          >
-                            ⚪ Trắng/Phòng
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleInstantCanvasBgRemoval('main_media', null, 'black')}
-                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                              chromaKey?.mode === 'black' ? 'bg-gray-700 text-cyan-300' : 'text-gray-400 hover:text-white'
-                            }`}
-                            title="Tách nền đen (Screen)"
-                          >
-                            ⚫ Đen
-                          </button>
-                        </div>
-
-                        <div className="h-3 w-px bg-slate-700 mx-0.5" />
-
-                        {/* Sắp xếp lớp */}
-                        <button
-                          type="button"
-                          onClick={handleLayerBringForward}
-                          className="px-1 py-0.5 rounded text-[8px] font-bold bg-slate-800 hover:bg-slate-700 text-cyan-300 cursor-pointer"
-                          title="Đưa lên trên 1 lớp"
-                        >
-                          🔼 Lên
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleLayerSendBackward}
-                          className="px-1 py-0.5 rounded text-[8px] font-bold bg-slate-800 hover:bg-slate-700 text-amber-300 cursor-pointer"
-                          title="Đưa xuống dưới 1 lớp"
-                        >
-                          🔽 Xuống
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteLayerFromStep(currentStep.id, 'main_media')}
-                          className="px-1.5 py-0.5 rounded-lg text-[9px] font-black bg-rose-950/80 hover:bg-rose-900 text-rose-300 hover:text-white border border-rose-600/40 flex items-center gap-0.5 cursor-pointer"
-                        >
-                          <Trash2 size={10} />
-                          <span>Xóa</span>
-                        </button>
-                      </div>
-                    )}
 
                     {/* 8 Điểm Resize Handles Khi Được Chọn */}
                     {isSelected && (
@@ -1669,95 +1583,7 @@ export default function LivestreamFlowSequencer() {
                       </button>
                     )}
 
-                    {/* Floating Chroma Toolbar Cho PiP */}
-                    {isSelected && (
-                      <div 
-                        className="absolute -bottom-11 left-1/2 -translate-x-1/2 flex items-center gap-1 z-50 bg-slate-950/95 backdrop-blur-md px-2 py-1 rounded-xl border border-indigo-400 shadow-2xl whitespace-nowrap"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => handleInstantCanvasBgRemoval('pip', null, 'auto')}
-                          className="px-1.5 py-0.5 rounded-lg text-[9px] font-black bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center gap-0.5 cursor-pointer shadow-xs"
-                          title="Tự động nhận diện & tách sạch sẽ nền phòng / tường / phông"
-                        >
-                          <Wand2 size={10} />
-                          <span>🪄 Auto AI</span>
-                        </button>
 
-                        <div className="flex items-center gap-0.5 bg-slate-900 p-0.5 rounded-lg border border-slate-700">
-                          <button
-                            type="button"
-                            onClick={() => handleInstantCanvasBgRemoval('pip', null, 'green')}
-                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                              (!chromaKey?.mode || chromaKey?.mode === 'green') ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'
-                            }`}
-                            title="Tách phông xanh lá cây"
-                          >
-                            🟢 Lá
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleInstantCanvasBgRemoval('pip', null, 'blue')}
-                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                              chromaKey?.mode === 'blue' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
-                            }`}
-                            title="Tách phông xanh dương"
-                          >
-                            🔵 Lam
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleInstantCanvasBgRemoval('pip', null, 'white')}
-                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                              chromaKey?.mode === 'white' ? 'bg-white text-black' : 'text-gray-400 hover:text-white'
-                            }`}
-                            title="Tách nền trắng / tường phòng sáng"
-                          >
-                            ⚪ Trắng/Phòng
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleInstantCanvasBgRemoval('pip', null, 'black')}
-                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                              chromaKey?.mode === 'black' ? 'bg-gray-700 text-cyan-300' : 'text-gray-400 hover:text-white'
-                            }`}
-                            title="Tách nền đen (Screen)"
-                          >
-                            ⚫ Đen
-                          </button>
-                        </div>
-
-                        <div className="h-3 w-px bg-slate-700 mx-0.5" />
-
-                        {/* Sắp xếp lớp */}
-                        <button
-                          type="button"
-                          onClick={handleLayerBringForward}
-                          className="px-1 py-0.5 rounded text-[8px] font-bold bg-slate-800 hover:bg-slate-700 text-cyan-300 cursor-pointer"
-                          title="Đưa lên trên 1 lớp"
-                        >
-                          🔼 Lên
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleLayerSendBackward}
-                          className="px-1 py-0.5 rounded text-[8px] font-bold bg-slate-800 hover:bg-slate-700 text-amber-300 cursor-pointer"
-                          title="Đưa xuống dưới 1 lớp"
-                        >
-                          🔽 Xuống
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteLayerFromStep(currentStep.id, 'pip')}
-                          className="px-1.5 py-0.5 rounded-lg text-[9px] font-black bg-rose-950/80 hover:bg-rose-900 text-rose-300 hover:text-white border border-rose-600/40 flex items-center gap-0.5 cursor-pointer"
-                        >
-                          <Trash2 size={10} />
-                          <span>Xóa</span>
-                        </button>
-                      </div>
-                    )}
 
                     {/* 8 Điểm Resize Handles Khi Được Chọn */}
                     {isSelected && (
@@ -1854,111 +1680,7 @@ export default function LivestreamFlowSequencer() {
                       </button>
                     )}
 
-                    {/* Mini Toolbar Trực Tiếp Tách Phông Xanh & Nạp Media & Xóa Khi Chọn Avatar Trên Sân Khấu */}
-                    {isSelected && (
-                      <div 
-                        className="absolute -bottom-11 left-1/2 -translate-x-1/2 flex items-center gap-1 z-50 bg-slate-950/95 backdrop-blur-md px-2 py-1 rounded-xl border border-cyan-400 shadow-2xl whitespace-nowrap"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => handleInstantCanvasBgRemoval('avatar', av.id, 'auto')}
-                          className="px-1.5 py-0.5 rounded-lg text-[9px] font-black bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center gap-0.5 cursor-pointer shadow-xs"
-                          title="Tự động nhận diện & tách sạch sẽ nền phòng / tường / phông"
-                        >
-                          <Wand2 size={10} />
-                          <span>🪄 Auto AI</span>
-                        </button>
 
-                        <div className="flex items-center gap-0.5 bg-slate-900 p-0.5 rounded-lg border border-slate-700">
-                          <button
-                            type="button"
-                            onClick={() => handleInstantCanvasBgRemoval('avatar', av.id, 'green')}
-                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                              (!av.chromaKey?.mode || av.chromaKey?.mode === 'green') ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'
-                            }`}
-                            title="Tách phông xanh lá cây"
-                          >
-                            🟢 Lá
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleInstantCanvasBgRemoval('avatar', av.id, 'blue')}
-                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                              av.chromaKey?.mode === 'blue' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
-                            }`}
-                            title="Tách phông xanh dương"
-                          >
-                            🔵 Lam
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleInstantCanvasBgRemoval('avatar', av.id, 'white')}
-                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                              av.chromaKey?.mode === 'white' ? 'bg-white text-black' : 'text-gray-400 hover:text-white'
-                            }`}
-                            title="Tách nền trắng / tường phòng sáng"
-                          >
-                            ⚪ Trắng/Phòng
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleInstantCanvasBgRemoval('avatar', av.id, 'black')}
-                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                              av.chromaKey?.mode === 'black' ? 'bg-gray-700 text-cyan-300' : 'text-gray-400 hover:text-white'
-                            }`}
-                            title="Tách nền đen (Screen)"
-                          >
-                            ⚫ Đen
-                          </button>
-                        </div>
-
-                        <div className="h-3 w-px bg-slate-700 mx-0.5" />
-
-                        {/* Sắp xếp lớp */}
-                        <button
-                          type="button"
-                          onClick={handleLayerBringForward}
-                          className="px-1 py-0.5 rounded text-[8px] font-bold bg-slate-800 hover:bg-slate-700 text-cyan-300 cursor-pointer"
-                          title="Đưa lên trên 1 lớp"
-                        >
-                          🔼 Lên
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleLayerSendBackward}
-                          className="px-1 py-0.5 rounded text-[8px] font-bold bg-slate-800 hover:bg-slate-700 text-amber-300 cursor-pointer"
-                          title="Đưa xuống dưới 1 lớp"
-                        >
-                          🔽 Xuống
-                        </button>
-
-                        <div className="h-3 w-px bg-slate-700 mx-0.5" />
-
-                        {/* Nút Nạp Media Cho Avatar */}
-                        <label className="text-[9px] font-black text-cyan-300 hover:text-white cursor-pointer flex items-center gap-1 bg-cyan-950/80 px-1.5 py-0.5 rounded-lg border border-cyan-500/40">
-                          <Upload size={10} />
-                          <span>Tải Video/Ảnh</span>
-                          <input 
-                            type="file" 
-                            accept="video/*,image/*" 
-                            onChange={(e) => handleDirectAvatarMediaUpload(av.id, e)} 
-                            className="hidden" 
-                          />
-                        </label>
-
-                        {/* Nút Xóa Avatar Khỏi Sân Khấu */}
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteAvatarLayer(av.id)}
-                          className="px-1.5 py-0.5 rounded-lg text-[9px] font-black bg-rose-950/80 hover:bg-rose-900 text-rose-300 hover:text-white border border-rose-600/40 flex items-center gap-0.5 cursor-pointer"
-                          title="Xóa nhân vật này khỏi sân khấu"
-                        >
-                          <Trash2 size={10} />
-                          <span>Xóa</span>
-                        </button>
-                      </div>
-                    )}
 
                     {/* 8 Điểm Resize Handles Khi Được Chọn */}
                     {isSelected && (
@@ -2023,95 +1745,7 @@ export default function LivestreamFlowSequencer() {
                       </button>
                     )}
 
-                    {/* Floating Chroma Toolbar Cho Banner */}
-                    {isSelected && (
-                      <div 
-                        className="absolute -bottom-11 left-1/2 -translate-x-1/2 flex items-center gap-1 z-50 bg-slate-950/95 backdrop-blur-md px-2 py-1 rounded-xl border border-amber-400 shadow-2xl whitespace-nowrap"
-                        onClick={(e) => e.stopPropagation()}
-                      >
-                        <button
-                          type="button"
-                          onClick={() => handleInstantCanvasBgRemoval('banner', null, 'auto')}
-                          className="px-1.5 py-0.5 rounded-lg text-[9px] font-black bg-gradient-to-r from-purple-600 to-indigo-600 text-white flex items-center gap-0.5 cursor-pointer shadow-xs"
-                          title="Tự động nhận diện & tách sạch sẽ nền phòng / tường / phông"
-                        >
-                          <Wand2 size={10} />
-                          <span>🪄 Auto AI</span>
-                        </button>
 
-                        <div className="flex items-center gap-0.5 bg-slate-900 p-0.5 rounded-lg border border-slate-700">
-                          <button
-                            type="button"
-                            onClick={() => handleInstantCanvasBgRemoval('banner', null, 'green')}
-                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                              (!chromaKey?.mode || chromaKey?.mode === 'green') ? 'bg-green-600 text-white' : 'text-gray-400 hover:text-white'
-                            }`}
-                            title="Tách phông xanh lá cây"
-                          >
-                            🟢 Lá
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleInstantCanvasBgRemoval('banner', null, 'blue')}
-                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                              chromaKey?.mode === 'blue' ? 'bg-blue-600 text-white' : 'text-gray-400 hover:text-white'
-                            }`}
-                            title="Tách phông xanh dương"
-                          >
-                            🔵 Lam
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleInstantCanvasBgRemoval('banner', null, 'white')}
-                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                              chromaKey?.mode === 'white' ? 'bg-white text-black' : 'text-gray-400 hover:text-white'
-                            }`}
-                            title="Tách nền trắng / tường phòng sáng"
-                          >
-                            ⚪ Trắng/Phòng
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleInstantCanvasBgRemoval('banner', null, 'black')}
-                            className={`px-1 py-0.5 rounded text-[8px] font-bold cursor-pointer ${
-                              chromaKey?.mode === 'black' ? 'bg-gray-700 text-cyan-300' : 'text-gray-400 hover:text-white'
-                            }`}
-                            title="Tách nền đen (Screen)"
-                          >
-                            ⚫ Đen
-                          </button>
-                        </div>
-
-                        <div className="h-3 w-px bg-slate-700 mx-0.5" />
-
-                        {/* Sắp xếp lớp */}
-                        <button
-                          type="button"
-                          onClick={handleLayerBringForward}
-                          className="px-1 py-0.5 rounded text-[8px] font-bold bg-slate-800 hover:bg-slate-700 text-cyan-300 cursor-pointer"
-                          title="Đưa lên trên 1 lớp"
-                        >
-                          🔼 Lên
-                        </button>
-                        <button
-                          type="button"
-                          onClick={handleLayerSendBackward}
-                          className="px-1 py-0.5 rounded text-[8px] font-bold bg-slate-800 hover:bg-slate-700 text-amber-300 cursor-pointer"
-                          title="Đưa xuống dưới 1 lớp"
-                        >
-                          🔽 Xuống
-                        </button>
-
-                        <button
-                          type="button"
-                          onClick={() => handleDeleteLayerFromStep(currentStep.id, 'banner')}
-                          className="px-1.5 py-0.5 rounded-lg text-[9px] font-black bg-rose-950/80 hover:bg-rose-900 text-rose-300 hover:text-white border border-rose-600/40 flex items-center gap-0.5 cursor-pointer"
-                        >
-                          <Trash2 size={10} />
-                          <span>Xóa</span>
-                        </button>
-                      </div>
-                    )}
 
                     {/* 8 Điểm Resize Handles Khi Được Chọn */}
                     {isSelected && (
@@ -2239,6 +1873,75 @@ export default function LivestreamFlowSequencer() {
               {/* Bottom Home Indicator Bar */}
               <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-20 h-1 bg-white/30 rounded-full z-50 pointer-events-none" />
             </div>
+
+            {/* 🌟 THANH CÔNG CỤ NỔI DỌC NGOÀI KHUNG VIDEO KHI CHỌN LỚP (BÊN HÔNG PHẢI SÂN KHẤU) */}
+            {selectedLayer.type && (
+              <div 
+                className="absolute top-3 right-1 z-50 flex flex-col gap-1 bg-slate-950/95 backdrop-blur-md p-1.5 rounded-xl border border-cyan-400 shadow-2xl animate-in fade-in zoom-in duration-200"
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div className="text-[8px] font-black text-center text-cyan-300 border-b border-slate-800 pb-0.5 uppercase tracking-wider">
+                  {selectedLayer.type === 'avatar' ? `Avatar ${selectedLayer.id}` : selectedLayer.type === 'main_media' ? 'Nền Chính' : selectedLayer.type === 'pip' ? 'Video PiP' : selectedLayer.type === 'banner' ? 'Banner' : 'Chữ'}
+                </div>
+
+                {/* 🪄 1 NÚT DUY NHẤT: XÓA NỀN AI (TỰ ĐỘNG TÁCH MỌI LOẠI NỀN) */}
+                {selectedLayer.type !== 'text' && (
+                  <button
+                    type="button"
+                    onClick={() => handleInstantCanvasBgRemoval(selectedLayer.type, selectedLayer.id, 'auto')}
+                    className="px-2 py-1.5 rounded-lg text-[9px] font-black bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white flex items-center justify-center gap-1 cursor-pointer shadow-md hover:scale-105 active:scale-95 transition-all"
+                    title="Tự động nhận diện & xóa sạch tất cả các loại nền (xanh lá, xanh dương, nền đen, nền trắng, phòng/tường)"
+                  >
+                    <Wand2 size={11} />
+                    <span>🪄 Xóa Nền</span>
+                  </button>
+                )}
+
+                {/* Sắp xếp lớp */}
+                <div className="flex items-center gap-0.5">
+                  <button
+                    type="button"
+                    onClick={handleLayerBringForward}
+                    className="flex-1 px-1.5 py-0.5 rounded text-[8px] font-bold bg-slate-900 hover:bg-slate-800 text-cyan-300 border border-slate-700 flex items-center justify-center gap-0.5 cursor-pointer"
+                    title="Đưa lên trên 1 lớp"
+                  >
+                    <ArrowUp size={9} />
+                    <span>Lên</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={handleLayerSendBackward}
+                    className="flex-1 px-1.5 py-0.5 rounded text-[8px] font-bold bg-slate-900 hover:bg-slate-800 text-amber-300 border border-slate-700 flex items-center justify-center gap-0.5 cursor-pointer"
+                    title="Đưa xuống dưới 1 lớp"
+                  >
+                    <ArrowDown size={9} />
+                    <span>Xuống</span>
+                  </button>
+                </div>
+
+                {/* Xóa Layer Khỏi Bước */}
+                <button
+                  type="button"
+                  onClick={() => handleDeleteLayerFromStep(currentStep.id, selectedLayer.type, selectedLayer.id)}
+                  className="px-1.5 py-1 rounded-lg text-[8px] font-black bg-rose-950/80 hover:bg-rose-900 text-rose-300 hover:text-white border border-rose-600/40 flex items-center justify-center gap-1 cursor-pointer"
+                  title="Xóa lớp này khỏi bước"
+                >
+                  <Trash2 size={10} />
+                  <span>Xóa Lớp</span>
+                </button>
+
+                {/* Đóng Chọn */}
+                <button
+                  type="button"
+                  onClick={() => setSelectedLayer({ type: null, id: null })}
+                  className="px-1 py-0.5 rounded text-[8px] font-bold bg-slate-900 hover:bg-slate-800 text-gray-400 hover:text-white flex items-center justify-center gap-0.5 cursor-pointer"
+                  title="Bỏ chọn đối tượng"
+                >
+                  <X size={9} />
+                  <span>Đóng</span>
+                </button>
+              </div>
+            )}
           </div>
 
           {/* 🌟 THANH THAO TÁC CĂN CHỈNH VỊ TRÍ NHANH: GỌN GÀNG ĐÚNG 1 HÀNG DUY NHẤT */}
@@ -2434,33 +2137,9 @@ export default function LivestreamFlowSequencer() {
                       )}
                     </div>
 
-                    {/* Cột Phải: Phân Vai Avatar Nói, Thời lượng & Nút Thao Tác */}
-                    <div className="flex items-center gap-1.5 shrink-0" onClick={(e) => e.stopPropagation()}>
+                    {/* Cột Phải: Phân Vai Avatar Nói, Thời lượng, Xem & Nút Thao Tác (Cài Đặt & Xóa Rõ Ràng 100%) */}
+                    <div className="flex items-center gap-1.5 flex-wrap shrink-0" onClick={(e) => e.stopPropagation()}>
                       
-                      {/* Nút Bật / Tắt Voice Riêng Cho Bước Này */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          const nextVoice = step.voiceEnabled === false ? true : false;
-                          handleUpdateStep(step.id, 'voiceEnabled', nextVoice);
-                          if (!nextVoice && speakingStepId === step.id) {
-                            stopVoiceAudio();
-                            setSpeakingStepId(null);
-                            setIsSpeakingPreview(false);
-                          }
-                          toast.info(nextVoice ? `🔊 Bước ${idx + 1}: ĐÃ BẬT Voice AI` : `🔇 Bước ${idx + 1}: ĐÃ TẮT Voice AI (Không đọc thoại)`);
-                        }}
-                        className={`px-2 py-1 rounded-lg text-[10px] font-black flex items-center gap-1 border cursor-pointer transition-all ${
-                          step.voiceEnabled !== false 
-                            ? 'bg-emerald-950/90 text-emerald-300 border-emerald-500/50 hover:bg-emerald-900' 
-                            : 'bg-rose-950/90 text-rose-300 border-rose-500/50 hover:bg-rose-900'
-                        }`}
-                        title={step.voiceEnabled !== false ? "Bấm để TẮT giọng đọc AI cho bước này" : "Bấm để BẬT giọng đọc AI cho bước này"}
-                      >
-                        {step.voiceEnabled !== false ? <Volume2 size={11} className="text-emerald-400" /> : <Volume2 size={11} className="text-rose-400 opacity-60" />}
-                        <span>{step.voiceEnabled !== false ? 'Voice: BẬT' : 'Voice: TẮT'}</span>
-                      </button>
-
                       <select
                         value={step.avatarSpeaker || 'avatar_1'}
                         onChange={(e) => handleUpdateStep(step.id, 'avatarSpeaker', e.target.value)}
@@ -2510,6 +2189,7 @@ export default function LivestreamFlowSequencer() {
                         )}
                       </div>
 
+                      {/* Nút Xem Bước Này */}
                       <button
                         type="button"
                         onClick={() => {
@@ -2532,47 +2212,23 @@ export default function LivestreamFlowSequencer() {
                         <span>{isSelected ? 'Đang Xem' : 'Xem Bước Này'}</span>
                       </button>
 
-                      {/* Nút Chạy Test Riêng Cho Bước Này */}
-                      <button
-                        type="button"
-                        onClick={() => {
-                          if (speakingStepId === step.id || (isPlayingFlow && currentStepIndex === idx)) {
-                            handleStopFlow();
-                          } else {
-                            startStep(idx, true);
-                          }
-                        }}
-                        className={`px-2.5 py-1 font-black text-[10px] rounded-lg shadow-xs flex items-center gap-1 cursor-pointer transition-all ${
-                          (isPlayingFlow && currentStepIndex === idx)
-                            ? 'bg-rose-600 text-white animate-pulse'
-                            : 'bg-indigo-600 hover:bg-indigo-500 text-white'
-                        }`}
-                        title="Chạy test giọng đọc và thời gian riêng cho bước này"
-                      >
-                        {(isPlayingFlow && currentStepIndex === idx) ? (
-                          <>
-                            <Square size={11} className="fill-white" />
-                            <span>Dừng Test</span>
-                          </>
-                        ) : (
-                          <>
-                            <Play size={11} className="fill-white" />
-                            <span>Chạy Test</span>
-                          </>
-                        )}
-                      </button>
-
-                      {/* Mũi tên Mở Rộng / Thu Gọn kèm Badge Tên Tab */}
+                      {/* Nút Cài Đặt Chi Tiết */}
                       <button
                         type="button"
                         onClick={() => setExpandedStepId(isExpanded ? null : step.id)}
-                        className="px-2 py-1 text-xs font-bold text-gray-300 hover:text-white rounded-lg bg-slate-900 border border-slate-700 flex items-center gap-1 cursor-pointer"
+                        className={`px-2.5 py-1 text-[11px] font-black rounded-lg border flex items-center gap-1 cursor-pointer transition-all ${
+                          isExpanded 
+                            ? 'bg-indigo-600 text-white border-indigo-400 shadow-md' 
+                            : 'bg-slate-900 hover:bg-slate-800 text-cyan-300 border-slate-700'
+                        }`}
                         title="Mở rộng / Thu gọn cấu hình chi tiết của bước này"
                       >
+                        <Sliders size={12} />
                         <span>Cài Đặt</span>
-                        {isExpanded ? <ChevronUp size={13} /> : <ChevronDown size={13} />}
+                        {isExpanded ? <ChevronUp size={12} /> : <ChevronDown size={12} />}
                       </button>
 
+                      {/* Nút Nhân Bản */}
                       <button
                         type="button"
                         onClick={() => handleDuplicateStep(step)}
@@ -2582,37 +2238,39 @@ export default function LivestreamFlowSequencer() {
                         <Copy size={12} />
                       </button>
 
+                      {/* Nút Xóa Bước Này (Màu đỏ nổi bật, hiển thị 100%) */}
                       <button
                         type="button"
                         onClick={() => handleDeleteStep(step.id)}
-                        className="p-1 text-gray-400 hover:text-rose-400 rounded bg-slate-900 border border-slate-700 cursor-pointer"
-                        title="Xóa bước này"
+                        className="px-2 py-1 text-rose-300 hover:text-white rounded-lg bg-rose-950/80 hover:bg-rose-900 border border-rose-600/50 flex items-center gap-1 cursor-pointer font-bold text-[10px] transition-all shadow-xs"
+                        title="Xóa bước này khỏi kịch bản"
                       >
-                        <Trash2 size={12} />
+                        <Trash2 size={12} className="text-rose-400" />
+                        <span>Xóa</span>
                       </button>
                     </div>
 
                   </div>
 
-                  {/* NỘI DUNG CHÍNH: KHUNG KỊCH BẢN & LỜI THOẠI AI NẰM RIÊNG */}
-                  <div className="p-2.5 space-y-2">
+                  {/* NỘI DUNG CHÍNH: KHUNG KỊCH BẢN & LỜI THOẠI AI NẰM RIÊNG (TO GẤP 3 LẦN) */}
+                  <div className="p-3 space-y-2">
                     
-                    <div className="bg-slate-950/70 p-2.5 rounded-xl border border-indigo-900/40 space-y-1.5">
-                      <div className="flex items-center justify-between flex-wrap gap-1.5">
-                        <span className="text-[10px] font-black uppercase text-cyan-300 flex items-center gap-1">
-                          <FileText size={11} />
-                          <span>Lời Thoại & Giọng Đọc AI:</span>
+                    <div className="bg-slate-950/80 p-3 rounded-xl border border-indigo-900/50 space-y-2">
+                      <div className="flex items-center justify-between flex-wrap gap-2">
+                        <span className="text-xs font-black uppercase text-cyan-300 flex items-center gap-1.5">
+                          <FileText size={13} className="text-cyan-400" />
+                          <span>Lời Thoại & Giọng Đọc AI (Kịch Bản):</span>
                         </span>
 
-                        <div className="flex items-center gap-1.5 flex-wrap" onClick={(e) => e.stopPropagation()}>
+                        <div className="flex items-center gap-2 flex-wrap" onClick={(e) => e.stopPropagation()}>
                           
                           {/* Bộ Chọn Giọng Đọc Voice AI Brain */}
-                          <div className="flex items-center gap-1 bg-slate-900 px-2 py-0.5 rounded-lg border border-purple-500/40">
-                            <Mic size={11} className="text-purple-400 shrink-0" />
+                          <div className="flex items-center gap-1 bg-slate-900 px-2 py-1 rounded-lg border border-purple-500/40">
+                            <Mic size={12} className="text-purple-400 shrink-0" />
                             <select
                               value={step.voiceId || 'brain_auto'}
                               onChange={(e) => handleUpdateStep(step.id, 'voiceId', e.target.value)}
-                              className="bg-transparent text-purple-300 text-[10px] font-bold outline-none cursor-pointer max-w-[150px] sm:max-w-[200px] truncate"
+                              className="bg-transparent text-purple-300 text-xs font-bold outline-none cursor-pointer max-w-[160px] sm:max-w-[220px] truncate"
                               title="Chọn giọng đọc AI cho nhân vật ở bước này"
                             >
                               {CURATED_STUDIO_VOICES.map(v => (
@@ -2623,38 +2281,38 @@ export default function LivestreamFlowSequencer() {
 
                           {/* Badge Giọng Bộ Não */}
                           {(!step.voiceId || step.voiceId === 'brain_auto') && (
-                            <span className="text-[9px] font-bold text-amber-300 bg-amber-950/60 px-2 py-0.5 rounded-md border border-amber-500/30 truncate max-w-[140px]" title="Giọng mặc định lấy trực tiếp từ Cấu hình Bộ Não Voice AI">
+                            <span className="text-[10px] font-bold text-amber-300 bg-amber-950/70 px-2 py-1 rounded-md border border-amber-500/30 truncate max-w-[150px]" title="Giọng mặc định lấy trực tiếp từ Cấu hình Bộ Não Voice AI">
                               🧠 {getBrainVoiceNameForSpeaker(step.avatarSpeaker).split(' ')[0]}
                             </span>
                           )}
 
-                          {/* Nút Đọc Thử AI / Dừng Đọc với Animation Sóng Âm */}
+                          {/* 🔊 1 NÚT DUY NHẤT: ĐỌC THỬ VOICE / DỪNG ĐỌC */}
                           <button
                             type="button"
                             onClick={() => handleTestVoiceSpeech(step.id, step.scriptText, step.voiceId, step.avatarSpeaker)}
-                            className={`px-2.5 py-1 rounded-lg text-[10px] font-bold flex items-center gap-1.5 cursor-pointer shadow-xs transition-all ${
+                            className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-md transition-all ${
                               speakingStepId === step.id 
-                                ? 'bg-rose-600 text-white animate-pulse ring-1 ring-rose-300' 
-                                : 'bg-indigo-900/80 hover:bg-indigo-800 text-cyan-300 border border-indigo-700/50'
+                                ? 'bg-rose-600 text-white animate-pulse ring-2 ring-rose-300' 
+                                : 'bg-gradient-to-r from-indigo-700 to-cyan-700 hover:from-indigo-600 hover:to-cyan-600 text-white border border-cyan-500/40'
                             }`}
                             title="Nghe thử giọng đọc AI cho đoạn này từ Bộ Não Voice AI"
                           >
                             {speakingStepId === step.id ? (
                               <>
-                                <Square size={10} className="fill-white" />
-                                <span className="font-mono">⏹️ Dừng Đọc</span>
-                                <span className="text-[9px] text-yellow-300 animate-bounce"> ▂▃▅</span>
+                                <Square size={12} className="fill-white" />
+                                <span>Dừng Đọc</span>
+                                <span className="text-xs text-yellow-300 animate-bounce"> ▂▃▅</span>
                               </>
                             ) : (
                               <>
-                                <Volume2 size={11} />
-                                <span>Đọc Thử AI</span>
+                                <Volume2 size={13} />
+                                <span>Nghe Thử Voice</span>
                               </>
                             )}
                           </button>
 
-                          <label className="px-2 py-0.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-[10px] font-bold flex items-center gap-1 cursor-pointer">
-                            <Upload size={11} />
+                          <label className="px-2.5 py-1.5 rounded-lg bg-slate-800 hover:bg-slate-700 text-amber-300 border border-slate-700 text-xs font-bold flex items-center gap-1 cursor-pointer">
+                            <Upload size={12} />
                             <span>Nạp File (.md, .txt, .docx, .pdf)</span>
                             <input 
                               type="file" 
@@ -2666,12 +2324,13 @@ export default function LivestreamFlowSequencer() {
                         </div>
                       </div>
 
+                      {/* KHUNG KỊCH BẢN TO GẤP 3 LẦN HIỆN TẠI (DỄ ĐỌC & DỄ NHẬP LIỆU) */}
                       <textarea
                         value={step.scriptText || ''}
                         onChange={(e) => handleUpdateStep(step.id, 'scriptText', e.target.value)}
-                        placeholder="Nhập lời thoại của nhân vật / kịch bản AI cho bước này hoặc bấm nút Nạp File (.md, .docx, .txt, .pdf)..."
-                        rows={isExpanded ? 3 : 2}
-                        className="w-full bg-slate-900 text-gray-100 text-xs p-2 rounded-lg border border-slate-800 focus:border-cyan-500 outline-none resize-y transition-all font-medium leading-relaxed"
+                        placeholder="Nhập lời thoại của nhân vật / kịch bản AI chi tiết cho bước này hoặc bấm nút Nạp File (.md, .docx, .txt, .pdf)..."
+                        rows={6}
+                        className="w-full min-h-[140px] bg-slate-900 text-gray-100 text-[13px] p-3 rounded-xl border border-slate-700 focus:border-cyan-400 focus:ring-1 focus:ring-cyan-400 outline-none resize-y transition-all font-medium leading-relaxed shadow-inner"
                       />
                     </div>
 
