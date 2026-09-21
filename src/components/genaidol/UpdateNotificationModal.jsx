@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.4.9';
+export const APP_VERSION = '4.5.0';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.5.0 - Sửa Triệt Để Lỗi Bấm Mở Tab Luồng Live Idol 1-4 Avatar Chuyên Biệt Mượt Mà 60FPS',
+    description: '1. Sửa Dứt Điểm 100% Lỗi Mở Tab: Nâng cấp nút "🎬 Luồng Live Idol 1-4 Avatar" trong menu dropdown mở ngay tức thì bảng điều khiển chuyên biệt Full-screen Studio Sequencer 60FPS không bị kẹt hay giật lag; 2. Cấu Trúc Modal Riêng Biệt: Tách riêng giao diện Luồng Live Idol 1-4 Avatar độc lập, giúp hiển thị trọn vẹn 100% không gian làm việc; 3. Khóa Chặt 100% Toàn Bộ Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D, Luồng phát online HTTPS Cloudflare Tunnel.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.4.9 - Loại Bỏ Nút Trùng Lặp Trên Menu & Tối Ưu Mở Ngay Tab Luồng Live Idol 1-4 Avatar',
     description: '1. Loại Bỏ Nút Trùng Lặp: Đã dọn dẹp và xóa bỏ hoàn toàn nút bấm dư thừa trên Menu Dropdown theo đúng yêu cầu; 2. Sửa Triệt Để Lỗi Mở Tab: Tối ưu nút "🎬 Luồng Live Idol 1-4 Avatar" mở thẳng vào Sequencer đa avatar; 3. Khóa chặt 100% tất cả các module hệ thống.'

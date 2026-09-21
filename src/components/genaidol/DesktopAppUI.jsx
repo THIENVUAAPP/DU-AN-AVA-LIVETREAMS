@@ -13,6 +13,7 @@ import { supabase, syncUserToSupabase } from '../../lib/supabaseClient';
 import flvjs from 'flv.js';
 import Hls from 'hls.js';
 import WorkspaceTacVu from './WorkspaceTacVu';
+import LivestreamFlowSequencer from './LivestreamFlowSequencer';
 import GeneralSettings from './GeneralSettings';
 import ThanhToanCoin from './ThanhToanCoin';
 import TokenHistoryModal from './TokenHistoryModal';
@@ -5230,6 +5231,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 {/* 0. LUỒNG LIVE IDOL 1-4 AVATAR */}
                 <button 
                   type="button"
+                  onMouseDown={(e) => { 
+                    e.preventDefault();
+                    e.stopPropagation();
+                    setActiveSettingsModal('workspace_sequencer'); 
+                    setIsSettingsDropdownOpen(false); 
+                  }}
                   onClick={(e) => { 
                     e.preventDefault();
                     e.stopPropagation();
@@ -6354,8 +6361,39 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         </div>
       )}
 
+      {/* 🎬 DEDICATED FULL-SCREEN MODAL: LUỒNG LIVE IDOL 1-4 AVATAR & KỊCH BẢN PHÂN ĐOẠN 24/7 */}
+      {activeSettingsModal === 'workspace_sequencer' && (
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/90 backdrop-blur-md p-1 sm:p-2 animate-in fade-in zoom-in duration-150"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setActiveSettingsModal(null);
+          }}
+        >
+          <div className="w-full h-full max-w-[1760px] max-h-[98vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-[#0b0f19] border border-rose-500/30 relative">
+            <div className="flex items-center justify-between px-5 py-2.5 border-b border-rose-500/20 bg-gradient-to-r from-rose-950/70 via-[#131022] to-indigo-950/70 shrink-0">
+              <div className="flex items-center gap-2.5 text-rose-400 font-black text-sm">
+                <Layers size={18} className="text-rose-400 animate-pulse" />
+                <span className="tracking-wide">🎬 LUỒNG LIVE IDOL 1–4 AVATAR & KỊCH BẢN PHÂN ĐOẠN 24/7</span>
+                <span className="text-[10px] px-2 py-0.5 rounded-full font-bold bg-rose-500/20 text-rose-300 border border-rose-500/40">Studio Pro 60FPS</span>
+              </div>
+              <button 
+                type="button"
+                onClick={() => setActiveSettingsModal(null)}
+                className="p-1.5 rounded-lg bg-white/10 text-white/70 hover:bg-rose-600 hover:text-white transition-all cursor-pointer"
+                title="Đóng bảng luồng live"
+              >
+                <X size={18} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-hidden">
+              <LivestreamFlowSequencer />
+            </div>
+          </div>
+        </div>
+      )}
+
       {/* Settings Modal (WorkspaceTacVu / Event Manager) */}
-      {(activeSettingsModal === 'workspace' || activeSettingsModal === 'workspace_sequencer' || activeSettingsModal === 'workspace_events') && (
+      {(activeSettingsModal === 'workspace' || activeSettingsModal === 'workspace_events') && (
         <div 
           className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-2 md:p-3 animate-in fade-in zoom-in duration-200"
           onClick={(e) => {
@@ -6367,8 +6405,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               <h2 className="text-xl font-bold flex items-center gap-2">
                 <Settings className="text-blue-500" />
                 <span>
-                  {activeSettingsModal === 'workspace_sequencer' 
-                    ? '🎬 Luồng Live Idol 1–4 Avatar & Kịch Bản Phân Đoạn Live' 
+                  {activeSettingsModal === 'workspace_events' 
+                    ? 'Cài đặt Sự kiện & Kịch bản Tương tác Livestream' 
                     : 'Cài đặt Hệ thống Sự kiện Livestream'}
                 </span>
               </h2>
@@ -6385,16 +6423,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 >
                   <X size={24} />
                 </button>
-    </div>
-    </div>
+              </div>
+            </div>
             <div className="flex-1 overflow-auto relative">
               <WorkspaceTacVu 
                 key={activeSettingsModal}
                 defaultEventId={activeSettingsModal === 'workspace_events' ? 'welcome' : 'flow_sequencer'} 
               />
-    </div>
-    </div>
-    </div>
+            </div>
+          </div>
+        </div>
       )}
 
       {/* Payment & Token Packages Modal */}
