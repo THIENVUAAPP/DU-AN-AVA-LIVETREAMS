@@ -539,9 +539,11 @@ const getDefaultEventConfigs = () => {
 export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
   const [selectedEventId, setSelectedEventId] = useState(defaultEventId);
   const [showMultiAvatarModal, setShowMultiAvatarModal] = useState(false);
+  const prevDefaultIdRef = useRef(defaultEventId);
 
   useEffect(() => {
-    if (defaultEventId) {
+    if (defaultEventId && defaultEventId !== prevDefaultIdRef.current) {
+      prevDefaultIdRef.current = defaultEventId;
       setSelectedEventId(defaultEventId);
     }
   }, [defaultEventId]);

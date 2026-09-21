@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.4.5';
+export const APP_VERSION = '4.4.6';
 export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.4.6 - Khắc Phục Triệt Để Lỗi Bấm Luồng Avatar & Thống Nhất Truy Cập Luồng Live Idol 1-4 Avatar',
+    description: '1. Khắc Phục Triệt Để Lỗi Luồng Avatar: Sửa hoàn toàn hiện tượng không bấm được hoặc bị đơ tab Luồng Avatar/Sequencer, cho phép chuyển đổi tự do, mượt mà giữa Luồng Live Idol 1-4 Avatar và các sự kiện mà không bị reset trạng thái; 2. Thống Nhất Nút Menu Dropdown: Đồng bộ toàn bộ các nút chức năng Avatar trong menu dẫn trực tiếp đến subview Luồng Live Idol 1-4 Avatar đầy đủ tính năng; 3. Khóa Chặt 100% Toàn Bộ Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D, Luồng phát 60 FPS 4K.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.4.5 - Đổi Tên Tab "Luồng Live Idol 1-4 Avatar", Tự Động Phát Video Khớp 100% Khung Sân Khấu Khi Có Sự Kiện & Sửa Triệt Để Lỗi Truy Cập Kịch Bản / Kết Nối Idol',
     description: '1. Đổi Tên Tab Thống Nhất: Đổi tên tab chức năng thành "🎬 Luồng Live Idol 1-4 Avatar" trực quan, dễ nhớ, giữ nguyên 100% tính năng phân đoạn và bố cục 1-4 avatar; 2. Luồng Sự Kiện Tự Động Phát Video Khớp 100% Khung Sân Khấu: Khi có sự kiện (chào người mới, bình luận, quà tặng đặc biệt/thường, theo dõi, chia sẻ, cảm ơn tim, chốt đơn, nói chuyện AI, xin lỗi, im lặng/chờ...), video được tải lên từ ô sự kiện tương ứng sẽ tự động chuyển và phát trực tiếp lên Sân Khấu Chính full-frame (object-cover 100%), không hở viền; khi kết thúc sự kiện tự động trả về video nền; 3. Sửa Triệt Để Lỗi Truy Cập "Chuỗi Kịch Bản" & "Kết Nối Idol": Điều hướng chính xác và tức thì tới subview kịch bản hoặc sự kiện mà không bị báo lỗi runtime; 4. Khóa Chặt 100% Toàn Bộ Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle PK, Game Bản Đồ 3D, Luồng phát 60 FPS 4K.'
