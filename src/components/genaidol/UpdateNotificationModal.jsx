@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.1.8';
-export const RELEASE_DATE = '20/09/2026';
+export const APP_VERSION = '4.1.9';
+export const RELEASE_DATE = '21/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.1.9 - Đồng Bộ Hoàn Hảo Chuỗi Kịch Bản Sequencer Với Màn Hình Live, Window Capture & Link TikTok Studio',
+    description: '1. Đồng Bộ Trực Tiếp Màn Hình Chính: Khi chuỗi kịch bản phân đoạn chạy, video trên Màn hình chính (Ảnh 3) tự động chuyển đổi theo đúng mốc thời gian cài đặt; 2. Phát Tức Thì Sang Window Capture & Link TikTok Live: OBS Window Capture và Link Online HTTPS (/live-stream) tự động nhận video chuyển cảnh 0ms vừa khít khung hình 9:16; 3. Thuyết Minh Giọng Đọc AI Đồng Thời: Nhân vật/MC AI đọc thuyết minh liên tục theo kịch bản trong khi phát video sản phẩm và review; 4. Khóa Chặt 100% Hệ Thống: Bảo toàn nguyên vẹn Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle, Game Bản Đồ 3D.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.1.8 - Tinh Gọn Giao Diện, Loại Bỏ Nút Bấm Trùng Lặp & Giữ Menu Chuỗi Kịch Bản Chuẩn',
     description: '1. Tinh Gọn Giao Diện Desktop: Loại bỏ nút bấm thừa trên Top Control Bar để giao diện gọn gàng, chuyển toàn quyền truy cập Sequencer vào Menu chính; 2. Truy Cập Thuận Tiện: Duy trì tab "🎬 Chuỗi Kịch Bản Live" trong Menu chức năng và Header Navigation; 3. Khóa Chặt 100% Toàn Bộ Module: Bảo toàn tuyệt đối mọi tính năng đang vận hành (Window Capture OBS Zero-Copy, Voice AI Brain, Game Battle, Game Bản Đồ 3D).'

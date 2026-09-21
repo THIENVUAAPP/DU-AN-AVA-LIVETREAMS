@@ -3,13 +3,13 @@
   "aspectRatio": "9:16",
   "characterId": "linhanh_4k",
   "characterName": "Video Người Dùng",
-  "mediaUrl": "/uploads/media-1789921492266-868517831.mp4",
+  "mediaUrl": "/idols/phong_studio_ngoc_trinh_4k.mp4",
   "isVideo": true,
-  "videoPlaybackEvent": "time_sync",
-  "isPlaying": false,
+  "videoPlaybackEvent": "play",
+  "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1789922984092,
+  "updatedAt": 1789951103828,
   "flvUrl": null,
   "isConnected": false,
   "type": "MASTER_LIVE_STATE_UPDATE",
@@ -20,7 +20,7 @@
   "isVideoAudioMuted": false,
   "videoVolume": 1,
   "clearMedia": false,
-  "tunnelUrl": "https://typing-transaction-rush-cheese.trycloudflare.com",
+  "tunnelUrl": "https://implemented-functioning-casa-loved.trycloudflare.com",
   "isMuted": false,
   "pinnedProduct": {
     "id": 2,
@@ -35,5 +35,11 @@
     "storeUrl": "https://shop.tiktok.com",
     "pinnedAt": 1789922298958,
     "triggerSource": "manual_workspace"
-  }
+  },
+  "currentMedia": "/idols/phong_studio_ngoc_trinh_4k.mp4",
+  "activeTab": "flow_sequencer",
+  "stepTitle": "Bước 1: Avatar AI Chào Khán Giả & Chia Sẻ Kiến Thức Da",
+  "actionType": "avatar_talk",
+  "fit": "cover",
+  "sound": true
 }

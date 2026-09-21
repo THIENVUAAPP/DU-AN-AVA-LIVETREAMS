@@ -2466,6 +2466,65 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     };
   }, [unlockAllAudio]);
 
+  // 🎬 LẮNG NGHE ĐIỀU PHỐI TỪ CHUỖI KỊCH BẢN (SEQUENCER) ĐỒNG BỘ MÀN HÌNH CHÍNH, WINDOW CAPTURE & TIKTOK LIVE STUDIO
+  useEffect(() => {
+    const handleFlowMediaUpdate = (e) => {
+      const { mediaUrl, scriptText, title, actionType } = e.detail || {};
+      if (!mediaUrl) return;
+
+      setUserLockedMediaUrl(mediaUrl);
+      try { localStorage.setItem('avalive_user_locked_media', mediaUrl); } catch (err) {}
+
+      // 1. Cập nhật trực tiếp Video trên Màn hình chính của Phần mềm (Ảnh số 3)
+      if (desktopVideoRef.current) {
+        if (desktopVideoRef.current.src !== mediaUrl) {
+          desktopVideoRef.current.src = mediaUrl;
+          desktopVideoRef.current.currentTime = 0;
+        }
+        desktopVideoRef.current.dataset.userPaused = 'false';
+        desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+      }
+      setIsVideoPlaying(true);
+      setIsMasterLiveRunning(true);
+
+      // 2. Đồng bộ 0ms sang Cửa sổ Window Capture OBS qua BroadcastChannel
+      postMasterBroadcast({
+        type: 'GLOBAL_MEDIA_CHANGE',
+        mediaUrl: mediaUrl,
+        blobUrl: mediaUrl,
+        isVideo: true,
+        isPlaying: true,
+        currentTime: 0,
+        force: true,
+        source: 'sequencer',
+        timestamp: Date.now()
+      });
+
+      // 3. Đồng bộ 0ms sang Đường Link Online HTTPS (TikTok Live Studio /live-stream) qua Backend
+      syncMasterLiveState({
+        stage: 'idol',
+        mediaUrl: mediaUrl,
+        isVideo: true,
+        isPlaying: true,
+        aspectRatio: globalAspectRatio || '9:16',
+        stepTitle: title,
+        actionType: actionType
+      }, socketRef.current);
+
+      // 4. Phát Giọng Nói AI (Voice) đọc thuyết minh/tư vấn theo kịch bản của phân đoạn này
+      if (scriptText && scriptText.trim() && audioPlayerRef.current) {
+        audioPlayerRef.current.startScript(scriptText.trim());
+      }
+    };
+
+    window.addEventListener('avalive:update_master_media', handleFlowMediaUpdate);
+    window.addEventListener('avalive_flow_step_changed', handleFlowMediaUpdate);
+    return () => {
+      window.removeEventListener('avalive:update_master_media', handleFlowMediaUpdate);
+      window.removeEventListener('avalive_flow_step_changed', handleFlowMediaUpdate);
+    };
+  }, [globalAspectRatio]);
+
   useEffect(() => {
     let backendUrl = '';
     if (typeof window !== 'undefined') {
