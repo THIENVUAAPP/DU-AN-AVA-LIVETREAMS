@@ -7799,11 +7799,20 @@ function getOrCreateAudioContext() {
  * Giải phóng 100% rào cản Autoplay Policy của trình duyệt ngay khi người dùng click
  */
 export function unlockAudioContext() {
-  if (typeof window === 'undefined') return;
+  if (typeof window === 'undefined') return null;
   try {
     const audioCtx = getOrCreateAudioContext();
-    if (audioCtx && audioCtx.state === 'suspended') {
-      audioCtx.resume().catch(() => {});
+    if (audioCtx) {
+      if (audioCtx.state === 'suspended') {
+        audioCtx.resume().catch(() => {});
+      }
+      try {
+        const buffer = audioCtx.createBuffer(1, 1, 22050);
+        const source = audioCtx.createBufferSource();
+        source.buffer = buffer;
+        source.connect(audioCtx.destination);
+        source.start(0);
+      } catch (e) {}
     }
     if (typeof window !== 'undefined') {
       try {
@@ -7817,19 +7826,11 @@ export function unlockAudioContext() {
       if ('speechSynthesis' in window) {
         try { window.speechSynthesis.resume(); } catch (e) {}
       }
-      if (audioCtx) {
-        try {
-          const osc = audioCtx.createOscillator();
-          const gain = audioCtx.createGain();
-          gain.gain.value = 0.0001;
-          osc.connect(gain);
-          gain.connect(audioCtx.destination);
-          osc.start(0);
-          osc.stop(audioCtx.currentTime + 0.001);
-        } catch (e) {}
-      }
     }
-  } catch (e) {}
+    return audioCtx;
+  } catch (e) {
+    return null;
+  }
 }
 
 /**

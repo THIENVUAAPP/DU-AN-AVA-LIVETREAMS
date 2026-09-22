@@ -192,56 +192,26 @@ export default function EventVoiceTester({
   }, []);
 
   /**
-   * Helper phân giải câu thoại: bóc tách speaker tag ([Idol]:, [Trợ Lý]:...) và xác định đúng giọng đọc
+   * Helper phân giải câu thoại: Đảm bảo đọc ĐÚNG 1 GIỌNG DUY NHẤT mà người dùng chọn trên dropdown
    */
   const parseScriptSentence = (rawSentenceText, fallbackVoice = null) => {
     if (!rawSentenceText || !rawSentenceText.trim()) {
       return { cleanText: '', voiceObj: null, activeSpeakerId: 'idol', matchedSpeakerAvatar: null };
     }
 
-    const multiConfig = getMultiAvatarConfig();
-    let matchedSpeakerAvatar = null;
-    let cleanSentenceText = rawSentenceText;
+    // Luôn ưu tiên đúng 1 giọng được chọn trong dropdown của tab kịch bản
+    const activeVoiceId = fallbackVoice ? (fallbackVoice.id || fallbackVoice) : (selectedVoiceRef.current || defaultVoiceId || 'free_vi_female');
+    const selectedVoiceObj = (typeof activeVoiceId === 'object' && activeVoiceId.id)
+      ? activeVoiceId
+      : (ALL_SYSTEM_VOICES.find(v => v.id === activeVoiceId) || resolveEffectiveVoice('idol', activeVoiceId, 'avatar_1'));
 
-    if (multiConfig && multiConfig.avatars) {
-      for (const av of multiConfig.avatars) {
-        if (!av.enabled) continue;
-        const tagClean = (av.tag || '').replace(/[\[\]]/g, '').trim().toLowerCase();
-        if (!tagClean) continue;
-        const regex = new RegExp(`^(\\[?${tagClean}\\]?|${tagClean})\\s*:\\s*(.*)$`, 'i');
-        const m = rawSentenceText.match(regex);
-        if (m) {
-          matchedSpeakerAvatar = av;
-          cleanSentenceText = m[2].trim();
-          break;
-        }
-      }
-    }
+    // Bóc tách tiền tố speaker tag nếu có trong câu thoại để đọc phần nội dung thuần
+    let cleanSentenceText = rawSentenceText
+      .replace(/^(\[?[a-zA-Z0-9_\u00C0-\u1EF9\s]+\]?\s*:\s*)/i, '')
+      .trim();
 
-    // Nếu không khớp trực tiếp từ tag avatar tùy chỉnh, kiểm tra các tag phổ biến
-    if (!matchedSpeakerAvatar) {
-      if (/^(\[?idol\]?|idol)\s*:\s*(.*)$/i.test(rawSentenceText)) {
-        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'avatar_1' || a.role === 'idol') || { id: 'avatar_1', role: 'idol', voiceId: 'free_vi_female', name: 'Idol Chính' };
-        cleanSentenceText = rawSentenceText.replace(/^(\[?idol\]?|idol)\s*:\s*/i, '').trim();
-      } else if (/^(\[?trợ lý\]?|\[?tro ly\]?|\[?troly\]?|\[?quản lý\]?|\[?quan ly\]?|trợ lý|tro ly|quản lý|quan ly)\s*:\s*(.*)$/i.test(rawSentenceText)) {
-        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'avatar_2' || a.role === 'assistant' || a.role === 'manager') || { id: 'avatar_2', role: 'assistant', voiceId: 'vn_nam_quanly_uyquyen', name: 'Trợ Lý' };
-        cleanSentenceText = rawSentenceText.replace(/^(\[?trợ lý\]?|\[?tro ly\]?|\[?troly\]?|\[?quản lý\]?|\[?quan ly\]?|trợ lý|tro ly|quản lý|quan ly)\s*:\s*/i, '').trim();
-      } else if (/^(\[?blv game\]?|\[?game\]?|\[?blv\]?|\[?pk\]?|blv game|game|blv|pk)\s*:\s*(.*)$/i.test(rawSentenceText)) {
-        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'avatar_3' || a.role === 'game') || { id: 'avatar_3', role: 'game', voiceId: 'vn_nam_bando_chienbinh', name: 'BLV Game PK' };
-        cleanSentenceText = rawSentenceText.replace(/^(\[?blv game\]?|\[?game\]?|\[?blv\]?|\[?pk\]?|blv game|game|blv|pk)\s*:\s*/i, '').trim();
-      } else if (/^(\[?khách mời\]?|\[?khach moi\]?|\[?khach\]?|khách mời|khach moi|khach)\s*:\s*(.*)$/i.test(rawSentenceText)) {
-        matchedSpeakerAvatar = multiConfig?.avatars?.find(a => a.id === 'avatar_4' || a.role === 'guest') || { id: 'avatar_4', role: 'guest', voiceId: 'vn_nu_jessica_sangchanh', name: 'Khách Mời' };
-        cleanSentenceText = rawSentenceText.replace(/^(\[?khách mời\]?|\[?khach moi\]?|\[?khach\]?|khách mời|khach moi|khach)\s*:\s*/i, '').trim();
-      }
-    }
-
-    const activeSpeakerId = matchedSpeakerAvatar ? matchedSpeakerAvatar.id : 'avatar_1';
-    let voiceObj = null;
-    if (matchedSpeakerAvatar && matchedSpeakerAvatar.id !== 'avatar_1' && matchedSpeakerAvatar.role !== 'idol') {
-      voiceObj = resolveEffectiveVoice(matchedSpeakerAvatar.role || 'idol', matchedSpeakerAvatar.voiceId, matchedSpeakerAvatar.id);
-    } else {
-      const activeVoiceId = fallbackVoice ? (fallbackVoice.id || fallbackVoice) : (selectedVoiceRef.current || defaultVoiceId || 'free_vi_female');
-      voiceObj = resolveEffectiveVoice('idol', activeVoiceId, 'avatar_1');
+    if (!cleanSentenceText) {
+      cleanSentenceText = rawSentenceText.trim();
     }
 
     // Chuẩn hóa phát âm và làm sạch emoji/ký tự đặc biệt cho câu thoại để khớp 100% cache key
@@ -249,9 +219,9 @@ export default function EventVoiceTester({
 
     return {
       cleanText: normalizedText,
-      voiceObj,
-      activeSpeakerId,
-      matchedSpeakerAvatar
+      voiceObj: selectedVoiceObj,
+      activeSpeakerId: 'avatar_1',
+      matchedSpeakerAvatar: null
     };
   };
 

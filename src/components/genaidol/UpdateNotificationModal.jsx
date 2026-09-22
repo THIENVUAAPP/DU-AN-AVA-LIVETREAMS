@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.8.2';
+export const APP_VERSION = '4.8.3';
 export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.8.2 - Đọc Trọn Vẹn Kịch Bản Dài Siêu Mượt Từ Đầu Đến Đuôi (Không Bao Giờ Nghẽn/Dừng)',
-    description: '1. Đọc Trọn Vẹn Mọi Kịch Bản Từ Đầu Đến Đuôi Siêu Mượt: Thay thế cơ chế tải ồ ạt bằng Lookahead Stream thông minh (luôn chuẩn bị gối đầu 2 câu kế tiếp trong RAM), triệt tiêu hoàn toàn tình trạng nghẽn hàng đợi mạng khiến kịch bản bị đứng giữa chừng. 2. Ưu Tiên Chuẩn Xác 100% Giọng Đọc Đã Chọn: Mọi câu thoại trong kịch bản đều được phân giải chính xác theo giọng đọc người dùng chọn trên dropdown (ví dụ: Live Queen, Hoài My, Nam Minh...), đọc trôi chảy liên tục từ câu 1 đến câu 388+ không vấp. 3. Tải Về Trực Tiếp ZIP v4.8.2: Tự động cập nhật gói cài đặt Windows & macOS mới nhất.'
+    title: '⚡ Bản Cập Nhật v4.8.3 - Khóa Chặt 1 Voice Duy Nhất Cho Kịch Bản & Khắc Phục Triệt Để Âm Thanh',
+    description: '1. Khóa Chặt Đúng 1 Voice Cho Mọi Câu Kịch Bản: Khi người dùng chọn bất kỳ giọng nào trong dropdown (ví dụ: Live Queen, Hoài My...), hệ thống áp dụng đúng 1 giọng duy nhất đó xuyên suốt 100% kịch bản, không ghép hay xáo trộn giọng khác. 2. Mở Khóa Tuyệt Đối Hệ Thống Âm Thanh (Synchronous Unlock): Khắc phục triệt để hiện tượng im lặng khi duyệt kịch bản dài, bảo đảm bấm phát là cất tiếng đọc ngay lập tức 0ms từ đầu đến cuối.'
   }
 ];
 
