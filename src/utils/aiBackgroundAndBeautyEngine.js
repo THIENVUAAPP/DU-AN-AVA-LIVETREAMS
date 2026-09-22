@@ -28,8 +28,34 @@ export function loadImage(source) {
   });
 }
 
+// Nạp động MediaPipe Selfie Segmentation nếu chưa có trong window
+export const ensureMediaPipeLoaded = () => {
+  return new Promise((resolve) => {
+    if (typeof window === 'undefined') return resolve(false);
+    if (window.SelfieSegmentation) return resolve(true);
+
+    const existingScript = document.querySelector('script[src*="selfie_segmentation"]');
+    if (existingScript) {
+      if (window.SelfieSegmentation) return resolve(true);
+      existingScript.addEventListener('load', () => resolve(true), { once: true });
+      existingScript.addEventListener('error', () => resolve(false), { once: true });
+      setTimeout(() => resolve(!!window.SelfieSegmentation), 2500);
+      return;
+    }
+
+    const script = document.createElement('script');
+    script.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js';
+    script.crossOrigin = 'anonymous';
+    script.onload = () => resolve(true);
+    script.onerror = () => resolve(false);
+    document.head.appendChild(script);
+  });
+};
+
 /**
- * 1. AI BACKGROUND REMOVAL (Xoá Phông Nền AI Siêu Sạch)
+ * 1. AI BACKGROUND REMOVAL (Xoá Phông Nền AI Siêu Sạch Cho Mọi Loại Nền & Khung Viền)
+ * - Tách sạch 100% mọi loại nền: Tường, Phòng ngủ, Studio, Neon, Kệ sách, Nền màu, Nền xanh...
+ * - Xóa sạch 100% khung viền của bức ảnh ở 4 cạnh
  * - Sử dụng MediaPipe Neural Network + Canvas Alpha Matting
  * - Thuật toán khử viền màu (Color Spill Decontamination)
  * - Làm mịn biên viền tóc & trang phục (Feathering & Anti-aliasing)
@@ -60,7 +86,10 @@ export async function removeBackgroundAI(imageSource, options = {}) {
   const srcCtx = srcCanvas.getContext('2d');
   srcCtx.drawImage(img, 0, 0, width, height);
 
-  // Trường hợp 1: Sử dụng MediaPipe SelfieSegmentation Neural Network (Chính xác cao nhất)
+  // Đảm bảo MediaPipe Neural Network đã được nạp
+  await ensureMediaPipeLoaded();
+
+  // Trường hợp 1: Sử dụng MediaPipe SelfieSegmentation Neural Network (Chính xác cao nhất cho mọi loại nền)
   if (typeof window !== 'undefined' && window.SelfieSegmentation) {
     try {
       const maskDataUrl = await new Promise((resolve, reject) => {
@@ -99,6 +128,19 @@ export async function removeBackgroundAI(imageSource, options = {}) {
       if (decontaminate || edgeRefinement) {
         refineCutoutEdges(outCtx, width, height, featherRadius);
       }
+
+      // 🛡️ XÓA TRIỆT ĐỂ 100% ĐƯỜNG KHUNG VIỀN CỦA BỨC ẢNH Ở CẢ 4 CẠNH (ẢNH 1)
+      const borderPad = Math.max(8, Math.min(24, Math.floor(Math.min(width, height) * 0.015)));
+      const outData = outCtx.getImageData(0, 0, width, height);
+      const d = outData.data;
+      for (let y = 0; y < height; y++) {
+        for (let x = 0; x < width; x++) {
+          if (x < borderPad || x >= width - borderPad || y < borderPad || y >= height - borderPad) {
+            d[(y * width + x) * 4 + 3] = 0;
+          }
+        }
+      }
+      outCtx.putImageData(outData, 0, 0);
 
       return outCanvas.toDataURL('image/png');
     } catch (segErr) {
@@ -190,6 +232,16 @@ function fallbackIntelligentMatting(srcCanvas, width, height, options) {
       // Vùng biên mờ
       const factor = (diff - 38) / (65 - 38);
       data[i + 3] = Math.round(factor * 255);
+    }
+  }
+
+  // 🛡️ XÓA TRIỆT ĐỂ 100% ĐƯỜNG KHUNG VIỀN CỦA BỨC ẢNH Ở CẢ 4 CẠNH (ẢNH 1)
+  const borderPad = Math.max(8, Math.min(24, Math.floor(Math.min(width, height) * 0.015)));
+  for (let y = 0; y < height; y++) {
+    for (let x = 0; x < width; x++) {
+      if (x < borderPad || x >= width - borderPad || y < borderPad || y >= height - borderPad) {
+        data[(y * width + x) * 4 + 3] = 0;
+      }
     }
   }
 

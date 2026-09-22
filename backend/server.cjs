@@ -3607,14 +3607,80 @@ async function fetchGoogleTranslateTTSBuffer(fullText, lang = 'vi') {
   return audioBuffers.length > 0 ? Buffer.concat(audioBuffers) : null;
 }
 
+function humanizeTextForBackendTTS(rawText, gender, lang, sentencePauseSeconds = 0) {
+  if (!rawText || typeof rawText !== 'string') return '';
+  let text = rawText
+    .replace(/\[[^\]]*\]/g, ' ')
+    .replace(/\((?:cười|cười tươi|vỗ tay|hành động|chỉ tay|nháy mắt|nói to|nói nhỏ|thì thầm|hào hứng|nhấn mạnh|chỉ giỏ hàng|chốt đơn|đếm ngược|action|smile|clap)[^\)]*\)/gi, ' ')
+    .replace(/[#*`_~"'“”„«»‘’]/g, '')
+    // Loại bỏ hoàn toàn emojis để TTS không đọc tên emoji
+    .replace(/\p{Extended_Pictographic}/gu, '')
+    .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{1FA00}-\u{1FAFF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, '')
+    .replace(/\r?\n+/g, ' ')
+    .replace(/[…]+/g, ' ')
+    .replace(/\.{2,}/g, ' ')
+    .replace(/[;:]+/g, ', ')
+    .replace(/,\s*,+/g, ', ')
+    .replace(/[^\S\r\n]+/g, ' ')
+    .trim();
+
+  // Đọc liên tục xuyên suốt (0s): chuyển dấu chấm giữa câu thành dấu phẩy nghỉ nhịp siêu ngắn mượt mà (~150ms)
+  // và GIỮ NGUYÊN dấu cảm thán (!) và dấu hỏi (?) để truyền cảm, đúng cao độ và biểu cảm!
+  if (sentencePauseSeconds === 0) {
+    text = text.replace(/\.(?=\s+[\p{L}\p{N}])/gu, ',');
+  }
+
+  const isVi = !lang || lang.toLowerCase().startsWith('vi');
+  if (!isVi) return text;
+
+  // Chuyển đổi số đếm & tiền tệ chuẩn xác (chỉ sau số đếm)
+  text = text
+    .replace(/(?<![\p{L}\p{N}_])(\d+)\s*k(?![\p{L}\p{N}_])/giu, '$1 nghìn đồng')
+    .replace(/(?<![\p{L}\p{N}_])(\d+)\s*cành(?![\p{L}\p{N}_])/giu, '$1 nghìn đồng')
+    .replace(/(?<![\p{L}\p{N}_])(\d+)[,\.](\d+)\s*(tr|triệu)(?![\p{L}\p{N}_])/giu, '$1 triệu $2 trăm nghìn đồng')
+    .replace(/(?<![\p{L}\p{N}_])(\d+)\s*(tr|triệu)(?![\p{L}\p{N}_])/giu, '$1 triệu đồng')
+    .replace(/(?<![\p{L}\p{N}_])(\d+)\s*%(?![\p{L}\p{N}_])/gu, '$1 phần trăm')
+    .replace(/(?<![\p{L}\p{N}_])(\d+)\s*(đ|vnd|vnđ)(?![\p{L}\p{N}_])/giu, '$1 đồng')
+    .replace(/(?<![\p{L}\p{N}_])(\d+)\s*lít(?![\p{L}\p{N}_])/giu, '$1 trăm nghìn đồng')
+    .replace(/(?<![\p{L}\p{N}_])(\d+)\s*củ(?![\p{L}\p{N}_])/giu, '$1 triệu đồng');
+
+  // Viết tắt livestream thông dụng (Unicode-aware boundary)
+  text = text
+    .replace(/(?<![\p{L}\p{N}_])sp(?![\p{L}\p{N}_])/giu, 'sản phẩm')
+    .replace(/(?<![\p{L}\p{N}_])đc(?![\p{L}\p{N}_])/giu, 'được')
+    .replace(/(?<![\p{L}\p{N}_])dc(?![\p{L}\p{N}_])/giu, 'được')
+    .replace(/(?<![\p{L}\p{N}_])ko(?![\p{L}\p{N}_])/giu, 'không')
+    .replace(/(?<![\p{L}\p{N}_])khg(?![\p{L}\p{N}_])/giu, 'không')
+    .replace(/(?<![\p{L}\p{N}_])mn(?![\p{L}\p{N}_])/giu, 'mọi người')
+    .replace(/(?<![\p{L}\p{N}_])mng(?![\p{L}\p{N}_])/giu, 'mọi người')
+    .replace(/(?<![\p{L}\p{N}_])sz(?![\p{L}\p{N}_])/giu, 'size')
+    .replace(/(?<![\p{L}\p{N}_])ib(?![\p{L}\p{N}_])/giu, 'nhắn tin')
+    .replace(/(?<![\p{L}\p{N}_])inbox(?![\p{L}\p{N}_])/giu, 'nhắn tin trực tiếp')
+    .replace(/(?<![\p{L}\p{N}_])cmt(?![\p{L}\p{N}_])/giu, 'bình luận')
+    .replace(/(?<![\p{L}\p{N}_])comment(?![\p{L}\p{N}_])/giu, 'bình luận')
+    .replace(/(?<![\p{L}\p{N}_])deal(?![\p{L}\p{N}_])/giu, 'ưu đãi')
+    .replace(/(?<![\p{L}\p{N}_])freeship(?![\p{L}\p{N}_])/giu, 'miễn phí giao hàng')
+    .replace(/(?<![\p{L}\p{N}_])free\s*ship(?![\p{L}\p{N}_])/giu, 'miễn phí giao hàng')
+    .replace(/(?<![\p{L}\p{N}_])voucher(?![\p{L}\p{N}_])/giu, 'mã giảm giá')
+    .replace(/(?<![\p{L}\p{N}_])flash\s*sale(?![\p{L}\p{N}_])/giu, 'ưu đãi chớp nhoáng')
+    .replace(/(?<![\p{L}\p{N}_])follow(?![\p{L}\p{N}_])/giu, 'theo dõi')
+    .replace(/(?<![\p{L}\p{N}_])fl(?![\p{L}\p{N}_])/giu, 'theo dõi')
+    .replace(/(?<![\p{L}\p{N}_])cod(?![\p{L}\p{N}_])/giu, 'nhận hàng thanh toán')
+    .replace(/(?<![\p{L}\p{N}_])stk(?![\p{L}\p{N}_])/giu, 'số tài khoản')
+    .replace(/(?<![\p{L}\p{N}_])sđt(?![\p{L}\p{N}_])/giu, 'số điện thoại')
+    .replace(/(?<![\p{L}\p{N}_])sdt(?![\p{L}\p{N}_])/giu, 'số điện thoại');
+
+  return text;
+}
+
 // 🎙️ Microsoft Azure Neural Voice Synthesis Core (Hỗ trợ trọn bộ kịch bản dài không giới hạn)
-async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+0Hz', rate = '+0%' }) {
+async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+0Hz', rate = '+0%', sentencePauseSeconds = 0 }) {
   if (!EdgeTTS) return null;
   if (!text || !text.trim()) return null;
   const neuralVoice = resolveNeuralVoice(voice, gender, lang);
   const safePitch = normalizeTtsPitch(pitch);
   const safeRate = normalizeTtsRate(rate);
-  const processedText = humanizeTextForBackendTTS(text, gender, lang) || text;
+  const processedText = humanizeTextForBackendTTS(text, gender, lang, sentencePauseSeconds) || text;
 
   // Nếu kịch bản dài trên 1000 ký tự: chia thành các đoạn nhỏ để EdgeTTS xử lý siêu mượt
   if (processedText.length > 1000) {
@@ -3633,7 +3699,7 @@ async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+
 
     const segmentBuffers = [];
     for (const seg of textSegments) {
-      const segBuf = await synthesizeNeuralTTSBuffer({ text: seg, voice, gender, lang, pitch, rate });
+      const segBuf = await synthesizeNeuralTTSBuffer({ text: seg, voice, gender, lang, pitch, rate, sentencePauseSeconds });
       if (segBuf) segmentBuffers.push(segBuf);
     }
     if (segmentBuffers.length > 0) return Buffer.concat(segmentBuffers);
@@ -3681,9 +3747,10 @@ app.get('/api/tts', async (req, res) => {
   const lang = (req.query.lang || 'vi').toString().trim();
   const pitch = (req.query.pitch || '+0Hz').toString().trim();
   const rate = (req.query.rate || '+0%').toString().trim();
+  const sentencePauseSeconds = parseFloat(req.query.sentencePauseSeconds) || 0;
   if (!text) return res.status(400).send('Missing text parameter');
 
-  const cacheKey = `${voiceId || voice}_${voice}_${gender}_${pitch}_${rate}_${lang}_${text}`;
+  const cacheKey = `${voiceId || voice}_${voice}_${gender}_${pitch}_${rate}_${lang}_pause${sentencePauseSeconds}_${text}`;
   if (ttsAudioBufferCache.has(cacheKey)) {
     const cached = ttsAudioBufferCache.get(cacheKey);
     res.setHeader('Content-Type', 'audio/mpeg');
@@ -3692,7 +3759,7 @@ app.get('/api/tts', async (req, res) => {
   }
 
   // 1. Tận dụng Microsoft Azure Neural Voice Engine
-  const neuralBuffer = await synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch, rate });
+  const neuralBuffer = await synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch, rate, sentencePauseSeconds });
   if (neuralBuffer) {
     if (ttsAudioBufferCache.size > 500) {
       const first = ttsAudioBufferCache.keys().next().value;
@@ -3721,19 +3788,20 @@ app.get('/api/tts', async (req, res) => {
 });
 
 app.post('/api/tts', async (req, res) => {
-  const { text, platform, voice, voiceId, gender, lang = 'vi', pitch = '+0Hz', rate = '+0%' } = req.body || {};
+  const { text, platform, voice, voiceId, gender, lang = 'vi', pitch = '+0Hz', rate = '+0%', sentencePauseSeconds = 0 } = req.body || {};
   const txt = (text || '').toString().trim();
   if (!txt) return res.status(400).json({ error: 'Missing text parameter' });
 
   const activeVoice = voice || voiceId;
-  const cacheKey = `${voiceId || activeVoice}_${activeVoice}_${gender}_${pitch}_${rate}_${lang}_${txt}`;
+  const numPause = parseFloat(sentencePauseSeconds) || 0;
+  const cacheKey = `${voiceId || activeVoice}_${activeVoice}_${gender}_${pitch}_${rate}_${lang}_pause${numPause}_${txt}`;
   if (ttsAudioBufferCache.has(cacheKey)) {
     const cached = ttsAudioBufferCache.get(cacheKey);
     return res.json({ success: true, audioBase64: cached.toString('base64') });
   }
 
   // 1. Edge Neural TTS
-  const neuralBuffer = await synthesizeNeuralTTSBuffer({ text: txt, voice: activeVoice, gender, lang, pitch, rate });
+  const neuralBuffer = await synthesizeNeuralTTSBuffer({ text: txt, voice: activeVoice, gender, lang, pitch, rate, sentencePauseSeconds: numPause });
   if (neuralBuffer) {
     if (ttsAudioBufferCache.size > 500) {
       const first = ttsAudioBufferCache.keys().next().value;

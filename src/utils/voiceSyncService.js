@@ -7153,9 +7153,29 @@ export const getChromaStyle = (chromaConfig) => {
 /**
  * ✂️ TÁCH NỀN HÌNH ẢNH TRỰC TIẾP QUA CANVAS 0ms (SIÊU SẠCH 4K & TRONG SUỐT 100% - XÓA SẠCH KHUNG VIỀN ẢNH)
  */
-export const removeImageBackgroundCanvas = (imgSrc, mode = 'auto', tolerance = 45) => {
+export const removeImageBackgroundCanvas = async (imgSrc, mode = 'auto', tolerance = 45) => {
+  if (!imgSrc) return '';
+
+  // 1. 🤖 TÁCH NỀN AI NƠ-RON MEDIAPIPE CAO CẤP (XỬ LÝ MỌI LOẠI PHÔNG NỀN: PHÒNG, TƯỜNG, ĐỒ VẬT, NEON, ẢNH CHỤP...)
+  try {
+    const { removeBackgroundAI } = await import('./aiBackgroundAndBeautyEngine.js');
+    if (typeof removeBackgroundAI === 'function') {
+      const aiResult = await removeBackgroundAI(imgSrc, {
+        featherRadius: 2,
+        decontaminate: true,
+        edgeRefinement: true,
+        maxResolution: 2048
+      });
+      if (aiResult && typeof aiResult === 'string' && aiResult.startsWith('data:image')) {
+        return aiResult;
+      }
+    }
+  } catch (aiErr) {
+    console.warn('AI MediaPipe background removal fallback to canvas algorithm:', aiErr);
+  }
+
+  // 2. CANVAS FALLBACK CHO CHROMA KEY HOẶC KHI OFFLINE
   return new Promise((resolve) => {
-    if (!imgSrc) return resolve('');
     const img = new Image();
     img.crossOrigin = 'anonymous';
     img.onload = () => {
@@ -7284,7 +7304,7 @@ export const removeImageBackgroundCanvas = (imgSrc, mode = 'auto', tolerance = 4
 
         // 3. 🛡️ XÓA SẠCH HOÀN TOÀN ĐƯỜNG KHUNG VIỀN Ở 4 CẠNH ẢNH (Ảnh số 1: Xóa luôn khung của bức ảnh)
         // Loại bỏ triệt để mọi vạch viền khung ảnh, viền đen chụp màn hình, viền cắt viền hộp 4 cạnh
-        const borderPad = Math.max(3, Math.min(6, Math.floor(Math.min(w, h) * 0.008)));
+        const borderPad = Math.max(8, Math.min(24, Math.floor(Math.min(w, h) * 0.018)));
         for (let y = 0; y < h; y++) {
           for (let x = 0; x < w; x++) {
             if (x < borderPad || x >= w - borderPad || y < borderPad || y >= h - borderPad) {
@@ -8423,9 +8443,11 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
   let finalRateNum = Math.max(-25, Math.min(60, baseRateNum + userRateOffset));
   const effectiveRate = (finalRateNum >= 0 ? '+' : '') + finalRateNum + '%';
 
+  const sentencePauseSeconds = voice?.sentencePauseSeconds !== undefined ? Number(voice.sentencePauseSeconds) : 0;
+
   // Khóa bộ nhớ đệm độc bản theo từng ID giọng đọc riêng biệt để không bao giờ bị phát nhầm giọng khác
   const voiceIdKey = voice?.id || neuralVoice;
-  const cacheKey = `${voiceIdKey}_${neuralVoice}_${effectivePitch}_${effectiveRate}_${text.trim()}`;
+  const cacheKey = `${voiceIdKey}_${neuralVoice}_${effectivePitch}_${effectiveRate}_pause${sentencePauseSeconds}_${text.trim()}`;
   if (audioBufferMemoryCache.has(cacheKey)) {
     return audioBufferMemoryCache.get(cacheKey);
   }
@@ -8447,21 +8469,25 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
     ? window.location.origin
     : '';
 
-  // Chuẩn hóa văn bản gửi đến TTS engine: Loại bỏ hoàn toàn dấu ba chấm ..., dấu ngắt nghỉ dài, đọc liên tục xuyên suốt
+  // Chuẩn hóa văn bản gửi đến TTS engine: Giữ nguyên cảm xúc (!, ?), xử lý khoảng dừng theo cài đặt
   let ttsText = text.trim();
   ttsText = ttsText
     .replace(/\r?\n+/g, ' ')
     .replace(/[…]+/g, ' ')
     .replace(/\.{2,}/g, ' ')
-    .replace(/!+/g, '.')
-    .replace(/\?+/g, '.')
     .replace(/[;:]+/g, ', ')
     .replace(/,\s*,+/g, ', ')
     .replace(/\s+/g, ' ')
     .trim();
 
-  // Đảm bảo câu có dấu kết thúc (.) để EdgeTTS phát âm trọn vẹn không nuốt đuôi
-  if (ttsText && !/[.]$/.test(ttsText)) {
+  // Đọc liên tục xuyên suốt (0s): chuyển dấu chấm giữa câu thành dấu phẩy nghỉ nhịp siêu ngắn mượt mà (~150ms)
+  // và GIỮ NGUYÊN dấu cảm thán (!) và dấu hỏi (?) để truyền cảm, đúng cao độ và biểu cảm!
+  if (sentencePauseSeconds === 0) {
+    ttsText = ttsText.replace(/\.(?=\s+[A-ZÀ-Ỹa-zà-ỹ0-9])/g, ',');
+  }
+
+  // Đảm bảo câu có dấu kết thúc (.) hoặc (! / ?) để EdgeTTS phát âm trọn vẹn không nuốt đuôi
+  if (ttsText && !/[.!?]$/.test(ttsText)) {
     ttsText += '.';
   }
 
@@ -8472,10 +8498,11 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
     gender,
     pitch: effectivePitch,
     rate: effectiveRate,
-    lang: shortLang
+    lang: shortLang,
+    sentencePauseSeconds
   });
 
-  const ttsQuery = `text=${encodeURIComponent(ttsText)}&voice=${encodeURIComponent(neuralVoice)}&voiceId=${encodeURIComponent(voice?.id || '')}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(effectivePitch)}&rate=${encodeURIComponent(effectiveRate)}&lang=${encodeURIComponent(shortLang)}`;
+  const ttsQuery = `text=${encodeURIComponent(ttsText)}&voice=${encodeURIComponent(neuralVoice)}&voiceId=${encodeURIComponent(voice?.id || '')}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(effectivePitch)}&rate=${encodeURIComponent(effectiveRate)}&lang=${encodeURIComponent(shortLang)}&sentencePauseSeconds=${encodeURIComponent(sentencePauseSeconds)}`;
 
   const baseCandidates = [
     ...(currentOrigin ? [`${currentOrigin}/api/tts`] : []),
@@ -8666,6 +8693,7 @@ export async function previewVoiceAudio(voiceOrId, sampleText = null, onEndOrPri
     volume: customOptions.volume !== undefined ? customOptions.volume : (voiceObj.volume !== undefined ? voiceObj.volume : 1.0),
     rate: customOptions.rate !== undefined ? customOptions.rate : (voiceObj.rate !== undefined ? voiceObj.rate : 1.0),
     pitch: customOptions.pitch !== undefined ? customOptions.pitch : (voiceObj.pitch !== undefined ? voiceObj.pitch : 1.0),
+    sentencePauseSeconds: customOptions.sentencePauseSeconds !== undefined ? customOptions.sentencePauseSeconds : (voiceObj.sentencePauseSeconds !== undefined ? voiceObj.sentencePauseSeconds : 0),
     apiKey: customOptions.apiKey || voiceObj.apiKey || getElevenLabsApiKey()
   };
 
