@@ -207,6 +207,26 @@ export default function GeneralSettings({ onClose = () => {}, initialTab = 'prom
   const [assignedToast, setAssignedToast] = useState(null);
   const [previewingRole, setPreviewingRole] = useState(null);
 
+  // 🔑 API KEYS — Gemini, OpenAI, HeyGen, ElevenLabs
+  const [apiKeys, setApiKeys] = useState(() => ({
+    gemini: localStorage.getItem('gemini_api_key') || '',
+    openai: localStorage.getItem('openai_api_key') || '',
+    heygen: localStorage.getItem('heygen_api_key') || '',
+    elevenlabs: localStorage.getItem('elevenlabs_api_key') || ''
+  }));
+  const [apiKeyVisible, setApiKeyVisible] = useState({ gemini: false, openai: false, heygen: false, elevenlabs: false });
+  const [apiKeySaved, setApiKeySaved] = useState({ gemini: false, openai: false, heygen: false, elevenlabs: false });
+  const [elevenLabsVoices, setElevenLabsVoices] = useState(() => {
+    try {
+      const saved = localStorage.getItem('elevenlabs_user_voices');
+      return saved ? JSON.parse(saved) : [];
+    } catch { return []; }
+  });
+  const [elevenFetchStatus, setElevenFetchStatus] = useState('idle'); // 'idle' | 'loading' | 'success' | 'error'
+  const [elevenPreviewId, setElevenPreviewId] = useState(null);
+  const elevenAudioRef = useRef(null);
+
+
   const isAdmin = useMemo(() => {
     try {
       const raw = localStorage.getItem('aidol_user_session') || localStorage.getItem('ava_live_user');
@@ -1757,7 +1777,7 @@ IDOL MỈM CƯỜI + GESTURE
     // Tab 2: Nhân vật Chính (Idol Live)
     mainVoiceEnabled: true,
     llmChoice: 'gemini', 
-    apiModel: 'gemini-1.5-flash',
+    apiModel: 'gemini-2.0-flash',
     mainVoiceFilter: 'all', // 'all' | 'male' | 'female'
     mainVoiceId: 'free_vi_female',
     
@@ -1811,9 +1831,9 @@ IDOL MỈM CƯỜI + GESTURE
         if (!parsed.commentVoiceId || !ALL_SYSTEM_VOICES.some(v => v.id === parsed.commentVoiceId)) {
           parsed.commentVoiceId = 'free_vi_female';
         }
-        // Default model to gemini-1.5-flash if Model AvaLive or not set
+        // Default model to gemini-2.0-flash if Model AvaLive or not set
         if (!parsed.apiModel || parsed.apiModel === 'Model AvaLive') {
-          parsed.apiModel = 'gemini-1.5-flash';
+          parsed.apiModel = 'gemini-2.0-flash';
         }
 
         // Luôn bảo lưu trọn vẹn Bộ Não Tính Cách (System Prompt) mặc định
@@ -2130,7 +2150,7 @@ IDOL MỈM CƯỜI + GESTURE
       const json = JSON.stringify(settings);
       localStorage.setItem('aidol_general_settings', json);
       localStorage.setItem('aidol_general_settings_backup', json);
-      localStorage.setItem('gemini_model', settings.apiModel || 'gemini-1.5-flash');
+      localStorage.setItem('gemini_model', settings.apiModel || 'gemini-2.0-flash');
 
       // Đồng bộ vào hệ thống 3 kênh giọng của AVA Live
       const idolMatch = ALL_SYSTEM_VOICES.find(v => v.id === settings.mainVoiceId);
@@ -2194,6 +2214,88 @@ IDOL MỈM CƯỜI + GESTURE
   const handleMainVoiceFilter = (filter) => setSettings(prev => ({ ...prev, mainVoiceFilter: filter }));
   const handleAssistantVoiceFilter = (filter) => setSettings(prev => ({ ...prev, assistantVoiceFilter: filter }));
   const handleGameVoiceFilter = (filter) => setSettings(prev => ({ ...prev, gameVoiceFilter: filter }));
+
+  // 🔑 API KEY HANDLERS
+  const handleSaveApiKey = (type) => {
+    const key = (apiKeys[type] || '').trim();
+    const storageMap = {
+      gemini: 'gemini_api_key',
+      openai: 'openai_api_key',
+      heygen: 'heygen_api_key',
+      elevenlabs: 'elevenlabs_api_key'
+    };
+    if (key) {
+      localStorage.setItem(storageMap[type], key);
+    } else {
+      localStorage.removeItem(storageMap[type]);
+    }
+    setApiKeySaved(prev => ({ ...prev, [type]: !!key }));
+    // Thông báo hệ thống API key đã thay đổi
+    window.dispatchEvent(new CustomEvent('avalive:api_key_updated', { detail: { type, key } }));
+    // Nếu là ElevenLabs key → tự động fetch danh sách giọng
+    if (type === 'elevenlabs' && key) {
+      fetchElevenLabsVoices(key);
+    }
+    setTimeout(() => setApiKeySaved(prev => ({ ...prev, [type]: false })), 3000);
+  };
+
+  const fetchElevenLabsVoices = async (key) => {
+    const apiKey = key || localStorage.getItem('elevenlabs_api_key') || '';
+    if (!apiKey) return;
+    setElevenFetchStatus('loading');
+    try {
+      const res = await fetch('https://api.elevenlabs.io/v1/voices', {
+        headers: { 'xi-api-key': apiKey, 'Content-Type': 'application/json' }
+      });
+      if (!res.ok) throw new Error('API Error ' + res.status);
+      const data = await res.json();
+      const voices = (data.voices || []).map(v => ({
+        id: `el_user_${v.voice_id}`,
+        voice_id: v.voice_id,
+        name: v.name,
+        category: v.category || 'premade',
+        labels: v.labels || {},
+        preview_url: v.preview_url || '',
+        provider: 'elevenlabs_user',
+        styleCategory: 'elevenlabs_user'
+      }));
+      setElevenLabsVoices(voices);
+      localStorage.setItem('elevenlabs_user_voices', JSON.stringify(voices));
+      setElevenFetchStatus('success');
+    } catch (err) {
+      setElevenFetchStatus('error');
+    }
+  };
+
+  const handleAssignElVoiceToAvatar = (voice, role) => {
+    // Chuyển voice ElevenLabs thành voice object chuẩn của hệ thống
+    const voiceObj = {
+      id: voice.id,
+      name: voice.name,
+      provider: 'elevenlabs_user',
+      voiceId: voice.voice_id,
+      eleven_voice_id: voice.voice_id,
+      preview_url: voice.preview_url,
+      category: voice.category,
+      volume: 1.0, rate: 1.0, pitch: 1.0
+    };
+    handleAssignVoice(role, voiceObj);
+  };
+
+  const handlePreviewElVoice = (voice) => {
+    if (elevenPreviewId === voice.id) {
+      if (elevenAudioRef.current) { elevenAudioRef.current.pause(); }
+      setElevenPreviewId(null);
+      return;
+    }
+    if (voice.preview_url) {
+      if (elevenAudioRef.current) { elevenAudioRef.current.pause(); }
+      elevenAudioRef.current = new Audio(voice.preview_url);
+      elevenAudioRef.current.play().catch(() => {});
+      elevenAudioRef.current.onended = () => setElevenPreviewId(null);
+      setElevenPreviewId(voice.id);
+    }
+  };
 
   const notifyAssigned = (msg, type = 'success') => {
     setAssignedToast({ msg, type });
@@ -2430,6 +2532,12 @@ IDOL MỈM CƯỜI + GESTURE
         >
           <Settings2 size={16} className="text-gray-400" /> Cấu hình Nhanh
         </button>
+        <button
+          onClick={() => { setActiveTab('elevenlabs-voices'); if (!elevenLabsVoices.length && apiKeys.elevenlabs) fetchElevenLabsVoices(); }}
+          className={`flex items-center gap-2 px-4 py-3 font-bold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'elevenlabs-voices' ? 'border-purple-600 text-purple-700 bg-purple-50/60 shadow-xs' : 'border-transparent text-purple-700 hover:text-purple-600 hover:bg-purple-50/30'}`}
+        >
+          <Mic size={16} className="text-purple-600" /> 🎙️ GIỌNG ELEVENLABS {elevenLabsVoices.length > 0 ? `(${elevenLabsVoices.length})` : ''}
+        </button>
 
         <button 
           type="button"
@@ -2463,6 +2571,113 @@ IDOL MỈM CƯỜI + GESTURE
                   <p className="text-xs sm:text-sm text-blue-100 max-w-3xl leading-relaxed">
                     Hệ thống AI xử lý ngôn ngữ tự nhiên cực nhanh (&lt;500ms), tự động phân tích câu hỏi của khán giả trên livestream, quét kho tri thức doanh nghiệp để trả lời chuẩn xác, thông minh và chốt đơn tự động theo đúng giọng đọc Idol đã cài đặt!
                   </p>
+                </div>
+              </div>
+
+              {/* 🔑 BOX API KEYS CÁ NHÂN */}
+              <div className="bg-white border border-gray-200 rounded-xl shadow-sm overflow-hidden">
+                <div className="bg-gradient-to-r from-gray-800 to-gray-900 px-4 py-2.5 flex items-center justify-between">
+                  <span className="flex items-center gap-2 text-white font-bold text-xs">
+                    <Key size={14} className="text-yellow-400" />
+                    🔑 API KEYS CÁ NHÂN — TỰ ĐỘNG ĐỒNG BỘ VÀO TOÀN HỆ THỐNG
+                  </span>
+                  <span className="text-[10px] text-gray-400 font-medium">Dán key vào → Lưu & Đồng Bộ → Hệ thống dùng key đó ngay lập tức</span>
+                </div>
+                <div className="p-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* Gemini API Key */}
+                  {[
+                    {
+                      type: 'gemini',
+                      label: '🤖 Google Gemini API Key',
+                      placeholder: 'AIza...',
+                      desc: 'Bộ Não AI — Trả lời bình luận, viết kịch bản (model: gemini-2.0-flash)',
+                      color: 'blue',
+                      icon: '🤖'
+                    },
+                    {
+                      type: 'openai',
+                      label: '💬 OpenAI / ChatGPT API Key',
+                      placeholder: 'sk-...',
+                      desc: 'Bộ Não AI Fallback — Trả lời bình luận, kịch bản (model: gpt-4o-mini)',
+                      color: 'emerald',
+                      icon: '💬'
+                    },
+                    {
+                      type: 'heygen',
+                      label: '🎭 HeyGen API Key',
+                      placeholder: 'YWV...',
+                      desc: 'Lipsync — Video/ảnh nhân vật nhép miệng khớp khẩu hình (tính credit HeyGen)',
+                      color: 'orange',
+                      icon: '🎭'
+                    },
+                    {
+                      type: 'elevenlabs',
+                      label: '🎙️ ElevenLabs API Key',
+                      placeholder: 'sk_...',
+                      desc: 'Voice AI — Tự động đồng bộ toàn bộ giọng từ tài khoản ElevenLabs của bạn',
+                      color: 'purple',
+                      icon: '🎙️'
+                    }
+                  ].map(({ type, label, placeholder, desc, color, icon }) => {
+                    const saved = !!localStorage.getItem(type === 'openai' ? 'openai_api_key' : type === 'gemini' ? 'gemini_api_key' : type === 'heygen' ? 'heygen_api_key' : 'elevenlabs_api_key');
+                    const colorMap = {
+                      blue: { border: 'border-blue-200', bg: 'bg-blue-50', badge: 'bg-blue-100 text-blue-700 border-blue-300', btn: 'bg-blue-600 hover:bg-blue-700' },
+                      emerald: { border: 'border-emerald-200', bg: 'bg-emerald-50', badge: 'bg-emerald-100 text-emerald-700 border-emerald-300', btn: 'bg-emerald-600 hover:bg-emerald-700' },
+                      orange: { border: 'border-orange-200', bg: 'bg-orange-50', badge: 'bg-orange-100 text-orange-700 border-orange-300', btn: 'bg-orange-600 hover:bg-orange-700' },
+                      purple: { border: 'border-purple-200', bg: 'bg-purple-50', badge: 'bg-purple-100 text-purple-700 border-purple-300', btn: 'bg-purple-600 hover:bg-purple-700' }
+                    }[color];
+                    return (
+                      <div key={type} className={`rounded-xl border ${colorMap.border} ${colorMap.bg} p-3 space-y-2`}>
+                        <div className="flex items-center justify-between">
+                          <label className="text-xs font-bold text-gray-800">{label}</label>
+                          <span className={`text-[10px] px-2 py-0.5 rounded-full font-bold border ${saved ? colorMap.badge : 'bg-gray-100 text-gray-500 border-gray-200'}`}>
+                            {saved ? '🟢 Đã kết nối' : '⚪ Chưa kết nối'}
+                          </span>
+                        </div>
+                        <p className="text-[10px] text-gray-500 leading-relaxed">{desc}</p>
+                        <div className="flex gap-2 items-center">
+                          <div className="relative flex-1">
+                            <input
+                              type={apiKeyVisible[type] ? 'text' : 'password'}
+                              value={apiKeys[type]}
+                              onChange={e => setApiKeys(prev => ({ ...prev, [type]: e.target.value }))}
+                              onKeyDown={e => e.key === 'Enter' && handleSaveApiKey(type)}
+                              placeholder={placeholder}
+                              className="w-full border border-gray-300 rounded-lg px-3 py-1.5 text-xs bg-white focus:outline-none focus:border-current font-mono pr-8"
+                            />
+                            <button
+                              type="button"
+                              onClick={() => setApiKeyVisible(prev => ({ ...prev, [type]: !prev[type] }))}
+                              className="absolute right-2 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-700 text-xs"
+                              title="Hiện/Ẩn key"
+                            >
+                              {apiKeyVisible[type] ? '🙈' : '👁'}
+                            </button>
+                          </div>
+                          <button
+                            type="button"
+                            onClick={() => handleSaveApiKey(type)}
+                            className={`flex items-center gap-1 px-3 py-1.5 text-white text-xs font-bold rounded-lg transition-colors shrink-0 ${colorMap.btn}`}
+                          >
+                            {apiKeySaved[type] ? <><CheckCircle2 size={12} /> Đã Lưu!</> : <><Save size={12} /> Lưu & Đồng Bộ</>}
+                          </button>
+                        </div>
+                        {type === 'elevenlabs' && apiKeys.elevenlabs && (
+                          <button
+                            type="button"
+                            onClick={() => fetchElevenLabsVoices()}
+                            disabled={elevenFetchStatus === 'loading'}
+                            className="w-full text-[11px] font-bold py-1 rounded-lg border border-purple-300 text-purple-700 hover:bg-purple-100 transition-colors flex items-center justify-center gap-1 disabled:opacity-50"
+                          >
+                            {elevenFetchStatus === 'loading' ? <><Loader2 size={11} className="animate-spin" /> Đang đồng bộ giọng...</> :
+                             elevenFetchStatus === 'success' ? <><CheckCircle2 size={11} className="text-green-600" /> Đã đồng bộ {elevenLabsVoices.length} giọng — Xem tab GIỌNG ELEVENLABS</> :
+                             elevenFetchStatus === 'error' ? <>❌ Lỗi kết nối ElevenLabs — Kiểm tra lại API Key</> :
+                             <>🔄 Đồng bộ danh sách giọng từ tài khoản ElevenLabs</>}
+                          </button>
+                        )}
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
@@ -4384,10 +4599,10 @@ IDOL MỈM CƯỜI + GESTURE
                           <div className="pt-2 border-t border-gray-100">
                             <label className="text-xs font-semibold text-[#a53b3b] block mb-1">Model AI Trả Lời (Admin Only):</label>
                             <select 
-                              name="apiModel" value={settings.apiModel || 'gemini-1.5-flash'} onChange={handleChange}
+                              name="apiModel" value={settings.apiModel || 'gemini-2.0-flash'} onChange={handleChange}
                               className="w-full border border-gray-300 rounded px-2.5 py-1.5 text-xs focus:outline-none focus:border-blue-500 bg-gray-50 font-bold"
                             >
-                              <option value="gemini-1.5-flash">🔥 Gemini 1.5 Flash (Siêu tốc & Thông minh nhất - Tiết kiệm chi phí)</option>
+                              <option value="gemini-2.0-flash">🔥 Gemini 1.5 Flash (Siêu tốc & Thông minh nhất - Tiết kiệm chi phí)</option>
                             </select>
                           </div>
                         )}
@@ -4793,6 +5008,105 @@ IDOL MỈM CƯỜI + GESTURE
                 </div>
               </div>
 
+            </div>
+          )}
+
+          {/* 🎙️ TAB GIỌNG ELEVENLABS */}
+          {activeTab === 'elevenlabs-voices' && (
+            <div className="space-y-4">
+              <div className="bg-gradient-to-r from-purple-700 via-violet-700 to-indigo-700 rounded-xl p-5 text-white shadow-md relative overflow-hidden">
+                <div className="absolute right-3 -bottom-4 opacity-15 text-8xl font-black pointer-events-none">🎙️</div>
+                <div className="relative z-10 space-y-2">
+                  <div className="inline-flex items-center gap-1.5 bg-white/20 backdrop-blur-md px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wider">
+                    <Mic size={14} className="text-yellow-300" /> GIỌNG ELEVENLABS CÁ NHÂN — ĐỒNG BỘ TỪ TÀI KHOẢN CỦA BẠN
+                  </div>
+                  <h2 className="text-xl sm:text-2xl font-black">Toàn Bộ Giọng ElevenLabs Của Bạn — Gán Vào Nhân Vật Ngay Lập Tức</h2>
+                  <p className="text-xs sm:text-sm text-purple-100 max-w-3xl leading-relaxed">
+                    Dán API Key ElevenLabs vào tab Bộ Não → Nhấn Đồng Bộ → Toàn bộ giọng từ tài khoản bạn tự động xuất hiện ở đây. Bấm Gán vào Nhân Vật để sử dụng như các giọng AVA Live khác.
+                  </p>
+                </div>
+              </div>
+              <div className="bg-white border border-gray-200 rounded-xl p-4 flex items-center gap-4 flex-wrap">
+                <div className="flex-1 min-w-0">
+                  {!apiKeys.elevenlabs ? (
+                    <p className="text-sm text-gray-500">⚠️ Chưa có ElevenLabs API Key. Vào tab <b>BỘ NÃO IDOL</b> → nhập API Key ElevenLabs → Lưu &amp; Đồng Bộ.</p>
+                  ) : elevenLabsVoices.length > 0 ? (
+                    <p className="text-sm text-gray-700">✅ Đã đồng bộ <b className="text-purple-700">{elevenLabsVoices.length} giọng</b> từ tài khoản ElevenLabs của bạn.</p>
+                  ) : (
+                    <p className="text-sm text-gray-500">Nhấn <b>Đồng bộ</b> để tải danh sách giọng từ tài khoản ElevenLabs.</p>
+                  )}
+                </div>
+                {apiKeys.elevenlabs && (
+                  <button type="button" onClick={() => fetchElevenLabsVoices()} disabled={elevenFetchStatus === 'loading'}
+                    className="flex items-center gap-2 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl transition-colors disabled:opacity-50">
+                    {elevenFetchStatus === 'loading' ? <><Loader2 size={13} className="animate-spin" /> Đang đồng bộ...</> : <><Zap size={13} /> 🔄 Đồng bộ giọng ngay</>}
+                  </button>
+                )}
+              </div>
+              {elevenLabsVoices.length > 0 ? (
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                  {elevenLabsVoices.map(voice => {
+                    const categoryLabel = voice.category === 'cloned' ? '🔁 Giọng Clone' : voice.category === 'generated' ? '✨ Giọng AI' : '⭐ Giọng Gốc';
+                    const isPlaying = elevenPreviewId === voice.id;
+                    const gender = voice.labels?.gender === 'male' ? '👨 Nam' : voice.labels?.gender === 'female' ? '👩 Nữ' : '🎤 Khác';
+                    return (
+                      <div key={voice.id} className={`bg-white border rounded-xl p-3 space-y-2 transition-all ${isPlaying ? 'border-purple-400 shadow-md shadow-purple-100' : 'border-gray-200 hover:border-purple-200'}`}>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="min-w-0">
+                            <p className="font-bold text-sm text-gray-900 truncate">{voice.name}</p>
+                            <div className="flex items-center gap-1 mt-0.5 flex-wrap">
+                              <span className="text-[10px] px-1.5 py-0.5 bg-purple-100 text-purple-700 rounded-full font-medium">{categoryLabel}</span>
+                              <span className="text-[10px] px-1.5 py-0.5 bg-gray-100 text-gray-600 rounded-full">{gender}</span>
+                              {voice.labels?.age && <span className="text-[10px] px-1.5 py-0.5 bg-blue-50 text-blue-600 rounded-full">{voice.labels.age}</span>}
+                            </div>
+                          </div>
+                          {voice.preview_url && (
+                            <button type="button" onClick={() => handlePreviewElVoice(voice)}
+                              className={`shrink-0 p-1.5 rounded-full border text-xs font-bold transition-all ${isPlaying ? 'bg-purple-600 border-purple-600 text-white' : 'bg-white border-gray-300 text-gray-600 hover:border-purple-400 hover:text-purple-600'}`}
+                              title={isPlaying ? 'Dừng' : 'Nghe thử'}>
+                              {isPlaying ? '⏹' : '▶'}
+                            </button>
+                          )}
+                        </div>
+                        <div className="pt-1 border-t border-gray-100">
+                          <p className="text-[10px] text-gray-500 mb-1 font-medium">Gán vào nhân vật:</p>
+                          <div className="flex flex-wrap gap-1">
+                            {[
+                              { role: 'idol', label: '🎯 NV1 Idol' },
+                              { role: 'assistant', label: '💼 NV2 Quản Lý' },
+                              { role: 'avatar_3', label: '🎮 NV3 Game' },
+                              { role: 'comment', label: '💬 NV4 Bình Luận' },
+                              { role: 'avatar_5', label: '✨ NV5' }
+                            ].map(({ role, label }) => (
+                              <button key={role} type="button"
+                                onClick={() => { handleAssignElVoiceToAvatar(voice, role); notifyAssigned(`🎙️ Đã gán giọng ElevenLabs "${voice.name}" vào ${label}!`); }}
+                                className="px-2 py-0.5 text-[10px] font-bold rounded-md bg-purple-50 border border-purple-200 text-purple-700 hover:bg-purple-600 hover:text-white hover:border-purple-600 transition-all">
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              ) : apiKeys.elevenlabs ? (
+                <div className="text-center py-16 text-gray-400">
+                  <div className="text-5xl mb-3">🎙️</div>
+                  <p className="font-bold text-gray-600">Chưa có giọng nào</p>
+                  <p className="text-sm mt-1">Nhấn <b>Đồng bộ giọng ngay</b> ở trên để tải danh sách từ ElevenLabs</p>
+                </div>
+              ) : (
+                <div className="text-center py-16 text-gray-400">
+                  <div className="text-5xl mb-3">🔑</div>
+                  <p className="font-bold text-gray-600">Cần ElevenLabs API Key</p>
+                  <p className="text-sm mt-1">Vào tab <b>BỘ NÃO IDOL</b> → nhập ElevenLabs API Key → Lưu &amp; Đồng Bộ</p>
+                  <button type="button" onClick={() => setActiveTab('prompt')}
+                    className="mt-3 px-4 py-2 bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs rounded-xl transition-colors">
+                    → Đến tab BỘ NÃO IDOL
+                  </button>
+                </div>
+              )}
             </div>
           )}
 

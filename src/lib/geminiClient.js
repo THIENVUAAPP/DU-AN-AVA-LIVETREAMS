@@ -60,7 +60,7 @@ export async function fetchAiReply({ kind = 'question', username, characterName,
     // Proxy server offline hoặc không phản hồi
   }
 
-  // 2. Thử gọi trực tiếp Google Generative Language API (Gemini 1.5 Flash)
+  // 2. Thử gọi trực tiếp Google Generative Language API (Gemini 2.0 Flash — Thông minh nhất, Tiết kiệm chi phí)
   if (apiKey && apiKey.trim()) {
     try {
       const promptText = `Bạn là Trợ lý Livestream / Bình luận viên AI thông minh, hài hước, năng lượng cao cho sự kiện livestream Việt Nam.
@@ -68,7 +68,7 @@ Khán giả tên là "${username || 'bạn'}" vừa bình luận: "${question ||
 Bối cảnh: ${context || 'Livestream tương tác minigame'}.
 Yêu cầu: Trả lời tự nhiên, thân thiện, ngắn gọn (1-2 câu ngắn, tối đa 25 từ). QUY TẮC XƯNG HÔ BẮT BUỘC: Bạn luôn tự xưng là "em" và gọi khán giả là "bạn" hoặc "chào bạn ${username || 'bạn'}". Đây là quy tắc tuyệt đối, chỉ dùng đại từ "em" và "bạn" trong mọi trường hợp. Tuyệt đối không nói tục. Chỉ trả về đúng 1 câu thoại tiếng Việt không dấu ngoặc kép.`;
 
-      const directRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey.trim()}`, {
+      const directRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey.trim()}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({

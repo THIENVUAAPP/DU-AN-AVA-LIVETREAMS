@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.6.2';
+export const APP_VERSION = '4.6.3';
 export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.6.2 - Nút Quay Lại/Tiến Tới Chính Xác, Đồng Bộ Sân Khấu Giữ Kết Nối & Sân Khấu Chính Tải Video Độc Lập',
-    description: '1. Nút Quay Lại & Tiến Tới (Undo/Redo) Chính Xác Tuyệt Đối: Sửa lỗi stale closure, nút hoạt động đúng với mọi thao tác upload ảnh, xóa ảnh, xóa video — bấm quay lại khôi phục chính xác trạng thái trước; 2. Đồng Bộ Sân Khấu Chính Giữ Kết Nối: Khi bấm Đồng Bộ Sân Khấu Chính, trạng thái duy trì đến khi người dùng bấm Tắt — không tự ý ngắt; Khi bấm Tắt, Sân Khấu Chính lập tức xóa trắng (clear stage) và ngắt kết nối hoàn toàn; 3. Sân Khấu Chính Tải Video/Ảnh Độc Lập: Bấm ô trống ở Sân Khấu Chính để tải video/ảnh lên, hiển thị ngay lập tức mà không bị block bởi overlay cũ của Sequencer.'
+    title: '⚡ Bản Cập Nhật v4.6.3 - 4 API Keys Cá Nhân (Gemini, OpenAI, HeyGen, ElevenLabs) + Tab Giọng ElevenLabs Đồng Bộ',
+    description: '1. Bổ sung 4 ô nhập API Key cá nhân trong tab Bộ Não Idol: Google Gemini (bộ não AI, model gemini-2.0-flash thông minh nhất & tiết kiệm), OpenAI/ChatGPT (bộ não AI fallback, model gpt-4o-mini), HeyGen (lipsync nhép miệng khớp khẩu hình video/ảnh nhân vật), ElevenLabs (voice AI tổng hợp giọng). 2. Tab mới GIỌNG ELEVENLABS: Paste API Key → tự động đồng bộ toàn bộ giọng từ tài khoản ElevenLabs → xem danh sách, nghe thử và gán vào từng nhân vật (NV1 Idol, NV2 Quản Lý, NV3 Game, NV4 Bình Luận, NV5) ngay lập tức, tích hợp hoàn toàn với hệ thống giọng AVA Live. 3. Nâng cấp model Gemini mặc định từ 1.5-flash lên 2.0-flash — thông minh hơn, chi phí tương đương.'
   }
 ];
 
