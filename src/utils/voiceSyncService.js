@@ -9055,7 +9055,6 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     const audio = new Audio(directGoogleUrl);
     audio.volume = effectiveVoiceVolume;
     audio.playbackRate = requestedRate;
-    audio.crossOrigin = 'anonymous';
     activePreviewAudio = audio;
 
     if (typeof window !== 'undefined') {

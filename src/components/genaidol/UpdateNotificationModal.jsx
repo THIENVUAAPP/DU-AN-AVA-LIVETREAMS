@@ -2,37 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.7.8';
+export const APP_VERSION = '4.7.9';
 export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.7.8 - Tăng Tốc Xử Lý Voice Siêu Tốc 0ms, Đọc Kịch Bản Idol & Bước Live Tức Thì, Mở Khóa Audio Context Toàn Diện',
-    description: '1. Phát Voice Ngay Lập Tức 0ms Không Chờ Đợi: Tối ưu hoá toàn diện cơ chế AudioContext Unlocking và RAM AudioBuffer Caching, giải phóng 100% rào cản Autoplay Policy của trình duyệt ngay khi bấm nút. Voice phát ngay tức thì 0ms, không còn độ trễ khi bấm "Thử giọng" ở danh sách 332 giọng hay "Nghe Thử Voice" trong kịch bản. 2. Đọc Kịch Bản Idol & Livestream Flow Siêu Tốc: Kịch bản Idol và các bước Live Idol Avatar đọc xuyên suốt, tròn vành rõ chữ, cảm xúc chân thực và tự động luân chuyển mượt mà 100%. 3. Tự Động Phục Vụ Gói Cài Đặt Mới Nhất: Mọi link tải Windows & Mac tự động phân giải phiên bản mới nhất v4.7.8.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v4.7.7 - Tăng Tốc Xử Lý Voice 0ms Tức Thì, Đọc Kịch Bản Siêu Nhanh & Khóa Chặt Cập Nhật Windows Mới Nhất',
-    description: '1. Tăng Tốc Xử Lý Đọc Voice 0ms Tức Thì: Tối ưu hóa song song pipeline Voice TTS, loại bỏ hoàn toàn độ trễ khi bấm Nghe Thử Voice trên kịch bản (Ảnh 1 & Ảnh 3) và Thử Giọng trong kho giọng 332 giọng (Ảnh 2). Âm thanh phát ngay lập tức không cần đợi. 2. Khóa Chặt File Tải Về Mới Nhất Trên Windows: Mọi link tải cài đặt tự động phân giải gói ZIP mới nhất trên Windows & macOS, đảm bảo trải nghiệm cài đặt mượt mà nhất.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v4.7.6 - Nâng Cấp Nút Đồng Bộ Sân Khấu Chính Chuẩn Màu Xanh/Đỏ & Đọc Thử Voice AI Toàn Diện',
-    description: '1. Nút Đồng Bộ Sân Khấu Chính: Hiển thị trực quan màu Xanh Emerald khi BẬT (🟢 ĐANG PHÁT RA SÂN KHẤU CHÍNH) và màu Đỏ khi TẮT (🔴 📡 ĐỒNG BỘ RA SÂN KHẤU CHÍNH). Chỉ có người dùng bấm tắt/mở, không tự ý tắt, duy trì phát liên tục cho tới khi người dùng bấm dừng. 2. Đọc Thử Voice AI Toàn Diện: Nâng cấp động cơ phát âm thanh 4 lớp (Neural TTS + Broadcast DSP + Direct HTML5 Audio + Web Speech API) đảm bảo 100% mọi giọng đọc khi bấm Nghe Thử đều phát siêu mượt mà, truyền cảm, có hơi thở, nhấn nhá cảm xúc sống động.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v4.7.5 - Nâng Cấp Tách Sạch 100% Background & Khung Viền Ảnh, Khôi Phục Đồng Bộ Sân Khấu Chính, Sửa Lỗi Nghe Thử Voice & Tinh Gọn Giao Diện',
-    description: '1. Tách Sạch 100% Background & Khung Viền Ảnh: Xóa sạch mọi loại phông nền phức tạp (tường, phòng, đồ vật, neon, sàn) và triệt tiêu 100% vạch viền khung của bức ảnh ở 4 cạnh. 2. Khôi Phục Đồng Bộ Sân Khấu Chính: Nút [Đồng Bộ Ra Sân Khấu Chính] truyền tải tức thì toàn bộ video, avatar, ảnh và lớp phủ từ Sân Khấu Phụ sang Master Live Stream mà không bị nghẽn trạng thái. 3. Sửa Lỗi Nghe Thử Voice: Bấm Nghe Thử Voice hoạt động tức thì, phát giọng mượt mà chuẩn xác từ Voice AI Brain. 4. Xóa Ô Dư Thừa: Loại bỏ ô Nghỉ Chuyển Bước dư ở chân thẻ kịch bản.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v4.7.4 - Khắc Phục Triệt Để Lỗi Ngắt Quãng Kịch Bản Idol & EventVoiceTester, Đọc Xuyên Suốt Liền Mạch 0ms',
-    description: '1. Đọc Kịch Bản Idol Xuyên Suốt: Sửa triệt để lỗi callback onEnd trong previewVoiceAudio khi truyền options object, loại bỏ hoàn toàn hiện tượng khựng dừng / dừng 8 giây giữa các câu trong Kịch bản Idol. Đọc siêu mượt liên tục 0ms hoặc theo đúng khoảng nghỉ cài đặt của người dùng. 2. Tách Sạch 100% Nền & Khung Viền: Duy trì MediaPipe AI Neural Network xóa sạch mọi loại phông nền (tường, phòng, neon, người, đồ vật) và triệt tiêu 100% viền khung ảnh 4 cạnh.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v4.7.3 - Tách Sạch 100% Nền Mọi Hình Ảnh & Khung Viền, Khóa Chặt Đồng Bộ Sân Khấu Chính, Cài Đặt Nghỉ Nhịp Câu & Đọc Xuyên Suốt',
-    description: '1. Xóa Sạch 100% Background & Khung Viền Ảnh. 2. Khóa Chặt Đồng Bộ Sân Khấu Chính. 3. Đọc Kịch Bản Xuyên Suốt & Đọc Có Cảm Xúc.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v4.7.0 - Xóa Triệt Để Khung Viền Khi Tách Nền, Nhân Bản Đối Tượng Trực Tiếp Trên Sân Khấu & Đọc Voice Kịch Bản Liên Tục Xuyên Suốt',
-    description: '1. Xóa Triệt Để Khung Viền & Badge Khi Tách Nền: Loại bỏ 100% vạch khung ảnh gốc 4 cạnh; tự động xóa hoàn toàn viền hộp. 2. Nhân Bản Đối Tượng Trực Tiếp Trên Sân Khấu. 3. Đọc Voice Kịch Bản Liên Tục Mượt Mà.'
+    title: '⚡ Bản Cập Nhật v4.7.9 - Tải Về Trực Tiếp Gói Cài Đặt Mới Nhất (Windows & Mac), Đọc Kịch Bản Idol & Luồng Live 0ms, Hiển Thị Video Nhân Vật Tức Thì',
+    description: '1. Đọc Thử & Phát Kịch Bản Idol Siêu Tốc: Bấm nghe thử hoặc phát kịch bản là âm thanh cất giọng đọc ngay lập tức 0ms, tự động chuyển câu tuần hoàn mượt mà không khựng, hỗ trợ mọi định dạng dấu ngoặc kép và biểu cảm tự nhiên. 2. Phục Vụ Gói Cài Đặt ZIP Mới Nhất v4.7.9: Khắc phục triệt để lỗi tải bản cũ v4.6.0, đảm bảo 100% nút tải về trên Windows và macOS tải đúng gói ZIP mới nhất (v4.7.9) trực tiếp về máy. 3. Hiển Thị Video Nhân Vật Ngay Lập Tức: Bất kỳ video nhân vật/avatar nào được tải lên hoặc chuyển đổi trên Sân Khấu Chính đều hiển thị và phát ngay lập tức 0ms trên màn hình live. 4. Tinh Gọn Bảng Thông Báo: Chỉ hiển thị duy nhất thông tin bản cập nhật mới nhất v4.7.9 trên web.'
   }
 ];
 
