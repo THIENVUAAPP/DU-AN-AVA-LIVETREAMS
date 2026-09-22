@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.7.4';
+export const APP_VERSION = '4.7.5';
 export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.7.5 - Nâng Cấp Tách Sạch 100% Background & Khung Viền Ảnh, Khôi Phục Đồng Bộ Sân Khấu Chính, Sửa Lỗi Nghe Thử Voice & Tinh Gọn Giao Diện',
+    description: '1. Tách Sạch 100% Background & Khung Viền Ảnh: Xóa sạch mọi loại phông nền phức tạp (tường, phòng, đồ vật, neon, sàn) và triệt tiêu 100% vạch viền khung của bức ảnh ở 4 cạnh. 2. Khôi Phục Đồng Bộ Sân Khấu Chính: Nút [Đồng Bộ Ra Sân Khấu Chính] truyền tải tức thì toàn bộ video, avatar, ảnh và lớp phủ từ Sân Khấu Phụ sang Master Live Stream mà không bị nghẽn trạng thái. 3. Sửa Lỗi Nghe Thử Voice: Bấm Nghe Thử Voice hoạt động tức thì, phát giọng mượt mà chuẩn xác từ Voice AI Brain. 4. Xóa Ô Dư Thừa: Loại bỏ ô Nghỉ Chuyển Bước dư ở chân thẻ kịch bản.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.7.4 - Khắc Phục Triệt Để Lỗi Ngắt Quãng Kịch Bản Idol & EventVoiceTester, Đọc Xuyên Suốt Liền Mạch 0ms',
     description: '1. Đọc Kịch Bản Idol Xuyên Suốt: Sửa triệt để lỗi callback onEnd trong previewVoiceAudio khi truyền options object, loại bỏ hoàn toàn hiện tượng khựng dừng / dừng 8 giây giữa các câu trong Kịch bản Idol. Đọc siêu mượt liên tục 0ms hoặc theo đúng khoảng nghỉ cài đặt của người dùng. 2. Tách Sạch 100% Nền & Khung Viền: Duy trì MediaPipe AI Neural Network xóa sạch mọi loại phông nền (tường, phòng, neon, người, đồ vật) và triệt tiêu 100% viền khung ảnh 4 cạnh.'

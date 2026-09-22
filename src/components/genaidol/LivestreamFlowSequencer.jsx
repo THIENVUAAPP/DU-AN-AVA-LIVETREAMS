@@ -593,11 +593,11 @@ export default function LivestreamFlowSequencer() {
   }, [activePreset, multiAvatarConfig]);
 
   // 📡 Đẩy video và dữ liệu phân đoạn của bước hiện tại lên Sân khấu chính (OBS / TikTok Live / Master)
-  const syncStepToServer = (step, index = 0, isLivePlaying = true) => {
+  const syncStepToServer = (step, index = 0, isLivePlaying = true, forceSync = false) => {
     if (!step) return;
     // 🛡️ CHỈ ĐỒNG BỘ RA SÂN KHẤU CHÍNH KHI NGƯỜI DÙNG BẬT ĐỒNG BỘ (ẢNH 2) HOẶC ĐANG CHẠY KỊCH BẢN
-    // TUYỆT ĐỐI KHÔNG TỰ Ý CHẠY HOẶC ĐẨY MEDIA RA SÂN KHẤU CHÍNH KHI NGƯỜI DÙNG CHƯA BẤM!
-    if (!isMasterSynced && !isPlayingFlow && !isLivePlaying) {
+    const isSyncActive = forceSync || isMasterSynced || (typeof window !== 'undefined' && localStorage.getItem('avalive_master_sync_active') === 'true');
+    if (!isSyncActive && !isPlayingFlow && !isLivePlaying) {
       return;
     }
     
@@ -957,7 +957,10 @@ export default function LivestreamFlowSequencer() {
     if (nextSync) {
       toast.success('📡 ĐÃ BẬT ĐỒNG BỘ: Toàn bộ Sân Khấu Phụ (Ảnh 4) đang phát ra Sân Khấu Chính!');
       if (activePreset?.steps?.[currentStepIndex]) {
-        syncStepToServer(activePreset.steps[currentStepIndex], currentStepIndex, isPlayingFlow);
+        syncStepToServer(activePreset.steps[currentStepIndex], currentStepIndex, isPlayingFlow, true);
+        setTimeout(() => {
+          syncStepToServer(activePreset.steps[currentStepIndex], currentStepIndex, isPlayingFlow, true);
+        }, 60);
       }
     } else {
       // 🔌 Ngắt kết nối đồng bộ — fire event và broadcast CLEAR_STAGE để Sân Khấu Chính xóa sạch lớp phủ
@@ -2149,11 +2152,11 @@ export default function LivestreamFlowSequencer() {
   };
 
   // ✂️ TÁCH NỀN TỨC THÌ (CANVAS REALTIME 0MS) CHO HÌNH ẢNH HOẶC VIDEO
-  const handleInstantCanvasBgRemoval = async (layerType, targetId = null, mode = 'green') => {
+  const handleInstantCanvasBgRemoval = async (layerType, targetId = null, mode = 'auto') => {
     let targetImg = null;
-    if (layerType === 'avatar' && targetId) {
-      const av = safeAvatars.find(a => a.id === targetId);
-      targetImg = av?.talkVideo || av?.idleVideo;
+    if (layerType === 'avatar') {
+      const av = (targetId ? safeAvatars.find(a => a.id === targetId) : null) || safeAvatars[0];
+      targetImg = av?.talkVideo || av?.idleVideo || av?.mediaUrl;
     } else if (layerType === 'main_media') {
       targetImg = currentStep?.mediaUrl;
     } else if (layerType === 'pip') {
@@ -2170,15 +2173,16 @@ export default function LivestreamFlowSequencer() {
     }
 
     pushUndoSnapshot();
-    toast.info('⏳ Đang xử lý tách nền hình ảnh siêu sạch...');
+    toast.info('⏳ Đang xử lý tách nền hình ảnh siêu sạch 100%...');
     try {
-      const transparentDataUrl = await removeImageBackgroundCanvas(targetImg, mode);
-      if (layerType === 'avatar' && targetId) {
+      const transparentDataUrl = await removeImageBackgroundCanvas(targetImg, mode || 'auto');
+      if (layerType === 'avatar') {
+        const tgtId = targetId || safeAvatars[0]?.id || 'avatar_1';
         const currentAvs = (multiAvatarConfig?.avatars && multiAvatarConfig.avatars.length > 0)
           ? [...multiAvatarConfig.avatars]
-          : [{ id: targetId, name: 'MC', talkVideo: '', idleVideo: '', mediaUrl: '' }];
+          : [{ id: tgtId, name: 'MC', talkVideo: '', idleVideo: '', mediaUrl: '' }];
         const updatedAvatars = currentAvs.map(a => {
-          if (a.id === targetId) {
+          if (a.id === tgtId) {
             return {
               ...a,
               talkVideo: transparentDataUrl,
@@ -2206,10 +2210,10 @@ export default function LivestreamFlowSequencer() {
         handleUpdateStep(currentStep.id, 'overlayImage', transparentDataUrl);
       }
       toast.success('🎉 Đã tách sạch sẽ 100% nền hình ảnh trong suốt!');
-      if (isMasterSynced && currentStep) {
+      if (currentStep) {
         setTimeout(() => {
-          syncStepToServer(activePreset.steps[currentStepIndex] || currentStep, currentStepIndex, isPlayingFlow);
-        }, 100);
+          syncStepToServer(activePreset.steps[currentStepIndex] || currentStep, currentStepIndex, isPlayingFlow, true);
+        }, 80);
       }
     } catch (err) {
       handleLayerChromaUpdate(layerType, targetId, { enabled: true, mode });
@@ -2421,12 +2425,17 @@ export default function LivestreamFlowSequencer() {
       toast.error('Chưa có lời thoại để đọc thử!');
       return;
     }
-    if (speakingStepId === stepId || isSpeakingPreview) {
+    if (speakingStepId === stepId) {
       stopVoiceAudio();
       setIsSpeakingPreview(false);
       setSpeakingStepId(null);
       toast.info('⏹️ Đã dừng giọng đọc');
       return;
+    }
+
+    // Nếu đang phát đoạn thoại khác, ngắt trước khi phát đoạn mới
+    if (isSpeakingPreview || speakingStepId) {
+      stopVoiceAudio();
     }
     
     const effectiveVoiceId = (!voiceId || voiceId === 'brain_auto') 
@@ -3641,26 +3650,6 @@ export default function LivestreamFlowSequencer() {
                             <option value={0.5}>⏱️ 0.5s (Nghỉ nhẹ 0.5s)</option>
                             <option value={1.0}>⏱️ 1.0s (Nghỉ 1 giây)</option>
                             <option value={2.0}>⏱️ 2.0s (Nghỉ 2 giây)</option>
-                          </select>
-                        </div>
-
-                        <div className="flex items-center gap-1.5 flex-wrap">
-                          <span className="text-[10px] font-black text-emerald-300 flex items-center gap-1">
-                            <Clock size={11} className="text-emerald-400" />
-                            <span>Nghỉ Chuyển Bước:</span>
-                          </span>
-                          <select
-                            value={step.pauseSeconds !== undefined ? step.pauseSeconds : 0}
-                            onChange={(e) => handleUpdateStep(step.id, 'pauseSeconds', parseFloat(e.target.value))}
-                            className="bg-slate-900 border border-slate-700 text-emerald-300 rounded px-1.5 py-0.5 text-[11px] font-bold outline-none cursor-pointer"
-                            title="Khoảng thời gian dừng nghỉ giữa bước này và bước tiếp theo. Mặc định 0s: Chuyển tiếp tức thì!"
-                          >
-                            <option value={0}>⚡ 0s (Chuyển Tiếp Tức Thì)</option>
-                            <option value={0.5}>⏱️ 0.5s (Nghỉ 0.5 giây)</option>
-                            <option value={1.0}>⏱️ 1.0s (Nghỉ 1 giây)</option>
-                            <option value={2.0}>⏱️ 2.0s (Nghỉ 2 giây)</option>
-                            <option value={3.0}>⏱️ 3.0s (Nghỉ 3 giây)</option>
-                            <option value={5.0}>⏱️ 5.0s (Nghỉ 5 giây)</option>
                           </select>
                         </div>
 
