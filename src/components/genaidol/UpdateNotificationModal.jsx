@@ -2,17 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.7.1';
+export const APP_VERSION = '4.7.2';
 export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.7.1 - Tách Sạch 100% Background & Khung Viền Bức Ảnh Bằng AI, Tùy Chỉnh Nghỉ Nhịp Câu & Đọc Kịch Bản Xuyên Suốt',
-    description: '1. Xóa Sạch 100% Background & Khung Viền Bức Ảnh: Nâng cấp thuật toán AI Selfie Segmentation & Canvas Boundary Purge giúp tách sạch mọi loại phông nền (tường hồng, phòng studio, background phức tạp), xóa triệt để 100% đường khung viền 4 cạnh của ảnh chụp/ảnh gốc, chỉ giữ lại trọn vẹn nhân vật và sản phẩm. 2. Đọc Kịch Bản Xuyên Suốt Không Ngắt Quãng: Khắc phục triệt để lỗi ngắt quãng giữa chừng khi đọc kịch bản; duy trì luồng phát âm 24/7 liên tục, mượt mà và tự nhiên. 3. Tùy Chỉnh Nghỉ Nhịp Câu & Dừng Nghỉ Bước: Bổ sung thanh cài đặt trực tiếp trên từng bước cho phép người dùng tùy chỉnh thời gian nghỉ ngắt câu (.?!) từ 0s (đọc liền mạch xuyên suốt) đến 2s, và dừng chuyển bước từ 0s (chuyển tức thì) đến 5s.'
+    title: '⚡ Bản Cập Nhật v4.7.2 - Khôi Phục Toàn Diện Bản v4.7.0 (Commit 4d8d7e4)',
+    description: 'Đã khôi phục lại chính xác 100% toàn bộ trạng thái hoạt động, mã nguồn và tính năng theo đúng bản v4.7.0 (commit 4d8d7e4) theo yêu cầu của người dùng.'
   },
   {
     title: '⚡ Bản Cập Nhật v4.7.0 - Xóa Triệt Để Khung Viền Khi Tách Nền, Nhân Bản Đối Tượng Trực Tiếp Trên Sân Khấu & Đọc Voice Kịch Bản Liên Tục Xuyên Suốt',
     description: '1. Xóa Triệt Để Khung Viền & Badge Khi Tách Nền: Loại bỏ 100% vạch khung ảnh gốc 4 cạnh với cơ chế padding khử viền rìa ảnh; tự động xóa hoàn toàn viền hộp, ring, bóng đổ và badge PiP/Avatar khi tách nền để nhân vật/sản phẩm trôi nổi tự nhiên trên sân khấu. Hỗ trợ tách sạch mọi loại phông nền (xanh lá, xanh dương, đen, trắng, tường, phòng). 2. Nhân Bản Đối Tượng Trực Tiếp Trên Sân Khấu: Bấm nút Nhân Bản lớp sẽ lập tức nhân đôi thành 2 video/hình ảnh cùng hiển thị đồng thời ngay trên Sân Khấu Phụ (Main Media -> PiP / Avatar 2; PiP -> Main Media / Avatar; Banner -> PiP / Avatar). 3. Đọc Voice Kịch Bản Liên Tục Mượt Mà: Khử triệt để hiện tượng khựng dừng lâu tại các dấu câu, dấu ba chấm và ngắt dòng; giọng đọc truyền cảm, chuyên nghiệp, chuyển bước tức thì 0ms và lặp lại liên tục 24/7.'
+  },
+  {
+    title: '⚡ Bản Cập Nhật v4.6.9 - Hỗ Trợ Tải Lên Nhiều Video / Ảnh / Avatar & Nút Nhân Bản Sao Chép Lớp Trực Tiếp Trên Sân Khấu',
+    description: '1. Tải Lên Nhiều Video / Ảnh / Avatar: Cho phép chọn và tải lên nhiều tệp cùng lúc ở cả Sân Khấu Phụ và Cấu Hình Layer Từng Bước. Tệp đầu tiên nạp vào bước hiện tại, các tệp tiếp theo tự động tạo thêm các bước kịch bản tiếp nối (hoặc nạp vào Avatar 1, 2, 3...). 2. Bổ Sung Nút Nhân Bản Sao Chép: Nằm kế bên nút Tải Lên / Avatar trên thanh công cụ Sân Khấu Phụ và từng bước, cho phép sao chép nhân bản tức thì nhân vật (Avatar 1 sang Avatar 2), video nền sang PiP hoặc tạo bước bản sao, hình ảnh banner và tiêu đề chữ một cách linh hoạt, mượt mà.'
   }
 ];
 

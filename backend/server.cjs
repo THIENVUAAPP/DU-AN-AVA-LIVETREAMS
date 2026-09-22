@@ -3404,11 +3404,10 @@ function humanizeTextForBackendTTS(rawText, gender, lang) {
     .replace(/\r?\n+/g, ' ')
     .replace(/[…]+/g, ' ')
     .replace(/\.{2,}/g, ' ')
-    .replace(/!+/g, '!')
-    .replace(/\?+/g, '?')
+    .replace(/!+/g, '.')
+    .replace(/\?+/g, '.')
     .replace(/[;:]+/g, ', ')
     .replace(/,\s*,+/g, ', ')
-    .replace(/([!?.,])\s*([!?.,])+/g, '$1')
     .replace(/[^\S\r\n]+/g, ' ')
     .trim();
 
@@ -3513,12 +3512,6 @@ function humanizeTextForBackendTTS(rawText, gender, lang) {
     .replace(/[^\S\r\n]+/g, ' ')
     .trim();
 
-  // Đọc liền mạch xuyên suốt nếu sentencePauseSeconds === 0
-  const pauseSec = Number(sentencePauseSeconds) || 0;
-  if (pauseSec === 0) {
-    cleaned = cleaned.replace(/\.(?=\s+[A-ZÀ-Ỹa-zà-ỹ0-9])/g, ',');
-  }
-
   // Đảm bảo câu có dấu kết thúc (. hoặc !) để EdgeTTS không nuốt âm đuôi
   if (cleaned && !/[.!?]$/.test(cleaned)) {
     cleaned += '.';
@@ -3615,13 +3608,13 @@ async function fetchGoogleTranslateTTSBuffer(fullText, lang = 'vi') {
 }
 
 // 🎙️ Microsoft Azure Neural Voice Synthesis Core (Hỗ trợ trọn bộ kịch bản dài không giới hạn)
-async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+0Hz', rate = '+0%', sentencePauseSeconds = 0 }) {
+async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+0Hz', rate = '+0%' }) {
   if (!EdgeTTS) return null;
   if (!text || !text.trim()) return null;
   const neuralVoice = resolveNeuralVoice(voice, gender, lang);
   const safePitch = normalizeTtsPitch(pitch);
   const safeRate = normalizeTtsRate(rate);
-  const processedText = humanizeTextForBackendTTS(text, gender, lang, sentencePauseSeconds) || text;
+  const processedText = humanizeTextForBackendTTS(text, gender, lang) || text;
 
   // Nếu kịch bản dài trên 1000 ký tự: chia thành các đoạn nhỏ để EdgeTTS xử lý siêu mượt
   if (processedText.length > 1000) {
@@ -3640,7 +3633,7 @@ async function synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch = '+
 
     const segmentBuffers = [];
     for (const seg of textSegments) {
-      const segBuf = await synthesizeNeuralTTSBuffer({ text: seg, voice, gender, lang, pitch, rate, sentencePauseSeconds });
+      const segBuf = await synthesizeNeuralTTSBuffer({ text: seg, voice, gender, lang, pitch, rate });
       if (segBuf) segmentBuffers.push(segBuf);
     }
     if (segmentBuffers.length > 0) return Buffer.concat(segmentBuffers);
@@ -3688,10 +3681,9 @@ app.get('/api/tts', async (req, res) => {
   const lang = (req.query.lang || 'vi').toString().trim();
   const pitch = (req.query.pitch || '+0Hz').toString().trim();
   const rate = (req.query.rate || '+0%').toString().trim();
-  const sentencePauseSeconds = req.query.sentencePauseSeconds !== undefined ? parseFloat(req.query.sentencePauseSeconds) : 0;
   if (!text) return res.status(400).send('Missing text parameter');
 
-  const cacheKey = `${voiceId || voice}_${voice}_${gender}_${pitch}_${rate}_${lang}_${sentencePauseSeconds}_${text}`;
+  const cacheKey = `${voiceId || voice}_${voice}_${gender}_${pitch}_${rate}_${lang}_${text}`;
   if (ttsAudioBufferCache.has(cacheKey)) {
     const cached = ttsAudioBufferCache.get(cacheKey);
     res.setHeader('Content-Type', 'audio/mpeg');
@@ -3700,7 +3692,7 @@ app.get('/api/tts', async (req, res) => {
   }
 
   // 1. Tận dụng Microsoft Azure Neural Voice Engine
-  const neuralBuffer = await synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch, rate, sentencePauseSeconds });
+  const neuralBuffer = await synthesizeNeuralTTSBuffer({ text, voice, gender, lang, pitch, rate });
   if (neuralBuffer) {
     if (ttsAudioBufferCache.size > 500) {
       const first = ttsAudioBufferCache.keys().next().value;
@@ -3729,20 +3721,19 @@ app.get('/api/tts', async (req, res) => {
 });
 
 app.post('/api/tts', async (req, res) => {
-  const { text, platform, voice, voiceId, gender, lang = 'vi', pitch = '+0Hz', rate = '+0%', sentencePauseSeconds = 0 } = req.body || {};
+  const { text, platform, voice, voiceId, gender, lang = 'vi', pitch = '+0Hz', rate = '+0%' } = req.body || {};
   const txt = (text || '').toString().trim();
   if (!txt) return res.status(400).json({ error: 'Missing text parameter' });
 
   const activeVoice = voice || voiceId;
-  const pauseSec = Number(sentencePauseSeconds) || 0;
-  const cacheKey = `${voiceId || activeVoice}_${activeVoice}_${gender}_${pitch}_${rate}_${lang}_${pauseSec}_${txt}`;
+  const cacheKey = `${voiceId || activeVoice}_${activeVoice}_${gender}_${pitch}_${rate}_${lang}_${txt}`;
   if (ttsAudioBufferCache.has(cacheKey)) {
     const cached = ttsAudioBufferCache.get(cacheKey);
     return res.json({ success: true, audioBase64: cached.toString('base64') });
   }
 
   // 1. Edge Neural TTS
-  const neuralBuffer = await synthesizeNeuralTTSBuffer({ text: txt, voice: activeVoice, gender, lang, pitch, rate, sentencePauseSeconds: pauseSec });
+  const neuralBuffer = await synthesizeNeuralTTSBuffer({ text: txt, voice: activeVoice, gender, lang, pitch, rate });
   if (neuralBuffer) {
     if (ttsAudioBufferCache.size > 500) {
       const first = ttsAudioBufferCache.keys().next().value;
