@@ -2,12 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.6.8';
+export const APP_VERSION = '4.6.9';
 export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.6.8 - Khắc Phục Triệt Để Mở Tab Giọng Ava Live (332) & Chu Chu Trình Video Sự Kiện / Video Chờ 100% Khớp Sân Khấu',
+    title: '⚡ Bản Cập Nhật v4.6.9 - Hỗ Trợ Tải Lên Nhiều Video / Ảnh / Avatar & Nút Nhân Bản Sao Chép Lớp Trực Tiếp Trên Sân Khấu',
+    description: '1. Tải Lên Nhiều Video / Ảnh / Avatar: Cho phép chọn và tải lên nhiều tệp cùng lúc ở cả Sân Khấu Phụ và Cấu Hình Layer Từng Bước. Tệp đầu tiên nạp vào bước hiện tại, các tệp tiếp theo tự động tạo thêm các bước kịch bản tiếp nối (hoặc nạp vào Avatar 1, 2, 3...). 2. Bổ Sung Nút Nhân Bản Sao Chép: Nằm kế bên nút Tải Lên / Avatar trên thanh công cụ Sân Khấu Phụ và từng bước, cho phép sao chép nhân bản tức thì nhân vật (Avatar 1 sang Avatar 2), video nền sang PiP hoặc tạo bước bản sao, hình ảnh banner và tiêu đề chữ một cách linh hoạt, mượt mà.'
+  },
+  {
+    title: '⚡ Bản Cập Nhật v4.6.8 - Khắc Phục Triệt Để Mở Tab Giọng Ava Live (332) & Chu Trình Video Sự Kiện / Video Chờ 100% Khớp Sân Khấu',
     description: '1. Sửa Triệt Để Lỗi Báo Đỏ Mở Tab Giọng Ava Live (332): Khắc phục lỗi crash ReferenceError, mở tức thì bảng 332 giọng, bộ lọc đa vùng miền/quốc gia/tuổi tác và gán nhanh NV 1-5 mượt mà. 2. Chu Trình Video Sự Kiện - Video Chờ Tự Động: Tự động hiển thị video chờ cài đặt ra Sân Khấu Chính làm video nền mặc định (khớp 100% khung hình). Khi có sự kiện bình luận, quà tặng, chốt đơn, chào người mới, phát đúng video sự kiện (khớp voice/nhép miệng), sau khi kết thúc tự động quay lại video chờ liên tục 24/7.'
   }
 ];

@@ -1461,74 +1461,89 @@ export default function LivestreamFlowSequencer() {
     toast.success('📋 Đã nhân bản bước!');
   };
 
-  // 🎭 Tải Media Trực Tiếp Từ Máy Tính Gán Vào Avatar Đang Chọn Trên Sân Khấu (Hỗ trợ Cả Video & Hình Ảnh)
+  // 🎭 Tải Media Trực Tiếp Từ Máy Tính Gán Vào Avatar Đang Chọn Trên Sân Khấu (Hỗ trợ Nhiều File, Cả Video & Hình Ảnh)
   const handleDirectAvatarMediaUpload = (avatarId, e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const rawFiles = Array.from(e.target.files || []);
+    if (rawFiles.length === 0) return;
 
-    const isImg = file.type.startsWith('image/') || file.name.match(/\.(png|jpe?g|webp|gif|svg|avif|bmp)$/i);
+    const getFileUrl = (file) => {
+      const isImg = file.type.startsWith('image/') || file.name.match(/\.(png|jpe?g|webp|gif|svg|avif|bmp)$/i);
+      if (isImg) {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (ev) => resolve(ev.target?.result || '');
+          reader.onerror = () => resolve('');
+          reader.readAsDataURL(file);
+        });
+      } else {
+        try {
+          return Promise.resolve(URL.createObjectURL(file) + '#type=video');
+        } catch {
+          return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => resolve(ev.target?.result || '');
+            reader.onerror = () => resolve('');
+            reader.readAsDataURL(file);
+          });
+        }
+      }
+    };
 
-    const applyAvatarMedia = (mediaUrl) => {
+    Promise.all(rawFiles.map(f => getFileUrl(f))).then((loadedUrls) => {
       pushUndoSnapshot();
       const currentAvatars = (multiAvatarConfig?.avatars && multiAvatarConfig.avatars.length > 0)
         ? multiAvatarConfig.avatars
         : DEFAULT_MULTI_AVATAR_CONFIG.avatars;
-      
-      const currentCount = typeof multiAvatarConfig?.activeCount === 'number' ? multiAvatarConfig.activeCount : 1;
-      const targetCount = Math.max(1, currentCount);
+
+      const curNum = parseInt(String(avatarId).replace(/\D/g, '') || '1', 10);
+
+      // Gán lần lượt các file cho avatarId, avatar tiếp theo...
+      const updatedAvatars = currentAvatars.map(a => {
+        const aNum = parseInt(String(a.id).replace(/\D/g, '') || '1', 10);
+        const fileOffset = aNum - curNum;
+        if (fileOffset >= 0 && fileOffset < loadedUrls.length) {
+          const mediaUrl = loadedUrls[fileOffset];
+          return {
+            ...a,
+            talkVideo: mediaUrl,
+            idleVideo: mediaUrl,
+            mediaUrl: mediaUrl,
+            chromaKey: { enabled: false, mode: 'green', color: '#00ff00' }
+          };
+        }
+        return a;
+      });
+
+      const maxAffectedAvatar = Math.min(5, curNum + loadedUrls.length - 1);
+      const targetCount = Math.max(multiAvatarConfig?.activeCount || 1, maxAffectedAvatar);
 
       const updated = {
         ...multiAvatarConfig,
         enabled: true,
         activeCount: targetCount,
-        avatars: currentAvatars.map(a => {
-          if (a.id === avatarId) {
-            return {
-              ...a,
-              talkVideo: mediaUrl,
-              idleVideo: mediaUrl,
-              mediaUrl: mediaUrl,
-              chromaKey: { enabled: false, mode: 'green', color: '#00ff00' }
-            };
-          }
-          return a;
-        })
+        avatars: updatedAvatars
       };
       setMultiAvatarConfig(updated);
       saveMultiAvatarConfig(updated);
-      toast.success(`🎭 Đã nạp ${isImg ? 'ảnh' : 'video'} "${file.name}" cho Avatar ${avatarId.toUpperCase()} (Giữ nguyên phông gốc)!`);
+
+      if (loadedUrls.length > 1) {
+        toast.success(`👥 Đã nạp thành công ${loadedUrls.length} Avatar (từ Nhân Vật ${curNum} đến Nhân Vật ${maxAffectedAvatar})!`);
+      } else {
+        toast.success(`🎭 Đã nạp Avatar ${String(avatarId).toUpperCase()} (Giữ nguyên phông gốc)!`);
+      }
+
       if (isMasterSynced && currentStep) {
         setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
       }
-    };
+    });
 
-    if (isImg) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const dataUrl = ev.target?.result;
-        if (dataUrl) applyAvatarMedia(dataUrl);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      try {
-        const objectUrl = URL.createObjectURL(file) + '#type=video';
-        applyAvatarMedia(objectUrl);
-      } catch (err) {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          const dataUrl = ev.target?.result;
-          if (dataUrl) applyAvatarMedia(dataUrl);
-        };
-        reader.readAsDataURL(file);
-      }
-    }
     e.target.value = '';
   };
 
-  // 📂 TẢI MEDIA TRỰC TIẾP TỪ MÁY TÍNH (VIDEO / ẢNH) -> NẠP NGAY LÊN SÂN KHẤU 9:16
+  // 📂 TẢI MEDIA TRỰC TIẾP TỪ MÁY TÍNH (HỖ TRỢ TẢI NHIỀU FILE VIDEO / ẢNH -> TỰ ĐỘNG TẠO BƯỚC NỐI TIẾP)
   const handleDirectMediaUpload = (stepId, targetField, e) => {
-    const file = e.target.files?.[0];
-    if (!file) return;
+    const rawFiles = Array.from(e.target.files || []);
+    if (rawFiles.length === 0) return;
 
     // Tự động chuyển ngay sang bước này để hiển thị trên Sân Khấu 9:16
     const stepIdx = activePreset?.steps?.findIndex(s => s.id === stepId);
@@ -1540,62 +1555,104 @@ export default function LivestreamFlowSequencer() {
       }
     }
 
-    const isImg = file.type.startsWith('image/') || file.name.match(/\.(png|jpe?g|webp|gif|svg|avif|bmp)$/i);
+    const firstFile = rawFiles[0];
+    const isImgFirst = firstFile.type.startsWith('image/') || firstFile.name.match(/\.(png|jpe?g|webp|gif|svg|avif|bmp)$/i);
 
-    const applyStepMedia = (mediaUrl) => {
+    const getFileUrl = (file) => {
+      const isImg = file.type.startsWith('image/') || file.name.match(/\.(png|jpe?g|webp|gif|svg|avif|bmp)$/i);
+      if (isImg) {
+        return new Promise((resolve) => {
+          const reader = new FileReader();
+          reader.onload = (ev) => resolve(ev.target?.result || '');
+          reader.onerror = () => resolve('');
+          reader.readAsDataURL(file);
+        });
+      } else {
+        try {
+          return Promise.resolve(URL.createObjectURL(file) + '#type=video');
+        } catch {
+          return new Promise((resolve) => {
+            const reader = new FileReader();
+            reader.onload = (ev) => resolve(ev.target?.result || '');
+            reader.onerror = () => resolve('');
+            reader.readAsDataURL(file);
+          });
+        }
+      }
+    };
+
+    Promise.all(rawFiles.map(f => getFileUrl(f))).then((loadedUrls) => {
       pushUndoSnapshot();
       let updatedCurrentStep = null;
+
       setPresets(prev => prev.map(p => {
         if (p.id !== activePresetId) return p;
-        return {
-          ...p,
-          steps: p.steps.map(s => {
-            if (s.id !== stepId) return s;
-            const updatedStep = { ...s, [targetField]: mediaUrl };
-            if (targetField === 'mediaUrl') {
-              updatedStep.isMainMediaDeleted = false;
-              updatedStep.mainMediaChromaKey = { enabled: false, mode: 'green', color: '#00ff00' };
-            } else if (targetField === 'secondaryMediaUrl') {
-              updatedStep.secondaryMediaChromaKey = { enabled: false, mode: 'green', color: '#00ff00' };
-            } else if (targetField === 'overlayImage') {
-              updatedStep.overlayImageChromaKey = { enabled: false, mode: 'green', color: '#00ff00' };
-            }
-            if (s.id === currentStep?.id) {
-              updatedCurrentStep = updatedStep;
-            }
-            return updatedStep;
-          })
+        const curIdx = p.steps.findIndex(s => s.id === stepId);
+        if (curIdx === -1) return p;
+
+        const baseStep = p.steps[curIdx];
+        const firstUrl = loadedUrls[0];
+
+        // Cập nhật bước hiện tại với file đầu tiên
+        const updatedFirstStep = {
+          ...baseStep,
+          [targetField]: firstUrl
         };
+        if (targetField === 'mediaUrl') {
+          updatedFirstStep.isMainMediaDeleted = false;
+          updatedFirstStep.mainMediaChromaKey = { enabled: false, mode: 'green', color: '#00ff00' };
+        } else if (targetField === 'secondaryMediaUrl') {
+          updatedFirstStep.secondaryMediaChromaKey = { enabled: false, mode: 'green', color: '#00ff00' };
+        } else if (targetField === 'overlayImage') {
+          updatedFirstStep.overlayImageChromaKey = { enabled: false, mode: 'green', color: '#00ff00' };
+        }
+
+        if (baseStep.id === currentStep?.id) {
+          updatedCurrentStep = updatedFirstStep;
+        }
+
+        const newSteps = [...p.steps];
+        newSteps[curIdx] = updatedFirstStep;
+
+        // Nếu có nhiều file (> 1): Tự động tạo thêm các bước kịch bản tiếp nối
+        if (loadedUrls.length > 1) {
+          const extraSteps = [];
+          for (let i = 1; i < loadedUrls.length; i++) {
+            const extraFile = rawFiles[i];
+            const extraUrl = loadedUrls[i];
+            const cleanTitle = extraFile.name.replace(/\.[^/.]+$/, "");
+            const newStep = {
+              ...baseStep,
+              id: `step_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 6)}`,
+              title: cleanTitle ? `Bước: ${cleanTitle}` : `${baseStep.title} (${i + 1})`,
+              [targetField]: extraUrl,
+              isMainMediaDeleted: false,
+              mainMediaChromaKey: { enabled: false, mode: 'green', color: '#00ff00' },
+              secondaryMediaChromaKey: { enabled: false, mode: 'green', color: '#00ff00' },
+              overlayImageChromaKey: { enabled: false, mode: 'green', color: '#00ff00' }
+            };
+            extraSteps.push(newStep);
+          }
+          newSteps.splice(curIdx + 1, 0, ...extraSteps);
+        }
+
+        return { ...p, steps: newSteps };
       }));
-      toast.success(`🎬 Đã nạp ${isImg ? 'ảnh' : 'video'} "${file.name}" lên Sân Khấu 9:16 (Giữ nguyên phông gốc)!`);
+
+      if (rawFiles.length > 1) {
+        toast.success(`🎉 Đã tải lên thành công ${rawFiles.length} tệp! 1 tệp vào bước hiện tại và ${rawFiles.length - 1} bước kịch bản tiếp theo đã tự động được tạo!`);
+      } else {
+        toast.success(`🎬 Đã nạp ${isImgFirst ? 'ảnh' : 'video'} "${firstFile.name}" lên Sân Khấu 9:16 (Giữ nguyên phông gốc)!`);
+      }
+
       if (isMasterSynced) {
         setTimeout(() => {
           const sToSync = updatedCurrentStep || currentStep;
           if (sToSync) syncStepToServer(sToSync, currentStepIndex, isPlayingFlow);
         }, 50);
       }
-    };
+    });
 
-    if (isImg) {
-      const reader = new FileReader();
-      reader.onload = (ev) => {
-        const dataUrl = ev.target?.result;
-        if (dataUrl) applyStepMedia(dataUrl);
-      };
-      reader.readAsDataURL(file);
-    } else {
-      try {
-        const objectUrl = URL.createObjectURL(file) + '#type=video';
-        applyStepMedia(objectUrl);
-      } catch (err) {
-        const reader = new FileReader();
-        reader.onload = (ev) => {
-          const dataUrl = ev.target?.result;
-          if (dataUrl) applyStepMedia(dataUrl);
-        };
-        reader.readAsDataURL(file);
-      }
-    }
     e.target.value = '';
   };
 
@@ -1610,6 +1667,146 @@ export default function LivestreamFlowSequencer() {
       handleDirectMediaUpload(currentStep.id, 'secondaryMediaUrl', e);
     } else if (layerType === 'banner') {
       handleDirectMediaUpload(currentStep.id, 'overlayImage', e);
+    }
+  };
+
+  // 📋 NHÂN BẢN SAO CHÉP LỚP ĐANG CHỌN TRỰC TIẾP TRÊN SÂN KHẤU PHỤ (Avatar, Video Nền, Video PiP, Ảnh Banner, Tiêu Đề)
+  const handleDuplicateSelectedLayer = () => {
+    if (!selectedLayer?.type) {
+      toast.info('💡 Vui lòng bấm chọn một lớp trên Sân Khấu (Avatar, Video, Ảnh, hoặc Chữ) để nhân bản!');
+      return;
+    }
+    pushUndoSnapshot();
+
+    if (selectedLayer.type === 'avatar') {
+      const curId = selectedLayer.id || 'avatar_1';
+      const currentAvatars = (multiAvatarConfig?.avatars && multiAvatarConfig.avatars.length > 0)
+        ? multiAvatarConfig.avatars
+        : DEFAULT_MULTI_AVATAR_CONFIG.avatars;
+      const sourceAvatar = currentAvatars.find(a => a.id === curId) || currentAvatars[0];
+
+      // Tìm slot avatar tiếp theo (avatar_1 -> avatar_2 -> avatar_3 -> avatar_4 -> avatar_5)
+      const curNum = parseInt(String(curId).replace(/\D/g, '') || '1', 10);
+      const nextNum = curNum >= 5 ? 1 : curNum + 1;
+      const nextId = `avatar_${nextNum}`;
+
+      // Sao chép thuộc tính từ sourceAvatar sang targetAvatar
+      const updatedAvatars = currentAvatars.map(a => {
+        if (a.id === nextId) {
+          return {
+            ...a,
+            talkVideo: sourceAvatar?.talkVideo || '',
+            idleVideo: sourceAvatar?.idleVideo || '',
+            mediaUrl: sourceAvatar?.mediaUrl || sourceAvatar?.talkVideo || '',
+            chromaKey: sourceAvatar?.chromaKey ? { ...sourceAvatar.chromaKey } : { enabled: false, mode: 'green', color: '#00ff00' }
+          };
+        }
+        return a;
+      });
+
+      const updatedConfig = {
+        ...multiAvatarConfig,
+        enabled: true,
+        activeCount: Math.max(multiAvatarConfig?.activeCount || 1, nextNum),
+        avatars: updatedAvatars
+      };
+      setMultiAvatarConfig(updatedConfig);
+      saveMultiAvatarConfig(updatedConfig);
+
+      // Cập nhật transform cho avatar mới trong bước hiện tại (dịch chuyển vị trí nhẹ để không che nhau)
+      if (currentStep) {
+        const existingTrans = currentStep.avatarTransforms?.[curId] || { x: 50, y: 50, scale: 1, rotate: 0 };
+        const newTrans = {
+          ...existingTrans,
+          x: Math.min(85, Math.max(15, (existingTrans.x || 50) + 12)),
+          y: Math.min(85, Math.max(15, (existingTrans.y || 50) + 5))
+        };
+        handleUpdateStepTransform(currentStep.id, 'avatar', newTrans, nextId);
+      }
+
+      setSelectedLayer({ type: 'avatar', id: nextId });
+      toast.success(`👥 Đã nhân bản Avatar ${curNum} sang Avatar ${nextNum} thành công!`);
+      if (isMasterSynced && currentStep) {
+        setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
+      }
+      return;
+    }
+
+    if (selectedLayer.type === 'main_media') {
+      if (!currentStep) return;
+      if (!currentStep.mediaUrl) {
+        toast.info('💡 Chưa có Video/Ảnh nền chính để nhân bản!');
+        return;
+      }
+      // Nếu PiP chưa có video, nhân bản ngay sang PiP để hiển thị 2 video đồng thời trên sân khấu!
+      if (!currentStep.secondaryMediaUrl) {
+        const currentMainTrans = currentStep.mainMediaTransform || { x: 50, y: 50, scale: 1, rotate: 0 };
+        const pipTrans = {
+          x: Math.min(80, Math.max(20, (currentMainTrans.x || 50) + 10)),
+          y: Math.min(80, Math.max(20, (currentMainTrans.y || 50) + 10)),
+          scale: 0.5,
+          rotate: currentMainTrans.rotate || 0
+        };
+        setPresets(prev => prev.map(p => {
+          if (p.id !== activePresetId) return p;
+          return {
+            ...p,
+            steps: p.steps.map(s => {
+              if (s.id !== currentStep.id) return s;
+              return {
+                ...s,
+                secondaryMediaUrl: currentStep.mediaUrl,
+                secondaryMediaTransform: pipTrans,
+                secondaryMediaChromaKey: currentStep.mainMediaChromaKey ? { ...currentStep.mainMediaChromaKey } : { enabled: false, mode: 'green', color: '#00ff00' }
+              };
+            })
+          };
+        }));
+        setSelectedLayer({ type: 'pip', id: 'pip' });
+        toast.success('🎬 Đã nhân bản Video nền sang lớp Video PiP trên Sân Khấu!');
+        if (isMasterSynced) {
+          setTimeout(() => syncStepToServer({
+            ...currentStep,
+            secondaryMediaUrl: currentStep.mediaUrl,
+            secondaryMediaTransform: pipTrans
+          }, currentStepIndex, isPlayingFlow), 50);
+        }
+      } else {
+        // Nếu PiP đã có, nhân bản nguyên bước kịch bản chứa video này
+        handleDuplicateStep(currentStep);
+        toast.success('🎬 Đã nhân bản video sang bước kịch bản tiếp theo!');
+      }
+      return;
+    }
+
+    if (selectedLayer.type === 'pip') {
+      if (!currentStep || !currentStep.secondaryMediaUrl) {
+        toast.info('💡 Chưa có Video PiP để nhân bản!');
+        return;
+      }
+      handleDuplicateStep(currentStep);
+      toast.success('🎬 Đã nhân bản bước kịch bản chứa Video PiP!');
+      return;
+    }
+
+    if (selectedLayer.type === 'banner') {
+      if (!currentStep || !currentStep.overlayImage) {
+        toast.info('💡 Chưa có Banner/Ảnh để nhân bản!');
+        return;
+      }
+      handleDuplicateStep(currentStep);
+      toast.success('🖼️ Đã nhân bản bước kịch bản chứa Banner/Ảnh!');
+      return;
+    }
+
+    if (selectedLayer.type === 'text') {
+      if (!currentStep || !currentStep.overlayText) {
+        toast.info('💡 Chưa có Tiêu đề chữ để nhân bản!');
+        return;
+      }
+      handleDuplicateStep(currentStep);
+      toast.success('✍️ Đã nhân bản bước kịch bản chứa Tiêu đề chữ!');
+      return;
     }
   };
 
@@ -2242,17 +2439,29 @@ export default function LivestreamFlowSequencer() {
               <div className="flex items-center gap-0.5 shrink-0">
                 {/* 📁 Nút Tải Video/Ảnh (Ảnh 4) */}
                 {selectedLayer.type !== 'text' && (
-                  <label className="px-1.5 py-0.5 rounded-md text-[8.5px] font-black bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-0.5 cursor-pointer shadow-xs whitespace-nowrap" title="Tải Video/Ảnh từ máy tính lên">
+                  <label className="px-1.5 py-0.5 rounded-md text-[8.5px] font-black bg-blue-600 hover:bg-blue-500 text-white flex items-center gap-0.5 cursor-pointer shadow-xs whitespace-nowrap" title="Tải Video/Ảnh từ máy tính lên (chọn 1 hoặc nhiều tệp)">
                     <Upload size={9} />
                     <span>Tải Lên</span>
                     <input 
                       type="file" 
                       accept="video/*,image/*" 
+                      multiple
                       onChange={(e) => handleDirectLayerUpload(selectedLayer.type, selectedLayer.id, e)}
                       className="hidden" 
                     />
                   </label>
                 )}
+
+                {/* 📋 Nút Nhân Bản Sao Chép (Video / Avatar / Lớp) */}
+                <button
+                  type="button"
+                  onClick={handleDuplicateSelectedLayer}
+                  className="px-1.5 py-0.5 rounded-md text-[8.5px] font-black bg-amber-600 hover:bg-amber-500 text-white flex items-center gap-0.5 cursor-pointer shadow-xs whitespace-nowrap"
+                  title={`Nhân bản sao chép ${selectedLayer.type === 'avatar' ? `Avatar ${selectedLayer.id || '1'}` : selectedLayer.type === 'main_media' ? 'Video nền chính' : selectedLayer.type === 'pip' ? 'Video PiP' : selectedLayer.type === 'banner' ? 'Ảnh banner' : 'Tiêu đề chữ'}`}
+                >
+                  <Copy size={9} />
+                  <span>Nhân Bản</span>
+                </button>
 
                 {/* 🪄 Xóa Nền AI */}
                 {selectedLayer.type !== 'text' && (
@@ -3229,7 +3438,46 @@ export default function LivestreamFlowSequencer() {
                               </select>
                             </div>
 
-                            {/* 📂 NẠP VIDEO NỀN CHÍNH (TỪ MÁY TÍNH + NÚT GHIM) */}
+                            {/* 🎭 NẠP AVATAR / NHÂN VẬT NÓI (TỪ MÁY TÍNH - HỖ TRỢ NHIỀU TỆP) */}
+                            <div>
+                              <div className="flex items-center justify-between mb-1">
+                                <label className="text-[10px] font-black uppercase text-gray-400">
+                                  Avatar / Nhân Vật Nói:
+                                </label>
+                                <span className="text-[10px] text-cyan-300 font-bold">
+                                  {step.avatarSpeaker ? `Đang chọn: ${step.avatarSpeaker.toUpperCase()}` : 'AVATAR_1'}
+                                </span>
+                              </div>
+
+                              <div className="flex items-center gap-1.5 flex-wrap">
+                                <label className="px-3 py-1.5 bg-indigo-600 hover:bg-indigo-500 text-white text-[11px] font-black rounded-lg cursor-pointer flex items-center gap-1 shadow-sm" title="Tải Video/Ảnh cho Avatar từ máy tính (chọn 1 hoặc nhiều tệp)">
+                                  <Upload size={12} />
+                                  <span>Tải Avatar Từ Máy</span>
+                                  <input 
+                                    type="file" 
+                                    accept="video/*,image/*" 
+                                    multiple
+                                    onChange={(e) => handleDirectAvatarMediaUpload(step.avatarSpeaker || 'avatar_1', e)} 
+                                    className="hidden" 
+                                  />
+                                </label>
+
+                                <button
+                                  type="button"
+                                  onClick={() => {
+                                    setSelectedLayer({ type: 'avatar', id: step.avatarSpeaker || 'avatar_1' });
+                                    handleDuplicateSelectedLayer();
+                                  }}
+                                  className="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white text-[11px] font-black rounded-lg cursor-pointer flex items-center gap-1 shadow-sm"
+                                  title="Nhân bản avatar này sang slot tiếp theo trên sân khấu"
+                                >
+                                  <Copy size={12} />
+                                  <span>Nhân Bản</span>
+                                </button>
+                              </div>
+                            </div>
+
+                            {/* 📂 NẠP VIDEO NỀN CHÍNH (TỪ MÁY TÍNH + NÚT GHIM + NHÂN BẢN) */}
                             <div>
                               <div className="flex items-center justify-between mb-1">
                                 <label className="text-[10px] font-black uppercase text-gray-400">
@@ -3247,16 +3495,32 @@ export default function LivestreamFlowSequencer() {
                               </div>
 
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <label className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-black text-[11px] font-black rounded-lg cursor-pointer flex items-center gap-1 shadow-sm">
+                                <label className="px-3 py-1.5 bg-cyan-600 hover:bg-cyan-500 text-black text-[11px] font-black rounded-lg cursor-pointer flex items-center gap-1 shadow-sm" title="Tải Video/Ảnh từ máy tính lên (chọn 1 hoặc nhiều tệp)">
                                   <Upload size={12} />
                                   <span>Tải Video Từ Máy Tính</span>
                                   <input 
                                     type="file" 
                                     accept="video/*,image/*" 
+                                    multiple
                                     onChange={(e) => handleDirectMediaUpload(step.id, 'mediaUrl', e)} 
                                     className="hidden" 
                                   />
                                 </label>
+
+                                {step.mediaUrl && (
+                                  <button
+                                    type="button"
+                                    onClick={() => {
+                                      setSelectedLayer({ type: 'main_media', id: 'main' });
+                                      handleDuplicateSelectedLayer();
+                                    }}
+                                    className="px-2.5 py-1.5 bg-amber-600 hover:bg-amber-500 text-white text-[11px] font-black rounded-lg cursor-pointer flex items-center gap-1 shadow-sm"
+                                    title="Nhân bản video này sang lớp PiP hoặc bước mới"
+                                  >
+                                    <Copy size={12} />
+                                    <span>Nhân Bản Video</span>
+                                  </button>
+                                )}
 
                                 {step.mediaUrl && (
                                   <button
@@ -3294,12 +3558,13 @@ export default function LivestreamFlowSequencer() {
                               </div>
 
                               <div className="flex items-center gap-1.5 flex-wrap">
-                                <label className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-bold rounded-lg cursor-pointer flex items-center gap-1 border border-slate-700">
+                                <label className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-white text-[11px] font-bold rounded-lg cursor-pointer flex items-center gap-1 border border-slate-700" title="Tải Video PiP từ máy (chọn 1 hoặc nhiều tệp)">
                                   <Upload size={12} />
                                   <span>Tải Video PiP Từ Máy</span>
                                   <input 
                                     type="file" 
-                                    accept="video/*" 
+                                    accept="video/*,image/*" 
+                                    multiple
                                     onChange={(e) => handleDirectMediaUpload(step.id, 'secondaryMediaUrl', e)} 
                                     className="hidden" 
                                   />
@@ -3340,7 +3605,7 @@ export default function LivestreamFlowSequencer() {
                               </div>
 
                               <input 
-                                type="text"
+                                type="text" 
                                 value={step.overlayText || ''}
                                 onChange={(e) => handleUpdateStep(step.id, 'overlayText', e.target.value)}
                                 placeholder="Nhập chữ hiển thị trên sân khấu (hoặc để trống)..."
@@ -3396,12 +3661,13 @@ export default function LivestreamFlowSequencer() {
                               </div>
 
                               <div className="flex items-center gap-1.5">
-                                <label className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 text-[11px] font-bold rounded-lg cursor-pointer flex items-center gap-1 border border-slate-700">
+                                <label className="px-3 py-1.5 bg-slate-800 hover:bg-slate-700 text-amber-300 text-[11px] font-bold rounded-lg cursor-pointer flex items-center gap-1 border border-slate-700" title="Tải Ảnh Banner từ máy (chọn 1 hoặc nhiều tệp)">
                                   <Upload size={12} />
                                   <span>Tải Ảnh Banner Từ Máy</span>
                                   <input 
                                     type="file" 
-                                    accept="image/*" 
+                                    accept="image/*,video/*" 
+                                    multiple
                                     onChange={(e) => handleDirectMediaUpload(step.id, 'overlayImage', e)} 
                                     className="hidden" 
                                   />
