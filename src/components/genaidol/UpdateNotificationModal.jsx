@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.6.0';
+export const APP_VERSION = '4.6.1';
 export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.6.0 - Hoàn Thiện Xóa Khung & Media Sân Khấu Phụ, Hỗ Trợ Tải Ảnh Trực Tiếp & Trả Về Sân Khấu Chính Độc Lập',
-    description: '1. Xóa Khung & Media Toàn Diện Ở Sân Khấu Phụ: Khi chọn bất kỳ layer nào (Avatar, Nền chính, PiP, Banner, Text) và bấm nút [Xóa] trên thanh công cụ hàng ngang, hệ thống lập tức xóa cả media lẫn loại bỏ hoàn toàn khung hiển thị khỏi sân khấu và đồng bộ tức thì ra sân khấu chính; 2. Hỗ Trợ Tải Ảnh Trực Tiếp Lên Sân Khấu: Khắc phục triệt để lỗi chỉ tải được video mà không tải được hình ảnh, nạp trực tiếp file ảnh (PNG, JPG, WEBP, GIF, SVG) lên Avatar/Nền/PiP/Banner hiển thị sắc nét tức thì; 3. Trả Về Giao Diện Sân Khấu Chính Ban Đầu Khi Tắt Đồng Bộ: Khi tắt nút "ĐỒNG BỘ RA SÂN KHẤU CHÍNH", sân khấu chính lập tức phục hồi 100% về giao diện nhân vật/video độc lập ban đầu, xóa toàn bộ overlay phụ; 4. Sân Khấu Chính Hoạt Động Độc Lập Không Bị Tách Phông: Khi không đồng bộ, sân khấu chính chạy độc lập không bị dính hiệu ứng phông xanh hay tách nền chéo, đảm bảo phát video mượt mà chuẩn 60FPS; 5. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Hệ Thống.'
+    title: '⚡ Bản Cập Nhật v4.6.1 - Sân Khấu Chính Tuyệt Đối Không Tự Xóa Nền, Hoàn Tác / Tiến Tới Chuẩn & Xóa 2 Bước Media/Khung',
+    description: '1. Sân Khấu Chính Tuyệt Đối Không Tự Ý Xóa Phông Nền: Chế độ độc lập bình thường phát video/ảnh nguyên bản 100%, không bị tự động bật AI Beauty tách nền hay dính chroma key; 2. Khôi Phục Giao Diện Sân Khấu Chính Ban Đầu Khi Tắt Đồng Bộ: Tắt đồng bộ lập tức xóa sạch lớp phủ sân khấu phụ và khôi phục video/ảnh nhân vật gốc; 3. Nút Quay Lại & Tiến Tới (Undo / Redo): Lưu lại đầy đủ mọi lịch sử thao tác nạp media, sắp xếp lớp, co giãn, xóa nền và hoàn tác/tiến tới tức thì, đồng bộ ra Master; 4. Cơ Chế Xóa 2 Bước (Ảnh 4): Bấm Xóa lần 1 sẽ xóa nội dung video/ảnh bên trong và GIỮ NGUYÊN KHUNG viền cùng 8 điểm co giãn để dễ dàng tải video/ảnh khác lên thay thế; bấm Xóa lần 2 mới xóa hẳn khung khỏi sân khấu; 5. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Hệ Thống.'
   }
 ];
 

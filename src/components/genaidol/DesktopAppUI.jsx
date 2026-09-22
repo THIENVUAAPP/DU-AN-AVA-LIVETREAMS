@@ -576,6 +576,16 @@ export default function DesktopAppUI() {
           fromSequencer: false,
           enabled: false
         }));
+        // Khôi phục video/ảnh của nhân vật đang chọn
+        const customMatch = (customCharacters && Array.isArray(customCharacters)) 
+          ? customCharacters.find(c => c.id === selectedCharacter && (c.url || c.mediaUrl)) 
+          : null;
+        const charUrl = customMatch?.url || (selectedCharacter && CHARACTERS[selectedCharacter]?.url) || CHARACTERS.default_idol.url;
+        if (desktopVideoRef.current && charUrl && (!customMatch || customMatch.type === 'video')) {
+          desktopVideoRef.current.src = charUrl;
+          desktopVideoRef.current.currentTime = 0;
+          desktopVideoRef.current.play().catch(() => {});
+        }
       }
     };
 
@@ -2777,6 +2787,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         fromSequencer: false,
         enabled: false
       }));
+      // Khôi phục video/ảnh của nhân vật đang chọn
+      const customMatch = (customCharacters && Array.isArray(customCharacters)) 
+        ? customCharacters.find(c => c.id === selectedCharacter && (c.url || c.mediaUrl)) 
+        : null;
+      const charUrl = customMatch?.url || (selectedCharacter && CHARACTERS[selectedCharacter]?.url) || CHARACTERS.default_idol.url;
+      if (desktopVideoRef.current && charUrl && (!customMatch || customMatch.type === 'video')) {
+        desktopVideoRef.current.src = charUrl;
+        desktopVideoRef.current.currentTime = 0;
+        desktopVideoRef.current.play().catch(() => {});
+      }
       setIsScriptLiveRunning(false);
       setIsMasterLiveRunning(false);
       postMasterBroadcast({
@@ -3792,10 +3812,57 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           }
         });
       } else {
-        // Ảnh: Mở Modal AI Xoá Phông & Làm Đẹp Siêu Nét 4K
-        setBeautyModalImage(localUrl);
-        setBeautyModalCharName(charName);
-        setIsBeautyModalOpen(true);
+        // 🖼️ ẢNH BÌNH THƯỜNG: NẠP VÀ HIỂN THỊ TỨC THÌ 100% NGUYÊN BẢN, TUYỆT ĐỐI KHÔNG TỰ Ý XÓA PHÔNG NỀN!
+        const newCharId = `custom_${Date.now()}`;
+        const tempChar = {
+          id: newCharId,
+          name: charName,
+          url: localUrl,
+          mediaUrl: localUrl,
+          type: 'image',
+          fileData: file,
+          fileBlob: file,
+          fileSize: file.size,
+          fileSignature: fileSig
+        };
+
+        registerFileInRAM(file, newCharId);
+        setActiveMedia(file, newCharId, { name: charName, mediaUrl: localUrl, id: newCharId }).catch(() => {});
+        setActiveMedia(file, 'current_active', { name: charName, mediaUrl: localUrl, id: newCharId }).catch(() => {});
+
+        try {
+          await saveCharacterToIDB(tempChar);
+          localStorage.setItem('avalive_selected_char', newCharId);
+        } catch (e) {}
+
+        setCustomCharacters(prev => [...prev, tempChar]);
+        setSelectedCharacter(newCharId);
+        showToast(`🖼️ Đã nạp ảnh "${charName}" nguyên bản lên sân khấu chính!`, 'success');
+
+        // Bắn phát sóng realtime ảnh đến TikTok Live Studio / OBS
+        syncMasterLiveState({
+          stage: 'idol',
+          selectedCharacter: newCharId,
+          characterName: charName,
+          mediaUrl: localUrl,
+          isVideo: false,
+          aspectRatio: globalAspectRatio || '9:16'
+        }, socketRef.current);
+
+        fastStreamUpload(file, {
+          onInit: ({ fileUrl }) => {
+            const updatedChar = { ...tempChar, url: localUrl, mediaUrl: fileUrl };
+            setCustomCharacters(prev => prev.map(c => c.id === newCharId ? updatedChar : c));
+            syncMasterLiveState({
+              stage: 'idol',
+              selectedCharacter: newCharId,
+              characterName: charName,
+              mediaUrl: fileUrl,
+              isVideo: false,
+              aspectRatio: globalAspectRatio || '9:16'
+            }, socketRef.current);
+          }
+        });
       }
     }
     if (fileInputRef.current) {

@@ -17,7 +17,7 @@ export default function AICharacterBeautyModal({
   const [processStep, setProcessStep] = useState('');
   
   // Settings
-  const [autoRemoveBg, setAutoRemoveBg] = useState(true);
+  const [autoRemoveBg, setAutoRemoveBg] = useState(false);
   const [autoEnhanceBeauty, setAutoEnhanceBeauty] = useState(true);
   const [smoothSkin, setSmoothSkin] = useState(65);
   const [sharpness, setSharpness] = useState(60);
