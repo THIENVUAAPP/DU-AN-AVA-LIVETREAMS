@@ -189,8 +189,14 @@ export default function LivestreamFlowSequencer() {
   const [presetNameInput, setPresetNameInput] = useState('');
   const [isStageMediaPaused, setIsStageMediaPaused] = useState(false);
 
-  // 📡 State Đồng Bộ Ra Sân Khấu Chính (OBS / TikTok Live Studio) — Mặc định luôn TẮT (FALSE), chỉ chạy khi người dùng bấm
-  const [isMasterSynced, setIsMasterSynced] = useState(false);
+  // 📡 State Đồng Bộ Ra Sân Khấu Chính (OBS / TikTok Live Studio) — Chỉ người dùng bấm bật/tắt, không tự ý tắt
+  const [isMasterSynced, setIsMasterSynced] = useState(() => {
+    try {
+      return localStorage.getItem('avalive_master_sync_active') === 'true';
+    } catch (e) {
+      return false;
+    }
+  });
 
   // Luôn đồng bộ trạng thái nút Sync với event hệ thống khi người dùng bấm bật/tắt
   useEffect(() => {
@@ -199,11 +205,16 @@ export default function LivestreamFlowSequencer() {
         setIsMasterSynced(e.detail.isSynced);
       }
     };
+    const handleSyncDisconnect = (e) => {
+      if (e?.detail?.source === 'user_toggle') {
+        setIsMasterSynced(false);
+      }
+    };
     window.addEventListener('avalive:master_sync_state_changed', handleSyncStateChange);
-    window.addEventListener('avalive:sequencer_sync_disconnected', () => setIsMasterSynced(false));
+    window.addEventListener('avalive:sequencer_sync_disconnected', handleSyncDisconnect);
     return () => {
       window.removeEventListener('avalive:master_sync_state_changed', handleSyncStateChange);
-      window.removeEventListener('avalive:sequencer_sync_disconnected', () => setIsMasterSynced(false));
+      window.removeEventListener('avalive:sequencer_sync_disconnected', handleSyncDisconnect);
     };
   }, []);
 
@@ -2421,10 +2432,7 @@ export default function LivestreamFlowSequencer() {
 
   // 🎙️ ĐỌC THỬ GIỌNG AI BỘ NÃO (VOICE AI BRAIN) 0MS THỜI GIAN THỰC
   const handleTestVoiceSpeech = (stepId, text, voiceId = 'brain_auto', speakerId = 'avatar_1', options = {}) => {
-    if (!text || !text.trim()) {
-      toast.error('Chưa có lời thoại để đọc thử!');
-      return;
-    }
+    const textToSpeak = (text && text.trim()) || 'Dạ em xin chào cả nhà đang xem livestream nha! Em là AI Livestream của phiên live hôm nay ạ!';
     if (speakingStepId === stepId) {
       stopVoiceAudio();
       setIsSpeakingPreview(false);
@@ -2453,7 +2461,7 @@ export default function LivestreamFlowSequencer() {
       ? options.voiceRate 
       : (stepObj?.voiceRate || 1.0);
 
-    previewVoiceAudio(effectiveVoiceId, text, () => {
+    previewVoiceAudio(effectiveVoiceId, textToSpeak, () => {
       setIsSpeakingPreview(false);
       setSpeakingStepId(null);
     }, {
@@ -2569,18 +2577,19 @@ export default function LivestreamFlowSequencer() {
             <span className="hidden sm:inline">{isMasterVoiceEnabled ? 'VOICE AI: BẬT' : 'VOICE AI: TẮT'}</span>
           </button>
 
+          {/* 📡 NÚT ĐỒNG BỘ RA SÂN KHẤU CHÍNH (BẬT = MÀU XANH, TẮT = MÀU ĐỎ - DO NGƯỜI DÙNG BẤM TẮT/MỞ) */}
           <button
             onClick={handleToggleMasterSync}
-            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md cursor-pointer ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md cursor-pointer border ${
               isMasterSynced 
-                ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white ring-2 ring-emerald-400 animate-pulse' 
-                : 'bg-indigo-950 hover:bg-indigo-900 text-indigo-300 border border-indigo-700/60'
+                ? 'bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 text-white border-emerald-400 ring-2 ring-emerald-400/80 shadow-[0_0_15px_rgba(16,185,129,0.5)]' 
+                : 'bg-rose-950/90 hover:bg-rose-900 text-rose-300 border-rose-600/70 shadow-[0_0_10px_rgba(225,29,72,0.3)]'
             }`}
-            title={isMasterSynced ? 'Đang phát trực tiếp ra Sân Khấu Chính / OBS / TikTok Live' : 'Bấm để phát dữ liệu ra Sân Khấu Chính / OBS / TikTok Live'}
+            title={isMasterSynced ? '🟢 ĐANG PHÁT RA SÂN KHẤU CHÍNH: Bấm để NGẮT KẾT NỐI Sân Khấu Chính' : '🔴 ĐÃ NGẮT: Bấm để BẬT ĐỒNG BỘ RA SÂN KHẤU CHÍNH'}
           >
-            <Monitor size={13} />
-            <span className="hidden md:inline">
-              {isMasterSynced ? '🟢 ĐANG PHÁT RA SÂN KHẤU CHÍNH' : '📡 ĐỒNG BỘ RA SÂN KHẤU CHÍNH'}
+            <Monitor size={13} className={isMasterSynced ? 'text-white animate-bounce' : 'text-rose-400'} />
+            <span className="inline font-bold">
+              {isMasterSynced ? '🟢 ĐANG PHÁT RA SÂN KHẤU CHÍNH' : '🔴 📡 ĐỒNG BỘ RA SÂN KHẤU CHÍNH'}
             </span>
           </button>
 

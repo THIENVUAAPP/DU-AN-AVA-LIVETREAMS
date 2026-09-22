@@ -8558,7 +8558,25 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
             }
 
             if (arrayBuf && arrayBuf.byteLength > 100) {
-              const rawAudioBuffer = await audioCtx.decodeAudioData(arrayBuf.slice(0));
+              let rawAudioBuffer = null;
+              try {
+                rawAudioBuffer = await new Promise((resDec, rejDec) => {
+                  try {
+                    const p = audioCtx.decodeAudioData(
+                      arrayBuf.slice(0),
+                      (buf) => resDec(buf),
+                      (err) => rejDec(err)
+                    );
+                    if (p && typeof p.then === 'function') {
+                      p.then(resDec).catch(rejDec);
+                    }
+                  } catch (e) {
+                    rejDec(e);
+                  }
+                });
+              } catch (decErr) {
+                console.warn('AudioContext decodeAudioData error, returning fallback:', decErr);
+              }
               if (rawAudioBuffer) {
                 const audioBuffer = trimAudioBufferSilence(rawAudioBuffer);
                 if (audioBufferMemoryCache.size > 300) {
@@ -8870,6 +8888,68 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     }
   } catch (dspErr) {
     console.warn('[voiceSyncService] Neural Voice synthesis error, fallback to resilient stream:', dspErr);
+  }
+
+  if (thisSpeechId !== currentSpeechGenerationId) return true;
+
+  // =========================================================================
+  // TIER 2.5: DIRECT HTML5 AUDIO PLAYBACK VIA BACKEND BASE64
+  // =========================================================================
+  try {
+    const currentOrigin = typeof window !== 'undefined' && window.location?.origin ? window.location.origin : '';
+    const res = await fetch(`${currentOrigin}/api/tts`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        text: textToSpeak,
+        voice: voice?.neuralVoice || 'vi-VN-HoaiMyNeural',
+        voiceId: voice?.id || '',
+        gender: checkIsMale(voice) ? 'male' : 'female',
+        pitch: '+0Hz',
+        rate: '+0%'
+      })
+    }).catch(() => null);
+
+    if (res && res.ok) {
+      const data = await res.json().catch(() => null);
+      if (data?.audioBase64) {
+        const audioUrl = `data:audio/mp3;base64,${data.audioBase64}`;
+        const audio = new Audio(audioUrl);
+        audio.volume = effectiveVoiceVolume;
+        audio.playbackRate = requestedRate;
+        activePreviewAudio = audio;
+
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', {
+            detail: { isSpeaking: true, avatarId: voice?.id || 'idol', role: voice?.recommendedFor || 'idol', speechText: textToSpeak }
+          }));
+        }
+
+        try { globalLipSyncEngine.connectAudioElement(audio); } catch(e) {}
+
+        return await new Promise((resolve) => {
+          let finished = false;
+          const finish = () => {
+            if (finished) return;
+            finished = true;
+            activePreviewAudio = null;
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', {
+                detail: { isSpeaking: false, avatarId: null }
+              }));
+            }
+            if (thisSpeechId !== currentSpeechGenerationId) return resolve(false);
+            if (onEnd) onEnd();
+            resolve(true);
+          };
+          audio.onended = finish;
+          audio.onerror = finish;
+          audio.play().catch(finish);
+        });
+      }
+    }
+  } catch (directHtml5Err) {
+    console.warn('[voiceSyncService] Direct HTML5 Audio fallback error:', directHtml5Err);
   }
 
   if (thisSpeechId !== currentSpeechGenerationId) return true;

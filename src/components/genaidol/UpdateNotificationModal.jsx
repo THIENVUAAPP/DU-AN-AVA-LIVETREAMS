@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.7.5';
+export const APP_VERSION = '4.7.6';
 export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.7.6 - Nâng Cấp Nút Đồng Bộ Sân Khấu Chính Chuẩn Màu Xanh/Đỏ & Đọc Thử Voice AI Toàn Diện',
+    description: '1. Nút Đồng Bộ Sân Khấu Chính: Hiển thị trực quan màu Xanh Emerald khi BẬT (🟢 ĐANG PHÁT RA SÂN KHẤU CHÍNH) và màu Đỏ khi TẮT (🔴 📡 ĐỒNG BỘ RA SÂN KHẤU CHÍNH). Chỉ có người dùng bấm tắt/mở, không tự ý tắt, duy trì phát liên tục cho tới khi người dùng bấm dừng. 2. Đọc Thử Voice AI Toàn Diện: Nâng cấp động cơ phát âm thanh 4 lớp (Neural TTS + Broadcast DSP + Direct HTML5 Audio + Web Speech API) đảm bảo 100% mọi giọng đọc khi bấm Nghe Thử đều phát siêu mượt mà, truyền cảm, có hơi thở, nhấn nhá cảm xúc sống động.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.7.5 - Nâng Cấp Tách Sạch 100% Background & Khung Viền Ảnh, Khôi Phục Đồng Bộ Sân Khấu Chính, Sửa Lỗi Nghe Thử Voice & Tinh Gọn Giao Diện',
     description: '1. Tách Sạch 100% Background & Khung Viền Ảnh: Xóa sạch mọi loại phông nền phức tạp (tường, phòng, đồ vật, neon, sàn) và triệt tiêu 100% vạch viền khung của bức ảnh ở 4 cạnh. 2. Khôi Phục Đồng Bộ Sân Khấu Chính: Nút [Đồng Bộ Ra Sân Khấu Chính] truyền tải tức thì toàn bộ video, avatar, ảnh và lớp phủ từ Sân Khấu Phụ sang Master Live Stream mà không bị nghẽn trạng thái. 3. Sửa Lỗi Nghe Thử Voice: Bấm Nghe Thử Voice hoạt động tức thì, phát giọng mượt mà chuẩn xác từ Voice AI Brain. 4. Xóa Ô Dư Thừa: Loại bỏ ô Nghỉ Chuyển Bước dư ở chân thẻ kịch bản.'
