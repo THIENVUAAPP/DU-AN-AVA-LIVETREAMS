@@ -3921,12 +3921,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       );
     }
 
-    // 0.1 MULTI-AVATAR STUDIO CANVAS (1-4 CHARACTERS) — CHỈ KÍCH HOẠT KHI ĐƯỢC ĐỒNG BỘ TỪ STUDIO / SEQUENCER
-    // 🎬 KHI _syncedFromSequencer=true: Luôn render canvas dù activeCount=0 hoặc enabled=false
-    // Lý do: multiAvatarConfig từ sequencer có thể có enabled=false nhưng vẫn chứa avatar video data
-    const isSyncedCanvas = isMasterStageSynced && (
-      multiAvatarConfig?.activeCount >= 1 || 
-      multiAvatarConfig?._syncedFromSequencer === true
+    // 🎬 KHI isMasterStageSynced=true: Luôn render visual canvas đầy đủ mọi lớp đồng bộ từ sequencer
+    const isSyncedCanvas = isMasterStageSynced || (
+      multiAvatarConfig?.enabled && (multiAvatarConfig?.activeCount >= 1)
     );
     if (isSyncedCanvas) {
       const sourceAvatars = (isMasterStageSynced && flowSequencerOverlay?.syncedAvatars && flowSequencerOverlay.syncedAvatars.length > 0)
@@ -4079,6 +4076,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       : 'none',
                     transformOrigin: 'center center',
                     zIndex: bgTrans?.zIndex || 0,
+                    backgroundColor: 'transparent',
                     ...bgChroma
                   }}
                 >
@@ -4093,9 +4091,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       muted={liveAudioMuted}
                       playsInline
                       controls={false}
-                      className="w-full h-full bg-black select-none"
+                      className="w-full h-full bg-transparent select-none"
                       style={{
                         objectFit: bgTrans?.objectFit || 'cover',
+                        backgroundColor: 'transparent',
                         filter: `${bgTrans?.blur ? `blur(${bgTrans.blur}px)` : ''} ${bgTrans?.brightness ? `brightness(${bgTrans.brightness}%)` : ''}`.trim() || 'none',
                         ...bgChroma
                       }}
@@ -4104,9 +4103,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                     <img 
                       src={bgSrc}
                       alt="Studio Background"
-                      className="w-full h-full"
+                      className="w-full h-full bg-transparent"
                       style={{
                         objectFit: bgTrans?.objectFit || 'cover',
+                        backgroundColor: 'transparent',
                         filter: `${bgTrans?.blur ? `blur(${bgTrans.blur}px)` : ''} ${bgTrans?.brightness ? `brightness(${bgTrans.brightness}%)` : ''}`.trim() || 'none',
                         ...bgChroma
                       }}
@@ -4234,12 +4234,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       />
                     )}
 
-                    {/* Badge Tên & Loa Nói Của Avatar (Khớp 100% Sân Khấu Phụ) */}
-                    <div className="absolute top-1 left-1 bg-black/85 backdrop-blur-xs text-white text-[8px] font-black px-1.5 py-0.5 rounded flex items-center gap-1 border border-white/20 pointer-events-none z-30">
-                      <span className={`w-1.5 h-1.5 rounded-full ${isSpeakingNow ? 'bg-cyan-400 animate-ping' : 'bg-gray-400'}`} />
-                      <span>#{idx + 1} {avatar.name || `Nhân Vật ${idx + 1}`}</span>
-                      {isSpeakingNow && <Volume2 size={9} className="text-cyan-300 animate-bounce" />}
-                    </div>
                   </div>
                 </div>
               );
@@ -4743,6 +4737,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   : 'w-full max-w-[1200px] h-auto max-h-full aspect-[16/9] rounded-2xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-black'
               }`}
             >
+              <SvgChromaFilters />
               {renderAiIdolLiveStage()}
 
               {/* LỚP 1.5: VIDEO PHỤ PIP (PICTURE-IN-PICTURE) XẾP CHỒNG TỪ SEQUENCER (ẢNH 4) */}
@@ -4766,6 +4761,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       width: `${pipTrans.width}%`,
                       height: pipTrans.height ? `${pipTrans.height}%` : 'auto',
                       zIndex: pipTrans.zIndex || 20,
+                      backgroundColor: 'transparent',
                       ...pipChroma
                     }}
                   >
@@ -4773,7 +4769,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       <img
                         src={flowSequencerOverlay.secondaryMediaUrl}
                         alt="PiP Media"
-                        className="w-full h-full object-cover rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.85)] border-2 border-white/50 backdrop-blur-sm"
+                        className="w-full h-full object-cover rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.85)] bg-transparent"
                         style={pipChroma}
                       />
                     ) : (
@@ -4783,7 +4779,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                         loop
                         muted
                         playsInline
-                        className="w-full h-full object-cover rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.85)] border-2 border-white/50 backdrop-blur-sm"
+                        className="w-full h-full object-cover rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.85)] bg-transparent"
                         style={pipChroma}
                       />
                     )}
@@ -4811,13 +4807,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       width: `${bannerTrans.width}%`,
                       height: bannerTrans.height ? `${bannerTrans.height}%` : 'auto',
                       zIndex: bannerTrans.zIndex || 30,
+                      backgroundColor: 'transparent',
                       ...bannerChroma
                     }}
                   >
                     <img 
                       src={flowSequencerOverlay.overlayImage} 
                       alt="Sequencer Overlay" 
-                      className="w-full h-full object-contain rounded-xl drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)]"
+                      className="w-full h-full object-contain rounded-xl drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] bg-transparent"
                       style={bannerChroma}
                     />
                   </div>

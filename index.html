@@ -82,6 +82,58 @@
     </script>
   </head>
   <body class="bg-[#0A0A0A] text-gray-100 antialiased selection:bg-[#EF4444] selection:text-white min-h-screen overflow-x-hidden pt-safe pb-safe">
+    <!-- SVG Chroma Filters: Bộ lọc tách nền xanh lá & xanh dương chuẩn 4K toàn cục -->
+    <svg width="0" height="0" class="absolute pointer-events-none opacity-0" style="position: absolute; width: 0; height: 0; overflow: hidden;" aria-hidden="true">
+      <defs>
+        <!-- Tách nền xanh lá (Green Screen) -->
+        <filter id="avalive-chroma-green" color-interpolation-filters="sRGB" x="0%" y="0%" width="100%" height="100%">
+          <feColorMatrix
+            type="matrix"
+            values="
+              1.00  0.00  0.00  0.00  0.00
+              0.35  0.30  0.35  0.00  0.00
+              0.00  0.00  1.00  0.00  0.00
+              0.00  0.00  0.00  1.00  0.00"
+            result="despilled_green"
+          />
+          <feColorMatrix
+            in="SourceGraphic"
+            type="matrix"
+            values="
+              1.00  0.00  0.00  0.00  0.00
+              0.00  1.00  0.00  0.00  0.00
+              0.00  0.00  1.00  0.00  0.00
+              2.60 -3.80  2.60  1.00 -0.10"
+            result="alpha_mask_green"
+          />
+          <feComposite in="despilled_green" in2="alpha_mask_green" operator="in" />
+        </filter>
+
+        <!-- Tách nền xanh dương (Blue Screen) -->
+        <filter id="avalive-chroma-blue" color-interpolation-filters="sRGB" x="0%" y="0%" width="100%" height="100%">
+          <feColorMatrix
+            type="matrix"
+            values="
+              1.00  0.00  0.00  0.00  0.00
+              0.00  1.00  0.00  0.00  0.00
+              0.35  0.35  0.30  0.00  0.00
+              0.00  0.00  0.00  1.00  0.00"
+            result="despilled_blue"
+          />
+          <feColorMatrix
+            in="SourceGraphic"
+            type="matrix"
+            values="
+              1.00  0.00  0.00  0.00  0.00
+              0.00  1.00  0.00  0.00  0.00
+              0.00  0.00  1.00  0.00  0.00
+              2.60  2.60 -3.80  1.00 -0.10"
+            result="alpha_mask_blue"
+          />
+          <feComposite in="despilled_blue" in2="alpha_mask_blue" operator="in" />
+        </filter>
+      </defs>
+    </svg>
     <div id="root"></div>
     <script>
       // Trình duyệt luôn chặn không cho chạy file JS dạng "module" khi mở trực tiếp file HTML

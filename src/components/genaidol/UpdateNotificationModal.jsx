@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.5.8';
+export const APP_VERSION = '4.5.9';
 export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.5.8 - Đồng Bộ Hoàn Hảo 100% Toàn Bộ Trình Chiếu Sân Khấu Phụ Ra Sân Khấu Chính',
-    description: '1. Đồng Bộ Tức Thì 5 Lớp Sân Khấu: Khi bấm Đồng Bộ hoặc Phát Live, toàn bộ 5 lớp từ sân khấu phụ (Video/Ảnh Nền, Video/Ảnh PiP, 1-4 Avatar AI, Banner Poster, Tiêu đề chữ Typography) được đẩy ngay lập tức ra sân khấu chính và giữ nguyên 100% tất cả vị trí, kích thước và định dạng; 2. Triệt Tiêu Lỗi Hiển Thị Nhân Vật Cũ: Loại bỏ triệt để lỗi sân khấu chính bị đè bởi ảnh/video nhân vật cũ được chọn trước đó, phân giải chính xác media từ từng phân đoạn kịch bản live; 3. Giữ Nguyên Bố Cục Từng Avatar: Vô hiệu hóa việc ép avatar toàn màn hình khi sync, đảm bảo vị trí và kích thước của từng nhân vật khớp hoàn toàn với sân khấu phụ; 4. Hỗ Trợ Đầy Đủ Ảnh & Video Cho PiP: Lớp PiP giờ đây hiển thị mượt mà cả video lẫn hình ảnh sản phẩm; 5. Tự Động Lặp Lại Kịch Bản Vô Hạn: Phát live tuần tự từng bước một, đọc kịch bản và tự động chuyển bước, khi hết sẽ quay lại bước 1 lặp vô hạn cho đến khi người dùng tắt live; 6. Khóa Chặt 100% Toàn Bộ Các Tab Module Không Liên Quan.'
+    title: '⚡ Bản Cập Nhật v4.5.9 - Tinh Gọn Khung Sân Khấu, Đồng Bộ Tách Nền AI & Khử Toàn Bộ Badge',
+    description: '1. Xóa Bỏ Nút Nổi Dư Thừa Trên Khung: Đã loại bỏ hoàn toàn các nút [Xóa Khung], [Tách Nền AI], [Tải PiP / Nền / Avatar / Banner] hiển thị đè trên các khung video/ảnh khi được chọn ở sân khấu phụ vì đã có sẵn đầy đủ trên thanh tiêu đề sân khấu, giữ nguyên 100% 8 điểm resize và viền chọn; 2. Đồng Bộ Chuẩn Xác Tách Nền AI / Phông Xanh: Khắc phục triệt để lỗi phông nền đen/không tách nền trên Sân Khấu Chính khi bật tách nền hoặc phông xanh ở sân khấu phụ, nhúng bộ lọc SvgChromaFilters trực tiếp và khử nền trong suốt hoàn hảo 60FPS; 3. Khử Hoàn Toàn Badge #1 & Live 9:16: Đã loại bỏ triệt để huy hiệu tên nhân vật (#1 Quang Huy) và tag trạng thái [Live 9:16] khỏi cả sân khấu phụ và sân khấu chính, giúp luồng xuất ra OBS và TikTok Live Studio sạch sẽ 100%; 4. Khóa Chặt Nguyên Vẹn Mọi Module Hệ Thống.'
   }
 ];
 

@@ -3,6 +3,7 @@ import { io } from 'socket.io-client';
 
 import { loadAllAidolItems } from '../../utils/idbHelper';
 import { getActiveMedia } from '../../utils/activeMediaStore';
+import { SvgChromaFilters } from './MultiAvatarStudioModal';
 
 /**
  * 🖥️ TAB CODE ĐỘC LẬP: CỬA SỔ BẮT HÌNH WINDOW CAPTURE 4K 60 FPS CHO OBS & TIKTOK LIVE STUDIO
@@ -791,6 +792,7 @@ export default function WindowCapturePlayer() {
         fontFamily: 'system-ui, -apple-system, sans-serif'
       }}
     >
+      <SvgChromaFilters />
       <video
         ref={videoRef}
         src={isDirectStreamActive ? undefined : (resolvedFinalSrc || undefined)}
@@ -1264,7 +1266,7 @@ export default function WindowCapturePlayer() {
             zIndex: 10
           }}
         >
-          🔴 4K 60 FPS REALTIME v4.5.8 (OBS ZERO-COPY)
+          🔴 4K 60 FPS REALTIME v4.5.9 (OBS ZERO-COPY)
         </div>
       )}
     </div>

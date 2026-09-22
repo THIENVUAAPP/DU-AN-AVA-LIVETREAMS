@@ -1184,6 +1184,11 @@ export default function LivestreamFlowSequencer() {
     };
     setMultiAvatarConfig(updated);
     saveMultiAvatarConfig(updated);
+    if (isMasterSynced && currentStep) {
+      setTimeout(() => {
+        syncStepToServer(currentStep, currentStepIndex, isPlayingFlow);
+      }, 50);
+    }
     toast.success(`✨ Đã cập nhật Xóa Phông cho Avatar ${avatarId.toUpperCase()}!`);
   };
 
@@ -1331,20 +1336,33 @@ export default function LivestreamFlowSequencer() {
 
   // ✂️ CẬP NHẬT CHROMA KEY / XÓA NỀN CHO BẤT KỲ LỚP NÀO
   const handleLayerChromaUpdate = (layerType, targetId, updates) => {
+    let updatedStep = { ...currentStep };
     if (layerType === 'avatar' && targetId) {
       handleAvatarChromaUpdate(targetId, updates);
     } else if (layerType === 'main_media') {
       const current = currentStep?.mainMediaChromaKey || { enabled: false, mode: 'green', color: '#00ff00' };
-      handleUpdateStep(currentStep.id, 'mainMediaChromaKey', { ...current, ...updates });
+      const nextVal = { ...current, ...updates };
+      handleUpdateStep(currentStep.id, 'mainMediaChromaKey', nextVal);
+      updatedStep.mainMediaChromaKey = nextVal;
       toast.success('✨ Đã cập nhật Tách Phông cho Video/Ảnh Nền!');
     } else if (layerType === 'pip') {
       const current = currentStep?.secondaryMediaChromaKey || { enabled: false, mode: 'green', color: '#00ff00' };
-      handleUpdateStep(currentStep.id, 'secondaryMediaChromaKey', { ...current, ...updates });
+      const nextVal = { ...current, ...updates };
+      handleUpdateStep(currentStep.id, 'secondaryMediaChromaKey', nextVal);
+      updatedStep.secondaryMediaChromaKey = nextVal;
       toast.success('✨ Đã cập nhật Tách Phông cho Video PiP!');
     } else if (layerType === 'banner') {
       const current = currentStep?.overlayImageChromaKey || { enabled: false, mode: 'green', color: '#00ff00' };
-      handleUpdateStep(currentStep.id, 'overlayImageChromaKey', { ...current, ...updates });
+      const nextVal = { ...current, ...updates };
+      handleUpdateStep(currentStep.id, 'overlayImageChromaKey', nextVal);
+      updatedStep.overlayImageChromaKey = nextVal;
       toast.success('✨ Đã cập nhật Tách Phông cho Ảnh Banner!');
+    }
+
+    if (isMasterSynced && currentStep) {
+      setTimeout(() => {
+        syncStepToServer(updatedStep, currentStepIndex, isPlayingFlow);
+      }, 50);
     }
   };
 
@@ -1382,6 +1400,11 @@ export default function LivestreamFlowSequencer() {
         handleUpdateStep(currentStep.id, 'overlayImage', transparentDataUrl);
       }
       toast.success('🎉 Đã tách sạch sẽ 100% nền hình ảnh trong suốt!');
+      if (isMasterSynced && currentStep) {
+        setTimeout(() => {
+          syncStepToServer(activePreset.steps[currentStepIndex] || currentStep, currentStepIndex, isPlayingFlow);
+        }, 100);
+      }
     } catch (err) {
       handleLayerChromaUpdate(layerType, targetId, { enabled: true, mode });
       toast.success('✨ Đã bật bộ lọc Tách Phông Xanh!');
@@ -1959,59 +1982,6 @@ export default function LivestreamFlowSequencer() {
                       )}
                     </div>
 
-                    {/* Nút Xóa Khung, Tách Nền AI và Tải Cho Nền Chính */}
-                    {isSelected && (
-                      <div className="absolute -top-3.5 left-0 right-0 flex items-center justify-between px-1 z-50 pointer-events-auto">
-                        <div className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              pushUndoSnapshot();
-                              handleDeleteLayerFromStep(currentStep.id, 'main_media');
-                            }}
-                            className="px-2 py-0.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full shadow-2xl cursor-pointer flex items-center gap-1 border border-white text-[9px] font-black active:scale-95"
-                            title="Xóa Khung Video/Ảnh Nền Chính (Ctrl + Z để hoàn tác)"
-                          >
-                            <Trash2 size={10} />
-                            <span>Xóa Khung</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              pushUndoSnapshot();
-                              handleInstantCanvasBgRemoval('main_media', null, 'auto');
-                            }}
-                            className="px-2 py-0.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white rounded-full shadow-2xl cursor-pointer flex items-center gap-1 border border-white text-[9px] font-black active:scale-95"
-                            title="Tách sạch sẽ phông nền AI (giữ nguyên chủ thể 100%)"
-                          >
-                            <Wand2 size={10} />
-                            <span>Tách Nền AI</span>
-                          </button>
-                        </div>
-
-                        <label 
-                          onClick={(e) => e.stopPropagation()}
-                          className="px-2 py-0.5 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-2xl cursor-pointer flex items-center gap-1 border border-white text-[9px] font-black active:scale-95" 
-                          title="Tải Video hoặc Ảnh Nền từ máy tính"
-                        >
-                          <Upload size={9} />
-                          <span>Tải Nền</span>
-                          <input 
-                            type="file" 
-                            accept="video/*,image/*" 
-                            onChange={(e) => {
-                              pushUndoSnapshot();
-                              handleDirectMediaUpload(currentStep.id, 'mediaUrl', e);
-                            }}
-                            className="hidden" 
-                          />
-                        </label>
-                      </div>
-                    )}
-
                     {/* 8 Điểm Resize Handles Khi Được Chọn */}
                     {isSelected && (
                       <>
@@ -2085,59 +2055,6 @@ export default function LivestreamFlowSequencer() {
                         🎬 PiP
                       </span>
                     </div>
-
-                    {/* Nút Xóa Khung, Tách Nền AI và Tải Cho PiP */}
-                    {isSelected && (
-                      <div className="absolute -top-3.5 left-0 right-0 flex items-center justify-between px-1 z-50 pointer-events-auto">
-                        <div className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              pushUndoSnapshot();
-                              handleDeleteLayerFromStep(currentStep.id, 'pip');
-                            }}
-                            className="px-2 py-0.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full shadow-2xl cursor-pointer flex items-center gap-1 border border-white text-[9px] font-black active:scale-95"
-                            title="Xóa Khung Video/Ảnh PiP (Ctrl + Z để hoàn tác)"
-                          >
-                            <Trash2 size={10} />
-                            <span>Xóa Khung</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              pushUndoSnapshot();
-                              handleInstantCanvasBgRemoval('pip', null, 'auto');
-                            }}
-                            className="px-2 py-0.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white rounded-full shadow-2xl cursor-pointer flex items-center gap-1 border border-white text-[9px] font-black active:scale-95"
-                            title="Tách sạch sẽ phông nền AI của PiP"
-                          >
-                            <Wand2 size={10} />
-                            <span>Tách Nền AI</span>
-                          </button>
-                        </div>
-
-                        <label 
-                          onClick={(e) => e.stopPropagation()}
-                          className="px-2 py-0.5 bg-indigo-600 hover:bg-indigo-500 text-white rounded-full shadow-2xl cursor-pointer flex items-center gap-1 border border-white text-[9px] font-black active:scale-95" 
-                          title="Tải Video hoặc Ảnh PiP từ máy tính"
-                        >
-                          <Upload size={9} />
-                          <span>Tải PiP</span>
-                          <input 
-                            type="file" 
-                            accept="video/*,image/*" 
-                            onChange={(e) => {
-                              pushUndoSnapshot();
-                              handleDirectMediaUpload(currentStep.id, 'secondaryMediaUrl', e);
-                            }}
-                            className="hidden" 
-                          />
-                        </label>
-                      </div>
-                    )}
 
                     {/* 8 Điểm Resize Handles Khi Được Chọn */}
                     {isSelected && (
@@ -2216,66 +2133,7 @@ export default function LivestreamFlowSequencer() {
                         />
                       )}
 
-                      {/* Badge Tên & Loa Nói Của Avatar */}
-                      <div className="absolute top-1 left-1 bg-black/85 backdrop-blur-xs text-white text-[8px] font-black px-1.5 py-0.5 rounded flex items-center gap-1 border border-white/20 pointer-events-none">
-                        <span className={`w-1.5 h-1.5 rounded-full ${isCurrentSpeaker ? 'bg-cyan-400 animate-ping' : 'bg-gray-400'}`} />
-                        <span>#{avIdx + 1} {av.name}</span>
-                        {isCurrentSpeaker && <Volume2 size={9} className="text-cyan-300 animate-bounce" />}
-                      </div>
                     </div>
-
-                    {/* Nút Xóa Khung, Tách Nền AI và Tải Cho Avatar */}
-                    {isSelected && (
-                      <div className="absolute -top-3.5 left-0 right-0 flex items-center justify-between px-1 z-50 pointer-events-auto">
-                        <div className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              pushUndoSnapshot();
-                              handleDeleteAvatarLayer(av.id);
-                            }}
-                            className="px-2 py-0.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full shadow-2xl cursor-pointer flex items-center gap-1 border border-white text-[9px] font-black active:scale-95"
-                            title="Xóa Khung Nhân Vật Khỏi Sân Khấu (Ctrl + Z để hoàn tác)"
-                          >
-                            <Trash2 size={10} />
-                            <span>Xóa Khung</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              pushUndoSnapshot();
-                              handleInstantCanvasBgRemoval('avatar', av.id, 'auto');
-                            }}
-                            className="px-2 py-0.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white rounded-full shadow-2xl cursor-pointer flex items-center gap-1 border border-white text-[9px] font-black active:scale-95"
-                            title="Tách sạch sẽ phông nền AI của Avatar (giữ nguyên người 100%)"
-                          >
-                            <Wand2 size={10} />
-                            <span>Tách Nền AI</span>
-                          </button>
-                        </div>
-
-                        <label 
-                          onClick={(e) => e.stopPropagation()}
-                          className="px-2 py-0.5 bg-blue-600 hover:bg-blue-500 text-white rounded-full shadow-2xl cursor-pointer flex items-center gap-1 border border-white text-[9px] font-black active:scale-95" 
-                          title="Tải Video hoặc Ảnh cho Avatar này"
-                        >
-                          <Upload size={9} />
-                          <span>Tải Avatar</span>
-                          <input 
-                            type="file" 
-                            accept="video/*,image/*" 
-                            onChange={(e) => {
-                              pushUndoSnapshot();
-                              handleDirectAvatarMediaUpload(av.id, e);
-                            }}
-                            className="hidden" 
-                          />
-                        </label>
-                      </div>
-                    )}
 
                     {/* 8 Điểm Resize Handles Khi Được Chọn */}
                     {isSelected && (
@@ -2324,58 +2182,6 @@ export default function LivestreamFlowSequencer() {
                       style={chromaStyle}
                     />
 
-                    {/* Nút Xóa Khung, Tách Nền AI và Tải Cho Banner */}
-                    {isSelected && (
-                      <div className="absolute -top-3.5 left-0 right-0 flex items-center justify-between px-1 z-50 pointer-events-auto">
-                        <div className="flex items-center gap-1">
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              pushUndoSnapshot();
-                              handleDeleteLayerFromStep(currentStep.id, 'banner');
-                            }}
-                            className="px-2 py-0.5 bg-rose-600 hover:bg-rose-500 text-white rounded-full shadow-2xl cursor-pointer flex items-center gap-1 border border-white text-[9px] font-black active:scale-95"
-                            title="Xóa Khung Ảnh Banner (Ctrl + Z để hoàn tác)"
-                          >
-                            <Trash2 size={10} />
-                            <span>Xóa Khung</span>
-                          </button>
-
-                          <button
-                            type="button"
-                            onClick={(e) => {
-                              e.stopPropagation();
-                              pushUndoSnapshot();
-                              handleInstantCanvasBgRemoval('banner', null, 'auto');
-                            }}
-                            className="px-2 py-0.5 bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white rounded-full shadow-2xl cursor-pointer flex items-center gap-1 border border-white text-[9px] font-black active:scale-95"
-                            title="Tách sạch sẽ phông nền AI của Banner"
-                          >
-                            <Wand2 size={10} />
-                            <span>Tách Nền AI</span>
-                          </button>
-                        </div>
-
-                        <label 
-                          onClick={(e) => e.stopPropagation()}
-                          className="px-2 py-0.5 bg-amber-600 hover:bg-amber-500 text-white rounded-full shadow-2xl cursor-pointer flex items-center gap-1 border border-white text-[9px] font-black active:scale-95" 
-                          title="Tải Ảnh mới cho Banner này"
-                        >
-                          <Upload size={9} />
-                          <span>Tải Banner</span>
-                          <input 
-                            type="file" 
-                            accept="image/*" 
-                            onChange={(e) => {
-                              pushUndoSnapshot();
-                              handleDirectLayerUpload('banner', null, e);
-                            }}
-                            className="hidden" 
-                          />
-                        </label>
-                      </div>
-                    )}
 
                     {/* 8 Điểm Resize Handles Khi Được Chọn */}
                     {isSelected && (
@@ -2495,11 +2301,6 @@ export default function LivestreamFlowSequencer() {
                 );
               })()}
 
-              {/* Tag Trạng Thái Live Preview */}
-              <div className="absolute top-5 left-2 z-40 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-xs text-[9px] font-bold text-white border border-white/20 flex items-center gap-1 pointer-events-none">
-                <span className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-pulse" />
-                <span>Live 9:16</span>
-              </div>
 
               {/* Bottom Home Indicator Bar */}
               <div className="absolute bottom-1 left-1/2 -translate-x-1/2 w-20 h-1 bg-white/30 rounded-full z-50 pointer-events-none" />
