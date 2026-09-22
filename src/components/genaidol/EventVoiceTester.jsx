@@ -19,7 +19,8 @@ import {
   getMultiAvatarConfig,
   polishAndOptimizeScript,
   formatTextForRegionalSpeech,
-  prefetchTTSAudio
+  prefetchTTSAudio,
+  unlockAudioContext
 } from '../../utils/voiceSyncService';
 
 export const SPEED_OPTIONS = [
@@ -326,6 +327,7 @@ export default function EventVoiceTester({
   // Đổi giọng: Ngay lập tức lưu và PHÁT NGAY LẬP TỨC kịch bản với giọng mới được chọn (0ms)
   const handleVoiceSelect = (voiceId) => {
     if (!voiceId) return;
+    try { unlockAudioContext(); } catch (e) {}
     setSelectedVoiceId(voiceId);
     selectedVoiceRef.current = voiceId;
 
@@ -395,6 +397,7 @@ export default function EventVoiceTester({
 
   const playSentenceAtIndex = (index, customVoice = null) => {
     if (!isPlayingRef.current) return;
+    try { unlockAudioContext(); } catch (e) {}
 
     if (queueTimeoutRef.current) {
       clearTimeout(queueTimeoutRef.current);
@@ -576,6 +579,7 @@ export default function EventVoiceTester({
       e.preventDefault();
       e.stopPropagation();
     }
+    try { unlockAudioContext(); } catch (e) {}
 
     if (isPlaying) {
       handleStop();

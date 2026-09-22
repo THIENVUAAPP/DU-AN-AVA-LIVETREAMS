@@ -23,7 +23,8 @@ import {
   ALL_SYSTEM_VOICES,
   getSavedVoiceConfig,
   previewVoiceAudio,
-  stopVoiceAudio
+  stopVoiceAudio,
+  unlockAudioContext
 } from '../../utils/voiceSyncService';
 
 // 🎙️ Danh sách các Giọng Đọc AI Tiếng Việt Top 1 & Đồng Bộ Bộ Não Voice AI Brain
@@ -835,6 +836,7 @@ export default function LivestreamFlowSequencer() {
         : step.voiceId;
       
       stopVoiceAudio();
+      try { unlockAudioContext(); } catch (e) {}
       setSpeakingStepId(step.id);
       setIsSpeakingPreview(true);
 
@@ -2445,6 +2447,7 @@ export default function LivestreamFlowSequencer() {
     if (isSpeakingPreview || speakingStepId) {
       stopVoiceAudio();
     }
+    try { unlockAudioContext(); } catch (e) {}
     
     const effectiveVoiceId = (!voiceId || voiceId === 'brain_auto') 
       ? getBrainVoiceForSpeaker(speakerId) 

@@ -16,7 +16,8 @@ import {
   setRealtimeAudioParams,
   getFavoriteVoiceIds,
   toggleFavoriteVoiceId,
-  isVoiceFavorite
+  isVoiceFavorite,
+  unlockAudioContext
 } from '../../utils/voiceSyncService';
 import { DEFAULT_SYSTEM_PROMPT } from '../../utils/defaultSystemPrompt';
 import UniversalMediaPicker from './UniversalMediaPicker';

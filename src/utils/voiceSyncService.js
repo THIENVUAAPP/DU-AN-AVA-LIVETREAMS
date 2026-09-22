@@ -7795,6 +7795,36 @@ function getOrCreateAudioContext() {
 }
 
 /**
+ * ⚡ MỞ KHÓA TOÀN DIỆN HỆ THỐNG ÂM THANH (SYNCHRONOUS USER GESTURE UNLOCK)
+ * Giải phóng 100% rào cản Autoplay Policy của trình duyệt ngay khi người dùng click
+ */
+export function unlockAudioContext() {
+  if (typeof window === 'undefined') return;
+  try {
+    const audioCtx = getOrCreateAudioContext();
+    if (audioCtx && audioCtx.state === 'suspended') {
+      audioCtx.resume().catch(() => {});
+    }
+    if (typeof window !== 'undefined') {
+      if ('speechSynthesis' in window) {
+        window.speechSynthesis.resume();
+      }
+      if (audioCtx) {
+        try {
+          const osc = audioCtx.createOscillator();
+          const gain = audioCtx.createGain();
+          gain.gain.value = 0.0001;
+          osc.connect(gain);
+          gain.connect(audioCtx.destination);
+          osc.start(0);
+          osc.stop(audioCtx.currentTime + 0.001);
+        } catch (e) {}
+      }
+    }
+  } catch (e) {}
+}
+
+/**
  * ⏹️ DỪNG ÂM THANH HIỆN TẠI (KHÔNG XÓA HÀNG ĐỢI KỊCH BẢN)
  */
 export function stopCurrentActiveAudioNode() {
@@ -8687,6 +8717,9 @@ export async function prefetchTTSAudio(text, voice = null, options = {}) {
  * Ưu tiên tuyệt đối 100% khi người dùng bấm Chạy Test / Nghe Thử kịch bản
  */
 export async function previewVoiceAudio(voiceOrId, sampleText = null, onEndOrPriority = null, optionsOrOnEnd = null) {
+  if (typeof window !== 'undefined') {
+    try { unlockAudioContext(); } catch (e) {}
+  }
   if (typeof window === 'undefined') {
     if (typeof optionsOrOnEnd === 'function') optionsOrOnEnd();
     if (typeof onEndOrPriority === 'function') onEndOrPriority();
@@ -8809,6 +8842,9 @@ async function processGlobalSpeechQueue() {
 }
 
 async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTest = false) {
+  if (typeof window !== 'undefined') {
+    try { unlockAudioContext(); } catch (e) {}
+  }
   stopCurrentActiveAudioNode();
   const thisSpeechId = ++currentSpeechGenerationId;
 

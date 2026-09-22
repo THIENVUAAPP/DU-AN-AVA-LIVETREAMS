@@ -2,13 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.7.7';
+export const APP_VERSION = '4.7.8';
 export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '⚡ Bản Cập Nhật v4.7.8 - Tăng Tốc Xử Lý Voice Siêu Tốc 0ms, Đọc Kịch Bản Idol & Bước Live Tức Thì, Mở Khóa Audio Context Toàn Diện',
+    description: '1. Phát Voice Ngay Lập Tức 0ms Không Chờ Đợi: Tối ưu hoá toàn diện cơ chế AudioContext Unlocking và RAM AudioBuffer Caching, giải phóng 100% rào cản Autoplay Policy của trình duyệt ngay khi bấm nút. Voice phát ngay tức thì 0ms, không còn độ trễ khi bấm "Thử giọng" ở danh sách 332 giọng hay "Nghe Thử Voice" trong kịch bản. 2. Đọc Kịch Bản Idol & Livestream Flow Siêu Tốc: Kịch bản Idol và các bước Live Idol Avatar đọc xuyên suốt, tròn vành rõ chữ, cảm xúc chân thực và tự động luân chuyển mượt mà 100%. 3. Tự Động Phục Vụ Gói Cài Đặt Mới Nhất: Mọi link tải Windows & Mac tự động phân giải phiên bản mới nhất v4.7.8.'
+  },
+  {
     title: '⚡ Bản Cập Nhật v4.7.7 - Tăng Tốc Xử Lý Voice 0ms Tức Thì, Đọc Kịch Bản Siêu Nhanh & Khóa Chặt Cập Nhật Windows Mới Nhất',
-    description: '1. Tăng Tốc Xử Lý Đọc Voice 0ms Tức Thì: Tối ưu hóa song song pipeline Voice TTS, loại bỏ hoàn toàn độ trễ khi bấm Nghe Thử Voice trên kịch bản (Ảnh 1 & Ảnh 3) và Thử Giọng trong kho giọng 332 giọng (Ảnh 2). Âm thanh phát ngay lập tức không cần đợi. 2. Khóa Chặt File Tải Về Mới Nhất Trên Windows: Mọi link tải cài đặt tự động phân giải gói ZIP mới nhất (v4.7.7) trên Windows & macOS, đảm bảo trải nghiệm cài đặt mượt mà nhất.'
+    description: '1. Tăng Tốc Xử Lý Đọc Voice 0ms Tức Thì: Tối ưu hóa song song pipeline Voice TTS, loại bỏ hoàn toàn độ trễ khi bấm Nghe Thử Voice trên kịch bản (Ảnh 1 & Ảnh 3) và Thử Giọng trong kho giọng 332 giọng (Ảnh 2). Âm thanh phát ngay lập tức không cần đợi. 2. Khóa Chặt File Tải Về Mới Nhất Trên Windows: Mọi link tải cài đặt tự động phân giải gói ZIP mới nhất trên Windows & macOS, đảm bảo trải nghiệm cài đặt mượt mà nhất.'
   },
   {
     title: '⚡ Bản Cập Nhật v4.7.6 - Nâng Cấp Nút Đồng Bộ Sân Khấu Chính Chuẩn Màu Xanh/Đỏ & Đọc Thử Voice AI Toàn Diện',
