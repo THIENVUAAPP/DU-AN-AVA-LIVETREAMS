@@ -2144,6 +2144,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   }, [liveVolume]);
 
   const handleSelectCharacter = useCallback((charId) => {
+    setIsMasterStageSynced(false);
+    setFlowSequencerOverlay(null);
+    setMultiAvatarConfig(prev => ({ ...prev, _syncedFromSequencer: false, fromSequencer: false, enabled: false }));
+    try {
+      localStorage.removeItem('avalive_master_sync_active');
+      localStorage.removeItem('avalive_sequencer_overlay');
+    } catch (e) {}
+
     const charItem = customCharacters.find(c => c.id === charId);
     if (!charItem) return;
     let charUrl = charItem.mediaUrl || charItem.url;
@@ -3558,15 +3566,21 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
-      // 🔓 Nếu Sân Khấu Chính đang ở chế độ độc lập (không đồng bộ với Sequencer), xóa overlay cũ để video mới hiển thị ngay
-      if (!isMasterStageSynced) {
-        setFlowSequencerOverlay(null);
-        setUserLockedMediaUrl(null);
-        try {
-          localStorage.removeItem('avalive_sequencer_overlay');
-          localStorage.removeItem('avalive_user_locked_media');
-        } catch (_) {}
-      }
+      // 🔓 Người dùng tải media trực tiếp trên Sân Khấu Chính -> Tắt đồng bộ từ Sequencer để Sân Khấu Chính phát độc lập tức thì
+      setIsMasterStageSynced(false);
+      setFlowSequencerOverlay(null);
+      setUserLockedMediaUrl(null);
+      setMultiAvatarConfig(prev => ({
+        ...prev,
+        _syncedFromSequencer: false,
+        fromSequencer: false,
+        enabled: false
+      }));
+      try {
+        localStorage.removeItem('avalive_master_sync_active');
+        localStorage.removeItem('avalive_sequencer_overlay');
+        localStorage.removeItem('avalive_user_locked_media');
+      } catch (_) {}
 
       const rawName = file.name.replace(/\.[^/.]+$/, "") || "Idol Live AI Pro";
       const charName = rawName.length > 20 ? rawName.substring(0, 18) + "…" : rawName;
@@ -3587,7 +3601,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         const matchedChar = existingChar || existingIDB;
 
         if (matchedChar) {
-          // 🎉 TÁI SỬ DỤNG 100% VIDEO ĐÃ CÓ: KHÔNG TẠO MỚI, KHÔNG NHÂN BẢN DUNG LƯỢNG
+          const targetId = matchedChar.id || `custom_${Date.now()}`;
           let targetMediaUrl = (matchedChar.mediaUrl && !matchedChar.mediaUrl.startsWith('blob:')) ? matchedChar.mediaUrl : '';
 
           // Lưu tham chiếu Blob và signature vào RAM Cache
@@ -3602,7 +3616,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           }
 
           setSelectedCharacter(targetId);
-          if (targetMediaUrl) setUserLockedMediaUrl(targetMediaUrl);
+          try { localStorage.setItem('avalive_selected_char', targetId); } catch (e) {}
           setIsVideoPlaying(true);
           lastPlaybackTimeRef.current = 0;
           currentFileBlobRef.current = file;
@@ -3615,67 +3629,26 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
           }
 
-          // 🚀 Nếu chưa có server URL (/uploads/...), gọi upload-stream-init tức thì (2ms) để lấy link server chuẩn cho TikTok Live Studio & Window Capture
-          if (!targetMediaUrl) {
-            fastStreamUpload(file, {
-              onInit: ({ fileUrl }) => {
-                if (fileUrl) {
-                  setUserLockedMediaUrl(fileUrl);
-                  syncMasterLiveState({
-                    stage: 'idol',
-                    selectedCharacter: targetId,
-                    characterName: charName,
-                    mediaUrl: fileUrl,
-                    isVideo: true,
-                    videoPlaybackEvent: 'play',
-                    isPlaying: true,
-                    aspectRatio: globalAspectRatio || '9:16'
-                  }, socketRef.current);
-                }
-              }
-            }).catch(() => {});
-          } else {
-            // Bắn broadcast đồng bộ sang Window Capture ngay lập tức 0ms với fileBlob gốc và server URL
-            try {
-              const bc = new BroadcastChannel('avalive_master_live_stream');
-              bc.postMessage({
-                type: 'GLOBAL_MEDIA_CHANGE',
-                mediaUrl: targetMediaUrl,
-                blobUrl: localUrl,
-                fileBlob: file,
-                characterId: targetId,
-                characterName: charName,
-                isVideo: true,
-                isPlaying: true,
-                currentTime: 0,
-                force: true,
-                source: 'desktop',
-                timestamp: Date.now()
-              });
-              setTimeout(() => bc.close(), 100);
-            } catch (err) {}
-
-            sendVideoControl({
-              action: 'play',
-              currentTime: 0,
-              isPlaying: true,
-              mediaUrl: targetMediaUrl,
-              timestamp: Date.now()
-            }, socketRef.current);
-
-            syncMasterLiveState({
-              stage: 'idol',
-              selectedCharacter: targetId,
+          try {
+            const bc = new BroadcastChannel('avalive_master_live_stream');
+            bc.postMessage({
+              type: 'GLOBAL_MEDIA_CHANGE',
+              mediaUrl: targetMediaUrl || localUrl,
+              blobUrl: localUrl,
+              fileBlob: file,
+              characterId: targetId,
               characterName: charName,
-              mediaUrl: targetMediaUrl,
               isVideo: true,
-              videoPlaybackEvent: 'play',
               isPlaying: true,
-              aspectRatio: globalAspectRatio || '9:16'
-            }, socketRef.current);
-          }
+              currentTime: 0,
+              force: true,
+              source: 'desktop',
+              timestamp: Date.now()
+            });
+            setTimeout(() => bc.close(), 100);
+          } catch (err) {}
 
-          showToast(`⚡ Video "${charName}" đã có sẵn trong hệ thống! Đã kích hoạt sử dụng ngay lập tức mà không tốn dung lượng máy.`, 'success');
+          showToast(`⚡ Video "${charName}" đã có sẵn trong hệ thống! Đã kích hoạt sử dụng ngay lập tức.`, 'success');
           return;
         }
 
@@ -3693,7 +3666,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           fileSignature: fileSig
         };
 
-        // Lưu tham chiếu Blob toàn cục cho Window Capture & popup con nạp tức thì 0ms
         registerFileInRAM(file, newCharId);
         setActiveMedia(file, newCharId, { name: charName, mediaUrl: localUrl, id: newCharId }).catch(() => {});
         setActiveMedia(file, 'current_active', { name: charName, mediaUrl: localUrl, id: newCharId }).catch(() => {});
@@ -3705,13 +3677,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           window.__activeMediaBlobMap.set(localUrl, file);
         }
 
-        // Lưu ngay lập tức vào IndexedDB để Window Capture & OBS nhận fileBlob 0ms
         try {
           await saveCharacterToIDB(tempChar);
           localStorage.setItem('avalive_selected_char', newCharId);
         } catch (e) {}
 
-        setCustomCharacters(prev => [...prev, tempChar]);
+        setCustomCharacters(prev => {
+          const next = [...prev, tempChar];
+          try { localStorage.setItem('avalive_custom_characters', JSON.stringify(next)); } catch (e) {}
+          return next;
+        });
         setSelectedCharacter(newCharId);
         setIsVideoPlaying(true);
         lastPlaybackTimeRef.current = 0;
@@ -3746,31 +3721,21 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           setTimeout(() => bc.close(), 100);
         } catch (err) {}
 
-        showToast(`⚡ Đã phát ngay video "${charName}" trên giao diện phần mềm!`, 'success');
+        showToast(`⚡ Đã phát ngay video "${charName}" trên sân khấu chính!`, 'success');
 
-        // 🚀 2. PHÁT LUỒNG SIÊU TỐC TỪNG PHẦN (FAST-STREAM PIPELINE) LÊN SERVER & TIKTOK LIVE STUDIO
+        // 🚀 2. PHÁT LUỒNG SIÊU TỐC TỪNG PHẦN (FAST-STREAM PIPELINE) LÊN SERVER & TIKTOK LIVE STUDIO TRONG BACKGROUND
         fastStreamUpload(file, {
           onInit: ({ fileUrl }) => {
             const updatedChar = {
               id: newCharId,
               name: charName,
-              url: localUrl, // Giữ nguyên Blob URL cho Desktop preview siêu mượt không lag
-              mediaUrl: fileUrl, // Server URL cho TikTok Live Studio & OBS
+              url: localUrl,
+              mediaUrl: fileUrl,
               type: 'video',
               fileData: file
             };
-
-            // 🔒 KHOÁ CỐ ĐỊNH VIDEO CỦA NGƯỜI DÙNG: Cập nhật đường dẫn server vĩnh viễn
             setUserLockedMediaUrl(fileUrl);
             try { localStorage.setItem('avalive_user_locked_media', fileUrl); } catch (e) {}
-
-            if (typeof window !== 'undefined') {
-              window.__activeMediaBlob = file;
-              window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
-              window.__activeMediaBlobMap.set(fileUrl, file);
-              window.__activeMediaBlobMap.set(newCharId, file);
-              window.__activeMediaBlobMap.set(localUrl, file);
-            }
 
             setCustomCharacters(prev => {
               const updatedList = prev.map(c => c.id === newCharId ? updatedChar : c);
@@ -3786,7 +3751,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               mediaUrl: fileUrl
             }).catch(() => {});
 
-            // 🚀 BẮN PHÁT SÓNG REALTIME VIDEO ĐẾN TIKTOK LIVE STUDIO / OBS & WINDOW CAPTURE
             try {
               const bc = new BroadcastChannel('avalive_master_live_stream');
               bc.postMessage({
@@ -3805,85 +3769,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               });
               setTimeout(() => bc.close(), 100);
             } catch (err) {}
-
-            sendVideoControl({
-              action: 'play',
-              currentTime: 0,
-              isPlaying: true,
-              mediaUrl: fileUrl,
-              timestamp: Date.now()
-            }, socketRef.current);
-            syncMasterLiveState({
-              stage: 'idol',
-              selectedCharacter: newCharId,
-              characterName: charName,
-              mediaUrl: fileUrl,
-              isVideo: true,
-              videoPlaybackEvent: 'play',
-              isPlaying: true,
-              aspectRatio: globalAspectRatio || '9:16'
-            }, socketRef.current);
-
-            showToast(`✅ Video "${charName}" đã sẵn sàng trên TikTok Live Studio!`, 'success');
-          },
-          onProgress: (pct) => {
-            if (pct === 100) {
-              showToast(`🎉 Video "${charName}" đã nạp 100% dung lượng vào hệ thống!`, 'success');
-            }
-          },
-          onError: async (err) => {
-            console.warn('[FastStream] Error, fallback to standard upload:', err);
-            try {
-              const formData = new FormData();
-              formData.append('file', file);
-              const res = await fetch('/api/upload-media', { method: 'POST', body: formData });
-              if (res.ok) {
-                const data = await res.json();
-                if (data && data.url) {
-                  const fallbackUrl = data.url.includes('/uploads/') ? data.url.substring(data.url.indexOf('/uploads/')) : data.url;
-                  setUserLockedMediaUrl(fallbackUrl);
-                  try { localStorage.setItem('avalive_user_locked_media', fallbackUrl); } catch (e) {}
-                  try {
-                    const bc = new BroadcastChannel('avalive_master_live_stream');
-                    bc.postMessage({
-                      type: 'GLOBAL_MEDIA_CHANGE',
-                      mediaUrl: fallbackUrl,
-                      blobUrl: localUrl,
-                      fileBlob: file,
-                      characterId: newCharId,
-                      characterName: charName,
-                      isVideo: true,
-                      isPlaying: true,
-                      currentTime: 0,
-                      force: true,
-                      source: 'desktop',
-                      timestamp: Date.now()
-                    });
-                    setTimeout(() => bc.close(), 100);
-                  } catch (err) {}
-                  sendVideoControl({
-                    action: 'play',
-                    currentTime: 0,
-                    isPlaying: true,
-                    mediaUrl: fallbackUrl,
-                    timestamp: Date.now()
-                  }, socketRef.current);
-                  syncMasterLiveState({
-                    stage: 'idol',
-                    selectedCharacter: newCharId,
-                    characterName: charName,
-                    mediaUrl: fallbackUrl,
-                    isVideo: true,
-                    videoPlaybackEvent: 'play',
-                    isPlaying: true
-                  }, socketRef.current);
-                }
-              }
-            } catch(e) {}
           }
-        });
+        }).catch(() => {});
       } else {
-        // 🖼️ ẢNH BÌNH THƯỜNG: NẠP VÀ HIỂN THỊ TỨC THÌ 100% NGUYÊN BẢN, TUYỆT ĐỐI KHÔNG TỰ Ý XÓA PHÔNG NỀN!
+        // 🖼️ ẢNH BÌNH THƯỜNG: NẠP VÀ HIỂN THỊ TỨC THÌ 100% NGUYÊN BẢN
         const newCharId = `custom_${Date.now()}`;
         const tempChar = {
           id: newCharId,
@@ -3906,34 +3795,43 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           localStorage.setItem('avalive_selected_char', newCharId);
         } catch (e) {}
 
-        setCustomCharacters(prev => [...prev, tempChar]);
+        setCustomCharacters(prev => {
+          const next = [...prev, tempChar];
+          try { localStorage.setItem('avalive_custom_characters', JSON.stringify(next)); } catch (e) {}
+          return next;
+        });
         setSelectedCharacter(newCharId);
         showToast(`🖼️ Đã nạp ảnh "${charName}" nguyên bản lên sân khấu chính!`, 'success');
 
-        // Bắn phát sóng realtime ảnh đến TikTok Live Studio / OBS
-        syncMasterLiveState({
-          stage: 'idol',
-          selectedCharacter: newCharId,
-          characterName: charName,
-          mediaUrl: localUrl,
-          isVideo: false,
-          aspectRatio: globalAspectRatio || '9:16'
-        }, socketRef.current);
+        try {
+          const bc = new BroadcastChannel('avalive_master_live_stream');
+          bc.postMessage({
+            type: 'GLOBAL_MEDIA_CHANGE',
+            mediaUrl: localUrl,
+            blobUrl: localUrl,
+            fileBlob: file,
+            characterId: newCharId,
+            characterName: charName,
+            isVideo: false,
+            isPlaying: true,
+            currentTime: 0,
+            force: true,
+            source: 'desktop',
+            timestamp: Date.now()
+          });
+          setTimeout(() => bc.close(), 100);
+        } catch (err) {}
 
         fastStreamUpload(file, {
           onInit: ({ fileUrl }) => {
             const updatedChar = { ...tempChar, url: localUrl, mediaUrl: fileUrl };
-            setCustomCharacters(prev => prev.map(c => c.id === newCharId ? updatedChar : c));
-            syncMasterLiveState({
-              stage: 'idol',
-              selectedCharacter: newCharId,
-              characterName: charName,
-              mediaUrl: fileUrl,
-              isVideo: false,
-              aspectRatio: globalAspectRatio || '9:16'
-            }, socketRef.current);
+            setCustomCharacters(prev => {
+              const updatedList = prev.map(c => c.id === newCharId ? updatedChar : c);
+              try { localStorage.setItem('avalive_custom_characters', JSON.stringify(updatedList)); } catch (e) {}
+              return updatedList;
+            });
           }
-        });
+        }).catch(() => {});
       }
     }
     if (fileInputRef.current) {
@@ -4086,10 +3984,17 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       );
     }
 
-    // 🎬 KHI isMasterStageSynced=true: Luôn render visual canvas đầy đủ mọi lớp đồng bộ từ sequencer
-    const isSyncedCanvas = isMasterStageSynced === true || (
-      multiAvatarConfig?.enabled === true && !multiAvatarConfig?.fromSequencer && (multiAvatarConfig?.activeCount >= 2)
+    // 🎬 KHI isMasterStageSynced=true: Luôn render visual canvas đầy đủ mọi lớp đồng bộ từ sequencer (CHỈ KHI CÓ OVERLAY DỮ LIỆU)
+    const hasSequencerData = isMasterStageSynced === true && !!flowSequencerOverlay && (
+      !!flowSequencerOverlay.mainMediaUrl || 
+      (Array.isArray(flowSequencerOverlay.syncedAvatars) && flowSequencerOverlay.syncedAvatars.length > 0) || 
+      !!flowSequencerOverlay.secondaryMediaUrl || 
+      !!flowSequencerOverlay.overlayImage || 
+      !!flowSequencerOverlay.overlayText
     );
+    const isMultiAvatarActive = !isMasterStageSynced && multiAvatarConfig?.enabled === true && !multiAvatarConfig?.fromSequencer && (multiAvatarConfig?.activeCount >= 2) && (multiAvatarConfig.avatars || []).some(a => a.enabled && (a.talkVideo || a.idleVideo || a.videoUrl || a.mediaUrl));
+
+    const isSyncedCanvas = hasSequencerData || isMultiAvatarActive;
     if (isSyncedCanvas) {
       const sourceAvatars = (isMasterStageSynced && flowSequencerOverlay?.syncedAvatars && flowSequencerOverlay.syncedAvatars.length > 0)
         ? flowSequencerOverlay.syncedAvatars
@@ -4132,7 +4037,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         })
         .filter(a => !!a.resolvedVidSrc); // Triệt tiêu hoàn toàn bất kỳ ô nào không có video/ảnh
 
-      if (isMasterStageSynced || activeList.length > 0) {
+      if (activeList.length > 0 || (isMasterStageSynced && flowSequencerOverlay?.mainMediaUrl)) {
         const isGridOnly = !isMasterStageSynced && multiAvatarConfig.layoutMode === 'grid';
         const count = activeList.length;
 
@@ -4153,30 +4058,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 const isImg = isImageMedia(vidSrc);
 
                 return (
-                  <div 
-                    key={avatar.id} 
-                    className={`relative w-full h-full overflow-hidden rounded-lg bg-slate-950 flex items-center justify-center transition-all duration-300 ${
-                      isSpeakingNow ? 'ring-2 ring-amber-400/80 shadow-[0_0_20px_rgba(251,191,36,0.4)] z-10' : 'opacity-95'
-                    }`}
-                  >
+                  <div key={avatar.id} className="relative w-full h-full overflow-hidden rounded-lg bg-black flex items-center justify-center">
                     {isImg ? (
-                      <img 
-                        src={vidSrc}
-                        alt={avatar.name}
-                        className="w-full h-full object-cover select-none pointer-events-none"
-                      />
+                      <img src={vidSrc} alt={avatar.name} className="w-full h-full object-cover" />
                     ) : (
-                      <video
-                        key={`${avatar.id}_${isSpeakingNow ? 'talk' : 'idle'}_${vidSrc}`}
-                        src={vidSrc}
-                        autoPlay
-                        loop
-                        muted={liveAudioMuted}
-                        playsInline
-                        controls={false}
-                        className="w-full h-full object-cover bg-black select-none pointer-events-none"
-                      />
+                      <video src={vidSrc} autoPlay loop muted playsInline className="w-full h-full object-cover" />
                     )}
+                    <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/60 text-white text-[10px] font-bold">
+                      {avatar.name} {isSpeakingNow && '🔊'}
+                    </div>
                   </div>
                 );
               })}
@@ -4184,10 +4074,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           );
         }
 
-        // Freeform Visual Studio Stage Canvas (Tái hiện 100% nguyên xi Sân Khấu Phụ khi Đồng Bộ)
+        // Layout Tự Do / Studio Sequencer Đồng Bộ
         return (
           <div 
-            className="relative w-full h-full overflow-hidden bg-cover bg-center"
+            className="relative w-full h-full overflow-hidden select-none"
             style={{
               backgroundColor: multiAvatarConfig.backgroundColor || '#0a0c14'
             }}
@@ -4196,58 +4086,48 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             {((!isMasterStageSynced && multiAvatarConfig.backgroundUrl) || (isMasterStageSynced && !flowSequencerOverlay?.isMainMediaDeleted && (flowSequencerOverlay?.mainMediaUrl || userLockedMediaUrl))) && (() => {
               const bgSrc = (isMasterStageSynced && flowSequencerOverlay?.mainMediaUrl) || (!flowSequencerOverlay?.isMainMediaDeleted ? (multiAvatarConfig.backgroundUrl || userLockedMediaUrl) : null);
               if (!bgSrc) return null;
-              const bgIsVideo = !isImageMedia(bgSrc);
+              const isBgImg = isImageMedia(bgSrc);
               const bgTrans = (isMasterStageSynced && flowSequencerOverlay?.mainMediaTransform)
                 ? flowSequencerOverlay.mainMediaTransform
                 : (multiAvatarConfig.backgroundTransform || { x: 0, y: 0, width: 100, height: 100 });
               const bgChroma = isMasterStageSynced && flowSequencerOverlay?.mainMediaChromaKey
                 ? getChromaStyle(flowSequencerOverlay.mainMediaChromaKey)
-                : {};
+                : getChromaStyle(multiAvatarConfig.backgroundChromaKey);
+
               return (
-                <div
-                  className="absolute pointer-events-none"
+                <div 
+                  className="absolute transition-all duration-300"
                   style={{
-                    left: `${bgTrans?.x ?? 0}%`,
-                    top: `${bgTrans?.y ?? 0}%`,
-                    width: `${bgTrans?.width ?? 100}%`,
-                    height: `${bgTrans?.height ?? 100}%`,
-                    transform: (bgTrans?.scale && bgTrans?.scale !== 100)
-                      ? `scale(${bgTrans.scale / 100})`
-                      : 'none',
-                    transformOrigin: 'center center',
-                    zIndex: bgTrans?.zIndex || 0,
-                    backgroundColor: 'transparent',
-                    ...bgChroma
+                    left: `${bgTrans.x}%`,
+                    top: `${bgTrans.y}%`,
+                    width: `${bgTrans.width}%`,
+                    height: `${bgTrans.height}%`,
+                    zIndex: bgTrans.zIndex || 0,
+                    transform: `rotate(${bgTrans.rotation || 0}deg) scaleX(${bgTrans.flipH ? -1 : 1}) scaleY(${bgTrans.flipV ? -1 : 1})`,
+                    opacity: (bgTrans.opacity !== undefined ? bgTrans.opacity : 100) / 100,
+                    borderRadius: `${bgTrans.borderRadius || 0}px`
                   }}
                 >
-                  {bgIsVideo ? (
-                    <video
-                      key={bgSrc}
-                      ref={desktopVideoRef}
-                      data-main-player="true"
-                      src={bgSrc}
-                      autoPlay
-                      loop
-                      muted={liveAudioMuted}
-                      playsInline
-                      controls={false}
-                      className="w-full h-full bg-transparent select-none"
+                  {isBgImg ? (
+                    <img 
+                      src={bgSrc} 
+                      alt="Background" 
+                      className="w-full h-full"
                       style={{
-                        objectFit: bgTrans?.objectFit || 'cover',
-                        backgroundColor: 'transparent',
-                        filter: `${bgTrans?.blur ? `blur(${bgTrans.blur}px)` : ''} ${bgTrans?.brightness ? `brightness(${bgTrans.brightness}%)` : ''}`.trim() || 'none',
+                        objectFit: bgTrans.objectFit || 'cover',
                         ...bgChroma
                       }}
                     />
                   ) : (
-                    <img 
-                      src={bgSrc}
-                      alt="Studio Background"
-                      className="w-full h-full bg-transparent"
+                    <video 
+                      src={bgSrc} 
+                      autoPlay 
+                      loop 
+                      muted 
+                      playsInline 
+                      className="w-full h-full"
                       style={{
-                        objectFit: bgTrans?.objectFit || 'cover',
-                        backgroundColor: 'transparent',
-                        filter: `${bgTrans?.blur ? `blur(${bgTrans.blur}px)` : ''} ${bgTrans?.brightness ? `brightness(${bgTrans.brightness}%)` : ''}`.trim() || 'none',
+                        objectFit: bgTrans.objectFit || 'cover',
                         ...bgChroma
                       }}
                     />
@@ -4255,85 +4135,65 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 </div>
               );
             })()}
-            {/* Extra Custom Image / Media Layers */}
+
+            {/* Extra Images Layers */}
             {(multiAvatarConfig.extraImageLayers || []).map(layer => {
-              const isImg = layer.type !== 'video' && (isImageMedia(layer.url) || !layer.type);
-              const chromaStyle = getChromaStyle(layer.chromaKey);
+              if (!layer.url) return null;
+              const trans = layer.transform || { x: 0, y: 0, width: 100, height: 100 };
+              const chroma = getChromaStyle(layer.chromaKey);
               return (
-                <div
+                <div 
                   key={layer.id}
-                  className="absolute overflow-hidden pointer-events-none"
+                  className="absolute transition-all duration-300 pointer-events-none"
                   style={{
-                    left: `${layer.x ?? 20}%`,
-                    top: `${layer.y ?? 20}%`,
-                    width: `${layer.width ?? 30}%`,
-                    height: `${layer.height ?? 30}%`,
-                    zIndex: layer.zIndex || 10,
-                    borderRadius: `${layer.borderRadius ?? 0}px`,
-                    ...chromaStyle
+                    left: `${trans.x}%`,
+                    top: `${trans.y}%`,
+                    width: `${trans.width}%`,
+                    height: `${trans.height}%`,
+                    zIndex: trans.zIndex || 5,
+                    transform: `rotate(${trans.rotation || 0}deg) scaleX(${trans.flipH ? -1 : 1}) scaleY(${trans.flipV ? -1 : 1})`,
+                    opacity: (trans.opacity !== undefined ? trans.opacity : 100) / 100,
+                    borderRadius: `${trans.borderRadius || 0}px`
                   }}
                 >
-                  {isImg ? (
-                    <img
-                      src={layer.url}
-                      alt={layer.name || 'Extra Layer'}
-                      className="w-full h-full bg-transparent select-none"
-                      style={{
-                        objectFit: layer.objectFit || 'contain',
-                        ...chromaStyle
-                      }}
-                    />
-                  ) : (
-                    <video
-                      src={layer.url}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      className="w-full h-full bg-transparent select-none"
-                      style={{
-                        objectFit: layer.objectFit || 'contain',
-                        ...chromaStyle
-                      }}
-                    />
-                  )}
+                  <img 
+                    src={layer.url} 
+                    alt="Extra Layer" 
+                    className="w-full h-full"
+                    style={{
+                      objectFit: trans.objectFit || 'contain',
+                      ...chroma
+                    }}
+                  />
                 </div>
               );
             })}
 
-            {activeList.map((avatar, idx) => {
-              const vidSrc = avatar.resolvedVidSrc;
-              const isSpeakingNow = avatar.isSpeakingNow;
-              // ⚡ FIX: Khi đang đồng bộ từ Sequencer, dùng chính xác transform của avatar từ sequencer (không ép full 100% gây tràn che nền)
-              const isSoloOrPrimary = !isMasterStageSynced && (activeList.length === 1 || (idx === 0 && (!avatar.transform || (avatar.transform.x === 4 && avatar.transform.y === 8 && avatar.transform.width === 48))));
+            {/* Avatars Studio Transform */}
+            {activeList.map(avatar => {
               const transform = (isMasterStageSynced && flowSequencerOverlay?.avatarTransforms?.[avatar.id])
-                || avatar.transform 
-                || (isSoloOrPrimary
-                  ? { x: 0, y: 0, width: 100, height: 100, zIndex: 5, pose: 'stand', objectFit: 'cover', borderRadius: 0 }
-                  : { 
-                      x: idx === 1 ? 55 : idx === 2 ? 25 : 65, 
-                      y: idx === 1 ? 25 : idx === 2 ? 60 : 10, 
-                      width: 42, 
-                      height: 65, 
-                      zIndex: 6 + idx, 
-                      pose: 'stand', 
-                      objectFit: 'cover', 
-                      borderRadius: 12 
-                    });
+                ? flowSequencerOverlay.avatarTransforms[avatar.id]
+                : (multiAvatarConfig.avatarTransforms?.[avatar.id] || { x: 0, y: 0, width: 100, height: 100 });
+              
+              const isSpeakingNow = avatar.isSpeakingNow;
+              const vidSrc = avatar.resolvedVidSrc;
+              if (!vidSrc) return null;
               const isImg = isImageMedia(vidSrc);
               const chromaStyle = getChromaStyle(avatar.chromaKey || multiAvatarConfig.chromaKey);
 
               return (
                 <div 
-                  key={avatar.id} 
-                  className="absolute overflow-visible transition-all duration-300 pointer-events-none"
+                  key={avatar.id}
+                  className="absolute transition-all duration-300 pointer-events-none"
                   style={{
-                    left: `${transform.x ?? 0}%`,
-                    top: `${transform.y ?? 0}%`,
-                    width: `${transform.width ?? 100}%`,
-                    height: `${transform.height ?? 100}%`,
-                    zIndex: isSpeakingNow ? (transform.zIndex || 5) + 5 : (transform.zIndex || 5),
-                    borderRadius: `${transform.borderRadius ?? 0}px`
+                    left: `${transform.x}%`,
+                    top: `${transform.y}%`,
+                    width: `${transform.width}%`,
+                    height: `${transform.height}%`,
+                    zIndex: transform.zIndex || 10,
+                    transform: `rotate(${transform.rotation || 0}deg) scaleX(${transform.flipH ? -1 : 1}) scaleY(${transform.flipV ? -1 : 1})`,
+                    opacity: (transform.opacity !== undefined ? transform.opacity : 100) / 100,
+                    borderRadius: `${transform.borderRadius || 0}px`
                   }}
                 >
                   <div 
@@ -4373,7 +4233,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                         }}
                       />
                     )}
-
                   </div>
                 </div>
               );
@@ -4406,12 +4265,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }
       
       const customMatch = (customCharacters && Array.isArray(customCharacters)) 
-        ? customCharacters.find(c => c.id === selectedCharacter && (c.url || c.mediaUrl)) 
+        ? customCharacters.find(c => c.id === selectedCharacter) 
         : null;
 
       // 🎬 KHI ĐANG ĐỒNG BỘ TỪ SEQUENCER (PHÁT LIVE): ƯU TIÊN VIDEO/ẢNH TỪ SEQUENCER TRƯỚC
-      // Lý do: userLockedMediaUrl được set bởi handleFlowMediaUpdate khi bấm Phát Live.
-      // customMatch là nhân vật cũ đã chọn, không phải video từ kịch bản live.
       const sequencerLockedMedia = isMasterStageSynced && userLockedMediaUrl
         ? { 
             id: 'sequencer_video', 
@@ -4424,14 +4281,20 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
       let selected = sequencerLockedMedia ||
         customMatch || 
-        (userLockedMediaUrl ? { id: 'locked_video', name: 'Video Đang Phát', url: userLockedMediaUrl, mediaUrl: userLockedMediaUrl, type: 'video' } : null) ||
         (selectedCharacter && CHARACTERS[selectedCharacter]?.url ? { id: selectedCharacter, ...CHARACTERS[selectedCharacter] } : null) || 
+        (userLockedMediaUrl && isMasterStageSynced ? { id: 'locked_video', name: 'Video Đang Phát', url: userLockedMediaUrl, mediaUrl: userLockedMediaUrl, type: 'video' } : null) ||
         (customCharacters.find(c => c.url || c.mediaUrl) || null) || 
         (Object.entries(CHARACTERS).find(([k, v]) => v.url)?.[1] ? { id: Object.entries(CHARACTERS).find(([k, v]) => v.url)[0], ...Object.entries(CHARACTERS).find(([k, v]) => v.url)[1] } : null) ||
         CHARACTERS.default_idol;
 
       if (selected) {
-        const resolvedUrl = selected.url || selected.mediaUrl;
+        let resolvedUrl = selected.url || selected.mediaUrl;
+        if (!resolvedUrl && selected.fileData) {
+          try {
+            resolvedUrl = URL.createObjectURL(selected.fileData);
+            selected.url = resolvedUrl;
+          } catch (e) {}
+        }
         if (resolvedUrl) {
           const isExplicitVideo = selected.type === 'video' || 
             (selected.fileData && selected.fileData.type && selected.fileData.type.startsWith('video/')) ||
@@ -5779,9 +5642,19 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   <div
                     key={charItem.id || index}
                     onClick={() => {
+                      // 🔓 Tắt đồng bộ từ sequencer để hiển thị nhân vật độc lập tức thì trên sân khấu chính
+                      setIsMasterStageSynced(false);
+                      setFlowSequencerOverlay(null);
+                      setMultiAvatarConfig(prev => ({ ...prev, _syncedFromSequencer: false, fromSequencer: false, enabled: false }));
+                      try {
+                        localStorage.removeItem('avalive_master_sync_active');
+                        localStorage.removeItem('avalive_sequencer_overlay');
+                      } catch (e) {}
+
                       let serverUrl = (charItem.mediaUrl && !charItem.mediaUrl.startsWith('blob:')) 
                         ? charItem.mediaUrl 
                         : (charItem.url && !charItem.url.startsWith('blob:') ? charItem.url : null);
+
                       if (!serverUrl && typeof charItem.url === 'string' && charItem.url.includes('/uploads/')) {
                         serverUrl = charItem.url.substring(charItem.url.indexOf('/uploads/'));
                       }

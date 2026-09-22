@@ -192,11 +192,31 @@ export default function LivestreamFlowSequencer() {
   // 📡 State Đồng Bộ Ra Sân Khấu Chính (OBS / TikTok Live Studio)
   const [isMasterSynced, setIsMasterSynced] = useState(() => {
     try {
-      return localStorage.getItem('aidol_master_live_synced') === 'true';
+      return localStorage.getItem('avalive_master_sync_active') === 'true';
     } catch (e) {
       return false;
     }
   });
+
+  // Luôn đồng bộ trạng thái nút Sync với localStorage và event hệ thống
+  useEffect(() => {
+    const handleSyncStateChange = (e) => {
+      if (e.detail && typeof e.detail.isSynced === 'boolean') {
+        setIsMasterSynced(e.detail.isSynced);
+      } else {
+        try {
+          setIsMasterSynced(localStorage.getItem('avalive_master_sync_active') === 'true');
+        } catch (err) {}
+      }
+    };
+    window.addEventListener('avalive:master_sync_state_changed', handleSyncStateChange);
+    window.addEventListener('avalive:sequencer_sync_disconnected', () => setIsMasterSynced(false));
+    return () => {
+      window.removeEventListener('avalive:master_sync_state_changed', handleSyncStateChange);
+      window.removeEventListener('avalive:sequencer_sync_disconnected', () => setIsMasterSynced(false));
+    };
+  }, []);
+
 
   // 🔊 State Bật/Tắt Voice AI Quyền Lực Nhất (Master Voice Control)
   const [isMasterVoiceEnabled, setIsMasterVoiceEnabled] = useState(() => {
@@ -904,6 +924,8 @@ export default function LivestreamFlowSequencer() {
         localStorage.setItem('avalive_master_sync_active', 'true');
       } else {
         localStorage.removeItem('avalive_master_sync_active');
+        localStorage.removeItem('avalive_sequencer_overlay');
+        localStorage.removeItem('avalive_user_locked_media');
       }
     } catch (e) {}
 
@@ -917,11 +939,20 @@ export default function LivestreamFlowSequencer() {
         syncStepToServer(activePreset.steps[currentStepIndex], currentStepIndex, isPlayingFlow);
       }
     } else {
-      // 🔌 Ngắt kết nối đồng bộ — fire event riêng để Desktop clear Sân Khấu Chính nhưng KHÔNG reset video nhân vật
+      // 🔌 Ngắt kết nối đồng bộ — fire event và broadcast CLEAR_STAGE để Sân Khấu Chính xóa sạch lớp phủ
       window.dispatchEvent(new CustomEvent('avalive:sequencer_sync_disconnected', {
         detail: { isSynced: false, source: 'user_toggle' }
       }));
-      toast.info('📴 Đã ngắt đồng bộ — Sân Khấu Chính đã trống (Sân Khấu Phụ vẫn hoạt động bình thường)');
+      try {
+        const bc = new BroadcastChannel('avalive_master_live_stream');
+        bc.postMessage({
+          type: 'CLEAR_STAGE',
+          source: 'sequencer_disconnect',
+          timestamp: Date.now()
+        });
+        setTimeout(() => bc.close(), 100);
+      } catch (err) {}
+      toast.info('📴 Đã ngắt đồng bộ — Sân Khấu Chính đã ngắt toàn bộ kết nối với Sân Khấu Phụ');
     }
   };
 

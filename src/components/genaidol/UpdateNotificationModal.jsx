@@ -2,15 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.6.3';
+export const APP_VERSION = '4.6.4';
 export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.6.3 - 4 API Keys Cá Nhân (Gemini, OpenAI, HeyGen, ElevenLabs) + Tab Giọng ElevenLabs Đồng Bộ',
-    description: '1. Bổ sung 4 ô nhập API Key cá nhân trong tab Bộ Não Idol: Google Gemini (bộ não AI, model gemini-2.0-flash thông minh nhất & tiết kiệm), OpenAI/ChatGPT (bộ não AI fallback, model gpt-4o-mini), HeyGen (lipsync nhép miệng khớp khẩu hình video/ảnh nhân vật), ElevenLabs (voice AI tổng hợp giọng). 2. Tab mới GIỌNG ELEVENLABS: Paste API Key → tự động đồng bộ toàn bộ giọng từ tài khoản ElevenLabs → xem danh sách, nghe thử và gán vào từng nhân vật (NV1 Idol, NV2 Quản Lý, NV3 Game, NV4 Bình Luận, NV5) ngay lập tức, tích hợp hoàn toàn với hệ thống giọng AVA Live. 3. Nâng cấp model Gemini mặc định từ 1.5-flash lên 2.0-flash — thông minh hơn, chi phí tương đương.'
+    title: '⚡ Bản Cập Nhật v4.6.4 - Khóa Chặt Nút Đồng Bộ Sân Khấu & Hiển Thị Video Tải Lên Sân Khấu Chính Tức Thì 0ms',
+    description: '1. Khóa Chặt Nút Đồng Bộ Sân Khấu Chính: Chỉ bật/tắt khi người dùng bấm tay, tuyệt đối không tự ý tắt ngầm; Khi bấm Tắt, tự động ngắt kết nối và xóa sạch dữ liệu Sân Khấu Phụ trên Sân Khấu Chính. 2. Tải & Hiển Thị Video Sân Khấu Chính Tức Thì: Người dùng tải video/ảnh lên các ô nhân vật hoặc bấm chọn bất kỳ ô nhân vật nào thì Sân Khấu Chính hiển thị và phát ngay lập tức 0ms, không độ trễ, không bị đè bởi overlay cũ.'
   }
 ];
+
 
 
 export const CHANGELOG = UPDATE_NOTES;
