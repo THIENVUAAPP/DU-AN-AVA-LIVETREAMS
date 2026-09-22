@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.8.1';
+export const APP_VERSION = '4.8.2';
 export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.8.1 - Tối Ưu Triệt Để Âm Thanh Kịch Bản Idol 0ms & Khóa Cố Định Video Nhân Vật',
-    description: '1. Khắc Phục Triệt Để Âm Thanh Voice Kịch Bản Idol 0ms: Ưu tiên trực tiếp giọng đọc được chọn trong dropdown và speaker tag, tối ưu hóa bộ giải mã âm thanh đa luồng HTTPS-safe, mở khóa AudioContext và HTML5 Audio đa tầng đảm bảo 100% bấm nghe thử là phát ra tiếng ngay lập tức. 2. Khóa Chặt Cố Định Video Nhân Vật: Video nhân vật tải lên trên Sân Khấu Chính nằm cố định vững chắc, không bị chập chờn hay biến mất cho đến khi người dùng chủ động xóa hoặc đổi video. 3. Tải Về Trực Tiếp ZIP v4.8.1: Mọi endpoint tải Windows & macOS phục vụ gói ZIP v4.8.1 mới nhất.'
+    title: '⚡ Bản Cập Nhật v4.8.2 - Đọc Trọn Vẹn Kịch Bản Dài Siêu Mượt Từ Đầu Đến Đuôi (Không Bao Giờ Nghẽn/Dừng)',
+    description: '1. Đọc Trọn Vẹn Mọi Kịch Bản Từ Đầu Đến Đuôi Siêu Mượt: Thay thế cơ chế tải ồ ạt bằng Lookahead Stream thông minh (luôn chuẩn bị gối đầu 2 câu kế tiếp trong RAM), triệt tiêu hoàn toàn tình trạng nghẽn hàng đợi mạng khiến kịch bản bị đứng giữa chừng. 2. Ưu Tiên Chuẩn Xác 100% Giọng Đọc Đã Chọn: Mọi câu thoại trong kịch bản đều được phân giải chính xác theo giọng đọc người dùng chọn trên dropdown (ví dụ: Live Queen, Hoài My, Nam Minh...), đọc trôi chảy liên tục từ câu 1 đến câu 388+ không vấp. 3. Tải Về Trực Tiếp ZIP v4.8.2: Tự động cập nhật gói cài đặt Windows & macOS mới nhất.'
   }
 ];
 

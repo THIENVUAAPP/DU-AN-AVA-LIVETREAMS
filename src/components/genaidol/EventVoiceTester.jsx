@@ -237,10 +237,10 @@ export default function EventVoiceTester({
 
     const activeSpeakerId = matchedSpeakerAvatar ? matchedSpeakerAvatar.id : 'avatar_1';
     let voiceObj = null;
-    if (matchedSpeakerAvatar) {
+    if (matchedSpeakerAvatar && matchedSpeakerAvatar.id !== 'avatar_1' && matchedSpeakerAvatar.role !== 'idol') {
       voiceObj = resolveEffectiveVoice(matchedSpeakerAvatar.role || 'idol', matchedSpeakerAvatar.voiceId, matchedSpeakerAvatar.id);
     } else {
-      const activeVoiceId = fallbackVoice ? (fallbackVoice.id || fallbackVoice) : selectedVoiceRef.current;
+      const activeVoiceId = fallbackVoice ? (fallbackVoice.id || fallbackVoice) : (selectedVoiceRef.current || defaultVoiceId || 'free_vi_female');
       voiceObj = resolveEffectiveVoice('idol', activeVoiceId, 'avatar_1');
     }
 
@@ -306,19 +306,20 @@ export default function EventVoiceTester({
   };
 
   /**
-   * ⚡ TẢI TRƯỚC TOÀN BỘ KỊCH BẢN VÀO RAM AUDIOBUFFER (PARALLEL PREFETCH 0MS DELAY)
-   * Nạp ngầm toàn bộ các câu thoại vào RAM cache để khi đọc đến câu nào là có sẵn buffer ngay lập tức 0ms
+   * ⚡ LOOKAHEAD PREFETCH WINDOW (2 CÂU KẾ TIẾP):
+   * Chỉ tải trước 2 câu kế tiếp trong RAM cache, không gửi bão request làm nghẽn mạng
    */
-  const prefetchAllSentences = async (sentenceList, customVoice = null) => {
+  const prefetchLookahead = async (sentenceList, startIndex = 0, customVoice = null) => {
     if (!sentenceList || sentenceList.length === 0) return;
     const curVoice = customVoice || selectedVoiceRef.current || defaultVoiceId || 'free_vi_female';
-    for (let i = 0; i < sentenceList.length; i++) {
+    const limit = Math.min(startIndex + 3, sentenceList.length);
+    for (let i = startIndex; i < limit; i++) {
       try {
         const parsed = parseScriptSentence(sentenceList[i], curVoice);
         if (parsed.cleanText) {
           const rate = (parsed.matchedSpeakerAvatar?.rate ?? 1.0) * (speedRef.current || 1.0);
           const pitch = parsed.matchedSpeakerAvatar?.pitch;
-          await prefetchTTSAudio(parsed.cleanText, parsed.voiceObj, { rate, pitch });
+          prefetchTTSAudio(parsed.cleanText, parsed.voiceObj, { rate, pitch });
         }
       } catch (e) {}
     }
@@ -363,8 +364,8 @@ export default function EventVoiceTester({
       window.dispatchEvent(new CustomEvent('avalive_script_testing_state_change', { detail: { isTesting: true } }));
     }
 
-    // Tải trước ngầm TOÀN BỘ kịch bản với giọng mới vào RAM Cache
-    prefetchAllSentences(sentences, newVoiceObj);
+    // Tải trước ngầm 2 câu đầu tiên với giọng mới
+    prefetchLookahead(sentences, 0, newVoiceObj);
 
     // Phát ngay lập tức 0ms câu đầu tiên với giọng mới
     playSentenceAtIndex(0, newVoiceObj);
@@ -453,18 +454,8 @@ export default function EventVoiceTester({
       }));
     } catch (e) {}
 
-    // 🚀 LOOKAHEAD PIPELINE VƯỢT TRỘI: Pre-fetch các câu tiếp theo (N+1 -> N+5) với CHÍNH XÁC cleanText, rate & pitch
-    for (let offset = 1; offset <= 5; offset++) {
-      const nextIdx = index + offset;
-      if (nextIdx < sentences.length) {
-        const nextParsed = parseScriptSentence(sentences[nextIdx], customVoice);
-        if (nextParsed.cleanText) {
-          const nextRate = (nextParsed.matchedSpeakerAvatar?.rate ?? 1.0) * (speedRef.current || 1.0);
-          const nextPitch = nextParsed.matchedSpeakerAvatar?.pitch;
-          prefetchTTSAudio(nextParsed.cleanText, nextParsed.voiceObj, { rate: nextRate, pitch: nextPitch });
-        }
-      }
-    }
+    // 🚀 LOOKAHEAD PIPELINE: Tải trước 2 câu tiếp theo
+    prefetchLookahead(sentences, index + 1, customVoice);
 
     const speakerRate = (matchedSpeakerAvatar?.rate ?? 1.0) * (speedRef.current || 1.0);
     const speakerVolume = (matchedSpeakerAvatar?.volume ?? 1.0) * (volumeRef.current || 1.0);
@@ -507,9 +498,9 @@ export default function EventVoiceTester({
       }
     };
 
-    // Watchdog an toàn: Thời gian tối đa cho 1 câu đọc (chỉ kích hoạt khi mạng lỗi hoàn toàn, không bao giờ ngắt ngang tiếng)
+    // Watchdog an toàn: Thời gian tối đa cho 1 câu đọc
     const cleanLen = (cleanSentenceText || '').length;
-    const dynamicTimeoutMs = Math.max(20000, Math.ceil((cleanLen / 4) + 12) * 1000);
+    const dynamicTimeoutMs = Math.max(15000, Math.ceil((cleanLen / 4) + 10) * 1000);
     watchdogTimer = setTimeout(() => {
       if (isPlayingRef.current && currentSentenceIdxRef.current === index && !hasHandledStep) {
         console.warn(`[EventVoiceTester] Watchdog safety timeout for sentence ${index} (len: ${cleanLen}), advancing.`);
@@ -558,18 +549,17 @@ export default function EventVoiceTester({
     }
   };
 
-  // ⚡ TỰ ĐỘNG TẢI TRƯỚC VÀO BỘ NHỚ RAM (PRE-WARM CACHE TOÀN BỘ KỊCH BẢN) NGAY KHI NHẬP TEXT / ĐỔI GIỌNG
-  // Giúp khi bấm Play, âm thanh phát ra NGAY TỨC THÌ 0.000s, không cần đợi tải mạng!
+  // ⚡ TỰ ĐỘNG TẢI TRƯỚC VÀO BỘ NHỚ RAM 2 CÂU ĐẦU TIÊN KHI NHẬP TEXT / ĐỔI GIỌNG
   useEffect(() => {
     if (!text || !text.trim()) return;
     const timer = setTimeout(() => {
       try {
         const sentences = splitIntoSentences(text);
         if (sentences && sentences.length > 0) {
-          prefetchAllSentences(sentences, selectedVoiceRef.current);
+          prefetchLookahead(sentences, 0, selectedVoiceRef.current);
         }
       } catch (e) {}
-    }, 150);
+    }, 200);
 
     return () => clearTimeout(timer);
   }, [text, selectedVoiceId, speed]);
@@ -611,8 +601,8 @@ export default function EventVoiceTester({
     const curVoiceId = selectedVoiceRef.current || defaultVoiceId || 'free_vi_female';
     const parsed0 = parseScriptSentence(sentences[0], curVoiceId);
 
-    // Tải trước ngầm TOÀN BỘ kịch bản song song vào RAM Cache ngay lập tức
-    prefetchAllSentences(sentences, curVoiceId);
+    // Tải trước ngầm 2 câu tiếp theo
+    prefetchLookahead(sentences, 0, curVoiceId);
 
     playSentenceAtIndex(0, parsed0.voiceObj);
   };
