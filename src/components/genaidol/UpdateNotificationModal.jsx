@@ -2,17 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.7.3';
+export const APP_VERSION = '4.7.4';
 export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.7.3 - Tách Sạch 100% Nền Mọi Hình Ảnh & Khung Viền, Khóa Chặt Đồng Bộ Sân Khấu Chính, Cài Đặt Nghỉ Nhịp Câu & Đọc Xuyên Suốt',
-    description: '1. Xóa Sạch 100% Background & Khung Viền Ảnh: Tích hợp MediaPipe AI Neural Network phân đoạn nhân vật/đồ vật trên mọi loại phông nền (phòng ngủ, tường, studio, neon, nền màu...); triệt tiêu 100% vạch viền khung của bức ảnh ở 4 cạnh và bổ sung nút Bỏ chọn khung. 2. Khóa Chặt Đồng Bộ Sân Khấu Chính: Tuyệt đối không tự ý chạy hay đồng bộ media ra Sân Khấu Chính khi người dùng chưa bấm nút "ĐỒNG BỘ RA SÂN KHẤU CHÍNH" hoặc "CHẠY LIVE". 3. Đọc Kịch Bản Xuyên Suốt & Đọc Có Cảm Xúc: Giữ nguyên cảm xúc (!, ?), hỗ trợ cài đặt tùy chỉnh khoảng nghỉ nhịp ngắt câu (0s Đọc Xuyên Suốt, 0.2s, 0.5s, 1s, 2s) và khoảng nghỉ chuyển bước; loại bỏ hoàn toàn lỗi ngắt quãng khi đọc.'
+    title: '⚡ Bản Cập Nhật v4.7.4 - Khắc Phục Triệt Để Lỗi Ngắt Quãng Kịch Bản Idol & EventVoiceTester, Đọc Xuyên Suốt Liền Mạch 0ms',
+    description: '1. Đọc Kịch Bản Idol Xuyên Suốt: Sửa triệt để lỗi callback onEnd trong previewVoiceAudio khi truyền options object, loại bỏ hoàn toàn hiện tượng khựng dừng / dừng 8 giây giữa các câu trong Kịch bản Idol. Đọc siêu mượt liên tục 0ms hoặc theo đúng khoảng nghỉ cài đặt của người dùng. 2. Tách Sạch 100% Nền & Khung Viền: Duy trì MediaPipe AI Neural Network xóa sạch mọi loại phông nền (tường, phòng, neon, người, đồ vật) và triệt tiêu 100% viền khung ảnh 4 cạnh.'
   },
   {
-    title: '⚡ Bản Cập Nhật v4.7.2 - Khôi Phục Toàn Diện Bản v4.7.0 (Commit 4d8d7e4)',
-    description: 'Đã khôi phục lại chính xác 100% toàn bộ trạng thái hoạt động, mã nguồn và tính năng theo đúng bản v4.7.0 (commit 4d8d7e4) theo yêu cầu của người dùng.'
+    title: '⚡ Bản Cập Nhật v4.7.3 - Tách Sạch 100% Nền Mọi Hình Ảnh & Khung Viền, Khóa Chặt Đồng Bộ Sân Khấu Chính, Cài Đặt Nghỉ Nhịp Câu & Đọc Xuyên Suốt',
+    description: '1. Xóa Sạch 100% Background & Khung Viền Ảnh. 2. Khóa Chặt Đồng Bộ Sân Khấu Chính. 3. Đọc Kịch Bản Xuyên Suốt & Đọc Có Cảm Xúc.'
   },
   {
     title: '⚡ Bản Cập Nhật v4.7.0 - Xóa Triệt Để Khung Viền Khi Tách Nền, Nhân Bản Đối Tượng Trực Tiếp Trên Sân Khấu & Đọc Voice Kịch Bản Liên Tục Xuyên Suốt',

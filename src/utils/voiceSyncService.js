@@ -8663,6 +8663,7 @@ export async function previewVoiceAudio(voiceOrId, sampleText = null, onEndOrPri
       priority = onEndOrPriority;
       isTest = onEndOrPriority;
     } else if (typeof onEndOrPriority === 'object' && onEndOrPriority !== null) {
+      customOptions = onEndOrPriority;
       priority = onEndOrPriority.priority !== undefined ? !!onEndOrPriority.priority : true;
       isTest = onEndOrPriority.isTest !== undefined ? !!onEndOrPriority.isTest : true;
     }
@@ -8671,16 +8672,24 @@ export async function previewVoiceAudio(voiceOrId, sampleText = null, onEndOrPri
     isTest = optionsOrOnEnd;
     if (typeof onEndOrPriority === 'function') {
       onEnd = onEndOrPriority;
+    } else if (typeof onEndOrPriority === 'object' && onEndOrPriority !== null) {
+      customOptions = onEndOrPriority;
+      onEnd = onEndOrPriority.onEnd || null;
     }
   } else if (typeof optionsOrOnEnd === 'object' && optionsOrOnEnd !== null) {
     customOptions = optionsOrOnEnd;
-    onEnd = typeof onEndOrPriority === 'function' ? onEndOrPriority : optionsOrOnEnd.onEnd;
+    onEnd = typeof onEndOrPriority === 'function' ? onEndOrPriority : (optionsOrOnEnd.onEnd || null);
     priority = optionsOrOnEnd.priority !== undefined ? !!optionsOrOnEnd.priority : true;
     isTest = optionsOrOnEnd.isTest !== undefined ? !!optionsOrOnEnd.isTest : true;
   } else if (typeof onEndOrPriority === 'function') {
     onEnd = onEndOrPriority;
     priority = true;
     isTest = true;
+  } else if (typeof onEndOrPriority === 'object' && onEndOrPriority !== null) {
+    customOptions = onEndOrPriority;
+    onEnd = typeof onEndOrPriority.onEnd === 'function' ? onEndOrPriority.onEnd : null;
+    priority = onEndOrPriority.priority !== undefined ? !!onEndOrPriority.priority : true;
+    isTest = onEndOrPriority.isTest !== undefined ? !!onEndOrPriority.isTest : true;
   } else if (typeof onEndOrPriority === 'boolean') {
     priority = onEndOrPriority;
     isTest = onEndOrPriority;

@@ -504,9 +504,9 @@ export default function EventVoiceTester({
       }
     };
 
-    // Watchdog an toàn: Thời gian tối đa cho 1 câu đọc ngắn (tối đa 6-12s tùy độ dài), chuyển ngay câu tiếp theo không bao giờ bị treo
+    // Watchdog an toàn: Thời gian tối đa cho 1 câu đọc (chỉ kích hoạt khi mạng lỗi hoàn toàn, không bao giờ ngắt ngang tiếng)
     const cleanLen = (cleanSentenceText || '').length;
-    const dynamicTimeoutMs = Math.max(5000, Math.ceil((cleanLen / 8) + 4) * 1000);
+    const dynamicTimeoutMs = Math.max(20000, Math.ceil((cleanLen / 4) + 12) * 1000);
     watchdogTimer = setTimeout(() => {
       if (isPlayingRef.current && currentSentenceIdxRef.current === index && !hasHandledStep) {
         console.warn(`[EventVoiceTester] Watchdog safety timeout for sentence ${index} (len: ${cleanLen}), advancing.`);
@@ -518,14 +518,15 @@ export default function EventVoiceTester({
     previewVoiceAudio(
       voiceObj,
       cleanSentenceText,
+      () => {
+        advanceToNextSentence();
+      },
       {
         priority: true,
         isTest: true,
         volume: speakerVolume,
         rate: speakerRate,
-        onEnd: () => {
-          advanceToNextSentence();
-        }
+        sentencePauseSeconds: pauseDurationRef.current !== undefined ? pauseDurationRef.current : 0
       }
     );
   };
