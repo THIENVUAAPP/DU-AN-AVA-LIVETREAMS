@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.8.0';
+export const APP_VERSION = '4.8.1';
 export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.8.0 - Khắc Phục Triệt Để Nghe Thử Voice Kịch Bản Idol & Khóa Chặt Vị Trí Video Nhân Vật Không Bị Chập Chờn',
-    description: '1. Khắc Phục Triệt Để Đọc & Nghe Thử Kịch Bản Idol: Tối ưu bộ giải mã âm thanh đa luồng, loại bỏ triệt để xung đột SPA HTML fallback, mở khóa toàn diện AudioContext và HTML5 Audio. Bấm phát kịch bản là voice cất tiếng đọc ngay lập tức 0ms, tự động chuyển câu tuần hoàn siêu mượt. 2. Giữ Nguyên 100% Vị Trí Video Nhân Vật (Không Ẩn Hiện): Video nhân vật tải lên trên Sân Khấu Chính được ưu tiên tuyệt đối #1, nằm cố định chắc chắn trên màn hình live và phát liên tục, không bị chập chờn hay ghi đè bởi video chờ cho đến khi người dùng chủ động xóa hoặc đổi video. 3. Đồng Bộ Tải Về Trực Tiếp ZIP v4.8.0: Mọi link tải Windows & macOS tải đúng gói ZIP mới nhất trực tiếp về máy.'
+    title: '⚡ Bản Cập Nhật v4.8.1 - Tối Ưu Triệt Để Âm Thanh Kịch Bản Idol 0ms & Khóa Cố Định Video Nhân Vật',
+    description: '1. Khắc Phục Triệt Để Âm Thanh Voice Kịch Bản Idol 0ms: Ưu tiên trực tiếp giọng đọc được chọn trong dropdown và speaker tag, tối ưu hóa bộ giải mã âm thanh đa luồng HTTPS-safe, mở khóa AudioContext và HTML5 Audio đa tầng đảm bảo 100% bấm nghe thử là phát ra tiếng ngay lập tức. 2. Khóa Chặt Cố Định Video Nhân Vật: Video nhân vật tải lên trên Sân Khấu Chính nằm cố định vững chắc, không bị chập chờn hay biến mất cho đến khi người dùng chủ động xóa hoặc đổi video. 3. Tải Về Trực Tiếp ZIP v4.8.1: Mọi endpoint tải Windows & macOS phục vụ gói ZIP v4.8.1 mới nhất.'
   }
 ];
 

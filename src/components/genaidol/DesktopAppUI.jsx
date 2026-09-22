@@ -4305,8 +4305,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         ? customCharacters.find(c => c.id === selectedCharacter) 
         : null;
 
-      // 🎬 KHI ĐANG ĐỒNG BỘ TỪ SEQUENCER (PHÁT LIVE): ƯU TIÊN VIDEO/ẢNH TỪ SEQUENCER TRƯỚC NẾU CÓ BẬT MASTER SYNC
-      const sequencerLockedMedia = isMasterStageSynced && userLockedMediaUrl
+      // 🎬 KHI ĐANG ĐỒNG BỘ TỪ SEQUENCER (PHÁT LIVE): CHỈ KÍCH HOẠT NẾU NGƯỜI DÙNG KHÔNG CHỌN NHÂN VẬT RIÊNG
+      const sequencerLockedMedia = (!customMatch && isMasterStageSynced && userLockedMediaUrl)
         ? { 
             id: 'sequencer_video', 
             name: 'Kịch Bản Live Đang Phát', 
@@ -4316,9 +4316,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           }
         : null;
 
-      // 🎬 VIDEO CHỜ TỪ CÀI ĐẶT SỰ KIỆN LIVE
+      // 🎬 VIDEO CHỜ TỪ CÀI ĐẶT SỰ KIỆN LIVE: CHỈ DÙNG KHI KHÔNG CÓ NHÂN VẬT TÙY CHỌN
       const savedIdleVideoUrl = typeof localStorage !== 'undefined' ? (localStorage.getItem('aidol_idle_media_url') || localStorage.getItem('avalive_user_locked_media')) : null;
-      const eventIdleMedia = (!customMatch && savedIdleVideoUrl) ? {
+      const eventIdleMedia = (!customMatch && !sequencerLockedMedia && savedIdleVideoUrl) ? {
         id: 'event_idle_video',
         name: 'Video Chờ Cài Đặt Sự Kiện',
         url: savedIdleVideoUrl,
@@ -4365,52 +4365,23 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         }
       }
 
-      if (activeVideoItem && activeVideoItem.mediaUrl) {
-        const isEventActive = isProcessingEvent || activeVideoItem.id?.startsWith('event_vid_') || activeVideoItem.id?.startsWith('ev_') || activeVideoItem.id?.startsWith('special_gift_') || activeVideoItem.id?.startsWith('checkout_');
+      // Chỉ ưu tiên activeVideoItem khi đang có sự kiện video ngắn thực sự
+      const isEventActive = isProcessingEvent && (activeVideoItem?.id?.startsWith('event_vid_') || activeVideoItem?.id?.startsWith('ev_') || activeVideoItem?.id?.startsWith('special_gift_') || activeVideoItem?.id?.startsWith('checkout_'));
+      if (isEventActive && activeVideoItem && activeVideoItem.mediaUrl) {
         return (
           <video 
+            key={activeVideoItem.id || 'event_video_player'}
             ref={desktopVideoRef}
             data-main-player="true"
-            data-is-event-video={isEventActive ? 'true' : 'false'}
+            data-is-event-video="true"
             src={activeVideoItem.mediaUrl} 
             className="w-full h-full object-cover bg-black cursor-pointer main-video-player"
             autoPlay
-            loop={!isEventActive}
+            loop={false}
             controls={false}
             muted={liveAudioMuted}
             onEnded={() => {
-              if (isEventActive) {
-                handleVideoEnded();
-                const idleVid = typeof localStorage !== 'undefined' ? (localStorage.getItem('aidol_idle_media_url') || localStorage.getItem('avalive_user_locked_media')) : null;
-                if (idleVid) {
-                  setActiveVideoItem({
-                    id: 'idle_bg_video',
-                    name: 'Video Chờ (Idle Studio)',
-                    mediaUrl: idleVid,
-                    url: idleVid,
-                    type: 'video'
-                  });
-                  if (desktopVideoRef.current) {
-                    desktopVideoRef.current.dataset.isEventVideo = 'false';
-                    desktopVideoRef.current.src = idleVid;
-                    desktopVideoRef.current.currentTime = 0;
-                    desktopVideoRef.current.loop = true;
-                    desktopVideoRef.current.play().catch(() => {});
-                  }
-                  try {
-                    const bc = new BroadcastChannel('avalive_master_live_stream');
-                    bc.postMessage({
-                      type: 'EVENT_VIDEO_PLAY',
-                      videoUrl: idleVid,
-                      name: 'Video Chờ (Idle Studio)',
-                      eventType: 'idle',
-                      muteSourceVideo: false,
-                      timestamp: Date.now()
-                    });
-                    setTimeout(() => bc.close(), 100);
-                  } catch (e) {}
-                }
-              }
+              handleVideoEnded();
             }}
             onError={() => {
               console.warn('Lỗi tải video sự kiện');
@@ -4431,6 +4402,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           <div className="relative w-full h-full group/videoContainer select-none overflow-hidden bg-black flex items-center justify-center">
             {/* THẺ VIDEO PREVIEW TRÊN PHẦN MỀM (TƯƠNG THÍCH HOÀN HẢO VỚI OBS WINDOW CAPTURE - KHÔNG BAO GIỜ ĐEN MÀN HÌNH) */}
             <video 
+              key={selected.id || selected.url || 'main_desktop_video'}
               ref={desktopVideoRef}
               data-main-player="true"
               src={selected.url} 

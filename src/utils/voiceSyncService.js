@@ -7648,6 +7648,24 @@ export function updateActiveVoiceAudio(role, voiceObj) {
  * - TUYỆT ĐỐI KHÔNG CHỒNG CHÉO: Luôn phát duy nhất đúng 1 giọng được chọn.
  */
 export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId = null, avatarId = null) {
+  // 🎯 ƯU TIÊN SỐ 1 (CAO NHẤT KHI TEST / CHỌN GIỌNG TRỰC TIẾP): NẾU TRUYỀN taskSpecificVoiceId CỤ THỂ THÌ DÙNG NGAY taskSpecificVoiceId
+  if (taskSpecificVoiceId) {
+    if (typeof taskSpecificVoiceId === 'object' && taskSpecificVoiceId.id) {
+      const fullVoice = ALL_SYSTEM_VOICES.find(v => v.id === taskSpecificVoiceId.id) || taskSpecificVoiceId;
+      return {
+        ...fullVoice,
+        ...taskSpecificVoiceId,
+        volume: taskSpecificVoiceId.volume !== undefined ? Number(taskSpecificVoiceId.volume) : (fullVoice.volume ?? 1.0),
+        rate: taskSpecificVoiceId.rate !== undefined ? Number(taskSpecificVoiceId.rate) : (fullVoice.rate ?? 1.0),
+        pitch: taskSpecificVoiceId.pitch !== undefined ? Number(taskSpecificVoiceId.pitch) : (fullVoice.pitch ?? 1.0)
+      };
+    }
+    if (typeof taskSpecificVoiceId === 'string' && taskSpecificVoiceId.trim()) {
+      const matchedVoice = ALL_SYSTEM_VOICES.find(v => v.id === taskSpecificVoiceId.trim());
+      if (matchedVoice) return matchedVoice;
+    }
+  }
+
   const dualConfig = getSavedVoiceConfig();
   const normalizedRole = (roleOrEvent || '').toLowerCase().trim();
   const normalizedAvatarId = (avatarId || '').toLowerCase().trim();
@@ -7678,7 +7696,7 @@ export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId 
     brainVoice = dualConfig.avatar1Voice || dualConfig.idolVoice;
   }
 
-  // 🎯 ƯU TIÊN SỐ 1 (CAO NHẤT): CẤU HÌNH TRONG TAB BỘ NÃO AI
+  // 🎯 ƯU TIÊN SỐ 2: CẤU HÌNH TRONG TAB BỘ NÃO AI
   if (brainVoice && brainVoice.id && brainVoice.enabled !== false) {
     const fullVoice = ALL_SYSTEM_VOICES.find(v => v.id === brainVoice.id) || brainVoice;
     return {
@@ -7688,24 +7706,6 @@ export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId 
       rate: brainVoice.rate !== undefined ? Number(brainVoice.rate) : (fullVoice.rate ?? 1.0),
       pitch: brainVoice.pitch !== undefined ? Number(brainVoice.pitch) : (fullVoice.pitch ?? 1.0)
     };
-  }
-
-  // 🎯 ƯU TIÊN SỐ 2 (PHỤ / FALLBACK): NẾU BỘ NÃO CHƯA CÓ, DÙNG VOICE TRUYỀN CỤ THỂ TỪ TÁC VỤ / SỰ KIỆN
-  if (taskSpecificVoiceId) {
-    if (typeof taskSpecificVoiceId === 'object' && taskSpecificVoiceId.id) {
-      const fullVoice = ALL_SYSTEM_VOICES.find(v => v.id === taskSpecificVoiceId.id) || taskSpecificVoiceId;
-      return {
-        ...fullVoice,
-        ...taskSpecificVoiceId,
-        volume: taskSpecificVoiceId.volume !== undefined ? Number(taskSpecificVoiceId.volume) : (fullVoice.volume ?? 1.0),
-        rate: taskSpecificVoiceId.rate !== undefined ? Number(taskSpecificVoiceId.rate) : (fullVoice.rate ?? 1.0),
-        pitch: taskSpecificVoiceId.pitch !== undefined ? Number(taskSpecificVoiceId.pitch) : (fullVoice.pitch ?? 1.0)
-      };
-    }
-    if (typeof taskSpecificVoiceId === 'string' && taskSpecificVoiceId.trim()) {
-      const matchedVoice = ALL_SYSTEM_VOICES.find(v => v.id === taskSpecificVoiceId.trim());
-      if (matchedVoice) return matchedVoice;
-    }
   }
 
   // 🎯 ƯU TIÊN SỐ 3: FALLBACK MẶC ĐỊNH CHUẨN XÁC TỪ IDOL VOICE CỦA BỘ NÃO AI
@@ -8542,27 +8542,32 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
 
   const ttsQuery = `text=${encodeURIComponent(ttsText)}&voice=${encodeURIComponent(neuralVoice)}&voiceId=${encodeURIComponent(voice?.id || '')}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(effectivePitch)}&rate=${encodeURIComponent(effectiveRate)}&lang=${encodeURIComponent(shortLang)}&sentencePauseSeconds=${encodeURIComponent(sentencePauseSeconds)}`;
 
+  const isHttps = typeof window !== 'undefined' && window.location?.protocol === 'https:';
   const isViteDev = typeof window !== 'undefined' && window.location?.port === '5173';
 
-  const baseCandidates = [
-    ...(isViteDev ? [`http://localhost:3001/api/tts`, `http://127.0.0.1:3001/api/tts`] : []),
-    ...(currentOrigin ? [`${currentOrigin}/api/tts`] : []),
-    `/api/tts`,
-    `http://127.0.0.1:3001/api/tts`,
-    `http://localhost:3001/api/tts`
-  ];
+  const baseCandidates = isHttps
+    ? [
+        ...(currentOrigin ? [`${currentOrigin}/api/tts`] : []),
+        `/api/tts`
+      ]
+    : [
+        ...(currentOrigin ? [`${currentOrigin}/api/tts`] : []),
+        `/api/tts`,
+        `http://localhost:3001/api/tts`,
+        `http://127.0.0.1:3001/api/tts`
+      ];
 
   const endpointCandidates = Array.from(new Set([
-    ...(cachedWorkingTtsEndpoint ? [cachedWorkingTtsEndpoint] : []),
+    ...(cachedWorkingTtsEndpoint && (!isHttps || cachedWorkingTtsEndpoint.startsWith('https:') || cachedWorkingTtsEndpoint.startsWith('/')) ? [cachedWorkingTtsEndpoint] : []),
     ...baseCandidates
   ]));
 
   const doFetch = async () => {
-    // ⚡ Ưu tiên 1: Thử endpoint đã ghi nhớ hoặc /api/tts trực tiếp với timeout 1800ms
+    // ⚡ Ưu tiên 1: Thử endpoint đã ghi nhớ hoặc /api/tts trực tiếp với timeout 2200ms
     const primaryEndpoint = cachedWorkingTtsEndpoint || endpointCandidates[0] || (currentOrigin ? `${currentOrigin}/api/tts` : '/api/tts');
     try {
       const controller = new AbortController();
-      const timeoutId = setTimeout(() => controller.abort(), 1800);
+      const timeoutId = setTimeout(() => controller.abort(), 2200);
       const res = await fetch(primaryEndpoint, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -8629,7 +8634,7 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
     for (const endpoint of remainingEndpoints) {
       try {
         const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 1500);
+        const timeoutId = setTimeout(() => controller.abort(), 1800);
         const res = await fetch(endpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
@@ -8689,8 +8694,50 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
             }
           }
         }
-      } catch (err) {}
+      } catch (e) {}
     }
+
+    // ⚡ Ưu tiên 3: GET Fallback trực tiếp
+    try {
+      const getEndpoint = (currentOrigin ? `${currentOrigin}/api/tts` : '/api/tts') + `?${ttsQuery}`;
+      const res = await fetch(getEndpoint).catch(() => null);
+      if (res && res.ok) {
+        const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('text/html')) {
+          const arrayBuf = await res.arrayBuffer().catch(() => null);
+          if (arrayBuf && arrayBuf.byteLength > 100) {
+            let rawAudioBuffer = null;
+            try {
+              rawAudioBuffer = await new Promise((resDec, rejDec) => {
+                try {
+                  const p = audioCtx.decodeAudioData(
+                    arrayBuf.slice(0),
+                    (buf) => resDec(buf),
+                    (err) => rejDec(err)
+                  );
+                  if (p && typeof p.then === 'function') {
+                    p.then(resDec).catch(rejDec);
+                  }
+                } catch (e) {
+                  rejDec(e);
+                }
+              });
+            } catch (decErr) {}
+
+            if (rawAudioBuffer) {
+              const audioBuffer = trimAudioBufferSilence(rawAudioBuffer);
+              if (audioBufferMemoryCache.size > 300) {
+                const firstKey = audioBufferMemoryCache.keys().next().value;
+                audioBufferMemoryCache.delete(firstKey);
+              }
+              audioBufferMemoryCache.set(cacheKey, audioBuffer);
+              return audioBuffer;
+            }
+          }
+        }
+      }
+    } catch (e) {}
+
     return null;
   };
 
@@ -8997,60 +9044,87 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
   if (thisSpeechId !== currentSpeechGenerationId) return true;
 
   // =========================================================================
-  // TIER 2.5: DIRECT HTML5 AUDIO PLAYBACK VIA BACKEND BASE64
+  // TIER 2.5: DIRECT HTML5 AUDIO PLAYBACK VIA BACKEND BASE64 / MULTI-ENDPOINTS
   // =========================================================================
   try {
-    const currentOrigin = typeof window !== 'undefined' && window.location?.origin ? window.location.origin : '';
-    const res = await fetch(`${currentOrigin}/api/tts`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        text: textToSpeak,
-        voice: voice?.neuralVoice || 'vi-VN-HoaiMyNeural',
-        voiceId: voice?.id || '',
-        gender: checkIsMale(voice) ? 'male' : 'female',
-        pitch: '+0Hz',
-        rate: '+0%'
-      })
-    }).catch(() => null);
+    const isHttpsEnv = typeof window !== 'undefined' && window.location?.protocol === 'https:';
+    const fallbackEndpoints = [
+      ...(currentOrigin ? [`${currentOrigin}/api/tts`] : []),
+      '/api/tts',
+      ...(isHttpsEnv ? [] : ['http://localhost:3001/api/tts', 'http://127.0.0.1:3001/api/tts'])
+    ];
 
-    if (res && res.ok) {
-      const data = await res.json().catch(() => null);
-      if (data?.audioBase64) {
-        const audioUrl = `data:audio/mp3;base64,${data.audioBase64}`;
-        const audio = new Audio(audioUrl);
-        audio.volume = effectiveVoiceVolume;
-        audio.playbackRate = requestedRate;
-        activePreviewAudio = audio;
+    for (const ep of fallbackEndpoints) {
+      if (thisSpeechId !== currentSpeechGenerationId) return true;
+      try {
+        const res = await fetch(ep, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: textToSpeak,
+            voice: voice?.neuralVoice || 'vi-VN-HoaiMyNeural',
+            voiceId: voice?.id || '',
+            gender: checkIsMale(voice) ? 'male' : 'female',
+            pitch: '+0Hz',
+            rate: '+0%',
+            lang: shortLang
+          })
+        }).catch(() => null);
 
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', {
-            detail: { isSpeaking: true, avatarId: voice?.id || 'idol', role: voice?.recommendedFor || 'idol', speechText: textToSpeak }
-          }));
-        }
-
-        try { globalLipSyncEngine.connectAudioElement(audio); } catch(e) {}
-
-        return await new Promise((resolve) => {
-          let finished = false;
-          const finish = () => {
-            if (finished) return;
-            finished = true;
-            activePreviewAudio = null;
-            if (typeof window !== 'undefined') {
-              window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', {
-                detail: { isSpeaking: false, avatarId: null }
-              }));
+        if (res && res.ok) {
+          const contentType = res.headers.get('content-type') || '';
+          if (!contentType.includes('text/html')) {
+            let audioDataUrl = null;
+            if (contentType.includes('application/json')) {
+              const data = await res.json().catch(() => null);
+              if (data?.audioBase64) {
+                audioDataUrl = `data:audio/mp3;base64,${data.audioBase64}`;
+              }
+            } else {
+              const blob = await res.blob().catch(() => null);
+              if (blob && blob.size > 100) {
+                audioDataUrl = URL.createObjectURL(blob);
+              }
             }
-            if (thisSpeechId !== currentSpeechGenerationId) return resolve(false);
-            if (onEnd) onEnd();
-            resolve(true);
-          };
-          audio.onended = finish;
-          audio.onerror = finish;
-          audio.play().catch(finish);
-        });
-      }
+
+            if (audioDataUrl) {
+              const audio = new Audio(audioDataUrl);
+              audio.volume = effectiveVoiceVolume;
+              audio.playbackRate = requestedRate;
+              activePreviewAudio = audio;
+
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', {
+                  detail: { isSpeaking: true, avatarId: voice?.id || 'idol', role: voice?.recommendedFor || 'idol', speechText: textToSpeak }
+                }));
+              }
+
+              try { globalLipSyncEngine.connectAudioElement(audio); } catch(e) {}
+
+              return await new Promise((resolve) => {
+                let finished = false;
+                const finish = () => {
+                  if (finished) return;
+                  finished = true;
+                  activePreviewAudio = null;
+                  try { if (audioDataUrl.startsWith('blob:')) URL.revokeObjectURL(audioDataUrl); } catch (e) {}
+                  if (typeof window !== 'undefined') {
+                    window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', {
+                      detail: { isSpeaking: false, avatarId: null }
+                    }));
+                  }
+                  if (thisSpeechId !== currentSpeechGenerationId) return resolve(false);
+                  if (onEnd) onEnd();
+                  resolve(true);
+                };
+                audio.onended = finish;
+                audio.onerror = finish;
+                audio.play().catch(finish);
+              });
+            }
+          }
+        }
+      } catch (epErr) {}
     }
   } catch (directHtml5Err) {
     console.warn('[voiceSyncService] Direct HTML5 Audio fallback error:', directHtml5Err);
@@ -9059,15 +9133,15 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
   if (thisSpeechId !== currentSpeechGenerationId) return true;
 
   // =========================================================================
-  // TIER 3: GOOGLE TRANSLATE STREAM & WEB SPEECH API ULTRA-ROBUST FALLBACK
+  // TIER 3: DIRECT GET /api/tts STREAM & WEB SPEECH API ULTRA-ROBUST FALLBACK
   // Đảm bảo 100% khi người dùng bấm Chạy Test / Nghe Thử luôn luôn phát ra tiếng
   // =========================================================================
   try {
     const encodedText = encodeURIComponent(textToSpeak.slice(0, 200));
     const gLang = isVietnameseVoice ? 'vi' : (shortLang || 'vi');
-    const directGoogleUrl = `https://translate.google.com/translate_tts?ie=UTF-8&q=${encodedText}&tl=${gLang}&client=tw-ob`;
+    const directApiGetUrl = (currentOrigin ? `${currentOrigin}/api/tts` : '/api/tts') + `?text=${encodedText}&lang=${gLang}&voice=${encodeURIComponent(voice?.neuralVoice || 'vi-VN-HoaiMyNeural')}`;
     
-    const audio = new Audio(directGoogleUrl);
+    const audio = new Audio(directApiGetUrl);
     audio.volume = effectiveVoiceVolume;
     audio.playbackRate = requestedRate;
     activePreviewAudio = audio;
