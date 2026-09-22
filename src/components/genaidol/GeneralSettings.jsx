@@ -4879,6 +4879,8 @@ IDOL MỈM CƯỜI + GESTURE
                         const curVoiceId = settings[voiceIdKey] || (char.num === 1 ? settings.mainVoiceId : char.num === 2 ? settings.assistantVoiceId : char.num === 3 ? settings.gameVoiceId : char.num === 4 ? settings.commentVoiceId : char.defaultVoice);
                         const curVoiceObj = allAvail.find(v => v.id === curVoiceId) || ALL_SYSTEM_VOICES.find(v => v.id === curVoiceId) || ALL_SYSTEM_VOICES[0];
                         const curVol = settings[volKey] !== undefined ? settings[volKey] : (char.num === 1 ? (settings.mainVoiceVolume || 1.0) : char.num === 2 ? (settings.assistantVoiceVolume || 1.0) : 1.0);
+                        const curRate = settings[rateKey] !== undefined ? settings[rateKey] : (char.num === 1 ? (settings.mainVoiceRate || 1.0) : char.num === 2 ? (settings.assistantVoiceRate || 1.0) : 1.0);
+                        const curPitch = settings[pitchKey] !== undefined ? settings[pitchKey] : (char.num === 1 ? (settings.mainVoicePitch || 1.0) : char.num === 2 ? (settings.assistantVoicePitch || 1.0) : 1.0);
                         const isCharEnabled = settings[`avatar${char.num}Enabled`] !== false;
 
                         return (

@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.6.7';
+export const APP_VERSION = '4.6.8';
 export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.6.7 - Đồng Bộ 100% Video Cài Đặt Sự Kiện Ra Sân Khấu Chính & Nâng Cấp Kho Giọng Ava Live (332)',
-    description: '1. Đồng Bộ Video Cài Đặt Sự Kiện: Tự động đồng bộ 100% mọi video cài đặt tác vụ (video chạy nền, video nhép miệng, video phản hồi bình luận, video cảm ơn, video chốt đơn, video chào người mới, video chờ idle) ngay lập tức ra Sân Khấu Chính và phát vừa vặn khung hình 60 FPS. 2. Kho Giọng Ava Live (332 Giọng): Hiển thị đầy đủ 100% chức năng phân loại giọng đọc theo quốc gia, vùng miền, giới tính, độ tuổi, nghe thử tức thì 0ms và bổ sung nút gán nhanh Idol, Trợ lý, Bình luận, Nhân Vật 1 - 5 mượt mà.'
+    title: '⚡ Bản Cập Nhật v4.6.8 - Khắc Phục Triệt Để Mở Tab Giọng Ava Live (332) & Chu Chu Trình Video Sự Kiện / Video Chờ 100% Khớp Sân Khấu',
+    description: '1. Sửa Triệt Để Lỗi Báo Đỏ Mở Tab Giọng Ava Live (332): Khắc phục lỗi crash ReferenceError, mở tức thì bảng 332 giọng, bộ lọc đa vùng miền/quốc gia/tuổi tác và gán nhanh NV 1-5 mượt mà. 2. Chu Trình Video Sự Kiện - Video Chờ Tự Động: Tự động hiển thị video chờ cài đặt ra Sân Khấu Chính làm video nền mặc định (khớp 100% khung hình). Khi có sự kiện bình luận, quà tặng, chốt đơn, chào người mới, phát đúng video sự kiện (khớp voice/nhép miệng), sau khi kết thúc tự động quay lại video chờ liên tục 24/7.'
   }
 ];
 

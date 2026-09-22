@@ -2835,6 +2835,27 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                         }
                       } catch (err) {}
 
+                      // 🎬 NẾU VỪA KẾT THÚC VIDEO SỰ KIỆN -> TỰ ĐỘNG TRỞ VỀ VIDEO CHỜ IDLE
+                      try {
+                        const idleVid = localStorage.getItem('aidol_idle_media_url') || localStorage.getItem('avalive_user_locked_media');
+                        if (idleVid && (v.dataset.isEventVideo === 'true' || (v.src && !v.src.includes(idleVid)))) {
+                          v.dataset.isEventVideo = 'false';
+                          v.src = idleVid;
+                          v.currentTime = 0;
+                          v.loop = true;
+                          v.play().catch(() => {});
+                          setMasterState(prev => ({
+                            ...prev,
+                            mediaUrl: idleVid,
+                            isVideo: true,
+                            isPlaying: true,
+                            videoPlaybackEvent: 'play',
+                            videoCurrentTime: 0
+                          }));
+                          return;
+                        }
+                      } catch (err) {}
+
                       // Mặc định lặp lại 0ms liền mạch (Seamless Zero-Latency Loop) cho video đơn
                       try {
                         v.currentTime = 0;

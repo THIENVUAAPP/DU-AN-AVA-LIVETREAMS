@@ -4316,10 +4316,21 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           }
         : null;
 
+      // 🎬 VIDEO CHỜ TỪ CÀI ĐẶT SỰ KIỆN LIVE (IDLE VIDEO MẶC ĐỊNH CHO SÂN KHẤU CHÍNH)
+      const savedIdleVideoUrl = typeof localStorage !== 'undefined' ? (localStorage.getItem('aidol_idle_media_url') || localStorage.getItem('avalive_user_locked_media')) : null;
+      const eventIdleMedia = savedIdleVideoUrl ? {
+        id: 'event_idle_video',
+        name: 'Video Chờ Cài Đặt Sự Kiện',
+        url: savedIdleVideoUrl,
+        mediaUrl: savedIdleVideoUrl,
+        type: 'video'
+      } : null;
+
       let selected = sequencerLockedMedia ||
+        eventIdleMedia ||
         customMatch || 
         (selectedCharacter && CHARACTERS[selectedCharacter]?.url ? { id: selectedCharacter, ...CHARACTERS[selectedCharacter] } : null) || 
-        (userLockedMediaUrl && isMasterStageSynced ? { id: 'locked_video', name: 'Video Đang Phát', url: userLockedMediaUrl, mediaUrl: userLockedMediaUrl, type: 'video' } : null) ||
+        (userLockedMediaUrl ? { id: 'locked_video', name: 'Video Đang Phát', url: userLockedMediaUrl, mediaUrl: userLockedMediaUrl, type: 'video' } : null) ||
         (customCharacters.find(c => c.url || c.mediaUrl) || null) || 
         (Object.entries(CHARACTERS).find(([k, v]) => v.url)?.[1] ? { id: Object.entries(CHARACTERS).find(([k, v]) => v.url)[0], ...Object.entries(CHARACTERS).find(([k, v]) => v.url)[1] } : null) ||
         CHARACTERS.default_idol;
@@ -4353,23 +4364,59 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         }
       }
 
-      if (isProcessingEvent && activeVideoItem && activeVideoItem.mediaUrl) {
+      if (activeVideoItem && activeVideoItem.mediaUrl) {
+        const isEventActive = isProcessingEvent || activeVideoItem.id?.startsWith('event_vid_') || activeVideoItem.id?.startsWith('ev_') || activeVideoItem.id?.startsWith('special_gift_') || activeVideoItem.id?.startsWith('checkout_');
         return (
           <video 
             ref={desktopVideoRef}
             data-main-player="true"
+            data-is-event-video={isEventActive ? 'true' : 'false'}
             src={activeVideoItem.mediaUrl} 
-            className="w-full h-full object-cover bg-black"
+            className="w-full h-full object-cover bg-black cursor-pointer main-video-player"
             autoPlay
-            loop={!isProcessingEvent}
+            loop={!isEventActive}
             controls={false}
             muted={liveAudioMuted}
-            onEnded={handleVideoEnded}
+            onEnded={() => {
+              if (isEventActive) {
+                handleVideoEnded();
+                const idleVid = typeof localStorage !== 'undefined' ? (localStorage.getItem('aidol_idle_media_url') || localStorage.getItem('avalive_user_locked_media')) : null;
+                if (idleVid) {
+                  setActiveVideoItem({
+                    id: 'idle_bg_video',
+                    name: 'Video Chờ (Idle Studio)',
+                    mediaUrl: idleVid,
+                    url: idleVid,
+                    type: 'video'
+                  });
+                  if (desktopVideoRef.current) {
+                    desktopVideoRef.current.dataset.isEventVideo = 'false';
+                    desktopVideoRef.current.src = idleVid;
+                    desktopVideoRef.current.currentTime = 0;
+                    desktopVideoRef.current.loop = true;
+                    desktopVideoRef.current.play().catch(() => {});
+                  }
+                  try {
+                    const bc = new BroadcastChannel('avalive_master_live_stream');
+                    bc.postMessage({
+                      type: 'EVENT_VIDEO_PLAY',
+                      videoUrl: idleVid,
+                      name: 'Video Chờ (Idle Studio)',
+                      eventType: 'idle',
+                      muteSourceVideo: false,
+                      timestamp: Date.now()
+                    });
+                    setTimeout(() => bc.close(), 100);
+                  } catch (e) {}
+                }
+              }
+            }}
             onError={() => {
-              console.warn('Lỗi tải video phản hồi');
-              setActiveVideoItem(null);
+              console.warn('Lỗi tải video sự kiện');
+              handleVideoEnded();
             }}
             playsInline 
+            onClick={toggleDesktopVideoPlayback}
           />
         );
       }
@@ -4616,6 +4663,29 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 }
               }}
               onEnded={(e) => {
+                // 🎬 NẾU VỪA KẾT THÚC VIDEO SỰ KIỆN -> TỰ ĐỘNG TRỞ VỀ VIDEO CHỜ IDLE
+                const idleVid = typeof localStorage !== 'undefined' ? (localStorage.getItem('aidol_idle_media_url') || localStorage.getItem('avalive_user_locked_media')) : null;
+                if (idleVid && (e.currentTarget.dataset.isEventVideo === 'true' || (e.currentTarget.src && !e.currentTarget.src.includes(idleVid)))) {
+                  e.currentTarget.dataset.isEventVideo = 'false';
+                  e.currentTarget.src = idleVid;
+                  e.currentTarget.currentTime = 0;
+                  e.currentTarget.loop = true;
+                  e.currentTarget.play().catch(() => {});
+                  try {
+                    const bc = new BroadcastChannel('avalive_master_live_stream');
+                    bc.postMessage({
+                      type: 'EVENT_VIDEO_PLAY',
+                      videoUrl: idleVid,
+                      name: 'Video Chờ (Idle Studio)',
+                      eventType: 'idle',
+                      muteSourceVideo: false,
+                      timestamp: Date.now()
+                    });
+                    setTimeout(() => bc.close(), 100);
+                  } catch (err) {}
+                  return;
+                }
+
                 // Tự động chuyển bài kế tiếp trong playlist nếu có nhiều video, hoặc lặp 0ms liền mạch (24/24)
                 const validVideos = Array.isArray(customCharacters) 
                   ? customCharacters.filter(c => Boolean(c.url || c.mediaUrl)) 

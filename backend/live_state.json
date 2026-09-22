@@ -5,11 +5,11 @@
   "characterName": "BAN BANH",
   "mediaUrl": "/uploads/media-1790052668369-185423420.mp4",
   "isVideo": true,
-  "videoPlaybackEvent": "play",
-  "isPlaying": true,
+  "videoPlaybackEvent": "time_sync",
+  "isPlaying": false,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1790057477815,
+  "updatedAt": 1790060171772,
   "flvUrl": null,
   "isConnected": false,
   "type": "MASTER_LIVE_STATE_UPDATE",
@@ -47,7 +47,7 @@
   "productPrice": null,
   "overlayImage": null,
   "overlayImagePos": "top-left",
-  "overlayText": "🌸 CHÀO MỪNG ĐẾN VỚI PHIÊN LIVESTREAM",
+  "overlayText": null,
   "overlayTextPos": "top",
   "overlayTextStyle": "fire_sale",
   "isMediaPinned": false,
@@ -59,8 +59,14 @@
   "overlayTextFontSize": 20,
   "overlayTextColor": "#ffffff",
   "avatarSpeaker": "avatar_1",
-  "voiceId": "brain_auto",
+  "voiceId": "vn_f_dna_01_liveselling_energy",
   "secondaryMediaTransform": null,
   "overlayImageTransform": null,
-  "overlayTextTransform": null
+  "overlayTextTransform": {
+    "x": 5,
+    "y": 5,
+    "width": 90,
+    "height": 12,
+    "zIndex": 30
+  }
 }
