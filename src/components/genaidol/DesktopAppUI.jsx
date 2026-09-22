@@ -2610,9 +2610,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         overlayTextFontSize: overlayTextFontSize || 20,
         overlayTextColor: overlayTextColor || '#ffffff',
         overlayTextTransform: overlayTextTransform || null,
+        mainMediaUrl: effectiveMediaUrl,
         mainMediaTransform: mainMediaTransform || null,
         mainMediaChromaKey: mainMediaChromaKey || null,
         avatarTransforms: avatarTransforms || null,
+        syncedAvatars: e.detail?.syncedAvatars || (e.detail || {}).multiAvatarConfig?.avatars || null,
         isMediaPinned: !!isMediaPinned
       };
       setFlowSequencerOverlay(overlayData);
@@ -3927,9 +3929,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       multiAvatarConfig?._syncedFromSequencer === true
     );
     if (isSyncedCanvas) {
-      const activeList = (multiAvatarConfig.avatars || [])
-        .filter(a => a.enabled)
-        .slice(0, multiAvatarConfig.activeCount)
+      const sourceAvatars = (isMasterStageSynced && flowSequencerOverlay?.syncedAvatars && flowSequencerOverlay.syncedAvatars.length > 0)
+        ? flowSequencerOverlay.syncedAvatars
+        : (multiAvatarConfig.avatars || []);
+
+      const activeList = sourceAvatars
+        .filter(a => isMasterStageSynced ? true : a.enabled)
+        .slice(0, isMasterStageSynced ? Math.max(1, sourceAvatars.length) : multiAvatarConfig.activeCount)
         .map((avatar, idx) => {
           const isSpeakingNow = isSpeakerActive && (
             activeSpeakerId === avatar.id || 
@@ -3939,13 +3945,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           const customMatch = (customCharacters && Array.isArray(customCharacters)) 
             ? customCharacters.find(c => c.id === selectedCharacter && (c.url || c.mediaUrl)) 
             : null;
-          const fallbackUrl = customMatch?.url || userLockedMediaUrl || '';
+          // ⚡ FIX: Khi đang đồng bộ từ Sequencer, tuyệt đối KHÔNG lấy nhân vật cũ (customMatch) mà phải lấy đúng media từ sequencer
+          const fallbackUrl = isMasterStageSynced 
+            ? (userLockedMediaUrl || '') 
+            : (customMatch?.url || userLockedMediaUrl || '');
           
           const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || '';
           const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || '';
-          const vidSrc = isSpeakingNow 
+          const vidSrc = avatar.resolvedVidSrc || (isSpeakingNow 
             ? (talkSrc || idleSrc || (idx === 0 ? fallbackUrl : '')) 
-            : (idleSrc || talkSrc || (idx === 0 ? fallbackUrl : ''));
+            : (idleSrc || talkSrc || (idx === 0 ? fallbackUrl : '')));
           
           return {
             ...avatar,
@@ -4049,21 +4058,28 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           >
             {/* Studio Transformed Background Layer — dùng backgroundUrl hoặc fallback sang userLockedMediaUrl */}
             {(multiAvatarConfig.backgroundUrl || (isMasterStageSynced && userLockedMediaUrl)) && (() => {
-              const bgSrc = multiAvatarConfig.backgroundUrl || userLockedMediaUrl;
+              const bgSrc = (isMasterStageSynced && flowSequencerOverlay?.mainMediaUrl) || multiAvatarConfig.backgroundUrl || userLockedMediaUrl;
               const bgIsVideo = !isImageMedia(bgSrc);
+              const bgTrans = (isMasterStageSynced && flowSequencerOverlay?.mainMediaTransform)
+                ? flowSequencerOverlay.mainMediaTransform
+                : (multiAvatarConfig.backgroundTransform || { x: 0, y: 0, width: 100, height: 100 });
+              const bgChroma = isMasterStageSynced && flowSequencerOverlay?.mainMediaChromaKey
+                ? getChromaStyle(flowSequencerOverlay.mainMediaChromaKey)
+                : {};
               return (
                 <div
                   className="absolute pointer-events-none"
                   style={{
-                    left: `${multiAvatarConfig.backgroundTransform?.x ?? 0}%`,
-                    top: `${multiAvatarConfig.backgroundTransform?.y ?? 0}%`,
-                    width: `${multiAvatarConfig.backgroundTransform?.width ?? 100}%`,
-                    height: `${multiAvatarConfig.backgroundTransform?.height ?? 100}%`,
-                    transform: (multiAvatarConfig.backgroundTransform?.scale && multiAvatarConfig.backgroundTransform?.scale !== 100)
-                      ? `scale(${multiAvatarConfig.backgroundTransform.scale / 100})`
+                    left: `${bgTrans?.x ?? 0}%`,
+                    top: `${bgTrans?.y ?? 0}%`,
+                    width: `${bgTrans?.width ?? 100}%`,
+                    height: `${bgTrans?.height ?? 100}%`,
+                    transform: (bgTrans?.scale && bgTrans?.scale !== 100)
+                      ? `scale(${bgTrans.scale / 100})`
                       : 'none',
                     transformOrigin: 'center center',
-                    zIndex: 0
+                    zIndex: bgTrans?.zIndex || 0,
+                    ...bgChroma
                   }}
                 >
                   {bgIsVideo ? (
@@ -4079,8 +4095,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       controls={false}
                       className="w-full h-full bg-black select-none"
                       style={{
-                        objectFit: multiAvatarConfig.backgroundTransform?.objectFit || 'cover',
-                        filter: `${multiAvatarConfig.backgroundTransform?.blur ? `blur(${multiAvatarConfig.backgroundTransform.blur}px)` : ''} ${multiAvatarConfig.backgroundTransform?.brightness ? `brightness(${multiAvatarConfig.backgroundTransform.brightness}%)` : ''}`.trim() || 'none'
+                        objectFit: bgTrans?.objectFit || 'cover',
+                        filter: `${bgTrans?.blur ? `blur(${bgTrans.blur}px)` : ''} ${bgTrans?.brightness ? `brightness(${bgTrans.brightness}%)` : ''}`.trim() || 'none',
+                        ...bgChroma
                       }}
                     />
                   ) : (
@@ -4089,8 +4106,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       alt="Studio Background"
                       className="w-full h-full"
                       style={{
-                        objectFit: multiAvatarConfig.backgroundTransform?.objectFit || 'cover',
-                        filter: `${multiAvatarConfig.backgroundTransform?.blur ? `blur(${multiAvatarConfig.backgroundTransform.blur}px)` : ''} ${multiAvatarConfig.backgroundTransform?.brightness ? `brightness(${multiAvatarConfig.backgroundTransform.brightness}%)` : ''}`.trim() || 'none'
+                        objectFit: bgTrans?.objectFit || 'cover',
+                        filter: `${bgTrans?.blur ? `blur(${bgTrans.blur}px)` : ''} ${bgTrans?.brightness ? `brightness(${bgTrans.brightness}%)` : ''}`.trim() || 'none',
+                        ...bgChroma
                       }}
                     />
                   )}
@@ -4146,27 +4164,29 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             {activeList.map((avatar, idx) => {
               const vidSrc = avatar.resolvedVidSrc;
               const isSpeakingNow = avatar.isSpeakingNow;
-              // Nếu là nhân vật đơn hoặc nhân vật 1 trên sân khấu chính: Hiển thị Full Màn Hình 100% (trừ khi có toạ độ tuỳ chỉnh riêng của multi-avatar 2-4 người)
-              const isSoloOrPrimary = activeList.length === 1 || (idx === 0 && (!avatar.transform || (avatar.transform.x === 4 && avatar.transform.y === 8 && avatar.transform.width === 48)));
-              const transform = isSoloOrPrimary
-                ? { x: 0, y: 0, width: 100, height: 100, zIndex: 5, pose: 'stand', objectFit: 'cover', borderRadius: 0 }
-                : (avatar.transform || { 
-                    x: idx === 1 ? 55 : idx === 2 ? 25 : 65, 
-                    y: idx === 1 ? 25 : idx === 2 ? 60 : 10, 
-                    width: 42, 
-                    height: 65, 
-                    zIndex: 6, 
-                    pose: 'stand', 
-                    objectFit: 'cover',
-                    borderRadius: 12
-                  });
+              // ⚡ FIX: Khi đang đồng bộ từ Sequencer, dùng chính xác transform của avatar từ sequencer (không ép full 100% gây tràn che nền)
+              const isSoloOrPrimary = !isMasterStageSynced && (activeList.length === 1 || (idx === 0 && (!avatar.transform || (avatar.transform.x === 4 && avatar.transform.y === 8 && avatar.transform.width === 48))));
+              const transform = (isMasterStageSynced && flowSequencerOverlay?.avatarTransforms?.[avatar.id])
+                || avatar.transform 
+                || (isSoloOrPrimary
+                  ? { x: 0, y: 0, width: 100, height: 100, zIndex: 5, pose: 'stand', objectFit: 'cover', borderRadius: 0 }
+                  : { 
+                      x: idx === 1 ? 55 : idx === 2 ? 25 : 65, 
+                      y: idx === 1 ? 25 : idx === 2 ? 60 : 10, 
+                      width: 42, 
+                      height: 65, 
+                      zIndex: 6 + idx, 
+                      pose: 'stand', 
+                      objectFit: 'cover', 
+                      borderRadius: 12 
+                    });
               const isImg = isImageMedia(vidSrc);
               const chromaStyle = getChromaStyle(avatar.chromaKey || multiAvatarConfig.chromaKey);
 
               return (
                 <div 
                   key={avatar.id} 
-                  className="absolute overflow-hidden transition-all duration-300 pointer-events-none"
+                  className="absolute overflow-visible transition-all duration-300 pointer-events-none"
                   style={{
                     left: `${transform.x ?? 0}%`,
                     top: `${transform.y ?? 0}%`,
@@ -4177,8 +4197,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   }}
                 >
                   <div 
-                    className="w-full h-full overflow-hidden rounded-[inherit] bg-transparent"
-                    style={chromaStyle}
+                    className={`relative w-full h-full overflow-hidden rounded-[inherit] ${
+                      isSpeakingNow ? 'ring-2 ring-emerald-400/80 shadow-md' : ''
+                    }`}
+                    style={{ background: avatar?.chromaKey?.enabled ? 'transparent' : 'transparent', ...chromaStyle }}
                   >
                     {isImg ? (
                       <img
@@ -4211,6 +4233,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                         }}
                       />
                     )}
+
+                    {/* Badge Tên & Loa Nói Của Avatar (Khớp 100% Sân Khấu Phụ) */}
+                    <div className="absolute top-1 left-1 bg-black/85 backdrop-blur-xs text-white text-[8px] font-black px-1.5 py-0.5 rounded flex items-center gap-1 border border-white/20 pointer-events-none z-30">
+                      <span className={`w-1.5 h-1.5 rounded-full ${isSpeakingNow ? 'bg-cyan-400 animate-ping' : 'bg-gray-400'}`} />
+                      <span>#{idx + 1} {avatar.name || `Nhân Vật ${idx + 1}`}</span>
+                      {isSpeakingNow && <Volume2 size={9} className="text-cyan-300 animate-bounce" />}
+                    </div>
                   </div>
                 </div>
               );
@@ -4720,12 +4749,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               {isMasterStageSynced && flowSequencerOverlay?.secondaryMediaUrl && (() => {
                 const pipTrans = flowSequencerOverlay.secondaryMediaTransform || {
                   x: flowSequencerOverlay.secondaryMediaPos === 'top-left' ? 4 : flowSequencerOverlay.secondaryMediaPos === 'bottom-left' ? 4 : flowSequencerOverlay.secondaryMediaPos === 'bottom-right' ? 55 : 55,
-                  y: flowSequencerOverlay.secondaryMediaPos === 'bottom-left' || flowSequencerOverlay.secondaryMediaPos === 'bottom-right' ? 70 : 4,
+                  y: flowSequencerOverlay.secondaryMediaPos === 'bottom-left' || flowSequencerOverlay.secondaryMediaPos === 'bottom-right' ? 70 : 8,
                   width: flowSequencerOverlay.secondaryMediaScale || 40,
                   height: 25,
-                  zIndex: 25
+                  zIndex: 20
                 };
                 const pipChroma = getChromaStyle(flowSequencerOverlay.secondaryMediaChromaKey);
+                const isPipImg = isImageMedia(flowSequencerOverlay.secondaryMediaUrl);
 
                 return (
                   <div 
@@ -4735,19 +4765,28 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       top: `${pipTrans.y}%`,
                       width: `${pipTrans.width}%`,
                       height: pipTrans.height ? `${pipTrans.height}%` : 'auto',
-                      zIndex: pipTrans.zIndex || 25,
+                      zIndex: pipTrans.zIndex || 20,
                       ...pipChroma
                     }}
                   >
-                    <video
-                      src={flowSequencerOverlay.secondaryMediaUrl}
-                      autoPlay
-                      loop
-                      muted
-                      playsInline
-                      className="w-full h-full object-cover rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.85)] border-2 border-white/50 backdrop-blur-sm"
-                      style={pipChroma}
-                    />
+                    {isPipImg ? (
+                      <img
+                        src={flowSequencerOverlay.secondaryMediaUrl}
+                        alt="PiP Media"
+                        className="w-full h-full object-cover rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.85)] border-2 border-white/50 backdrop-blur-sm"
+                        style={pipChroma}
+                      />
+                    ) : (
+                      <video
+                        src={flowSequencerOverlay.secondaryMediaUrl}
+                        autoPlay
+                        loop
+                        muted
+                        playsInline
+                        className="w-full h-full object-cover rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.85)] border-2 border-white/50 backdrop-blur-sm"
+                        style={pipChroma}
+                      />
+                    )}
                   </div>
                 );
               })()}
@@ -4755,11 +4794,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               {/* LỚP 2: OVERLAY HÌNH ẢNH / BANNER / POSTER TỪ SEQUENCER (ẢNH 4) */}
               {isMasterStageSynced && flowSequencerOverlay?.overlayImage && (() => {
                 const bannerTrans = flowSequencerOverlay.overlayImageTransform || {
-                  x: flowSequencerOverlay.overlayImagePos === 'top-right' ? 65 : flowSequencerOverlay.overlayImagePos === 'bottom-left' ? 4 : flowSequencerOverlay.overlayImagePos === 'bottom-right' ? 65 : 4,
-                  y: flowSequencerOverlay.overlayImagePos === 'bottom-left' || flowSequencerOverlay.overlayImagePos === 'bottom-right' ? 70 : 4,
-                  width: 32,
+                  x: flowSequencerOverlay.overlayImagePos === 'top-right' ? 65 : flowSequencerOverlay.overlayImagePos === 'bottom-left' ? 4 : flowSequencerOverlay.overlayImagePos === 'bottom-right' ? 65 : 10,
+                  y: flowSequencerOverlay.overlayImagePos === 'bottom-left' || flowSequencerOverlay.overlayImagePos === 'bottom-right' ? 70 : 12,
+                  width: 80,
                   height: 20,
-                  zIndex: 30
+                  zIndex: 25
                 };
                 const bannerChroma = getChromaStyle(flowSequencerOverlay.overlayImageChromaKey);
 

@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.5.7';
-export const RELEASE_DATE = '21/09/2026';
+export const APP_VERSION = '4.5.8';
+export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.5.7 - Đồng Bộ Tức Thì TOÀN BỘ Canvas Sân Khấu Phụ → Sân Khấu Chính Khi Bấm Phát Live',
-    description: '1. Gửi Toàn Bộ multiAvatarConfig Kể Cả enabled=false: Sân khấu phụ giờ luôn đẩy đầy đủ cấu hình (video nền, avatar 1-4, extra layers, positions, transforms) ra sân khấu chính kể cả khi Multi-Avatar Studio chưa được bật; 2. Render Background Video/Ảnh Đầy Đủ: Sân khấu chính tự động hiển thị video nền chính từ bước kịch bản hiện tại; nếu không có backgroundUrl thì fallback sang userLockedMediaUrl — không bao giờ bị màn đen; 3. Apply Toàn Bộ Canvas Từ Sequencer: Khi nhận event từ sequencer (fromSequencer=true), sân khấu chính apply đầy đủ toàn bộ config thay vì chỉ merge transforms; 4. Render Canvas Dù activeCount=0 hoặc enabled=false: Khi đang đồng bộ (_syncedFromSequencer=true), sân khấu chính luôn render Freeform Canvas đúng với bố cục sân khấu phụ; 5. Extra Layers + Positions Giữ Nguyên 100%: Toàn bộ lớp extra (ảnh, video, overlay text, banner) với đúng vị trí x/y/width/height/zIndex được tái hiện chính xác; 6. Khóa Chặt 100% Toàn Bộ Hệ Thống.'
+    title: '⚡ Bản Cập Nhật v4.5.8 - Đồng Bộ Hoàn Hảo 100% Toàn Bộ Trình Chiếu Sân Khấu Phụ Ra Sân Khấu Chính',
+    description: '1. Đồng Bộ Tức Thì 5 Lớp Sân Khấu: Khi bấm Đồng Bộ hoặc Phát Live, toàn bộ 5 lớp từ sân khấu phụ (Video/Ảnh Nền, Video/Ảnh PiP, 1-4 Avatar AI, Banner Poster, Tiêu đề chữ Typography) được đẩy ngay lập tức ra sân khấu chính và giữ nguyên 100% tất cả vị trí, kích thước và định dạng; 2. Triệt Tiêu Lỗi Hiển Thị Nhân Vật Cũ: Loại bỏ triệt để lỗi sân khấu chính bị đè bởi ảnh/video nhân vật cũ được chọn trước đó, phân giải chính xác media từ từng phân đoạn kịch bản live; 3. Giữ Nguyên Bố Cục Từng Avatar: Vô hiệu hóa việc ép avatar toàn màn hình khi sync, đảm bảo vị trí và kích thước của từng nhân vật khớp hoàn toàn với sân khấu phụ; 4. Hỗ Trợ Đầy Đủ Ảnh & Video Cho PiP: Lớp PiP giờ đây hiển thị mượt mà cả video lẫn hình ảnh sản phẩm; 5. Tự Động Lặp Lại Kịch Bản Vô Hạn: Phát live tuần tự từng bước một, đọc kịch bản và tự động chuyển bước, khi hết sẽ quay lại bước 1 lặp vô hạn cho đến khi người dùng tắt live; 6. Khóa Chặt 100% Toàn Bộ Các Tab Module Không Liên Quan.'
   }
 ];
 

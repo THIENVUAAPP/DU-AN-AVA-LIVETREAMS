@@ -519,6 +519,33 @@ export default function LivestreamFlowSequencer() {
     const overlayImgToPlay = resolved.overlayImage;
     const overlayTxtToPlay = resolved.overlayText;
 
+    // 👥 Tạo danh sách Avatar đã phân giải đầy đủ Media, Toạ độ Transform & Trạng thái phát chuẩn 100%
+    const safeAvatarsList = (multiAvatarConfig?.avatars && multiAvatarConfig.avatars.length > 0)
+      ? multiAvatarConfig.avatars
+      : DEFAULT_MULTI_AVATAR_CONFIG.avatars;
+    const activeCount = multiAvatarConfig?.activeCount || 1;
+    const avatarsList = safeAvatarsList.slice(0, activeCount);
+
+    const syncedAvatars = avatarsList.map((av, avIdx) => {
+      const isCurrentSpeaker = (step.avatarSpeaker === av.id) || (step.avatarSpeaker === 'all') || (!step.avatarSpeaker && avIdx === 0);
+      const transform = (resolved.avatarTransforms && resolved.avatarTransforms[av.id])
+        || (step.avatarTransforms && step.avatarTransforms[av.id]) 
+        || av.transform 
+        || { x: 5 + avIdx * 24, y: 15, width: 45, height: 75, zIndex: 10 + avIdx };
+      const vidSrc = isCurrentSpeaker 
+        ? (av.talkVideo || av.idleVideo || mediaToPlay) 
+        : (av.idleVideo || av.talkVideo || mediaToPlay);
+      return {
+        ...av,
+        id: av.id,
+        name: av.name || `Nhân Vật ${avIdx + 1}`,
+        resolvedVidSrc: vidSrc,
+        transform,
+        chromaKey: (av.chromaKey && av.chromaKey.enabled) ? av.chromaKey : null,
+        isSpeakingNow: isCurrentSpeaker && isLivePlaying
+      };
+    });
+
     const payload = {
       mediaUrl: mediaToPlay,
       blobUrl: mediaToPlay,
@@ -546,6 +573,7 @@ export default function LivestreamFlowSequencer() {
       overlayTextTransform: resolved.overlayTextTransform || step.overlayTextTransform || null,
       avatarSpeaker: step.avatarSpeaker || 'avatar_1',
       avatarTransforms: resolved.avatarTransforms || step.avatarTransforms || null,
+      syncedAvatars: syncedAvatars,
       isMediaPinned: !!step.isMediaPinned,
       isPlaying: isLivePlaying
     };
@@ -561,6 +589,8 @@ export default function LivestreamFlowSequencer() {
         isPlaying: isLivePlaying,
         currentTime: 0,
         source: 'sequencer',
+        mainMediaTransform: resolved.mainMediaTransform || null,
+        mainMediaChromaKey: resolved.mainMediaChromaKey || null,
         secondaryMediaUrl: secondaryToPlay || null,
         secondaryMediaTransform: resolved.secondaryMediaTransform || null,
         secondaryMediaChromaKey: resolved.secondaryMediaChromaKey || null,
@@ -574,37 +604,66 @@ export default function LivestreamFlowSequencer() {
         overlayTextTransform: resolved.overlayTextTransform || null,
         avatarSpeaker: step.avatarSpeaker || 'avatar_1',
         avatarTransforms: resolved.avatarTransforms || null,
+        syncedAvatars: syncedAvatars,
         timestamp: Date.now()
       });
     } catch (e) {}
 
-    // 2. Custom Events nội bộ — GỬI TOÀN BỘ multiAvatarConfig KỂ CẢ KHI enabled=false
-    // ⚡ Fix: Đây là root cause khiến video/ảnh/avatar không đồng bộ ra sân khấu chính
+    // 2. Custom Events nội bộ — GỬI TOÀN BỘ multiAvatarConfig & syncedAvatars
+    // ⚡ Tái hiện 100% nguyên vẹn toàn bộ 5 lớp từ Sân Khấu Phụ sang Sân Khấu Chính
+    const syncedConfig = {
+      ...(multiAvatarConfig || {}),
+      enabled: true,
+      activeCount: avatarsList.length,
+      avatars: syncedAvatars,
+      activeSpeakerId: step.avatarSpeaker || 'avatar_1',
+      fromSequencer: true,
+      syncedAt: Date.now()
+    };
+
     const fullSyncPayload = {
       ...payload,
-      multiAvatarConfig: multiAvatarConfig ? {
-        ...multiAvatarConfig,
-        activeSpeakerId: step.avatarSpeaker || 'avatar_1',
-        // Đánh dấu đây là dữ liệu từ sequencer để sân khấu chính ưu tiên render đúng
-        fromSequencer: true,
-        syncedAt: Date.now()
-      } : null
+      syncedAvatars: syncedAvatars,
+      multiAvatarConfig: syncedConfig
     };
+
+    // Lưu ngay vào localStorage để duy trì trạng thái kể cả khi người dùng reload hoặc đóng modal
+    try {
+      localStorage.setItem('avalive_master_sync_active', 'true');
+      if (mediaToPlay) localStorage.setItem('avalive_user_locked_media', mediaToPlay);
+      localStorage.setItem('avalive_sequencer_overlay', JSON.stringify({
+        mainMediaUrl: mediaToPlay,
+        mainMediaTransform: resolved.mainMediaTransform || step.mainMediaTransform || null,
+        mainMediaChromaKey: resolved.mainMediaChromaKey || step.mainMediaChromaKey || null,
+        secondaryMediaUrl: secondaryToPlay || null,
+        secondaryMediaTransform: resolved.secondaryMediaTransform || step.secondaryMediaTransform || null,
+        secondaryMediaChromaKey: resolved.secondaryMediaChromaKey || step.secondaryMediaChromaKey || null,
+        overlayImage: overlayImgToPlay || null,
+        overlayImageTransform: resolved.overlayImageTransform || step.overlayImageTransform || null,
+        overlayImageChromaKey: resolved.overlayImageChromaKey || step.overlayImageChromaKey || null,
+        overlayText: overlayTxtToPlay || null,
+        overlayTextStyle: resolved.overlayTextStyle || step.overlayTextStyle || 'fire_sale',
+        overlayTextFontFamily: resolved.overlayTextFontFamily || step.overlayTextFontFamily || 'be_vietnam',
+        overlayTextFontSize: resolved.overlayTextFontSize || step.overlayTextFontSize || 20,
+        overlayTextColor: resolved.overlayTextColor || step.overlayTextColor || '#ffffff',
+        overlayTextTransform: resolved.overlayTextTransform || step.overlayTextTransform || null,
+        avatarSpeaker: step.avatarSpeaker || 'avatar_1',
+        avatarTransforms: resolved.avatarTransforms || step.avatarTransforms || null,
+        syncedAvatars: syncedAvatars,
+        isMediaPinned: !!step.isMediaPinned
+      }));
+    } catch (e) {}
+
     window.dispatchEvent(new CustomEvent('avalive:update_master_media', { detail: fullSyncPayload }));
     window.dispatchEvent(new CustomEvent('avalive_flow_step_changed', { detail: fullSyncPayload }));
     if (step.avatarSpeaker) {
       window.dispatchEvent(new CustomEvent('avalive:speaker_change', { detail: { speakerId: step.avatarSpeaker, avatarId: step.avatarSpeaker, isSpeaking: isLivePlaying } }));
       window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', { detail: { speakerId: step.avatarSpeaker, avatarId: step.avatarSpeaker, isSpeaking: isLivePlaying } }));
     }
-    // Luôn dispatch multiAvatarConfig kể cả enabled=false để sân khấu chính tái hiện đúng canvas
-    if (multiAvatarConfig) {
-      window.dispatchEvent(new CustomEvent('avalive_multi_avatar_changed', {
-        detail: {
-          ...multiAvatarConfig,
-          activeSpeakerId: step.avatarSpeaker || 'avatar_1'
-        }
-      }));
-    }
+    // Luôn dispatch multiAvatarConfig đã đồng bộ để các listener nhận ngay
+    window.dispatchEvent(new CustomEvent('avalive_multi_avatar_changed', {
+      detail: syncedConfig
+    }));
 
     // 3. Gửi sang Backend API Live State
     fetch('/api/live-state', {
