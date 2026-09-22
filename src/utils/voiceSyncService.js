@@ -7151,10 +7151,10 @@ export const getChromaStyle = (chromaConfig) => {
 };
 
 /**
- * ✂️ TÁCH NỀN HÌNH ẢNH TRỰC TIẾP QUA CANVAS 0ms (SIÊU SẠCH 4K & TRONG SUỐT 100%)
+ * ✂️ TÁCH NỀN HÌNH ẢNH TRỰC TIẾP QUA CANVAS 0ms (SIÊU SẠCH 4K & TRONG SUỐT 100% - XÓA SẠCH KHUNG VIỀN ẢNH)
  */
-export const removeImageBackgroundCanvas = (imgSrc, mode = 'green', tolerance = 40) => {
-  return new Promise((resolve, reject) => {
+export const removeImageBackgroundCanvas = (imgSrc, mode = 'auto', tolerance = 45) => {
+  return new Promise((resolve) => {
     if (!imgSrc) return resolve('');
     const img = new Image();
     img.crossOrigin = 'anonymous';
@@ -7172,33 +7172,35 @@ export const removeImageBackgroundCanvas = (imgSrc, mode = 'green', tolerance = 
         const imgData = ctx.getImageData(0, 0, w, h);
         const data = imgData.data;
 
-        // 1. Lấy mẫu màu từ 4 góc và đường viền (Sample border colors for ambient background detection)
-        const samplePoints = [
-          [2, 2], [Math.floor(w / 2), 2], [w - 3, 2],
+        // 1. Lấy mẫu màu từ 4 cạnh và 4 góc (Sample ambient background along all 4 borders)
+        const sampleCoords = [
+          [2, 2], [Math.floor(w / 4), 2], [Math.floor(w / 2), 2], [Math.floor(w * 0.75), 2], [w - 3, 2],
           [2, Math.floor(h / 4)], [w - 3, Math.floor(h / 4)],
           [2, Math.floor(h / 2)], [w - 3, Math.floor(h / 2)],
-          [2, h - 3], [Math.floor(w / 2), h - 3], [w - 3, h - 3]
+          [2, Math.floor(h * 0.75)], [w - 3, Math.floor(h * 0.75)],
+          [2, h - 3], [Math.floor(w / 4), h - 3], [Math.floor(w / 2), h - 3], [Math.floor(w * 0.75), h - 3], [w - 3, h - 3]
         ];
 
-        let bgR = 0, bgG = 0, bgB = 0;
-        let validSamples = 0;
-        samplePoints.forEach(([sx, sy]) => {
+        const bgSamples = [];
+        sampleCoords.forEach(([sx, sy]) => {
           if (sx >= 0 && sx < w && sy >= 0 && sy < h) {
             const idx = (sy * w + sx) * 4;
-            bgR += data[idx];
-            bgG += data[idx + 1];
-            bgB += data[idx + 2];
-            validSamples++;
+            bgSamples.push({ r: data[idx], g: data[idx + 1], b: data[idx + 2] });
           }
         });
-        if (validSamples > 0) {
-          bgR = Math.round(bgR / validSamples);
-          bgG = Math.round(bgG / validSamples);
-          bgB = Math.round(bgB / validSamples);
+
+        // Tính màu trung bình viền
+        let avgR = 0, avgG = 0, avgB = 0;
+        bgSamples.forEach(s => { avgR += s.r; avgG += s.g; avgB += s.b; });
+        if (bgSamples.length > 0) {
+          avgR = Math.round(avgR / bgSamples.length);
+          avgG = Math.round(avgG / bgSamples.length);
+          avgB = Math.round(avgB / bgSamples.length);
         }
 
-        const effectiveTol = Math.max(15, Math.min(90, tolerance || 40));
+        const effectiveTol = Math.max(20, Math.min(85, tolerance || 45));
 
+        // 2. Quét từng pixel và xóa sạch mọi loại phông nền
         for (let i = 0; i < data.length; i += 4) {
           const r = data[i];
           const g = data[i + 1];
@@ -7208,71 +7210,87 @@ export const removeImageBackgroundCanvas = (imgSrc, mode = 'green', tolerance = 
 
           let isBg = false;
 
+          const greenDiff = g - Math.max(r, b);
+          const blueDiff = b - Math.max(r, g);
+          const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+          const maxVal = Math.max(r, g, b);
+          const minVal = Math.min(r, g, b);
+          const colorSpread = maxVal - minVal;
+
+          // Kiểm tra da người để không bị xóa nhầm
+          const isSkinTone = (r > 110 && g > 75 && b > 55 && r > g && g > b && (r - g) >= 10 && colorSpread > 15);
+
           if (mode === 'green') {
-            // Khử phông xanh lá cây & viền ám xanh (Chroma Green)
-            const greenDiff = g - Math.max(r, b);
-            if ((g > 60 && greenDiff > 8) || (g > 100 && g > r * 1.15 && g > b * 1.15)) {
+            // Phông xanh lá cây
+            if ((g > 55 && greenDiff > 8) || (g > 90 && g > r * 1.12 && g > b * 1.12)) {
               isBg = true;
             }
           } else if (mode === 'blue') {
-            // Khử phông xanh dương (Chroma Blue)
-            const blueDiff = b - Math.max(r, g);
-            if ((b > 60 && blueDiff > 8) || (b > 100 && b > r * 1.15 && b > g * 1.15)) {
+            // Phông xanh dương
+            if ((b > 55 && blueDiff > 8) || (b > 90 && b > r * 1.12 && b > g * 1.12)) {
+              isBg = true;
+            }
+          } else if (mode === 'black') {
+            // Phông đen / tối
+            if (maxVal < 45) {
               isBg = true;
             }
           } else if (mode === 'white' || mode === 'room' || mode === 'wall') {
-            // Khử nền trắng / Tường phòng sáng / Nền phòng có vân nhẹ
-            const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-            const isSkin = (r > 120 && g > 80 && b > 60 && r > g && g > b && (r - g) > 15);
-            const isDarkClothing = (r < 60 && g < 60 && b < 60);
-            const distFromBg = Math.sqrt(Math.pow(r - bgR, 2) + Math.pow(g - bgG, 2) + Math.pow(b - bgB, 2));
-            
-            if (!isSkin && !isDarkClothing) {
-              if (luminance > 185 && (Math.max(r, g, b) - Math.min(r, g, b)) < 45) {
+            // Phông trắng, tường sáng, phòng
+            if (!isSkinTone) {
+              if (luminance > 185 && colorSpread < 45) {
                 isBg = true;
-              } else if (distFromBg < effectiveTol * 1.4) {
-                isBg = true;
+              } else {
+                const distFromBorder = Math.sqrt(Math.pow(r - avgR, 2) + Math.pow(g - avgG, 2) + Math.pow(b - avgB, 2));
+                if (distFromBorder < effectiveTol * 1.4) isBg = true;
               }
             }
-          } else if (mode === 'black') {
-            // Khử nền đen (Screen)
-            const maxVal = Math.max(r, g, b);
-            if (maxVal < 40) {
+          } else {
+            // 🪄 MODE AUTO: TỰ ĐỘNG NHẬN DIỆN VÀ XÓA MỌI LOẠI NỀN (XANH, ĐEN, TRẮNG, TƯỜNG, PHÒNG, GRADIENT)
+            if ((g > 55 && greenDiff > 8) || (g > 90 && g > r * 1.12 && g > b * 1.12)) {
               isBg = true;
-            }
-          } else if (mode === 'auto' || mode === 'smart') {
-            // 🪄 TỰ ĐỘNG XÓA TẤT CẢ CÁC LOẠI NỀN (LÁ, LAM, TRẮNG/PHÒNG, ĐEN, TƯỜNG)
-            const greenDiff = g - Math.max(r, b);
-            const blueDiff = b - Math.max(r, g);
-            const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-            const isSkin = (r > 120 && g > 80 && b > 60 && r > g && g > b && (r - g) > 15);
-            const isDarkClothing = (r < 60 && g < 60 && b < 60);
-            const distFromBg = Math.sqrt(Math.pow(r - bgR, 2) + Math.pow(g - bgG, 2) + Math.pow(b - bgB, 2));
-
-            if ((g > 60 && greenDiff > 8) || (g > 100 && g > r * 1.15 && g > b * 1.15)) {
-              // Phông xanh lá
+            } else if ((b > 55 && blueDiff > 8) || (b > 90 && b > r * 1.12 && b > g * 1.12)) {
               isBg = true;
-            } else if ((b > 60 && blueDiff > 8) || (b > 100 && b > r * 1.15 && b > g * 1.15)) {
-              // Phông xanh dương
+            } else if (maxVal < 42) {
               isBg = true;
-            } else if (!isSkin && !isDarkClothing && luminance > 185 && (Math.max(r, g, b) - Math.min(r, g, b)) < 45) {
-              // Nền trắng / tường sáng
-              isBg = true;
-            } else if (Math.max(r, g, b) < 40) {
-              // Nền đen
-              isBg = true;
-            } else if (!isSkin && !isDarkClothing && distFromBg < effectiveTol * 1.4) {
-              // Nền tường / phòng ambient theo góc
-              isBg = true;
+            } else if (!isSkinTone) {
+              if (luminance > 190 && colorSpread < 40) {
+                isBg = true;
+              } else {
+                // So khớp với mẫu màu viền xung quanh
+                for (let s = 0; s < bgSamples.length; s++) {
+                  const sm = bgSamples[s];
+                  const dist = Math.sqrt(Math.pow(r - sm.r, 2) + Math.pow(g - sm.g, 2) + Math.pow(b - sm.b, 2));
+                  if (dist < effectiveTol * 1.3) {
+                    isBg = true;
+                    break;
+                  }
+                }
+              }
             }
           }
 
           if (isBg) {
-            data[i + 3] = 0; // Xóa sạch sẽ 100% trong suốt (Zero background residue)
+            data[i + 3] = 0; // Xóa sạch sẽ 100% trong suốt
           } else {
-            // Khử viền ám màu xanh (Color Despill) cho người/vật thể
-            if (g > Math.max(r, b) && (g - Math.max(r, b)) > 5) {
+            // Khử viền ám xanh lá hoặc xanh dương (Color Despill)
+            if (g > Math.max(r, b) && greenDiff > 5) {
               data[i + 1] = Math.round((r + b) / 2);
+            } else if (b > Math.max(r, g) && blueDiff > 5) {
+              data[i + 2] = Math.round((r + g) / 2);
+            }
+          }
+        }
+
+        // 3. 🛡️ XÓA SẠCH HOÀN TOÀN ĐƯỜNG KHUNG VIỀN Ở 4 CẠNH ẢNH (Ảnh số 1: Xóa luôn khung của bức ảnh)
+        // Loại bỏ triệt để mọi vạch viền khung ảnh, viền đen chụp màn hình, viền cắt viền hộp 4 cạnh
+        const borderPad = Math.max(3, Math.min(6, Math.floor(Math.min(w, h) * 0.008)));
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            if (x < borderPad || x >= w - borderPad || y < borderPad || y >= h - borderPad) {
+              const idx = (y * w + x) * 4;
+              // Nếu pixel ở viền rìa ảnh, xóa trong suốt tuyệt đối để không còn sót lại khung viền
+              data[idx + 3] = 0;
             }
           }
         }
@@ -7919,14 +7937,16 @@ export function humanizeVoiceSpeechText(rawText, voice = null) {
   const isVietnamese = !voice || voice?.lang === 'vi-VN' || voice?.region === 'vi' || voice?.id?.startsWith('vn_') || voice?.id === 'free_vi_female' || voice?.id === 'el_adam';
   if (!isVietnamese) return text;
 
-  // Dọn dẹp khoảng trắng và dấu câu thừa để âm thanh mượt mà không khựng ngắt dài nhưng giữ nguyên dòng
+  // Dọn dẹp khoảng trắng, xuống dòng và dấu câu thừa để âm thanh đọc liên tục xuyên suốt không bị dừng khựng lâu
   text = text
-    .replace(/[…]+/g, ', ')
-    .replace(/\.{2,}/g, ', ')
-    .replace(/!{2,}/g, '! ')
-    .replace(/\?{2,}/g, '? ')
+    .replace(/\r?\n+/g, ' ')
+    .replace(/[…]+/g, ' ')
+    .replace(/\.{2,}/g, ' ')
+    .replace(/!+/g, '.')
+    .replace(/\?+/g, '.')
+    .replace(/[;:]+/g, ', ')
     .replace(/,\s*,+/g, ', ')
-    .replace(/[^\S\r\n]+/g, ' ')
+    .replace(/\s+/g, ' ')
     .trim();
 
   return text;
@@ -8427,20 +8447,21 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
     ? window.location.origin
     : '';
 
-  // Chuẩn hóa văn bản gửi đến TTS engine: Loại bỏ hoàn toàn dấu ba chấm ..., dấu ngắt nghỉ dài
+  // Chuẩn hóa văn bản gửi đến TTS engine: Loại bỏ hoàn toàn dấu ba chấm ..., dấu ngắt nghỉ dài, đọc liên tục xuyên suốt
   let ttsText = text.trim();
   ttsText = ttsText
+    .replace(/\r?\n+/g, ' ')
     .replace(/[…]+/g, ' ')
     .replace(/\.{2,}/g, ' ')
-    .replace(/!{2,}/g, ' ')
-    .replace(/\?{2,}/g, ' ')
-    .replace(/[;:]+/g, ' ')
+    .replace(/!+/g, '.')
+    .replace(/\?+/g, '.')
+    .replace(/[;:]+/g, ', ')
     .replace(/,\s*,+/g, ', ')
     .replace(/\s+/g, ' ')
     .trim();
 
-  // Đảm bảo câu có dấu kết thúc (. hoặc !) để EdgeTTS không nuốt âm đuôi
-  if (ttsText && !/[.!?]$/.test(ttsText)) {
+  // Đảm bảo câu có dấu kết thúc (.) để EdgeTTS phát âm trọn vẹn không nuốt đuôi
+  if (ttsText && !/[.]$/.test(ttsText)) {
     ttsText += '.';
   }
 

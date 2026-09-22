@@ -829,8 +829,13 @@ export default function LivestreamFlowSequencer() {
         setSpeakingStepId(null);
         setIsSpeakingPreview(false);
 
-        // NẾU LÀ CHẾ ĐỘ MẶC ĐỊNH THEO KỊCH BẢN & ĐANG CHẠY LIVE -> TỰ ĐỘNG CHUYỂN BƯỚC TIẾP THEO KHI ĐỌC XONG
-        if (isAutoScript) {
+        // 🎙️ ĐỌC KỊCH BẢN LIÊN TỤC XUYÊN SUỐT: Tự động chuyển ngay sang bước tiếp theo khi đọc xong (0ms delay)
+        // Chỉ dừng nghỉ khi người dùng cài đặt dừng nghỉ (step.pauseSeconds > 0), bình thường đọc liên tục 100%!
+        const pauseDelay = (typeof step.pauseSeconds === 'number' && step.pauseSeconds > 0)
+          ? step.pauseSeconds * 1000
+          : 0;
+
+        const advanceNext = () => {
           const nextIndex = safeIndex + 1;
           if (nextIndex < activePreset.steps.length) {
             startStep(nextIndex, true);
@@ -840,8 +845,14 @@ export default function LivestreamFlowSequencer() {
             setIsPlayingFlow(false);
             toast.success('🎉 Đã đọc xong toàn bộ kịch bản!');
           }
+        };
+
+        if (pauseDelay > 0) {
+          setTimeout(advanceNext, pauseDelay);
+        } else {
+          advanceNext();
         }
-      }, { priority: true, isTest: true, volume: 1.0 });
+      }, { priority: true, isTest: true, volume: 1.0, rate: step.voiceRate || 1.0 });
     } else {
       stopVoiceAudio();
       setSpeakingStepId(null);
@@ -859,12 +870,9 @@ export default function LivestreamFlowSequencer() {
     timerRef.current = setInterval(() => {
       setSecondsRemaining(prev => {
         if (prev <= 1) {
-          const currentStepObj = activePreset.steps[currentStepIndex];
-          const isAutoScript = currentStepObj?.isScriptDuration || currentStepObj?.durationMode === 'auto_script';
-          
-          // Nếu là chế độ kịch bản và đang có audio nói thì chờ onEnd, nếu không có audio thì tự chuyển
-          if (isAutoScript && isSpeakingPreview) {
-            return 1; // Giữ ở 1s cho đến khi giọng đọc kết thúc
+          // Khi audio đang phát, luôn giữ ở 1s để không bao giờ ngắt ngang giọng đọc của AI
+          if (isSpeakingPreview) {
+            return 1;
           }
 
           const nextIndex = currentStepIndex + 1;
@@ -1744,7 +1752,9 @@ export default function LivestreamFlowSequencer() {
         const pipTrans = {
           x: Math.min(80, Math.max(20, (currentMainTrans.x || 50) + 10)),
           y: Math.min(80, Math.max(20, (currentMainTrans.y || 50) + 10)),
-          scale: 0.5,
+          width: 35,
+          height: 35,
+          scale: 0.6,
           rotate: currentMainTrans.rotate || 0
         };
         setPresets(prev => prev.map(p => {
@@ -1772,9 +1782,42 @@ export default function LivestreamFlowSequencer() {
           }, currentStepIndex, isPlayingFlow), 50);
         }
       } else {
-        // Nếu PiP đã có, nhân bản nguyên bước kịch bản chứa video này
-        handleDuplicateStep(currentStep);
-        toast.success('🎬 Đã nhân bản video sang bước kịch bản tiếp theo!');
+        // Nếu PiP đã có video, nhân bản trực tiếp sang 1 slot Avatar AI để hiển thị đồng thời nhiều video trên sân khấu!
+        const currentAvatars = (multiAvatarConfig?.avatars && multiAvatarConfig.avatars.length > 0)
+          ? multiAvatarConfig.avatars
+          : DEFAULT_MULTI_AVATAR_CONFIG.avatars;
+        const emptySlot = currentAvatars.find(a => !a.talkVideo && !a.idleVideo && !a.mediaUrl) || currentAvatars[1] || currentAvatars[0];
+        const targetId = emptySlot?.id || 'avatar_2';
+        const targetNum = parseInt(String(targetId).replace(/\D/g, '') || '2', 10);
+
+        const updatedAvatars = currentAvatars.map(a => {
+          if (a.id === targetId) {
+            return {
+              ...a,
+              talkVideo: currentStep.mediaUrl,
+              idleVideo: currentStep.mediaUrl,
+              mediaUrl: currentStep.mediaUrl,
+              chromaKey: currentStep.mainMediaChromaKey ? { ...currentStep.mainMediaChromaKey } : { enabled: false, mode: 'green', color: '#00ff00' }
+            };
+          }
+          return a;
+        });
+        const updatedConfig = {
+          ...multiAvatarConfig,
+          enabled: true,
+          activeCount: Math.max(multiAvatarConfig?.activeCount || 1, targetNum),
+          avatars: updatedAvatars
+        };
+        setMultiAvatarConfig(updatedConfig);
+        saveMultiAvatarConfig(updatedConfig);
+
+        const newTrans = { x: 55, y: 55, width: 35, height: 35, scale: 0.8, rotate: 0 };
+        handleUpdateStepTransform(currentStep.id, 'avatar', newTrans, targetId);
+        setSelectedLayer({ type: 'avatar', id: targetId });
+        toast.success(`🎬 Đã nhân bản thêm Video sang lớp ${emptySlot?.name || `Avatar ${targetNum}`} trên Sân Khấu!`);
+        if (isMasterSynced) {
+          setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
+        }
       }
       return;
     }
@@ -1784,8 +1827,58 @@ export default function LivestreamFlowSequencer() {
         toast.info('💡 Chưa có Video PiP để nhân bản!');
         return;
       }
-      handleDuplicateStep(currentStep);
-      toast.success('🎬 Đã nhân bản bước kịch bản chứa Video PiP!');
+      if (!currentStep.mediaUrl) {
+        handleUpdateStep(currentStep.id, 'mediaUrl', currentStep.secondaryMediaUrl);
+        if (currentStep.secondaryMediaChromaKey) {
+          handleUpdateStep(currentStep.id, 'mainMediaChromaKey', { ...currentStep.secondaryMediaChromaKey });
+        }
+        setSelectedLayer({ type: 'main_media', id: 'main' });
+        toast.success('🎬 Đã nhân bản Video PiP sang Video Nền Chính trên Sân Khấu!');
+      } else {
+        const currentAvatars = (multiAvatarConfig?.avatars && multiAvatarConfig.avatars.length > 0)
+          ? multiAvatarConfig.avatars
+          : DEFAULT_MULTI_AVATAR_CONFIG.avatars;
+        const emptySlot = currentAvatars.find(a => !a.talkVideo && !a.idleVideo && !a.mediaUrl) || currentAvatars[1] || currentAvatars[0];
+        const targetId = emptySlot?.id || 'avatar_2';
+        const targetNum = parseInt(String(targetId).replace(/\D/g, '') || '2', 10);
+
+        const updatedAvatars = currentAvatars.map(a => {
+          if (a.id === targetId) {
+            return {
+              ...a,
+              talkVideo: currentStep.secondaryMediaUrl,
+              idleVideo: currentStep.secondaryMediaUrl,
+              mediaUrl: currentStep.secondaryMediaUrl,
+              chromaKey: currentStep.secondaryMediaChromaKey ? { ...currentStep.secondaryMediaChromaKey } : { enabled: false, mode: 'green', color: '#00ff00' }
+            };
+          }
+          return a;
+        });
+        const updatedConfig = {
+          ...multiAvatarConfig,
+          enabled: true,
+          activeCount: Math.max(multiAvatarConfig?.activeCount || 1, targetNum),
+          avatars: updatedAvatars
+        };
+        setMultiAvatarConfig(updatedConfig);
+        saveMultiAvatarConfig(updatedConfig);
+
+        const pipTrans = currentStep.secondaryMediaTransform || { x: 50, y: 50 };
+        const newTrans = {
+          x: Math.min(80, Math.max(15, (pipTrans.x || 50) + 12)),
+          y: Math.min(80, Math.max(15, (pipTrans.y || 50) + 5)),
+          width: 35,
+          height: 35,
+          scale: 0.8,
+          rotate: 0
+        };
+        handleUpdateStepTransform(currentStep.id, 'avatar', newTrans, targetId);
+        setSelectedLayer({ type: 'avatar', id: targetId });
+        toast.success(`🎬 Đã nhân bản Video PiP sang lớp ${emptySlot?.name || `Avatar ${targetNum}`} trên Sân Khấu!`);
+        if (isMasterSynced) {
+          setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
+        }
+      }
       return;
     }
 
@@ -1794,8 +1887,54 @@ export default function LivestreamFlowSequencer() {
         toast.info('💡 Chưa có Banner/Ảnh để nhân bản!');
         return;
       }
-      handleDuplicateStep(currentStep);
-      toast.success('🖼️ Đã nhân bản bước kịch bản chứa Banner/Ảnh!');
+      if (!currentStep.secondaryMediaUrl) {
+        const bannerTrans = currentStep.overlayImageTransform || { x: 50, y: 50 };
+        const pipTrans = {
+          x: Math.min(80, Math.max(15, (bannerTrans.x || 50) + 10)),
+          y: Math.min(80, Math.max(15, (bannerTrans.y || 50) + 10)),
+          width: 35,
+          height: 35,
+          scale: 0.6,
+          rotate: 0
+        };
+        handleUpdateStep(currentStep.id, 'secondaryMediaUrl', currentStep.overlayImage);
+        handleUpdateStepTransform(currentStep.id, 'pip', pipTrans);
+        setSelectedLayer({ type: 'pip', id: 'pip' });
+        toast.success('🖼️ Đã nhân bản Banner/Ảnh sang lớp hiển thị thứ 2 trên Sân Khấu!');
+      } else {
+        const currentAvatars = (multiAvatarConfig?.avatars && multiAvatarConfig.avatars.length > 0)
+          ? multiAvatarConfig.avatars
+          : DEFAULT_MULTI_AVATAR_CONFIG.avatars;
+        const emptySlot = currentAvatars.find(a => !a.talkVideo && !a.idleVideo && !a.mediaUrl) || currentAvatars[1] || currentAvatars[0];
+        const targetId = emptySlot?.id || 'avatar_2';
+        const targetNum = parseInt(String(targetId).replace(/\D/g, '') || '2', 10);
+
+        const updatedAvatars = currentAvatars.map(a => {
+          if (a.id === targetId) {
+            return {
+              ...a,
+              talkVideo: currentStep.overlayImage,
+              idleVideo: currentStep.overlayImage,
+              mediaUrl: currentStep.overlayImage,
+              chromaKey: { enabled: false, mode: 'green', color: '#00ff00' }
+            };
+          }
+          return a;
+        });
+        const updatedConfig = {
+          ...multiAvatarConfig,
+          enabled: true,
+          activeCount: Math.max(multiAvatarConfig?.activeCount || 1, targetNum),
+          avatars: updatedAvatars
+        };
+        setMultiAvatarConfig(updatedConfig);
+        saveMultiAvatarConfig(updatedConfig);
+
+        const newTrans = { x: 55, y: 55, width: 35, height: 35, scale: 0.8, rotate: 0 };
+        handleUpdateStepTransform(currentStep.id, 'avatar', newTrans, targetId);
+        setSelectedLayer({ type: 'avatar', id: targetId });
+        toast.success(`🖼️ Đã nhân bản Banner/Ảnh sang lớp ${emptySlot?.name || `Avatar ${targetNum}`} trên Sân Khấu!`);
+      }
       return;
     }
 
@@ -1804,8 +1943,12 @@ export default function LivestreamFlowSequencer() {
         toast.info('💡 Chưa có Tiêu đề chữ để nhân bản!');
         return;
       }
-      handleDuplicateStep(currentStep);
-      toast.success('✍️ Đã nhân bản bước kịch bản chứa Tiêu đề chữ!');
+      const currentTrans = currentStep.overlayTextTransform || { x: 50, y: 85 };
+      handleUpdateStepTransform(currentStep.id, 'text', {
+        ...currentTrans,
+        y: Math.min(92, (currentTrans.y || 85) + 5)
+      });
+      toast.success('✍️ Đã nhân bản vị trí tiêu đề chữ trên Sân Khấu!');
       return;
     }
   };
@@ -2575,13 +2718,16 @@ export default function LivestreamFlowSequencer() {
                 const isSelected = !isStageLocked && selectedLayer?.type === 'main_media';
                 const chromaStyle = getLayerChromaStyle('main_media');
                 const chromaKey = currentStep?.mainMediaChromaKey;
+                const isBgRemoved = Boolean(chromaKey?.enabled || (activeMediaUrl && (activeMediaUrl.startsWith('data:image/png') || activeMediaUrl.includes('transparent'))));
 
                 return (
                   <div
                     onMouseDown={(e) => handlePointerDown(e, 'main_media', null, null)}
                     onTouchStart={(e) => handlePointerDown(e, 'main_media', null, null)}
                     className={`absolute transition-shadow cursor-move select-none ${
-                      isSelected ? 'ring-2 ring-cyan-400 shadow-2xl z-20' : 'z-0'
+                      isSelected 
+                        ? (isBgRemoved ? 'z-20' : 'ring-2 ring-cyan-400 shadow-2xl z-20 rounded-lg') 
+                        : 'z-0'
                     }`}
                     style={{
                       left: `${mediaTrans.x}%`,
@@ -2594,14 +2740,14 @@ export default function LivestreamFlowSequencer() {
                   >
                     {activeMediaUrl ? (
                       <div 
-                        className="relative w-full h-full overflow-hidden rounded-lg"
-                        style={{ background: chromaKey?.enabled ? 'transparent' : '#000000' }}
+                        className={`relative w-full h-full overflow-hidden ${isBgRemoved ? '' : 'rounded-lg'}`}
+                        style={{ background: isBgRemoved ? 'transparent' : '#000000' }}
                       >
                         {isImageMedia(activeMediaUrl) ? (
                           <img 
                             key={activeMediaUrl}
                             src={activeMediaUrl} 
-                            alt="Stage BG"
+                            alt="Stage BG" 
                             className="w-full h-full object-cover pointer-events-none"
                             style={chromaStyle}
                           />
@@ -2625,7 +2771,7 @@ export default function LivestreamFlowSequencer() {
                           />
                         )}
 
-                        {isSelected && (
+                        {isSelected && !isBgRemoved && (
                           <span className="absolute bottom-1 right-1 bg-black/80 text-cyan-300 text-[8px] font-black px-1.5 py-0.2 rounded border border-cyan-500/40 pointer-events-none">
                             🎥 Nền Chính
                           </span>
@@ -2668,13 +2814,16 @@ export default function LivestreamFlowSequencer() {
                 const isSelected = !isStageLocked && selectedLayer?.type === 'pip';
                 const chromaStyle = getLayerChromaStyle('pip');
                 const chromaKey = currentStep?.secondaryMediaChromaKey;
+                const isBgRemoved = Boolean(chromaKey?.enabled || (activeSecondaryMediaUrl && (activeSecondaryMediaUrl.startsWith('data:image/png') || activeSecondaryMediaUrl.includes('transparent'))));
 
                 return (
                   <div 
                     onMouseDown={(e) => handlePointerDown(e, 'pip', null, null)}
                     onTouchStart={(e) => handlePointerDown(e, 'pip', null, null)}
-                    className={`absolute rounded-xl shadow-2xl transition-shadow cursor-move ${
-                      isSelected ? 'ring-2 ring-indigo-400 border-2 border-indigo-400 z-20' : 'border border-indigo-500/50'
+                    className={`absolute transition-shadow cursor-move ${
+                      isSelected 
+                        ? (isBgRemoved ? 'z-20' : 'ring-2 ring-indigo-400 border-2 border-indigo-400 rounded-xl z-20') 
+                        : (isBgRemoved ? 'border-none ring-0 shadow-none' : 'border border-indigo-500/50 rounded-xl shadow-2xl')
                     }`}
                     style={{
                       left: `${pipTrans.x}%`,
@@ -2687,8 +2836,8 @@ export default function LivestreamFlowSequencer() {
                   >
                     {activeSecondaryMediaUrl ? (
                       <div 
-                        className="relative w-full h-full rounded-xl overflow-hidden"
-                        style={{ background: chromaKey?.enabled ? 'transparent' : '#000000' }}
+                        className={`relative w-full h-full overflow-hidden ${isBgRemoved ? '' : 'rounded-xl'}`}
+                        style={{ background: isBgRemoved ? 'transparent' : '#000000' }}
                       >
                         {isImageMedia(activeSecondaryMediaUrl) ? (
                           <img 
@@ -2715,9 +2864,11 @@ export default function LivestreamFlowSequencer() {
                             style={chromaStyle}
                           />
                         )}
-                        <span className="absolute bottom-1 right-1 bg-indigo-600/90 text-white text-[8px] font-black px-1.5 py-0.2 rounded">
-                          🎬 PiP
-                        </span>
+                        {!isBgRemoved && (
+                          <span className="absolute bottom-1 right-1 bg-indigo-600/90 text-white text-[8px] font-black px-1.5 py-0.2 rounded pointer-events-none">
+                            🎬 PiP
+                          </span>
+                        )}
                       </div>
                     ) : (
                       /* Khung Trống PiP Khi Đã Xóa Media */
@@ -2756,6 +2907,7 @@ export default function LivestreamFlowSequencer() {
                 const vidSrc = rawVidSrc || '';
                 const chromaStyle = getLayerChromaStyle('avatar', av.id);
                 const isSelected = !isStageLocked && selectedLayer?.type === 'avatar' && selectedLayer?.id === av.id;
+                const isBgRemoved = Boolean(av?.chromaKey?.enabled || (vidSrc && (vidSrc.startsWith('data:image/png') || vidSrc.includes('transparent'))));
 
                 return (
                   <div 
@@ -2764,10 +2916,10 @@ export default function LivestreamFlowSequencer() {
                     onTouchStart={(e) => handlePointerDown(e, 'avatar', av.id, null)}
                     className={`absolute transition-shadow cursor-move ${
                       isSelected 
-                        ? 'ring-2 ring-cyan-400 shadow-xl shadow-cyan-500/30 z-20' 
+                        ? (isBgRemoved ? 'z-20' : 'ring-2 ring-cyan-400 shadow-xl shadow-cyan-500/30 z-20 rounded-[16px]') 
                         : isCurrentSpeaker
-                        ? 'ring-1.5 ring-emerald-400/80 shadow-md'
-                        : 'hover:ring-1 hover:ring-white/40'
+                        ? (isBgRemoved ? '' : 'ring-1.5 ring-emerald-400/80 shadow-md rounded-[16px]')
+                        : (isBgRemoved ? '' : 'hover:ring-1 hover:ring-white/40 rounded-[16px]')
                     }`}
                     style={{
                       left: `${transform.x}%`,
@@ -2775,14 +2927,14 @@ export default function LivestreamFlowSequencer() {
                       width: `${transform.width}%`,
                       height: `${transform.height}%`,
                       zIndex: transform.zIndex || (10 + avIdx),
-                      borderRadius: '16px',
+                      borderRadius: isBgRemoved ? '0px' : '16px',
                       overflow: 'visible'
                     }}
                   >
                     {vidSrc ? (
                       <div 
-                        className="relative w-full h-full rounded-[16px] overflow-hidden"
-                        style={{ background: av?.chromaKey?.enabled ? 'transparent' : '#000000' }}
+                        className={`relative w-full h-full overflow-hidden ${isBgRemoved ? '' : 'rounded-[16px]'}`}
+                        style={{ background: isBgRemoved ? 'transparent' : '#000000' }}
                       >
                         {isImageMedia(vidSrc) ? (
                           <img 
@@ -2841,13 +2993,16 @@ export default function LivestreamFlowSequencer() {
                 const bannerTrans = getLayerCurrentTransform('banner');
                 const isSelected = !isStageLocked && selectedLayer?.type === 'banner';
                 const chromaStyle = getLayerChromaStyle('banner');
+                const isBgRemoved = Boolean(currentStep?.overlayImageChromaKey?.enabled || (activeOverlayImage && (activeOverlayImage.startsWith('data:image/png') || activeOverlayImage.includes('transparent'))));
 
                 return (
                   <div 
                     onMouseDown={(e) => handlePointerDown(e, 'banner', null, null)}
                     onTouchStart={(e) => handlePointerDown(e, 'banner', null, null)}
                     className={`absolute transition-shadow cursor-move ${
-                      isSelected ? 'ring-2 ring-amber-400 rounded-xl' : ''
+                      isSelected 
+                        ? (isBgRemoved ? 'z-20' : 'ring-2 ring-amber-400 rounded-xl z-20') 
+                        : ''
                     }`}
                     style={{
                       left: `${bannerTrans.x}%`,
@@ -2862,7 +3017,7 @@ export default function LivestreamFlowSequencer() {
                       <img 
                         src={activeOverlayImage} 
                         alt="Overlay Banner" 
-                        className="w-full h-full object-contain drop-shadow-xl pointer-events-none rounded-lg"
+                        className={`w-full h-full object-contain pointer-events-none ${isBgRemoved ? '' : 'drop-shadow-xl rounded-lg'}`}
                         style={chromaStyle}
                       />
                     ) : (

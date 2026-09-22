@@ -3401,6 +3401,13 @@ function humanizeTextForBackendTTS(rawText, gender, lang) {
     // Loại bỏ hoàn toàn emojis để TTS không đọc tên emoji
     .replace(/\p{Extended_Pictographic}/gu, '')
     .replace(/[\u{1F300}-\u{1F9FF}\u{2600}-\u{27BF}\u{1FA00}-\u{1FAFF}\u{1F600}-\u{1F64F}\u{1F680}-\u{1F6FF}]/gu, '')
+    .replace(/\r?\n+/g, ' ')
+    .replace(/[…]+/g, ' ')
+    .replace(/\.{2,}/g, ' ')
+    .replace(/!+/g, '.')
+    .replace(/\?+/g, '.')
+    .replace(/[;:]+/g, ', ')
+    .replace(/,\s*,+/g, ', ')
     .replace(/[^\S\r\n]+/g, ' ')
     .trim();
 
