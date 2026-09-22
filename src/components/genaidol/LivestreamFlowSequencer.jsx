@@ -275,6 +275,12 @@ export default function LivestreamFlowSequencer() {
   isMasterSyncedRef.current = isMasterSynced;
   const hasPushedDragUndoRef = useRef(false);
   const syncStepToServerRef = useRef(null);
+  // Refs cho undo/redo stack để tránh stale closure trong useCallback
+  const undoStackRef = useRef([]);
+  const redoStackRef = useRef([]);
+  undoStackRef.current = undoStack;
+  redoStackRef.current = redoStack;
+
 
   // Hàm lưu snapshot trước khi thực hiện thay đổi (Push state to Undo)
   const pushUndoSnapshot = useCallback(() => {
@@ -291,7 +297,8 @@ export default function LivestreamFlowSequencer() {
   }, []);
 
   const handleUndo = useCallback(() => {
-    if (undoStack.length === 0) {
+    const stack = undoStackRef.current;
+    if (stack.length === 0) {
       toast.info('↩️ Không có thao tác nào để quay lại!');
       return;
     }
@@ -301,7 +308,7 @@ export default function LivestreamFlowSequencer() {
       multiAvatarConfig: JSON.parse(JSON.stringify(multiAvatarConfigRef.current || {})),
       currentStepIndex: currentStepIndexRef.current
     };
-    const previousSnap = undoStack[undoStack.length - 1];
+    const previousSnap = stack[stack.length - 1];
     setUndoStack(prev => prev.slice(0, -1));
     setRedoStack(prev => [...prev.slice(-40), currentSnap]);
 
@@ -324,19 +331,30 @@ export default function LivestreamFlowSequencer() {
       currentStepIndexRef.current = previousSnap.currentStepIndex;
     }
     toast.success('↩️ ĐÃ QUAY LẠI TRẠNG THÁI TRƯỚC (Hoàn tác thành công)!');
-    if (isMasterSyncedRef.current && syncStepToServerRef.current) {
-      setTimeout(() => {
-        const pr = previousSnap?.presets?.find(x => x.id === (previousSnap?.activePresetId || activePresetIdRef.current));
-        const st = pr?.steps?.[previousSnap?.currentStepIndex ?? currentStepIndexRef.current];
-        if (st && syncStepToServerRef.current) {
-          syncStepToServerRef.current(st, previousSnap?.currentStepIndex ?? currentStepIndexRef.current, isPlayingFlowRef.current);
+
+    // Fire event để DesktopAppUI cập nhật video tương ứng
+    setTimeout(() => {
+      const pr = previousSnap?.presets?.find(x => x.id === (previousSnap?.activePresetId || activePresetIdRef.current));
+      const st = pr?.steps?.[previousSnap?.currentStepIndex ?? currentStepIndexRef.current];
+      window.dispatchEvent(new CustomEvent('avalive:sequencer_undo_redo', {
+        detail: {
+          presets: previousSnap?.presets,
+          activePresetId: previousSnap?.activePresetId,
+          currentStepIndex: previousSnap?.currentStepIndex,
+          multiAvatarConfig: previousSnap?.multiAvatarConfig,
+          step: st
         }
-      }, 60);
-    }
-  }, [undoStack]);
+      }));
+      // Nếu đang đồng bộ, cũng sync lên Master
+      if (isMasterSyncedRef.current && syncStepToServerRef.current && st) {
+        syncStepToServerRef.current(st, previousSnap?.currentStepIndex ?? currentStepIndexRef.current, isPlayingFlowRef.current);
+      }
+    }, 60);
+  }, []); // dependency rỗng — đọc từ refs, không bị stale
 
   const handleRedo = useCallback(() => {
-    if (redoStack.length === 0) {
+    const stack = redoStackRef.current;
+    if (stack.length === 0) {
       toast.info('↪️ Không có thao tác nào để tiến tới!');
       return;
     }
@@ -346,7 +364,7 @@ export default function LivestreamFlowSequencer() {
       multiAvatarConfig: JSON.parse(JSON.stringify(multiAvatarConfigRef.current || {})),
       currentStepIndex: currentStepIndexRef.current
     };
-    const nextSnap = redoStack[redoStack.length - 1];
+    const nextSnap = stack[stack.length - 1];
     setRedoStack(prev => prev.slice(0, -1));
     setUndoStack(prev => [...prev.slice(-40), currentSnap]);
 
@@ -369,16 +387,27 @@ export default function LivestreamFlowSequencer() {
       currentStepIndexRef.current = nextSnap.currentStepIndex;
     }
     toast.success('↪️ ĐÃ TIẾN TỚI THAO TÁC TIẾP THEO (Làm lại thành công)!');
-    if (isMasterSyncedRef.current && syncStepToServerRef.current) {
-      setTimeout(() => {
-        const pr = nextSnap?.presets?.find(x => x.id === (nextSnap?.activePresetId || activePresetIdRef.current));
-        const st = pr?.steps?.[nextSnap?.currentStepIndex ?? currentStepIndexRef.current];
-        if (st && syncStepToServerRef.current) {
-          syncStepToServerRef.current(st, nextSnap?.currentStepIndex ?? currentStepIndexRef.current, isPlayingFlowRef.current);
+
+    // Fire event để DesktopAppUI cập nhật video tương ứng
+    setTimeout(() => {
+      const pr = nextSnap?.presets?.find(x => x.id === (nextSnap?.activePresetId || activePresetIdRef.current));
+      const st = pr?.steps?.[nextSnap?.currentStepIndex ?? currentStepIndexRef.current];
+      window.dispatchEvent(new CustomEvent('avalive:sequencer_undo_redo', {
+        detail: {
+          presets: nextSnap?.presets,
+          activePresetId: nextSnap?.activePresetId,
+          currentStepIndex: nextSnap?.currentStepIndex,
+          multiAvatarConfig: nextSnap?.multiAvatarConfig,
+          step: st
         }
-      }, 60);
-    }
-  }, [redoStack]);
+      }));
+      // Nếu đang đồng bộ, cũng sync lên Master
+      if (isMasterSyncedRef.current && syncStepToServerRef.current && st) {
+        syncStepToServerRef.current(st, nextSnap?.currentStepIndex ?? currentStepIndexRef.current, isPlayingFlowRef.current);
+      }
+    }, 60);
+  }, []); // dependency rỗng — đọc từ refs, không bị stale
+
 
   // Phím tắt Ctrl+Z / Cmd+Z và Ctrl+Y / Cmd+Shift+Z
   useEffect(() => {
@@ -888,8 +917,11 @@ export default function LivestreamFlowSequencer() {
         syncStepToServer(activePreset.steps[currentStepIndex], currentStepIndex, isPlayingFlow);
       }
     } else {
-      window.dispatchEvent(new CustomEvent('avalive:stop_flow_sequencer'));
-      toast.info('📴 Đã ngắt đồng bộ ra Sân Khấu Chính (Trở về giao diện độc lập)');
+      // 🔌 Ngắt kết nối đồng bộ — fire event riêng để Desktop clear Sân Khấu Chính nhưng KHÔNG reset video nhân vật
+      window.dispatchEvent(new CustomEvent('avalive:sequencer_sync_disconnected', {
+        detail: { isSynced: false, source: 'user_toggle' }
+      }));
+      toast.info('📴 Đã ngắt đồng bộ — Sân Khấu Chính đã trống (Sân Khấu Phụ vẫn hoạt động bình thường)');
     }
   };
 

@@ -479,6 +479,18 @@ export default function LiveStreamStandalonePlayer() {
                 }
               }
             }
+          } else if (ev.data.type === 'CLEAR_STAGE') {
+            // 🔌 Xóa toàn bộ Sân Khấu Chính khi người dùng ngắt đồng bộ từ Sequencer
+            setFlowSequencerOverlay(null);
+            setVideoSrc('');
+            if (videoRef.current) {
+              videoRef.current.pause();
+              videoRef.current.src = '';
+            }
+            if (activeBlobUrlRef.current) {
+              try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
+              activeBlobUrlRef.current = null;
+            }
           }
         };
       } catch (e) {}
@@ -951,7 +963,7 @@ export default function LiveStreamStandalonePlayer() {
           zIndex: 10
         }}
       >
-        🔴 4K 60 FPS REALTIME v4.6.1 (TIKTOK LIVE)
+        🔴 4K 60 FPS REALTIME v4.6.2 (TIKTOK LIVE)
       </div>
     </div>
   );

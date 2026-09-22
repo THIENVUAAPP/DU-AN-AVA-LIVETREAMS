@@ -2,15 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.6.1';
+export const APP_VERSION = '4.6.2';
 export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.6.1 - Sân Khấu Chính Tuyệt Đối Không Tự Xóa Nền, Hoàn Tác / Tiến Tới Chuẩn & Xóa 2 Bước Media/Khung',
-    description: '1. Sân Khấu Chính Tuyệt Đối Không Tự Ý Xóa Phông Nền: Chế độ độc lập bình thường phát video/ảnh nguyên bản 100%, không bị tự động bật AI Beauty tách nền hay dính chroma key; 2. Khôi Phục Giao Diện Sân Khấu Chính Ban Đầu Khi Tắt Đồng Bộ: Tắt đồng bộ lập tức xóa sạch lớp phủ sân khấu phụ và khôi phục video/ảnh nhân vật gốc; 3. Nút Quay Lại & Tiến Tới (Undo / Redo): Lưu lại đầy đủ mọi lịch sử thao tác nạp media, sắp xếp lớp, co giãn, xóa nền và hoàn tác/tiến tới tức thì, đồng bộ ra Master; 4. Cơ Chế Xóa 2 Bước (Ảnh 4): Bấm Xóa lần 1 sẽ xóa nội dung video/ảnh bên trong và GIỮ NGUYÊN KHUNG viền cùng 8 điểm co giãn để dễ dàng tải video/ảnh khác lên thay thế; bấm Xóa lần 2 mới xóa hẳn khung khỏi sân khấu; 5. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Hệ Thống.'
+    title: '⚡ Bản Cập Nhật v4.6.2 - Nút Quay Lại/Tiến Tới Chính Xác, Đồng Bộ Sân Khấu Giữ Kết Nối & Sân Khấu Chính Tải Video Độc Lập',
+    description: '1. Nút Quay Lại & Tiến Tới (Undo/Redo) Chính Xác Tuyệt Đối: Sửa lỗi stale closure, nút hoạt động đúng với mọi thao tác upload ảnh, xóa ảnh, xóa video — bấm quay lại khôi phục chính xác trạng thái trước; 2. Đồng Bộ Sân Khấu Chính Giữ Kết Nối: Khi bấm Đồng Bộ Sân Khấu Chính, trạng thái duy trì đến khi người dùng bấm Tắt — không tự ý ngắt; Khi bấm Tắt, Sân Khấu Chính lập tức xóa trắng (clear stage) và ngắt kết nối hoàn toàn; 3. Sân Khấu Chính Tải Video/Ảnh Độc Lập: Bấm ô trống ở Sân Khấu Chính để tải video/ảnh lên, hiển thị ngay lập tức mà không bị block bởi overlay cũ của Sequencer.'
   }
 ];
+
 
 export const CHANGELOG = UPDATE_NOTES;
 

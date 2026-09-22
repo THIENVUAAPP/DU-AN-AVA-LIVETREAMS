@@ -645,12 +645,70 @@ export default function DesktopAppUI() {
       }
     };
 
+
+    // 🔌 KHI NGƯỜI DÙNG BẤM TẮT ĐỒNG BỘ TỪ SÂN KHẤU PHỤ → XÓA SÂN KHẤU CHÍNH
+    const handleSequencerSyncDisconnected = () => {
+      setIsMasterStageSynced(false);
+      setFlowSequencerOverlay(null);
+      setUserLockedMediaUrl(null);
+      try {
+        localStorage.removeItem('avalive_master_sync_active');
+        localStorage.removeItem('avalive_sequencer_overlay');
+        localStorage.removeItem('avalive_user_locked_media');
+      } catch (err) {}
+      setMultiAvatarConfig(prev => ({
+        ...prev,
+        _syncedFromSequencer: false,
+        fromSequencer: false,
+        enabled: false
+      }));
+      // Xóa trắng Sân Khấu Chính (clear stage) — KHÔNG restore video cũ
+      if (desktopVideoRef.current) {
+        desktopVideoRef.current.pause();
+        desktopVideoRef.current.src = '';
+      }
+      // Broadcast CLEAR_STAGE đến Window Capture và LiveStream Player
+      try {
+        const bcClear = new BroadcastChannel('avalive_master_live_stream');
+        bcClear.postMessage({
+          type: 'CLEAR_STAGE',
+          source: 'sequencer_disconnect',
+          timestamp: Date.now()
+        });
+        setTimeout(() => bcClear.close(), 100);
+      } catch (e) {}
+    };
+
+    // ↩️ KHI UNDO/REDO TỪ SÂN KHẤU PHỤ → CẬP NHẬT VIDEO Ở SÂN KHẤU CHÍNH
+    const handleSequencerUndoRedo = (e) => {
+      const { step, multiAvatarConfig: snapMac } = e.detail || {};
+      // Chỉ cập nhật nếu đang ở trạng thái đồng bộ
+      if (!localStorage.getItem('avalive_master_sync_active')) return;
+      if (!step) return;
+      // Cập nhật multiAvatarConfig nếu có
+      if (snapMac) {
+        setMultiAvatarConfig(snapMac);
+      }
+      // Cập nhật video nền chính nếu có main_media
+      const mainMedia = step.layers?.find(l => l.type === 'main_media');
+      if (mainMedia?.mediaUrl) {
+        const mediaUrl = mainMedia.mediaUrl;
+        if (desktopVideoRef.current) {
+          desktopVideoRef.current.src = mediaUrl;
+          desktopVideoRef.current.currentTime = 0;
+          desktopVideoRef.current.play().catch(() => {});
+        }
+      }
+    };
+
     window.addEventListener('avalive_multi_avatar_changed', handleMultiAvatarChange);
     window.addEventListener('avalive_active_speaker_changed', handleSpeakerChange);
     window.addEventListener('avalive_speaker_change', handleSpeakerChange);
     window.addEventListener('avalive:master_sync_state_changed', handleMasterSyncChange);
     window.addEventListener('avalive:event_video_trigger', handleEventVideoTrigger);
     window.addEventListener('avalive:idle_video_updated', handleIdleVideoUpdate);
+    window.addEventListener('avalive:sequencer_sync_disconnected', handleSequencerSyncDisconnected);
+    window.addEventListener('avalive:sequencer_undo_redo', handleSequencerUndoRedo);
     return () => {
       window.removeEventListener('avalive_multi_avatar_changed', handleMultiAvatarChange);
       window.removeEventListener('avalive_active_speaker_changed', handleSpeakerChange);
@@ -658,8 +716,11 @@ export default function DesktopAppUI() {
       window.removeEventListener('avalive:master_sync_state_changed', handleMasterSyncChange);
       window.removeEventListener('avalive:event_video_trigger', handleEventVideoTrigger);
       window.removeEventListener('avalive:idle_video_updated', handleIdleVideoUpdate);
+      window.removeEventListener('avalive:sequencer_sync_disconnected', handleSequencerSyncDisconnected);
+      window.removeEventListener('avalive:sequencer_undo_redo', handleSequencerUndoRedo);
     };
   }, []);
+
 
   // Tỷ Lệ Khung Hình Toàn Cục (9:16 TikTok Dọc vs 16:9 OBS Ngang)
   const [globalAspectRatio, setGlobalAspectRatio] = useState(() => {
@@ -3497,6 +3558,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   const handleFileUpload = async (e) => {
     const file = e.target.files[0];
     if (file) {
+      // 🔓 Nếu Sân Khấu Chính đang ở chế độ độc lập (không đồng bộ với Sequencer), xóa overlay cũ để video mới hiển thị ngay
+      if (!isMasterStageSynced) {
+        setFlowSequencerOverlay(null);
+        setUserLockedMediaUrl(null);
+        try {
+          localStorage.removeItem('avalive_sequencer_overlay');
+          localStorage.removeItem('avalive_user_locked_media');
+        } catch (_) {}
+      }
+
       const rawName = file.name.replace(/\.[^/.]+$/, "") || "Idol Live AI Pro";
       const charName = rawName.length > 20 ? rawName.substring(0, 18) + "…" : rawName;
       const isVideo = file.type.startsWith('video/') || 

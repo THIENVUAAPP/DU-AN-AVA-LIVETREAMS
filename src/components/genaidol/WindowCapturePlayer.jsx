@@ -520,6 +520,20 @@ export default function WindowCapturePlayer() {
             overlayTextTransform: msg.overlayTextTransform || null
           });
         }
+
+        // 🔌 CLEAR_STAGE: Xóa toàn bộ Sân Khấu Chính khi ngắt đồng bộ từ Sequencer
+        if (msg.type === 'CLEAR_STAGE') {
+          if (videoRef.current) {
+            videoRef.current.pause();
+            videoRef.current.src = '';
+          }
+          setVideoSrc('');
+          setFlowSequencerOverlay(null);
+          if (activeBlobUrlRef.current) {
+            try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
+            activeBlobUrlRef.current = null;
+          }
+        }
       };
     } catch (e) {}
 
@@ -1266,7 +1280,7 @@ export default function WindowCapturePlayer() {
             zIndex: 10
           }}
         >
-          🔴 4K 60 FPS REALTIME v4.6.1 (OBS ZERO-COPY)
+          🔴 4K 60 FPS REALTIME v4.6.2 (OBS ZERO-COPY)
         </div>
       )}
     </div>
