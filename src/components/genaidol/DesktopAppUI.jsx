@@ -4305,7 +4305,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         ? customCharacters.find(c => c.id === selectedCharacter) 
         : null;
 
-      // 🎬 KHI ĐANG ĐỒNG BỘ TỪ SEQUENCER (PHÁT LIVE): ƯU TIÊN VIDEO/ẢNH TỪ SEQUENCER TRƯỚC
+      // 🎬 KHI ĐANG ĐỒNG BỘ TỪ SEQUENCER (PHÁT LIVE): ƯU TIÊN VIDEO/ẢNH TỪ SEQUENCER TRƯỚC NẾU CÓ BẬT MASTER SYNC
       const sequencerLockedMedia = isMasterStageSynced && userLockedMediaUrl
         ? { 
             id: 'sequencer_video', 
@@ -4316,9 +4316,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           }
         : null;
 
-      // 🎬 VIDEO CHỜ TỪ CÀI ĐẶT SỰ KIỆN LIVE (IDLE VIDEO MẶC ĐỊNH CHO SÂN KHẤU CHÍNH)
+      // 🎬 VIDEO CHỜ TỪ CÀI ĐẶT SỰ KIỆN LIVE
       const savedIdleVideoUrl = typeof localStorage !== 'undefined' ? (localStorage.getItem('aidol_idle_media_url') || localStorage.getItem('avalive_user_locked_media')) : null;
-      const eventIdleMedia = savedIdleVideoUrl ? {
+      const eventIdleMedia = (!customMatch && savedIdleVideoUrl) ? {
         id: 'event_idle_video',
         name: 'Video Chờ Cài Đặt Sự Kiện',
         url: savedIdleVideoUrl,
@@ -4326,12 +4326,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         type: 'video'
       } : null;
 
-      let selected = sequencerLockedMedia ||
-        eventIdleMedia ||
-        customMatch || 
+      // 🛡️ ƯU TIÊN TUYỆT ĐỐI NHÂN VẬT/VIDEO NGƯỜI DÙNG TẢI LÊN HOẶC ĐANG CHỌN (KHÔNG BỊ CHẬP CHỜN / MẤT VIDEO)
+      let selected = customMatch || 
         (selectedCharacter && CHARACTERS[selectedCharacter]?.url ? { id: selectedCharacter, ...CHARACTERS[selectedCharacter] } : null) || 
+        sequencerLockedMedia ||
+        eventIdleMedia ||
         (userLockedMediaUrl ? { id: 'locked_video', name: 'Video Đang Phát', url: userLockedMediaUrl, mediaUrl: userLockedMediaUrl, type: 'video' } : null) ||
-        (customCharacters.find(c => c.url || c.mediaUrl) || null) || 
+        (customCharacters && customCharacters.length > 0 ? customCharacters.find(c => c.url || c.mediaUrl) : null) || 
         (Object.entries(CHARACTERS).find(([k, v]) => v.url)?.[1] ? { id: Object.entries(CHARACTERS).find(([k, v]) => v.url)[0], ...Object.entries(CHARACTERS).find(([k, v]) => v.url)[1] } : null) ||
         CHARACTERS.default_idol;
 

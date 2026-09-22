@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.7.9';
+export const APP_VERSION = '4.8.0';
 export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.7.9 - Tải Về Trực Tiếp Gói Cài Đặt Mới Nhất (Windows & Mac), Đọc Kịch Bản Idol & Luồng Live 0ms, Hiển Thị Video Nhân Vật Tức Thì',
-    description: '1. Đọc Thử & Phát Kịch Bản Idol Siêu Tốc: Bấm nghe thử hoặc phát kịch bản là âm thanh cất giọng đọc ngay lập tức 0ms, tự động chuyển câu tuần hoàn mượt mà không khựng, hỗ trợ mọi định dạng dấu ngoặc kép và biểu cảm tự nhiên. 2. Phục Vụ Gói Cài Đặt ZIP Mới Nhất v4.7.9: Khắc phục triệt để lỗi tải bản cũ v4.6.0, đảm bảo 100% nút tải về trên Windows và macOS tải đúng gói ZIP mới nhất (v4.7.9) trực tiếp về máy. 3. Hiển Thị Video Nhân Vật Ngay Lập Tức: Bất kỳ video nhân vật/avatar nào được tải lên hoặc chuyển đổi trên Sân Khấu Chính đều hiển thị và phát ngay lập tức 0ms trên màn hình live. 4. Tinh Gọn Bảng Thông Báo: Chỉ hiển thị duy nhất thông tin bản cập nhật mới nhất v4.7.9 trên web.'
+    title: '⚡ Bản Cập Nhật v4.8.0 - Khắc Phục Triệt Để Nghe Thử Voice Kịch Bản Idol & Khóa Chặt Vị Trí Video Nhân Vật Không Bị Chập Chờn',
+    description: '1. Khắc Phục Triệt Để Đọc & Nghe Thử Kịch Bản Idol: Tối ưu bộ giải mã âm thanh đa luồng, loại bỏ triệt để xung đột SPA HTML fallback, mở khóa toàn diện AudioContext và HTML5 Audio. Bấm phát kịch bản là voice cất tiếng đọc ngay lập tức 0ms, tự động chuyển câu tuần hoàn siêu mượt. 2. Giữ Nguyên 100% Vị Trí Video Nhân Vật (Không Ẩn Hiện): Video nhân vật tải lên trên Sân Khấu Chính được ưu tiên tuyệt đối #1, nằm cố định chắc chắn trên màn hình live và phát liên tục, không bị chập chờn hay ghi đè bởi video chờ cho đến khi người dùng chủ động xóa hoặc đổi video. 3. Đồng Bộ Tải Về Trực Tiếp ZIP v4.8.0: Mọi link tải Windows & macOS tải đúng gói ZIP mới nhất trực tiếp về máy.'
   }
 ];
 

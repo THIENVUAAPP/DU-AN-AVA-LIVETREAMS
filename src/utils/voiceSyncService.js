@@ -7806,8 +7806,16 @@ export function unlockAudioContext() {
       audioCtx.resume().catch(() => {});
     }
     if (typeof window !== 'undefined') {
+      try {
+        const dummy = new Audio('data:audio/wav;base64,UklGRigAAABXQVZFZm10IBIAAAABAAEARKwAAIhYAQACABAAAABkYXRhAgAAAAEA');
+        dummy.volume = 0.0001;
+        const p = dummy.play();
+        if (p && typeof p.then === 'function') {
+          p.then(() => { dummy.pause(); }).catch(() => {});
+        }
+      } catch (e) {}
       if ('speechSynthesis' in window) {
-        window.speechSynthesis.resume();
+        try { window.speechSynthesis.resume(); } catch (e) {}
       }
       if (audioCtx) {
         try {
@@ -8534,7 +8542,10 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
 
   const ttsQuery = `text=${encodeURIComponent(ttsText)}&voice=${encodeURIComponent(neuralVoice)}&voiceId=${encodeURIComponent(voice?.id || '')}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(effectivePitch)}&rate=${encodeURIComponent(effectiveRate)}&lang=${encodeURIComponent(shortLang)}&sentencePauseSeconds=${encodeURIComponent(sentencePauseSeconds)}`;
 
+  const isViteDev = typeof window !== 'undefined' && window.location?.port === '5173';
+
   const baseCandidates = [
+    ...(isViteDev ? [`http://localhost:3001/api/tts`, `http://127.0.0.1:3001/api/tts`] : []),
     ...(currentOrigin ? [`${currentOrigin}/api/tts`] : []),
     `/api/tts`,
     `http://127.0.0.1:3001/api/tts`,
@@ -8548,7 +8559,7 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
 
   const doFetch = async () => {
     // ⚡ Ưu tiên 1: Thử endpoint đã ghi nhớ hoặc /api/tts trực tiếp với timeout 1800ms
-    const primaryEndpoint = cachedWorkingTtsEndpoint || (currentOrigin ? `${currentOrigin}/api/tts` : '/api/tts');
+    const primaryEndpoint = cachedWorkingTtsEndpoint || endpointCandidates[0] || (currentOrigin ? `${currentOrigin}/api/tts` : '/api/tts');
     try {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), 1800);
@@ -8561,73 +8572,9 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
       clearTimeout(timeoutId);
 
       if (res && res.ok) {
-        cachedWorkingTtsEndpoint = primaryEndpoint;
         const contentType = res.headers.get('content-type') || '';
-        let arrayBuf = null;
-
-        if (contentType.includes('application/json')) {
-          const data = await res.json().catch(() => null);
-          if (data?.audioBase64) {
-            const binaryString = atob(data.audioBase64);
-            const bytes = new Uint8Array(binaryString.length);
-            for (let i = 0; i < binaryString.length; i++) {
-              bytes[i] = binaryString.charCodeAt(i);
-            }
-            arrayBuf = bytes.buffer;
-          }
-        } else {
-          arrayBuf = await res.arrayBuffer().catch(() => null);
-        }
-
-        if (arrayBuf && arrayBuf.byteLength > 100) {
-          let rawAudioBuffer = null;
-          try {
-            rawAudioBuffer = await new Promise((resDec, rejDec) => {
-              try {
-                const p = audioCtx.decodeAudioData(
-                  arrayBuf.slice(0),
-                  (buf) => resDec(buf),
-                  (err) => rejDec(err)
-                );
-                if (p && typeof p.then === 'function') {
-                  p.then(resDec).catch(rejDec);
-                }
-              } catch (e) {
-                rejDec(e);
-              }
-            });
-          } catch (decErr) {}
-
-          if (rawAudioBuffer) {
-            const audioBuffer = trimAudioBufferSilence(rawAudioBuffer);
-            if (audioBufferMemoryCache.size > 300) {
-              const firstKey = audioBufferMemoryCache.keys().next().value;
-              audioBufferMemoryCache.delete(firstKey);
-            }
-            audioBufferMemoryCache.set(cacheKey, audioBuffer);
-            return audioBuffer;
-          }
-        }
-      }
-    } catch (e) {}
-
-    // ⚡ Ưu tiên 2: Fallback nhanh đồng thời tới các endpoint còn lại
-    const remainingEndpoints = endpointCandidates.filter(ep => ep !== primaryEndpoint);
-    for (const endpoint of remainingEndpoints) {
-      try {
-        const controller = new AbortController();
-        const timeoutId = setTimeout(() => controller.abort(), 1500);
-        const res = await fetch(endpoint, {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: postPayload,
-          signal: controller.signal
-        }).catch(() => null);
-        clearTimeout(timeoutId);
-
-        if (res && res.ok) {
-          cachedWorkingTtsEndpoint = endpoint;
-          const contentType = res.headers.get('content-type') || '';
+        if (!contentType.includes('text/html')) {
+          cachedWorkingTtsEndpoint = primaryEndpoint;
           let arrayBuf = null;
 
           if (contentType.includes('application/json')) {
@@ -8671,6 +8618,74 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
               }
               audioBufferMemoryCache.set(cacheKey, audioBuffer);
               return audioBuffer;
+            }
+          }
+        }
+      }
+    } catch (e) {}
+
+    // ⚡ Ưu tiên 2: Fallback nhanh đồng thời tới các endpoint còn lại
+    const remainingEndpoints = endpointCandidates.filter(ep => ep !== primaryEndpoint);
+    for (const endpoint of remainingEndpoints) {
+      try {
+        const controller = new AbortController();
+        const timeoutId = setTimeout(() => controller.abort(), 1500);
+        const res = await fetch(endpoint, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: postPayload,
+          signal: controller.signal
+        }).catch(() => null);
+        clearTimeout(timeoutId);
+
+        if (res && res.ok) {
+          const contentType = res.headers.get('content-type') || '';
+          if (!contentType.includes('text/html')) {
+            cachedWorkingTtsEndpoint = endpoint;
+            let arrayBuf = null;
+
+            if (contentType.includes('application/json')) {
+              const data = await res.json().catch(() => null);
+              if (data?.audioBase64) {
+                const binaryString = atob(data.audioBase64);
+                const bytes = new Uint8Array(binaryString.length);
+                for (let i = 0; i < binaryString.length; i++) {
+                  bytes[i] = binaryString.charCodeAt(i);
+                }
+                arrayBuf = bytes.buffer;
+              }
+            } else {
+              arrayBuf = await res.arrayBuffer().catch(() => null);
+            }
+
+            if (arrayBuf && arrayBuf.byteLength > 100) {
+              let rawAudioBuffer = null;
+              try {
+                rawAudioBuffer = await new Promise((resDec, rejDec) => {
+                  try {
+                    const p = audioCtx.decodeAudioData(
+                      arrayBuf.slice(0),
+                      (buf) => resDec(buf),
+                      (err) => rejDec(err)
+                    );
+                    if (p && typeof p.then === 'function') {
+                      p.then(resDec).catch(rejDec);
+                    }
+                  } catch (e) {
+                    rejDec(e);
+                  }
+                });
+              } catch (decErr) {}
+
+              if (rawAudioBuffer) {
+                const audioBuffer = trimAudioBufferSilence(rawAudioBuffer);
+                if (audioBufferMemoryCache.size > 300) {
+                  const firstKey = audioBufferMemoryCache.keys().next().value;
+                  audioBufferMemoryCache.delete(firstKey);
+                }
+                audioBufferMemoryCache.set(cacheKey, audioBuffer);
+                return audioBuffer;
+              }
             }
           }
         }
