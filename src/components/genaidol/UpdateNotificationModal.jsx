@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.7.6';
+export const APP_VERSION = '4.7.7';
 export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v4.7.7 - Tăng Tốc Xử Lý Voice 0ms Tức Thì, Đọc Kịch Bản Siêu Nhanh & Khóa Chặt Cập Nhật Windows Mới Nhất',
+    description: '1. Tăng Tốc Xử Lý Đọc Voice 0ms Tức Thì: Tối ưu hóa song song pipeline Voice TTS, loại bỏ hoàn toàn độ trễ khi bấm Nghe Thử Voice trên kịch bản (Ảnh 1 & Ảnh 3) và Thử Giọng trong kho giọng 332 giọng (Ảnh 2). Âm thanh phát ngay lập tức không cần đợi. 2. Khóa Chặt File Tải Về Mới Nhất Trên Windows: Mọi link tải cài đặt tự động phân giải gói ZIP mới nhất (v4.7.7) trên Windows & macOS, đảm bảo trải nghiệm cài đặt mượt mà nhất.'
+  },
   {
     title: '⚡ Bản Cập Nhật v4.7.6 - Nâng Cấp Nút Đồng Bộ Sân Khấu Chính Chuẩn Màu Xanh/Đỏ & Đọc Thử Voice AI Toàn Diện',
     description: '1. Nút Đồng Bộ Sân Khấu Chính: Hiển thị trực quan màu Xanh Emerald khi BẬT (🟢 ĐANG PHÁT RA SÂN KHẤU CHÍNH) và màu Đỏ khi TẮT (🔴 📡 ĐỒNG BỘ RA SÂN KHẤU CHÍNH). Chỉ có người dùng bấm tắt/mở, không tự ý tắt, duy trì phát liên tục cho tới khi người dùng bấm dừng. 2. Đọc Thử Voice AI Toàn Diện: Nâng cấp động cơ phát âm thanh 4 lớp (Neural TTS + Broadcast DSP + Direct HTML5 Audio + Web Speech API) đảm bảo 100% mọi giọng đọc khi bấm Nghe Thử đều phát siêu mượt mà, truyền cảm, có hơi thở, nhấn nhá cảm xúc sống động.'
