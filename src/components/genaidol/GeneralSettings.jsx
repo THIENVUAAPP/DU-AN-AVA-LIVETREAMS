@@ -4422,6 +4422,16 @@ IDOL MỈM CƯỜI + GESTURE
                                   {isSelectedAsIdol && <span className="text-[10px] bg-blue-600 text-white px-2 py-0.5 rounded-md font-bold shadow-xs">✓ Đang Gán Idol</span>}
                                   {isSelectedAsAssistant && <span className="text-[10px] bg-red-600 text-white px-2 py-0.5 rounded-md font-bold shadow-xs">✓ Đang Gán Trợ Lý</span>}
                                   {isSelectedAsComment && <span className="text-[10px] bg-purple-600 text-white px-2 py-0.5 rounded-md font-bold shadow-xs">✓ Đang Gán Bình Luận</span>}
+                                  {[1, 2, 3, 4, 5].map(num => {
+                                    if (settings[`avatar${num}VoiceId`] === v.id) {
+                                      return (
+                                        <span key={num} className="text-[10px] bg-amber-600 text-white px-1.5 py-0.5 rounded font-bold shadow-xs">
+                                          ✓ NV{num}
+                                        </span>
+                                      );
+                                    }
+                                    return null;
+                                  })}
                                 </div>
                                 <div className="text-[11px] text-gray-500 italic mt-0.5 line-clamp-1">
                                   💬 "{v.sampleText || v.desc}"
@@ -4490,7 +4500,7 @@ IDOL MỈM CƯỜI + GESTURE
                                 </button>
                               </td>
                               <td className="px-4 py-2.5 text-center">
-                                <div className="flex items-center justify-center gap-1.5">
+                                <div className="flex items-center justify-center gap-1.5 flex-wrap">
                                   {/* Gán Idol */}
                                   <button
                                     type="button"
@@ -4501,7 +4511,7 @@ IDOL MỈM CƯỜI + GESTURE
                                         : 'bg-gray-100 hover:bg-blue-50 text-gray-700 hover:text-blue-600 border border-gray-200'
                                     }`}
                                   >
-                                    {isSelectedAsIdol ? '✓ Đã Gán Idol' : '🎤 Gán Idol'}
+                                    {isSelectedAsIdol ? '✓ Idol' : '🎤 Idol'}
                                   </button>
 
                                   {/* Gán Trợ Lý */}
@@ -4514,7 +4524,7 @@ IDOL MỈM CƯỜI + GESTURE
                                         : 'bg-gray-100 hover:bg-red-50 text-gray-700 hover:text-red-600 border border-gray-200'
                                     }`}
                                   >
-                                    {isSelectedAsAssistant ? '✓ Đã Gán Trợ Lý' : '💼 Gán Trợ Lý'}
+                                    {isSelectedAsAssistant ? '✓ Trợ Lý' : '💼 Trợ Lý'}
                                   </button>
 
                                   {/* Gán Bình Luận */}
@@ -4527,8 +4537,30 @@ IDOL MỈM CƯỜI + GESTURE
                                         : 'bg-gray-100 hover:bg-purple-50 text-gray-700 hover:text-purple-600 border border-gray-200'
                                     }`}
                                   >
-                                    {isSelectedAsComment ? '✓ Đã Gán Bình Luận' : '💬 Gán Bình Luận'}
+                                    {isSelectedAsComment ? '✓ Bình Luận' : '💬 Bình Luận'}
                                   </button>
+
+                                  {/* Gán NV 1 - 5 */}
+                                  <div className="flex items-center gap-1 border-l pl-1.5 border-gray-200">
+                                    {[1, 2, 3, 4, 5].map((num) => {
+                                      const isNV = settings[`avatar${num}VoiceId`] === v.id;
+                                      return (
+                                        <button
+                                          key={num}
+                                          type="button"
+                                          title={`Gán cho Nhân Vật ${num}`}
+                                          onClick={() => handleAssignVoice(`avatar_${num}`, v)}
+                                          className={`px-1.5 py-1 rounded text-[11px] font-bold transition-all ${
+                                            isNV 
+                                              ? 'bg-amber-500 text-white font-black shadow-xs ring-1 ring-amber-300' 
+                                              : 'bg-gray-50 hover:bg-amber-50 text-gray-600 hover:text-amber-700 border border-gray-200'
+                                          }`}
+                                        >
+                                          NV{num}
+                                        </button>
+                                      );
+                                    })}
+                                  </div>
                                 </div>
                               </td>
                             </tr>

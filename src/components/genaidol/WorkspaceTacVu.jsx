@@ -735,11 +735,55 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
     e.target.value = '';
   };
 
+  // 🎬 TỰ ĐỘNG LƯU & ĐỒNG BỘ CẤU HÌNH SỰ KIỆN KHI THAY ĐỔI
+  useEffect(() => {
+    if (!eventConfigs || Object.keys(eventConfigs).length === 0) return;
+    try {
+      const json = JSON.stringify(eventConfigs);
+      localStorage.setItem('aidol_event_configs', json);
+      localStorage.setItem('aidol_event_configs_backup', json);
+    } catch (e) {}
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('avalive_event_configs_updated', {
+        detail: { eventConfigs }
+      }));
+    }
+  }, [eventConfigs]);
+
   const updateEventConfig = (id, partial) => {
-    setEventConfigs(prev => ({
-      ...prev,
-      [id]: { ...prev[id], ...partial }
-    }));
+    setEventConfigs(prev => {
+      const updated = {
+        ...prev,
+        [id]: { ...prev[id], ...partial }
+      };
+      return updated;
+    });
+
+    // 🎬 TỰ ĐỘNG ĐỒNG BỘ VIDEO SỰ KIỆN RA SÂN KHẤU CHÍNH NGAY KHI CHỌN HOẶC ĐỔI VIDEO
+    const vidUrl = partial.videoFile || partial.videoUrl || partial.supportVideoFile;
+    if (vidUrl && typeof window !== 'undefined') {
+      if (id === 'idle') {
+        try {
+          localStorage.setItem('avalive_user_locked_media', vidUrl);
+          localStorage.setItem('aidol_idle_media_url', vidUrl);
+          localStorage.setItem('avalive_active_video_src', vidUrl);
+        } catch (e) {}
+        window.dispatchEvent(new CustomEvent('avalive:idle_video_updated', {
+          detail: { videoUrl: vidUrl, eventConfigs: { ...eventConfigs, [id]: { ...eventConfigs[id], ...partial } } }
+        }));
+      } else {
+        window.dispatchEvent(new CustomEvent('avalive:event_video_trigger', {
+          detail: {
+            videoUrl: vidUrl,
+            name: `${id.toUpperCase()} Video`,
+            eventType: id,
+            isPreRecorded: partial.isPreRecorded ?? eventConfigs[id]?.isPreRecorded,
+            muteSourceVideo: partial.muteSourceVideo ?? eventConfigs[id]?.muteSourceVideo
+          }
+        }));
+      }
+    }
   };
 
   const handleChange = (e) => {
@@ -1114,6 +1158,17 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
         }
       };
     });
+
+    if (name === 'videoFile' && value && typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('avalive:event_video_trigger', {
+        detail: {
+          videoUrl: value,
+          name: `Sản Phẩm ${productId}`,
+          eventType: 'checkout',
+          isPreRecorded: true
+        }
+      }));
+    }
   };
 
   const handleAddProduct = () => {

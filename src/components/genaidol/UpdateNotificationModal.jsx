@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.6.6';
+export const APP_VERSION = '4.6.7';
 export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.6.6 - Hoàn Thiện Quay Lại / Tiến Tới (Undo/Redo), Nghe Thử Voice 0ms & Đồng Bộ Cấu Hình Nhân Vật 1-5',
-    description: '1. Nút Quay Lại (Undo) & Tiến Tới (Redo): Hoàn tác và làm lại 100% chính xác mọi thao tác chỉnh sửa, xóa video/ảnh/khung, khôi phục sân khấu tức thì 0ms. 2. Nghe Thử Voice Kịch Bản 0ms: Khắc phục triệt để lỗi không nghe thử được, bấm Nghe Thử đọc ngay lập tức, bấm Dừng Đọc dừng ngay, ưu tiên đúng giọng chọn. 3. Tinh Gọn Bộ Não AI: Loại bỏ nút STUDIO 2-4 Avatar dư thừa. 4. Tích Chọn Nhân Vật 1-5: Bổ sung ô tích chọn sử dụng nhân vật trong Bộ Não và đồng bộ 100% vào luồng phát Live AI Avatar.'
+    title: '⚡ Bản Cập Nhật v4.6.7 - Đồng Bộ 100% Video Cài Đặt Sự Kiện Ra Sân Khấu Chính & Nâng Cấp Kho Giọng Ava Live (332)',
+    description: '1. Đồng Bộ Video Cài Đặt Sự Kiện: Tự động đồng bộ 100% mọi video cài đặt tác vụ (video chạy nền, video nhép miệng, video phản hồi bình luận, video cảm ơn, video chốt đơn, video chào người mới, video chờ idle) ngay lập tức ra Sân Khấu Chính và phát vừa vặn khung hình 60 FPS. 2. Kho Giọng Ava Live (332 Giọng): Hiển thị đầy đủ 100% chức năng phân loại giọng đọc theo quốc gia, vùng miền, giới tính, độ tuổi, nghe thử tức thì 0ms và bổ sung nút gán nhanh Idol, Trợ lý, Bình luận, Nhân Vật 1 - 5 mượt mà.'
   }
 ];
 

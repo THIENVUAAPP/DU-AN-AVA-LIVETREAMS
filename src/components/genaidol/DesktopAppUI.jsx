@@ -596,6 +596,7 @@ export default function DesktopAppUI() {
         try {
           localStorage.setItem('avalive_user_locked_media', videoUrl);
           localStorage.setItem('aidol_idle_media_url', videoUrl);
+          localStorage.setItem('avalive_active_video_src', videoUrl);
         } catch (err) {}
         const item = {
           id: `idle_${Date.now()}`,
@@ -605,6 +606,11 @@ export default function DesktopAppUI() {
           type: 'video'
         };
         setActiveVideoItem(item);
+        if (desktopVideoRef.current) {
+          desktopVideoRef.current.src = videoUrl;
+          desktopVideoRef.current.currentTime = 0;
+          desktopVideoRef.current.play().catch(() => {});
+        }
         syncMasterLiveState({
           stage: 'idol',
           mediaUrl: videoUrl,
@@ -613,6 +619,19 @@ export default function DesktopAppUI() {
           videoPlaybackEvent: 'play',
           isPlaying: true
         }, socketRef.current);
+
+        try {
+          const bc = new BroadcastChannel('avalive_master_live_stream');
+          bc.postMessage({
+            type: 'EVENT_VIDEO_PLAY',
+            videoUrl: videoUrl,
+            name: 'Video Chờ (Idle Studio)',
+            eventType: 'idle',
+            muteSourceVideo: false,
+            timestamp: Date.now()
+          });
+          setTimeout(() => bc.close(), 100);
+        } catch (err) {}
       }
     };
 
@@ -627,21 +646,39 @@ export default function DesktopAppUI() {
           type: 'video'
         };
         setActiveVideoItem(item);
-        if (isPreRecorded) {
-          // Video có sẵn âm thanh / voice -> Bật âm thanh gốc cho video
-          if (desktopVideoRef.current) {
-            desktopVideoRef.current.muted = muteSourceVideo === true;
-            desktopVideoRef.current.volume = 1.0;
-          }
+        setUserLockedMediaUrl(videoUrl);
+        try {
+          localStorage.setItem('avalive_user_locked_media', videoUrl);
+          localStorage.setItem('avalive_active_video_src', videoUrl);
+        } catch (err) {}
+        if (desktopVideoRef.current) {
+          desktopVideoRef.current.src = videoUrl;
+          desktopVideoRef.current.currentTime = 0;
+          desktopVideoRef.current.muted = muteSourceVideo === true;
+          desktopVideoRef.current.volume = 1.0;
+          desktopVideoRef.current.play().catch(err => console.log('Event video playback error:', err));
         }
         syncMasterLiveState({
           stage: 'idol',
           mediaUrl: videoUrl,
-          characterName: name || 'AI Idol Event',
+          characterName: name || `${eventType} Video`,
           isVideo: true,
           videoPlaybackEvent: 'play',
           isPlaying: true
         }, socketRef.current);
+
+        try {
+          const bc = new BroadcastChannel('avalive_master_live_stream');
+          bc.postMessage({
+            type: 'EVENT_VIDEO_PLAY',
+            videoUrl: videoUrl,
+            name: name || `${eventType} Video`,
+            eventType: eventType,
+            muteSourceVideo: muteSourceVideo,
+            timestamp: Date.now()
+          });
+          setTimeout(() => bc.close(), 100);
+        } catch (err) {}
       }
     };
 

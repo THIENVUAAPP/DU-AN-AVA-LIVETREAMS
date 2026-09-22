@@ -1443,6 +1443,42 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 }
                 setIsPlayingState(true);
               }
+            } else if (event.data.type === 'EVENT_VIDEO_PLAY') {
+              const { videoUrl, muteSourceVideo, name } = event.data;
+              if (videoUrl) {
+                try {
+                  localStorage.removeItem('avalive_user_paused');
+                  localStorage.removeItem('avalive_window_capture_paused');
+                  localStorage.setItem('avalive_user_locked_media', videoUrl);
+                  localStorage.setItem('avalive_active_video_src', videoUrl);
+                } catch (e) {}
+
+                setMasterState(prev => ({
+                  ...prev,
+                  mediaUrl: videoUrl,
+                  characterName: name || prev.characterName,
+                  stage: 'idol',
+                  isVideo: true,
+                  isPlaying: true,
+                  videoPlaybackEvent: 'play',
+                  videoCurrentTime: 0
+                }));
+
+                const v = overlayVideoRef.current;
+                if (v) {
+                  v.dataset.userPaused = 'false';
+                  v.src = videoUrl;
+                  v.currentTime = 0;
+                  if (typeof muteSourceVideo === 'boolean') {
+                    v.muted = muteSourceVideo;
+                  } else {
+                    v.muted = isVideoAudioMuted;
+                  }
+                  if (!v.muted) v.volume = videoVolume;
+                  v.play().catch(() => {});
+                }
+                setIsPlayingState(true);
+              }
             } else if (event.data.type === 'MASTER_LIVE_STATE_UPDATE' || event.data.stage) {
               applyMasterState(event.data);
             } else if (event.data.type === 'LIVE_EVENT') {
