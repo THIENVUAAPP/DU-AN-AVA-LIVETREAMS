@@ -295,6 +295,9 @@ export default function LivestreamFlowSequencer() {
   isMasterSyncedRef.current = isMasterSynced;
   const hasPushedDragUndoRef = useRef(false);
   const syncStepToServerRef = useRef(null);
+  const activePresetRef = useRef(activePreset);
+  activePresetRef.current = activePreset;
+  const startStepRef = useRef(null);
   // Refs cho undo/redo stack để tránh stale closure trong useCallback
   const undoStackRef = useRef([]);
   const redoStackRef = useRef([]);
@@ -796,12 +799,14 @@ export default function LivestreamFlowSequencer() {
 
   // Khởi động hoặc chuyển bước trong chuỗi kịch bản (chỉ đọc kịch bản khi được yêu cầu, Master Voice BẬT và Bước BẬT Voice)
   const startStep = (index, shouldPlay = false) => {
-    if (!activePreset || !activePreset.steps || activePreset.steps.length === 0) {
+    startStepRef.current = startStep;
+    const preset = activePresetRef.current || activePreset;
+    if (!preset || !preset.steps || preset.steps.length === 0) {
       toast.error('Kịch bản chưa có phân đoạn nào!');
       return;
     }
-    const safeIndex = (index >= 0 && index < activePreset.steps.length) ? index : 0;
-    const step = activePreset.steps[safeIndex];
+    const safeIndex = (index >= 0 && index < preset.steps.length) ? index : 0;
+    const step = preset.steps[safeIndex];
     setCurrentStepIndex(safeIndex);
 
     const isAutoScript = step.isScriptDuration || step.durationMode === 'auto_script';
@@ -836,11 +841,13 @@ export default function LivestreamFlowSequencer() {
           : 0;
 
         const advanceNext = () => {
+          const currentPres = activePresetRef.current || preset;
           const nextIndex = safeIndex + 1;
-          if (nextIndex < activePreset.steps.length) {
-            startStep(nextIndex, true);
-          } else if (activePreset.loop !== false) {
-            startStep(0, true);
+          const runStep = startStepRef.current || startStep;
+          if (nextIndex < currentPres.steps.length) {
+            runStep(nextIndex, true);
+          } else if (currentPres.loop !== false) {
+            runStep(0, true);
           } else {
             setIsPlayingFlow(false);
             toast.success('🎉 Đã đọc xong toàn bộ kịch bản!');
@@ -852,7 +859,13 @@ export default function LivestreamFlowSequencer() {
         } else {
           advanceNext();
         }
-      }, { priority: true, isTest: true, volume: 1.0, rate: step.voiceRate || 1.0 });
+      }, { 
+        priority: true, 
+        isTest: true, 
+        volume: 1.0, 
+        rate: step.voiceRate || 1.0,
+        sentencePauseSeconds: step.sentencePauseSeconds !== undefined ? step.sentencePauseSeconds : 0
+      });
     } else {
       stopVoiceAudio();
       setSpeakingStepId(null);
@@ -869,12 +882,17 @@ export default function LivestreamFlowSequencer() {
 
     timerRef.current = setInterval(() => {
       setSecondsRemaining(prev => {
-        if (prev <= 1) {
-          // Khi audio đang phát, luôn giữ ở 1s để không bao giờ ngắt ngang giọng đọc của AI
-          if (isSpeakingPreview) {
-            return 1;
-          }
+        const curStep = activePreset?.steps?.[currentStepIndex];
+        const isVoiceDriven = isSpeakingPreview || (curStep?.voiceEnabled !== false && curStep?.scriptText && curStep?.scriptText.trim());
 
+        // Nếu bước hiện tại đang có giọng đọc AI điều phối:
+        // Đếm ngược trực quan hiển thị thời gian, nhưng GIỮ Ở 1s và TUYỆT ĐỐI KHÔNG TỰ TIỆN GỌI startStep!
+        // Duy nhất previewVoiceAudio.onEnd sẽ điều phối chuyển bước khi đọc xong để không bao giờ bị ngắt quãng!
+        if (isVoiceDriven) {
+          return prev > 1 ? prev - 1 : 1;
+        }
+
+        if (prev <= 1) {
           const nextIndex = currentStepIndex + 1;
           if (nextIndex < activePreset.steps.length) {
             startStep(nextIndex, true);
@@ -2136,11 +2154,11 @@ export default function LivestreamFlowSequencer() {
   };
 
   // ✂️ TÁCH NỀN TỨC THÌ (CANVAS REALTIME 0MS) CHO HÌNH ẢNH HOẶC VIDEO
-  const handleInstantCanvasBgRemoval = async (layerType, targetId = null, mode = 'green') => {
+  const handleInstantCanvasBgRemoval = async (layerType, targetId = null, mode = 'auto') => {
     let targetImg = null;
     if (layerType === 'avatar' && targetId) {
       const av = safeAvatars.find(a => a.id === targetId);
-      targetImg = av?.talkVideo || av?.idleVideo;
+      targetImg = av?.talkVideo || av?.idleVideo || av?.mediaUrl;
     } else if (layerType === 'main_media') {
       targetImg = currentStep?.mediaUrl;
     } else if (layerType === 'pip') {
@@ -2151,8 +2169,8 @@ export default function LivestreamFlowSequencer() {
 
     if (!targetImg || !isImageMedia(targetImg)) {
       // Đối với Video: Kích hoạt bộ lọc Chroma Key tương ứng
-      handleLayerChromaUpdate(layerType, targetId, { enabled: true, mode });
-      toast.info(`✨ Đã kích hoạt bộ lọc Tách Nền (${mode.toUpperCase()}) cho Video!`);
+      handleLayerChromaUpdate(layerType, targetId, { enabled: true, mode: mode === 'auto' ? 'green' : mode });
+      toast.info(`✨ Đã kích hoạt bộ lọc Tách Nền (${(mode || 'green').toUpperCase()}) cho Video!`);
       return;
     }
 
@@ -2161,7 +2179,27 @@ export default function LivestreamFlowSequencer() {
     try {
       const transparentDataUrl = await removeImageBackgroundCanvas(targetImg, mode);
       if (layerType === 'avatar' && targetId) {
-        handleAvatarMediaUpload(targetId, 'talkVideo', transparentDataUrl);
+        const currentAvatars = (multiAvatarConfig?.avatars && multiAvatarConfig.avatars.length > 0)
+          ? multiAvatarConfig.avatars
+          : DEFAULT_MULTI_AVATAR_CONFIG.avatars;
+        const updatedAvatars = currentAvatars.map(a => {
+          if (a.id === targetId) {
+            return {
+              ...a,
+              talkVideo: transparentDataUrl,
+              idleVideo: transparentDataUrl,
+              mediaUrl: transparentDataUrl,
+              chromaKey: { enabled: false, mode: 'green', color: '#00ff00' }
+            };
+          }
+          return a;
+        });
+        const updated = {
+          ...multiAvatarConfig,
+          avatars: updatedAvatars
+        };
+        setMultiAvatarConfig(updated);
+        saveMultiAvatarConfig(updated);
       } else if (layerType === 'main_media') {
         handleUpdateStep(currentStep.id, 'mediaUrl', transparentDataUrl);
       } else if (layerType === 'pip') {
@@ -2176,7 +2214,8 @@ export default function LivestreamFlowSequencer() {
         }, 100);
       }
     } catch (err) {
-      handleLayerChromaUpdate(layerType, targetId, { enabled: true, mode });
+      console.warn('Lỗi tách nền:', err);
+      handleLayerChromaUpdate(layerType, targetId, { enabled: true, mode: mode === 'auto' ? 'green' : mode });
       toast.success('✨ Đã bật bộ lọc Tách Phông Xanh!');
     }
   };
@@ -2380,7 +2419,7 @@ export default function LivestreamFlowSequencer() {
   };
 
   // 🎙️ ĐỌC THỬ GIỌNG AI BỘ NÃO (VOICE AI BRAIN) 0MS THỜI GIAN THỰC
-  const handleTestVoiceSpeech = (stepId, text, voiceId = 'brain_auto', speakerId = 'avatar_1') => {
+  const handleTestVoiceSpeech = (stepId, text, voiceId = 'brain_auto', speakerId = 'avatar_1', stepObj = null) => {
     if (!text || !text.trim()) {
       toast.error('Chưa có lời thoại để đọc thử!');
       return;
@@ -2400,9 +2439,17 @@ export default function LivestreamFlowSequencer() {
     setIsSpeakingPreview(true);
     setSpeakingStepId(stepId);
 
+    const targetStep = stepObj || activePreset?.steps?.find(s => s.id === stepId);
+
     previewVoiceAudio(effectiveVoiceId, text, () => {
       setIsSpeakingPreview(false);
       setSpeakingStepId(null);
+    }, {
+      priority: true,
+      isTest: true,
+      volume: 1.0,
+      rate: targetStep?.voiceRate || 1.0,
+      sentencePauseSeconds: targetStep?.sentencePauseSeconds !== undefined ? targetStep.sentencePauseSeconds : 0
     });
   };
 
@@ -3513,7 +3560,7 @@ export default function LivestreamFlowSequencer() {
                           {/* 🔊 1 NÚT DUY NHẤT: ĐỌC THỬ VOICE / DỪNG ĐỌC */}
                           <button
                             type="button"
-                            onClick={() => handleTestVoiceSpeech(step.id, step.scriptText, step.voiceId, step.avatarSpeaker)}
+                            onClick={() => handleTestVoiceSpeech(step.id, step.scriptText, step.voiceId, step.avatarSpeaker, step)}
                             className={`px-3 py-1.5 rounded-lg text-xs font-black flex items-center gap-1.5 cursor-pointer shadow-md transition-all ${
                               speakingStepId === step.id 
                                 ? 'bg-rose-600 text-white animate-pulse ring-2 ring-rose-300' 
@@ -3545,6 +3592,74 @@ export default function LivestreamFlowSequencer() {
                               className="hidden" 
                             />
                           </label>
+                        </div>
+                      </div>
+
+                      {/* ⏱️ THANH CÀI ĐẶT NGHỈ NHỊP CÂU & DỪNG CHUYỂN BƯỚC (THEO ĐÚNG YÊU CẦU NGƯỜI DÙNG) */}
+                      <div className="flex items-center gap-3 flex-wrap text-xs bg-slate-900/90 p-2 rounded-xl border border-slate-800" onClick={(e) => e.stopPropagation()}>
+                        {/* Nghỉ nhịp ngắt câu .?! */}
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-gray-300 font-bold text-[11px] flex items-center gap-1">
+                            <span>⏸️ Nghỉ ngắt câu (.?!):</span>
+                          </span>
+                          <select
+                            value={step.sentencePauseSeconds !== undefined ? step.sentencePauseSeconds : 0}
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value);
+                              handleUpdateStep(step.id, 'sentencePauseSeconds', val);
+                              toast.info(`🎙️ Nghỉ ngắt câu: ${val === 0 ? 'Đọc liền mạch xuyên suốt' : `${val}s`}`);
+                            }}
+                            className="bg-slate-950 text-cyan-300 font-black text-xs px-2 py-1 rounded-lg border border-slate-700 outline-none cursor-pointer hover:border-cyan-400"
+                            title="Thời gian nghỉ giữa các câu văn. Mặc định 0s: AI đọc liên tục xuyên suốt không gián đoạn."
+                          >
+                            <option value={0}>0s (Đọc liền mạch xuyên suốt)</option>
+                            <option value={0.2}>0.2s (Nghỉ rất nhẹ)</option>
+                            <option value={0.5}>0.5s (Nghỉ 0.5s)</option>
+                            <option value={1.0}>1.0s (Nghỉ 1 giây)</option>
+                            <option value={1.5}>1.5s (Nghỉ 1.5 giây)</option>
+                            <option value={2.0}>2.0s (Nghỉ 2 giây)</option>
+                          </select>
+                        </div>
+
+                        {/* Dừng nghỉ chuyển bước */}
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-gray-300 font-bold text-[11px] flex items-center gap-1">
+                            <span>⏱️ Dừng chuyển bước:</span>
+                          </span>
+                          <select
+                            value={step.pauseSeconds !== undefined ? step.pauseSeconds : 0}
+                            onChange={(e) => {
+                              const val = parseFloat(e.target.value);
+                              handleUpdateStep(step.id, 'pauseSeconds', val);
+                              toast.info(`⏱️ Dừng chuyển bước: ${val === 0 ? 'Chuyển tức thì (Xuyên suốt)' : `${val}s`}`);
+                            }}
+                            className="bg-slate-950 text-emerald-300 font-black text-xs px-2 py-1 rounded-lg border border-slate-700 outline-none cursor-pointer hover:border-emerald-400"
+                            title="Thời gian nghỉ giữa bước này sang bước tiếp theo. Mặc định 0s: Chuyển bước tức thì."
+                          >
+                            <option value={0}>0s (Chuyển bước tức thì - Xuyên suốt)</option>
+                            <option value={0.5}>0.5s (Nghỉ 0.5 giây)</option>
+                            <option value={1.0}>1.0s (Nghỉ 1 giây)</option>
+                            <option value={2.0}>2.0s (Nghỉ 2 giây)</option>
+                            <option value={3.0}>3.0s (Nghỉ 3 giây)</option>
+                            <option value={5.0}>5.0s (Nghỉ 5 giây)</option>
+                          </select>
+                        </div>
+
+                        {/* Tốc độ đọc */}
+                        <div className="flex items-center gap-1.5 ml-auto">
+                          <span className="text-gray-300 font-bold text-[11px]">⚡ Tốc độ:</span>
+                          <select
+                            value={step.voiceRate || 1.0}
+                            onChange={(e) => handleUpdateStep(step.id, 'voiceRate', parseFloat(e.target.value))}
+                            className="bg-slate-950 text-amber-300 font-black text-xs px-2 py-1 rounded-lg border border-slate-700 outline-none cursor-pointer hover:border-amber-400"
+                          >
+                            <option value={0.9}>0.9x (Chậm từ tốn)</option>
+                            <option value={1.0}>1.0x (Chuẩn tự nhiên)</option>
+                            <option value={1.05}>1.05x (Hơi nhanh)</option>
+                            <option value={1.1}>1.1x (Nhanh chốt sale)</option>
+                            <option value={1.15}>1.15x (Sôi nổi năng động)</option>
+                            <option value={1.2}>1.2x (Cực nhanh)</option>
+                          </select>
                         </div>
                       </div>
 

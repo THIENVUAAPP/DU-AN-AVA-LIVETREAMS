@@ -9,7 +9,7 @@
   "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1790066767234,
+  "updatedAt": 1790071521973,
   "flvUrl": null,
   "isConnected": false,
   "type": "MASTER_LIVE_STATE_UPDATE",
@@ -33,10 +33,10 @@
     "stock": 99,
     "keywords": "ava live;ava;phần mềm ava live;phần mềm livestream ai;livestream ai;livestream bằng ai;nhân vật",
     "storeUrl": "https://shop.tiktok.com",
-    "pinnedAt": 1790066746485,
+    "pinnedAt": 1790069676256,
     "triggerSource": "🎬 Nhắc từ khóa: \"nhân vật\""
   },
-  "currentMedia": "blob:http://localhost:3001/33bfafc1-06d1-4b6e-9aaf-9a67c5f4f3d7#type=video",
+  "currentMedia": "blob:http://localhost:3001/fd10f7b7-07b9-44d9-ae79-a7a4485894f3#type=video",
   "activeTab": "flow_sequencer",
   "stepTitle": "Bước 1: Avatar AI Chào Khán Giả & Mở Đầu Live",
   "actionType": "avatar_talk",
@@ -51,7 +51,7 @@
   "overlayTextPos": "top",
   "overlayTextStyle": "fire_sale",
   "isMediaPinned": false,
-  "secondaryMediaUrl": "blob:http://localhost:3001/315bf2e1-f393-405a-8be1-eb4159096ad0#type=video",
+  "secondaryMediaUrl": "blob:http://localhost:3001/494cf4d7-50ca-4f2d-a820-6237c05ec61a#type=video",
   "secondaryMediaPos": "top-right",
   "secondaryMediaScale": 40,
   "overlayImageScale": 100,
@@ -61,11 +61,11 @@
   "avatarSpeaker": "avatar_1",
   "voiceId": "vn_f_dna_04_luxury_glamour",
   "secondaryMediaTransform": {
-    "x": 51,
-    "y": 17,
-    "width": 46,
-    "height": 64,
-    "zIndex": 20
+    "x": 31,
+    "y": 13,
+    "width": 58,
+    "height": 57,
+    "zIndex": 10
   },
   "overlayImageTransform": null,
   "overlayTextTransform": {

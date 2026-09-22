@@ -7153,43 +7153,111 @@ export const getChromaStyle = (chromaConfig) => {
 /**
  * ✂️ TÁCH NỀN HÌNH ẢNH TRỰC TIẾP QUA CANVAS 0ms (SIÊU SẠCH 4K & TRONG SUỐT 100% - XÓA SẠCH KHUNG VIỀN ẢNH)
  */
-export const removeImageBackgroundCanvas = (imgSrc, mode = 'auto', tolerance = 45) => {
+const ensureMediaPipeLoaded = () => {
+  if (typeof window === 'undefined') return Promise.resolve(null);
+  if (window.SelfieSegmentation) return Promise.resolve(window.SelfieSegmentation);
   return new Promise((resolve) => {
+    let attempts = 0;
+    const interval = setInterval(() => {
+      attempts++;
+      if (window.SelfieSegmentation) {
+        clearInterval(interval);
+        resolve(window.SelfieSegmentation);
+      } else if (attempts > 12) {
+        clearInterval(interval);
+        try {
+          const script = document.createElement('script');
+          script.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js';
+          script.crossOrigin = 'anonymous';
+          script.onload = () => resolve(window.SelfieSegmentation || null);
+          script.onerror = () => resolve(null);
+          document.head.appendChild(script);
+          setTimeout(() => resolve(window.SelfieSegmentation || null), 2500);
+        } catch {
+          resolve(null);
+        }
+      }
+    }, 100);
+  });
+};
+
+export const removeImageBackgroundCanvas = (imgSrc, mode = 'auto', tolerance = 45) => {
+  return new Promise(async (resolve) => {
     if (!imgSrc) return resolve('');
     const img = new Image();
     img.crossOrigin = 'anonymous';
-    img.onload = () => {
+    img.onload = async () => {
       try {
-        const canvas = document.createElement('canvas');
         const w = img.naturalWidth || img.width;
         const h = img.naturalHeight || img.height;
+        const canvas = document.createElement('canvas');
         canvas.width = w;
         canvas.height = h;
         const ctx = canvas.getContext('2d', { willReadFrequently: true });
         if (!ctx) return resolve(imgSrc);
 
-        ctx.drawImage(img, 0, 0);
+        ctx.drawImage(img, 0, 0, w, h);
+
+        // 🧠 CỐ GẮNG CHẠY MEDIAPIPE AI SELFIE SEGMENTATION NẾU CÓ SẴN (TÁCH NGƯỜI SIÊU CHÍNH XÁC TRÊN MỌI LOẠI NỀN PHÒNG, TƯỜNG HỒNG, CHỮ NEON)
+        let aiMaskCanvas = null;
+        const SelfieSegClass = (typeof window !== 'undefined' && window.SelfieSegmentation) ? window.SelfieSegmentation : await ensureMediaPipeLoaded();
+        if (SelfieSegClass && (mode === 'auto' || mode === 'person' || mode === 'ai' || mode === 'green')) {
+          try {
+            aiMaskCanvas = await new Promise((resSeg) => {
+              const seg = new SelfieSegClass({
+                locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`,
+              });
+              seg.setOptions({ modelSelection: 0, selfieMode: false });
+              const segTimer = setTimeout(() => resSeg(null), 4000);
+              seg.onResults((results) => {
+                clearTimeout(segTimer);
+                try {
+                  const mCanvas = document.createElement('canvas');
+                  mCanvas.width = w;
+                  mCanvas.height = h;
+                  const mCtx = mCanvas.getContext('2d');
+                  mCtx.drawImage(results.segmentationMask, 0, 0, w, h);
+                  resSeg(mCanvas);
+                } catch {
+                  resSeg(null);
+                }
+              });
+              seg.send({ image: canvas }).catch(() => resSeg(null));
+            });
+          } catch (e) {
+            aiMaskCanvas = null;
+          }
+        }
+
         const imgData = ctx.getImageData(0, 0, w, h);
         const data = imgData.data;
 
-        // 1. Lấy mẫu màu từ 4 cạnh và 4 góc (Sample ambient background along all 4 borders)
-        const sampleCoords = [
-          [2, 2], [Math.floor(w / 4), 2], [Math.floor(w / 2), 2], [Math.floor(w * 0.75), 2], [w - 3, 2],
-          [2, Math.floor(h / 4)], [w - 3, Math.floor(h / 4)],
-          [2, Math.floor(h / 2)], [w - 3, Math.floor(h / 2)],
-          [2, Math.floor(h * 0.75)], [w - 3, Math.floor(h * 0.75)],
-          [2, h - 3], [Math.floor(w / 4), h - 3], [Math.floor(w / 2), h - 3], [Math.floor(w * 0.75), h - 3], [w - 3, h - 3]
-        ];
+        // Lấy dữ liệu mặt nạ AI nếu có
+        let aiMaskData = null;
+        if (aiMaskCanvas) {
+          const mCtx = aiMaskCanvas.getContext('2d');
+          aiMaskData = mCtx.getImageData(0, 0, w, h).data;
+        }
 
+        // 1. Lấy mẫu màu đa điểm từ 4 cạnh biên (32 mẫu quanh viền ảnh)
         const bgSamples = [];
-        sampleCoords.forEach(([sx, sy]) => {
-          if (sx >= 0 && sx < w && sy >= 0 && sy < h) {
-            const idx = (sy * w + sx) * 4;
-            bgSamples.push({ r: data[idx], g: data[idx + 1], b: data[idx + 2] });
-          }
-        });
+        const sampleSteps = 8;
+        for (let s = 1; s < sampleSteps; s++) {
+          const sx = Math.floor((w * s) / sampleSteps);
+          const sy = Math.floor((h * s) / sampleSteps);
+          // Cạnh trên & dưới
+          const topIdx = (2 * w + sx) * 4;
+          const botIdx = ((h - 3) * w + sx) * 4;
+          bgSamples.push({ r: data[topIdx], g: data[topIdx + 1], b: data[topIdx + 2] });
+          bgSamples.push({ r: data[botIdx], g: data[botIdx + 1], b: data[botIdx + 2] });
+          // Cạnh trái & phải
+          const leftIdx = (sy * w + 2) * 4;
+          const rightIdx = (sy * w + (w - 3)) * 4;
+          bgSamples.push({ r: data[leftIdx], g: data[leftIdx + 1], b: data[leftIdx + 2] });
+          bgSamples.push({ r: data[rightIdx], g: data[rightIdx + 1], b: data[rightIdx + 2] });
+        }
 
-        // Tính màu trung bình viền
+        // Tính màu nền trung bình biên
         let avgR = 0, avgG = 0, avgB = 0;
         bgSamples.forEach(s => { avgR += s.r; avgG += s.g; avgB += s.b; });
         if (bgSamples.length > 0) {
@@ -7198,99 +7266,124 @@ export const removeImageBackgroundCanvas = (imgSrc, mode = 'auto', tolerance = 4
           avgB = Math.round(avgB / bgSamples.length);
         }
 
-        const effectiveTol = Math.max(20, Math.min(85, tolerance || 45));
+        const effectiveTol = Math.max(25, Math.min(85, tolerance || 45));
 
-        // 2. Quét từng pixel và xóa sạch mọi loại phông nền
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-          const alpha = data[i + 3];
-          if (alpha === 0) continue;
+        // 2. Quét từng pixel và xóa sạch nền
+        for (let y = 0; y < h; y++) {
+          for (let x = 0; x < w; x++) {
+            const i = (y * w + x) * 4;
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            const alpha = data[i + 3];
+            if (alpha === 0) continue;
 
-          let isBg = false;
+            let isBg = false;
 
-          const greenDiff = g - Math.max(r, b);
-          const blueDiff = b - Math.max(r, g);
-          const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-          const maxVal = Math.max(r, g, b);
-          const minVal = Math.min(r, g, b);
-          const colorSpread = maxVal - minVal;
-
-          // Kiểm tra da người để không bị xóa nhầm
-          const isSkinTone = (r > 110 && g > 75 && b > 55 && r > g && g > b && (r - g) >= 10 && colorSpread > 15);
-
-          if (mode === 'green') {
-            // Phông xanh lá cây
-            if ((g > 55 && greenDiff > 8) || (g > 90 && g > r * 1.12 && g > b * 1.12)) {
-              isBg = true;
-            }
-          } else if (mode === 'blue') {
-            // Phông xanh dương
-            if ((b > 55 && blueDiff > 8) || (b > 90 && b > r * 1.12 && b > g * 1.12)) {
-              isBg = true;
-            }
-          } else if (mode === 'black') {
-            // Phông đen / tối
-            if (maxVal < 45) {
-              isBg = true;
-            }
-          } else if (mode === 'white' || mode === 'room' || mode === 'wall') {
-            // Phông trắng, tường sáng, phòng
-            if (!isSkinTone) {
-              if (luminance > 185 && colorSpread < 45) {
+            // NẾU CÓ MẶT NẠ AI MEDIAPIPE:
+            if (aiMaskData) {
+              const maskVal = aiMaskData[i]; // 0 (nền) đến 255 (người)
+              if (maskVal > 85) {
+                // Đây chắc chắn là nhân vật / người
+                isBg = false;
+              } else if (y < h * 0.48) {
+                // Vùng nửa trên không phải người -> Chắc chắn là nền phòng/tường/chữ neon/kệ hoa -> XÓA 100%!
                 isBg = true;
               } else {
-                const distFromBorder = Math.sqrt(Math.pow(r - avgR, 2) + Math.pow(g - avgG, 2) + Math.pow(b - avgB, 2));
-                if (distFromBorder < effectiveTol * 1.4) isBg = true;
-              }
-            }
-          } else {
-            // 🪄 MODE AUTO: TỰ ĐỘNG NHẬN DIỆN VÀ XÓA MỌI LOẠI NỀN (XANH, ĐEN, TRẮNG, TƯỜNG, PHÒNG, GRADIENT)
-            if ((g > 55 && greenDiff > 8) || (g > 90 && g > r * 1.12 && g > b * 1.12)) {
-              isBg = true;
-            } else if ((b > 55 && blueDiff > 8) || (b > 90 && b > r * 1.12 && b > g * 1.12)) {
-              isBg = true;
-            } else if (maxVal < 42) {
-              isBg = true;
-            } else if (!isSkinTone) {
-              if (luminance > 190 && colorSpread < 40) {
-                isBg = true;
-              } else {
-                // So khớp với mẫu màu viền xung quanh
-                for (let s = 0; s < bgSamples.length; s++) {
+                // Vùng nửa dưới (có thể chứa sản phẩm, máy chạy bộ, gói bánh gạo lứt):
+                // Kiểm tra xem có trùng màu tường/nền biên hay không
+                let distToBg = Math.sqrt(Math.pow(r - avgR, 2) + Math.pow(g - avgG, 2) + Math.pow(b - avgB, 2));
+                for (let s = 0; s < Math.min(12, bgSamples.length); s++) {
                   const sm = bgSamples[s];
-                  const dist = Math.sqrt(Math.pow(r - sm.r, 2) + Math.pow(g - sm.g, 2) + Math.pow(b - sm.b, 2));
-                  if (dist < effectiveTol * 1.3) {
-                    isBg = true;
-                    break;
+                  const d = Math.sqrt(Math.pow(r - sm.r, 2) + Math.pow(g - sm.g, 2) + Math.pow(b - sm.b, 2));
+                  if (d < distToBg) distToBg = d;
+                }
+                if (distToBg < effectiveTol * 1.2) {
+                  isBg = true;
+                }
+              }
+            } else {
+              // THUẬT TOÁN TÁCH NỀN ĐA NĂNG (FALLBACK KHI KHÔNG CÓ AI):
+              const greenDiff = g - Math.max(r, b);
+              const blueDiff = b - Math.max(r, g);
+              const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
+              const maxVal = Math.max(r, g, b);
+              const minVal = Math.min(r, g, b);
+              const colorSpread = maxVal - minVal;
+
+              if (mode === 'green') {
+                if ((g > 55 && greenDiff > 8) || (g > 90 && g > r * 1.12 && g > b * 1.12)) isBg = true;
+              } else if (mode === 'blue') {
+                if ((b > 55 && blueDiff > 8) || (b > 90 && b > r * 1.12 && b > g * 1.12)) isBg = true;
+              } else if (mode === 'black') {
+                if (maxVal < 45) isBg = true;
+              } else if (mode === 'white') {
+                if (luminance > 185 && colorSpread < 45) isBg = true;
+              } else {
+                // Chế độ AUTO: Tự động so khớp với tập mẫu nền 4 biên
+                if ((g > 55 && greenDiff > 8) || (g > 90 && g > r * 1.12 && g > b * 1.12)) {
+                  isBg = true;
+                } else if ((b > 55 && blueDiff > 8) || (b > 90 && b > r * 1.12 && b > g * 1.12)) {
+                  isBg = true;
+                } else if (maxVal < 38) {
+                  isBg = true;
+                } else if (luminance > 215 && colorSpread < 35) {
+                  isBg = true;
+                } else {
+                  // So khớp với mẫu màu viền xung quanh (xóa cả tường hồng, phòng, studio)
+                  for (let s = 0; s < bgSamples.length; s++) {
+                    const sm = bgSamples[s];
+                    const dist = Math.sqrt(Math.pow(r - sm.r, 2) + Math.pow(g - sm.g, 2) + Math.pow(b - sm.b, 2));
+                    if (dist < effectiveTol * 1.35) {
+                      isBg = true;
+                      break;
+                    }
                   }
                 }
               }
             }
-          }
 
-          if (isBg) {
-            data[i + 3] = 0; // Xóa sạch sẽ 100% trong suốt
-          } else {
-            // Khử viền ám xanh lá hoặc xanh dương (Color Despill)
-            if (g > Math.max(r, b) && greenDiff > 5) {
-              data[i + 1] = Math.round((r + b) / 2);
-            } else if (b > Math.max(r, g) && blueDiff > 5) {
-              data[i + 2] = Math.round((r + g) / 2);
+            if (isBg) {
+              data[i + 3] = 0; // Xóa sạch sẽ 100% trong suốt
+            } else {
+              // Khử viền ám xanh lá hoặc xanh dương (Color Despill)
+              const greenDiff = g - Math.max(r, b);
+              const blueDiff = b - Math.max(r, g);
+              if (g > Math.max(r, b) && greenDiff > 5) {
+                data[i + 1] = Math.round((r + b) / 2);
+              } else if (b > Math.max(r, g) && blueDiff > 5) {
+                data[i + 2] = Math.round((r + g) / 2);
+              }
             }
           }
         }
 
-        // 3. 🛡️ XÓA SẠCH HOÀN TOÀN ĐƯỜNG KHUNG VIỀN Ở 4 CẠNH ẢNH (Ảnh số 1: Xóa luôn khung của bức ảnh)
-        // Loại bỏ triệt để mọi vạch viền khung ảnh, viền đen chụp màn hình, viền cắt viền hộp 4 cạnh
-        const borderPad = Math.max(3, Math.min(6, Math.floor(Math.min(w, h) * 0.008)));
+        // 3. 🛡️ XÓA TRIỆT ĐỂ 100% ĐƯỜNG KHUNG VIỀN Ở 4 CẠNH ẢNH (Ảnh số 1 & Ảnh mới)
+        // Loại bỏ 100% mọi vạch viền khung ảnh, viền đen chụp màn hình, viền cắt viền hộp 4 cạnh
+        const borderPad = Math.max(10, Math.min(20, Math.floor(Math.min(w, h) * 0.025)));
         for (let y = 0; y < h; y++) {
           for (let x = 0; x < w; x++) {
             if (x < borderPad || x >= w - borderPad || y < borderPad || y >= h - borderPad) {
               const idx = (y * w + x) * 4;
-              // Nếu pixel ở viền rìa ảnh, xóa trong suốt tuyệt đối để không còn sót lại khung viền
               data[idx + 3] = 0;
+            }
+          }
+        }
+
+        // 4. LÀM MỊN VIỀN ALPHA (Feathering 2px) ĐỂ KHÔNG BỊ RĂNG CƯA
+        for (let y = borderPad; y < h - borderPad; y++) {
+          for (let x = borderPad; x < w - borderPad; x++) {
+            const idx = (y * w + x) * 4;
+            if (data[idx + 3] > 0) {
+              // Kiểm tra xem có giáp pixel trong suốt không
+              const leftAlpha = data[(y * w + (x - 1)) * 4 + 3];
+              const rightAlpha = data[(y * w + (x + 1)) * 4 + 3];
+              const topAlpha = data[((y - 1) * w + x) * 4 + 3];
+              const botAlpha = data[((y + 1) * w + x) * 4 + 3];
+              if (leftAlpha === 0 || rightAlpha === 0 || topAlpha === 0 || botAlpha === 0) {
+                // Pixel viền mép: làm mềm êm ái
+                data[idx + 3] = Math.round(data[idx + 3] * 0.85);
+              }
             }
           }
         }
@@ -7937,15 +8030,16 @@ export function humanizeVoiceSpeechText(rawText, voice = null) {
   const isVietnamese = !voice || voice?.lang === 'vi-VN' || voice?.region === 'vi' || voice?.id?.startsWith('vn_') || voice?.id === 'free_vi_female' || voice?.id === 'el_adam';
   if (!isVietnamese) return text;
 
-  // Dọn dẹp khoảng trắng, xuống dòng và dấu câu thừa để âm thanh đọc liên tục xuyên suốt không bị dừng khựng lâu
+  // Dọn dẹp khoảng trắng, xuống dòng nhưng GIỮ TRỌN VẸN CẢM XÚC (! và ?) để giọng đọc truyền cảm, có ngữ điệu lên xuống
   text = text
     .replace(/\r?\n+/g, ' ')
     .replace(/[…]+/g, ' ')
     .replace(/\.{2,}/g, ' ')
-    .replace(/!+/g, '.')
-    .replace(/\?+/g, '.')
+    .replace(/!+/g, '!')
+    .replace(/\?+/g, '?')
     .replace(/[;:]+/g, ', ')
     .replace(/,\s*,+/g, ', ')
+    .replace(/([!?.,])\s*([!?.,])+/g, '$1')
     .replace(/\s+/g, ' ')
     .trim();
 
@@ -8423,9 +8517,12 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
   let finalRateNum = Math.max(-25, Math.min(60, baseRateNum + userRateOffset));
   const effectiveRate = (finalRateNum >= 0 ? '+' : '') + finalRateNum + '%';
 
+  // 3. TÍNH TOÁN KHOẢNG NGHỈ GIỮA CÁC CÂU (.?!)
+  const sentencePause = voice?.sentencePauseSeconds !== undefined ? Number(voice.sentencePauseSeconds) : 0;
+
   // Khóa bộ nhớ đệm độc bản theo từng ID giọng đọc riêng biệt để không bao giờ bị phát nhầm giọng khác
   const voiceIdKey = voice?.id || neuralVoice;
-  const cacheKey = `${voiceIdKey}_${neuralVoice}_${effectivePitch}_${effectiveRate}_${text.trim()}`;
+  const cacheKey = `${voiceIdKey}_${neuralVoice}_${effectivePitch}_${effectiveRate}_${sentencePause}_${text.trim()}`;
   if (audioBufferMemoryCache.has(cacheKey)) {
     return audioBufferMemoryCache.get(cacheKey);
   }
@@ -8453,15 +8550,21 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
     .replace(/\r?\n+/g, ' ')
     .replace(/[…]+/g, ' ')
     .replace(/\.{2,}/g, ' ')
-    .replace(/!+/g, '.')
-    .replace(/\?+/g, '.')
+    .replace(/!+/g, '!')
+    .replace(/\?+/g, '?')
     .replace(/[;:]+/g, ', ')
     .replace(/,\s*,+/g, ', ')
+    .replace(/([!?.,])\s*([!?.,])+/g, '$1')
     .replace(/\s+/g, ' ')
     .trim();
 
-  // Đảm bảo câu có dấu kết thúc (.) để EdgeTTS phát âm trọn vẹn không nuốt đuôi
-  if (ttsText && !/[.]$/.test(ttsText)) {
+  // Đọc liền mạch xuyên suốt nếu sentencePause === 0: Chuyển dấu chấm giữa câu thành dấu phẩy nhẹ
+  if (sentencePause === 0) {
+    ttsText = ttsText.replace(/\.(?=\s+[A-ZÀ-Ỹa-zà-ỹ0-9])/g, ',');
+  }
+
+  // Đảm bảo câu có dấu kết thúc (. ? !) để EdgeTTS phát âm trọn vẹn giàu cảm xúc
+  if (ttsText && !/[.!?]$/.test(ttsText)) {
     ttsText += '.';
   }
 
@@ -8472,10 +8575,11 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
     gender,
     pitch: effectivePitch,
     rate: effectiveRate,
-    lang: shortLang
+    lang: shortLang,
+    sentencePauseSeconds: sentencePause
   });
 
-  const ttsQuery = `text=${encodeURIComponent(ttsText)}&voice=${encodeURIComponent(neuralVoice)}&voiceId=${encodeURIComponent(voice?.id || '')}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(effectivePitch)}&rate=${encodeURIComponent(effectiveRate)}&lang=${encodeURIComponent(shortLang)}`;
+  const ttsQuery = `text=${encodeURIComponent(ttsText)}&voice=${encodeURIComponent(neuralVoice)}&voiceId=${encodeURIComponent(voice?.id || '')}&gender=${encodeURIComponent(gender)}&pitch=${encodeURIComponent(effectivePitch)}&rate=${encodeURIComponent(effectiveRate)}&lang=${encodeURIComponent(shortLang)}&sentencePauseSeconds=${encodeURIComponent(sentencePause)}`;
 
   const baseCandidates = [
     ...(currentOrigin ? [`${currentOrigin}/api/tts`] : []),
@@ -8666,6 +8770,7 @@ export async function previewVoiceAudio(voiceOrId, sampleText = null, onEndOrPri
     volume: customOptions.volume !== undefined ? customOptions.volume : (voiceObj.volume !== undefined ? voiceObj.volume : 1.0),
     rate: customOptions.rate !== undefined ? customOptions.rate : (voiceObj.rate !== undefined ? voiceObj.rate : 1.0),
     pitch: customOptions.pitch !== undefined ? customOptions.pitch : (voiceObj.pitch !== undefined ? voiceObj.pitch : 1.0),
+    sentencePauseSeconds: customOptions.sentencePauseSeconds !== undefined ? customOptions.sentencePauseSeconds : (voiceObj.sentencePauseSeconds !== undefined ? voiceObj.sentencePauseSeconds : 0),
     apiKey: customOptions.apiKey || voiceObj.apiKey || getElevenLabsApiKey()
   };
 
