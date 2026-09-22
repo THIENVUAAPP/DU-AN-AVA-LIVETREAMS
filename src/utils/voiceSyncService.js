@@ -8581,10 +8581,28 @@ export async function previewVoiceAudio(voiceOrId, sampleText = null, optionsOrO
   // Chuẩn hóa voice object từ string ID hoặc role theo chuẩn Bộ Não AI
   let voiceObj = voiceOrId;
   if (typeof voiceOrId === 'string') {
-    if (['idol', 'manager', 'assistant', 'game', 'comment', 'avatar_1', 'avatar_2', 'avatar_3', 'avatar_4'].includes(voiceOrId.toLowerCase())) {
+    if (['idol', 'manager', 'assistant', 'game', 'comment', 'avatar_1', 'avatar_2', 'avatar_3', 'avatar_4', 'avatar_5'].includes(voiceOrId.toLowerCase())) {
       voiceObj = resolveEffectiveVoice(voiceOrId);
     } else {
-      voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === voiceOrId) || resolveEffectiveVoice('idol', voiceOrId);
+      voiceObj = ALL_SYSTEM_VOICES.find(v => v.id === voiceOrId || v.voiceId === voiceOrId);
+      if (!voiceObj) {
+        try {
+          const userElVoices = JSON.parse(localStorage.getItem('elevenlabs_user_voices') || '[]');
+          const matchEl = userElVoices.find(v => v.id === voiceOrId || v.voice_id === voiceOrId);
+          if (matchEl) {
+            voiceObj = {
+              id: matchEl.id || matchEl.voice_id,
+              name: matchEl.name,
+              provider: 'elevenlabs',
+              voiceId: matchEl.voice_id || matchEl.id,
+              lang: 'vi-VN'
+            };
+          }
+        } catch (e) {}
+      }
+      if (!voiceObj) {
+        voiceObj = resolveEffectiveVoice('idol', voiceOrId);
+      }
     }
   }
   voiceObj = voiceObj || ALL_SYSTEM_VOICES[0];

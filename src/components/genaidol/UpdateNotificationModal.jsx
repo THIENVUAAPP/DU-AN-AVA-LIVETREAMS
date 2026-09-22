@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.6.4';
+export const APP_VERSION = '4.6.5';
 export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.6.4 - Khóa Chặt Nút Đồng Bộ Sân Khấu & Hiển Thị Video Tải Lên Sân Khấu Chính Tức Thì 0ms',
-    description: '1. Khóa Chặt Nút Đồng Bộ Sân Khấu Chính: Chỉ bật/tắt khi người dùng bấm tay, tuyệt đối không tự ý tắt ngầm; Khi bấm Tắt, tự động ngắt kết nối và xóa sạch dữ liệu Sân Khấu Phụ trên Sân Khấu Chính. 2. Tải & Hiển Thị Video Sân Khấu Chính Tức Thì: Người dùng tải video/ảnh lên các ô nhân vật hoặc bấm chọn bất kỳ ô nhân vật nào thì Sân Khấu Chính hiển thị và phát ngay lập tức 0ms, không độ trễ, không bị đè bởi overlay cũ.'
+    title: '⚡ Bản Cập Nhật v4.6.5 - Tối Ưu Giữ Nguyên Phông Gốc Khi Tải Lên & Nâng Cấp Nghe Thử Voice Kịch Bản 100% Ổn Định',
+    description: '1. Giữ Nguyên Phông Gốc Ảnh/Video: Mọi ảnh và video khi tải lên sân khấu hoặc nhân vật Avatar được bảo toàn 100% phông nền gốc, chỉ tách nền/phông xanh khi người dùng chủ động bấm nút. 2. Nghe Thử Voice Kịch Bản Toàn Diện: Nút "Nghe Thử Voice" và luồng đọc kịch bản hoạt động 100% ổn định, ưu tiên chính xác giọng đọc được chọn cho từng bước, hỗ trợ đầy đủ giọng VIP, giọng ElevenLabs API key và giọng Bộ Não AI.'
   }
 ];
 

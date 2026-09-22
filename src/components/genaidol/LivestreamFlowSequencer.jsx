@@ -841,7 +841,7 @@ export default function LivestreamFlowSequencer() {
             toast.success('🎉 Đã đọc xong toàn bộ kịch bản!');
           }
         }
-      });
+      }, { priority: true, isTest: true, volume: 1.0 });
     } else {
       stopVoiceAudio();
       setSpeakingStepId(null);
@@ -1484,7 +1484,8 @@ export default function LivestreamFlowSequencer() {
               ...a,
               talkVideo: mediaUrl,
               idleVideo: mediaUrl,
-              mediaUrl: mediaUrl
+              mediaUrl: mediaUrl,
+              chromaKey: { enabled: false, mode: 'green', color: '#00ff00' }
             };
           }
           return a;
@@ -1492,7 +1493,7 @@ export default function LivestreamFlowSequencer() {
       };
       setMultiAvatarConfig(updated);
       saveMultiAvatarConfig(updated);
-      toast.success(`🎭 Đã nạp ${isImg ? 'ảnh' : 'video'} "${file.name}" cho Avatar ${avatarId.toUpperCase()}!`);
+      toast.success(`🎭 Đã nạp ${isImg ? 'ảnh' : 'video'} "${file.name}" cho Avatar ${avatarId.toUpperCase()} (Giữ nguyên phông gốc)!`);
       if (isMasterSynced && currentStep) {
         setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
       }
@@ -1550,6 +1551,11 @@ export default function LivestreamFlowSequencer() {
             const updatedStep = { ...s, [targetField]: mediaUrl };
             if (targetField === 'mediaUrl') {
               updatedStep.isMainMediaDeleted = false;
+              updatedStep.mainMediaChromaKey = { enabled: false, mode: 'green', color: '#00ff00' };
+            } else if (targetField === 'secondaryMediaUrl') {
+              updatedStep.secondaryMediaChromaKey = { enabled: false, mode: 'green', color: '#00ff00' };
+            } else if (targetField === 'overlayImage') {
+              updatedStep.overlayImageChromaKey = { enabled: false, mode: 'green', color: '#00ff00' };
             }
             if (s.id === currentStep?.id) {
               updatedCurrentStep = updatedStep;
@@ -1558,7 +1564,7 @@ export default function LivestreamFlowSequencer() {
           })
         };
       }));
-      toast.success(`🎬 Đã nạp ${isImg ? 'ảnh' : 'video'} "${file.name}" lên Sân Khấu 9:16!`);
+      toast.success(`🎬 Đã nạp ${isImg ? 'ảnh' : 'video'} "${file.name}" lên Sân Khấu 9:16 (Giữ nguyên phông gốc)!`);
       if (isMasterSynced) {
         setTimeout(() => {
           const sToSync = updatedCurrentStep || currentStep;
@@ -1656,12 +1662,29 @@ export default function LivestreamFlowSequencer() {
 
   // 🎙️ Toàn bộ danh sách Giọng Đọc AI Phân Nhóm từ Bộ Não Voice AI
   const categorizedVoiceList = useMemo(() => {
+    let elevenLabsVoices = [];
+    try {
+      const stored = localStorage.getItem('elevenlabs_user_voices');
+      if (stored) {
+        const parsed = JSON.parse(stored);
+        if (Array.isArray(parsed)) {
+          elevenLabsVoices = parsed.map(v => ({
+            id: v.voice_id || v.id,
+            name: `🎙️ ${v.name || 'ElevenLabs Voice'} (Tùy Chỉnh)`,
+            tier: 'pro',
+            provider: 'elevenlabs'
+          }));
+        }
+      }
+    } catch(e) {}
+
     const vipVoices = ALL_SYSTEM_VOICES.filter(v => v.tier === 'pro' || v.badge?.includes('VIP') || v.id.startsWith('free_') || v.id.startsWith('vn_'));
     const femaleVoices = ALL_SYSTEM_VOICES.filter(v => v.gender === 'Female' && !vipVoices.some(vip => vip.id === v.id) && (v.lang?.startsWith('vi') || v.region === 'vi'));
     const maleVoices = ALL_SYSTEM_VOICES.filter(v => v.gender === 'Male' && !vipVoices.some(vip => vip.id === v.id) && (v.lang?.startsWith('vi') || v.region === 'vi'));
     const otherVoices = ALL_SYSTEM_VOICES.filter(v => !vipVoices.some(vip => vip.id === v.id) && !femaleVoices.some(f => f.id === v.id) && !maleVoices.some(m => m.id === v.id));
 
     return {
+      elevenLabsVoices,
       vipVoices,
       femaleVoices,
       maleVoices,
@@ -1715,15 +1738,15 @@ export default function LivestreamFlowSequencer() {
       return {};
     }
     const resolved = resolveStepMedia(currentStepIndex);
-    if (layerType === 'main_media') {
+    if (layerType === 'main_media' || layerType === 'mainMedia') {
       const chroma = currentStep?.mainMediaChromaKey || resolved.mainMediaChromaKey;
       if (chroma?.enabled) return getChromaStyle(chroma);
     }
-    if (layerType === 'pip') {
+    if (layerType === 'pip' || layerType === 'secondaryMedia') {
       const chroma = currentStep?.secondaryMediaChromaKey || resolved.secondaryMediaChromaKey;
       if (chroma?.enabled) return getChromaStyle(chroma);
     }
-    if (layerType === 'banner') {
+    if (layerType === 'banner' || layerType === 'overlayImage') {
       const chroma = currentStep?.overlayImageChromaKey || resolved.overlayImageChromaKey;
       if (chroma?.enabled) return getChromaStyle(chroma);
     }
@@ -1735,19 +1758,19 @@ export default function LivestreamFlowSequencer() {
     let updatedStep = { ...currentStep };
     if (layerType === 'avatar' && targetId) {
       handleAvatarChromaUpdate(targetId, updates);
-    } else if (layerType === 'main_media') {
+    } else if (layerType === 'main_media' || layerType === 'mainMedia') {
       const current = currentStep?.mainMediaChromaKey || { enabled: false, mode: 'green', color: '#00ff00' };
       const nextVal = { ...current, ...updates };
       handleUpdateStep(currentStep.id, 'mainMediaChromaKey', nextVal);
       updatedStep.mainMediaChromaKey = nextVal;
       toast.success('✨ Đã cập nhật Tách Phông cho Video/Ảnh Nền!');
-    } else if (layerType === 'pip') {
+    } else if (layerType === 'pip' || layerType === 'secondaryMedia') {
       const current = currentStep?.secondaryMediaChromaKey || { enabled: false, mode: 'green', color: '#00ff00' };
       const nextVal = { ...current, ...updates };
       handleUpdateStep(currentStep.id, 'secondaryMediaChromaKey', nextVal);
       updatedStep.secondaryMediaChromaKey = nextVal;
       toast.success('✨ Đã cập nhật Tách Phông cho Video PiP!');
-    } else if (layerType === 'banner') {
+    } else if (layerType === 'banner' || layerType === 'overlayImage') {
       const current = currentStep?.overlayImageChromaKey || { enabled: false, mode: 'green', color: '#00ff00' };
       const nextVal = { ...current, ...updates };
       handleUpdateStep(currentStep.id, 'overlayImageChromaKey', nextVal);
@@ -3053,6 +3076,16 @@ export default function LivestreamFlowSequencer() {
                               <option value="brain_auto" className="bg-slate-900 text-amber-300 font-bold">
                                 🧠 Giọng Bộ Não Voice AI (Tự Động Theo Nhân Vật)
                               </option>
+
+                              {categorizedVoiceList.elevenLabsVoices?.length > 0 && (
+                                <optgroup label="⚡ Giọng ElevenLabs Tùy Chỉnh (API Key)" className="bg-slate-900 text-emerald-400 font-bold">
+                                  {categorizedVoiceList.elevenLabsVoices.map(v => (
+                                    <option key={v.id} value={v.id} className="bg-slate-900 text-white font-normal">
+                                      {v.name}
+                                    </option>
+                                  ))}
+                                </optgroup>
+                              )}
 
                               {categorizedVoiceList.vipVoices.length > 0 && (
                                 <optgroup label="👑 Top Bán Hàng & MC Livestream VIP" className="bg-slate-900 text-amber-400 font-bold">
