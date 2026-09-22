@@ -564,6 +564,18 @@ export default function DesktopAppUI() {
       setIsMasterStageSynced(isSynced);
       if (!isSynced) {
         setFlowSequencerOverlay(null);
+        setUserLockedMediaUrl(null);
+        try {
+          localStorage.removeItem('avalive_master_sync_active');
+          localStorage.removeItem('avalive_sequencer_overlay');
+          localStorage.removeItem('avalive_user_locked_media');
+        } catch (err) {}
+        setMultiAvatarConfig(prev => ({
+          ...prev,
+          _syncedFromSequencer: false,
+          fromSequencer: false,
+          enabled: false
+        }));
       }
     };
 
@@ -2611,6 +2623,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         overlayTextColor: overlayTextColor || '#ffffff',
         overlayTextTransform: overlayTextTransform || null,
         mainMediaUrl: effectiveMediaUrl,
+        isMainMediaDeleted: !!e.detail?.isMainMediaDeleted || !!(e.detail || {}).step?.isMainMediaDeleted,
         mainMediaTransform: mainMediaTransform || null,
         mainMediaChromaKey: mainMediaChromaKey || null,
         avatarTransforms: avatarTransforms || null,
@@ -2750,6 +2763,20 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
         window.speechSynthesis.cancel();
       }
+      setIsMasterStageSynced(false);
+      setFlowSequencerOverlay(null);
+      setUserLockedMediaUrl(null);
+      try {
+        localStorage.removeItem('avalive_master_sync_active');
+        localStorage.removeItem('avalive_sequencer_overlay');
+        localStorage.removeItem('avalive_user_locked_media');
+      } catch (err) {}
+      setMultiAvatarConfig(prev => ({
+        ...prev,
+        _syncedFromSequencer: false,
+        fromSequencer: false,
+        enabled: false
+      }));
       setIsScriptLiveRunning(false);
       setIsMasterLiveRunning(false);
       postMasterBroadcast({
@@ -2760,7 +2787,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       syncMasterLiveState({
         isPlaying: false
       }, socketRef.current);
-      showToast('⏹️ Đã dừng kịch bản chuỗi phân đoạn', 'info');
+      showToast('⏹️ Đã tắt đồng bộ, trở về Sân Khấu Chính ban đầu', 'info');
     };
 
     window.addEventListener('avalive:update_master_media', handleFlowMediaUpdate);
@@ -3922,17 +3949,23 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     }
 
     // 🎬 KHI isMasterStageSynced=true: Luôn render visual canvas đầy đủ mọi lớp đồng bộ từ sequencer
-    const isSyncedCanvas = isMasterStageSynced || (
-      multiAvatarConfig?.enabled && (multiAvatarConfig?.activeCount >= 1)
+    const isSyncedCanvas = isMasterStageSynced === true || (
+      multiAvatarConfig?.enabled === true && !multiAvatarConfig?.fromSequencer && (multiAvatarConfig?.activeCount >= 2)
     );
     if (isSyncedCanvas) {
       const sourceAvatars = (isMasterStageSynced && flowSequencerOverlay?.syncedAvatars && flowSequencerOverlay.syncedAvatars.length > 0)
         ? flowSequencerOverlay.syncedAvatars
         : (multiAvatarConfig.avatars || []);
 
+      const activeCount = isMasterStageSynced 
+        ? ((flowSequencerOverlay?.multiAvatarConfig?.activeCount !== undefined) 
+            ? flowSequencerOverlay.multiAvatarConfig.activeCount 
+            : (typeof multiAvatarConfig?.activeCount === 'number' ? multiAvatarConfig.activeCount : sourceAvatars.length))
+        : (multiAvatarConfig.activeCount || 1);
+
       const activeList = sourceAvatars
         .filter(a => isMasterStageSynced ? true : a.enabled)
-        .slice(0, isMasterStageSynced ? Math.max(1, sourceAvatars.length) : multiAvatarConfig.activeCount)
+        .slice(0, activeCount)
         .map((avatar, idx) => {
           const isSpeakingNow = isSpeakerActive && (
             activeSpeakerId === avatar.id || 
@@ -3961,40 +3994,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         })
         .filter(a => !!a.resolvedVidSrc); // Triệt tiêu hoàn toàn bất kỳ ô nào không có video/ảnh
 
-      // 🎬 KHI SYNC MÀ KHÔNG CÓ AVATAR VIDEO: Vẫn render Freeform Canvas với video nền từ sequencer
-      if (activeList.length === 0 && isMasterStageSynced && userLockedMediaUrl) {
-        const bgIsImage = isImageMedia(userLockedMediaUrl);
-        return (
-          <div
-            className="relative w-full h-full overflow-hidden bg-black"
-          >
-            {bgIsImage ? (
-              <img
-                key={userLockedMediaUrl}
-                src={userLockedMediaUrl}
-                alt="Stage Background"
-                className="w-full h-full object-cover pointer-events-none select-none"
-              />
-            ) : (
-              <video
-                key={userLockedMediaUrl}
-                ref={desktopVideoRef}
-                data-main-player="true"
-                src={userLockedMediaUrl}
-                autoPlay
-                loop
-                muted={liveAudioMuted}
-                playsInline
-                controls={false}
-                className="w-full h-full object-cover bg-black pointer-events-none select-none"
-              />
-            )}
-          </div>
-        );
-      }
-
-      if (activeList.length > 0) {
-        const isGridOnly = multiAvatarConfig.layoutMode === 'grid';
+      if (isMasterStageSynced || activeList.length > 0) {
+        const isGridOnly = !isMasterStageSynced && multiAvatarConfig.layoutMode === 'grid';
         const count = activeList.length;
 
         if (isGridOnly) {
@@ -4054,8 +4055,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             }}
           >
             {/* Studio Transformed Background Layer — dùng backgroundUrl hoặc fallback sang userLockedMediaUrl */}
-            {(multiAvatarConfig.backgroundUrl || (isMasterStageSynced && userLockedMediaUrl)) && (() => {
-              const bgSrc = (isMasterStageSynced && flowSequencerOverlay?.mainMediaUrl) || multiAvatarConfig.backgroundUrl || userLockedMediaUrl;
+            {((!isMasterStageSynced && multiAvatarConfig.backgroundUrl) || (isMasterStageSynced && !flowSequencerOverlay?.isMainMediaDeleted && (flowSequencerOverlay?.mainMediaUrl || userLockedMediaUrl))) && (() => {
+              const bgSrc = (isMasterStageSynced && flowSequencerOverlay?.mainMediaUrl) || (!flowSequencerOverlay?.isMainMediaDeleted ? (multiAvatarConfig.backgroundUrl || userLockedMediaUrl) : null);
+              if (!bgSrc) return null;
               const bgIsVideo = !isImageMedia(bgSrc);
               const bgTrans = (isMasterStageSynced && flowSequencerOverlay?.mainMediaTransform)
                 ? flowSequencerOverlay.mainMediaTransform

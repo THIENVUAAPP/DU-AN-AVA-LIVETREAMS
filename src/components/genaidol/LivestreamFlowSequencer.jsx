@@ -523,7 +523,7 @@ export default function LivestreamFlowSequencer() {
     const safeAvatarsList = (multiAvatarConfig?.avatars && multiAvatarConfig.avatars.length > 0)
       ? multiAvatarConfig.avatars
       : DEFAULT_MULTI_AVATAR_CONFIG.avatars;
-    const activeCount = multiAvatarConfig?.activeCount || 1;
+    const activeCount = typeof multiAvatarConfig?.activeCount === 'number' ? multiAvatarConfig.activeCount : 1;
     const avatarsList = safeAvatarsList.slice(0, activeCount);
 
     const syncedAvatars = avatarsList.map((av, avIdx) => {
@@ -623,6 +623,7 @@ export default function LivestreamFlowSequencer() {
 
     const fullSyncPayload = {
       ...payload,
+      isMainMediaDeleted: !!step.isMainMediaDeleted,
       syncedAvatars: syncedAvatars,
       multiAvatarConfig: syncedConfig
     };
@@ -630,9 +631,14 @@ export default function LivestreamFlowSequencer() {
     // Lưu ngay vào localStorage để duy trì trạng thái kể cả khi người dùng reload hoặc đóng modal
     try {
       localStorage.setItem('avalive_master_sync_active', 'true');
-      if (mediaToPlay) localStorage.setItem('avalive_user_locked_media', mediaToPlay);
+      if (mediaToPlay && !step.isMainMediaDeleted) {
+        localStorage.setItem('avalive_user_locked_media', mediaToPlay);
+      } else {
+        localStorage.removeItem('avalive_user_locked_media');
+      }
       localStorage.setItem('avalive_sequencer_overlay', JSON.stringify({
-        mainMediaUrl: mediaToPlay,
+        mainMediaUrl: step.isMainMediaDeleted ? '' : mediaToPlay,
+        isMainMediaDeleted: !!step.isMainMediaDeleted,
         mainMediaTransform: resolved.mainMediaTransform || step.mainMediaTransform || null,
         mainMediaChromaKey: resolved.mainMediaChromaKey || step.mainMediaChromaKey || null,
         secondaryMediaUrl: secondaryToPlay || null,
@@ -904,9 +910,62 @@ export default function LivestreamFlowSequencer() {
     }));
   };
 
+  // 🗑️ XÓA TRỰC TIẾP Ô NHÂN VẬT KHỎI SÂN KHẤU
+  const handleDeleteAvatarLayer = (avatarId, skipUndo = false) => {
+    if (!skipUndo) pushUndoSnapshot();
+    const existingAvatars = (multiAvatarConfig?.avatars && multiAvatarConfig.avatars.length > 0)
+      ? [...multiAvatarConfig.avatars]
+      : [
+          { id: 'avatar_1', name: 'Nhân Vật 1', talkVideo: '', idleVideo: '', voiceId: 'vi-VN-Standard-A', chromaKey: { enabled: false, mode: 'green', color: '#00ff00' } },
+          { id: 'avatar_2', name: 'Nhân Vật 2', talkVideo: '', idleVideo: '', voiceId: 'vi-VN-Standard-B', chromaKey: { enabled: false, mode: 'green', color: '#00ff00' } },
+          { id: 'avatar_3', name: 'Nhân Vật 3', talkVideo: '', idleVideo: '', voiceId: 'vi-VN-Standard-C', chromaKey: { enabled: false, mode: 'green', color: '#00ff00' } },
+          { id: 'avatar_4', name: 'Nhân Vật 4', talkVideo: '', idleVideo: '', voiceId: 'vi-VN-Standard-D', chromaKey: { enabled: false, mode: 'green', color: '#00ff00' } }
+        ];
+
+    const targetIdx = existingAvatars.findIndex(a => a.id === avatarId);
+    let updatedAvatars = [...existingAvatars];
+    if (targetIdx >= 0) {
+      const [removed] = updatedAvatars.splice(targetIdx, 1);
+      updatedAvatars.push({
+        ...removed,
+        name: `Nhân Vật ${updatedAvatars.length + 1}`,
+        talkVideo: '',
+        idleVideo: '',
+        chromaKey: { enabled: false, mode: 'green', color: '#00ff00' }
+      });
+      updatedAvatars = updatedAvatars.map((a, idx) => ({
+        ...a,
+        id: `avatar_${idx + 1}`,
+        name: a.name.startsWith('Nhân Vật') ? `Nhân Vật ${idx + 1}` : a.name
+      }));
+    }
+
+    const currentCount = typeof multiAvatarConfig?.activeCount === 'number' ? multiAvatarConfig.activeCount : 1;
+    const newCount = Math.max(0, currentCount - 1);
+
+    const updated = {
+      ...multiAvatarConfig,
+      activeCount: newCount,
+      avatars: updatedAvatars
+    };
+    setMultiAvatarConfig(updated);
+    saveMultiAvatarConfig(updated);
+    setSelectedLayer(null);
+    if (!skipUndo) {
+      toast.info(`🗑️ Đã xóa ô Avatar khỏi Sân Khấu!`);
+      if (isMasterSynced) {
+        setTimeout(() => syncToServer(), 50);
+      }
+    }
+  };
+
   // Xóa trực tiếp 1 layer khỏi bước hiện tại
   const handleDeleteLayerFromStep = (stepId, layerType, avatarId = null) => {
     pushUndoSnapshot();
+    if (layerType === 'avatar') {
+      const targetId = avatarId || selectedLayer?.id || 'avatar_1';
+      handleDeleteAvatarLayer(targetId, true);
+    }
     setPresets(prev => prev.map(p => {
       if (p.id !== activePresetId) return p;
       return {
@@ -917,9 +976,10 @@ export default function LivestreamFlowSequencer() {
           if (layerType === 'banner') return { ...s, overlayImage: '', overlayImageTransform: null };
           if (layerType === 'pip') return { ...s, secondaryMediaUrl: '', secondaryMediaTransform: null };
           if (layerType === 'main_media') return { ...s, mediaUrl: '', isMainMediaDeleted: true, mainMediaTransform: null };
-          if (layerType === 'avatar' && avatarId) {
+          if (layerType === 'avatar') {
+            const targetId = avatarId || selectedLayer?.id;
             const newTransforms = { ...(s.avatarTransforms || {}) };
-            delete newTransforms[avatarId];
+            if (targetId) delete newTransforms[targetId];
             return { ...s, avatarTransforms: newTransforms };
           }
           return s;
@@ -927,7 +987,10 @@ export default function LivestreamFlowSequencer() {
       };
     }));
     setSelectedLayer(null);
-    toast.info(`🗑️ Đã xóa lớp ${layerType.toUpperCase()} khỏi bước!`);
+    toast.info(`🗑️ Đã xóa lớp ${layerType.toUpperCase()} khỏi sân khấu!`);
+    if (isMasterSynced) {
+      setTimeout(() => syncToServer(), 50);
+    }
   };
 
   // Cập nhật tọa độ transform riêng của một layer trong bước hiện tại (Persistence per step)
@@ -1075,21 +1138,32 @@ export default function LivestreamFlowSequencer() {
     toast.success('📋 Đã nhân bản bước!');
   };
 
-  // 🎭 Tải Media Trực Tiếp Từ Máy Tính Gán Vào Avatar Đang Chọn Trên Sân Khấu
+  // 🎭 Tải Media Trực Tiếp Từ Máy Tính Gán Vào Avatar Đang Chọn Trên Sân Khấu (Hỗ trợ Cả Video & Hình Ảnh)
   const handleDirectAvatarMediaUpload = (avatarId, e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
-    try {
-      const objectUrl = URL.createObjectURL(file);
+    const isImg = file.type.startsWith('image/') || file.name.match(/\.(png|jpe?g|webp|gif|svg|avif|bmp)$/i);
+
+    const applyAvatarMedia = (mediaUrl) => {
+      const currentAvatars = (multiAvatarConfig?.avatars && multiAvatarConfig.avatars.length > 0)
+        ? multiAvatarConfig.avatars
+        : DEFAULT_MULTI_AVATAR_CONFIG.avatars;
+      
+      const currentCount = typeof multiAvatarConfig?.activeCount === 'number' ? multiAvatarConfig.activeCount : 1;
+      const targetCount = Math.max(1, currentCount);
+
       const updated = {
         ...multiAvatarConfig,
-        avatars: (multiAvatarConfig?.avatars || []).map(a => {
+        enabled: true,
+        activeCount: targetCount,
+        avatars: currentAvatars.map(a => {
           if (a.id === avatarId) {
             return {
               ...a,
-              talkVideo: objectUrl,
-              idleVideo: objectUrl
+              talkVideo: mediaUrl,
+              idleVideo: mediaUrl,
+              mediaUrl: mediaUrl
             };
           }
           return a;
@@ -1097,25 +1171,31 @@ export default function LivestreamFlowSequencer() {
       };
       setMultiAvatarConfig(updated);
       saveMultiAvatarConfig(updated);
-      toast.success(`🎭 Đã nạp "${file.name}" cho Avatar ${avatarId.toUpperCase()}!`);
-    } catch (err) {
+      toast.success(`🎭 Đã nạp ${isImg ? 'ảnh' : 'video'} "${file.name}" cho Avatar ${avatarId.toUpperCase()}!`);
+      if (isMasterSynced) {
+        setTimeout(() => syncToServer(), 50);
+      }
+    };
+
+    if (isImg) {
       const reader = new FileReader();
       reader.onload = (ev) => {
         const dataUrl = ev.target?.result;
-        const updated = {
-          ...multiAvatarConfig,
-          avatars: (multiAvatarConfig?.avatars || []).map(a => {
-            if (a.id === avatarId) {
-              return { ...a, talkVideo: dataUrl, idleVideo: dataUrl };
-            }
-            return a;
-          })
-        };
-        setMultiAvatarConfig(updated);
-        saveMultiAvatarConfig(updated);
-        toast.success(`🎭 Đã nạp "${file.name}" cho Avatar ${avatarId.toUpperCase()}!`);
+        if (dataUrl) applyAvatarMedia(dataUrl);
       };
       reader.readAsDataURL(file);
+    } else {
+      try {
+        const objectUrl = URL.createObjectURL(file) + '#type=video';
+        applyAvatarMedia(objectUrl);
+      } catch (err) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const dataUrl = ev.target?.result;
+          if (dataUrl) applyAvatarMedia(dataUrl);
+        };
+        reader.readAsDataURL(file);
+      }
     }
     e.target.value = '';
   };
@@ -1135,17 +1215,48 @@ export default function LivestreamFlowSequencer() {
       }
     }
 
-    try {
-      const objectUrl = URL.createObjectURL(file);
-      handleUpdateStep(stepId, targetField, objectUrl);
-      toast.success(`🎬 Đã nạp "${file.name}" lên Sân Khấu 9:16!`);
-    } catch (err) {
+    const isImg = file.type.startsWith('image/') || file.name.match(/\.(png|jpe?g|webp|gif|svg|avif|bmp)$/i);
+
+    const applyStepMedia = (mediaUrl) => {
+      setPresets(prev => prev.map(p => {
+        if (p.id !== activePresetId) return p;
+        return {
+          ...p,
+          steps: p.steps.map(s => {
+            if (s.id !== stepId) return s;
+            const updatedStep = { ...s, [targetField]: mediaUrl };
+            if (targetField === 'mediaUrl') {
+              updatedStep.isMainMediaDeleted = false;
+            }
+            return updatedStep;
+          })
+        };
+      }));
+      toast.success(`🎬 Đã nạp ${isImg ? 'ảnh' : 'video'} "${file.name}" lên Sân Khấu 9:16!`);
+      if (isMasterSynced) {
+        setTimeout(() => syncToServer(), 50);
+      }
+    };
+
+    if (isImg) {
       const reader = new FileReader();
-      reader.onload = (uploadEvent) => {
-        handleUpdateStep(stepId, targetField, uploadEvent.target?.result);
-        toast.success(`🎬 Đã nạp "${file.name}" lên Sân Khấu 9:16!`);
+      reader.onload = (ev) => {
+        const dataUrl = ev.target?.result;
+        if (dataUrl) applyStepMedia(dataUrl);
       };
       reader.readAsDataURL(file);
+    } else {
+      try {
+        const objectUrl = URL.createObjectURL(file) + '#type=video';
+        applyStepMedia(objectUrl);
+      } catch (err) {
+        const reader = new FileReader();
+        reader.onload = (ev) => {
+          const dataUrl = ev.target?.result;
+          if (dataUrl) applyStepMedia(dataUrl);
+        };
+        reader.readAsDataURL(file);
+      }
     }
     e.target.value = '';
   };
@@ -1258,55 +1369,11 @@ export default function LivestreamFlowSequencer() {
     startStep(next, isPlayingFlow);
   };
 
-  // 🗑️ XÓA TRỰC TIẾP Ô NHÂN VẬT KHỎI SÂN KHẤU
-  const handleDeleteAvatarLayer = (avatarId) => {
-    pushUndoSnapshot();
-    const existingAvatars = (multiAvatarConfig?.avatars && multiAvatarConfig.avatars.length > 0)
-      ? [...multiAvatarConfig.avatars]
-      : [
-          { id: 'avatar_1', name: 'Nhân Vật 1', talkVideo: '', idleVideo: '', voiceId: 'vi-VN-Standard-A', chromaKey: { enabled: false, mode: 'green', color: '#00ff00' } },
-          { id: 'avatar_2', name: 'Nhân Vật 2', talkVideo: '', idleVideo: '', voiceId: 'vi-VN-Standard-B', chromaKey: { enabled: false, mode: 'green', color: '#00ff00' } },
-          { id: 'avatar_3', name: 'Nhân Vật 3', talkVideo: '', idleVideo: '', voiceId: 'vi-VN-Standard-C', chromaKey: { enabled: false, mode: 'green', color: '#00ff00' } },
-          { id: 'avatar_4', name: 'Nhân Vật 4', talkVideo: '', idleVideo: '', voiceId: 'vi-VN-Standard-D', chromaKey: { enabled: false, mode: 'green', color: '#00ff00' } }
-        ];
-
-    const targetIdx = existingAvatars.findIndex(a => a.id === avatarId);
-    let updatedAvatars = [...existingAvatars];
-    if (targetIdx >= 0) {
-      const [removed] = updatedAvatars.splice(targetIdx, 1);
-      updatedAvatars.push({
-        ...removed,
-        name: `Nhân Vật ${updatedAvatars.length + 1}`,
-        talkVideo: '',
-        idleVideo: '',
-        chromaKey: { enabled: false, mode: 'green', color: '#00ff00' }
-      });
-      updatedAvatars = updatedAvatars.map((a, idx) => ({
-        ...a,
-        id: `avatar_${idx + 1}`,
-        name: a.name.startsWith('Nhân Vật') ? `Nhân Vật ${idx + 1}` : a.name
-      }));
-    }
-
-    const currentCount = multiAvatarConfig?.activeCount || 1;
-    const newCount = Math.max(1, currentCount - 1);
-
-    const updated = {
-      ...multiAvatarConfig,
-      activeCount: newCount,
-      avatars: updatedAvatars
-    };
-    setMultiAvatarConfig(updated);
-    saveMultiAvatarConfig(updated);
-    setSelectedLayer(null);
-    toast.info(`🗑️ Đã xóa ô Avatar khỏi Sân Khấu!`);
-  };
-
   const currentStep = activePreset.steps[currentStepIndex] || activePreset.steps[0];
   const safeAvatars = (multiAvatarConfig?.avatars && multiAvatarConfig.avatars.length > 0)
     ? multiAvatarConfig.avatars
     : DEFAULT_MULTI_AVATAR_CONFIG.avatars;
-  const activeAvatarCount = multiAvatarConfig?.activeCount || 1;
+  const activeAvatarCount = typeof multiAvatarConfig?.activeCount === 'number' ? multiAvatarConfig.activeCount : 1;
   const visibleAvatars = safeAvatars.slice(0, activeAvatarCount);
 
   // ✂️ LẤY STYLE CHROMA KEY / XÓA NỀN CHO BẤT KỲ LỚP NÀO

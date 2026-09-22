@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.5.9';
+export const APP_VERSION = '4.6.0';
 export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.5.9 - Tinh Gọn Khung Sân Khấu, Đồng Bộ Tách Nền AI & Khử Toàn Bộ Badge',
-    description: '1. Xóa Bỏ Nút Nổi Dư Thừa Trên Khung: Đã loại bỏ hoàn toàn các nút [Xóa Khung], [Tách Nền AI], [Tải PiP / Nền / Avatar / Banner] hiển thị đè trên các khung video/ảnh khi được chọn ở sân khấu phụ vì đã có sẵn đầy đủ trên thanh tiêu đề sân khấu, giữ nguyên 100% 8 điểm resize và viền chọn; 2. Đồng Bộ Chuẩn Xác Tách Nền AI / Phông Xanh: Khắc phục triệt để lỗi phông nền đen/không tách nền trên Sân Khấu Chính khi bật tách nền hoặc phông xanh ở sân khấu phụ, nhúng bộ lọc SvgChromaFilters trực tiếp và khử nền trong suốt hoàn hảo 60FPS; 3. Khử Hoàn Toàn Badge #1 & Live 9:16: Đã loại bỏ triệt để huy hiệu tên nhân vật (#1 Quang Huy) và tag trạng thái [Live 9:16] khỏi cả sân khấu phụ và sân khấu chính, giúp luồng xuất ra OBS và TikTok Live Studio sạch sẽ 100%; 4. Khóa Chặt Nguyên Vẹn Mọi Module Hệ Thống.'
+    title: '⚡ Bản Cập Nhật v4.6.0 - Hoàn Thiện Xóa Khung & Media Sân Khấu Phụ, Hỗ Trợ Tải Ảnh Trực Tiếp & Trả Về Sân Khấu Chính Độc Lập',
+    description: '1. Xóa Khung & Media Toàn Diện Ở Sân Khấu Phụ: Khi chọn bất kỳ layer nào (Avatar, Nền chính, PiP, Banner, Text) và bấm nút [Xóa] trên thanh công cụ hàng ngang, hệ thống lập tức xóa cả media lẫn loại bỏ hoàn toàn khung hiển thị khỏi sân khấu và đồng bộ tức thì ra sân khấu chính; 2. Hỗ Trợ Tải Ảnh Trực Tiếp Lên Sân Khấu: Khắc phục triệt để lỗi chỉ tải được video mà không tải được hình ảnh, nạp trực tiếp file ảnh (PNG, JPG, WEBP, GIF, SVG) lên Avatar/Nền/PiP/Banner hiển thị sắc nét tức thì; 3. Trả Về Giao Diện Sân Khấu Chính Ban Đầu Khi Tắt Đồng Bộ: Khi tắt nút "ĐỒNG BỘ RA SÂN KHẤU CHÍNH", sân khấu chính lập tức phục hồi 100% về giao diện nhân vật/video độc lập ban đầu, xóa toàn bộ overlay phụ; 4. Sân Khấu Chính Hoạt Động Độc Lập Không Bị Tách Phông: Khi không đồng bộ, sân khấu chính chạy độc lập không bị dính hiệu ứng phông xanh hay tách nền chéo, đảm bảo phát video mượt mà chuẩn 60FPS; 5. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Hệ Thống.'
   }
 ];
 

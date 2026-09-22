@@ -7130,7 +7130,8 @@ export const DEFAULT_MULTI_AVATAR_CONFIG = {
 
 export const isImageMedia = (url) => {
   if (!url || typeof url !== 'string') return false;
-  return /\.(png|jpe?g|webp|gif|svg|avif)($|\?)/i.test(url) || url.startsWith('data:image/');
+  if (url.startsWith('data:image/') || url.includes('#type=image') || url.includes('type=image') || url.includes('image/')) return true;
+  return /\.(png|jpe?g|webp|gif|svg|avif|bmp|ico)($|\?|#)/i.test(url);
 };
 
 export const getChromaStyle = (chromaConfig) => {
