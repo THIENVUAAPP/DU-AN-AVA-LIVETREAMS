@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.6.5';
+export const APP_VERSION = '4.6.6';
 export const RELEASE_DATE = '22/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v4.6.5 - Tối Ưu Giữ Nguyên Phông Gốc Khi Tải Lên & Nâng Cấp Nghe Thử Voice Kịch Bản 100% Ổn Định',
-    description: '1. Giữ Nguyên Phông Gốc Ảnh/Video: Mọi ảnh và video khi tải lên sân khấu hoặc nhân vật Avatar được bảo toàn 100% phông nền gốc, chỉ tách nền/phông xanh khi người dùng chủ động bấm nút. 2. Nghe Thử Voice Kịch Bản Toàn Diện: Nút "Nghe Thử Voice" và luồng đọc kịch bản hoạt động 100% ổn định, ưu tiên chính xác giọng đọc được chọn cho từng bước, hỗ trợ đầy đủ giọng VIP, giọng ElevenLabs API key và giọng Bộ Não AI.'
+    title: '⚡ Bản Cập Nhật v4.6.6 - Hoàn Thiện Quay Lại / Tiến Tới (Undo/Redo), Nghe Thử Voice 0ms & Đồng Bộ Cấu Hình Nhân Vật 1-5',
+    description: '1. Nút Quay Lại (Undo) & Tiến Tới (Redo): Hoàn tác và làm lại 100% chính xác mọi thao tác chỉnh sửa, xóa video/ảnh/khung, khôi phục sân khấu tức thì 0ms. 2. Nghe Thử Voice Kịch Bản 0ms: Khắc phục triệt để lỗi không nghe thử được, bấm Nghe Thử đọc ngay lập tức, bấm Dừng Đọc dừng ngay, ưu tiên đúng giọng chọn. 3. Tinh Gọn Bộ Não AI: Loại bỏ nút STUDIO 2-4 Avatar dư thừa. 4. Tích Chọn Nhân Vật 1-5: Bổ sung ô tích chọn sử dụng nhân vật trong Bộ Não và đồng bộ 100% vào luồng phát Live AI Avatar.'
   }
 ];
 

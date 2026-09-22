@@ -2359,8 +2359,44 @@ IDOL MỈM CƯỜI + GESTURE
           avatar5Voice: av5Match ? { ...av5Match, role: 'avatar_5', enabled: true, volume: Number(updated.avatar5VoiceVolume || 1.0), rate: Number(updated.avatar5VoiceRate || 1.0), pitch: Number(updated.avatar5VoicePitch || 1.0) } : undefined
         });
         localStorage.setItem('aidol_general_settings', JSON.stringify(updated));
+
+        // 🔄 Đồng bộ trực tiếp vào Multi-Avatar Config của Sân Khấu Live AI Idol
+        const savedMulti = JSON.parse(localStorage.getItem('avalive_multi_avatar_config') || '{}');
+        if (savedMulti && savedMulti.avatars) {
+          const charId = `avatar_${num}`;
+          const targetAv = savedMulti.avatars.find(a => a.id === charId);
+          if (targetAv) {
+            targetAv.voiceId = voice.id;
+            targetAv.volume = Number(updated[`avatar${num}VoiceVolume`] || 1.0);
+            targetAv.rate = Number(updated[`avatar${num}VoiceRate`] || 1.0);
+          }
+          localStorage.setItem('avalive_multi_avatar_config', JSON.stringify(savedMulti));
+          window.dispatchEvent(new CustomEvent('avalive_multi_avatar_changed', { detail: savedMulti }));
+        }
       } catch (e) {}
 
+      return updated;
+    });
+  };
+
+  const handleToggleAvatarEnabled = (charNum, enabled) => {
+    setSettings(prev => {
+      const updated = { ...prev, [`avatar${charNum}Enabled`]: enabled };
+      if (charNum === 1) updated.avatar1Enabled = enabled;
+      try {
+        localStorage.setItem('aidol_general_settings', JSON.stringify(updated));
+        const savedMulti = JSON.parse(localStorage.getItem('avalive_multi_avatar_config') || '{}');
+        if (savedMulti && savedMulti.avatars) {
+          const charId = `avatar_${charNum}`;
+          const targetAv = savedMulti.avatars.find(a => a.id === charId);
+          if (targetAv) {
+            targetAv.enabled = enabled;
+          }
+          localStorage.setItem('avalive_multi_avatar_config', JSON.stringify(savedMulti));
+          window.dispatchEvent(new CustomEvent('avalive_multi_avatar_changed', { detail: savedMulti }));
+        }
+      } catch (e) {}
+      notifyAssigned(`${enabled ? '✅ Đã BẬT' : '⏸️ Đã TẮT'} sử dụng Nhân Vật ${charNum}!`);
       return updated;
     });
   };
@@ -2537,15 +2573,6 @@ IDOL MỈM CƯỜI + GESTURE
           className={`flex items-center gap-2 px-4 py-3 font-bold text-sm transition-colors whitespace-nowrap border-b-2 ${activeTab === 'elevenlabs-voices' ? 'border-purple-600 text-purple-700 bg-purple-50/60 shadow-xs' : 'border-transparent text-purple-700 hover:text-purple-600 hover:bg-purple-50/30'}`}
         >
           <Mic size={16} className="text-purple-600" /> 🎙️ GIỌNG ELEVENLABS {elevenLabsVoices.length > 0 ? `(${elevenLabsVoices.length})` : ''}
-        </button>
-
-        <button 
-          type="button"
-          onClick={() => setShowMultiAvatarModal(true)}
-          className="flex items-center gap-1.5 px-3.5 py-1.5 my-auto mr-3 ml-auto bg-gradient-to-r from-indigo-600 to-purple-600 hover:from-indigo-700 hover:to-purple-700 text-white font-black text-xs rounded-xl shadow-md transition-all cursor-pointer hover:scale-105 active:scale-95 animate-pulse"
-        >
-          <Users size={14} className="text-yellow-300" />
-          <span>👥 STUDIO 2–4 AVATAR</span>
         </button>
       </div>
 
@@ -4820,16 +4847,23 @@ IDOL MỈM CƯỜI + GESTURE
                         const curVoiceId = settings[voiceIdKey] || (char.num === 1 ? settings.mainVoiceId : char.num === 2 ? settings.assistantVoiceId : char.num === 3 ? settings.gameVoiceId : char.num === 4 ? settings.commentVoiceId : char.defaultVoice);
                         const curVoiceObj = allAvail.find(v => v.id === curVoiceId) || ALL_SYSTEM_VOICES.find(v => v.id === curVoiceId) || ALL_SYSTEM_VOICES[0];
                         const curVol = settings[volKey] !== undefined ? settings[volKey] : (char.num === 1 ? (settings.mainVoiceVolume || 1.0) : char.num === 2 ? (settings.assistantVoiceVolume || 1.0) : 1.0);
-                        const curRate = settings[rateKey] !== undefined ? settings[rateKey] : (char.num === 1 ? (settings.mainVoiceRate || 1.0) : char.num === 2 ? (settings.assistantVoiceRate || 1.0) : 1.0);
-                        const curPitch = settings[pitchKey] !== undefined ? settings[pitchKey] : (char.num === 1 ? (settings.mainVoicePitch || 1.0) : char.num === 2 ? (settings.assistantVoicePitch || 1.0) : 1.0);
+                        const isCharEnabled = settings[`avatar${char.num}Enabled`] !== false;
 
                         return (
-                          <div key={char.id} className={`bg-white rounded-xl border-2 ${char.borderColor} p-3 shadow-xs space-y-2.5 flex flex-col justify-between`}>
+                          <div key={char.id} className={`bg-white rounded-xl border-2 ${isCharEnabled ? char.borderColor : 'border-gray-200 opacity-80'} p-3 shadow-xs space-y-2.5 flex flex-col justify-between transition-all`}>
                             <div>
                               <div className="flex items-center justify-between pb-1.5 border-b border-gray-100">
-                                <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${char.badgeColor}`}>
-                                  NV {char.num}
-                                </span>
+                                <label className="flex items-center gap-1.5 cursor-pointer select-none" title={`Bật / Tắt sử dụng Nhân Vật ${char.num}`}>
+                                  <input
+                                    type="checkbox"
+                                    checked={isCharEnabled}
+                                    onChange={(e) => handleToggleAvatarEnabled(char.num, e.target.checked)}
+                                    className="w-3.5 h-3.5 accent-indigo-600 rounded cursor-pointer"
+                                  />
+                                  <span className={`text-[10px] font-black px-2 py-0.5 rounded-md ${isCharEnabled ? char.badgeColor : 'bg-gray-400 text-white'}`}>
+                                    NV {char.num}
+                                  </span>
+                                </label>
                                 <button
                                   type="button"
                                   onClick={() => handlePreviewRoleVoice(char.id)}

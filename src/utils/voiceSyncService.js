@@ -8472,7 +8472,7 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
     for (let attempt = 0; attempt < 2; attempt++) {
       for (const endpoint of endpointCandidates) {
         let controller = new AbortController();
-        let timeoutId = setTimeout(() => controller.abort(), 35000);
+        let timeoutId = setTimeout(() => controller.abort(), 4000);
         try {
           let res = await fetch(endpoint, {
             method: 'POST',
@@ -8484,7 +8484,7 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
           if (!res || !res.ok) {
             clearTimeout(timeoutId);
             controller = new AbortController();
-            timeoutId = setTimeout(() => controller.abort(), 35000);
+            timeoutId = setTimeout(() => controller.abort(), 4000);
             const getUrl = endpoint.includes('?') ? `${endpoint}&${ttsQuery}` : `${endpoint}?${ttsQuery}`;
             res = await fetch(getUrl, { signal: controller.signal }).catch(() => null);
           }
@@ -8522,25 +8522,20 @@ export async function fetchAndDecodeTTSAudio(text, voice = null) {
               }
             }
           }
-        } catch (e) {
+        } catch (err) {
           clearTimeout(timeoutId);
         }
-      }
-      if (attempt === 0) {
-        await new Promise(r => setTimeout(r, 60));
       }
     }
     return null;
   };
 
-  const fetchPromise = doFetch();
-  activeFetchPromises.set(cacheKey, fetchPromise);
-  try {
-    const result = await fetchPromise;
-    return result;
-  } finally {
+  const fetchPromise = doFetch().finally(() => {
     activeFetchPromises.delete(cacheKey);
-  }
+  });
+
+  activeFetchPromises.set(cacheKey, fetchPromise);
+  return fetchPromise;
 }
 
 /**
@@ -8569,9 +8564,10 @@ export async function prefetchTTSAudio(text, voice = null, options = {}) {
 }
 
 /**
- * 🎙️ Phát Voice AI Âm Thanh Cho Mọi Mục Đích (Preview, Idol nói, Game BLV, Trợ lý, Bán hàng)
+ * 🎙️ HÀM PHÁT THỬ GIỌNG ĐỌC CHO PHÉP TEST MỌI GIỌNG (TIẾNG VIỆT & QUỐC TẾ)
+ * Ưu tiên tuyệt đối 100% khi người dùng bấm Chạy Test / Nghe Thử kịch bản
  */
-export async function previewVoiceAudio(voiceOrId, sampleText = null, optionsOrOnEnd = null, onEndOrPriority = null) {
+export async function previewVoiceAudio(voiceOrId, sampleText = null, onEndOrPriority = null, optionsOrOnEnd = null) {
   if (typeof window === 'undefined') {
     if (typeof optionsOrOnEnd === 'function') optionsOrOnEnd();
     if (typeof onEndOrPriority === 'function') onEndOrPriority();
@@ -8607,10 +8603,10 @@ export async function previewVoiceAudio(voiceOrId, sampleText = null, optionsOrO
   }
   voiceObj = voiceObj || ALL_SYSTEM_VOICES[0];
 
-  // Chuẩn hóa callback onEnd và options
+  // Chuẩn hóa callback onEnd và options - Mặc định chế độ Nghe Thử (preview) luôn là PRIORITY & TEST
   let onEnd = null;
-  let priority = false;
-  let isTest = false;
+  let priority = true;
+  let isTest = true;
   let customOptions = {};
 
   if (typeof optionsOrOnEnd === 'function') {
@@ -8619,8 +8615,8 @@ export async function previewVoiceAudio(voiceOrId, sampleText = null, optionsOrO
       priority = onEndOrPriority;
       isTest = onEndOrPriority;
     } else if (typeof onEndOrPriority === 'object' && onEndOrPriority !== null) {
-      priority = !!onEndOrPriority.priority;
-      isTest = !!onEndOrPriority.isTest;
+      priority = onEndOrPriority.priority !== undefined ? !!onEndOrPriority.priority : true;
+      isTest = onEndOrPriority.isTest !== undefined ? !!onEndOrPriority.isTest : true;
     }
   } else if (typeof optionsOrOnEnd === 'boolean') {
     priority = optionsOrOnEnd;
@@ -8631,10 +8627,12 @@ export async function previewVoiceAudio(voiceOrId, sampleText = null, optionsOrO
   } else if (typeof optionsOrOnEnd === 'object' && optionsOrOnEnd !== null) {
     customOptions = optionsOrOnEnd;
     onEnd = typeof onEndOrPriority === 'function' ? onEndOrPriority : optionsOrOnEnd.onEnd;
-    priority = !!optionsOrOnEnd.priority;
-    isTest = !!optionsOrOnEnd.isTest;
+    priority = optionsOrOnEnd.priority !== undefined ? !!optionsOrOnEnd.priority : true;
+    isTest = optionsOrOnEnd.isTest !== undefined ? !!optionsOrOnEnd.isTest : true;
   } else if (typeof onEndOrPriority === 'function') {
     onEnd = onEndOrPriority;
+    priority = true;
+    isTest = true;
   } else if (typeof onEndOrPriority === 'boolean') {
     priority = onEndOrPriority;
     isTest = onEndOrPriority;
@@ -8651,30 +8649,9 @@ export async function previewVoiceAudio(voiceOrId, sampleText = null, optionsOrO
   };
 
   // Kiểm tra nếu kênh giọng này bị tắt hoặc âm lượng về 0 (trừ khi đang nghe thử isTest)
-  if (!mergedVoice.isTest && (mergedVoice?.enabled === false || mergedVoice?.isMuted === true || (mergedVoice?.volume !== undefined && mergedVoice.volume <= 0.001))) {
-    if (onEnd) onEnd();
-    return true;
-  }
-
-  if (priority || isTest || mergedVoice.isTest) {
-    clearGlobalSpeechQueue();
-    return executeSingleSpeech(mergedVoice, sampleText, onEnd, true);
-  }
-
-  return new Promise((resolve) => {
-    if (globalSpeechQueue.length > 10) {
-      globalSpeechQueue.shift();
-    }
-
-    globalSpeechQueue.push({
-      voice: mergedVoice,
-      sampleText,
-      onEnd,
-      resolve
-    });
-
-    processGlobalSpeechQueue();
-  });
+  // Luôn dọn dẹp hàng đợi và thực thi phát ngay lập tức
+  clearGlobalSpeechQueue();
+  return executeSingleSpeech(mergedVoice, sampleText, onEnd, true);
 }
 
 async function processGlobalSpeechQueue() {

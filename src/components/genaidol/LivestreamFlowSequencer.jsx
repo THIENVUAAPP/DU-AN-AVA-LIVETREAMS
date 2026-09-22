@@ -350,27 +350,27 @@ export default function LivestreamFlowSequencer() {
       setCurrentStepIndex(previousSnap.currentStepIndex);
       currentStepIndexRef.current = previousSnap.currentStepIndex;
     }
-    toast.success('↩️ ĐÃ QUAY LẠI TRẠNG THÁI TRƯỚC (Hoàn tác thành công)!');
+    toast.success('↩️ ĐÃ QUAY LẠI THAO TÁC TRƯỚC ĐÓ (Khôi phục thành công)!');
 
-    // Fire event để DesktopAppUI cập nhật video tương ứng
-    setTimeout(() => {
-      const pr = previousSnap?.presets?.find(x => x.id === (previousSnap?.activePresetId || activePresetIdRef.current));
-      const st = pr?.steps?.[previousSnap?.currentStepIndex ?? currentStepIndexRef.current];
-      window.dispatchEvent(new CustomEvent('avalive:sequencer_undo_redo', {
-        detail: {
-          presets: previousSnap?.presets,
-          activePresetId: previousSnap?.activePresetId,
-          currentStepIndex: previousSnap?.currentStepIndex,
-          multiAvatarConfig: previousSnap?.multiAvatarConfig,
-          step: st
-        }
-      }));
-      // Nếu đang đồng bộ, cũng sync lên Master
-      if (isMasterSyncedRef.current && syncStepToServerRef.current && st) {
-        syncStepToServerRef.current(st, previousSnap?.currentStepIndex ?? currentStepIndexRef.current, isPlayingFlowRef.current);
+    // Đồng bộ lại ngay lập tức Sân Khấu & Master
+    const pr = previousSnap?.presets?.find(x => x.id === (previousSnap?.activePresetId || activePresetIdRef.current));
+    const targetIdx = previousSnap?.currentStepIndex ?? currentStepIndexRef.current;
+    const st = pr?.steps?.[targetIdx];
+    
+    window.dispatchEvent(new CustomEvent('avalive:sequencer_undo_redo', {
+      detail: {
+        presets: previousSnap?.presets,
+        activePresetId: previousSnap?.activePresetId,
+        currentStepIndex: targetIdx,
+        multiAvatarConfig: previousSnap?.multiAvatarConfig,
+        step: st
       }
-    }, 60);
-  }, []); // dependency rỗng — đọc từ refs, không bị stale
+    }));
+    
+    if (syncStepToServerRef.current && st) {
+      syncStepToServerRef.current(st, targetIdx, isPlayingFlowRef.current);
+    }
+  }, []);
 
   const handleRedo = useCallback(() => {
     const stack = redoStackRef.current;
@@ -406,27 +406,27 @@ export default function LivestreamFlowSequencer() {
       setCurrentStepIndex(nextSnap.currentStepIndex);
       currentStepIndexRef.current = nextSnap.currentStepIndex;
     }
-    toast.success('↪️ ĐÃ TIẾN TỚI THAO TÁC TIẾP THEO (Làm lại thành công)!');
+    toast.success('↪️ ĐÃ TIẾN TỚI THAO TÁC TIẾP THEO (Khôi phục thành công)!');
 
-    // Fire event để DesktopAppUI cập nhật video tương ứng
-    setTimeout(() => {
-      const pr = nextSnap?.presets?.find(x => x.id === (nextSnap?.activePresetId || activePresetIdRef.current));
-      const st = pr?.steps?.[nextSnap?.currentStepIndex ?? currentStepIndexRef.current];
-      window.dispatchEvent(new CustomEvent('avalive:sequencer_undo_redo', {
-        detail: {
-          presets: nextSnap?.presets,
-          activePresetId: nextSnap?.activePresetId,
-          currentStepIndex: nextSnap?.currentStepIndex,
-          multiAvatarConfig: nextSnap?.multiAvatarConfig,
-          step: st
-        }
-      }));
-      // Nếu đang đồng bộ, cũng sync lên Master
-      if (isMasterSyncedRef.current && syncStepToServerRef.current && st) {
-        syncStepToServerRef.current(st, nextSnap?.currentStepIndex ?? currentStepIndexRef.current, isPlayingFlowRef.current);
+    // Đồng bộ lại ngay lập tức Sân Khấu & Master
+    const pr = nextSnap?.presets?.find(x => x.id === (nextSnap?.activePresetId || activePresetIdRef.current));
+    const targetIdx = nextSnap?.currentStepIndex ?? currentStepIndexRef.current;
+    const st = pr?.steps?.[targetIdx];
+
+    window.dispatchEvent(new CustomEvent('avalive:sequencer_undo_redo', {
+      detail: {
+        presets: nextSnap?.presets,
+        activePresetId: nextSnap?.activePresetId,
+        currentStepIndex: targetIdx,
+        multiAvatarConfig: nextSnap?.multiAvatarConfig,
+        step: st
       }
-    }, 60);
-  }, []); // dependency rỗng — đọc từ refs, không bị stale
+    }));
+
+    if (syncStepToServerRef.current && st) {
+      syncStepToServerRef.current(st, targetIdx, isPlayingFlowRef.current);
+    }
+  }, []);
 
 
   // Phím tắt Ctrl+Z / Cmd+Z và Ctrl+Y / Cmd+Shift+Z
@@ -1011,6 +1011,9 @@ export default function LivestreamFlowSequencer() {
 
   // Cập nhật thông tin bước
   const handleUpdateStep = (stepId, field, value) => {
+    if (['mediaUrl', 'isMainMediaDeleted', 'secondaryMediaUrl', 'overlayImage', 'voiceId', 'avatarSpeaker', 'isMediaPinned', 'isSecondaryMediaPinned', 'isOverlayImagePinned', 'durationSeconds', 'title'].includes(field)) {
+      pushUndoSnapshot();
+    }
     setPresets(prev => prev.map(p => {
       if (p.id !== activePresetId) return p;
       return {
@@ -1641,6 +1644,13 @@ export default function LivestreamFlowSequencer() {
   // 🧠 Ánh xạ giọng đọc từ BỘ NÃO VOICE AI BRAIN cho từng nhân vật 1 - 5
   const getBrainVoiceForSpeaker = useCallback((speakerId) => {
     try {
+      const generalSettings = JSON.parse(localStorage.getItem('aidol_general_settings') || '{}');
+      if (speakerId === 'avatar_1' && (generalSettings.avatar1VoiceId || generalSettings.mainVoiceId)) return generalSettings.avatar1VoiceId || generalSettings.mainVoiceId;
+      if (speakerId === 'avatar_2' && (generalSettings.avatar2VoiceId || generalSettings.assistantVoiceId)) return generalSettings.avatar2VoiceId || generalSettings.assistantVoiceId;
+      if (speakerId === 'avatar_3' && (generalSettings.avatar3VoiceId || generalSettings.gameVoiceId)) return generalSettings.avatar3VoiceId || generalSettings.gameVoiceId;
+      if (speakerId === 'avatar_4' && (generalSettings.avatar4VoiceId || generalSettings.commentVoiceId)) return generalSettings.avatar4VoiceId || generalSettings.commentVoiceId;
+      if (speakerId === 'avatar_5' && generalSettings.avatar5VoiceId) return generalSettings.avatar5VoiceId;
+
       const voiceCfg = getSavedVoiceConfig();
       if (speakerId === 'avatar_1') return voiceCfg.avatar1Voice?.id || voiceCfg.idolVoice?.id || 'free_vi_female';
       if (speakerId === 'avatar_2') return voiceCfg.avatar2Voice?.id || voiceCfg.managerVoice?.id || 'vn_nam_quanly_uyquyen';
