@@ -454,6 +454,20 @@ export default function AIDOLLiveConsole() {
       window.dispatchEvent(new CustomEvent('avalive:substage_play_video', {
         detail: { item, playUrl, currentTime: 0 }
       }));
+      try {
+        const bc = new BroadcastChannel('avalive_master_live_stream');
+        bc.postMessage({
+          type: 'GLOBAL_MEDIA_CHANGE',
+          mediaUrl: playUrl,
+          fileBlob: item?.fileData || null,
+          characterName: item?.name || 'AI Idol',
+          action: 'play',
+          isPlaying: true,
+          currentTime: 0,
+          timestamp: Date.now()
+        });
+        setTimeout(() => bc.close(), 100);
+      } catch (e) {}
     }
   };
 

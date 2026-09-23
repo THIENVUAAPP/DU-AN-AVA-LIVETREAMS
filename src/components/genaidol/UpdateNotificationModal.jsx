@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.6';
+export const APP_VERSION = '4.9.7';
 export const RELEASE_DATE = '23/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.7 - Khắc Phục Triệt Để Màn Hình Đen Window Capture & Link Live, Đồng Bộ 100% Sân Khấu Chính & 14 Sự Kiện Live',
+    description: '1. Sửa Triệt Để Màn Hình Đen: Đồng bộ video phát từ Sân khấu phụ (Live Idol Avatar, Kho Video, 14 Sự kiện live) sang Sân khấu chính, Window Capture OBS và Đường link liên kết 0ms chuẩn 60 FPS, không còn tình trạng đen màn hình. 2. Xóa Bỏ Video Lưu Ẩn: Triệt tiêu hoàn toàn các video cache mặc định, Window Capture và Link stream chỉ phát 100% chính xác những gì đang hiển thị trên Sân khấu chính.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.6 - Khởi Động Trực Tiếp Phần Mềm Phát Live Khi Giải Nén & Tự Động Định Tuyến Chuẩn Xác',
     description: '1. Khởi Động Trực Tiếp Phần Mềm: Giải nén gói cài đặt Windows và Mac mở trực tiếp 100% giao diện Phần Mềm AvaLive Studio phát live (DesktopAppUI), tự động liên kết Sân khấu, Voice AI và các công cụ Livestream. 2. Định Tuyến Thông Minh: Tên miền website trực tuyến luôn hiển thị Trang Bán Hàng (Landing Page), trong khi gói cài đặt giải nén trên máy luôn mở Phần Mềm đầy đủ.'

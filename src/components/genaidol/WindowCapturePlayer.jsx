@@ -65,8 +65,7 @@ export default function WindowCapturePlayer() {
         try {
           const openerVid = window.opener.document.querySelector('video[data-main-player="true"]') || window.opener.document.querySelector('video');
           if (openerVid && (openerVid.currentSrc || openerVid.src)) {
-            const src = openerVid.currentSrc || openerVid.src;
-            if (src && !src.startsWith('blob:') && !src.startsWith('data:')) return src;
+            return openerVid.currentSrc || openerVid.src;
           }
         } catch (e) {}
       }
@@ -85,11 +84,11 @@ export default function WindowCapturePlayer() {
 
     try {
       const activeSrc = localStorage.getItem('avalive_active_video_src');
-      if (activeSrc && !activeSrc.startsWith('blob:') && !activeSrc.startsWith('data:')) return activeSrc;
+      if (activeSrc && typeof activeSrc === 'string' && activeSrc.trim()) return activeSrc;
       const saved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
-      if (saved.mediaUrl && !saved.mediaUrl.startsWith('blob:') && !saved.mediaUrl.startsWith('data:')) return saved.mediaUrl;
+      if (saved.mediaUrl && typeof saved.mediaUrl === 'string' && saved.mediaUrl.trim()) return saved.mediaUrl;
       const locked = localStorage.getItem('avalive_user_locked_media') || '';
-      if (locked && !locked.startsWith('blob:') && !locked.startsWith('data:')) return locked;
+      if (locked && typeof locked === 'string' && locked.trim()) return locked;
     } catch (e) {}
     return '';
   });
@@ -585,8 +584,8 @@ export default function WindowCapturePlayer() {
           }
         }
 
-        // ⚡ Đồng bộ video sự kiện 14 Tab
-        if (msg.eventVideoUrl || (msg.type === 'EVENT_VIDEO_TRIGGER' && msg.videoUrl)) {
+        // ⚡ Đồng bộ video sự kiện 14 Tab & Event Triggers
+        if (msg.type === 'EVENT_VIDEO_PLAY' || msg.type === 'EVENT_VIDEO_TRIGGER' || msg.eventVideoUrl || (msg.eventType && msg.videoUrl)) {
           const evUrl = resolveUrl(msg.eventVideoUrl || msg.videoUrl);
           if (evUrl) {
             setActiveEventVideo({
@@ -594,6 +593,16 @@ export default function WindowCapturePlayer() {
               name: msg.name || 'Event Video',
               eventType: msg.eventType
             });
+            isHardwareLocalBlobRef.current = false;
+            isDirectStreamActiveRef.current = false;
+            setIsDirectStreamActive(false);
+            if (videoRef.current) {
+              videoRef.current.srcObject = null;
+              videoRef.current.src = evUrl;
+              videoRef.current.play().catch(() => {});
+            }
+            setVideoSrc(evUrl);
+            setIsVideoLoading(false);
             if (msg.name || msg.eventType) {
               setLiveEventNotice({
                 type: msg.eventType,
@@ -602,6 +611,20 @@ export default function WindowCapturePlayer() {
               });
               setTimeout(() => setLiveEventNotice(null), 8000);
             }
+          }
+        }
+
+        if (msg.type === 'CLEAR_STAGE' || msg.clearMedia) {
+          setActiveEventVideo(null);
+          setLipSyncVideoUrl(null);
+          setQuickResponseVideo(null);
+          setVideoSrc('');
+          if (videoRef.current) {
+            try {
+              videoRef.current.pause();
+              videoRef.current.srcObject = null;
+              videoRef.current.src = '';
+            } catch (e) {}
           }
         }
 

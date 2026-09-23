@@ -49,15 +49,7 @@ import ShopeeLiveConnectModal from './ShopeeLiveConnectModal';
 import autoPinProductService from '../../utils/autoPinProductService';
 import { generateAiKnowledgeScript } from '../../utils/aiScriptGenerator';
 
-const CHARACTERS = {
-  default_idol: {
-    id: 'default_idol',
-    name: 'Idol Ngọc Nhi 👑 (4K Live 60FPS)',
-    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-    mediaUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-    type: 'video'
-  }
-};
+const CHARACTERS = {};
 
 // 📡 SINGLETON BROADCAST CHANNELS (Tái sử dụng vĩnh viễn, chống rò rỉ bộ nhớ khi phát nhiều giờ)
 let globalMasterBc = null;
@@ -3026,8 +3018,19 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       const targetUrl = playUrl || item?.mediaUrl || item?.url;
       if (!targetUrl) return;
 
+      const playItem = item || {
+        id: `substage_vid_${Date.now()}`,
+        name: item?.name || 'Sân Khấu Phụ',
+        mediaUrl: targetUrl,
+        url: targetUrl,
+        type: 'video'
+      };
+      setActiveVideoItem(playItem);
       setUserLockedMediaUrl(targetUrl);
-      try { localStorage.setItem('avalive_user_locked_media', targetUrl); } catch (err) {}
+      try {
+        localStorage.setItem('avalive_user_locked_media', targetUrl);
+        localStorage.setItem('avalive_active_video_src', targetUrl);
+      } catch (err) {}
 
       if (desktopVideoRef.current) {
         if (desktopVideoRef.current.src !== targetUrl) {
@@ -3040,30 +3043,89 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
       }
       setIsVideoPlaying(true);
+
+      // Đồng bộ ngay lập tức sang Window Capture OBS và Link stream
+      syncMasterLiveState({
+        stage: 'idol',
+        mediaUrl: targetUrl,
+        isVideo: true,
+        characterName: item?.name || 'AI Idol',
+        videoPlaybackEvent: 'play',
+        isPlaying: true,
+        videoCurrentTime: currentTime || 0,
+        updatedAt: Date.now()
+      }, socketRef.current);
+
+      try {
+        const bc = new BroadcastChannel('avalive_master_live_stream');
+        bc.postMessage({
+          type: 'GLOBAL_MEDIA_CHANGE',
+          mediaUrl: targetUrl,
+          fileBlob: item?.fileData || null,
+          characterName: item?.name || 'AI Idol',
+          action: 'play',
+          isPlaying: true,
+          currentTime: currentTime || 0,
+          timestamp: Date.now()
+        });
+        setTimeout(() => bc.close(), 100);
+      } catch (err) {}
     };
 
     const handleEventVideoTrigger = (e) => {
-      const { videoUrl, name, eventType, eventKey } = e.detail || {};
+      const { videoUrl, name, eventType, eventKey, isPreRecorded, muteSourceVideo } = e.detail || {};
       if (!videoUrl) return;
 
       const eventItem = {
         id: `event_vid_${eventKey || eventType || 'custom'}_${Date.now()}`,
-        name: name || 'Sự Kiện Live',
+        name: name || `${eventType || 'Live'} Video`,
         mediaUrl: videoUrl,
         url: videoUrl,
         type: 'video'
       };
       setActiveVideoItem(eventItem);
+      setUserLockedMediaUrl(videoUrl);
+      try {
+        localStorage.setItem('avalive_user_locked_media', videoUrl);
+        localStorage.setItem('avalive_active_video_src', videoUrl);
+      } catch (err) {}
 
       if (desktopVideoRef.current) {
         if (desktopVideoRef.current.src !== videoUrl) {
           desktopVideoRef.current.src = videoUrl;
         }
         desktopVideoRef.current.currentTime = 0;
+        desktopVideoRef.current.muted = muteSourceVideo === true;
         desktopVideoRef.current.dataset.userPaused = 'false';
         desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
       }
       setIsVideoPlaying(true);
+
+      syncMasterLiveState({
+        stage: 'idol',
+        mediaUrl: videoUrl,
+        eventVideoUrl: videoUrl,
+        characterName: name || `${eventType || 'Live'} Video`,
+        isVideo: true,
+        videoPlaybackEvent: 'play',
+        isPlaying: true,
+        videoCurrentTime: 0,
+        updatedAt: Date.now()
+      }, socketRef.current);
+
+      try {
+        const bc = new BroadcastChannel('avalive_master_live_stream');
+        bc.postMessage({
+          type: 'EVENT_VIDEO_PLAY',
+          eventVideoUrl: videoUrl,
+          videoUrl: videoUrl,
+          name: name || `${eventType || 'Live'} Video`,
+          eventType: eventType || 'event',
+          muteSourceVideo: muteSourceVideo,
+          timestamp: Date.now()
+        });
+        setTimeout(() => bc.close(), 100);
+      } catch (err) {}
     };
 
     const handleMasterStateChange = (e) => {

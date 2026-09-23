@@ -61,11 +61,11 @@ export default function LiveStreamStandalonePlayer() {
 
     try {
       const activeSrc = localStorage.getItem('avalive_active_video_src');
-      if (activeSrc && !activeSrc.startsWith('blob:')) return activeSrc;
+      if (activeSrc && typeof activeSrc === 'string' && activeSrc.trim()) return activeSrc;
       const saved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
-      if (saved.mediaUrl && !saved.mediaUrl.startsWith('blob:')) return saved.mediaUrl;
+      if (saved.mediaUrl && typeof saved.mediaUrl === 'string' && saved.mediaUrl.trim()) return saved.mediaUrl;
       const locked = localStorage.getItem('avalive_user_locked_media') || '';
-      if (locked && !locked.startsWith('blob:')) return locked;
+      if (locked && typeof locked === 'string' && locked.trim()) return locked;
     } catch (e) {}
     return '';
   });
@@ -317,7 +317,7 @@ export default function LiveStreamStandalonePlayer() {
             setTunnelUrl(d.tunnelUrl);
             try { localStorage.setItem('avalive_tunnel_url', d.tunnelUrl); } catch (e) {}
           }
-          if (d.mediaUrl && !d.mediaUrl.startsWith('blob:')) {
+          if (d.mediaUrl) {
             setVideoSrc(prev => {
               if (!prev || !isSameMedia(prev, d.mediaUrl)) {
                 return d.mediaUrl;
@@ -371,7 +371,7 @@ export default function LiveStreamStandalonePlayer() {
             isHardwareLocalBlobRef.current = true;
             setVideoSrc(localBlob);
             setIsVideoLoading(false);
-          } else if (data.mediaUrl && !data.mediaUrl.startsWith('blob:') && !isSameMedia(videoSrc, data.mediaUrl)) {
+          } else if (data.mediaUrl && !isSameMedia(videoSrc, data.mediaUrl)) {
             if (!isHardwareLocalBlobRef.current) {
               setVideoSrc(data.mediaUrl);
             }
