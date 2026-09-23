@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState, useCallback } from 'react';
 import { io } from 'socket.io-client';
 import { loadAllAidolItems } from '../../utils/idbHelper';
 import { getActiveMedia } from '../../utils/activeMediaStore';
+import { isImageMedia } from '../../utils/voiceSyncService';
 
 /**
  * 🎬 SIÊU PLAYER LIVESTREAM 60 FPS ĐỘC LẬP CHO TIKTOK LIVE STUDIO & OBS BROWSER SOURCE
@@ -611,89 +612,110 @@ export default function LiveStreamStandalonePlayer() {
         position: 'relative'
       }}
     >
-      <video
-        ref={videoRef}
-        src={resolveUrl(videoSrc) || undefined}
-        autoPlay
-        playsInline
-        webkit-playsinline="true"
-        loop
-        preload="auto"
-        muted={true}
-        disablePictureInPicture
-        controlsList="nodownload nofullscreen noremoteplayback"
-        onLoadedMetadata={(e) => {
-          setIsVideoLoading(false);
-          if (!isExplicitlyPausedRef.current && e.currentTarget.paused) {
-            e.currentTarget.play().then(() => {
-              setIsPlaybackActive(true);
-              if (!isUserMutedRef.current) {
-                e.currentTarget.muted = false;
-                e.currentTarget.volume = 1.0;
-              }
-            }).catch(() => {});
-          }
-        }}
-        onPlaying={(e) => {
-          setIsPlaybackActive(true);
-          setIsVideoLoading(false);
-          if (!isUserMutedRef.current && e.currentTarget.muted) {
-            e.currentTarget.muted = false;
-            e.currentTarget.volume = 1.0;
-          }
-        }}
-        onWaiting={() => {
-          setIsVideoLoading(true);
-          if (videoRef.current && !isExplicitlyPausedRef.current) {
-            videoRef.current.play().catch(() => {});
-          }
-        }}
-        onCanPlay={(e) => {
-          setIsVideoLoading(false);
-          if (!isExplicitlyPausedRef.current && e.currentTarget.paused) {
-            e.currentTarget.play().then(() => {
-              setIsPlaybackActive(true);
-              if (!isUserMutedRef.current) {
-                e.currentTarget.muted = false;
-                e.currentTarget.volume = 1.0;
-              }
-            }).catch(() => {});
-          }
-        }}
-        onError={() => {
-          fetch(`${window.location.origin}/api/live-state`)
-            .then(r => r.json())
-            .then(d => {
-              if (d && d.mediaUrl && !d.mediaUrl.startsWith('blob:')) {
-                setVideoSrc(d.mediaUrl);
-              }
-              if (d && d.tunnelUrl) {
-                setTunnelUrl(d.tunnelUrl);
-              }
-            }).catch(() => {});
-        }}
-        onStalled={() => {
-          if (videoRef.current && !isExplicitlyPausedRef.current) {
-            videoRef.current.play().catch(() => {});
-          }
-        }}
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: fitMode,
-          backgroundColor: '#000000',
-          display: 'block',
-          outline: 'none',
-          border: 'none',
-          transform: 'translate3d(0, 0, 0)',
-          WebkitTransform: 'translate3d(0, 0, 0)',
-          backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden',
-          WebkitFontSmoothing: 'antialiased',
-          willChange: 'transform',
-          imageRendering: '-webkit-optimize-contrast'
-        }}
-      />
+      {isImageMedia(videoSrc) ? (
+        <img
+          src={resolveUrl(videoSrc)}
+          alt="Live Stream Media"
+          onLoad={() => {
+            setIsVideoLoading(false);
+            setIsPlaybackActive(true);
+          }}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: fitMode,
+            backgroundColor: '#000000',
+            display: 'block',
+            outline: 'none',
+            border: 'none',
+            imageRendering: '-webkit-optimize-contrast'
+          }}
+        />
+      ) : (
+        <video
+          ref={videoRef}
+          src={resolveUrl(videoSrc) || undefined}
+          autoPlay
+          playsInline
+          webkit-playsinline="true"
+          loop
+          preload="auto"
+          muted={true}
+          disablePictureInPicture
+          controlsList="nodownload nofullscreen noremoteplayback"
+          onLoadedMetadata={(e) => {
+            setIsVideoLoading(false);
+            if (!isExplicitlyPausedRef.current && e.currentTarget.paused) {
+              e.currentTarget.play().then(() => {
+                setIsPlaybackActive(true);
+                if (!isUserMutedRef.current) {
+                  e.currentTarget.muted = false;
+                  e.currentTarget.volume = 1.0;
+                }
+              }).catch(() => {});
+            }
+          }}
+          onPlaying={(e) => {
+            setIsPlaybackActive(true);
+            setIsVideoLoading(false);
+            if (!isUserMutedRef.current && e.currentTarget.muted) {
+              e.currentTarget.muted = false;
+              e.currentTarget.volume = 1.0;
+            }
+          }}
+          onWaiting={() => {
+            setIsVideoLoading(true);
+            if (videoRef.current && !isExplicitlyPausedRef.current) {
+              videoRef.current.play().catch(() => {});
+            }
+          }}
+          onCanPlay={(e) => {
+            setIsVideoLoading(false);
+            if (!isExplicitlyPausedRef.current && e.currentTarget.paused) {
+              e.currentTarget.play().then(() => {
+                setIsPlaybackActive(true);
+                if (!isUserMutedRef.current) {
+                  e.currentTarget.muted = false;
+                  e.currentTarget.volume = 1.0;
+                }
+              }).catch(() => {});
+            }
+          }}
+          onError={() => {
+            fetch(`${window.location.origin}/api/live-state`)
+              .then(r => r.json())
+              .then(d => {
+                if (d && d.mediaUrl && !d.mediaUrl.startsWith('blob:')) {
+                  setVideoSrc(d.mediaUrl);
+                }
+                if (d && d.tunnelUrl) {
+                  setTunnelUrl(d.tunnelUrl);
+                }
+              }).catch(() => {});
+          }}
+          onStalled={() => {
+            if (videoRef.current && !isExplicitlyPausedRef.current) {
+              videoRef.current.play().catch(() => {});
+            }
+          }}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: fitMode,
+            backgroundColor: '#000000',
+            display: 'block',
+            outline: 'none',
+            border: 'none',
+            transform: 'translate3d(0, 0, 0)',
+            WebkitTransform: 'translate3d(0, 0, 0)',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            WebkitFontSmoothing: 'antialiased',
+            willChange: 'transform',
+            imageRendering: '-webkit-optimize-contrast'
+          }}
+        />
+      )}
 
       {/* Floating Controls Dock */}
       <div

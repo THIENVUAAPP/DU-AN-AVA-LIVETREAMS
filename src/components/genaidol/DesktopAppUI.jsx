@@ -2275,12 +2275,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       timestamp: Date.now()
     }, socketRef.current);
 
+    const effectiveMediaUrl = finalServerMediaUrl || blobUrl || cleanUrl || null;
+    const isVid = !isImageMedia(effectiveMediaUrl);
+
     syncMasterLiveState({
       stage: 'idol',
       selectedCharacter: charItem.id,
       characterName: charItem.name || 'AI Idol',
-      mediaUrl: finalServerMediaUrl || null,
-      isVideo: true,
+      mediaUrl: effectiveMediaUrl,
+      isVideo: isVid,
       videoPlaybackEvent: 'play',
       isPlaying: true,
       aspectRatio: globalAspectRatio || '9:16'
@@ -2298,7 +2301,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               selectedCharacter: charItem.id,
               characterName: charItem.name || 'AI Idol',
               mediaUrl: fileUrl,
-              isVideo: true,
+              isVideo: !isImageMedia(fileUrl),
               videoPlaybackEvent: 'play',
               isPlaying: true,
               aspectRatio: globalAspectRatio || '9:16'
@@ -6256,7 +6259,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                           stage: 'idol',
                           selectedCharacter: charItem.id,
                           characterName: charItem.name || 'AI Idol',
-                          mediaUrl: broadcastUrl || undefined,
+                          mediaUrl: broadcastUrl || cleanUrl || undefined,
                           isVideo: isVid,
                           videoPlaybackEvent: 'play',
                           videoCurrentTime: 0,

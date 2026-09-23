@@ -1155,56 +1155,88 @@ export default function WindowCapturePlayer() {
       }}
     >
       <SvgChromaFilters />
-      {/* ⚡ 1. TOPMOST LAYER: VIDEO PHẢN HỒI NHANH KHẨN CẤP */}
+      {/* ⚡ 1. TOPMOST LAYER: VIDEO / ẢNH PHẢN HỒI NHANH KHẨN CẤP */}
       {quickResponseVideo?.url ? (
-        <video
-          key={`quick_${quickResponseVideo.url}`}
-          src={quickResponseVideo.url}
-          autoPlay
-          playsInline
-          webkit-playsinline="true"
-          loop={Boolean(quickResponseVideo.loop)}
-          muted={isUserMutedRef.current || quickResponseVideo.muted}
-          preload="auto"
-          onEnded={() => {
-            if (!quickResponseVideo.loop) setQuickResponseVideo(null);
-          }}
-          onError={() => setQuickResponseVideo(null)}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: fitMode,
-            display: 'block',
-            backgroundColor: '#000',
-            transform: 'translate3d(0, 0, 0)',
-            WebkitTransform: 'translate3d(0, 0, 0)',
-            imageRendering: '-webkit-optimize-contrast'
-          }}
-        />
+        isImageMedia(quickResponseVideo.url) ? (
+          <img
+            key={`quick_${quickResponseVideo.url}`}
+            src={quickResponseVideo.url}
+            alt="Quick Response Media"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: fitMode,
+              display: 'block',
+              backgroundColor: '#000',
+              imageRendering: '-webkit-optimize-contrast'
+            }}
+          />
+        ) : (
+          <video
+            key={`quick_${quickResponseVideo.url}`}
+            src={quickResponseVideo.url}
+            autoPlay
+            playsInline
+            webkit-playsinline="true"
+            loop={Boolean(quickResponseVideo.loop)}
+            muted={isUserMutedRef.current || quickResponseVideo.muted}
+            preload="auto"
+            onEnded={() => {
+              if (!quickResponseVideo.loop) setQuickResponseVideo(null);
+            }}
+            onError={() => setQuickResponseVideo(null)}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: fitMode,
+              display: 'block',
+              backgroundColor: '#000',
+              transform: 'translate3d(0, 0, 0)',
+              WebkitTransform: 'translate3d(0, 0, 0)',
+              imageRendering: '-webkit-optimize-contrast'
+            }}
+          />
+        )
       ) : activeEventVideo?.url ? (
-        /* ⚡ 2. TOPMOST LAYER: VIDEO SỰ KIỆN 14 TAB (QUÀ TẶNG, CHÀO MỪNG, CHECKOUT...) */
-        <video
-          key={`event_${activeEventVideo.url}`}
-          src={activeEventVideo.url}
-          autoPlay
-          playsInline
-          webkit-playsinline="true"
-          loop={false}
-          muted={isUserMutedRef.current}
-          preload="auto"
-          onEnded={() => setActiveEventVideo(null)}
-          onError={() => setActiveEventVideo(null)}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: fitMode,
-            display: 'block',
-            backgroundColor: '#000',
-            transform: 'translate3d(0, 0, 0)',
-            WebkitTransform: 'translate3d(0, 0, 0)',
-            imageRendering: '-webkit-optimize-contrast'
-          }}
-        />
+        /* ⚡ 2. TOPMOST LAYER: VIDEO / ẢNH SỰ KIỆN 14 TAB (QUÀ TẶNG, CHÀO MỪNG, CHECKOUT...) */
+        isImageMedia(activeEventVideo.url) ? (
+          <img
+            key={`event_${activeEventVideo.url}`}
+            src={activeEventVideo.url}
+            alt="Event Media"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: fitMode,
+              display: 'block',
+              backgroundColor: '#000',
+              imageRendering: '-webkit-optimize-contrast'
+            }}
+          />
+        ) : (
+          <video
+            key={`event_${activeEventVideo.url}`}
+            src={activeEventVideo.url}
+            autoPlay
+            playsInline
+            webkit-playsinline="true"
+            loop={false}
+            muted={isUserMutedRef.current}
+            preload="auto"
+            onEnded={() => setActiveEventVideo(null)}
+            onError={() => setActiveEventVideo(null)}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: fitMode,
+              display: 'block',
+              backgroundColor: '#000',
+              transform: 'translate3d(0, 0, 0)',
+              WebkitTransform: 'translate3d(0, 0, 0)',
+              imageRendering: '-webkit-optimize-contrast'
+            }}
+          />
+        )
       ) : lipSyncVideoUrl ? (
         /* ⚡ 3. TOPMOST LAYER: VIDEO NHÉP MIỆNG LIPSYNC VOICE AI */
         <video
@@ -1450,77 +1482,96 @@ export default function WindowCapturePlayer() {
           </div>
         );
       })() : (resolvedFinalSrc || isDirectStreamActive) ? (
-        /* 🎬 SINGLE VIDEO (0MS DIRECT GPU CLONE & IN-MEMORY BLOB) */
-        <video
-          ref={videoRef}
-          src={isDirectStreamActive ? undefined : (resolvedFinalSrc || undefined)}
-          autoPlay
-          playsInline
-          webkit-playsinline="true"
-          loop
-          preload="auto"
-          disablePictureInPicture
-          controlsList="nodownload nofullscreen noremoteplayback"
-          onLoadedData={() => setIsVideoLoading(false)}
-          onCanPlay={() => setIsVideoLoading(false)}
-          onWaiting={() => {
-            if (!isDirectStreamActiveRef.current && (!videoRef.current?.readyState || videoRef.current.readyState < 2)) {
-              setIsVideoLoading(true);
-            }
-          }}
-          onPlaying={() => {
-            setIsVideoLoading(false);
-            setIsPlaybackActive(true);
-          }}
-          onError={async (e) => {
-            console.warn('[WindowCapture] Video loading error, attempting fallback:', e);
-            const attached = attachOpenerDirectStream();
-            if (!attached) {
-              const fallback = await tryLoadFromLocalDB();
-              if (fallback) {
-                isHardwareLocalBlobRef.current = true;
-                if (videoRef.current) videoRef.current.srcObject = null;
-                setVideoSrc(fallback);
-                setIsVideoLoading(false);
-              } else {
-                try {
-                  const port = window.location.port;
-                  const backendOrigin = (port === '5173' || port === '5174')
-                    ? `${window.location.protocol}//${window.location.hostname}:3001`
-                    : window.location.origin;
-                  const res = await fetch(`${backendOrigin}/api/live-state`);
-                  const data = await res.json();
-                  if (data && data.mediaUrl && !data.clearMedia) {
-                    const serverUrl = resolveUrl(data.mediaUrl);
-                    if (serverUrl && videoRef.current) {
-                      isHardwareLocalBlobRef.current = false;
-                      videoRef.current.srcObject = null;
-                      videoRef.current.src = serverUrl;
-                      setVideoSrc(serverUrl);
-                      videoRef.current.play().catch(() => {});
-                      console.log('[WindowCapture] ✅ Ultimate fallback: Đã khôi phục video từ server:', serverUrl);
+        /* 🎬 SINGLE VIDEO / IMAGE (0MS DIRECT GPU CLONE & IN-MEMORY BLOB) */
+        isImageMedia(resolvedFinalSrc) ? (
+          <img
+            src={resolvedFinalSrc}
+            alt="Live Stage Media"
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: fitMode,
+              display: 'block',
+              backgroundColor: '#000',
+              transform: 'translate3d(0, 0, 0)',
+              WebkitTransform: 'translate3d(0, 0, 0)',
+              imageRendering: '-webkit-optimize-contrast'
+            }}
+          />
+        ) : (
+          <video
+            ref={videoRef}
+            src={isDirectStreamActive ? undefined : (resolvedFinalSrc || undefined)}
+            autoPlay
+            playsInline
+            webkit-playsinline="true"
+            loop
+            preload="auto"
+            disablePictureInPicture
+            controlsList="nodownload nofullscreen noremoteplayback"
+            onLoadedData={() => setIsVideoLoading(false)}
+            onCanPlay={() => setIsVideoLoading(false)}
+            onWaiting={() => {
+              if (!isDirectStreamActiveRef.current && (!videoRef.current?.readyState || videoRef.current.readyState < 2)) {
+                setIsVideoLoading(true);
+              }
+            }}
+            onPlaying={() => {
+              setIsVideoLoading(false);
+              setIsPlaybackActive(true);
+            }}
+            onError={async (e) => {
+              console.warn('[WindowCapture] Video loading error, attempting fallback:', e);
+              const attached = attachOpenerDirectStream();
+              if (!attached) {
+                const fallback = await tryLoadFromLocalDB();
+                if (fallback) {
+                  isHardwareLocalBlobRef.current = true;
+                  if (videoRef.current) videoRef.current.srcObject = null;
+                  setVideoSrc(fallback);
+                  setIsVideoLoading(false);
+                } else {
+                  try {
+                    const port = window.location.port;
+                    const backendOrigin = (port === '5173' || port === '5174')
+                      ? `${window.location.protocol}//${window.location.hostname}:3001`
+                      : window.location.origin;
+                    const res = await fetch(`${backendOrigin}/api/live-state`);
+                    const data = await res.json();
+                    if (data && data.mediaUrl && !data.clearMedia) {
+                      const serverUrl = resolveUrl(data.mediaUrl);
+                      if (serverUrl) {
+                        isHardwareLocalBlobRef.current = false;
+                        if (videoRef.current) {
+                          videoRef.current.srcObject = null;
+                          videoRef.current.src = serverUrl;
+                          videoRef.current.play().catch(() => {});
+                        }
+                        setVideoSrc(serverUrl);
+                        console.log('[WindowCapture] ✅ Ultimate fallback: Đã khôi phục video từ server:', serverUrl);
+                      }
                     }
+                  } catch (fetchErr) {
+                    console.warn('[WindowCapture] Server fallback also failed:', fetchErr);
                   }
-                } catch (fetchErr) {
-                  console.warn('[WindowCapture] Server fallback also failed:', fetchErr);
                 }
               }
-            }
-          }}
-          style={{
-            width: '100%',
-            height: '100%',
-            objectFit: fitMode,
-            display: 'block',
-            backgroundColor: '#000',
-            transform: 'translate3d(0, 0, 0)',
-            WebkitTransform: 'translate3d(0, 0, 0)',
-            backfaceVisibility: 'hidden',
-            WebkitBackfaceVisibility: 'hidden',
-            imageRendering: '-webkit-optimize-contrast',
-            willChange: 'transform'
-          }}
-        />
+            }}
+            style={{
+              width: '100%',
+              height: '100%',
+              objectFit: fitMode,
+              display: 'block',
+              backgroundColor: '#000',
+              transform: 'translate3d(0, 0, 0)',
+              WebkitTransform: 'translate3d(0, 0, 0)',
+              backfaceVisibility: 'hidden',
+              WebkitBackfaceVisibility: 'hidden',
+              imageRendering: '-webkit-optimize-contrast',
+              willChange: 'transform'
+            }}
+          />
+        )
       ) : (
         <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#05070c', color: '#fff', textAlign: 'center', padding: '24px', userSelect: 'none' }}>
           <div style={{ width: '64px', height: '64px', borderRadius: '18px', background: 'rgba(6, 182, 212, 0.15)', border: '1px solid rgba(6, 182, 212, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', marginBottom: '12px' }}>

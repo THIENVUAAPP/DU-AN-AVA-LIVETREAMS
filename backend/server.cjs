@@ -892,11 +892,12 @@ app.post('/api/upload-media', upload.single('file'), (req, res) => {
   }
 
   const fileUrl = `/uploads/${finalFilename}`;
+  const isImageFile = /\.(png|jpe?g|webp|gif|svg|avif|bmp)$/i.test(finalFilename) || (req.file.mimetype && req.file.mimetype.startsWith('image/'));
   currentMasterLiveState = {
     ...currentMasterLiveState,
     stage: 'idol',
     mediaUrl: fileUrl,
-    isVideo: true,
+    isVideo: !isImageFile,
     videoPlaybackEvent: 'play',
     isPlaying: true,
     isUserExplicitMediaLocked: true,
@@ -904,7 +905,7 @@ app.post('/api/upload-media', upload.single('file'), (req, res) => {
   };
   io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
   saveLiveStateToFile();
-  res.json({ url: fileUrl, filename: finalFilename, reused: reused, success: true });
+  res.json({ url: fileUrl, filename: finalFilename, isVideo: !isImageFile, reused: reused, success: true });
 });
 
 // ============================================================
@@ -971,6 +972,11 @@ app.get([
 
   const soundParam = req.query.sound !== '0';
   const fitParam = req.query.fit || 'cover';
+  const isImageMediaHelper = (u) => {
+    if (!u || typeof u !== 'string') return false;
+    return /\.(png|jpe?g|webp|gif|svg|avif|bmp)($|\?|#)/i.test(u) || u.startsWith('data:image/');
+  };
+  const isInitialImg = isImageMediaHelper(vParam);
   const initialSrcAttr = (vParam && typeof vParam === 'string' && vParam.trim()) 
     ? `src="${vParam.startsWith('http') || vParam.startsWith('/') ? vParam : '/' + vParam}"` 
     : '';
@@ -1004,10 +1010,10 @@ app.get([
       position: absolute;
       inset: 0;
       width: 100vw; height: 100vh;
-      object-fit: cover;
+      object-fit: ${fitParam === 'contain' ? 'contain' : 'cover'};
       object-position: center center;
       background: #000;
-      display: block;
+      display: ${isInitialImg ? 'none' : 'block'};
       outline: none; border: none;
       image-rendering: -webkit-optimize-contrast;
       image-rendering: high-quality;
@@ -1015,6 +1021,16 @@ app.get([
       -webkit-transform: translateZ(0);
       backface-visibility: hidden;
       -webkit-backface-visibility: hidden;
+    }
+    #imagePlayer {
+      position: absolute;
+      inset: 0;
+      width: 100vw; height: 100vh;
+      object-fit: ${fitParam === 'contain' ? 'contain' : 'cover'};
+      object-position: center center;
+      background: #000;
+      display: ${isInitialImg ? 'block' : 'none'};
+      image-rendering: -webkit-optimize-contrast;
     }
     #loadingOverlay {
       position: absolute;
@@ -1075,7 +1091,7 @@ app.get([
     </div>
     <video 
       id="videoPlayer" 
-      ${initialSrcAttr}
+      ${!isInitialImg && initialSrcAttr ? initialSrcAttr : ''}
       autoplay 
       playsinline 
       webkit-playsinline 
@@ -1086,6 +1102,11 @@ app.get([
       muted
       disableRemotePlayback
     ></video>
+    <img
+      id="imagePlayer"
+      ${isInitialImg && initialSrcAttr ? initialSrcAttr : ''}
+      alt="Live Media"
+    />
     <div id="controlsDock">
       <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập">⏸️ Dừng</button>
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
@@ -1274,7 +1295,12 @@ app.get([
         return window.location.origin + '/' + url;
       }
 
-      // 🎬 NẠP VÀ PHÁT VIDEO 4K 60 FPS LIỀN MẠCH TUYỆT ĐỐI (SIÊU SẮC NÉT & KHÔNG BAO GIỜ ĐEN MÀN HÌNH)
+      function isImage(u) {
+        if (!u) return false;
+        return /\.(png|jpe?g|webp|gif|svg|avif|bmp)($|\?|#)/i.test(u) || u.startsWith('data:image/');
+      }
+
+      // 🎬 NẠP VÀ PHÁT VIDEO / ẢNH 4K 60 FPS LIỀN MẠCH TUYỆT ĐỐI (SIÊU SẮC NÉT & KHÔNG BAO GIỜ ĐEN MÀN HÌNH)
       function loadAndPlay(url, forceSeekTime) {
         if (!url) {
           url = currentSrc || '';
@@ -1283,16 +1309,36 @@ app.get([
         const fullUrl = resolveUrl(url);
         if (!fullUrl) return;
 
-        if (!isSameMedia(vid.src, fullUrl)) {
-          currentSrc = fullUrl;
-          vid.src = fullUrl;
+        const imgEl = document.getElementById('imagePlayer');
+        if (isImage(fullUrl)) {
+          if (imgEl) {
+            imgEl.src = fullUrl;
+            imgEl.style.display = 'block';
+          }
+          if (vid) {
+            vid.style.display = 'none';
+            try { vid.pause(); } catch(e) {}
+          }
+          hideLoading();
+          return;
         }
 
-        if (typeof forceSeekTime === 'number' && forceSeekTime > 0) {
-          try { vid.currentTime = forceSeekTime; } catch(e) {}
+        if (imgEl) {
+          imgEl.style.display = 'none';
         }
+        if (vid) {
+          vid.style.display = 'block';
+          if (!isSameMedia(vid.src, fullUrl)) {
+            currentSrc = fullUrl;
+            vid.src = fullUrl;
+          }
 
-        safePlay();
+          if (typeof forceSeekTime === 'number' && forceSeekTime > 0) {
+            try { vid.currentTime = forceSeekTime; } catch(e) {}
+          }
+
+          safePlay();
+        }
       }
 
       // 🛡️ ANTI-PAUSE GUARDIAN: Tự động phát lại ngay nếu trình duyệt CEF vô tình pause
@@ -1537,6 +1583,11 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
   }
   const soundParam = req.query.sound !== '0';
   const fitParam = req.query.fit || 'cover';
+  const isImageMediaHelper = (u) => {
+    if (!u || typeof u !== 'string') return false;
+    return /\.(png|jpe?g|webp|gif|svg|avif|bmp)($|\?|#)/i.test(u) || u.startsWith('data:image/');
+  };
+  const isInitialImg = isImageMediaHelper(vParam);
 
   const html = `<!DOCTYPE html>
 <html lang="vi">
@@ -1568,11 +1619,17 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       width: 100%; height: 100%;
       object-fit: ${fitParam === 'contain' ? 'contain' : 'cover'};
       background-color: #000;
-      display: block;
+      display: ${isInitialImg ? 'none' : 'block'};
       transform: translateZ(0);
       -webkit-transform: translateZ(0);
       backface-visibility: hidden;
       perspective: 1000px;
+    }
+    #imagePlayer {
+      width: 100%; height: 100%;
+      object-fit: ${fitParam === 'contain' ? 'contain' : 'cover'};
+      background-color: #000;
+      display: ${isInitialImg ? 'block' : 'none'};
     }
     #controlsDock {
       position: absolute;
@@ -1655,7 +1712,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
   <div id="stage">
     <video 
       id="videoPlayer" 
-      src="${vParam ? (vParam.startsWith('http') || vParam.startsWith('/') ? vParam : '/' + vParam) : ''}"
+      src="${!isInitialImg && vParam ? (vParam.startsWith('http') || vParam.startsWith('/') ? vParam : '/' + vParam) : ''}"
       autoplay 
       playsinline 
       webkit-playsinline 
@@ -1666,6 +1723,11 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       crossorigin="anonymous"
       disableRemotePlayback
     ></video>
+    <img
+      id="imagePlayer"
+      src="${isInitialImg && vParam ? (vParam.startsWith('http') || vParam.startsWith('/') ? vParam : '/' + vParam) : ''}"
+      alt="Live Stage Media"
+    />
     
     <div id="controlsDock">
       <span style="font-size:10px; color:#10b981; font-weight:bold; display:flex; align-items:center; gap:4px;">
@@ -1795,6 +1857,11 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         return cleanA === cleanB || cleanA.endsWith(cleanB) || cleanB.endsWith(cleanA);
       }
 
+      function isImage(u) {
+        if (!u) return false;
+        return /\.(png|jpe?g|webp|gif|svg|avif|bmp)($|\?|#)/i.test(u) || u.startsWith('data:image/');
+      }
+
       function loadAndPlay(src) {
         if (!src) return;
         let cleanSrc = src;
@@ -1808,19 +1875,38 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           cleanSrc = '/' + cleanSrc;
         }
 
-        if (isSameMedia(vid.src, cleanSrc)) return;
-
-        currentSrc = cleanSrc;
-        vid.src = cleanSrc;
-        vid.load();
-        if (!isStreamUserPaused) {
-          vid.muted = targetMuted;
-          vid.play().catch(function() {
-            vid.muted = true;
-            vid.play().catch(function() {});
-          });
+        const imgEl = document.getElementById('imagePlayer');
+        if (isImage(cleanSrc)) {
+          if (imgEl) {
+            imgEl.src = cleanSrc;
+            imgEl.style.display = 'block';
+          }
+          if (vid) {
+            vid.style.display = 'none';
+            try { vid.pause(); } catch(e) {}
+          }
+          return;
         }
-        updateDockUI();
+
+        if (imgEl) {
+          imgEl.style.display = 'none';
+        }
+        if (vid) {
+          vid.style.display = 'block';
+          if (isSameMedia(vid.src, cleanSrc)) return;
+
+          currentSrc = cleanSrc;
+          vid.src = cleanSrc;
+          vid.load();
+          if (!isStreamUserPaused) {
+            vid.muted = targetMuted;
+            vid.play().catch(function() {
+              vid.muted = true;
+              vid.play().catch(function() {});
+            });
+          }
+          updateDockUI();
+        }
       }
 
       vid.addEventListener('loadedmetadata', function() {
@@ -1952,7 +2038,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.11';
+  let ver = '4.9.12';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1990,7 +2076,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.11';
+  let ver = '4.9.12';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));

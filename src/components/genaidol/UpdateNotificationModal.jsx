@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.11';
+export const APP_VERSION = '4.9.12';
 export const RELEASE_DATE = '23/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.12 - Đồng Bộ & Phát Trọn Vẹn 100% Video, Hình Ảnh, Nội Dung Lên Window Capture OBS & Link TikTok Live Studio',
+    description: '1. Hỗ Trợ Đầy Đủ Cả Video Lẫn Hình Ảnh: Cửa sổ Window Capture OBS và Đường link trực tuyến TikTok Live Studio tự động nhận diện và hiển thị siêu nét, siêu mượt cả Video (.mp4, .webm, .mov) lẫn Hình ảnh (.png, .jpg, .webp, .svg, .gif), triệt tiêu hoàn toàn màn hình đen. 2. Đồng Bộ Tức Thì 0ms Mọi Nguồn Sân Khấu: Tất cả dữ liệu từ Live Idol Avatar, Live Idol Studio (Multi-Avatar), 14 Sự kiện live và Video tải lên máy tính đều lập tức cập nhật sang Window Capture và Link phát với chất lượng gốc cao nhất.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.11 - Đẩy Toàn Bộ Video Sân Khấu Vào Uploads Realtime & Khắc Phục Triệt Để Chớp Đen / Biến Mất Khi Bấm Phát Kịch Bản Live',
     description: '1. Đẩy Video Vào Uploads Theo Thời Gian Thực: Mọi video người dùng tải lên hoặc chọn trên Sân khấu chính đều được tự động đẩy vào thư mục system/uploads theo thời gian thực mới nhất, phục vụ trực tiếp cho Window Capture OBS và Link phát TikTok Live Studio. 2. Khắc Phục Triệt Để Chớp Đen Khi Phát Kịch Bản Live: Video nhân vật trên Sân khấu chính được cố định thẻ phát và luồng phát liên tục, không bị gián đoạn hay chớp tắt màn hình đen giữa các câu thoại kịch bản AI.'
