@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.10';
+export const APP_VERSION = '4.9.11';
 export const RELEASE_DATE = '23/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.11 - Đẩy Toàn Bộ Video Sân Khấu Vào Uploads Realtime & Khắc Phục Triệt Để Chớp Đen / Biến Mất Khi Bấm Phát Kịch Bản Live',
+    description: '1. Đẩy Video Vào Uploads Theo Thời Gian Thực: Mọi video người dùng tải lên hoặc chọn trên Sân khấu chính đều được tự động đẩy vào thư mục system/uploads theo thời gian thực mới nhất, phục vụ trực tiếp cho Window Capture OBS và Link phát TikTok Live Studio. 2. Khắc Phục Triệt Để Chớp Đen Khi Phát Kịch Bản Live: Video nhân vật trên Sân khấu chính được cố định thẻ phát và luồng phát liên tục, không bị gián đoạn hay chớp tắt màn hình đen giữa các câu thoại kịch bản AI.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.10 - Tối Ưu Tải File ZIP Siêu Tốc 0ms, Loại Bỏ Hoàn Toàn Treo / Chậm Khi Tải Xuống Windows',
     description: '1. Tải Xuống Tức Thì 0ms: Tối ưu hóa đường dẫn phát hành trực tiếp từ GitHub CDN và loại bỏ các bước chờ kết nối trung gian, khắc phục triệt để tình trạng tải chậm hoặc đứng hình khi tải file ZIP trên Windows. 2. Nén Tối Đa & Tăng Tốc Độ Mở: Áp dụng thuật toán nén DEFLATE mức 9, tối ưu hóa toàn diện dung lượng gói cài đặt giúp tải siêu nhanh trong vài giây.'

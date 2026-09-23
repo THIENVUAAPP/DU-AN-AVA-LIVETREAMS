@@ -884,6 +884,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       if (audioPlayerRef.current) {
         audioPlayerRef.current.startScript(scriptText);
       }
+
+      // Giữ nguyên video nhân vật đang phát mượt mà liên tục, không bị gián đoạn hay chớp đen
+      if (desktopVideoRef.current) {
+        if (desktopVideoRef.current.paused) {
+          desktopVideoRef.current.play().catch(() => {});
+        }
+        setIsVideoPlaying(true);
+      }
       
       window.dispatchEvent(new CustomEvent('aidol_script_updated', {
         detail: { activeScriptTabId: chosen?.id, scriptTabs: scriptTabsList, fixedScriptText: scriptText, isPlaying: true, forceRestart: false }
@@ -4804,7 +4812,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           <div className="relative w-full h-full group/videoContainer select-none overflow-hidden bg-black flex items-center justify-center">
             {/* THẺ VIDEO PREVIEW TRÊN PHẦN MỀM (TƯƠNG THÍCH HOÀN HẢO VỚI OBS WINDOW CAPTURE - KHÔNG BAO GIỜ ĐEN MÀN HÌNH) */}
             <video 
-              key={selected.id || selected.url || 'main_desktop_video'}
+              key="main_desktop_video_player"
               ref={desktopVideoRef}
               data-main-player="true"
               src={selected.url} 
@@ -6513,13 +6521,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             currentVideoUrl={(isScriptLiveRunning || isConnected || showSimulator) && activeVideoItem ? activeVideoItem.mediaUrl : null}
             onActionTriggered={(e) => {
               if (e.type === 'LIPSYNC_READY') handleActionVideoReady(e.videoUrl, true);
-              if (e.type === 'LIPSYNC_ENDED') {
-                setLipSyncVideoUrl(null);
-                handleVideoEnded();
-              }
-              if (e.type === 'SPEECH_ENDED') {
-                setLipSyncVideoUrl(null);
-                handleVideoEnded();
+              if (e.type === 'LIPSYNC_ENDED' || e.type === 'SPEECH_ENDED') {
+                if (lipSyncVideoUrl) {
+                  setLipSyncVideoUrl(null);
+                  handleVideoEnded();
+                }
               }
             }} 
           />
