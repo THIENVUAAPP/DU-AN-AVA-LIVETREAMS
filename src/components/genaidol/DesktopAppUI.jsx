@@ -2357,11 +2357,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     }
   }, [customCharacters, globalAspectRatio]);
 
-  // Nút Bật/Tắt Video trên màn hình phần mềm: độc lập 100%, dùng để xem thử / kiểm tra video
+  // Nút Bật/Tắt Video trên màn hình phần mềm: đồng bộ trực tiếp tức thì sang OBS và link TikTok Live
   const toggleDesktopVideoPlayback = useCallback(() => {
     try {
       const vid = desktopVideoRef.current;
-      if (isVideoPlaying) {
+      const willPlay = !isVideoPlaying;
+      if (!willPlay) {
         if (vid) {
           try {
             vid.pause();
@@ -2369,7 +2370,19 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           } catch (e) {}
         }
         setIsVideoPlaying(false);
-        showToast('⏸️ Đã tạm dừng video xem thử trên phần mềm', 'info');
+        sendVideoControl({
+          action: 'pause',
+          isPlaying: false,
+          currentTime: vid ? vid.currentTime : 0,
+          mediaUrl: vid ? (vid.currentSrc || vid.src) : null,
+          timestamp: Date.now()
+        }, socketRef.current);
+        syncMasterLiveState({
+          videoPlaybackEvent: 'pause',
+          isPlaying: false,
+          videoCurrentTime: vid ? vid.currentTime : 0
+        }, socketRef.current);
+        showToast('⏸️ Đã tạm dừng phát video', 'info');
       } else {
         if (vid && vid.src) {
           vid.dataset.userPaused = 'false';
@@ -2391,7 +2404,19 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           }
         }
         setIsVideoPlaying(true);
-        showToast('▶️ Đang tiếp tục phát video xem thử trên phần mềm', 'success');
+        sendVideoControl({
+          action: 'play',
+          isPlaying: true,
+          currentTime: vid ? vid.currentTime : 0,
+          mediaUrl: vid ? (vid.currentSrc || vid.src) : null,
+          timestamp: Date.now()
+        }, socketRef.current);
+        syncMasterLiveState({
+          videoPlaybackEvent: 'play',
+          isPlaying: true,
+          videoCurrentTime: vid ? vid.currentTime : 0
+        }, socketRef.current);
+        showToast('▶️ Đang tiếp tục phát video (Đồng bộ 60 FPS)', 'success');
       }
     } catch (err) {
       console.warn('[VideoPlayback] Error toggling video:', err);
@@ -2993,6 +3018,110 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       window.removeEventListener('avalive:stop_flow_sequencer', handleStopFlowSequencer);
     };
   }, [globalAspectRatio]);
+
+  // ⚡ ĐỒNG BỘ TUYỆT ĐỐI SÂN KHẤU PHỤ (KHO LIVE / 14 SỰ KIỆN / SUBVIEWS) & SÂN KHẤU CHÍNH & WINDOW CAPTURE & ĐƯỜNG LINK
+  useEffect(() => {
+    const handleSubstagePlay = (e) => {
+      const { item, playUrl, currentTime } = e.detail || {};
+      const targetUrl = playUrl || item?.mediaUrl || item?.url;
+      if (!targetUrl) return;
+
+      setUserLockedMediaUrl(targetUrl);
+      try { localStorage.setItem('avalive_user_locked_media', targetUrl); } catch (err) {}
+
+      if (desktopVideoRef.current) {
+        if (desktopVideoRef.current.src !== targetUrl) {
+          desktopVideoRef.current.src = targetUrl;
+        }
+        if (typeof currentTime === 'number') {
+          desktopVideoRef.current.currentTime = currentTime;
+        }
+        desktopVideoRef.current.dataset.userPaused = 'false';
+        desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+      }
+      setIsVideoPlaying(true);
+    };
+
+    const handleEventVideoTrigger = (e) => {
+      const { videoUrl, name, eventType, eventKey } = e.detail || {};
+      if (!videoUrl) return;
+
+      const eventItem = {
+        id: `event_vid_${eventKey || eventType || 'custom'}_${Date.now()}`,
+        name: name || 'Sự Kiện Live',
+        mediaUrl: videoUrl,
+        url: videoUrl,
+        type: 'video'
+      };
+      setActiveVideoItem(eventItem);
+
+      if (desktopVideoRef.current) {
+        if (desktopVideoRef.current.src !== videoUrl) {
+          desktopVideoRef.current.src = videoUrl;
+        }
+        desktopVideoRef.current.currentTime = 0;
+        desktopVideoRef.current.dataset.userPaused = 'false';
+        desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+      }
+      setIsVideoPlaying(true);
+    };
+
+    const handleMasterStateChange = (e) => {
+      const state = e.detail;
+      if (!state) return;
+      if (state.stage && state.stage !== 'idol') return;
+      if (state.mediaUrl && state.mediaUrl !== userLockedMediaUrl) {
+        setUserLockedMediaUrl(state.mediaUrl);
+        if (desktopVideoRef.current && desktopVideoRef.current.src !== state.mediaUrl) {
+          desktopVideoRef.current.src = state.mediaUrl;
+          if (typeof state.videoCurrentTime === 'number') {
+            desktopVideoRef.current.currentTime = state.videoCurrentTime;
+          }
+          desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+        }
+      }
+    };
+
+    window.addEventListener('avalive:substage_play_video', handleSubstagePlay);
+    window.addEventListener('avalive:event_video_trigger', handleEventVideoTrigger);
+    window.addEventListener('avalive_master_state_changed', handleMasterStateChange);
+
+    // Lắng nghe BroadcastChannel
+    let bc = null;
+    try {
+      bc = new BroadcastChannel('avalive_master_live_stream');
+      bc.onmessage = (event) => {
+        const msg = event.data;
+        if (!msg) return;
+        if (msg.type === 'VIDEO_PLAYBACK_CONTROL') {
+          const vid = desktopVideoRef.current;
+          if (!vid) return;
+          if (msg.action === 'pause') {
+            vid.pause();
+            setIsVideoPlaying(false);
+          } else if (msg.action === 'play') {
+            if (msg.mediaUrl && vid.src !== msg.mediaUrl) {
+              vid.src = msg.mediaUrl;
+            }
+            if (typeof msg.currentTime === 'number' && Math.abs(vid.currentTime - msg.currentTime) > 0.8) {
+              vid.currentTime = msg.currentTime;
+            }
+            vid.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+            setIsVideoPlaying(true);
+          }
+        }
+      };
+    } catch (e) {}
+
+    return () => {
+      window.removeEventListener('avalive:substage_play_video', handleSubstagePlay);
+      window.removeEventListener('avalive:event_video_trigger', handleEventVideoTrigger);
+      window.removeEventListener('avalive_master_state_changed', handleMasterStateChange);
+      if (bc) {
+        try { bc.close(); } catch (e) {}
+      }
+    };
+  }, [userLockedMediaUrl]);
 
   useEffect(() => {
     let backendUrl = '';
@@ -4539,26 +4668,25 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         }
       }
 
-      // Chỉ ưu tiên activeVideoItem khi đang có sự kiện video ngắn thực sự
-      const isEventActive = isProcessingEvent && (activeVideoItem?.id?.startsWith('event_vid_') || activeVideoItem?.id?.startsWith('ev_') || activeVideoItem?.id?.startsWith('special_gift_') || activeVideoItem?.id?.startsWith('checkout_'));
-      if (isEventActive && activeVideoItem && activeVideoItem.mediaUrl) {
+      // Ưu tiên activeVideoItem khi đang có sự kiện video hoặc phát từ kho live / substage
+      if (activeVideoItem && activeVideoItem.mediaUrl) {
         return (
           <video 
-            key={activeVideoItem.id || 'event_video_player'}
+            key={activeVideoItem.id || activeVideoItem.mediaUrl || 'event_video_player'}
             ref={desktopVideoRef}
             data-main-player="true"
             data-is-event-video="true"
             src={activeVideoItem.mediaUrl} 
             className="w-full h-full object-cover bg-black cursor-pointer main-video-player"
             autoPlay
-            loop={false}
+            loop={!isProcessingEvent}
             controls={false}
             muted={liveAudioMuted}
             onEnded={() => {
               handleVideoEnded();
             }}
             onError={() => {
-              console.warn('Lỗi tải video sự kiện');
+              console.warn('Lỗi tải video sự kiện / substage');
               handleVideoEnded();
             }}
             playsInline 

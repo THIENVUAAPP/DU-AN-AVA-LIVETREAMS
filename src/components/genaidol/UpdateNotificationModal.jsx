@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.2';
+export const APP_VERSION = '4.9.3';
 export const RELEASE_DATE = '23/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.3 - Đồng Bộ Tuyệt Đối 100% Giữa Sân Khấu Phụ & Sân Khấu Chính, Window Capture OBS & Link TikTok Live (14 Sự Kiện Live)',
+    description: '1. Đồng Bộ Hoàn Hảo Sân Khấu Phụ & Chính: Mọi thao tác chọn và phát video trong Sân khấu phụ (Kho Live, 14 Tác vụ Live, Sequencer, Multi-Avatar) ngay lập tức đồng bộ chuẩn xác cùng khung hình, cùng thời gian và cùng Voice AI lên Sân khấu chính. 2. Đồng Bộ 14 Sự Kiện Live sang OBS & TikTok Live: Tất cả video sự kiện (Chào hỏi, Follow, Like, Share, Quà tặng, Chốt đơn...) và trạng thái Play/Pause/Time được đồng bộ tức thì 0ms sang Window Capture OBS và đường link Online HTTPS.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.2 - Khắc Phục Triệt Để Khởi Động Localhost 3001 & Tối Ưu Nạp Giao Diện Desktop 100%',
     description: '1. Sửa Triệt Để Lỗi Khởi Động: Bổ sung icon Upload bị thiếu trong thư viện lucide-react của DesktopAppUI, loại bỏ hoàn toàn lỗi ReferenceError khi nạp giao diện. 2. Trải Nghiệm Mở Localhost 3001 Tức Thì: Truy cập http://localhost:3001/ hiển thị ngay toàn bộ giao diện phần mềm trong 0.1 giây mượt mà 60 FPS.'

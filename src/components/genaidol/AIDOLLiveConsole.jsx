@@ -16,7 +16,7 @@ import {
 import { askGeminiLiveAi } from '../../lib/geminiClient';
 import { COUNTRY_FILTERS } from './game/GameVoiceConfigPanel';
 import { DEFAULT_BRAIN_PACKS } from '../../utils/defaultPresetsBootstrap';
-import { syncMasterLiveState } from '../../lib/masterLiveSync';
+import { syncMasterLiveState, sendVideoControl } from '../../lib/masterLiveSync';
 import { fastStreamUpload } from '../../utils/fastStreamService';
 
 // ──────────────────────────────────────────────
@@ -90,6 +90,7 @@ export default function AIDOLLiveConsole() {
   });
   const [streamStatus, setStreamStatus] = useState('idle'); // idle | connecting | live | error
   const videoRef = useRef(null);
+  const lastSubstageTimeBroadcastRef = useRef(0);
   const [activeVideoItem, setActiveVideoItem] = useState(null);
   const [activeJobItem, setActiveJobItem] = useState(null);
   const [videoQueue, setVideoQueue] = useState([]);
@@ -423,6 +424,7 @@ export default function AIDOLLiveConsole() {
       videoRef.current.play().catch(() => {});
     }
 
+    // ⚡ ĐỒNG BỘ TUYỆT ĐỐI SÂN KHẤU PHỤ -> SÂN KHẤU CHÍNH, WINDOW CAPTURE & ĐƯỜNG LINK ONLINE
     syncMasterLiveState({
       stage: 'idol',
       mediaUrl: playUrl,
@@ -430,8 +432,24 @@ export default function AIDOLLiveConsole() {
       characterName: item.name,
       videoPlaybackEvent: 'play',
       isPlaying: true,
+      videoCurrentTime: 0,
       updatedAt: Date.now()
     });
+
+    sendVideoControl({
+      action: 'play',
+      isPlaying: true,
+      currentTime: 0,
+      mediaUrl: playUrl,
+      force: true,
+      timestamp: Date.now()
+    });
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('avalive:substage_play_video', {
+        detail: { item, playUrl, currentTime: 0 }
+      }));
+    }
   };
 
   // ── Build video queue for live ──
@@ -607,8 +625,30 @@ export default function AIDOLLiveConsole() {
           <div className="relative bg-black flex-shrink-0" style={{aspectRatio:'9/16', maxHeight:'380px'}}>
             {activeVideoItem ? (
               activeVideoItem.type === 'video' ? (
-                <video ref={videoRef} className="w-full h-full object-cover" autoPlay loop={videoQueue.length <= 1} onEnded={handleVideoEnded}
-                  src={activeVideoItem.mediaUrl}/>
+                <video 
+                  ref={videoRef} 
+                  className="w-full h-full object-cover" 
+                  autoPlay 
+                  loop={videoQueue.length <= 1} 
+                  onEnded={handleVideoEnded}
+                  src={activeVideoItem.mediaUrl}
+                  onTimeUpdate={(e) => {
+                    const curTime = e.currentTarget.currentTime;
+                    const now = Date.now();
+                    if (now - lastSubstageTimeBroadcastRef.current > 1000) {
+                      lastSubstageTimeBroadcastRef.current = now;
+                      if (activeVideoItem && activeVideoItem.mediaUrl) {
+                        sendVideoControl({
+                          action: 'play',
+                          isPlaying: true,
+                          currentTime: curTime,
+                          mediaUrl: activeVideoItem.mediaUrl,
+                          timestamp: now
+                        });
+                      }
+                    }
+                  }}
+                />
               ) : activeVideoItem.type === 'audio' ? (
                 <div className="w-full h-full flex flex-col items-center justify-center bg-gradient-to-b from-purple-900/40 to-[#0D0F1A]">
                   <div className="w-20 h-20 rounded-full bg-purple-500/20 border-2 border-purple-500/50 flex items-center justify-center mb-3 animate-pulse">

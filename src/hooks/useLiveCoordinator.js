@@ -4,6 +4,7 @@ import { askGeminiLiveAi } from '../lib/geminiClient';
 import autoPinProductService from '../utils/autoPinProductService';
 import { resolveEffectiveVoice } from '../utils/voiceSyncService';
 import { isSmartSpamOrToxicComment, cleanUserNameForSpeech, isMeaningfulCommercialOrEngagingComment } from '../utils/vietnamesePronunciationMaster';
+import { syncMasterLiveState, sendVideoControl } from '../lib/masterLiveSync';
 
 export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack = 'talk' }) {
   const [liveMedia, setLiveMedia] = useState([]);
@@ -800,6 +801,26 @@ function fillTemplate(template, vars = {}) {
         }
         setActiveVideoItem(matchedEventVideo);
 
+        // ⚡ Đồng bộ tuyệt đối sang Sân Khấu Chính, Window Capture OBS & Đường Link Online HTTPS
+        syncMasterLiveState({
+          stage: 'idol',
+          mediaUrl: matchedEventVideo.mediaUrl,
+          characterName: matchedEventVideo.name || `${evKey} Video`,
+          isVideo: true,
+          videoPlaybackEvent: 'play',
+          isPlaying: true,
+          eventType: type,
+          eventKey: evKey,
+          eventVideoUrl: matchedEventVideo.mediaUrl,
+          captions: replyText || ''
+        });
+        sendVideoControl({
+          action: 'play',
+          mediaUrl: matchedEventVideo.mediaUrl,
+          currentTime: 0,
+          force: true
+        });
+
         // Bắn sự kiện toàn cục để Sân Khấu Chính lập tức hiển thị video sự kiện này tràn khớp màn hình
         if (typeof window !== 'undefined') {
           window.dispatchEvent(new CustomEvent('avalive:event_video_trigger', {
@@ -879,10 +900,12 @@ function fillTemplate(template, vars = {}) {
     setIsProcessingEvent(false);
     const configs = getSavedEventConfigs();
     const idleVid = configs.idle?.videoFile || configs.idle?.videoUrl || configs.idle?.supportVideoFile || (typeof localStorage !== 'undefined' ? (localStorage.getItem('aidol_idle_media_url') || localStorage.getItem('avalive_user_locked_media')) : null);
+    let nextMedia = null;
     if (lipSyncVideoUrl) {
       setLipSyncVideoUrl(null); // Trở về video nền
     } else if (previousVideoItem) {
       setActiveVideoItem(previousVideoItem);
+      nextMedia = previousVideoItem.mediaUrl || previousVideoItem.url;
       setPreviousVideoItem(null);
     } else if (idleVid) {
       setActiveVideoItem({
@@ -892,10 +915,21 @@ function fillTemplate(template, vars = {}) {
         url: idleVid,
         type: 'video'
       });
+      nextMedia = idleVid;
     } else {
       // Về mặc định video gốc mà người dùng đã chọn
       setActiveVideoItem(null);
     }
+
+    // ⚡ Đồng bộ phục hồi video nền sang Sân Khấu Chính, Window Capture OBS & Đường Link Online
+    syncMasterLiveState({
+      stage: 'idol',
+      mediaUrl: nextMedia || null,
+      isVideo: true,
+      videoPlaybackEvent: 'play',
+      isPlaying: true,
+      eventVideoUrl: null
+    });
   };
 
   return {

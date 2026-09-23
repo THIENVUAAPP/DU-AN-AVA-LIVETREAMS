@@ -824,6 +824,73 @@ export default function WindowCapturePlayer() {
           applyTimeSync(state.videoCurrentTime);
         }
       });
+
+      // ⚡ Nhận lệnh điều khiển video trực tiếp 0ms từ Sân Khấu Chính / Sân Khấu Phụ
+      socket.on('VIDEO_PLAYBACK_CONTROL', (control) => {
+        if (!control) return;
+        const vid = videoRef.current;
+        if (!vid) return;
+
+        if (control.mediaUrl) {
+          const resolved = resolveUrl(control.mediaUrl);
+          if (resolved && !isSameMedia(resolved, videoSrc)) {
+            isHardwareLocalBlobRef.current = false;
+            vid.srcObject = null;
+            vid.src = resolved;
+            vid.play().catch(() => {});
+            setVideoSrc(resolved);
+          }
+        }
+
+        if (control.action === 'pause') {
+          isExplicitlyPausedRef.current = true;
+          vid.pause();
+          setIsPlaybackActive(false);
+        } else if (control.action === 'play') {
+          isExplicitlyPausedRef.current = false;
+          vid.play().catch(() => {});
+          setIsPlaybackActive(true);
+        }
+
+        if (typeof control.currentTime === 'number') {
+          applyTimeSync(control.currentTime, !!control.force);
+        }
+      });
+
+      // ⚡ Nhận 14 sự kiện Live và video sự kiện trực tiếp
+      socket.on('LIVE_EVENT', (data) => {
+        if (!data) return;
+        if (data.eventVideoUrl || data.videoUrl) {
+          const evUrl = resolveUrl(data.eventVideoUrl || data.videoUrl);
+          if (evUrl) {
+            setActiveEventVideo({
+              url: evUrl,
+              name: data.name || 'Event Video',
+              eventType: data.eventType || data.type
+            });
+          }
+        }
+        if (data.name || data.type) {
+          setLiveEventNotice({
+            type: data.eventType || data.type,
+            name: data.name || data.author || 'Khán giả',
+            timestamp: Date.now()
+          });
+          setTimeout(() => setLiveEventNotice(null), 8000);
+        }
+      });
+
+      socket.on('EVENT_VIDEO_PLAY', (data) => {
+        if (!data) return;
+        const evUrl = resolveUrl(data.videoUrl || data.mediaUrl);
+        if (evUrl) {
+          setActiveEventVideo({
+            url: evUrl,
+            name: data.name || 'Event Video',
+            eventType: data.eventType
+          });
+        }
+      });
     } catch (e) {}
 
     return () => {
@@ -831,7 +898,7 @@ export default function WindowCapturePlayer() {
         try { socket.disconnect(); } catch (e) {}
       }
     };
-  }, [tunnelUrl, videoSrc, resolveUrl, tryLoadFromLocalDB]);
+  }, [tunnelUrl, videoSrc, resolveUrl, tryLoadFromLocalDB, applyTimeSync, isSameMedia]);
 
   // Quản lý phát Video & Phục hồi tự động
   useEffect(() => {
