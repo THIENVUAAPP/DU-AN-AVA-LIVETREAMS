@@ -4,6 +4,11 @@ import { io } from 'socket.io-client';
 import { loadAllAidolItems } from '../../utils/idbHelper';
 import { getActiveMedia } from '../../utils/activeMediaStore';
 import { SvgChromaFilters } from './MultiAvatarStudioModal';
+import GameBanDoVietNam from './game/GameBanDoVietNam';
+import GameBattleOverlay from './game/GameBattleOverlay';
+import GameChienDau from './game/GameChienDau';
+import { getMultiAvatarConfig, isImageMedia, getChromaStyle } from '../../utils/voiceSyncService';
+import { getMasterLiveState, syncMasterLiveState } from '../../lib/masterLiveSync';
 
 /**
  * 🖥️ TAB CODE ĐỘC LẬP: CỬA SỔ BẮT HÌNH WINDOW CAPTURE 4K 60 FPS CHO OBS & TIKTOK LIVE STUDIO
@@ -97,6 +102,32 @@ export default function WindowCapturePlayer() {
 
   const [isVideoLoading, setIsVideoLoading] = useState(false);
   const [isPlaybackActive, setIsPlaybackActive] = useState(false);
+
+  // 🎭 Sân khấu hiển thị hiện tại ('idol' | 'bando' | 'battle' | 'camera' | 'broadcast')
+  const [currentStage, setCurrentStage] = useState(() => {
+    try {
+      const saved = getMasterLiveState();
+      return saved?.stage || 'idol';
+    } catch (e) {
+      return 'idol';
+    }
+  });
+
+  // 👥 Cấu hình Multi-Avatar 1–4 nhân vật
+  const [multiAvatarConfig, setMultiAvatarConfig] = useState(() => {
+    try {
+      return getMultiAvatarConfig();
+    } catch (e) {
+      return { enabled: false, activeCount: 1, layout: 'auto', avatars: [] };
+    }
+  });
+  const [activeSpeakerId, setActiveSpeakerId] = useState(null);
+  const [isSpeakerActive, setIsSpeakerActive] = useState(false);
+
+  // ⚡ Video sự kiện đang phát từ 14 Tab Sự Kiện & AI Brain
+  const [activeEventVideo, setActiveEventVideo] = useState(null);
+  const [captions, setCaptions] = useState('');
+  const [liveEventNotice, setLiveEventNotice] = useState(null);
 
   // 📌 Sản phẩm ghim từ TikTok Shop (shop.tiktok.com)
   const [pinnedProduct, setPinnedProduct] = useState(() => {
@@ -405,6 +436,76 @@ export default function WindowCapturePlayer() {
     });
   }, [attachOpenerDirectStream, tryLoadFromLocalDB, resolveUrl]);
 
+  // 🔄 Lắng nghe sự kiện toàn cục nội bộ trong cùng cửa sổ / opener
+  useEffect(() => {
+    const handleMultiAvatarChange = (e) => {
+      if (e?.detail) {
+        setMultiAvatarConfig(e.detail);
+      } else {
+        setMultiAvatarConfig(getMultiAvatarConfig());
+      }
+    };
+
+    const handleSpeakerChange = (e) => {
+      const { avatarId, isSpeaking, role } = e?.detail || {};
+      if (isSpeaking) {
+        setActiveSpeakerId(avatarId || role || 'idol');
+        setIsSpeakerActive(true);
+      } else {
+        setIsSpeakerActive(false);
+      }
+    };
+
+    const handleCaptionUpdate = (e) => {
+      if (e?.detail?.caption !== undefined) {
+        setCaptions(e.detail.caption || '');
+      } else if (e?.detail?.text !== undefined) {
+        setCaptions(e.detail.text || '');
+      }
+    };
+
+    const handleEventVideoTrigger = (e) => {
+      if (e?.detail?.videoUrl) {
+        const resolved = resolveUrl(e.detail.videoUrl);
+        setActiveEventVideo({
+          url: resolved,
+          name: e.detail.name || 'Event Video',
+          eventType: e.detail.eventType
+        });
+        if (e.detail.name || e.detail.eventType) {
+          setLiveEventNotice({
+            type: e.detail.eventType,
+            name: e.detail.name,
+            timestamp: Date.now()
+          });
+          setTimeout(() => setLiveEventNotice(null), 8000);
+        }
+      }
+    };
+
+    const handleStageChange = (e) => {
+      if (e?.detail?.stage) {
+        setCurrentStage(e.detail.stage);
+      }
+    };
+
+    window.addEventListener('avalive_multi_avatar_changed', handleMultiAvatarChange);
+    window.addEventListener('avalive_active_speaker_changed', handleSpeakerChange);
+    window.addEventListener('avalive_speaker_change', handleSpeakerChange);
+    window.addEventListener('avalive_caption_updated', handleCaptionUpdate);
+    window.addEventListener('avalive:event_video_trigger', handleEventVideoTrigger);
+    window.addEventListener('avalive:stage_change', handleStageChange);
+
+    return () => {
+      window.removeEventListener('avalive_multi_avatar_changed', handleMultiAvatarChange);
+      window.removeEventListener('avalive_active_speaker_changed', handleSpeakerChange);
+      window.removeEventListener('avalive_speaker_change', handleSpeakerChange);
+      window.removeEventListener('avalive_caption_updated', handleCaptionUpdate);
+      window.removeEventListener('avalive:event_video_trigger', handleEventVideoTrigger);
+      window.removeEventListener('avalive:stage_change', handleStageChange);
+    };
+  }, [resolveUrl]);
+
   // Đồng bộ qua BroadcastChannel nội bộ cùng máy
   useEffect(() => {
     let bc = null;
@@ -420,6 +521,47 @@ export default function WindowCapturePlayer() {
       bc.onmessage = async (event) => {
         const msg = event.data;
         if (!msg) return;
+
+        // 🎭 Đồng bộ Sân Khấu (Idol / Game Bản Đồ / Game Chiến Đấu / Broadcast)
+        if (msg.type === 'GLOBAL_STAGE_CHANGE' && msg.stage) {
+          setCurrentStage(msg.stage);
+        } else if (msg.stage) {
+          setCurrentStage(msg.stage);
+        }
+
+        // 👥 Đồng bộ Multi-Avatar 1–4 nhân vật
+        if (msg.multiAvatarConfig || msg.type === 'MULTI_AVATAR_UPDATE') {
+          setMultiAvatarConfig(msg.multiAvatarConfig || getMultiAvatarConfig());
+        }
+        if (msg.activeSpeakerId !== undefined) {
+          setActiveSpeakerId(msg.activeSpeakerId);
+          setIsSpeakerActive(Boolean(msg.isSpeaking));
+        }
+
+        // 💬 Đồng bộ phụ đề / Captions AI Brain & Voice đọc kịch bản
+        if (msg.captions !== undefined || msg.caption !== undefined || msg.speechText !== undefined) {
+          setCaptions(msg.captions || msg.caption || msg.speechText || '');
+        }
+
+        // ⚡ Đồng bộ video sự kiện 14 Tab
+        if (msg.eventVideoUrl || (msg.type === 'EVENT_VIDEO_TRIGGER' && msg.videoUrl)) {
+          const evUrl = resolveUrl(msg.eventVideoUrl || msg.videoUrl);
+          if (evUrl) {
+            setActiveEventVideo({
+              url: evUrl,
+              name: msg.name || 'Event Video',
+              eventType: msg.eventType
+            });
+            if (msg.name || msg.eventType) {
+              setLiveEventNotice({
+                type: msg.eventType,
+                name: msg.name,
+                timestamp: Date.now()
+              });
+              setTimeout(() => setLiveEventNotice(null), 8000);
+            }
+          }
+        }
 
         if ((msg.type === 'GLOBAL_MEDIA_CHANGE' || msg.type === 'RESPONSE_CURRENT_MEDIA') && (msg.fileBlob || msg.mediaUrl || msg.blobUrl || msg.characterId)) {
           // ⚡ ƯU TIÊN 1: File/Blob object trực tiếp qua Structured Clone (0ms, 60 FPS chuẩn GPU)
@@ -528,6 +670,8 @@ export default function WindowCapturePlayer() {
             videoRef.current.src = '';
           }
           setVideoSrc('');
+          setActiveEventVideo(null);
+          setCaptions('');
           setFlowSequencerOverlay(null);
           if (activeBlobUrlRef.current) {
             try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
@@ -807,77 +951,385 @@ export default function WindowCapturePlayer() {
       }}
     >
       <SvgChromaFilters />
-      <video
-        ref={videoRef}
-        src={isDirectStreamActive ? undefined : (resolvedFinalSrc || undefined)}
-        autoPlay
-        playsInline
-        webkit-playsinline="true"
-        loop
-        preload="auto"
-        disablePictureInPicture
-        controlsList="nodownload nofullscreen noremoteplayback"
-        onLoadedData={() => setIsVideoLoading(false)}
-        onCanPlay={() => setIsVideoLoading(false)}
-        onWaiting={() => {
-          if (!isDirectStreamActiveRef.current && (!videoRef.current?.readyState || videoRef.current.readyState < 2)) {
-            setIsVideoLoading(true);
-          }
-        }}
-        onPlaying={() => {
-          setIsVideoLoading(false);
-          setIsPlaybackActive(true);
-        }}
-        onError={async (e) => {
-          console.warn('[WindowCapture] Video loading error, attempting fallback:', e);
-          const attached = attachOpenerDirectStream();
-          if (!attached) {
-            const fallback = await tryLoadFromLocalDB();
-            if (fallback) {
-              isHardwareLocalBlobRef.current = true;
-              if (videoRef.current) videoRef.current.srcObject = null;
-              setVideoSrc(fallback);
-              setIsVideoLoading(false);
-            } else {
-              // ⚡ ULTIMATE FALLBACK: Gọi /api/live-state lấy URL mới nhất từ server
-              try {
-                const port = window.location.port;
-                const backendOrigin = (port === '5173' || port === '5174')
-                  ? `${window.location.protocol}//${window.location.hostname}:3001`
-                  : window.location.origin;
-                const res = await fetch(`${backendOrigin}/api/live-state`);
-                const data = await res.json();
-                if (data && data.mediaUrl) {
-                  const serverUrl = resolveUrl(data.mediaUrl);
-                  if (serverUrl && videoRef.current) {
-                    isHardwareLocalBlobRef.current = false;
-                    videoRef.current.srcObject = null;
-                    videoRef.current.src = serverUrl;
-                    setVideoSrc(serverUrl);
-                    videoRef.current.play().catch(() => {});
-                    console.log('[WindowCapture] ✅ Ultimate fallback: Đã khôi phục video từ server:', serverUrl);
+      {/* 🎮 SÂN KHẤU 2: GAME BẢN ĐỒ VIỆT NAM (63 TỈNH THÀNH) */}
+      {(currentStage === 'bando' || currentStage === 'vietnam_map' || currentStage === 'map') ? (
+        <div style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'hidden', backgroundColor: 'transparent' }}>
+          <GameBanDoVietNam isPopout={true} aspectRatio="9:16" isDarkMode={true} />
+        </div>
+      ) : (currentStage === 'battle' || currentStage === 'gamebattle' || currentStage === 'game') ? (
+        /* 🎮 SÂN KHẤU 3: GAME CHIẾN ĐẤU PK ĐẠI CHIẾN */
+        <div style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'hidden', backgroundColor: 'transparent' }}>
+          <GameChienDau isPopout={true} aspectRatio="9:16" isDarkMode={true} />
+        </div>
+      ) : activeEventVideo?.url ? (
+        /* ⚡ VIDEO SỰ KIỆN ĐANG PHÁT TỪ 14 TAB SỰ KIỆN & AI BRAIN */
+        <video
+          key={activeEventVideo.url}
+          src={activeEventVideo.url}
+          autoPlay
+          playsInline
+          webkit-playsinline="true"
+          loop={false}
+          muted={isUserMutedRef.current}
+          onEnded={() => setActiveEventVideo(null)}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: fitMode,
+            display: 'block',
+            backgroundColor: '#000',
+            transform: 'translate3d(0, 0, 0)',
+            WebkitTransform: 'translate3d(0, 0, 0)',
+            imageRendering: '-webkit-optimize-contrast'
+          }}
+        />
+      ) : (multiAvatarConfig?.enabled && multiAvatarConfig?.activeCount >= 2 && Array.isArray(multiAvatarConfig?.avatars) && multiAvatarConfig.avatars.some(a => a.talkVideo || a.idleVideo || a.videoUrl)) ? (() => {
+        /* 👥 MULTI-AVATAR STUDIO (2-4 NHÂN VẬT AI IDOL ĐỒNG BỘ) */
+        const activeList = (multiAvatarConfig.avatars || []).filter(a => a.enabled).slice(0, multiAvatarConfig.activeCount);
+        const count = activeList.length;
+        const isGridOnly = multiAvatarConfig.layoutMode === 'grid';
+
+        if (isGridOnly) {
+          const gridStyle = count === 2 
+            ? { display: 'grid', gridTemplateColumns: '1fr 1fr', width: '100%', height: '100%', gap: '4px', padding: '4px', backgroundColor: '#000' }
+            : count === 3 
+            ? { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', width: '100%', height: '100%', gap: '4px', padding: '4px', backgroundColor: '#000' }
+            : { display: 'grid', gridTemplateColumns: '1fr 1fr', gridTemplateRows: '1fr 1fr', width: '100%', height: '100%', gap: '4px', padding: '4px', backgroundColor: '#000' };
+
+          return (
+            <div style={gridStyle}>
+              {activeList.map((avatar, idx) => {
+                const isSpeakingNow = isSpeakerActive && (activeSpeakerId === avatar.id || (!activeSpeakerId && avatar.id === 'idol'));
+                const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || '';
+                const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || '';
+                const rawSrc = isSpeakingNow ? (talkSrc || idleSrc || (idx === 0 ? videoSrc : '')) : (idleSrc || talkSrc || (idx === 0 ? videoSrc : ''));
+                const avatarVidSrc = resolveUrl(rawSrc);
+                const isImg = isImageMedia(avatarVidSrc);
+
+                return (
+                  <div 
+                    key={avatar.id} 
+                    style={{
+                      position: 'relative',
+                      width: '100%',
+                      height: '100%',
+                      overflow: 'hidden',
+                      borderRadius: '8px',
+                      backgroundColor: '#020617',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.3s ease',
+                      boxShadow: isSpeakingNow ? '0 0 20px rgba(251, 191, 36, 0.4)' : 'none',
+                      border: isSpeakingNow ? '2px solid rgba(251, 191, 36, 0.8)' : 'none',
+                      zIndex: isSpeakingNow ? 10 : 1
+                    }}
+                  >
+                    {avatarVidSrc ? (
+                      isImg ? (
+                        <img src={avatarVidSrc} alt={avatar.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                      ) : (
+                        <video
+                          key={`${avatar.id}_${isSpeakingNow ? 'talk' : 'idle'}_${avatarVidSrc}`}
+                          src={avatarVidSrc}
+                          autoPlay
+                          loop
+                          muted={isUserMutedRef.current}
+                          playsInline
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', backgroundColor: '#000' }}
+                        />
+                      )
+                    ) : (
+                      <div style={{ textAlign: 'center', color: '#fff', fontSize: '12px' }}>
+                        <span style={{ fontSize: '20px', display: 'block', marginBottom: '4px' }}>🎭</span>
+                        <span style={{ fontWeight: 'bold' }}>{avatar.name}</span>
+                      </div>
+                    )}
+                    <div style={{ position: 'absolute', bottom: '8px', left: '8px', zIndex: 20, display: 'flex', alignItems: 'center', gap: '6px', padding: '2px 8px', borderRadius: '6px', background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.1)', fontSize: '10px', fontWeight: 'bold', color: '#fff' }}>
+                      <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: isSpeakingNow ? '#fbbf24' : '#10b981' }} />
+                      <span>{avatar.name}</span>
+                      {isSpeakingNow && <span style={{ color: '#fde047', fontSize: '9px', fontWeight: '900', textTransform: 'uppercase' }}>Đang nói</span>}
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+          );
+        }
+
+        /* Freeform Visual Studio Stage Canvas */
+        return (
+          <div 
+            style={{
+              position: 'relative',
+              width: '100%',
+              height: '100%',
+              overflow: 'hidden',
+              backgroundColor: multiAvatarConfig.backgroundColor || '#0a0c14'
+            }}
+          >
+            {/* Background Layer */}
+            {multiAvatarConfig.backgroundUrl && (
+              <div
+                style={{
+                  position: 'absolute',
+                  pointerEvents: 'none',
+                  left: `${multiAvatarConfig.backgroundTransform?.x ?? 0}%`,
+                  top: `${multiAvatarConfig.backgroundTransform?.y ?? 0}%`,
+                  width: `${multiAvatarConfig.backgroundTransform?.width ?? 100}%`,
+                  height: `${multiAvatarConfig.backgroundTransform?.height ?? 100}%`,
+                  transform: (multiAvatarConfig.backgroundTransform?.scale && multiAvatarConfig.backgroundTransform?.scale !== 100) ? `scale(${multiAvatarConfig.backgroundTransform.scale / 100})` : 'none',
+                  transformOrigin: 'center center',
+                  zIndex: 0
+                }}
+              >
+                <img 
+                  src={resolveUrl(multiAvatarConfig.backgroundUrl)}
+                  alt="Studio Background"
+                  style={{
+                    width: '100%',
+                    height: '100%',
+                    objectFit: multiAvatarConfig.backgroundTransform?.objectFit || 'cover',
+                    filter: `${multiAvatarConfig.backgroundTransform?.blur ? `blur(${multiAvatarConfig.backgroundTransform.blur}px)` : ''} ${multiAvatarConfig.backgroundTransform?.brightness ? `brightness(${multiAvatarConfig.backgroundTransform.brightness}%)` : ''}`.trim() || 'none'
+                  }}
+                />
+              </div>
+            )}
+
+            {/* Extra Layers */}
+            {(multiAvatarConfig.extraImageLayers || []).map(layer => {
+              const layerUrl = resolveUrl(layer.url);
+              const isImg = layer.type !== 'video' && (isImageMedia(layerUrl) || !layer.type);
+              const chromaStyle = getChromaStyle(layer.chromaKey);
+              return (
+                <div
+                  key={layer.id}
+                  style={{
+                    position: 'absolute',
+                    pointerEvents: 'none',
+                    left: `${layer.x ?? 20}%`,
+                    top: `${layer.y ?? 20}%`,
+                    width: `${layer.width ?? 30}%`,
+                    height: `${layer.height ?? 30}%`,
+                    zIndex: layer.zIndex || 10,
+                    borderRadius: `${layer.borderRadius ?? 0}px`,
+                    opacity: (layer.opacity !== undefined ? layer.opacity : 100) / 100,
+                    overflow: 'hidden',
+                    ...chromaStyle
+                  }}
+                >
+                  {isImg ? (
+                    <img src={layerUrl} alt={layer.name || 'Extra Layer'} style={{ width: '100%', height: '100%', objectFit: layer.objectFit || 'contain', ...chromaStyle }} />
+                  ) : (
+                    <video src={layerUrl} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: layer.objectFit || 'contain', ...chromaStyle }} />
+                  )}
+                </div>
+              );
+            })}
+
+            {/* Avatar Characters */}
+            {activeList.map((avatar, idx) => {
+              const transform = avatar.transform || { 
+                x: idx === 0 ? 4 : idx === 1 ? 48 : idx === 2 ? 25 : 65, 
+                y: idx === 0 ? 8 : idx === 1 ? 28 : idx === 2 ? 60 : 10, 
+                width: 48, 
+                height: 75, 
+                zIndex: 5, 
+                objectFit: 'cover',
+                borderRadius: 16
+              };
+              const isSpeakingNow = isSpeakerActive && (activeSpeakerId === avatar.id || (!activeSpeakerId && avatar.id === 'idol'));
+              const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || '';
+              const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || '';
+              const rawSrc = isSpeakingNow ? (talkSrc || idleSrc || (idx === 0 ? videoSrc : '')) : (idleSrc || talkSrc || (idx === 0 ? videoSrc : ''));
+              const avatarVidSrc = resolveUrl(rawSrc);
+              const isImg = isImageMedia(avatarVidSrc);
+              const chromaStyle = getChromaStyle(avatar.chromaKey || multiAvatarConfig.chromaKey);
+
+              return (
+                <div 
+                  key={avatar.id} 
+                  style={{
+                    position: 'absolute',
+                    overflow: 'hidden',
+                    transition: 'all 0.3s ease',
+                    left: `${transform.x ?? (idx === 0 ? 4 : idx === 1 ? 48 : 25)}%`,
+                    top: `${transform.y ?? (idx === 0 ? 8 : idx === 1 ? 28 : 50)}%`,
+                    width: `${transform.width ?? 48}%`,
+                    height: `${transform.height ?? 75}%`,
+                    zIndex: isSpeakingNow ? (transform.zIndex || 5) + 10 : (transform.zIndex || 5),
+                    borderRadius: `${transform.borderRadius ?? 16}px`,
+                    boxShadow: isSpeakingNow ? '0 0 25px rgba(251, 191, 36, 0.6)' : 'none',
+                    border: isSpeakingNow ? '2px solid rgba(251, 191, 36, 0.9)' : 'none'
+                  }}
+                >
+                  <div style={{ width: '100%', height: '100%', overflow: 'hidden', borderRadius: 'inherit', backgroundColor: 'transparent', ...chromaStyle }}>
+                    {avatarVidSrc ? (
+                      isImg ? (
+                        <img src={avatarVidSrc} alt={avatar.name} style={{ width: '100%', height: '100%', objectFit: transform.objectFit || 'cover', ...chromaStyle }} />
+                      ) : (
+                        <video
+                          key={`${avatar.id}_${isSpeakingNow ? 'talk' : 'idle'}_${avatarVidSrc}`}
+                          src={avatarVidSrc}
+                          autoPlay
+                          loop
+                          muted={isUserMutedRef.current}
+                          playsInline
+                          style={{ width: '100%', height: '100%', objectFit: transform.objectFit || 'cover', backgroundColor: 'transparent', ...chromaStyle }}
+                        />
+                      )
+                    ) : (
+                      <div style={{ width: '100%', height: '100%', backgroundColor: 'rgba(15, 23, 42, 0.8)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', color: '#fff' }}>
+                        <span style={{ fontSize: '24px', marginBottom: '4px' }}>🧍</span>
+                        <span style={{ fontSize: '11px', fontWeight: '900' }}>{avatar.name}</span>
+                      </div>
+                    )}
+                  </div>
+                  <div style={{ position: 'absolute', bottom: '6px', left: '6px', zIndex: 20, display: 'flex', alignItems: 'center', gap: '4px', padding: '2px 6px', borderRadius: '4px', background: 'rgba(0,0,0,0.75)', backdropFilter: 'blur(4px)', border: '1px solid rgba(255,255,255,0.1)', fontSize: '9px', fontWeight: '900', color: '#fff', pointerEvents: 'none' }}>
+                    <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: isSpeakingNow ? '#fbbf24' : '#10b981' }} />
+                    <span style={{ maxWidth: '90px', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>{avatar.name}</span>
+                    {isSpeakingNow && <span style={{ color: '#fde047', fontSize: '8px', textTransform: 'uppercase' }}>Nói</span>}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        );
+      })() : (
+        /* 🎬 SINGLE VIDEO (0MS DIRECT GPU CLONE & IN-MEMORY BLOB) */
+        <video
+          ref={videoRef}
+          src={isDirectStreamActive ? undefined : (resolvedFinalSrc || undefined)}
+          autoPlay
+          playsInline
+          webkit-playsinline="true"
+          loop
+          preload="auto"
+          disablePictureInPicture
+          controlsList="nodownload nofullscreen noremoteplayback"
+          onLoadedData={() => setIsVideoLoading(false)}
+          onCanPlay={() => setIsVideoLoading(false)}
+          onWaiting={() => {
+            if (!isDirectStreamActiveRef.current && (!videoRef.current?.readyState || videoRef.current.readyState < 2)) {
+              setIsVideoLoading(true);
+            }
+          }}
+          onPlaying={() => {
+            setIsVideoLoading(false);
+            setIsPlaybackActive(true);
+          }}
+          onError={async (e) => {
+            console.warn('[WindowCapture] Video loading error, attempting fallback:', e);
+            const attached = attachOpenerDirectStream();
+            if (!attached) {
+              const fallback = await tryLoadFromLocalDB();
+              if (fallback) {
+                isHardwareLocalBlobRef.current = true;
+                if (videoRef.current) videoRef.current.srcObject = null;
+                setVideoSrc(fallback);
+                setIsVideoLoading(false);
+              } else {
+                try {
+                  const port = window.location.port;
+                  const backendOrigin = (port === '5173' || port === '5174')
+                    ? `${window.location.protocol}//${window.location.hostname}:3001`
+                    : window.location.origin;
+                  const res = await fetch(`${backendOrigin}/api/live-state`);
+                  const data = await res.json();
+                  if (data && data.mediaUrl) {
+                    const serverUrl = resolveUrl(data.mediaUrl);
+                    if (serverUrl && videoRef.current) {
+                      isHardwareLocalBlobRef.current = false;
+                      videoRef.current.srcObject = null;
+                      videoRef.current.src = serverUrl;
+                      setVideoSrc(serverUrl);
+                      videoRef.current.play().catch(() => {});
+                      console.log('[WindowCapture] ✅ Ultimate fallback: Đã khôi phục video từ server:', serverUrl);
+                    }
                   }
+                } catch (fetchErr) {
+                  console.warn('[WindowCapture] Server fallback also failed:', fetchErr);
                 }
-              } catch (fetchErr) {
-                console.warn('[WindowCapture] Server fallback also failed:', fetchErr);
               }
             }
-          }
-        }}
-        style={{
-          width: '100%',
-          height: '100%',
-          objectFit: fitMode,
-          display: 'block',
-          backgroundColor: '#000',
-          transform: 'translate3d(0, 0, 0)',
-          WebkitTransform: 'translate3d(0, 0, 0)',
-          backfaceVisibility: 'hidden',
-          WebkitBackfaceVisibility: 'hidden',
-          imageRendering: '-webkit-optimize-contrast',
-          willChange: 'transform'
-        }}
-      />
+          }}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: fitMode,
+            display: 'block',
+            backgroundColor: '#000',
+            transform: 'translate3d(0, 0, 0)',
+            WebkitTransform: 'translate3d(0, 0, 0)',
+            backfaceVisibility: 'hidden',
+            WebkitBackfaceVisibility: 'hidden',
+            imageRendering: '-webkit-optimize-contrast',
+            willChange: 'transform'
+          }}
+        />
+      )}
+
+      {/* 💬 OVERLAY PHỤ ĐỀ / CAPTIONS AI BRAIN & VOICE KỊCH BẢN */}
+      {captions && !isControlsHidden && (
+        <div
+          style={{
+            position: 'absolute',
+            bottom: pinnedProduct ? '110px' : '40px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            maxWidth: '85%',
+            zIndex: 45,
+            padding: '8px 16px',
+            background: 'rgba(0, 0, 0, 0.85)',
+            backdropFilter: 'blur(8px)',
+            borderRadius: '16px',
+            border: '1px solid rgba(6, 182, 212, 0.5)',
+            boxShadow: '0 8px 30px rgba(0,0,0,0.8)',
+            textAlign: 'center',
+            color: '#ffffff',
+            fontSize: '13px',
+            fontWeight: 'bold',
+            lineHeight: '1.4',
+            pointerEvents: 'none',
+            animation: 'fadeIn 0.2s ease'
+          }}
+        >
+          <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '6px', marginBottom: '2px' }}>
+            <span style={{ fontSize: '10px', color: '#22d3ee', fontWeight: '900', textTransform: 'uppercase', letterSpacing: '0.5px' }}>
+              🎙️ AI Live Voice
+            </span>
+          </div>
+          <span>{captions}</span>
+        </div>
+      )}
+
+      {/* 🔔 OVERLAY THÔNG BÁO SỰ KIỆN LIVE TỪ 14 TAB */}
+      {liveEventNotice && !isControlsHidden && (
+        <div
+          style={{
+            position: 'absolute',
+            top: '56px',
+            left: '50%',
+            transform: 'translateX(-50%)',
+            zIndex: 45,
+            padding: '6px 14px',
+            background: 'linear-gradient(135deg, rgba(225, 29, 72, 0.95), rgba(244, 63, 94, 0.95))',
+            borderRadius: '20px',
+            border: '1px solid rgba(255, 255, 255, 0.3)',
+            boxShadow: '0 4px 20px rgba(225, 29, 72, 0.5)',
+            color: '#fff',
+            fontSize: '11px',
+            fontWeight: '900',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '6px',
+            pointerEvents: 'none'
+          }}
+        >
+          <span style={{ fontSize: '13px' }}>⚡</span>
+          <span>{liveEventNotice.name || 'SỰ KIỆN LIVE ĐANG DIỄN RA'}</span>
+        </div>
+      )}
 
       {/* 👑 DOCK ĐIỀU KHIỂN NỔI CỦA CỬA SỔ WINDOW CAPTURE */}
       {!isControlsHidden && (

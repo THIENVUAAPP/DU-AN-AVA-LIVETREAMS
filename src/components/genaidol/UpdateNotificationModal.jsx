@@ -2,17 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.8.6';
+export const APP_VERSION = '4.8.7';
 export const RELEASE_DATE = '23/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v4.8.6 - Đóng Gói Tươi Mới 100% Toàn Bộ Tính Năng & Mã Nguồn Vào File ZIP',
-    description: '1. Đóng Gói Toàn Diện (Full Bundle Rebuild): Biên dịch tươi mới 100% toàn bộ giao diện Frontend, Idol Studio, Kịch bản Voice, Game Battle, Game 3D, Window Capture, Quick Response và Backend Core vào gói ZIP cài đặt Windows & Mac. 2. Đồng Bộ Tính Năng: Đảm bảo máy tính Windows và Mac khi giải nén chạy độc lập có đầy đủ 100% tính năng mới nhất.'
+    title: '🚀 Bản Cập Nhật v4.8.7 - Liên Kết Toàn Diện Multi-Avatar (1–4 Nhân Vật), 14 Tab Sự Kiện, AI Brain Với Window Capture OBS & TikTok Live Studio',
+    description: '1. Liên Kết Window Capture OBS & Live Studio: Kết nối 100% đồng bộ giữa Sân Khấu Chính phần mềm, Cửa Sổ Bắt Hình Window Capture và Đường Link Live TikTok với đầy đủ Multi-Avatar Studio 1–4 nhân vật (phông nền, chroma key, hiệu ứng phát sáng khi nói), 3D Game Bản Đồ 63 Tỉnh Thành, Game Chiến Đấu PK và Phụ đề/Captions AI Brain theo thời gian thực. 2. Đồng Bộ 14 Tab Sự Kiện: Tự động kích hoạt phát video sự kiện, thông báo nổi và hành động tương ứng trên toàn bộ các kênh phát live.'
   },
   {
-    title: '🚀 Bản Cập Nhật v4.8.5 - Tải Trực Tiếp File ZIP Về Máy Tính 100%, Không Mở Trang Web GitHub',
-    description: '1. Tải Trực Tiếp 100%: Khắc phục triệt để hiện tượng mở trang github.com khi bấm tải về. Hệ thống kích hoạt trực tiếp luồng tải file ZIP v4.8.5 về máy tính Windows và macOS. 2. Phát Hành Đồng Bộ GitHub Releases: Tự động gắn release asset chính thức cho phiên bản mới nhất v4.8.5.'
+    title: '🚀 Bản Cập Nhật v4.8.6 - Đóng Gói Tươi Mới 100% Toàn Bộ Tính Năng & Mã Nguồn Vào File ZIP',
+    description: '1. Đóng Gói Toàn Diện (Full Bundle Rebuild): Biên dịch tươi mới 100% toàn bộ giao diện Frontend, Idol Studio, Kịch bản Voice, Game Battle, Game 3D, Window Capture, Quick Response và Backend Core vào gói ZIP cài đặt Windows & Mac. 2. Đồng Bộ Tính Năng: Đảm bảo máy tính Windows và Mac khi giải nén chạy độc lập có đầy đủ 100% tính năng mới nhất.'
   }
 ];
 
