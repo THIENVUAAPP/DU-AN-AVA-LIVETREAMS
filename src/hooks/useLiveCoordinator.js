@@ -890,6 +890,16 @@ function fillTemplate(template, vars = {}) {
   const handleActionVideoReady = (videoUrl, isLipSync) => {
     if (isLipSync) {
       setLipSyncVideoUrl(videoUrl);
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('avalive:lipsync_video_trigger', {
+          detail: { videoUrl }
+        }));
+        try {
+          const bc = new BroadcastChannel('avalive_master_live_stream');
+          bc.postMessage({ type: 'LIP_SYNC_VIDEO', lipSyncVideoUrl: videoUrl, timestamp: Date.now() });
+          bc.close();
+        } catch (e) {}
+      }
     } else {
       // Tìm video reaction trong kho
       // (Bản demo đơn giản: AIAudioPlayer tự manage, hook này chỉ cấp state)
@@ -903,6 +913,16 @@ function fillTemplate(template, vars = {}) {
     let nextMedia = null;
     if (lipSyncVideoUrl) {
       setLipSyncVideoUrl(null); // Trở về video nền
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('avalive:lipsync_video_trigger', {
+          detail: { videoUrl: null }
+        }));
+        try {
+          const bc = new BroadcastChannel('avalive_master_live_stream');
+          bc.postMessage({ type: 'LIP_SYNC_VIDEO', lipSyncVideoUrl: null, timestamp: Date.now() });
+          bc.close();
+        } catch (e) {}
+      }
     } else if (previousVideoItem) {
       setActiveVideoItem(previousVideoItem);
       nextMedia = previousVideoItem.mediaUrl || previousVideoItem.url;

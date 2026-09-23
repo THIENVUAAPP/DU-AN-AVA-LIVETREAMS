@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.3';
+export const APP_VERSION = '4.9.4';
 export const RELEASE_DATE = '23/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.4 - Tối Ưu Tốc Độ Xuất Hiện Video 0ms (60 FPS) & Ưu Tiên Lớp Trên Cùng (Topmost Layer) OBS & TikTok Live',
+    description: '1. Tải Video Tức Thì 0ms (60 FPS): Loại bỏ hoàn toàn màn hình chờ xoay vòng, nạp và phát video ngay lập tức với khả năng tăng tốc phần cứng GPU cực nhanh. 2. Ưu Tiên Video Lớp Trên Cùng (Topmost Layer): Khi có nhiều video cùng lúc (14 Sự kiện Live, LipSync Voice AI, Phản hồi nhanh khẩn cấp), Window Capture OBS và đường link TikTok Live Studio luôn hiển thị full màn hình video ở lớp trên cùng tức thì.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.3 - Đồng Bộ Tuyệt Đối 100% Giữa Sân Khấu Phụ & Sân Khấu Chính, Window Capture OBS & Link TikTok Live (14 Sự Kiện Live)',
     description: '1. Đồng Bộ Hoàn Hảo Sân Khấu Phụ & Chính: Mọi thao tác chọn và phát video trong Sân khấu phụ (Kho Live, 14 Tác vụ Live, Sequencer, Multi-Avatar) ngay lập tức đồng bộ chuẩn xác cùng khung hình, cùng thời gian và cùng Voice AI lên Sân khấu chính. 2. Đồng Bộ 14 Sự Kiện Live sang OBS & TikTok Live: Tất cả video sự kiện (Chào hỏi, Follow, Like, Share, Quà tặng, Chốt đơn...) và trạng thái Play/Pause/Time được đồng bộ tức thì 0ms sang Window Capture OBS và đường link Online HTTPS.'

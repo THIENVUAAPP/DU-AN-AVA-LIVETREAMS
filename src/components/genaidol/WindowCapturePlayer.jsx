@@ -124,8 +124,10 @@ export default function WindowCapturePlayer() {
   const [activeSpeakerId, setActiveSpeakerId] = useState(null);
   const [isSpeakerActive, setIsSpeakerActive] = useState(false);
 
-  // ⚡ Video sự kiện đang phát từ 14 Tab Sự Kiện & AI Brain
+  // ⚡ Video sự kiện và video lớp trên cùng (Topmost Priority Layers)
   const [activeEventVideo, setActiveEventVideo] = useState(null);
+  const [lipSyncVideoUrl, setLipSyncVideoUrl] = useState(null);
+  const [quickResponseVideo, setQuickResponseVideo] = useState(null);
   const [captions, setCaptions] = useState('');
   const [liveEventNotice, setLiveEventNotice] = useState(null);
 
@@ -483,6 +485,25 @@ export default function WindowCapturePlayer() {
       }
     };
 
+    const handleLipSyncVideoTrigger = (e) => {
+      if (e?.detail?.videoUrl) {
+        setLipSyncVideoUrl(resolveUrl(e.detail.videoUrl));
+      } else {
+        setLipSyncVideoUrl(null);
+      }
+    };
+
+    const handleQuickResponseVideo = (e) => {
+      if (e?.detail?.quickResponseVideo?.url) {
+        setQuickResponseVideo({
+          ...e.detail.quickResponseVideo,
+          url: resolveUrl(e.detail.quickResponseVideo.url)
+        });
+      } else {
+        setQuickResponseVideo(null);
+      }
+    };
+
     const handleStageChange = (e) => {
       if (e?.detail?.stage) {
         setCurrentStage(e.detail.stage);
@@ -494,6 +515,8 @@ export default function WindowCapturePlayer() {
     window.addEventListener('avalive_speaker_change', handleSpeakerChange);
     window.addEventListener('avalive_caption_updated', handleCaptionUpdate);
     window.addEventListener('avalive:event_video_trigger', handleEventVideoTrigger);
+    window.addEventListener('avalive:lipsync_video_trigger', handleLipSyncVideoTrigger);
+    window.addEventListener('avalive:quick_response_video', handleQuickResponseVideo);
     window.addEventListener('avalive:stage_change', handleStageChange);
 
     return () => {
@@ -502,6 +525,8 @@ export default function WindowCapturePlayer() {
       window.removeEventListener('avalive_speaker_change', handleSpeakerChange);
       window.removeEventListener('avalive_caption_updated', handleCaptionUpdate);
       window.removeEventListener('avalive:event_video_trigger', handleEventVideoTrigger);
+      window.removeEventListener('avalive:lipsync_video_trigger', handleLipSyncVideoTrigger);
+      window.removeEventListener('avalive:quick_response_video', handleQuickResponseVideo);
       window.removeEventListener('avalive:stage_change', handleStageChange);
     };
   }, [resolveUrl]);
@@ -541,6 +566,23 @@ export default function WindowCapturePlayer() {
         // 💬 Đồng bộ phụ đề / Captions AI Brain & Voice đọc kịch bản
         if (msg.captions !== undefined || msg.caption !== undefined || msg.speechText !== undefined) {
           setCaptions(msg.captions || msg.caption || msg.speechText || '');
+        }
+
+        // ⚡ Đồng bộ video LipSync Voice AI
+        if (msg.type === 'LIP_SYNC_VIDEO' || msg.lipSyncVideoUrl !== undefined) {
+          setLipSyncVideoUrl(msg.lipSyncVideoUrl ? resolveUrl(msg.lipSyncVideoUrl) : null);
+        }
+
+        // ⚡ Đồng bộ video Phản Hồi Nhanh
+        if (msg.type === 'QUICK_RESPONSE_VIDEO' || msg.quickResponseVideo !== undefined) {
+          if (msg.quickResponseVideo?.url) {
+            setQuickResponseVideo({
+              ...msg.quickResponseVideo,
+              url: resolveUrl(msg.quickResponseVideo.url)
+            });
+          } else {
+            setQuickResponseVideo(null);
+          }
         }
 
         // ⚡ Đồng bộ video sự kiện 14 Tab
@@ -891,6 +933,23 @@ export default function WindowCapturePlayer() {
           });
         }
       });
+
+      socket.on('LIP_SYNC_VIDEO', (data) => {
+        if (!data) return;
+        setLipSyncVideoUrl(data.lipSyncVideoUrl ? resolveUrl(data.lipSyncVideoUrl) : null);
+      });
+
+      socket.on('QUICK_RESPONSE_VIDEO', (data) => {
+        if (!data) return;
+        if (data.quickResponseVideo?.url) {
+          setQuickResponseVideo({
+            ...data.quickResponseVideo,
+            url: resolveUrl(data.quickResponseVideo.url)
+          });
+        } else {
+          setQuickResponseVideo(null);
+        }
+      });
     } catch (e) {}
 
     return () => {
@@ -1059,27 +1118,21 @@ export default function WindowCapturePlayer() {
       }}
     >
       <SvgChromaFilters />
-      {/* 🎮 SÂN KHẤU 2: GAME BẢN ĐỒ VIỆT NAM (63 TỈNH THÀNH) */}
-      {(currentStage === 'bando' || currentStage === 'vietnam_map' || currentStage === 'map') ? (
-        <div style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'hidden', backgroundColor: 'transparent' }}>
-          <GameBanDoVietNam isPopout={true} aspectRatio="9:16" isDarkMode={true} />
-        </div>
-      ) : (currentStage === 'battle' || currentStage === 'gamebattle' || currentStage === 'game') ? (
-        /* 🎮 SÂN KHẤU 3: GAME CHIẾN ĐẤU PK ĐẠI CHIẾN */
-        <div style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'hidden', backgroundColor: 'transparent' }}>
-          <GameChienDau isPopout={true} aspectRatio="9:16" isDarkMode={true} />
-        </div>
-      ) : activeEventVideo?.url ? (
-        /* ⚡ VIDEO SỰ KIỆN ĐANG PHÁT TỪ 14 TAB SỰ KIỆN & AI BRAIN */
+      {/* ⚡ 1. TOPMOST LAYER: VIDEO PHẢN HỒI NHANH KHẨN CẤP */}
+      {quickResponseVideo?.url ? (
         <video
-          key={activeEventVideo.url}
-          src={activeEventVideo.url}
+          key={`quick_${quickResponseVideo.url}`}
+          src={quickResponseVideo.url}
           autoPlay
           playsInline
           webkit-playsinline="true"
-          loop={false}
-          muted={isUserMutedRef.current}
-          onEnded={() => setActiveEventVideo(null)}
+          loop={Boolean(quickResponseVideo.loop)}
+          muted={isUserMutedRef.current || quickResponseVideo.muted}
+          preload="auto"
+          onEnded={() => {
+            if (!quickResponseVideo.loop) setQuickResponseVideo(null);
+          }}
+          onError={() => setQuickResponseVideo(null)}
           style={{
             width: '100%',
             height: '100%',
@@ -1091,6 +1144,62 @@ export default function WindowCapturePlayer() {
             imageRendering: '-webkit-optimize-contrast'
           }}
         />
+      ) : activeEventVideo?.url ? (
+        /* ⚡ 2. TOPMOST LAYER: VIDEO SỰ KIỆN 14 TAB (QUÀ TẶNG, CHÀO MỪNG, CHECKOUT...) */
+        <video
+          key={`event_${activeEventVideo.url}`}
+          src={activeEventVideo.url}
+          autoPlay
+          playsInline
+          webkit-playsinline="true"
+          loop={false}
+          muted={isUserMutedRef.current}
+          preload="auto"
+          onEnded={() => setActiveEventVideo(null)}
+          onError={() => setActiveEventVideo(null)}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: fitMode,
+            display: 'block',
+            backgroundColor: '#000',
+            transform: 'translate3d(0, 0, 0)',
+            WebkitTransform: 'translate3d(0, 0, 0)',
+            imageRendering: '-webkit-optimize-contrast'
+          }}
+        />
+      ) : lipSyncVideoUrl ? (
+        /* ⚡ 3. TOPMOST LAYER: VIDEO NHÉP MIỆNG LIPSYNC VOICE AI */
+        <video
+          key={`lipsync_${lipSyncVideoUrl}`}
+          src={lipSyncVideoUrl}
+          autoPlay
+          playsInline
+          webkit-playsinline="true"
+          loop
+          muted={isUserMutedRef.current}
+          preload="auto"
+          onError={() => setLipSyncVideoUrl(null)}
+          style={{
+            width: '100%',
+            height: '100%',
+            objectFit: fitMode,
+            display: 'block',
+            backgroundColor: '#000',
+            transform: 'translate3d(0, 0, 0)',
+            WebkitTransform: 'translate3d(0, 0, 0)',
+            imageRendering: '-webkit-optimize-contrast'
+          }}
+        />
+      ) : (currentStage === 'bando' || currentStage === 'vietnam_map' || currentStage === 'map') ? (
+        <div style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'hidden', backgroundColor: 'transparent' }}>
+          <GameBanDoVietNam isPopout={true} aspectRatio="9:16" isDarkMode={true} />
+        </div>
+      ) : (currentStage === 'battle' || currentStage === 'gamebattle' || currentStage === 'game') ? (
+        /* 🎮 SÂN KHẤU 3: GAME CHIẾN ĐẤU PK ĐẠI CHIẾN */
+        <div style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'hidden', backgroundColor: 'transparent' }}>
+          <GameChienDau isPopout={true} aspectRatio="9:16" isDarkMode={true} />
+        </div>
       ) : (multiAvatarConfig?.enabled && multiAvatarConfig?.activeCount >= 2 && Array.isArray(multiAvatarConfig?.avatars) && multiAvatarConfig.avatars.some(a => a.talkVideo || a.idleVideo || a.videoUrl)) ? (() => {
         /* 👥 MULTI-AVATAR STUDIO (2-4 NHÂN VẬT AI IDOL ĐỒNG BỘ) */
         const activeList = (multiAvatarConfig.avatars || []).filter(a => a.enabled).slice(0, multiAvatarConfig.activeCount);
@@ -1584,39 +1693,6 @@ export default function WindowCapturePlayer() {
         >
           👁️
         </button>
-      )}
-
-      {/* Hiển thị chỉ báo đang tải - chỉ khi video thực sự chưa có dữ liệu và đang chờ */}
-      {isVideoLoading && !isPlaybackActive && !isDirectStreamActiveRef.current && (
-        <div
-          style={{
-            position: 'absolute',
-            inset: 0,
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(0,0,0,0.65)',
-            color: '#06b6d4',
-            zIndex: 30,
-            gap: '12px'
-          }}
-        >
-          <div
-            style={{
-              width: '40px',
-              height: '40px',
-              border: '3px solid rgba(6, 182, 212, 0.2)',
-              borderTopColor: '#06b6d4',
-              borderRadius: '50%',
-              animation: 'spin 1s linear infinite'
-            }}
-          />
-          <span style={{ fontSize: '13px', fontWeight: 'bold', letterSpacing: '0.5px' }}>
-            Đang Đồng Bộ Luồng 60 FPS...
-          </span>
-          <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
-        </div>
       )}
 
       {/* 📌 THẺ GHIM SẢN PHẨM TIKTOK SHOP TRÊN WINDOW CAPTURE 4K */}

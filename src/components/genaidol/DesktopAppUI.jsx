@@ -7172,6 +7172,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               videoPlaybackEvent: 'play',
               isPlaying: true
             }, socketRef.current);
+            if (typeof window !== 'undefined') {
+              window.dispatchEvent(new CustomEvent('avalive:quick_response_video', {
+                detail: { quickResponseVideo: videoData }
+              }));
+              try {
+                const bc = new BroadcastChannel('avalive_master_live_stream');
+                bc.postMessage({ type: 'QUICK_RESPONSE_VIDEO', quickResponseVideo: videoData, timestamp: Date.now() });
+                bc.close();
+              } catch (e) {}
+            }
           }
         }}
         onStopLiveVideo={() => {
@@ -7185,6 +7195,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             videoPlaybackEvent: 'play',
             isPlaying: true
           }, socketRef.current);
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('avalive:quick_response_video', {
+              detail: { quickResponseVideo: null }
+            }));
+            try {
+              const bc = new BroadcastChannel('avalive_master_live_stream');
+              bc.postMessage({ type: 'QUICK_RESPONSE_VIDEO', quickResponseVideo: null, timestamp: Date.now() });
+              bc.close();
+            } catch (e) {}
+          }
         }}
         activeQuickVideo={quickResponseActiveVideo}
         showToast={showToast}

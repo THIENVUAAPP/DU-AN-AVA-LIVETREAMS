@@ -203,6 +203,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   const [activeSpeakerId, setActiveSpeakerId] = useState(null);
   const [isSpeakerActive, setIsSpeakerActive] = useState(false);
 
+  // ⚡ Video sự kiện và video lớp trên cùng (Topmost Priority Layers)
+  const [activeEventVideo, setActiveEventVideo] = useState(null);
+  const [lipSyncVideoUrl, setLipSyncVideoUrl] = useState(null);
+  const [quickResponseVideo, setQuickResponseVideo] = useState(null);
+
   // 📌 SẢN PHẨM ĐANG GHIM THEO THỜI GIAN THỰC (ĐỒNG BỘ CHO OBS & TIKTOK LIVE STUDIO)
   const [pinnedProduct, setPinnedProduct] = useState(() => {
     try {
@@ -212,6 +217,49 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       return null;
     }
   });
+
+  useEffect(() => {
+    const handlePinnedProductUpdate = (e) => {
+      if (e?.detail?.product) {
+        setPinnedProduct(e.detail.product);
+      }
+    };
+    const handleEventVideoTrigger = (e) => {
+      if (e?.detail?.videoUrl) {
+        setActiveEventVideo({
+          url: e.detail.videoUrl,
+          name: e.detail.name || 'Event Video',
+          eventType: e.detail.eventType
+        });
+      } else {
+        setActiveEventVideo(null);
+      }
+    };
+    const handleLipSyncTrigger = (e) => {
+      if (e?.detail?.videoUrl) {
+        setLipSyncVideoUrl(e.detail.videoUrl);
+      } else {
+        setLipSyncVideoUrl(null);
+      }
+    };
+    const handleQuickResponse = (e) => {
+      if (e?.detail?.quickResponseVideo?.url) {
+        setQuickResponseVideo(e.detail.quickResponseVideo);
+      } else {
+        setQuickResponseVideo(null);
+      }
+    };
+
+    window.addEventListener('avalive:event_video_trigger', handleEventVideoTrigger);
+    window.addEventListener('avalive:lipsync_video_trigger', handleLipSyncTrigger);
+    window.addEventListener('avalive:quick_response_video', handleQuickResponse);
+
+    return () => {
+      window.removeEventListener('avalive:event_video_trigger', handleEventVideoTrigger);
+      window.removeEventListener('avalive:lipsync_video_trigger', handleLipSyncTrigger);
+      window.removeEventListener('avalive:quick_response_video', handleQuickResponse);
+    };
+  }, []);
 
   useEffect(() => {
     const handlePinnedProductUpdate = (e) => {
@@ -1216,6 +1264,28 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       socket.on('STUDIO_CAM_FRAME', (frameData) => {
         if (frameData) updateStudioFrame(frameData);
       });
+
+      socket.on('EVENT_VIDEO_PLAY', (data) => {
+        if (!data) return;
+        const evUrl = data.videoUrl || data.mediaUrl;
+        if (evUrl) {
+          setActiveEventVideo({
+            url: evUrl,
+            name: data.name || 'Event Video',
+            eventType: data.eventType
+          });
+        }
+      });
+
+      socket.on('LIP_SYNC_VIDEO', (data) => {
+        if (!data) return;
+        setLipSyncVideoUrl(data.lipSyncVideoUrl || null);
+      });
+
+      socket.on('QUICK_RESPONSE_VIDEO', (data) => {
+        if (!data) return;
+        setQuickResponseVideo(data.quickResponseVideo || null);
+      });
     } catch (err) {
       console.warn('Socket.io note:', err);
     }
@@ -1468,8 +1538,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 setIsPlayingState(true);
               }
             } else if (event.data.type === 'EVENT_VIDEO_PLAY') {
-              const { videoUrl, muteSourceVideo, name } = event.data;
+              const { videoUrl, muteSourceVideo, name, eventType } = event.data;
               if (videoUrl) {
+                setActiveEventVideo({
+                  url: videoUrl,
+                  name: name || 'Event Video',
+                  eventType: eventType
+                });
                 try {
                   localStorage.removeItem('avalive_user_paused');
                   localStorage.removeItem('avalive_window_capture_paused');
@@ -1502,6 +1577,19 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   v.play().catch(() => {});
                 }
                 setIsPlayingState(true);
+              }
+            } else if (event.data.type === 'LIP_SYNC_VIDEO' || event.data.lipSyncVideoUrl !== undefined) {
+              setLipSyncVideoUrl(event.data.lipSyncVideoUrl || null);
+            } else if (event.data.type === 'QUICK_RESPONSE_VIDEO' || event.data.quickResponseVideo !== undefined) {
+              setQuickResponseVideo(event.data.quickResponseVideo || null);
+            } else if (event.data.eventVideoUrl || (event.data.type === 'EVENT_VIDEO_TRIGGER' && event.data.videoUrl)) {
+              const evUrl = event.data.eventVideoUrl || event.data.videoUrl;
+              if (evUrl) {
+                setActiveEventVideo({
+                  url: evUrl,
+                  name: event.data.name || 'Event Video',
+                  eventType: event.data.eventType
+                });
               }
             } else if (event.data.type === 'MASTER_LIVE_STATE_UPDATE' || event.data.stage) {
               applyMasterState(event.data);
@@ -2443,11 +2531,86 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           className="relative flex items-center justify-center overflow-hidden w-full h-full"
           style={{ width: '100%', height: '100%' }}
         >
-          {/* SÂN KHẤU 1: LIVE AI IDOL (HỖ TRỢ 1 AVATAR HOẶC MULTI-AVATAR STUDIO 2–4 NHÂN VẬT) */}
-          {currentStage === 'idol' && (
-            <div className="w-full h-full absolute inset-0 flex items-center justify-center overflow-hidden bg-black">
-            {/* MULTI-AVATAR STUDIO CANVAS (2-4 CHARACTERS) */}
-            {multiAvatarConfig?.enabled && multiAvatarConfig?.activeCount >= 2 && Array.isArray(multiAvatarConfig?.avatars) && multiAvatarConfig.avatars.some(a => a.talkVideo || a.idleVideo || a.videoUrl) ? (() => {
+          {/* ⚡ 1. TOPMOST LAYER: VIDEO PHẢN HỒI NHANH KHẨN CẤP */}
+          {quickResponseVideo?.url ? (
+            <video
+              key={`quick_${quickResponseVideo.url}`}
+              src={quickResponseVideo.url}
+              autoPlay
+              playsInline
+              webkit-playsinline="true"
+              loop={Boolean(quickResponseVideo.loop)}
+              muted={isVideoAudioMuted || quickResponseVideo.muted}
+              preload="auto"
+              onEnded={() => {
+                if (!quickResponseVideo.loop) setQuickResponseVideo(null);
+              }}
+              onError={() => setQuickResponseVideo(null)}
+              className="w-full h-full object-cover bg-black"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: objectFitState || 'cover',
+                display: 'block',
+                transform: 'translate3d(0, 0, 0)',
+                WebkitTransform: 'translate3d(0, 0, 0)',
+                imageRendering: '-webkit-optimize-contrast'
+              }}
+            />
+          ) : activeEventVideo?.url ? (
+            /* ⚡ 2. TOPMOST LAYER: VIDEO SỰ KIỆN 14 TAB (QUÀ TẶNG, CHÀO MỪNG, CHECKOUT...) */
+            <video
+              key={`event_${activeEventVideo.url}`}
+              src={activeEventVideo.url}
+              autoPlay
+              playsInline
+              webkit-playsinline="true"
+              loop={false}
+              muted={isVideoAudioMuted}
+              preload="auto"
+              onEnded={() => setActiveEventVideo(null)}
+              onError={() => setActiveEventVideo(null)}
+              className="w-full h-full object-cover bg-black"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: objectFitState || 'cover',
+                display: 'block',
+                transform: 'translate3d(0, 0, 0)',
+                WebkitTransform: 'translate3d(0, 0, 0)',
+                imageRendering: '-webkit-optimize-contrast'
+              }}
+            />
+          ) : lipSyncVideoUrl ? (
+            /* ⚡ 3. TOPMOST LAYER: VIDEO NHÉP MIỆNG LIPSYNC VOICE AI */
+            <video
+              key={`lipsync_${lipSyncVideoUrl}`}
+              src={lipSyncVideoUrl}
+              autoPlay
+              playsInline
+              webkit-playsinline="true"
+              loop
+              muted={isVideoAudioMuted}
+              preload="auto"
+              onError={() => setLipSyncVideoUrl(null)}
+              className="w-full h-full object-cover bg-black"
+              style={{
+                width: '100%',
+                height: '100%',
+                objectFit: objectFitState || 'cover',
+                display: 'block',
+                transform: 'translate3d(0, 0, 0)',
+                WebkitTransform: 'translate3d(0, 0, 0)',
+                imageRendering: '-webkit-optimize-contrast'
+              }}
+            />
+          ) : (
+            <>
+              {/* SÂN KHẤU 1: LIVE AI IDOL (HỖ TRỢ 1 AVATAR HOẶC MULTI-AVATAR STUDIO 2–4 NHÂN VẬT) */}
+              {currentStage === 'idol' && (
+                <div className="w-full h-full absolute inset-0 flex items-center justify-center overflow-hidden bg-black">
+                {/* MULTI-AVATAR STUDIO CANVAS (2-4 CHARACTERS) */}
+                {multiAvatarConfig?.enabled && multiAvatarConfig?.activeCount >= 2 && Array.isArray(multiAvatarConfig?.avatars) && multiAvatarConfig.avatars.some(a => a.talkVideo || a.idleVideo || a.videoUrl) ? (() => {
               const activeList = (multiAvatarConfig.avatars || [])
                 .filter(a => a.enabled)
                 .slice(0, multiAvatarConfig.activeCount);
@@ -3033,6 +3196,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             )}
           </div>
         )}
+            </>
+          )}
         {/* OVERLAY SẢN PHẨM ĐANG GHIM TỰ ĐỘNG BỞI AI (CHUẨN TIKTOK SHOP shop.tiktok.com / LIVESTREAM STUDIO) */}
         {pinnedProduct && (
           <div className="absolute bottom-6 left-6 z-50 pointer-events-auto max-w-[360px] transition-all transform animate-bounce-subtle">
