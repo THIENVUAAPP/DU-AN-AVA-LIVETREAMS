@@ -287,7 +287,7 @@ if (fs.existsSync(cachedNodeExe)) {
 
 if (fs.existsSync(winZipFilePath)) fs.unlinkSync(winZipFilePath);
 try {
-  execSync(`cd "${winStaging}" && zip -q -r -y "${winZipFilePath}" . -x "*.DS_Store" -x "*__MACOSX*" -x "*.tmp" -x "Thumbs.db"`);
+  execSync(`cd "${winStaging}" && zip -9 -q -r -y "${winZipFilePath}" . -x "*.DS_Store" -x "*__MACOSX*" -x "*.tmp" -x "Thumbs.db"`);
 } catch (err) {
   if (!fs.existsSync(winZipFilePath) || fs.statSync(winZipFilePath).size < 1024 * 1024) {
     throw err;
@@ -439,7 +439,7 @@ fs.writeFileSync(path.join(macStaging, 'HUONG_DAN_SU_DUNG.txt'), huongDanContent
 
 if (fs.existsSync(macZipFilePath)) fs.unlinkSync(macZipFilePath);
 try {
-  execSync(`cd "${macStaging}" && zip -q -r -y "${macZipFilePath}" . -x "*.DS_Store" -x "*__MACOSX*" -x "*.tmp" -x "Thumbs.db"`);
+  execSync(`cd "${macStaging}" && zip -9 -q -r -y "${macZipFilePath}" . -x "*.DS_Store" -x "*__MACOSX*" -x "*.tmp" -x "Thumbs.db"`);
 } catch (err) {
   if (!fs.existsSync(macZipFilePath) || fs.statSync(macZipFilePath).size < 1024 * 1024) {
     throw err;

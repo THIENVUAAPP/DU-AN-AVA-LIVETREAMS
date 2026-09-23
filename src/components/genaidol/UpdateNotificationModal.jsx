@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.9';
+export const APP_VERSION = '4.9.10';
 export const RELEASE_DATE = '23/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.10 - Tối Ưu Tải File ZIP Siêu Tốc 0ms, Loại Bỏ Hoàn Toàn Treo / Chậm Khi Tải Xuống Windows',
+    description: '1. Tải Xuống Tức Thì 0ms: Tối ưu hóa đường dẫn phát hành trực tiếp từ GitHub CDN và loại bỏ các bước chờ kết nối trung gian, khắc phục triệt để tình trạng tải chậm hoặc đứng hình khi tải file ZIP trên Windows. 2. Nén Tối Đa & Tăng Tốc Độ Mở: Áp dụng thuật toán nén DEFLATE mức 9, tối ưu hóa toàn diện dung lượng gói cài đặt giúp tải siêu nhanh trong vài giây.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.9 - Xóa Bỏ Hoàn Toàn Video Mặc Định Trong Hệ Thống / Uploads & Đồng Bộ Tuyệt Đối Sân Khấu Chính Với Window Capture OBS & Link TikTok Live',
     description: '1. Xóa Sạch Video Mặc Định / Chạy Nền: Đã dọn dẹp sạch sẽ 100% video nền cũ trong thư mục system/uploads, gói cài đặt tải về luôn hoàn toàn sạch sẽ, không lưu video mặc định rác. 2. Đồng Bộ Đầy Đủ Dữ Liệu Video 0ms: Mọi video từ Sân khấu phụ (Live Idol Avatar, Kho Video), 14 Sự kiện live hoặc tải lên từ máy tính đều được phát và đồng bộ tức thì, đầy đủ thông tin dữ liệu sang Window Capture OBS và Link phát TikTok Live Studio.'

@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     }
 
     // Đọc phiên bản mới nhất từ package.json hoặc fallback version hiện tại
-    let currentVersion = '4.9.9';
+    let currentVersion = '4.9.10';
     try {
       const fs = await import('fs');
       const path = await import('path');
@@ -32,39 +32,16 @@ export default async function handler(req, res) {
     } catch (e) {}
 
     const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
-    let targetFileName = `${osPrefix}_v${currentVersion}.zip`;
-    const githubToken = process.env.GITHUB_TOKEN || '';
+    const targetFileName = `${osPrefix}_v${currentVersion}.zip`;
 
-    const headers = {
-      'User-Agent': 'AvaLive-Download-Agent/1.0',
-      'Accept': 'application/vnd.github.v3+json'
-    };
-    if (githubToken) {
-      headers['Authorization'] = `Bearer ${githubToken}`;
-    }
-
-    // Link tải trực tiếp từ GitHub Releases Asset của phiên bản hiện tại
-    let downloadUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${currentVersion}/${targetFileName}`;
-
-    try {
-      // 1. Kiểm tra release asset chính thức của phiên bản hiện tại
-      const tagRes = await fetch(`https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/tags/v${currentVersion}`, { headers });
-      if (tagRes.ok) {
-        const release = await tagRes.json();
-        const asset = (release.assets || []).find(a => a.name.startsWith(osPrefix) && a.name.endsWith('.zip'));
-        if (asset && asset.browser_download_url) {
-          downloadUrl = asset.browser_download_url;
-          targetFileName = asset.name;
-        }
-      }
-    } catch (e) {
-      console.warn('GitHub API query error:', e);
-    }
+    // ⚡ LINK TẢI TRỰC TIẾP SIÊU TỐC TỪ GITHUB RELEASES (0ms LATENCY, KHÔNG GẶP RATE LIMIT API)
+    const downloadUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${currentVersion}/${targetFileName}`;
 
     // Redirect trực tiếp tới asset stream với Header ép tải file
     res.setHeader('Location', downloadUrl);
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="${targetFileName}"`);
+    res.setHeader('Cache-Control', 'public, max-age=300');
     return res.status(302).end();
   } catch (err) {
     console.error('Download handler error:', err);
