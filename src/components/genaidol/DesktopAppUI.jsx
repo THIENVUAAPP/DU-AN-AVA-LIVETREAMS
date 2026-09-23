@@ -102,7 +102,6 @@ export default function DesktopAppUI() {
       localStorage.setItem('aidol_is_script_live_running', 'false');
       localStorage.setItem('avalive_master_live_running', 'false');
       if (typeof window !== 'undefined') window.__isScriptLiveRunning = false;
-      setIsMasterStageSynced(false);
     } catch(e) {}
   }, []);
 

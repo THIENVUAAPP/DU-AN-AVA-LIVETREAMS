@@ -160,18 +160,29 @@ const hasOverlayParam =
   pathname.includes('/idol') || 
   pathname.includes('/studio');
 
-const isLocalHost = hostname === 'localhost' || hostname === '127.0.0.1' || hostname.includes('127.0.0.1.nip.io') || hostname.startsWith('192.168.');
+const isLocalHost = 
+  hostname === 'localhost' || 
+  hostname === '127.0.0.1' || 
+  hostname === '0.0.0.0' || 
+  hostname === '[::1]' || 
+  hostname.includes('127.0.0.1.nip.io') || 
+  hostname.startsWith('192.168.') || 
+  hostname.startsWith('10.') || 
+  hostname.startsWith('172.');
 
 const isDesktopMode = 
   !hasOverlayParam && (
     isLocalHost ||
+    pathname === '/' ||
+    pathname === '' ||
     pathname === '/desktop' || 
     pathname.startsWith('/desktop') || 
     window.location.hash.includes('desktop') || 
     searchParams.get('mode') === 'desktop' ||
     window.location.port === '5173' ||
     window.location.port === '3000' ||
-    window.location.port === '3001'
+    window.location.port === '3001' ||
+    window.location.protocol === 'file:'
   );
 
 ReactDOM.createRoot(document.getElementById('root')).render(
