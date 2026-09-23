@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     }
 
     // Đọc phiên bản mới nhất từ package.json hoặc fallback version hiện tại
-    let currentVersion = '4.8.3';
+    let currentVersion = '4.8.4';
     try {
       const fs = await import('fs');
       const path = await import('path');
@@ -43,11 +43,11 @@ export default async function handler(req, res) {
       headers['Authorization'] = `Bearer ${githubToken}`;
     }
 
-    // Link tải trực tiếp mặc định theo phiên bản mới nhất
-    let downloadUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${currentVersion}/${targetFileName}`;
+    // Link tải trực tiếp từ GitHub Repository raw release zip (luôn chứa bản mới nhất)
+    let downloadUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/raw/main/release_zips/${targetFileName}`;
 
     try {
-      // 1. Kiểm tra release của phiên bản hiện tại v1.3.7
+      // 1. Kiểm tra release asset chính thức của phiên bản hiện tại
       const tagRes = await fetch(`https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/tags/v${currentVersion}`, { headers });
       if (tagRes.ok) {
         const release = await tagRes.json();
@@ -55,20 +55,6 @@ export default async function handler(req, res) {
         if (asset && asset.browser_download_url) {
           downloadUrl = asset.browser_download_url;
           targetFileName = asset.name;
-        }
-      } else {
-        // 2. Dự phòng: Tự động quét danh sách releases để lấy bản phát hành MỚI NHẤT có file zip tương ứng
-        const allRelRes = await fetch(`https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases?per_page=10`, { headers });
-        if (allRelRes.ok) {
-          const releases = await allRelRes.json();
-          for (const rel of releases) {
-            const asset = (rel.assets || []).find(a => a.name.startsWith(osPrefix) && a.name.endsWith('.zip'));
-            if (asset && asset.browser_download_url) {
-              downloadUrl = asset.browser_download_url;
-              targetFileName = asset.name;
-              break;
-            }
-          }
         }
       }
     } catch (e) {
