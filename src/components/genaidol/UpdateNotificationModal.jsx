@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.5';
+export const APP_VERSION = '4.9.6';
 export const RELEASE_DATE = '23/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.6 - Khởi Động Trực Tiếp Phần Mềm Phát Live Khi Giải Nén & Tự Động Định Tuyến Chuẩn Xác',
+    description: '1. Khởi Động Trực Tiếp Phần Mềm: Giải nén gói cài đặt Windows và Mac mở trực tiếp 100% giao diện Phần Mềm AvaLive Studio phát live (DesktopAppUI), tự động liên kết Sân khấu, Voice AI và các công cụ Livestream. 2. Định Tuyến Thông Minh: Tên miền website trực tuyến luôn hiển thị Trang Bán Hàng (Landing Page), trong khi gói cài đặt giải nén trên máy luôn mở Phần Mềm đầy đủ.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.5 - Khôi Phục Trang Bán Hàng Landing Page, Triệt Tiêu Video Phát Ẩn & Tối Ưu Truyền Video Sân Khấu Phụ Sang OBS / Link Live',
     description: '1. Khôi Phục Trang Bán Hàng (Landing Page): Truy cập website hiển thị đầy đủ giao diện Trang Chủ Bán Hàng & Giới thiệu tính năng, song song với giao diện Desktop App /desktop. 2. Triệt Tiêu Video Phát Ẩn: Tắt hoàn toàn âm thanh preview ngầm và giải phóng tài nguyên phát ẩn. 3. Sửa Lỗi Đen Màn Hình Window Capture OBS: Đồng bộ video từ sân khấu phụ sang sân khấu chính tức thì 0ms, hiển thị 60 FPS mượt mà không lỗi.'

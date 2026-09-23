@@ -172,6 +172,7 @@ const isLocalHost =
 
 const isDesktopMode = 
   !hasOverlayParam && (
+    isLocalHost ||
     pathname === '/desktop' || 
     pathname.startsWith('/desktop') || 
     window.location.hash.includes('desktop') || 

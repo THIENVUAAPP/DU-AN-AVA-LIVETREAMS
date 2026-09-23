@@ -126,7 +126,7 @@ start "" /B "%NODE_BIN%" core.cjs > server_log.txt 2>&1
 cd /d "%~dp0"
 
 :: 3. Cho server san sang tren cong 3001 (Polling kiem tra san sang)
-set "URL=http://localhost:3001/"
+set "URL=http://localhost:3001/desktop"
 set /a attempts=0
 
 :WAIT_LOOP
@@ -337,7 +337,7 @@ done
 
 # 5. Theo dõi máy chủ sẵn sàng và tự động mở trình duyệt
 (
-    APP_URL="http://127.0.0.1:3001"
+    APP_URL="http://127.0.0.1:3001/desktop"
     for i in {1..40}; do
         if curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:3001" 2>/dev/null | grep -qE "200|304|302|301"; then
             echo "✨ Máy chủ đã sẵn sàng! Đang mở giao diện điều khiển..."

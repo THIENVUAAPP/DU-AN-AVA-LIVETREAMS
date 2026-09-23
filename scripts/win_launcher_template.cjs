@@ -53,7 +53,7 @@ const child = spawn(nodeBin, ['core.cjs'], {
 child.unref();
 
 // 4. Kiểm tra cổng 3001 phản hồi HTTP trước khi mở giao diện (Tránh tuyệt đối lỗi ERR_CONNECTION_REFUSED)
-const targetUrl = 'http://localhost:3001/';
+const targetUrl = 'http://localhost:3001/desktop';
 
 function openBrowser() {
   const edge = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
