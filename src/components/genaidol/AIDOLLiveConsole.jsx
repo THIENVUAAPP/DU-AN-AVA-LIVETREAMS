@@ -411,16 +411,36 @@ export default function AIDOLLiveConsole() {
   const handlePlayFromKho = async (item) => {
     let playUrl = item.mediaUrl;
 
+    if (item.fileBlob && typeof window !== 'undefined') {
+      try {
+        window.__activeMediaBlob = item.fileBlob;
+        window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+        if (item.id) window.__activeMediaBlobMap.set(item.id, item.fileBlob);
+        if (item.mediaUrl) window.__activeMediaBlobMap.set(item.mediaUrl, item.fileBlob);
+        if (playUrl) window.__activeMediaBlobMap.set(playUrl, item.fileBlob);
+        window.__activeMediaBlobMap.set('latest', item.fileBlob);
+      } catch (e) {}
+    }
+
     // Nếu mediaUrl là blob, tự động nạp fast-stream lên server để TikTok Studio phát được ngay
     if (playUrl && playUrl.startsWith('blob:') && item.fileBlob) {
-      try {
-        const res = await fastStreamUpload(item.fileBlob);
+      fastStreamUpload(item.fileBlob).then((res) => {
         if (res && res.fileUrl) {
           playUrl = res.fileUrl;
           item.mediaUrl = playUrl;
           addLiveMedia(item).catch(() => {});
+          syncMasterLiveState({
+            stage: 'idol',
+            mediaUrl: playUrl,
+            isVideo: item.type === 'video',
+            characterName: item.name,
+            videoPlaybackEvent: 'play',
+            isPlaying: true,
+            videoCurrentTime: 0,
+            updatedAt: Date.now()
+          });
         }
-      } catch (err) {}
+      }).catch(() => {});
     }
 
     setActiveVideoItem(item);
@@ -459,8 +479,11 @@ export default function AIDOLLiveConsole() {
         bc.postMessage({
           type: 'GLOBAL_MEDIA_CHANGE',
           mediaUrl: playUrl,
-          fileBlob: item?.fileData || null,
+          fileBlob: item?.fileBlob || item?.fileData || null,
+          blobUrl: playUrl,
           characterName: item?.name || 'AI Idol',
+          characterId: item?.id,
+          isVideo: item.type === 'video',
           action: 'play',
           isPlaying: true,
           currentTime: 0,

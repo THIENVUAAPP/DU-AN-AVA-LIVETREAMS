@@ -38,7 +38,7 @@ export default function WindowCapturePlayer() {
     if (typeof window === 'undefined') return '';
     const params = new URLSearchParams(window.location.search);
     const v = params.get('v');
-    if (v && !v.startsWith('blob:') && !v.startsWith('data:')) return v;
+    if (v && !v.startsWith('data:')) return v;
 
     const charParam = params.get('char');
 
@@ -391,7 +391,7 @@ export default function WindowCapturePlayer() {
       if (streamAttached) return;
 
       // 3. Fallback lấy URL từ param ?v=
-      if (vParam && !vParam.startsWith('blob:')) {
+      if (vParam) {
         const serverUrl = resolveUrl(vParam);
         if (serverUrl) {
           isHardwareLocalBlobRef.current = false;
@@ -586,7 +586,20 @@ export default function WindowCapturePlayer() {
 
         // ⚡ Đồng bộ video sự kiện 14 Tab & Event Triggers
         if (msg.type === 'EVENT_VIDEO_PLAY' || msg.type === 'EVENT_VIDEO_TRIGGER' || msg.eventVideoUrl || (msg.eventType && msg.videoUrl)) {
-          const evUrl = resolveUrl(msg.eventVideoUrl || msg.videoUrl);
+          let evUrl = '';
+          if (msg.fileBlob && (msg.fileBlob instanceof Blob || msg.fileBlob instanceof File)) {
+            try {
+              if (activeBlobUrlRef.current) {
+                try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
+              }
+              evUrl = URL.createObjectURL(msg.fileBlob);
+              activeBlobUrlRef.current = evUrl;
+              isHardwareLocalBlobRef.current = true;
+            } catch (e) {}
+          }
+          if (!evUrl) {
+            evUrl = resolveUrl(msg.eventVideoUrl || msg.videoUrl || msg.mediaUrl);
+          }
           if (evUrl) {
             setActiveEventVideo({
               url: evUrl,
@@ -603,6 +616,7 @@ export default function WindowCapturePlayer() {
             }
             setVideoSrc(evUrl);
             setIsVideoLoading(false);
+            setIsPlaybackActive(true);
             if (msg.name || msg.eventType) {
               setLiveEventNotice({
                 type: msg.eventType,

@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.7';
+export const APP_VERSION = '4.9.8';
 export const RELEASE_DATE = '23/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.8 - Đồng Bộ Video Tức Thì 0ms (60 FPS) Cho Window Capture OBS & Link TikTok Live Studio (Sân Khấu Phụ & 14 Sự Kiện Live)',
+    description: '1. Khắc Phục Triệt Để Màn Hình Đen & Quay Tròn: Video phát từ Sân khấu phụ (Live Idol Avatar, Kho Video) và 14 Sự kiện phát live được nạp tức thì 0ms, phát mượt mà 60 FPS chuẩn xác trên cả Window Capture OBS và Đường link liên kết TikTok Live Studio giống như video tải trực tiếp từ máy tính. 2. Đồng Bộ Đa Kênh Tức Thì: Truyền tải mượt mà cả File Blob trong bộ nhớ RAM và đường dẫn máy chủ cố định, triệt tiêu hoàn toàn độ trễ.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.7 - Khắc Phục Triệt Để Màn Hình Đen Window Capture & Link Live, Đồng Bộ 100% Sân Khấu Chính & 14 Sự Kiện Live',
     description: '1. Sửa Triệt Để Màn Hình Đen: Đồng bộ video phát từ Sân khấu phụ (Live Idol Avatar, Kho Video, 14 Sự kiện live) sang Sân khấu chính, Window Capture OBS và Đường link liên kết 0ms chuẩn 60 FPS, không còn tình trạng đen màn hình. 2. Xóa Bỏ Video Lưu Ẩn: Triệt tiêu hoàn toàn các video cache mặc định, Window Capture và Link stream chỉ phát 100% chính xác những gì đang hiển thị trên Sân khấu chính.'

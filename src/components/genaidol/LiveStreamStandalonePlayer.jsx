@@ -22,7 +22,7 @@ export default function LiveStreamStandalonePlayer() {
     if (typeof window === 'undefined') return '';
     const params = new URLSearchParams(window.location.search);
     const v = params.get('v');
-    if (v && !v.startsWith('blob:')) return v;
+    if (v) return v;
 
     const charParam = params.get('char');
 
@@ -411,7 +411,7 @@ export default function LiveStreamStandalonePlayer() {
 
       socket.on('VIDEO_PLAYBACK_CONTROL', (control) => {
         // Tự động nhận video mới tức thì 0ms
-        if (control.mediaUrl && !control.mediaUrl.startsWith('blob:') && !isSameMedia(videoSrc, control.mediaUrl)) {
+        if (control.mediaUrl && !isSameMedia(videoSrc, control.mediaUrl)) {
           setVideoSrc(control.mediaUrl);
         }
         if (control.action === 'play' || control.isPlaying === true) {
@@ -435,6 +435,16 @@ export default function LiveStreamStandalonePlayer() {
             applyTimeSync(ev.data.currentTime, Boolean(ev.data.force));
           } else if (ev.data.type === 'PIN_PRODUCT_UPDATE' && ev.data.product) {
             setPinnedProduct(ev.data.product);
+          } else if (ev.data.type === 'EVENT_VIDEO_PLAY' || ev.data.type === 'EVENT_VIDEO_TRIGGER' || ev.data.eventVideoUrl) {
+            const evUrl = ev.data.eventVideoUrl || ev.data.videoUrl || ev.data.mediaUrl;
+            if (evUrl) {
+              setVideoSrc(evUrl);
+              setIsVideoLoading(false);
+              if (videoRef.current) {
+                videoRef.current.src = resolveUrl(evUrl);
+                tryPlayWithSound();
+              }
+            }
           } else if (ev.data.type === 'GLOBAL_MEDIA_CHANGE' || ev.data.type === 'MASTER_MEDIA_CHANGE') {
             if (ev.data.overlayImage || ev.data.overlayText || ev.data.secondaryMediaUrl) {
               setFlowSequencerOverlay({
@@ -462,20 +472,35 @@ export default function LiveStreamStandalonePlayer() {
                 isHardwareLocalBlobRef.current = true;
                 setVideoSrc(bUrl);
                 setIsVideoLoading(false);
+                if (videoRef.current) {
+                  videoRef.current.src = bUrl;
+                  tryPlayWithSound();
+                }
               } catch (e) {}
             } else if (ev.data.blobUrl && String(ev.data.blobUrl).startsWith('blob:')) {
               isHardwareLocalBlobRef.current = true;
               setVideoSrc(ev.data.blobUrl);
               setIsVideoLoading(false);
+              if (videoRef.current) {
+                videoRef.current.src = ev.data.blobUrl;
+                tryPlayWithSound();
+              }
             } else {
               const localBlob = await tryLoadFromLocalDB(ev.data.characterId || ev.data.mediaUrl);
               if (localBlob) {
                 isHardwareLocalBlobRef.current = true;
                 setVideoSrc(localBlob);
                 setIsVideoLoading(false);
-              } else if (ev.data.mediaUrl && !ev.data.mediaUrl.startsWith('blob:')) {
-                if (!isHardwareLocalBlobRef.current) {
-                  setVideoSrc(ev.data.mediaUrl);
+                if (videoRef.current) {
+                  videoRef.current.src = localBlob;
+                  tryPlayWithSound();
+                }
+              } else if (ev.data.mediaUrl) {
+                setVideoSrc(ev.data.mediaUrl);
+                setIsVideoLoading(false);
+                if (videoRef.current) {
+                  videoRef.current.src = resolveUrl(ev.data.mediaUrl);
+                  tryPlayWithSound();
                 }
               }
             }

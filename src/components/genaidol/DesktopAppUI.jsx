@@ -1117,8 +1117,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       serverActiveUrl = serverActiveUrl.substring(serverActiveUrl.indexOf('/uploads/'));
     }
 
-    // ⚡ CHUẨN HOÁ BROADCAST URL: Tuyệt đối ưu tiên server URL (/uploads/...) để mọi trình duyệt (Chrome, Safari, Cốc Cốc, OBS, TikTok Live Studio) đều mở được 100%
-    const broadcastUrl = serverActiveUrl || (activeUrl && !activeUrl.startsWith('blob:') ? activeUrl : '') || '';
+    // ⚡ CHUẨN HOÁ BROADCAST URL: Tuyệt đối ưu tiên server URL (/uploads/...), fallback activeUrl / userLockedMediaUrl
+    const broadcastUrl = serverActiveUrl || activeUrl || userLockedMediaUrl || '';
 
     try {
       localStorage.removeItem('avalive_user_paused');
@@ -3018,6 +3018,19 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       const targetUrl = playUrl || item?.mediaUrl || item?.url;
       if (!targetUrl) return;
 
+      const rawBlob = item?.fileBlob || item?.fileData || null;
+      if (rawBlob && typeof window !== 'undefined') {
+        try {
+          window.__activeMediaBlob = rawBlob;
+          window.__activeMediaBlobUrl = targetUrl;
+          window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+          if (item?.id) window.__activeMediaBlobMap.set(item.id, rawBlob);
+          if (item?.mediaUrl) window.__activeMediaBlobMap.set(item.mediaUrl, rawBlob);
+          window.__activeMediaBlobMap.set(targetUrl, rawBlob);
+          window.__activeMediaBlobMap.set('latest', rawBlob);
+        } catch (_) {}
+      }
+
       const playItem = item || {
         id: `substage_vid_${Date.now()}`,
         name: item?.name || 'Sân Khấu Phụ',
@@ -3061,8 +3074,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         bc.postMessage({
           type: 'GLOBAL_MEDIA_CHANGE',
           mediaUrl: targetUrl,
-          fileBlob: item?.fileData || null,
+          blobUrl: targetUrl,
+          fileBlob: rawBlob,
+          characterId: item?.id || 'substage',
           characterName: item?.name || 'AI Idol',
+          isVideo: true,
           action: 'play',
           isPlaying: true,
           currentTime: currentTime || 0,
@@ -3070,11 +3086,40 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         });
         setTimeout(() => bc.close(), 100);
       } catch (err) {}
+
+      // Tự động tải lên server ngầm trong background nếu chưa có link server
+      if (rawBlob && targetUrl.startsWith('blob:')) {
+        fastStreamUpload(rawBlob).then(res => {
+          if (res && res.fileUrl) {
+            syncMasterLiveState({
+              stage: 'idol',
+              mediaUrl: res.fileUrl,
+              isVideo: true,
+              characterName: item?.name || 'AI Idol',
+              videoPlaybackEvent: 'play',
+              isPlaying: true,
+              videoCurrentTime: currentTime || 0,
+              updatedAt: Date.now()
+            }, socketRef.current);
+          }
+        }).catch(() => {});
+      }
     };
 
     const handleEventVideoTrigger = (e) => {
-      const { videoUrl, name, eventType, eventKey, isPreRecorded, muteSourceVideo } = e.detail || {};
+      const { videoUrl, name, eventType, eventKey, isPreRecorded, muteSourceVideo, fileBlob } = e.detail || {};
       if (!videoUrl) return;
+
+      const rawBlob = fileBlob || null;
+      if (rawBlob && typeof window !== 'undefined') {
+        try {
+          window.__activeMediaBlob = rawBlob;
+          window.__activeMediaBlobUrl = videoUrl;
+          window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+          window.__activeMediaBlobMap.set(videoUrl, rawBlob);
+          window.__activeMediaBlobMap.set('latest', rawBlob);
+        } catch (_) {}
+      }
 
       const eventItem = {
         id: `event_vid_${eventKey || eventType || 'custom'}_${Date.now()}`,
@@ -3119,13 +3164,36 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           type: 'EVENT_VIDEO_PLAY',
           eventVideoUrl: videoUrl,
           videoUrl: videoUrl,
+          mediaUrl: videoUrl,
+          blobUrl: videoUrl,
+          fileBlob: rawBlob,
           name: name || `${eventType || 'Live'} Video`,
           eventType: eventType || 'event',
           muteSourceVideo: muteSourceVideo,
+          isPlaying: true,
+          currentTime: 0,
           timestamp: Date.now()
         });
         setTimeout(() => bc.close(), 100);
       } catch (err) {}
+
+      if (rawBlob && videoUrl.startsWith('blob:')) {
+        fastStreamUpload(rawBlob).then(res => {
+          if (res && res.fileUrl) {
+            syncMasterLiveState({
+              stage: 'idol',
+              mediaUrl: res.fileUrl,
+              eventVideoUrl: res.fileUrl,
+              characterName: name || `${eventType || 'Live'} Video`,
+              isVideo: true,
+              videoPlaybackEvent: 'play',
+              isPlaying: true,
+              videoCurrentTime: 0,
+              updatedAt: Date.now()
+            }, socketRef.current);
+          }
+        }).catch(() => {});
+      }
     };
 
     const handleMasterStateChange = (e) => {
