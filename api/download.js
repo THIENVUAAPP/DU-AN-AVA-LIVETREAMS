@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     }
 
     // Đọc phiên bản mới nhất từ package.json hoặc fallback version hiện tại
-    let currentVersion = '4.8.4';
+    let currentVersion = '4.8.5';
     try {
       const fs = await import('fs');
       const path = await import('path');
@@ -43,8 +43,8 @@ export default async function handler(req, res) {
       headers['Authorization'] = `Bearer ${githubToken}`;
     }
 
-    // Link tải trực tiếp từ GitHub Repository raw release zip (luôn chứa bản mới nhất)
-    let downloadUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/raw/main/release_zips/${targetFileName}`;
+    // Link tải trực tiếp từ GitHub Releases Asset của phiên bản hiện tại
+    let downloadUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${currentVersion}/${targetFileName}`;
 
     try {
       // 1. Kiểm tra release asset chính thức của phiên bản hiện tại

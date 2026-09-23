@@ -2,17 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.8.4';
+export const APP_VERSION = '4.8.5';
 export const RELEASE_DATE = '23/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v4.8.4 - Đồng Bộ & Tải Trực Tiếp Gói Cài Đặt Mới Nhất Cho Windows & Mac',
-    description: '1. Cập Nhật Chuẩn Xác Gói Cài Đặt Mới Nhất: Mọi luồng tải về trên Website, Vercel và Server Backend luôn phân giải và phục vụ trực tiếp file ZIP phiên bản v4.8.4 mới nhất cho Windows và macOS. 2. Loại Bỏ Hoàn Toàn Lỗi Tải Phiên Bản Cũ: Cố định luồng phân giải trực tiếp từ GitHub Repository raw release zip, tuyệt đối không bị tải nhầm bản cũ.'
+    title: '🚀 Bản Cập Nhật v4.8.5 - Tải Trực Tiếp File ZIP Về Máy Tính 100%, Không Mở Trang Web GitHub',
+    description: '1. Tải Trực Tiếp 100%: Khắc phục triệt để hiện tượng mở trang github.com khi bấm tải về. Hệ thống kích hoạt trực tiếp luồng tải file ZIP v4.8.5 về máy tính Windows và macOS. 2. Phát Hành Đồng Bộ GitHub Releases: Tự động gắn release asset chính thức cho phiên bản mới nhất v4.8.5.'
   },
   {
-    title: '⚡ Bản Cập Nhật v4.8.3 - Khóa Chặt 1 Voice Duy Nhất Cho Kịch Bản & Khắc Phục Triệt Để Âm Thanh',
-    description: '1. Khóa Chặt Đúng 1 Voice Cho Mọi Câu Kịch Bản: Khi người dùng chọn bất kỳ giọng nào trong dropdown (ví dụ: Live Queen, Hoài My...), hệ thống áp dụng đúng 1 giọng duy nhất đó xuyên suốt 100% kịch bản, không ghép hay xáo trộn giọng khác. 2. Mở Khóa Tuyệt Đối Hệ Thống Âm Thanh (Synchronous Unlock): Khắc phục triệt để hiện tượng im lặng khi duyệt kịch bản dài, bảo đảm bấm phát là cất tiếng đọc ngay lập tức 0ms từ đầu đến cuối.'
+    title: '🚀 Bản Cập Nhật v4.8.4 - Đồng Bộ & Tải Trực Tiếp Gói Cài Đặt Mới Nhất Cho Windows & Mac',
+    description: '1. Cập Nhật Chuẩn Xác Gói Cài Đặt Mới Nhất: Mọi luồng tải về trên Website, Vercel và Server Backend luôn phân giải và phục vụ trực tiếp file ZIP phiên bản v4.8.4 mới nhất cho Windows và macOS. 2. Loại Bỏ Hoàn Toàn Lỗi Tải Phiên Bản Cũ: Cố định luồng phân giải trực tiếp từ GitHub Repository raw release zip, tuyệt đối không bị tải nhầm bản cũ.'
   }
 ];
 
