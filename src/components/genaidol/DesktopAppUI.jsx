@@ -628,52 +628,6 @@ export default function DesktopAppUI() {
       }
     };
 
-    const handleEventVideoTrigger = (e) => {
-      const { videoUrl, name, eventType, isPreRecorded, muteSourceVideo } = e.detail || {};
-      if (videoUrl) {
-        const item = {
-          id: `ev_${Date.now()}`,
-          name: name || `${eventType} Video`,
-          mediaUrl: videoUrl,
-          url: videoUrl,
-          type: 'video'
-        };
-        setActiveVideoItem(item);
-        setUserLockedMediaUrl(videoUrl);
-        try {
-          localStorage.setItem('avalive_user_locked_media', videoUrl);
-          localStorage.setItem('avalive_active_video_src', videoUrl);
-        } catch (err) {}
-        if (desktopVideoRef.current) {
-          desktopVideoRef.current.src = videoUrl;
-          desktopVideoRef.current.currentTime = 0;
-          desktopVideoRef.current.muted = muteSourceVideo === true;
-          desktopVideoRef.current.volume = 1.0;
-          desktopVideoRef.current.play().catch(err => console.log('Event video playback error:', err));
-        }
-        syncMasterLiveState({
-          stage: 'idol',
-          mediaUrl: videoUrl,
-          characterName: name || `${eventType} Video`,
-          isVideo: true,
-          videoPlaybackEvent: 'play',
-          isPlaying: true
-        }, socketRef.current);
-
-        try {
-          const bc = new BroadcastChannel('avalive_master_live_stream');
-          bc.postMessage({
-            type: 'EVENT_VIDEO_PLAY',
-            videoUrl: videoUrl,
-            name: name || `${eventType} Video`,
-            eventType: eventType,
-            muteSourceVideo: muteSourceVideo,
-            timestamp: Date.now()
-          });
-          setTimeout(() => bc.close(), 100);
-        } catch (err) {}
-      }
-    };
 
 
     // 🔌 KHI NGƯỜI DÙNG BẤM TẮT ĐỒNG BỘ TỪ SÂN KHẤU PHỤ → XÓA SÂN KHẤU CHÍNH
@@ -735,7 +689,6 @@ export default function DesktopAppUI() {
     window.addEventListener('avalive_active_speaker_changed', handleSpeakerChange);
     window.addEventListener('avalive_speaker_change', handleSpeakerChange);
     window.addEventListener('avalive:master_sync_state_changed', handleMasterSyncChange);
-    window.addEventListener('avalive:event_video_trigger', handleEventVideoTrigger);
     window.addEventListener('avalive:idle_video_updated', handleIdleVideoUpdate);
     window.addEventListener('avalive:sequencer_sync_disconnected', handleSequencerSyncDisconnected);
     window.addEventListener('avalive:sequencer_undo_redo', handleSequencerUndoRedo);
@@ -744,7 +697,6 @@ export default function DesktopAppUI() {
       window.removeEventListener('avalive_active_speaker_changed', handleSpeakerChange);
       window.removeEventListener('avalive_speaker_change', handleSpeakerChange);
       window.removeEventListener('avalive:master_sync_state_changed', handleMasterSyncChange);
-      window.removeEventListener('avalive:event_video_trigger', handleEventVideoTrigger);
       window.removeEventListener('avalive:idle_video_updated', handleIdleVideoUpdate);
       window.removeEventListener('avalive:sequencer_sync_disconnected', handleSequencerSyncDisconnected);
       window.removeEventListener('avalive:sequencer_undo_redo', handleSequencerUndoRedo);

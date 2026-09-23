@@ -40,6 +40,18 @@ if (fs.existsSync(macZipFilePath)) fs.unlinkSync(macZipFilePath);
 const distDir = path.join(rootDir, 'dist');
 if (fs.existsSync(distDir)) fs.rmSync(distDir, { recursive: true, force: true });
 
+// 🛡️ Dọn dẹp sạch sẽ thư mục uploads để file ZIP giải nén không chứa bất kỳ video chạy nền nào
+['backend/uploads', 'uploads'].forEach(d => {
+  const uploadPath = path.join(rootDir, d);
+  if (fs.existsSync(uploadPath)) {
+    fs.readdirSync(uploadPath).forEach(f => {
+      if (f !== '.gitkeep') {
+        try { fs.unlinkSync(path.join(uploadPath, f)); } catch(e) {}
+      }
+    });
+  }
+});
+
 // 1. Biên dịch Vite Frontend
 console.log('\n[1/4] Đang biên dịch Frontend (Vite Production Build)...');
 try {

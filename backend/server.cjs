@@ -1952,7 +1952,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.8';
+  let ver = '4.9.9';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -1990,7 +1990,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.8';
+  let ver = '4.9.9';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -2182,13 +2182,11 @@ let currentMasterLiveState = savedState || {
 };
 
 // Tuyệt đối không tự ý gán video phát nền ngầm hoặc blob tạm thời
-if (!currentMasterLiveState.mediaUrl || currentMasterLiveState.mediaUrl.startsWith('blob:') || currentMasterLiveState.mediaUrl.includes('default_idol.mp4')) {
-  currentMasterLiveState.mediaUrl = getLatestUploadMediaUrl();
-}
-
-// 🎬 TỰ ĐỘNG KHÔI PHỤC VIDEO GẦN NHẤT CỦA NGƯỜI DÙNG:
-if (!currentMasterLiveState.mediaUrl || !fs.existsSync(path.join(uploadsDir, path.basename(currentMasterLiveState.mediaUrl)))) {
-  currentMasterLiveState.mediaUrl = getLatestUploadMediaUrl();
+if (currentMasterLiveState.mediaUrl) {
+  const fileOnDisk = findFileInUploadDirs(currentMasterLiveState.mediaUrl);
+  if (!fileOnDisk || !fs.existsSync(fileOnDisk)) {
+    currentMasterLiveState.mediaUrl = getLatestUploadMediaUrl() || null;
+  }
 }
 if (currentMasterLiveState.mediaUrl) {
   currentMasterLiveState.isVideo = true;
@@ -2198,8 +2196,12 @@ if (currentMasterLiveState.mediaUrl) {
   console.log(`[AutoRestore] 🎬 Đã khôi phục video gần nhất của người dùng: ${currentMasterLiveState.mediaUrl}`);
   saveLiveStateToFile();
 } else {
-  currentMasterLiveState.isPlaying = true;
-  currentMasterLiveState.videoPlaybackEvent = 'play';
+  currentMasterLiveState.mediaUrl = null;
+  currentMasterLiveState.isVideo = false;
+  currentMasterLiveState.isPlaying = false;
+  currentMasterLiveState.videoPlaybackEvent = 'pause';
+  currentMasterLiveState.isUserExplicitMediaLocked = false;
+  saveLiveStateToFile();
 }
 let currentBandoGameState = null;
 let currentBattleGameState = null;

@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.8';
+export const APP_VERSION = '4.9.9';
 export const RELEASE_DATE = '23/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.9 - Xóa Bỏ Hoàn Toàn Video Mặc Định Trong Hệ Thống / Uploads & Đồng Bộ Tuyệt Đối Sân Khấu Chính Với Window Capture OBS & Link TikTok Live',
+    description: '1. Xóa Sạch Video Mặc Định / Chạy Nền: Đã dọn dẹp sạch sẽ 100% video nền cũ trong thư mục system/uploads, gói cài đặt tải về luôn hoàn toàn sạch sẽ, không lưu video mặc định rác. 2. Đồng Bộ Đầy Đủ Dữ Liệu Video 0ms: Mọi video từ Sân khấu phụ (Live Idol Avatar, Kho Video), 14 Sự kiện live hoặc tải lên từ máy tính đều được phát và đồng bộ tức thì, đầy đủ thông tin dữ liệu sang Window Capture OBS và Link phát TikTok Live Studio.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.8 - Đồng Bộ Video Tức Thì 0ms (60 FPS) Cho Window Capture OBS & Link TikTok Live Studio (Sân Khấu Phụ & 14 Sự Kiện Live)',
     description: '1. Khắc Phục Triệt Để Màn Hình Đen & Quay Tròn: Video phát từ Sân khấu phụ (Live Idol Avatar, Kho Video) và 14 Sự kiện phát live được nạp tức thì 0ms, phát mượt mà 60 FPS chuẩn xác trên cả Window Capture OBS và Đường link liên kết TikTok Live Studio giống như video tải trực tiếp từ máy tính. 2. Đồng Bộ Đa Kênh Tức Thì: Truyền tải mượt mà cả File Blob trong bộ nhớ RAM và đường dẫn máy chủ cố định, triệt tiêu hoàn toàn độ trễ.'
