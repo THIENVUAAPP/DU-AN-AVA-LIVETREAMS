@@ -639,7 +639,7 @@ export default function WindowCapturePlayer() {
               }
               setVideoSrc(localBlob);
               setIsVideoLoading(false);
-            } else if (msg.mediaUrl && !msg.mediaUrl.startsWith('blob:')) {
+            } else if (msg.mediaUrl) {
               const resolved = resolveUrl(msg.mediaUrl);
               if (resolved && !isSameMedia(resolved, videoSrc)) {
                 isHardwareLocalBlobRef.current = false;
@@ -655,7 +655,7 @@ export default function WindowCapturePlayer() {
                   videoRef.current.play().catch(() => {});
                 }
                 setVideoSrc(resolved);
-                setIsVideoLoading(true);
+                setIsVideoLoading(false);
               }
             } else {
               attachOpenerDirectStream();

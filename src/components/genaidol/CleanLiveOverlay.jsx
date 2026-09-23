@@ -1002,7 +1002,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       // 🎬 ĐỒNG BỘ NẠP VIDEO & PHÁT LIỀN MẠCH 60 FPS
       const vid = overlayVideoRef.current || document.querySelector('video');
 
-      if (data.mediaUrl && typeof data.mediaUrl === 'string' && !data.mediaUrl.startsWith('blob:')) {
+      if (data.mediaUrl && typeof data.mediaUrl === 'string') {
         let cleanUrl = data.mediaUrl;
         if (cleanUrl.includes('/uploads/')) cleanUrl = cleanUrl.substring(cleanUrl.indexOf('/uploads/'));
         // CHỈ NẠP LẠI KHI THỰC SỰ LÀ FILE VIDEO KHÁC (TRÁNH BUFFER RESET GÂY ĐỨNG HÌNH & CHẬP CHỜN TIẾNG)
@@ -1081,7 +1081,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
         const next = { ...prev, ...data };
 
-        if (data.mediaUrl && typeof data.mediaUrl === 'string' && !data.mediaUrl.startsWith('blob:')) {
+        if (data.mediaUrl && typeof data.mediaUrl === 'string') {
           let cleanMedia = data.mediaUrl;
           if (cleanMedia.includes('/uploads/')) {
             cleanMedia = cleanMedia.substring(cleanMedia.indexOf('/uploads/'));
@@ -1689,7 +1689,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         bandoAudio.setMasterVolume(vol);
       } else if ((e.key === 'avalive_active_video_src' || e.key === 'avalive_user_locked_media') && e.newValue) {
         let newMedia = e.newValue;
-        if (newMedia && typeof newMedia === 'string' && !newMedia.startsWith('blob:')) {
+        if (newMedia && typeof newMedia === 'string') {
           setMasterState(prev => ({
             ...prev,
             mediaUrl: newMedia,

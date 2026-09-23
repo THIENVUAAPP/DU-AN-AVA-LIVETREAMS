@@ -179,6 +179,11 @@ export default function AIDOLLiveConsole() {
     return () => {
       window.removeEventListener('aidol_voice_sync_updated', handleVoiceSync);
       window.removeEventListener('ava_voice_config_updated', handleVoiceSync);
+      if (videoRef.current) {
+        try {
+          videoRef.current.pause();
+        } catch (e) {}
+      }
     };
   }, []);
 
@@ -629,6 +634,8 @@ export default function AIDOLLiveConsole() {
                   ref={videoRef} 
                   className="w-full h-full object-cover" 
                   autoPlay 
+                  muted={true}
+                  playsInline
                   loop={videoQueue.length <= 1} 
                   onEnded={handleVideoEnded}
                   src={activeVideoItem.mediaUrl}
@@ -655,7 +662,7 @@ export default function AIDOLLiveConsole() {
                     <Volume2 className="w-10 h-10 text-purple-400" />
                   </div>
                   <div className="text-xs font-bold text-white">{activeVideoItem.name}</div>
-                  <audio ref={videoRef} autoPlay loop={videoQueue.length <= 1} onEnded={handleVideoEnded} src={activeVideoItem.mediaUrl} className="w-full mt-3 px-4"/>
+                  <audio ref={videoRef} autoPlay muted={true} loop={videoQueue.length <= 1} onEnded={handleVideoEnded} src={activeVideoItem.mediaUrl} className="w-full mt-3 px-4"/>
                 </div>
               ) : (
                 <img src={activeVideoItem.mediaUrl} alt={activeVideoItem.name} className="w-full h-full object-cover"/>

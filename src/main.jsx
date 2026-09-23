@@ -172,16 +172,10 @@ const isLocalHost =
 
 const isDesktopMode = 
   !hasOverlayParam && (
-    isLocalHost ||
-    pathname === '/' ||
-    pathname === '' ||
     pathname === '/desktop' || 
     pathname.startsWith('/desktop') || 
     window.location.hash.includes('desktop') || 
     searchParams.get('mode') === 'desktop' ||
-    window.location.port === '5173' ||
-    window.location.port === '3000' ||
-    window.location.port === '3001' ||
     window.location.protocol === 'file:'
   );
 

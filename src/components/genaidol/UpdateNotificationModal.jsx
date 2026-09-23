@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.4';
+export const APP_VERSION = '4.9.5';
 export const RELEASE_DATE = '23/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.5 - Khôi Phục Trang Bán Hàng Landing Page, Triệt Tiêu Video Phát Ẩn & Tối Ưu Truyền Video Sân Khấu Phụ Sang OBS / Link Live',
+    description: '1. Khôi Phục Trang Bán Hàng (Landing Page): Truy cập website hiển thị đầy đủ giao diện Trang Chủ Bán Hàng & Giới thiệu tính năng, song song với giao diện Desktop App /desktop. 2. Triệt Tiêu Video Phát Ẩn: Tắt hoàn toàn âm thanh preview ngầm và giải phóng tài nguyên phát ẩn. 3. Sửa Lỗi Đen Màn Hình Window Capture OBS: Đồng bộ video từ sân khấu phụ sang sân khấu chính tức thì 0ms, hiển thị 60 FPS mượt mà không lỗi.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.4 - Tối Ưu Tốc Độ Xuất Hiện Video 0ms (60 FPS) & Ưu Tiên Lớp Trên Cùng (Topmost Layer) OBS & TikTok Live',
     description: '1. Tải Video Tức Thì 0ms (60 FPS): Loại bỏ hoàn toàn màn hình chờ xoay vòng, nạp và phát video ngay lập tức với khả năng tăng tốc phần cứng GPU cực nhanh. 2. Ưu Tiên Video Lớp Trên Cùng (Topmost Layer): Khi có nhiều video cùng lúc (14 Sự kiện Live, LipSync Voice AI, Phản hồi nhanh khẩn cấp), Window Capture OBS và đường link TikTok Live Studio luôn hiển thị full màn hình video ở lớp trên cùng tức thì.'
