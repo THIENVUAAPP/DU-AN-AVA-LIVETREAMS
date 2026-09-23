@@ -561,12 +561,12 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                       </span>
                     </div>
 
-                    {/* ĐƯỜNG LINK ONLINE HTTPS CLOUDFLARE 60 FPS (ĐƯỜNG LINK CHÍNH) */}
+                    {/* ĐƯỜNG LINK DUY NHẤT: ONLINE HTTPS 60 FPS CHO TIKTOK STUDIO & OBS */}
                     <div className="p-3.5 rounded-xl bg-gradient-to-br from-cyan-950/40 via-black to-blue-950/40 border-2 border-cyan-500/60 space-y-2.5 shadow-cyan-950/40 shadow-lg">
                       <div className="flex items-center justify-between text-[11px]">
                         <span className="font-black text-cyan-300 flex items-center gap-1.5">
                           <Wifi className="w-4 h-4 text-cyan-400 animate-pulse" />
-                          <span>👑 ĐƯỜNG LINK 1: ONLINE CLOUDFLARE 60 FPS (DÁN VÀO TIKTOK STUDIO):</span>
+                          <span>👑 ĐƯỜNG LINK DUY NHẤT: ONLINE HTTPS 60 FPS (DÁN VÀO TIKTOK STUDIO / OBS):</span>
                         </span>
                         <span className="text-[10px] font-black text-emerald-400 bg-emerald-500/20 border border-emerald-500/30 px-2.5 py-0.5 rounded-full">
                           {hasUrl ? '⚡ Chuẩn 100% TikTok' : '⏳ Đang Cấp Link...'}
@@ -630,37 +630,6 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
                           <span>Xem Thử</span>
                         </a>
                       </div>
-
-                      {/* ĐƯỜNG LINK DỰ PHÒNG CLOUD (VERCEL) */}
-                      {(() => {
-                        const fallbackCloudUrl = getProjectOverlayUrl(proj.path, true);
-                        const isCopiedFallback = copiedId === `${proj.id}_fallback`;
-                        return (
-                          <div className="pt-2 border-t border-white/10 flex items-center gap-2">
-                            <span className="text-[10px] font-bold text-gray-400 shrink-0">🌐 Link Dự Phòng Cloud:</span>
-                            <input
-                              type="text"
-                              readOnly
-                              value={fallbackCloudUrl}
-                              onClick={(e) => {
-                                e.target.select();
-                                handleCopy(fallbackCloudUrl, `${proj.id}_fallback`);
-                              }}
-                              className="flex-1 px-2.5 py-1.5 rounded-lg border border-white/10 bg-black/70 text-[11px] font-mono text-gray-300 focus:outline-none select-all cursor-pointer"
-                              title="Nhấp để tự động chọn và sao chép link dự phòng"
-                            />
-                            <button
-                              onClick={() => handleCopy(fallbackCloudUrl, `${proj.id}_fallback`)}
-                              className={`px-2.5 py-1.5 rounded-lg font-bold text-[10px] transition-all cursor-pointer flex items-center gap-1 shrink-0 ${
-                                isCopiedFallback ? "bg-emerald-600 text-white" : "bg-white/10 hover:bg-white/20 text-gray-200 border border-white/20"
-                              }`}
-                            >
-                              {isCopiedFallback ? <Check className="w-3 h-3" /> : <Copy className="w-3 h-3" />}
-                              <span>{isCopiedFallback ? "ĐÃ CHÉP" : "CHÉP DỰ PHÒNG"}</span>
-                            </button>
-                          </div>
-                        );
-                      })()}
 
                       <p className="text-[10.5px] text-cyan-300/90 leading-tight">
                         <span>✨ <b>Tương thích 100% TikTok Live Studio:</b> Chạy trên Player siêu nhẹ độc lập, tự động khớp khung hình 1080x1920, phát mượt 60 FPS liên tục hàng giờ mà không bao giờ bị đứng hình hay ngắt quãng!</span>

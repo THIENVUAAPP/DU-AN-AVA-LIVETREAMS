@@ -164,3 +164,50 @@ export async function getActiveMedia(key = 'current_active') {
 
   return null;
 }
+
+/**
+ * ⚡ Xóa hoàn toàn một media khỏi bộ nhớ và session DB khi bị người dùng xóa
+ * @param {string} key
+ */
+export async function removeActiveMedia(key) {
+  if (key) {
+    memoryStore.delete(key);
+    if (typeof window !== 'undefined') {
+      window.__activeMediaBlobMap?.delete(key);
+      if (window.opener && window.opener.__activeMediaBlobMap) {
+        try { window.opener.__activeMediaBlobMap.delete(key); } catch (e) {}
+      }
+    }
+  }
+  try {
+    const db = await initSessionDB();
+    if (db && key) {
+      const tx = db.transaction([STORE_NAME], 'readwrite');
+      tx.objectStore(STORE_NAME).delete(key);
+    }
+  } catch (e) {}
+}
+
+/**
+ * ⚡ Xóa sạch 100% toàn bộ bộ nhớ đệm media (Tuyệt đối không để lại bất kỳ dư âm nào)
+ */
+export async function clearActiveMedia() {
+  memoryStore.clear();
+  if (typeof window !== 'undefined') {
+    window.__activeMediaBlob = null;
+    window.__activeMediaBlobMap?.clear();
+    if (window.opener) {
+      try {
+        window.opener.__activeMediaBlob = null;
+        window.opener.__activeMediaBlobMap?.clear();
+      } catch (e) {}
+    }
+  }
+  try {
+    const db = await initSessionDB();
+    if (db) {
+      const tx = db.transaction([STORE_NAME], 'readwrite');
+      tx.objectStore(STORE_NAME).clear();
+    }
+  } catch (e) {}
+}

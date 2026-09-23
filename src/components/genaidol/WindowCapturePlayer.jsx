@@ -663,20 +663,34 @@ export default function WindowCapturePlayer() {
           });
         }
 
-        // 🔌 CLEAR_STAGE: Xóa toàn bộ Sân Khấu Chính khi ngắt đồng bộ từ Sequencer
-        if (msg.type === 'CLEAR_STAGE') {
+        // 🔌 CLEAR_STAGE / clearMedia: Xóa sạch toàn bộ video khi người dùng xóa trên phần mềm chính
+        if (msg.type === 'CLEAR_STAGE' || msg.clearMedia || (msg.type === 'GLOBAL_MEDIA_CHANGE' && msg.mediaUrl === null)) {
           if (videoRef.current) {
-            videoRef.current.pause();
-            videoRef.current.src = '';
+            try {
+              videoRef.current.pause();
+              videoRef.current.removeAttribute('src');
+              videoRef.current.src = '';
+              videoRef.current.srcObject = null;
+              videoRef.current.load();
+            } catch (e) {}
           }
           setVideoSrc('');
           setActiveEventVideo(null);
           setCaptions('');
           setFlowSequencerOverlay(null);
+          setIsDirectStreamActive(false);
+          isDirectStreamActiveRef.current = false;
+          isHardwareLocalBlobRef.current = false;
+          setIsPlaybackActive(false);
+          setIsVideoLoading(false);
           if (activeBlobUrlRef.current) {
             try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
             activeBlobUrlRef.current = null;
           }
+          try {
+            localStorage.removeItem('avalive_active_video_src');
+            localStorage.removeItem('avalive_user_locked_media');
+          } catch (e) {}
         }
       };
     } catch (e) {}
@@ -734,7 +748,34 @@ export default function WindowCapturePlayer() {
             overlayTextTransform: state.overlayTextTransform || null
           });
         }
-        if (state.mediaUrl || state.selectedCharacter) {
+        if (state.clearMedia || state.mediaUrl === null) {
+          if (videoRef.current) {
+            try {
+              videoRef.current.pause();
+              videoRef.current.removeAttribute('src');
+              videoRef.current.src = '';
+              videoRef.current.srcObject = null;
+              videoRef.current.load();
+            } catch (e) {}
+          }
+          setVideoSrc('');
+          setActiveEventVideo(null);
+          setCaptions('');
+          setFlowSequencerOverlay(null);
+          setIsDirectStreamActive(false);
+          isDirectStreamActiveRef.current = false;
+          isHardwareLocalBlobRef.current = false;
+          setIsPlaybackActive(false);
+          setIsVideoLoading(false);
+          if (activeBlobUrlRef.current) {
+            try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
+            activeBlobUrlRef.current = null;
+          }
+          try {
+            localStorage.removeItem('avalive_active_video_src');
+            localStorage.removeItem('avalive_user_locked_media');
+          } catch (e) {}
+        } else if (state.mediaUrl || state.selectedCharacter) {
           if (state.selectedCharacter) {
             currentCharIdRef.current = state.selectedCharacter;
           }
@@ -1195,7 +1236,7 @@ export default function WindowCapturePlayer() {
             })}
           </div>
         );
-      })() : (
+      })() : (resolvedFinalSrc || isDirectStreamActive) ? (
         /* 🎬 SINGLE VIDEO (0MS DIRECT GPU CLONE & IN-MEMORY BLOB) */
         <video
           ref={videoRef}
@@ -1236,7 +1277,7 @@ export default function WindowCapturePlayer() {
                     : window.location.origin;
                   const res = await fetch(`${backendOrigin}/api/live-state`);
                   const data = await res.json();
-                  if (data && data.mediaUrl) {
+                  if (data && data.mediaUrl && !data.clearMedia) {
                     const serverUrl = resolveUrl(data.mediaUrl);
                     if (serverUrl && videoRef.current) {
                       isHardwareLocalBlobRef.current = false;
@@ -1267,6 +1308,18 @@ export default function WindowCapturePlayer() {
             willChange: 'transform'
           }}
         />
+      ) : (
+        <div style={{ position: 'absolute', inset: 0, display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', background: '#05070c', color: '#fff', textAlign: 'center', padding: '24px', userSelect: 'none' }}>
+          <div style={{ width: '64px', height: '64px', borderRadius: '18px', background: 'rgba(6, 182, 212, 0.15)', border: '1px solid rgba(6, 182, 212, 0.4)', display: 'flex', alignItems: 'center', justifyContent: 'center', fontSize: '28px', marginBottom: '12px' }}>
+            🎬
+          </div>
+          <div style={{ fontSize: '13px', fontWeight: '900', color: '#22d3ee', letterSpacing: '0.5px', textTransform: 'uppercase' }}>
+            WINDOW CAPTURE SẴN SÀNG (9:16)
+          </div>
+          <div style={{ fontSize: '11px', color: '#94a3b8', marginTop: '6px', maxWidth: '240px', lineHeight: '1.4' }}>
+            Đang chờ phát video từ phần mềm AvaLive...
+          </div>
+        </div>
       )}
 
       {/* 💬 OVERLAY PHỤ ĐỀ / CAPTIONS AI BRAIN & VOICE KỊCH BẢN */}

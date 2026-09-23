@@ -1247,7 +1247,31 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         masterChannel = new BroadcastChannel('avalive_master_live_stream');
         masterChannel.onmessage = (event) => {
           if (event.data) {
-            if (event.data.type === 'EMERGENCY_STOP_ALL') {
+            if (event.data.type === 'CLEAR_STAGE' || event.data.clearMedia || (event.data.type === 'GLOBAL_MEDIA_CHANGE' && event.data.mediaUrl === null)) {
+              if (overlayVideoRef.current) {
+                try {
+                  overlayVideoRef.current.pause();
+                  overlayVideoRef.current.removeAttribute('src');
+                  overlayVideoRef.current.src = '';
+                  overlayVideoRef.current.load();
+                } catch (e) {}
+              }
+              setActiveMedia({ url: '', isVideo: false, name: '' });
+              setMasterState(prev => ({
+                ...prev,
+                mediaUrl: null,
+                selectedCharacter: '',
+                isVideo: false,
+                isPlaying: false
+              }));
+              setIsPlayingState(false);
+              try {
+                localStorage.removeItem('avalive_active_video_src');
+                localStorage.removeItem('avalive_user_locked_media');
+                localStorage.removeItem('aidol_idle_media_url');
+              } catch (e) {}
+              return;
+            } else if (event.data.type === 'EMERGENCY_STOP_ALL') {
               if (typeof window !== 'undefined') {
                 window.dispatchEvent(new CustomEvent('avalive_emergency_stop_all'));
                 if (window.speechSynthesis) window.speechSynthesis.cancel();
