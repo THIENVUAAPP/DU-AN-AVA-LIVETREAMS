@@ -98,6 +98,12 @@ export function bootstrapDefaultPresets() {
   if (typeof window === 'undefined') return;
 
   try {
+    // 🛡️ Dọn dẹp cờ đồng bộ và trạng thái phát tự động cũ để khởi động sạch 100%
+    localStorage.removeItem('avalive_master_sync_active');
+    localStorage.removeItem('avalive_sequencer_overlay');
+    localStorage.setItem('aidol_is_script_live_running', 'false');
+    localStorage.setItem('avalive_master_live_running', 'false');
+
     // 1. Nạp Bộ Não AI mặc định nếu chưa có
     if (!localStorage.getItem('aidol_custom_brains')) {
       localStorage.setItem('aidol_custom_brains', JSON.stringify(DEFAULT_BRAIN_PACKS));

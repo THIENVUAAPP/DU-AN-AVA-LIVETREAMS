@@ -154,7 +154,7 @@ export default function LivestreamFlowSequencer() {
     try {
       return getMultiAvatarConfig();
     } catch (e) {
-      return { enabled: true, activeCount: 1, avatars: [] };
+      return { enabled: false, activeCount: 1, avatars: [] };
     }
   });
 
@@ -939,14 +939,23 @@ export default function LivestreamFlowSequencer() {
 
   // ▶️ BẮT ĐẦU CHẠY LIVE
   const handleStartFlow = () => {
-    const preset = activePresetRef.current || activePreset;
-    if (!preset || !preset.steps || preset.steps.length === 0) {
-      toast.error('Chưa có kịch bản hoặc phân đoạn nào để chạy!');
-      return;
+    try {
+      let preset = activePresetRef.current || activePreset;
+      if (!preset || !preset.steps || preset.steps.length === 0) {
+        if (DEFAULT_PRESETS && DEFAULT_PRESETS[0]?.steps?.length > 0) {
+          preset = DEFAULT_PRESETS[0];
+          setActivePresetId(preset.id);
+        } else {
+          toast.error('Chưa có kịch bản hoặc phân đoạn nào để chạy!');
+          return;
+        }
+      }
+      setIsPlayingFlow(true);
+      startStep(currentStepIndex, true);
+      toast.success(`🎬 Bắt đầu chạy kịch bản: ${preset.name || 'Mặc định'}`);
+    } catch (err) {
+      console.warn('[Sequencer] Error starting flow:', err);
     }
-    setIsPlayingFlow(true);
-    startStep(currentStepIndex, true);
-    toast.success(`🎬 Bắt đầu chạy kịch bản: ${preset.name}`);
   };
 
   // 📡 BẬT / TẮT ĐỒNG BỘ RA SÂN KHẤU CHÍNH (ẢNH 3 & ẢNH 4)

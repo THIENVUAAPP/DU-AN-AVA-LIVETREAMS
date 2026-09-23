@@ -95,6 +95,14 @@ export default function DesktopAppUI() {
       if (battleVoiceEngine?.stopAll) battleVoiceEngine.stopAll();
       if (battleCommentary?.stopAll) battleCommentary.stopAll();
       if (bandoAudio?.stopAll) bandoAudio.stopAll();
+      
+      // 🛡️ BẢO ĐẢM KHỞI ĐỘNG SẠCH SẼ 100%: Xóa cờ đồng bộ cũ từ các phiên trước, không tự động chạy
+      localStorage.removeItem('avalive_master_sync_active');
+      localStorage.removeItem('avalive_sequencer_overlay');
+      localStorage.setItem('aidol_is_script_live_running', 'false');
+      localStorage.setItem('avalive_master_live_running', 'false');
+      if (typeof window !== 'undefined') window.__isScriptLiveRunning = false;
+      setIsMasterStageSynced(false);
     } catch(e) {}
   }, []);
 
@@ -521,13 +529,7 @@ export default function DesktopAppUI() {
   const currentActiveVoiceName = currentActiveVoiceObj?.name || 'Hoài My 👑 (Nữ Chuẩn - Bắc)';
 
   // 👥 MULTI-AVATAR STUDIO (2–4 NHÂN VẬT) & MASTER STAGE SYNC
-  const [isMasterStageSynced, setIsMasterStageSynced] = useState(() => {
-    try {
-      return localStorage.getItem('avalive_master_sync_active') === 'true';
-    } catch (e) {
-      return false;
-    }
-  });
+  const [isMasterStageSynced, setIsMasterStageSynced] = useState(false);
 
   const [multiAvatarConfig, setMultiAvatarConfig] = useState(() => {
     try {
@@ -2358,30 +2360,42 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
   // Nút Bật/Tắt Video trên màn hình phần mềm: độc lập 100%, dùng để xem thử / kiểm tra video
   const toggleDesktopVideoPlayback = useCallback(() => {
-    const vid = desktopVideoRef.current;
-    if (isVideoPlaying) {
-      if (vid) {
-        vid.pause();
-        vid.dataset.userPaused = 'true';
-      }
-      setIsVideoPlaying(false);
-      showToast('⏸️ Đã tạm dừng video xem thử trên phần mềm', 'info');
-    } else {
-      if (vid) {
-        vid.dataset.userPaused = 'false';
-        if (isLocalSpeakerMuted) {
-          vid.muted = true;
-        } else {
-          vid.muted = false;
-          vid.volume = liveVolume;
+    try {
+      const vid = desktopVideoRef.current;
+      if (isVideoPlaying) {
+        if (vid) {
+          try {
+            vid.pause();
+            vid.dataset.userPaused = 'true';
+          } catch (e) {}
         }
-        vid.play().catch(() => {
-          vid.muted = true;
-          vid.play().catch(() => {});
-        });
+        setIsVideoPlaying(false);
+        showToast('⏸️ Đã tạm dừng video xem thử trên phần mềm', 'info');
+      } else {
+        if (vid && vid.src) {
+          vid.dataset.userPaused = 'false';
+          if (isLocalSpeakerMuted) {
+            vid.muted = true;
+          } else {
+            vid.muted = false;
+            vid.volume = liveVolume;
+          }
+          const playPromise = vid.play();
+          if (playPromise !== undefined) {
+            playPromise.catch((err) => {
+              console.warn('[VideoPlayback] Caught play error, retrying muted:', err);
+              try {
+                vid.muted = true;
+                vid.play().catch(() => {});
+              } catch (e) {}
+            });
+          }
+        }
+        setIsVideoPlaying(true);
+        showToast('▶️ Đang tiếp tục phát video xem thử trên phần mềm', 'success');
       }
-      setIsVideoPlaying(true);
-      showToast('▶️ Đang tiếp tục phát video xem thử trên phần mềm', 'success');
+    } catch (err) {
+      console.warn('[VideoPlayback] Error toggling video:', err);
     }
   }, [isVideoPlaying, isLocalSpeakerMuted, liveVolume]);
 

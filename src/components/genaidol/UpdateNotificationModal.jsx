@@ -2,17 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.8.8';
+export const APP_VERSION = '4.8.9';
 export const RELEASE_DATE = '23/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v4.8.8 - Xóa Sạch 100% Video & Dữ Liệu Khi Xóa Trên Phần Mềm, Loại Bỏ Link Dự Phòng (Chỉ Sử Dụng 1 Link Chính Duy Nhất)',
-    description: '1. Xóa Sạch 100% Dữ Liệu Video: Khi người dùng xóa video khỏi sân khấu hoặc danh sách nhân vật, hệ thống lập tức xóa sạch triệt để toàn bộ bộ nhớ đệm, IndexedDB, ActiveMediaStore và luồng phát realtime, tuyệt đối không để lại bất kỳ dư âm nào. 2. Loại Bỏ Link Dự Phòng: Chuẩn hóa chỉ sử dụng duy nhất một đường link Live Online HTTPS 60 FPS chính thức, đảm bảo luồng phát mượt mà, không giật lag và không bị chồng chéo dữ liệu.'
+    title: '🚀 Bản Cập Nhật v4.8.9 - Khởi Động Sạch 100% (Standby Chuẩn), Khắc Phục Triệt Để Lỗi Tự Bật Live AI Idol / Đồng Bộ & Nâng Cấp Nút Phát Mượt Mà',
+    description: '1. Khởi Động Sạch 100% (Clean Standby): Khi mở phần mềm, hệ thống ở trạng thái giao diện chờ chuẩn hóa, tuyệt đối không tự ý bật chế độ đồng bộ kịch bản, Multi-Avatar Studio hay tự chạy khi chưa có thao tác từ người dùng. 2. Nâng Cấp Nút Phát & Điều Khiển Mượt Mà: Xử lý an toàn toàn bộ luồng phát video, kịch bản idol và âm thanh AI, loại bỏ triệt để mọi lỗi khi bấm phát, đảm bảo chuyển cảnh và phát mượt mà 60 FPS.'
   },
   {
-    title: '🚀 Bản Cập Nhật v4.8.7 - Liên Kết Toàn Diện Multi-Avatar (1–4 Nhân Vật), 14 Tab Sự Kiện, AI Brain Với Window Capture OBS & TikTok Live Studio',
-    description: '1. Liên Kết Window Capture OBS & Live Studio: Kết nối 100% đồng bộ giữa Sân Khấu Chính phần mềm, Cửa Sổ Bắt Hình Window Capture và Đường Link Live TikTok với đầy đủ Multi-Avatar Studio 1–4 nhân vật (phông nền, chroma key, hiệu ứng phát sáng khi nói), 3D Game Bản Đồ 63 Tỉnh Thành, Game Chiến Đấu PK và Phụ đề/Captions AI Brain theo thời gian thực. 2. Đồng Bộ 14 Tab Sự Kiện: Tự động kích hoạt phát video sự kiện, thông báo nổi và hành động tương ứng trên toàn bộ các kênh phát live.'
+    title: '🚀 Bản Cập Nhật v4.8.8 - Xóa Sạch 100% Video & Dữ Liệu Khi Xóa Trên Phần Mềm, Loại Bỏ Link Dự Phòng (Chỉ Sử Dụng 1 Link Chính Duy Nhất)',
+    description: '1. Xóa Sạch 100% Dữ Liệu Video: Khi người dùng xóa video khỏi sân khấu hoặc danh sách nhân vật, hệ thống lập tức xóa sạch triệt để toàn bộ bộ nhớ đệm, IndexedDB, ActiveMediaStore và luồng phát realtime, tuyệt đối không để lại bất kỳ dư âm nào. 2. Loại Bỏ Link Dự Phòng: Chuẩn hóa chỉ sử dụng duy nhất một đường link Live Online HTTPS 60 FPS chính thức, đảm bảo luồng phát mượt mà, không giật lag và không bị chồng chéo dữ liệu.'
   }
 ];
 
