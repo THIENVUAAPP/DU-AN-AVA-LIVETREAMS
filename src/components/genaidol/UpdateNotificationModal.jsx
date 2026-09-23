@@ -2,17 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.8.9';
+export const APP_VERSION = '4.9.0';
 export const RELEASE_DATE = '23/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v4.8.9 - Khởi Động Sạch 100% (Standby Chuẩn), Khắc Phục Triệt Để Lỗi Tự Bật Live AI Idol / Đồng Bộ & Nâng Cấp Nút Phát Mượt Mà',
-    description: '1. Khởi Động Sạch 100% (Clean Standby): Khi mở phần mềm, hệ thống ở trạng thái giao diện chờ chuẩn hóa, tuyệt đối không tự ý bật chế độ đồng bộ kịch bản, Multi-Avatar Studio hay tự chạy khi chưa có thao tác từ người dùng. 2. Nâng Cấp Nút Phát & Điều Khiển Mượt Mà: Xử lý an toàn toàn bộ luồng phát video, kịch bản idol và âm thanh AI, loại bỏ triệt để mọi lỗi khi bấm phát, đảm bảo chuyển cảnh và phát mượt mà 60 FPS.'
+    title: '🚀 Bản Cập Nhật v4.9.0 - Tối Ưu Xóa Video Ô Nhân Vật Siêu Mượt 60 FPS (Không Báo Lỗi), Đồng Bộ Chuẩn Xác Toàn Diện Windows & Mac',
+    description: '1. Xóa Video Nhân Vật Siêu Mượt (100% Không Lỗi): Xử lý chuyển đổi trạng thái an toàn tuyệt đối khi người dùng xóa video tại các ô nhân vật. Tự động chuyển mượt mà sang nhân vật kế tiếp hoặc dọn sạch sân khấu về trạng thái chờ nguyên bản mà không phát sinh bất kỳ lỗi nào. 2. Đồng Bộ Hóa Toàn Diện Windows & Mac: Toàn bộ dữ liệu mã nguồn, logic xử lý media và gói cài đặt độc lập được đồng bộ hóa chuẩn xác, tối ưu hóa dung lượng và hiệu năng.'
   },
   {
-    title: '🚀 Bản Cập Nhật v4.8.8 - Xóa Sạch 100% Video & Dữ Liệu Khi Xóa Trên Phần Mềm, Loại Bỏ Link Dự Phòng (Chỉ Sử Dụng 1 Link Chính Duy Nhất)',
-    description: '1. Xóa Sạch 100% Dữ Liệu Video: Khi người dùng xóa video khỏi sân khấu hoặc danh sách nhân vật, hệ thống lập tức xóa sạch triệt để toàn bộ bộ nhớ đệm, IndexedDB, ActiveMediaStore và luồng phát realtime, tuyệt đối không để lại bất kỳ dư âm nào. 2. Loại Bỏ Link Dự Phòng: Chuẩn hóa chỉ sử dụng duy nhất một đường link Live Online HTTPS 60 FPS chính thức, đảm bảo luồng phát mượt mà, không giật lag và không bị chồng chéo dữ liệu.'
+    title: '🚀 Bản Cập Nhật v4.8.9 - Khởi Động Sạch 100% (Standby Chuẩn), Khắc Phục Triệt Để Lỗi Tự Bật Live AI Idol / Đồng Bộ & Nâng Cấp Nút Phát Mượt Mà',
+    description: '1. Khởi Động Sạch 100% (Clean Standby): Khi mở phần mềm, hệ thống ở trạng thái giao diện chờ chuẩn hóa, tuyệt đối không tự ý bật chế độ đồng bộ kịch bản, Multi-Avatar Studio hay tự chạy khi chưa có thao tác từ người dùng. 2. Nâng Cấp Nút Phát & Điều Khiển Mượt Mà: Xử lý an toàn toàn bộ luồng phát video, kịch bản idol và âm thanh AI, loại bỏ triệt để mọi lỗi khi bấm phát, đảm bảo chuyển cảnh và phát mượt mà 60 FPS.'
   }
 ];
 
