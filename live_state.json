@@ -3,12 +3,13 @@
   "aspectRatio": "9:16",
   "characterId": "linhanh_4k",
   "characterName": "AvaLive VIP PRO",
-  "mediaUrl": null,
+  "mediaUrl": "/uploads/media-1790088604171-826069524.mp4",
   "isVideo": true,
   "videoPlaybackEvent": "play",
   "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
   "updatedAt": 1789482470075,
-  "tunnelUrl": "https://more-inspired-computer-bench.trycloudflare.com"
+  "tunnelUrl": "https://more-inspired-computer-bench.trycloudflare.com",
+  "isUserExplicitMediaLocked": true
 }

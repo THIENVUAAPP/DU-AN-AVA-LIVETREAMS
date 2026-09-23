@@ -2,17 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.8.5';
+export const APP_VERSION = '4.8.6';
 export const RELEASE_DATE = '23/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v4.8.5 - Tải Trực Tiếp File ZIP Về Máy Tính 100%, Không Mở Trang Web GitHub',
-    description: '1. Tải Trực Tiếp 100%: Khắc phục triệt để hiện tượng mở trang github.com khi bấm tải về. Hệ thống kích hoạt trực tiếp luồng tải file ZIP v4.8.5 về máy tính Windows và macOS. 2. Phát Hành Đồng Bộ GitHub Releases: Tự động gắn release asset chính thức cho phiên bản mới nhất v4.8.5.'
+    title: '🚀 Bản Cập Nhật v4.8.6 - Đóng Gói Tươi Mới 100% Toàn Bộ Tính Năng & Mã Nguồn Vào File ZIP',
+    description: '1. Đóng Gói Toàn Diện (Full Bundle Rebuild): Biên dịch tươi mới 100% toàn bộ giao diện Frontend, Idol Studio, Kịch bản Voice, Game Battle, Game 3D, Window Capture, Quick Response và Backend Core vào gói ZIP cài đặt Windows & Mac. 2. Đồng Bộ Tính Năng: Đảm bảo máy tính Windows và Mac khi giải nén chạy độc lập có đầy đủ 100% tính năng mới nhất.'
   },
   {
-    title: '🚀 Bản Cập Nhật v4.8.4 - Đồng Bộ & Tải Trực Tiếp Gói Cài Đặt Mới Nhất Cho Windows & Mac',
-    description: '1. Cập Nhật Chuẩn Xác Gói Cài Đặt Mới Nhất: Mọi luồng tải về trên Website, Vercel và Server Backend luôn phân giải và phục vụ trực tiếp file ZIP phiên bản v4.8.4 mới nhất cho Windows và macOS. 2. Loại Bỏ Hoàn Toàn Lỗi Tải Phiên Bản Cũ: Cố định luồng phân giải trực tiếp từ GitHub Repository raw release zip, tuyệt đối không bị tải nhầm bản cũ.'
+    title: '🚀 Bản Cập Nhật v4.8.5 - Tải Trực Tiếp File ZIP Về Máy Tính 100%, Không Mở Trang Web GitHub',
+    description: '1. Tải Trực Tiếp 100%: Khắc phục triệt để hiện tượng mở trang github.com khi bấm tải về. Hệ thống kích hoạt trực tiếp luồng tải file ZIP v4.8.5 về máy tính Windows và macOS. 2. Phát Hành Đồng Bộ GitHub Releases: Tự động gắn release asset chính thức cho phiên bản mới nhất v4.8.5.'
   }
 ];
 
