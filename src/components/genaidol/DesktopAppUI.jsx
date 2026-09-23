@@ -7,7 +7,7 @@ import {
   Brain, Radio, Coins, AlertTriangle, Eye, Clock, List, Zap, AlertCircle, FileText, CheckSquare, CheckCircle, Layers,
   Gift, ShoppingBag, ShoppingCart, Sparkles, RotateCcw, Send, Trash2, Heart, Share2, UserPlus, Users, Swords, Shield, Gamepad2, Flag, MapPin,
   Smartphone, MonitorPlay, Monitor, Globe, StopCircle, Power, Volume2, VolumeX, Volume1, Music, Tv,
-  User, LogOut, Mail, Lock, Check
+  User, LogOut, Mail, Lock, Check, Upload
 } from 'lucide-react';
 import { supabase, syncUserToSupabase } from '../../lib/supabaseClient';
 import flvjs from 'flv.js';
