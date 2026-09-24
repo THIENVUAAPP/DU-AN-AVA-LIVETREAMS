@@ -3300,16 +3300,21 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       const customUrl = localStorage.getItem('aidol_backend_url') || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BACKEND_URL);
       if (customUrl && customUrl.startsWith('http')) {
         backendUrl = customUrl;
-      } else if (window.location.port === '5173') {
+      } else if (window.location.port === '5173' || window.location.port === '3000') {
+        // Dev server: backend luôn chạy cổng 3001 local
         backendUrl = window.location.protocol + '//' + window.location.hostname + ':3001';
       } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         backendUrl = 'http://localhost:3001';
       } else if (window.location.protocol === 'file:') {
         backendUrl = 'http://localhost:3001'; // Fallback for double-clicking index.html
+      } else {
+        // ⚡ Chạy qua Cloudflare tunnel, Vercel, hoặc HTTPS bất kỳ
+        // Backend luôn là localhost:3001 (chạy local) — KHÔNG connect tới tunnel URL vì không có WebSocket backend ở đó
+        backendUrl = 'http://localhost:3001';
       }
     }
     
-    const socket = io(backendUrl || (window.location.origin !== 'file://' ? window.location.origin : 'http://localhost:3001'), {
+    const socket = io(backendUrl || 'http://localhost:3001', {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000

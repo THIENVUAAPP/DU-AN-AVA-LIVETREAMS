@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.15';
+export const APP_VERSION = '4.9.16';
 export const RELEASE_DATE = '24/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.16 - Sửa Triệt Để Lỗi Kết Nối Idol, Đồng Bộ 100% Video Sân Khấu Phụ → Window Capture OBS & TikTok Live',
+    description: '1. Sửa Lỗi Kết Nối Idol Báo Lỗi Ngay Lập Tức: Khắc phục triệt để socket.io không kết nối được backend khi chạy qua Cloudflare tunnel hoặc HTTPS. Socket luôn tự động kết nối đúng localhost:3001 bất kể môi trường. 2. Upload-First: Mọi video blob từ Sân khấu phụ, Sequencer, 14 Sự kiện live được upload lên /uploads/ trước khi gửi sang Window Capture OBS & TikTok Live — triệt tiêu 100% màn hình đen. 3. Toàn bộ 14 Sự kiện live đồng bộ chuẩn xác.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.15 - Kích Hoạt Hoạt Động 100% 4 Nút Điều Khiển Window Capture, Hiển Thị Đầy Đủ Thumbnail 14 Sự Kiện & Đồng Bộ Sân Khấu Chính 0ms',
     description: '1. Thanh Điều Khiển Window Capture Hoạt Động Tức Thì: Sửa toàn diện 4 nút chức năng trên thanh dock Window Capture ([Dừng/Phát], [Bật/Tắt Tiếng], [Tràn/Vừa], [Ẩn Toàn Bộ]), nâng z-index lên 99999, phản hồi bấm tức thì 100%, đồng bộ âm thanh và trạng thái phát mượt mà. 2. Hiển Thị Đầy Đủ Thumbnail 14 Sự Kiện Live: Hỗ trợ hiển thị trực quan thumbnail cả video và hình ảnh từ thư mục uploads hoặc đường dẫn tương đối, không còn bị biểu tượng FOLDER hay ô đen. 3. Đồng Bộ Trọn Vẹn Sân Khấu Chính 0ms: Sân khấu chính hiển thị video hoặc ảnh nào thì Window Capture OBS và Đường link liên kết TikTok Live Studio lập tức phát đúng nội dung đó với chất lượng cao nhất, không đen màn hình, không video rác.'

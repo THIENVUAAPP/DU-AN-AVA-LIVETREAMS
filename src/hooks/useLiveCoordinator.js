@@ -802,58 +802,54 @@ function fillTemplate(template, vars = {}) {
         }
         setActiveVideoItem(matchedEventVideo);
 
-        // ⚡ Đồng bộ tuyệt đối sang Sân Khấu Chính, Window Capture OBS & Đường Link Online HTTPS
-        syncMasterLiveState({
-          stage: 'idol',
-          mediaUrl: matchedEventVideo.mediaUrl,
-          characterName: matchedEventVideo.name || `${evKey} Video`,
-          isVideo: true,
-          videoPlaybackEvent: 'play',
-          isPlaying: true,
-          eventType: type,
-          eventKey: evKey,
-          eventVideoUrl: matchedEventVideo.mediaUrl,
-          captions: replyText || ''
-        });
-        sendVideoControl({
-          action: 'play',
-          mediaUrl: matchedEventVideo.mediaUrl,
-          currentTime: 0,
-          force: true
-        });
+        // ⚡ HÀM NỘI BỘ: broadcast với URL đã đảm bảo là HTTPS /uploads/ (không dùng blob: qua cross-window)
+        const _dispatchEventVideo = (finalVideoUrl) => {
+          syncMasterLiveState({
+            stage: 'idol',
+            mediaUrl: finalVideoUrl,
+            characterName: matchedEventVideo.name || `${evKey} Video`,
+            isVideo: true,
+            videoPlaybackEvent: 'play',
+            isPlaying: true,
+            eventType: type,
+            eventKey: evKey,
+            eventVideoUrl: finalVideoUrl,
+            captions: replyText || ''
+          });
+          sendVideoControl({
+            action: 'play',
+            mediaUrl: finalVideoUrl,
+            currentTime: 0,
+            force: true
+          });
+          // Bắn sự kiện toàn cục để Sân Khấu Chính lập tức hiển thị video sự kiện này
+          if (typeof window !== 'undefined') {
+            window.dispatchEvent(new CustomEvent('avalive:event_video_trigger', {
+              detail: {
+                videoUrl: finalVideoUrl,
+                eventType: type,
+                eventKey: evKey,
+                name: matchedEventVideo.name,
+                isPreRecorded,
+                muteSourceVideo
+              }
+            }));
+          }
+        };
 
-        // 🚀 Tự động chuyển đổi sang link uploads server nếu là blob hoặc data URL
+        // 🚀 UPLOAD-FIRST: Nếu là blob:/data: → upload lên server TRƯỚC, dispatch SAU với /uploads/ URL
+        // blob: URL không thể dùng qua cross-window (Window Capture OBS, TikTok Live Studio)
         if (matchedEventVideo.mediaUrl && (matchedEventVideo.mediaUrl.startsWith('blob:') || matchedEventVideo.mediaUrl.startsWith('data:'))) {
           ensureServerMediaUrl(matchedEventVideo.mediaUrl, matchedEventVideo.name || `${evKey}_video.mp4`).then(srvUrl => {
-            if (srvUrl && srvUrl !== matchedEventVideo.mediaUrl) {
-              syncMasterLiveState({
-                stage: 'idol',
-                mediaUrl: srvUrl,
-                eventVideoUrl: srvUrl,
-                updatedAt: Date.now()
-              });
-              sendVideoControl({
-                action: 'play',
-                mediaUrl: srvUrl,
-                currentTime: 0,
-                force: true
-              });
-            }
-          }).catch(() => {});
-        }
-
-        // Bắn sự kiện toàn cục để Sân Khấu Chính lập tức hiển thị video sự kiện này tràn khớp màn hình
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('avalive:event_video_trigger', {
-            detail: {
-              videoUrl: matchedEventVideo.mediaUrl,
-              eventType: type,
-              eventKey: evKey,
-              name: matchedEventVideo.name,
-              isPreRecorded,
-              muteSourceVideo
-            }
-          }));
+            const finalUrl = (srvUrl && !srvUrl.startsWith('blob:') && !srvUrl.startsWith('data:')) ? srvUrl : matchedEventVideo.mediaUrl;
+            _dispatchEventVideo(finalUrl);
+          }).catch(() => {
+            // Fallback: dispatch với blob (chỉ hoạt động trong cùng tab)
+            _dispatchEventVideo(matchedEventVideo.mediaUrl);
+          });
+        } else {
+          // URL đã là /uploads/ hoặc HTTPS → dispatch ngay
+          _dispatchEventVideo(matchedEventVideo.mediaUrl || '');
         }
       }
 
