@@ -963,11 +963,8 @@ app.get([
     }
   }
   if (!existsOnDisk) {
-    const latestUrl = getLatestUploadMediaUrl();
-    if (latestUrl) {
-      vParam = latestUrl;
-      existsOnDisk = true;
-    }
+    // Sân khấu chính không có video thì để trống, tuyệt đối không tự ý lấy video cũ trong uploads
+    vParam = '';
   }
 
   const soundParam = req.query.sound !== '0';
@@ -1107,6 +1104,9 @@ app.get([
       ${isInitialImg && initialSrcAttr ? initialSrcAttr : ''}
       alt="Live Media"
     />
+    <div id="overlayTextBanner" style="position: absolute; left: 4%; top: 5%; width: 92%; z-index: 35; text-align: center; pointer-events: none; display: none;">
+      <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);"></div>
+    </div>
     <div id="controlsDock">
       <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập">⏸️ Dừng</button>
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
@@ -1422,18 +1422,42 @@ app.get([
         }
       }, 500);
 
+      function applyLiveState(data) {
+        if (!data) return;
+        const banner = document.getElementById('overlayTextBanner');
+        const content = document.getElementById('overlayTextContent');
+        const txt = data.overlayText || data.title || data.stepTitle;
+        if (banner && content) {
+          if (txt && typeof txt === 'string' && txt.trim()) {
+            content.innerText = txt.trim();
+            banner.style.display = 'block';
+          } else {
+            banner.style.display = 'none';
+          }
+        }
+        if (data.clearMedia || data.mediaUrl === null) {
+          if (vid) {
+            try { vid.pause(); vid.removeAttribute('src'); vid.src = ''; vid.load(); } catch(e) {}
+            vid.style.display = 'none';
+          }
+          const imgEl = document.getElementById('imagePlayer');
+          if (imgEl) {
+            try { imgEl.removeAttribute('src'); imgEl.src = ''; } catch(e) {}
+            imgEl.style.display = 'none';
+          }
+        } else if (data.mediaUrl && !isSameMedia(vid.src, data.mediaUrl)) {
+          loadAndPlay(data.mediaUrl);
+        }
+        if (!isStreamUserPaused && vid.paused && vid.src) {
+          safePlay();
+        }
+      }
+
       function fetchLatestState() {
         fetch(window.location.origin + '/api/live-state', { cache: 'no-store' })
           .then(function(res) { return res.json(); })
           .then(function(data) {
-            if (!data) return;
-            // 🎬 ĐỒNG BỘ NGUỒN VIDEO: Khi phần mềm đổi sang video mới, TikTok Live Studio đổi theo tức thì 0ms
-            if (data.mediaUrl && !isSameMedia(vid.src, data.mediaUrl)) {
-              loadAndPlay(data.mediaUrl);
-            }
-            if (!isStreamUserPaused && vid.paused) {
-              safePlay();
-            }
+            applyLiveState(data);
           })
           .catch(function() {});
       }
@@ -1503,13 +1527,7 @@ app.get([
             });
 
             socket.on('MASTER_LIVE_STATE_UPDATE', function(data) {
-              if (!data) return;
-              if (data.mediaUrl && !isSameMedia(vid.src, data.mediaUrl)) {
-                loadAndPlay(data.mediaUrl);
-              }
-              if (!isStreamUserPaused && vid.paused) {
-                safePlay();
-              }
+              applyLiveState(data);
             });
 
             socket.on('VIDEO_PLAYBACK_CONTROL', function(control) {
@@ -1532,8 +1550,8 @@ app.get([
           const bc = new BroadcastChannel('avalive_master_live_stream');
           bc.onmessage = function(ev) {
             if (!ev.data) return;
-            if ((ev.data.type === 'GLOBAL_MEDIA_CHANGE' || ev.data.type === 'MASTER_MEDIA_CHANGE') && ev.data.mediaUrl && !isSameMedia(vid.src, ev.data.mediaUrl)) {
-              loadAndPlay(ev.data.mediaUrl);
+            if (ev.data.type === 'GLOBAL_MEDIA_CHANGE' || ev.data.type === 'MASTER_MEDIA_CHANGE') {
+              applyLiveState(ev.data);
             }
           };
         } catch(e) {}
@@ -1576,10 +1594,8 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     }
   }
   if (!vParam || !existsOnDisk || vParam.startsWith('blob:') || vParam.includes('default_idol.mp4')) {
-    const latestUrl = getLatestUploadMediaUrl();
-    if (latestUrl) {
-      vParam = latestUrl;
-    }
+    // Sân khấu chính không có video thì để trống, tuyệt đối không tự ý lấy video cũ trong uploads
+    vParam = '';
   }
   const soundParam = req.query.sound !== '0';
   const fitParam = req.query.fit || 'cover';
@@ -1728,6 +1744,9 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       src="${isInitialImg && vParam ? (vParam.startsWith('http') || vParam.startsWith('/') ? vParam : '/' + vParam) : ''}"
       alt="Live Stage Media"
     />
+    <div id="overlayTextBanner" style="position: absolute; left: 4%; top: 5%; width: 92%; z-index: 35; text-align: center; pointer-events: none; display: none;">
+      <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);"></div>
+    </div>
     
     <div id="controlsDock">
       <span style="font-size:10px; color:#10b981; font-weight:bold; display:flex; align-items:center; gap:4px;">
@@ -1935,9 +1954,30 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           if (badge) badge.innerText = '🟡 RECONNECTING...';
         });
 
-        socket.on('MASTER_LIVE_STATE_UPDATE', function(data) {
+        function applyLiveState(data) {
           if (!data) return;
-          if (data.mediaUrl && !isSameMedia(vid.src, data.mediaUrl)) {
+          const banner = document.getElementById('overlayTextBanner');
+          const content = document.getElementById('overlayTextContent');
+          const txt = data.overlayText || data.title || data.stepTitle;
+          if (banner && content) {
+            if (txt && typeof txt === 'string' && txt.trim()) {
+              content.innerText = txt.trim();
+              banner.style.display = 'block';
+            } else {
+              banner.style.display = 'none';
+            }
+          }
+          if (data.clearMedia || data.mediaUrl === null) {
+            if (vid) {
+              try { vid.pause(); vid.removeAttribute('src'); vid.src = ''; vid.load(); } catch(e) {}
+              vid.style.display = 'none';
+            }
+            const imgEl = document.getElementById('imagePlayer');
+            if (imgEl) {
+              try { imgEl.removeAttribute('src'); imgEl.src = ''; } catch(e) {}
+              imgEl.style.display = 'none';
+            }
+          } else if (data.mediaUrl && !isSameMedia(vid.src, data.mediaUrl)) {
             loadAndPlay(data.mediaUrl);
           }
           if (data.videoPlaybackEvent === 'pause') {
@@ -1947,14 +1987,18 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
             isStreamUserPaused = false;
             vid.play().catch(function() {});
           }
+        }
+
+        socket.on('MASTER_LIVE_STATE_UPDATE', function(data) {
+          applyLiveState(data);
         });
 
         if (typeof BroadcastChannel !== 'undefined') {
           const bc = new BroadcastChannel('avalive_master_live_stream');
           bc.onmessage = function(ev) {
             if (!ev.data) return;
-            if ((ev.data.type === 'GLOBAL_MEDIA_CHANGE' || ev.data.type === 'MASTER_MEDIA_CHANGE') && ev.data.mediaUrl && !isSameMedia(vid.src, ev.data.mediaUrl)) {
-              loadAndPlay(ev.data.mediaUrl);
+            if (ev.data.type === 'GLOBAL_MEDIA_CHANGE' || ev.data.type === 'MASTER_MEDIA_CHANGE') {
+              applyLiveState(ev.data);
             }
           };
         }
@@ -2038,7 +2082,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.12';
+  let ver = '4.9.13';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -2076,7 +2120,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.12';
+  let ver = '4.9.13';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -2225,7 +2269,7 @@ function saveLiveStateToFile(immediate = false) {
     try {
       // Tuyệt đối không bao giờ ghi blob: URL vào file state vĩnh viễn
       if (currentMasterLiveState && currentMasterLiveState.mediaUrl && currentMasterLiveState.mediaUrl.startsWith('blob:')) {
-        currentMasterLiveState.mediaUrl = getLatestUploadMediaUrl();
+        currentMasterLiveState.mediaUrl = null;
       }
       fs.writeFile(stateFilePath, JSON.stringify(currentMasterLiveState, null, 2), 'utf8', () => {});
     } catch (err) {}
@@ -2267,11 +2311,11 @@ let currentMasterLiveState = savedState || {
   updatedAt: Date.now()
 };
 
-// Tuyệt đối không tự ý gán video phát nền ngầm hoặc blob tạm thời
+// Tuyệt đối không tự ý gán video phát nền ngầm hoặc blob tạm thời, không tự ý quét bốc file cũ trong uploads
 if (currentMasterLiveState.mediaUrl) {
   const fileOnDisk = findFileInUploadDirs(currentMasterLiveState.mediaUrl);
   if (!fileOnDisk || !fs.existsSync(fileOnDisk)) {
-    currentMasterLiveState.mediaUrl = getLatestUploadMediaUrl() || null;
+    currentMasterLiveState.mediaUrl = null;
   }
 }
 if (currentMasterLiveState.mediaUrl) {
@@ -2427,10 +2471,13 @@ io.on('connection', (socket) => {
 
       const nextState = { ...currentMasterLiveState, ...cleanState, updatedAt: Date.now() };
       delete nextState.force;
-      // BẢO VỆ TUYỆT ĐỐI VIDEO ĐANG PHÁT: Không bao giờ tự ý xoá mediaUrl hiện tại nếu client gửi null/undefined
-      if (!nextState.mediaUrl || nextState.mediaUrl.startsWith('blob:')) {
-        nextState.mediaUrl = currentMasterLiveState.mediaUrl || getLatestUploadMediaUrl();
-        nextState.isVideo = true;
+      // BẢO VỆ VIDEO ĐANG PHÁT: Không bao giờ tự ý bốc video cũ ngẫu nhiên trong uploads
+      if (cleanState.clearMedia || cleanState.mediaUrl === null) {
+        nextState.mediaUrl = null;
+        nextState.isVideo = false;
+        nextState.isPlaying = false;
+      } else if (!nextState.mediaUrl || nextState.mediaUrl.startsWith('blob:')) {
+        nextState.mediaUrl = currentMasterLiveState.mediaUrl || null;
       }
       currentMasterLiveState = nextState;
       io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
@@ -3180,8 +3227,8 @@ app.get(['/api/live-state', '/api/master-live-state'], (req, res) => {
   if (currentTunnelUrl) {
     currentMasterLiveState.tunnelUrl = currentTunnelUrl;
   }
-  if (!currentMasterLiveState.mediaUrl || currentMasterLiveState.mediaUrl.startsWith('blob:')) {
-    currentMasterLiveState.mediaUrl = getLatestUploadMediaUrl();
+  if (currentMasterLiveState.mediaUrl && currentMasterLiveState.mediaUrl.startsWith('blob:')) {
+    currentMasterLiveState.mediaUrl = null;
   }
   if (currentMasterLiveState.mediaUrl) {
     currentMasterLiveState.isVideo = true;

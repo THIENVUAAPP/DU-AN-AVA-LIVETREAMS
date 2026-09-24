@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.12';
-export const RELEASE_DATE = '23/09/2026';
+export const APP_VERSION = '4.9.13';
+export const RELEASE_DATE = '24/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.13 - Đồng Bộ 100% Sân Khấu Chính, Triệt Tiêu Tự Phát Video Lung Tung & Đồng Bộ Trọn Vẹn Tiêu Đề',
+    description: '1. Sân Khấu Chính Phát Gì Thì Phát Đúng Cái Đó: Loại bỏ hoàn toàn cơ chế tự ý quét bốc video cũ hoặc ngẫu nhiên từ uploads/IndexedDB. Cửa sổ Window Capture OBS và Đường link liên kết TikTok Live Studio chỉ phát chuẩn xác 100% video, hình ảnh và âm thanh do Sân khấu chính hiển thị, triệt tiêu tình trạng phát video lung tung. 2. Đồng Bộ Trọn Vẹn Nội Dung Tiêu Đề: Toàn bộ tiêu đề phát, chữ banner khuyến mãi, phong cách chữ và màu sắc trên Sân khấu chính được đồng bộ tức thì sang Window Capture và Link TikTok Live Studio siêu mượt 60 FPS.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.12 - Đồng Bộ & Phát Trọn Vẹn 100% Video, Hình Ảnh, Nội Dung Lên Window Capture OBS & Link TikTok Live Studio',
     description: '1. Hỗ Trợ Đầy Đủ Cả Video Lẫn Hình Ảnh: Cửa sổ Window Capture OBS và Đường link trực tuyến TikTok Live Studio tự động nhận diện và hiển thị siêu nét, siêu mượt cả Video (.mp4, .webm, .mov) lẫn Hình ảnh (.png, .jpg, .webp, .svg, .gif), triệt tiêu hoàn toàn màn hình đen. 2. Đồng Bộ Tức Thì 0ms Mọi Nguồn Sân Khấu: Tất cả dữ liệu từ Live Idol Avatar, Live Idol Studio (Multi-Avatar), 14 Sự kiện live và Video tải lên máy tính đều lập tức cập nhật sang Window Capture và Link phát với chất lượng gốc cao nhất.'

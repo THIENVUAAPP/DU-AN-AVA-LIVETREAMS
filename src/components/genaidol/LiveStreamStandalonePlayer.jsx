@@ -384,7 +384,8 @@ export default function LiveStreamStandalonePlayer() {
         if (data.pinnedProduct) {
           setPinnedProduct(data.pinnedProduct);
         }
-        if (data.overlayImage || data.overlayText || data.secondaryMediaUrl) {
+        const overlayTextVal = data.overlayText || data.title || data.stepTitle || null;
+        if (data.overlayImage || overlayTextVal || data.secondaryMediaUrl) {
           setFlowSequencerOverlay({
             secondaryMediaUrl: data.secondaryMediaUrl || null,
             secondaryMediaPos: data.secondaryMediaPos || 'top-right',
@@ -392,7 +393,7 @@ export default function LiveStreamStandalonePlayer() {
             overlayImage: data.overlayImage || null,
             overlayImagePos: data.overlayImagePos || 'top-left',
             overlayImageScale: data.overlayImageScale || 100,
-            overlayText: data.overlayText || null,
+            overlayText: overlayTextVal,
             overlayTextPos: data.overlayTextPos || 'top',
             overlayTextStyle: data.overlayTextStyle || 'banner',
             overlayTextFontFamily: data.overlayTextFontFamily || 'be_vietnam',
@@ -447,7 +448,8 @@ export default function LiveStreamStandalonePlayer() {
               }
             }
           } else if (ev.data.type === 'GLOBAL_MEDIA_CHANGE' || ev.data.type === 'MASTER_MEDIA_CHANGE') {
-            if (ev.data.overlayImage || ev.data.overlayText || ev.data.secondaryMediaUrl) {
+            const overlayTextVal = ev.data.overlayText || ev.data.title || ev.data.stepTitle || null;
+            if (ev.data.overlayImage || overlayTextVal || ev.data.secondaryMediaUrl) {
               setFlowSequencerOverlay({
                 secondaryMediaUrl: ev.data.secondaryMediaUrl || null,
                 secondaryMediaPos: ev.data.secondaryMediaPos || 'top-right',
@@ -455,7 +457,7 @@ export default function LiveStreamStandalonePlayer() {
                 overlayImage: ev.data.overlayImage || null,
                 overlayImagePos: ev.data.overlayImagePos || 'top-left',
                 overlayImageScale: ev.data.overlayImageScale || 100,
-                overlayText: ev.data.overlayText || null,
+                overlayText: overlayTextVal,
                 overlayTextPos: ev.data.overlayTextPos || 'top',
                 overlayTextStyle: ev.data.overlayTextStyle || 'banner',
                 overlayTextFontFamily: ev.data.overlayTextFontFamily || 'be_vietnam',

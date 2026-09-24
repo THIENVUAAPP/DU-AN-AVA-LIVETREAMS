@@ -313,9 +313,6 @@ export default function WindowCapturePlayer() {
             (targetUrlOrCharId && it.mediaUrl && it.mediaUrl.includes(targetUrlOrCharId))
           );
         }
-        if (!found && !targetUrlOrCharId) {
-          found = items.slice().reverse().find(it => it && it.fileBlob && (it.fileBlob instanceof Blob || it.fileBlob instanceof File));
-        }
 
         if (found && found.fileBlob && (found.fileBlob instanceof Blob || found.fileBlob instanceof File)) {
           if (activeBlobUrlRef.current) {
@@ -720,7 +717,8 @@ export default function WindowCapturePlayer() {
           setPinnedProduct(msg.product);
         }
 
-        if (msg.overlayImage || msg.overlayText || msg.secondaryMediaUrl) {
+        const overlayTextMsg = msg.overlayText || msg.title || msg.stepTitle || null;
+        if (msg.overlayImage || overlayTextMsg || msg.secondaryMediaUrl) {
           setFlowSequencerOverlay({
             secondaryMediaUrl: msg.secondaryMediaUrl || null,
             secondaryMediaPos: msg.secondaryMediaPos || 'top-right',
@@ -732,7 +730,7 @@ export default function WindowCapturePlayer() {
             overlayImageScale: msg.overlayImageScale || 100,
             overlayImageTransform: msg.overlayImageTransform || null,
             overlayImageChromaKey: msg.overlayImageChromaKey || null,
-            overlayText: msg.overlayText || null,
+            overlayText: overlayTextMsg,
             overlayTextPos: msg.overlayTextPos || 'top',
             overlayTextStyle: msg.overlayTextStyle || 'banner',
             overlayTextFontFamily: msg.overlayTextFontFamily || 'be_vietnam',
@@ -806,7 +804,8 @@ export default function WindowCapturePlayer() {
         if (state.tunnelUrl && state.tunnelUrl !== tunnelUrl) {
           setTunnelUrl(state.tunnelUrl);
         }
-        if (state.overlayImage || state.overlayText || state.secondaryMediaUrl) {
+        const overlayTextState = state.overlayText || state.title || state.stepTitle || null;
+        if (state.overlayImage || overlayTextState || state.secondaryMediaUrl) {
           setFlowSequencerOverlay({
             secondaryMediaUrl: state.secondaryMediaUrl || null,
             secondaryMediaPos: state.secondaryMediaPos || 'top-right',
@@ -818,7 +817,7 @@ export default function WindowCapturePlayer() {
             overlayImageScale: state.overlayImageScale || 100,
             overlayImageTransform: state.overlayImageTransform || null,
             overlayImageChromaKey: state.overlayImageChromaKey || null,
-            overlayText: state.overlayText || null,
+            overlayText: overlayTextState,
             overlayTextPos: state.overlayTextPos || 'top',
             overlayTextStyle: state.overlayTextStyle || 'banner',
             overlayTextFontFamily: state.overlayTextFontFamily || 'be_vietnam',
@@ -1935,7 +1934,7 @@ export default function WindowCapturePlayer() {
       })()}
 
       {/* LỚP CHỮ BANNER OVERLAY */}
-      {flowSequencerOverlay?.overlayText && !isControlsHidden && (() => {
+      {flowSequencerOverlay?.overlayText && (() => {
         const trans = flowSequencerOverlay.overlayTextTransform;
         const style = trans ? {
           position: 'absolute',
