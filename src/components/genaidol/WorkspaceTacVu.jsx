@@ -786,9 +786,9 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
             }
           }));
         };
-        if (vidUrl.startsWith('blob:') || vidUrl.startsWith('data:')) {
+        if (typeof vidUrl === 'string' && (vidUrl.startsWith('blob:') || vidUrl.startsWith('data:'))) {
           ensureServerMediaUrl(vidUrl, `${id}_video.mp4`).then(srvUrl => {
-            _dispatchEventTrigger((srvUrl && !srvUrl.startsWith('blob:') && !srvUrl.startsWith('data:')) ? srvUrl : vidUrl);
+            _dispatchEventTrigger((srvUrl && typeof srvUrl === 'string' && !srvUrl.startsWith('blob:') && !srvUrl.startsWith('data:')) ? srvUrl : vidUrl);
           }).catch(() => _dispatchEventTrigger(vidUrl));
         } else {
           _dispatchEventTrigger(vidUrl);
@@ -1182,9 +1182,9 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
           }
         }));
       };
-      if (value.startsWith('blob:') || value.startsWith('data:')) {
+      if (typeof value === 'string' && (value.startsWith('blob:') || value.startsWith('data:'))) {
         ensureServerMediaUrl(value, `checkout_product_${productId}.mp4`).then(srvUrl => {
-          _dispatchProductTrigger((srvUrl && !srvUrl.startsWith('blob:') && !srvUrl.startsWith('data:')) ? srvUrl : value);
+          _dispatchProductTrigger((srvUrl && typeof srvUrl === 'string' && !srvUrl.startsWith('blob:') && !srvUrl.startsWith('data:')) ? srvUrl : value);
         }).catch(() => _dispatchProductTrigger(value));
       } else {
         _dispatchProductTrigger(value);

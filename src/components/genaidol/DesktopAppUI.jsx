@@ -46,6 +46,7 @@ import { bootstrapDefaultPresets } from '../../utils/defaultPresetsBootstrap';
 import { fastStreamUpload } from '../../utils/fastStreamService';
 import { setActiveMedia, removeActiveMedia, clearActiveMedia } from '../../utils/activeMediaStore';
 import ShopeeLiveConnectModal from './ShopeeLiveConnectModal';
+import IdolConnectModal from './IdolConnectModal';
 import autoPinProductService from '../../utils/autoPinProductService';
 import { generateAiKnowledgeScript } from '../../utils/aiScriptGenerator';
 import { ensureServerMediaUrl, uploadMediaToServer } from '../../utils/mediaUploadService';
@@ -4185,19 +4186,20 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
         showToast(`⚡ Đã phát ngay video "${charName}" trên sân khấu chính!`, 'success');
 
-        // 🚀 2. PHÁT LUỒNG SIÊU TỐC TỪNG PHẦN (FAST-STREAM PIPELINE) LÊN SERVER & TIKTOK LIVE STUDIO TRONG BACKGROUND
-        fastStreamUpload(file, {
-          onInit: ({ fileUrl }) => {
+        // 🚀 2. TẢI FILE HOÀN CHỈNH LÊN MÁY CHỦ TRONG BACKGROUND ĐỂ ĐỒNG BỘ OBS & TIKTOK LIVE STUDIO
+        uploadMediaToServer(file).then(serverUrl => {
+          if (serverUrl) {
+            const cleanServerUrl = serverUrl.includes('/uploads/') ? serverUrl.substring(serverUrl.indexOf('/uploads/')) : serverUrl;
             const updatedChar = {
               id: newCharId,
               name: charName,
               url: localUrl,
-              mediaUrl: fileUrl,
+              mediaUrl: cleanServerUrl,
               type: 'video',
               fileData: file
             };
-            setUserLockedMediaUrl(fileUrl);
-            try { localStorage.setItem('avalive_user_locked_media', fileUrl); } catch (e) {}
+            setUserLockedMediaUrl(cleanServerUrl);
+            try { localStorage.setItem('avalive_user_locked_media', cleanServerUrl); } catch (e) {}
 
             setCustomCharacters(prev => {
               const updatedList = prev.map(c => c.id === newCharId ? updatedChar : c);
@@ -4210,14 +4212,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               name: charName,
               type: 'video',
               fileData: file,
-              mediaUrl: fileUrl
+              mediaUrl: cleanServerUrl
             }).catch(() => {});
 
             syncMasterLiveState({
               stage: 'idol',
               selectedCharacter: newCharId,
               characterName: charName,
-              mediaUrl: fileUrl,
+              mediaUrl: cleanServerUrl,
               isVideo: true,
               isPlaying: true,
               videoPlaybackEvent: 'play',
@@ -4229,7 +4231,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               const bc = new BroadcastChannel('avalive_master_live_stream');
               bc.postMessage({
                 type: 'GLOBAL_MEDIA_CHANGE',
-                mediaUrl: fileUrl,
+                mediaUrl: cleanServerUrl,
                 blobUrl: localUrl,
                 fileBlob: file,
                 characterId: newCharId,
@@ -4244,7 +4246,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               setTimeout(() => bc.close(), 100);
             } catch (err) {}
           }
-        }).catch(() => {});
+        }).catch(err => {
+          console.warn('[handleFileUpload] Background upload failed:', err);
+        });
       } else {
         // 🖼️ ẢNH BÌNH THƯỜNG: NẠP VÀ HIỂN THỊ TỨC THÌ 100% NGUYÊN BẢN
         const newCharId = `custom_${Date.now()}`;
@@ -4884,14 +4888,20 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         (customCharacters && customCharacters.length > 0 ? customCharacters.find(c => c.url || c.mediaUrl) : null);
 
       if (selected) {
-        let resolvedUrl = (selected.mediaUrl && !selected.mediaUrl.startsWith('blob:')) 
-          ? selected.mediaUrl 
-          : (selected.url || selected.mediaUrl);
-        if ((!resolvedUrl || resolvedUrl.startsWith('blob:')) && selected.fileData) {
+        // 🛡️ TRÊN GIAO DIỆN DESKTOP APP: ƯU TIÊN TUYỆT ĐỐI LOCAL BLOB / RAM FILEDATA ĐỂ PHÁT NGAY 0MS KHÔNG BAO GIỜ BỊ ĐEN HAY LỖI
+        let resolvedUrl = '';
+        if (selected.url && (selected.url.startsWith('blob:') || selected.url.startsWith('data:'))) {
+          resolvedUrl = selected.url;
+        } else if (selected.fileData) {
           try {
             resolvedUrl = URL.createObjectURL(selected.fileData);
             selected.url = resolvedUrl;
-          } catch (e) {}
+          } catch(e) {}
+        }
+        if (!resolvedUrl) {
+          resolvedUrl = (selected.mediaUrl && !selected.mediaUrl.startsWith('blob:')) 
+            ? selected.mediaUrl 
+            : (selected.url || selected.mediaUrl);
         }
         if (resolvedUrl) {
           const isExplicitVideo = selected.type === 'video' || 
@@ -6103,7 +6113,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
                 {/* 2. KẾT NỐI IDOL */}
                 <button 
-                  onClick={() => { setActiveSettingsModal('workspace_events'); setIsSettingsDropdownOpen(false); }}
+                  onClick={() => { setActiveSettingsModal('idol_connect'); setIsSettingsDropdownOpen(false); }}
                   className={`w-full text-left px-3 py-2 mb-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-purple-900/40 to-purple-800/20 hover:from-purple-600 hover:to-purple-500 text-purple-100 hover:text-white border border-purple-800/50' : 'bg-purple-50 hover:bg-purple-500 text-purple-800 hover:text-white'}`}
                 >
                   <Radio size={16} className="text-purple-400 shrink-0" />
@@ -6318,14 +6328,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                         } catch(e) {}
                       }
 
-                      let charUrl = serverUrl || charItem.url || charItem.mediaUrl;
-                      if ((!charUrl || charUrl.startsWith('blob:')) && charItem.fileData) {
+                      let localPreviewUrl = '';
+                      if (charItem.url && (charItem.url.startsWith('blob:') || charItem.url.startsWith('data:'))) {
+                        localPreviewUrl = charItem.url;
+                      } else if (charItem.fileData) {
                         try {
-                          charUrl = URL.createObjectURL(charItem.fileData);
-                          charItem.url = charUrl;
-                          setCustomCharacters(prev => prev.map(c => c.id === charItem.id ? { ...c, url: charUrl } : c));
+                          localPreviewUrl = URL.createObjectURL(charItem.fileData);
+                          charItem.url = localPreviewUrl;
+                          setCustomCharacters(prev => prev.map(c => c.id === charItem.id ? { ...c, url: localPreviewUrl } : c));
                         } catch(e) {}
                       }
+
+                      let charUrl = localPreviewUrl || serverUrl || charItem.url || charItem.mediaUrl;
                       if (!charUrl) {
                         fileInputRef.current?.click();
                         return;
@@ -7236,48 +7250,22 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         </div>
       )}
 
-      {/* Settings Modal (WorkspaceTacVu / Event Manager) */}
-      {(activeSettingsModal === 'workspace' || activeSettingsModal === 'workspace_events') && (
-        <div 
-          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-2 md:p-3 animate-in fade-in zoom-in duration-200"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setActiveSettingsModal(null);
-          }}
-        >
-          <div className={`w-[98vw] max-w-[1720px] h-[97vh] max-h-[98vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border ${isDarkMode ? 'bg-[#141419] border-gray-700' : 'bg-white border-gray-200'}`}>
-            <div className={`flex items-center justify-between px-6 py-3.5 border-b shrink-0 ${isDarkMode ? 'border-gray-800' : 'border-gray-200'}`}>
-              <h2 className="text-xl font-bold flex items-center gap-2">
-                <Settings className="text-blue-500" />
-                <span>
-                  {activeSettingsModal === 'workspace_events' 
-                    ? 'Cài đặt Sự kiện & Kịch bản Tương tác Livestream' 
-                    : 'Cài đặt Hệ thống Sự kiện Livestream'}
-                </span>
-              </h2>
-              <div className="flex items-center gap-4">
-                <button 
-                  onClick={() => alert("Đang kiểm tra bản cập nhật từ Admin...")}
-                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium cursor-pointer"
-                >
-                  Kiểm tra cập nhật
-                </button>
-                <button 
-                  onClick={() => setActiveSettingsModal(null)}
-                  className={`p-2 rounded-lg transition-colors cursor-pointer ${isDarkMode ? 'hover:bg-gray-800 text-gray-400 hover:text-white' : 'hover:bg-gray-100 text-gray-500 hover:text-gray-900'}`}
-                >
-                  <X size={24} />
-                </button>
-              </div>
-            </div>
-            <div className="flex-1 overflow-auto relative">
-              <WorkspaceTacVu 
-                key={activeSettingsModal}
-                defaultEventId={activeSettingsModal === 'workspace_events' ? 'welcome' : 'flow_sequencer'} 
-              />
-            </div>
-          </div>
-        </div>
-      )}
+      {/* 🔴 CỔNG KẾT NỐI IDOL LIVESTREAM & SỰ KIỆN TƯƠNG TÁC (IDOL CONNECT HUB) */}
+      <IdolConnectModal
+        isOpen={activeSettingsModal === 'idol_connect' || activeSettingsModal === 'workspace' || activeSettingsModal === 'workspace_events'}
+        initialTab={activeSettingsModal === 'workspace' || activeSettingsModal === 'workspace_events' ? 'events' : 'connect'}
+        onClose={() => setActiveSettingsModal(null)}
+        isDarkMode={isDarkMode}
+        tiktokId={tiktokId}
+        setTiktokId={setTiktokId}
+        videoTiktokId={videoTiktokId}
+        setVideoTiktokId={setVideoTiktokId}
+        isConnected={isConnected}
+        isConnecting={isConnecting}
+        handleConnect={handleConnect}
+        isMasterLiveRunning={isMasterLiveRunning}
+        handleToggleMasterLive={handleToggleMasterLive}
+      />
 
       {/* Payment & Token Packages Modal */}
       {(activeSettingsModal === 'payment' || activeSettingsModal === 'coins') && (
