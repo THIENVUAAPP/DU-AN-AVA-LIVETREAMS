@@ -1322,11 +1322,12 @@ export default function WindowCapturePlayer() {
           return (
             <div style={gridStyle}>
               {activeList.map((avatar, idx) => {
-                const isSpeakingNow = isSpeakerActive && (activeSpeakerId === avatar.id || (!activeSpeakerId && avatar.id === 'idol'));
-                const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || '';
-                const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || '';
-                const rawSrc = isSpeakingNow ? (talkSrc || idleSrc || (idx === 0 ? videoSrc : '')) : (idleSrc || talkSrc || (idx === 0 ? videoSrc : ''));
-                const avatarVidSrc = resolveUrl(rawSrc);
+                const cleanTalk = (avatar.talkVideo && !avatar.talkVideo.includes('commondatastorage.googleapis.com') && !avatar.talkVideo.includes('demo_dancer')) ? avatar.talkVideo : '';
+                const cleanIdle = (avatar.idleVideo && !avatar.idleVideo.includes('commondatastorage.googleapis.com') && !avatar.idleVideo.includes('demo_dancer')) ? avatar.idleVideo : '';
+                const talkSrc = cleanTalk || avatar.videoUrl || avatar.mediaUrl || '';
+                const idleSrc = cleanIdle || avatar.videoUrl || avatar.mediaUrl || '';
+                const rawSrc = isSpeakingNow ? (talkSrc || idleSrc || videoSrc) : (idleSrc || talkSrc || videoSrc);
+                const avatarVidSrc = resolveUrl(rawSrc || videoSrc);
                 const isImg = isImageMedia(avatarVidSrc);
 
                 return (
@@ -1391,33 +1392,52 @@ export default function WindowCapturePlayer() {
               backgroundColor: multiAvatarConfig.backgroundColor || '#0a0c14'
             }}
           >
-            {/* Background Layer */}
-            {multiAvatarConfig.backgroundUrl && (
-              <div
-                style={{
-                  position: 'absolute',
-                  pointerEvents: 'none',
-                  left: `${multiAvatarConfig.backgroundTransform?.x ?? 0}%`,
-                  top: `${multiAvatarConfig.backgroundTransform?.y ?? 0}%`,
-                  width: `${multiAvatarConfig.backgroundTransform?.width ?? 100}%`,
-                  height: `${multiAvatarConfig.backgroundTransform?.height ?? 100}%`,
-                  transform: (multiAvatarConfig.backgroundTransform?.scale && multiAvatarConfig.backgroundTransform?.scale !== 100) ? `scale(${multiAvatarConfig.backgroundTransform.scale / 100})` : 'none',
-                  transformOrigin: 'center center',
-                  zIndex: 0
-                }}
-              >
-                <img 
-                  src={resolveUrl(multiAvatarConfig.backgroundUrl)}
-                  alt="Studio Background"
+            {/* Background Layer: Dùng backgroundUrl hoặc videoSrc (nền phát live chính) */}
+            {(multiAvatarConfig.backgroundUrl || (!multiAvatarConfig.isMainMediaDeleted && videoSrc)) && (() => {
+              const bgMedia = resolveUrl(multiAvatarConfig.backgroundUrl || videoSrc);
+              const isBgImg = isImageMedia(bgMedia);
+              return (
+                <div
                   style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: multiAvatarConfig.backgroundTransform?.objectFit || 'cover',
-                    filter: `${multiAvatarConfig.backgroundTransform?.blur ? `blur(${multiAvatarConfig.backgroundTransform.blur}px)` : ''} ${multiAvatarConfig.backgroundTransform?.brightness ? `brightness(${multiAvatarConfig.backgroundTransform.brightness}%)` : ''}`.trim() || 'none'
+                    position: 'absolute',
+                    pointerEvents: 'none',
+                    left: `${multiAvatarConfig.backgroundTransform?.x ?? 0}%`,
+                    top: `${multiAvatarConfig.backgroundTransform?.y ?? 0}%`,
+                    width: `${multiAvatarConfig.backgroundTransform?.width ?? 100}%`,
+                    height: `${multiAvatarConfig.backgroundTransform?.height ?? 100}%`,
+                    transform: (multiAvatarConfig.backgroundTransform?.scale && multiAvatarConfig.backgroundTransform?.scale !== 100) ? `scale(${multiAvatarConfig.backgroundTransform.scale / 100})` : 'none',
+                    transformOrigin: 'center center',
+                    zIndex: 0
                   }}
-                />
-              </div>
-            )}
+                >
+                  {isBgImg ? (
+                    <img 
+                      src={bgMedia}
+                      alt="Studio Background"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: multiAvatarConfig.backgroundTransform?.objectFit || 'cover',
+                        filter: `${multiAvatarConfig.backgroundTransform?.blur ? `blur(${multiAvatarConfig.backgroundTransform.blur}px)` : ''} ${multiAvatarConfig.backgroundTransform?.brightness ? `brightness(${multiAvatarConfig.backgroundTransform.brightness}%)` : ''}`.trim() || 'none'
+                      }}
+                    />
+                  ) : (
+                    <video 
+                      src={bgMedia}
+                      autoPlay
+                      loop
+                      muted={isStandaloneMuted}
+                      playsInline
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: multiAvatarConfig.backgroundTransform?.objectFit || 'cover'
+                      }}
+                    />
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Extra Layers */}
             {(multiAvatarConfig.extraImageLayers || []).map(layer => {
@@ -1462,10 +1482,12 @@ export default function WindowCapturePlayer() {
                 borderRadius: 16
               };
               const isSpeakingNow = isSpeakerActive && (activeSpeakerId === avatar.id || (!activeSpeakerId && avatar.id === 'idol'));
-              const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || '';
-              const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || '';
-              const rawSrc = isSpeakingNow ? (talkSrc || idleSrc || (idx === 0 ? videoSrc : '')) : (idleSrc || talkSrc || (idx === 0 ? videoSrc : ''));
-              const avatarVidSrc = resolveUrl(rawSrc);
+              const cleanTalk = (avatar.talkVideo && !avatar.talkVideo.includes('commondatastorage.googleapis.com') && !avatar.talkVideo.includes('demo_dancer')) ? avatar.talkVideo : '';
+              const cleanIdle = (avatar.idleVideo && !avatar.idleVideo.includes('commondatastorage.googleapis.com') && !avatar.idleVideo.includes('demo_dancer')) ? avatar.idleVideo : '';
+              const talkSrc = cleanTalk || avatar.videoUrl || avatar.mediaUrl || '';
+              const idleSrc = cleanIdle || avatar.videoUrl || avatar.mediaUrl || '';
+              const rawSrc = isSpeakingNow ? (talkSrc || idleSrc || videoSrc) : (idleSrc || talkSrc || videoSrc);
+              const avatarVidSrc = resolveUrl(rawSrc || videoSrc);
               const isImg = isImageMedia(avatarVidSrc);
               const chromaStyle = getChromaStyle(avatar.chromaKey || multiAvatarConfig.chromaKey);
 

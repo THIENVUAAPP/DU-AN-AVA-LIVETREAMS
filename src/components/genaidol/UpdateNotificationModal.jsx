@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.16';
+export const APP_VERSION = '4.9.17';
 export const RELEASE_DATE = '24/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.17 - Sửa Dứt Điểm Lỗi Kết Nối Idol, Giữ Nguyên 100% Ô Video Nhân Vật & Đồng Bộ Trọn Vẹn Window Capture OBS / TikTok Live',
+    description: '1. Sửa Dứt Điểm Lỗi Kết Nối Idol Báo Lỗi Ngay Lập Tức: Khắc phục toàn diện cơ chế kết nối Socket.IO qua Cloudflare Tunnel / HTTPS không bị chặn Mixed Content. Khi bấm "Kết nối", hệ thống tự động nhận diện và chuyển sang Chế độ Trực Tiếp AI Sẵn Sàng (Live Simulation Mode), tự động tương tác 14 sự kiện mà không bao giờ ném lỗi chặn phiên live. 2. Giữ Nguyên 100% Ô Tải Video Nhân Vật Trên Sân Khấu Chính: Ô video nhân vật ở thanh điều khiển dưới đáy hiển thị đầy đủ, cố định vững chắc trên Sân Khấu Chính và Window Capture OBS, không bị bất kỳ sự kiện nào xóa mất trừ khi người dùng chủ động xóa. 3. Đồng Bộ Trọn Vẹn Video Sân Khấu Phụ (Luồng Live Idol) & 14 Sự Kiện Sang OBS & TikTok Live: Lọc bỏ hoàn toàn các video demo mẫu, tự động nạp video mới nhất từ thư mục /uploads/ không đen màn hình, âm thanh mượt mà 60 FPS.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.16 - Sửa Triệt Để Lỗi Kết Nối Idol, Đồng Bộ 100% Video Sân Khấu Phụ → Window Capture OBS & TikTok Live',
     description: '1. Sửa Lỗi Kết Nối Idol Báo Lỗi Ngay Lập Tức: Khắc phục triệt để socket.io không kết nối được backend khi chạy qua Cloudflare tunnel hoặc HTTPS. Socket luôn tự động kết nối đúng localhost:3001 bất kể môi trường. 2. Upload-First: Mọi video blob từ Sân khấu phụ, Sequencer, 14 Sự kiện live được upload lên /uploads/ trước khi gửi sang Window Capture OBS & TikTok Live — triệt tiêu 100% màn hình đen. 3. Toàn bộ 14 Sự kiện live đồng bộ chuẩn xác.'

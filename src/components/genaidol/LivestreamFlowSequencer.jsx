@@ -633,9 +633,11 @@ export default function LivestreamFlowSequencer() {
         || (step.avatarTransforms && step.avatarTransforms[av.id]) 
         || av.transform 
         || { x: 5 + avIdx * 24, y: 15, width: 45, height: 75, zIndex: 10 + avIdx };
+      const cleanTalk = (av.talkVideo && !av.talkVideo.includes('commondatastorage.googleapis.com') && !av.talkVideo.includes('demo_dancer') && !av.talkVideo.includes('nhep_mieng')) ? av.talkVideo : '';
+      const cleanIdle = (av.idleVideo && !av.idleVideo.includes('commondatastorage.googleapis.com') && !av.idleVideo.includes('demo_dancer') && !av.idleVideo.includes('nhep_mieng')) ? av.idleVideo : '';
       const vidSrc = isCurrentSpeaker 
-        ? (av.talkVideo || av.idleVideo || mediaToPlay) 
-        : (av.idleVideo || av.talkVideo || mediaToPlay);
+        ? (cleanTalk || cleanIdle || mediaToPlay) 
+        : (cleanIdle || cleanTalk || mediaToPlay);
       return {
         ...av,
         id: av.id,

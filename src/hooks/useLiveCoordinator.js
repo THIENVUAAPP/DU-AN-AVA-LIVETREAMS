@@ -954,19 +954,48 @@ function fillTemplate(template, vars = {}) {
       });
       nextMedia = idleVid;
     } else {
-      // Về mặc định video gốc mà người dùng đã chọn
+      // Về mặc định video gốc mà người dùng đã chọn (từ ô nhân vật hoặc video khóa)
       setActiveVideoItem(null);
+      let userBaseMedia = (typeof localStorage !== 'undefined') 
+        ? (localStorage.getItem('avalive_user_locked_media') || localStorage.getItem('avalive_active_video_src'))
+        : null;
+      if (!userBaseMedia) {
+        try {
+          const rawChars = localStorage.getItem('avalive_custom_characters');
+          if (rawChars) {
+            const chars = JSON.parse(rawChars);
+            const selId = localStorage.getItem('avalive_selected_char');
+            const matched = chars.find(c => c.id === selId);
+            userBaseMedia = matched?.mediaUrl || matched?.url || chars[0]?.mediaUrl || chars[0]?.url;
+          }
+        } catch (e) {}
+      }
+      nextMedia = userBaseMedia || null;
     }
 
     // ⚡ Đồng bộ phục hồi video nền sang Sân Khấu Chính, Window Capture OBS & Đường Link Online
-    syncMasterLiveState({
-      stage: 'idol',
-      mediaUrl: nextMedia || null,
-      isVideo: true,
-      videoPlaybackEvent: 'play',
-      isPlaying: true,
-      eventVideoUrl: null
-    });
+    if (nextMedia) {
+      syncMasterLiveState({
+        stage: 'idol',
+        mediaUrl: nextMedia,
+        isVideo: true,
+        videoPlaybackEvent: 'play',
+        isPlaying: true,
+        eventVideoUrl: null
+      });
+      try {
+        const bc = new BroadcastChannel('avalive_master_live_stream');
+        bc.postMessage({
+          type: 'GLOBAL_MEDIA_CHANGE',
+          mediaUrl: nextMedia,
+          isVideo: true,
+          isPlaying: true,
+          source: 'event_ended_restore',
+          timestamp: Date.now()
+        });
+        setTimeout(() => bc.close(), 100);
+      } catch (e) {}
+    }
   };
 
   return {
