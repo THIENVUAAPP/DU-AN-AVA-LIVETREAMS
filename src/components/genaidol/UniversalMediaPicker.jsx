@@ -60,6 +60,65 @@ export const SAMPLE_IDOL_VIDEOS = [
   }
 ];
 
+// Helper trích xuất Thumbnail ảnh trực quan từ video trong 50ms (Chống hoàn toàn đen màn hình)
+function extractVideoThumbnail(urlOrFile) {
+  return new Promise((resolve) => {
+    try {
+      if (!urlOrFile) return resolve(null);
+      const isImg = typeof urlOrFile === 'string' 
+        ? (urlOrFile.match(/\.(png|jpg|jpeg|webp|gif|svg)(\?.*)?$/i) || urlOrFile.startsWith('data:image/'))
+        : (urlOrFile.type && urlOrFile.type.startsWith('image/'));
+      if (isImg) {
+        if (typeof urlOrFile === 'string') return resolve(urlOrFile);
+        return resolve(URL.createObjectURL(urlOrFile));
+      }
+
+      const video = document.createElement('video');
+      video.crossOrigin = 'anonymous';
+      video.muted = true;
+      video.playsInline = true;
+      video.preload = 'auto';
+      const src = typeof urlOrFile === 'string' ? urlOrFile : URL.createObjectURL(urlOrFile);
+      video.src = src;
+
+      let resolved = false;
+      const capture = () => {
+        if (resolved) return;
+        try {
+          if (video.videoWidth > 0 && video.videoHeight > 0) {
+            const canvas = document.createElement('canvas');
+            canvas.width = Math.min(video.videoWidth, 320);
+            canvas.height = Math.min(video.videoHeight, 240);
+            const ctx = canvas.getContext('2d');
+            if (ctx) {
+              ctx.drawImage(video, 0, 0, canvas.width, canvas.height);
+              const dataUrl = canvas.toDataURL('image/jpeg', 0.85);
+              resolved = true;
+              if (typeof urlOrFile !== 'string') {
+                try { URL.revokeObjectURL(src); } catch (e) {}
+              }
+              resolve(dataUrl);
+              return;
+            }
+          }
+        } catch (e) {}
+      };
+
+      video.onloadeddata = () => {
+        try { video.currentTime = 0.1; } catch (e) { capture(); }
+      };
+      video.onseeked = capture;
+      video.onerror = () => resolve(null);
+      setTimeout(() => {
+        capture();
+        if (!resolved) resolve(null);
+      }, 1200);
+    } catch (err) {
+      resolve(null);
+    }
+  });
+}
+
 export default function UniversalMediaPicker({
   label = 'Thư mục / File Video',
   subLabel = '',
@@ -73,30 +132,39 @@ export default function UniversalMediaPicker({
   inputId,
   badgeText = '',
   className = '',
-  accept = 'video/*,image/*,video/mp4,video/webm,video/quicktime,image/png,image/jpeg,image/webp,image/gif'
+  accept = 'video/*,image/*,.mp4,.webm,.mov,.mkv,.avi,.m4v,.flv,.wmv,.png,.jpg,.jpeg,.webp,.gif'
 }) {
   const [showSamples, setShowSamples] = useState(false);
   const [previewModalOpen, setPreviewModalOpen] = useState(false);
   const [localPreviewUrl, setLocalPreviewUrl] = useState(videoUrl || '');
+  const [thumbnailUrl, setThumbnailUrl] = useState(null);
   const fileInputRef = useRef(null);
   const previewVideoRef = useRef(null);
   const uniqueInputId = inputId || `universal-media-${Math.random().toString(36).substr(2, 9)}`;
 
-  // Đồng bộ preview URL khi prop videoUrl hoặc currentPath thay đổi
+  // Đồng bộ preview URL & Thumbnail tự động khi prop videoUrl hoặc currentPath thay đổi
   useEffect(() => {
-    if (videoUrl) {
-      setLocalPreviewUrl(videoUrl);
-    } else if (currentPath && (currentPath.startsWith('http') || currentPath.startsWith('blob:') || currentPath.startsWith('data:'))) {
-      setLocalPreviewUrl(currentPath);
+    const targetUrl = videoUrl || (currentPath && (currentPath.startsWith('http') || currentPath.startsWith('blob:') || currentPath.startsWith('data:') || currentPath.startsWith('/uploads') || currentPath.startsWith('/')) ? currentPath : '');
+    if (targetUrl) {
+      setLocalPreviewUrl(targetUrl);
+      extractVideoThumbnail(targetUrl).then(thumb => {
+        if (thumb) setThumbnailUrl(thumb);
+      });
     }
   }, [videoUrl, currentPath]);
 
-  const handleFileChange = (e) => {
+  const handleFileChange = async (e) => {
     const file = e.target.files?.[0];
     if (!file) return;
 
     const objectUrl = URL.createObjectURL(file);
     setLocalPreviewUrl(objectUrl);
+    
+    // 🖼️ Trích xuất thumbnail tức thì từ file tải lên (0ms)
+    extractVideoThumbnail(file).then(thumb => {
+      if (thumb) setThumbnailUrl(thumb);
+    });
+
     try {
       registerFileInRAM(file, objectUrl);
     } catch (e) {}
@@ -145,6 +213,9 @@ export default function UniversalMediaPicker({
 
   const handlePickSample = (sample) => {
     setLocalPreviewUrl(sample.url);
+    extractVideoThumbnail(sample.url).then(thumb => {
+      if (thumb) setThumbnailUrl(thumb);
+    });
     if (onSelectSample) {
       onSelectSample(sample);
     }
@@ -154,14 +225,28 @@ export default function UniversalMediaPicker({
 
   const handleClear = () => {
     setLocalPreviewUrl('');
+    setThumbnailUrl(null);
     if (onClear) {
       onClear();
     }
     toast.success('Đã đặt lại ô video');
   };
 
+  const isMediaAvailable = !!(localPreviewUrl && (
+    localPreviewUrl.startsWith('http') || 
+    localPreviewUrl.startsWith('blob:') || 
+    localPreviewUrl.startsWith('data:') || 
+    localPreviewUrl.startsWith('/uploads') || 
+    localPreviewUrl.startsWith('/') ||
+    /\.(mp4|webm|mov|mkv|avi|png|jpg|jpeg|webp|gif)/i.test(localPreviewUrl)
+  ));
+
+  const isImage = typeof localPreviewUrl === 'string' && (
+    localPreviewUrl.match(/\.(png|jpg|jpeg|webp|gif|svg)(\?.*)?$/i) || 
+    localPreviewUrl.startsWith('data:image/')
+  );
+
   const hasValue = !!(currentPath || localPreviewUrl);
-  const isVideoUrlAvailable = !!(localPreviewUrl && (localPreviewUrl.startsWith('http') || localPreviewUrl.startsWith('blob:') || localPreviewUrl.startsWith('data:')));
 
   return (
     <div className={`flex flex-col gap-1.5 w-full ${className}`}>
@@ -184,28 +269,44 @@ export default function UniversalMediaPicker({
       {/* Khung tương tác chính */}
       <div className="flex items-center gap-2.5 bg-gray-50/70 hover:bg-gray-50 border border-gray-200 rounded-xl p-2 transition-all shadow-2xs">
         
-        {/* 🎬 1. Ô THUMBNAIL PREVIEW NHỎ (HIỂN THỊ TRỰC QUAN VIDEO ĐÃ NẠP) */}
+        {/* 🎬 1. Ô THUMBNAIL PREVIEW (HIỂN THỊ TRỰC QUAN RÕ NÉT 100% - KHÔNG BAO GIỜ ĐEN) */}
         <div className="relative shrink-0 w-[54px] h-[54px] rounded-lg overflow-hidden bg-slate-900 border border-slate-300 shadow-inner flex items-center justify-center group">
-          {isVideoUrlAvailable ? (
+          {isMediaAvailable ? (
             <>
-              <video 
-                ref={previewVideoRef}
-                src={localPreviewUrl} 
-                className="w-full h-full object-cover cursor-pointer"
-                muted 
-                playsInline
-                loop
-                onMouseEnter={(e) => {
-                  try { e.target.play(); } catch (err) {}
-                }}
-                onMouseLeave={(e) => {
-                  try { 
-                    e.target.pause(); 
-                    e.target.currentTime = 0; 
-                  } catch (err) {}
-                }}
-                onClick={() => setPreviewModalOpen(true)}
-              />
+              {thumbnailUrl ? (
+                <img 
+                  src={thumbnailUrl} 
+                  alt="Thumbnail" 
+                  className="w-full h-full object-cover cursor-pointer"
+                  onClick={() => setPreviewModalOpen(true)}
+                />
+              ) : isImage ? (
+                <img 
+                  src={localPreviewUrl} 
+                  alt="Preview" 
+                  className="w-full h-full object-cover cursor-pointer"
+                  onClick={() => setPreviewModalOpen(true)}
+                />
+              ) : (
+                <video 
+                  ref={previewVideoRef}
+                  src={localPreviewUrl.includes('#t=') ? localPreviewUrl : `${localPreviewUrl}#t=0.1`} 
+                  className="w-full h-full object-cover cursor-pointer"
+                  muted 
+                  playsInline
+                  preload="auto"
+                  onMouseEnter={(e) => {
+                    try { e.target.play(); } catch (err) {}
+                  }}
+                  onMouseLeave={(e) => {
+                    try { 
+                      e.target.pause(); 
+                      e.target.currentTime = 0.1; 
+                    } catch (err) {}
+                  }}
+                  onClick={() => setPreviewModalOpen(true)}
+                />
+              )}
               <div 
                 onClick={() => setPreviewModalOpen(true)}
                 className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
@@ -241,7 +342,7 @@ export default function UniversalMediaPicker({
             )}
           </div>
           <div className="text-[10.5px] text-gray-400 truncate mt-0.5">
-            {isVideoUrlAvailable 
+            {isMediaAvailable 
               ? '▶ Di chuột vào ảnh nhỏ để xem trước hoặc bấm vào để phóng to' 
               : hasValue 
                 ? '📁 Đang liên kết với thư mục chứa video trên máy tính' 

@@ -4917,7 +4917,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           <div className="relative w-full h-full group/videoContainer select-none overflow-hidden bg-black flex items-center justify-center">
             {/* THẺ VIDEO PREVIEW TRÊN PHẦN MỀM (TƯƠNG THÍCH HOÀN HẢO VỚI OBS WINDOW CAPTURE - KHÔNG BAO GIỜ ĐEN MÀN HÌNH) */}
             <video 
-              key="main_desktop_video_player"
+              key={`main_desktop_vid_${selected.id || selected.url || 'default'}`}
               ref={desktopVideoRef}
               data-main-player="true"
               src={selected.url} 
@@ -4933,6 +4933,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               disablePictureInPicture
               disableRemotePlayback
               playsInline 
+              onLoadedData={(e) => {
+                try {
+                  e.currentTarget.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+                } catch (err) {}
+              }}
               onClick={toggleDesktopVideoPlayback}
               onError={(e) => {
                 console.warn('Desktop video playback error, recovering from IDB/fileData...', e);

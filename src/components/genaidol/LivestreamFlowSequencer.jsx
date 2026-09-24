@@ -2696,7 +2696,7 @@ export default function LivestreamFlowSequencer() {
                     <span>Tải Lên</span>
                     <input 
                       type="file" 
-                      accept="video/*,image/*" 
+                      accept="video/*,image/*,.mp4,.webm,.mov,.mkv,.avi,.m4v,.flv,.wmv,.png,.jpg,.jpeg,.webp,.gif" 
                       multiple
                       onChange={(e) => handleDirectLayerUpload(selectedLayer.type, selectedLayer.id, e)}
                       className="hidden" 
@@ -3777,7 +3777,7 @@ export default function LivestreamFlowSequencer() {
                                   <span>Tải Avatar Từ Máy</span>
                                   <input 
                                     type="file" 
-                                    accept="video/*,image/*" 
+                                    accept="video/*,image/*,.mp4,.webm,.mov,.mkv,.avi,.m4v,.flv,.wmv,.png,.jpg,.jpeg,.webp,.gif" 
                                     multiple
                                     onChange={(e) => handleDirectAvatarMediaUpload(step.avatarSpeaker || 'avatar_1', e)} 
                                     className="hidden" 
@@ -3822,7 +3822,7 @@ export default function LivestreamFlowSequencer() {
                                   <span>Tải Video Từ Máy Tính</span>
                                   <input 
                                     type="file" 
-                                    accept="video/*,image/*" 
+                                    accept="video/*,image/*,.mp4,.webm,.mov,.mkv,.avi,.m4v,.flv,.wmv,.png,.jpg,.jpeg,.webp,.gif" 
                                     multiple
                                     onChange={(e) => handleDirectMediaUpload(step.id, 'mediaUrl', e)} 
                                     className="hidden" 
@@ -3885,7 +3885,7 @@ export default function LivestreamFlowSequencer() {
                                   <span>Tải Video PiP Từ Máy</span>
                                   <input 
                                     type="file" 
-                                    accept="video/*,image/*" 
+                                    accept="video/*,image/*,.mp4,.webm,.mov,.mkv,.avi,.m4v,.flv,.wmv,.png,.jpg,.jpeg,.webp,.gif" 
                                     multiple
                                     onChange={(e) => handleDirectMediaUpload(step.id, 'secondaryMediaUrl', e)} 
                                     className="hidden" 

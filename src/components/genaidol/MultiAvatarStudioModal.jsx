@@ -1135,7 +1135,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
             <input 
               type="file" 
               multiple 
-              accept="image/*,video/*" 
+              accept="video/*,image/*,.mp4,.webm,.mov,.mkv,.avi,.m4v,.flv,.wmv,.png,.jpg,.jpeg,.webp,.gif" 
               onChange={handleMultiImageUpload} 
               className="hidden" 
             />
@@ -1151,7 +1151,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
             <input 
               type="file" 
               multiple 
-              accept="video/*,image/*" 
+              accept="video/*,image/*,.mp4,.webm,.mov,.mkv,.avi,.m4v,.flv,.wmv,.png,.jpg,.jpeg,.webp,.gif" 
               onChange={handleMultiFileUpload} 
               className="hidden" 
             />
@@ -1486,7 +1486,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                                 <Upload size={10} /> Đổi File
                                 <input 
                                   type="file" 
-                                  accept="video/*,image/*" 
+                                  accept="video/*,image/*,.mp4,.webm,.mov,.mkv,.avi,.m4v,.flv,.wmv,.png,.jpg,.jpeg,.webp,.gif" 
                                   onChange={(e) => handleDirectAvatarFileUpload(avatar.id, 'talkVideo', e)} 
                                   className="hidden" 
                                 />
@@ -1518,7 +1518,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                                 <span>Tải Video/Ảnh</span>
                                 <input 
                                   type="file" 
-                                  accept="video/*,image/*" 
+                                  accept="video/*,image/*,.mp4,.webm,.mov,.mkv,.avi,.m4v,.flv,.wmv,.png,.jpg,.jpeg,.webp,.gif" 
                                   onChange={(e) => handleDirectAvatarFileUpload(avatar.id, 'talkVideo', e)} 
                                   className="hidden" 
                                 />
@@ -1795,7 +1795,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                       <input 
                         type="file" 
                         multiple 
-                        accept="image/*,video/*" 
+                        accept="video/*,image/*,.mp4,.webm,.mov,.mkv,.avi,.m4v,.flv,.wmv,.png,.jpg,.jpeg,.webp,.gif" 
                         onChange={handleMultiImageUpload} 
                         className="hidden" 
                       />
@@ -1810,7 +1810,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                         <input 
                           type="file" 
                           multiple 
-                          accept="image/*,video/*" 
+                          accept="video/*,image/*,.mp4,.webm,.mov,.mkv,.avi,.m4v,.flv,.wmv,.png,.jpg,.jpeg,.webp,.gif" 
                           onChange={handleMultiImageUpload} 
                           className="hidden" 
                         />
@@ -1974,7 +1974,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                         <span className="text-[9px] text-gray-400">MP4, WebM, PNG, JPG</span>
                         <input 
                           type="file" 
-                          accept="video/*,image/*" 
+                          accept="video/*,image/*,.mp4,.webm,.mov,.mkv,.avi,.m4v,.flv,.wmv,.png,.jpg,.jpeg,.webp,.gif" 
                           onChange={(e) => handleDirectAvatarFileUpload(selectedAvatar.id, 'talkVideo', e)} 
                           className="hidden" 
                         />
@@ -2178,7 +2178,7 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                       <Upload size={12} /> Tải Ảnh Nền Từ Máy
                       <input 
                         type="file" 
-                        accept="image/*,video/*" 
+                        accept="video/*,image/*,.mp4,.webm,.mov,.mkv,.avi,.m4v,.flv,.wmv,.png,.jpg,.jpeg,.webp,.gif" 
                         onChange={handleCustomBackgroundUpload} 
                         className="hidden" 
                       />
