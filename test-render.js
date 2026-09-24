@@ -1,10 +1,9 @@
 import React from 'react';
 import { renderToString } from 'react-dom/server';
-import App from './src/App.jsx';
+import WorkspaceTacVu from './src/components/genaidol/WorkspaceTacVu.jsx';
 
 try {
-  const html = renderToString(React.createElement(App));
-  console.log('RENDER SUCCESS');
+  console.log(renderToString(<WorkspaceTacVu defaultEventId="welcome" />));
 } catch (e) {
-  console.error('RENDER ERROR:', e);
+  console.error("CRASH:", e);
 }

@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Video, FolderOpen, Sparkles, X, ChevronDown, Play, Eye, CheckCircle2, Film } from 'lucide-react';
 import { registerFileInRAM } from '../../utils/mediaDeduplication';
 import { uploadMediaToServer } from '../../utils/mediaUploadService';
+import { fastStreamUpload } from '../../utils/fastStreamService';
 const toast = {
   success: (message) => {
     if (typeof window !== 'undefined') {
@@ -106,14 +107,16 @@ export default function UniversalMediaPicker({
     }
     toast.success(`Đang nạp file: ${file.name}...`);
 
-    // 2. Tự động đẩy file vào thư mục uploads/ của server (chế độ config, không chiếm sân khấu)
-    uploadMediaToServer(file, file.name, { noStageTakeover: true }).then((serverUrl) => {
-      if (serverUrl) {
-        setLocalPreviewUrl(serverUrl);
-        if (onSelectFile) {
-          onSelectFile(file, serverUrl);
+    // 2. Tự động đẩy file vào thư mục uploads/ của server siêu tốc
+    fastStreamUpload(file, {
+      onInit: ({ fileUrl }) => {
+        if (fileUrl) {
+          setLocalPreviewUrl(fileUrl);
+          if (onSelectFile) {
+            onSelectFile(file, fileUrl);
+          }
+          toast.success(`✅ Đã đồng bộ ${file.name} vào hệ thống uploads`);
         }
-        toast.success(`✅ Đã đồng bộ ${file.name} vào hệ thống uploads`);
       }
     }).catch(() => {});
 

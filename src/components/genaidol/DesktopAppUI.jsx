@@ -13,6 +13,7 @@ import { supabase, syncUserToSupabase } from '../../lib/supabaseClient';
 import flvjs from 'flv.js';
 import Hls from 'hls.js';
 import WorkspaceTacVu from './WorkspaceTacVu';
+import IdolConnectModal from './IdolConnectModal';
 import LivestreamFlowSequencer from './LivestreamFlowSequencer';
 import GeneralSettings from './GeneralSettings';
 import ThanhToanCoin from './ThanhToanCoin';
@@ -4174,6 +4175,29 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               });
               setTimeout(() => bc.close(), 100);
             } catch (err) {}
+
+            try {
+              if (socketRef && socketRef.current) {
+                syncMasterLiveState({
+                  stage: 'idol',
+                  mediaUrl: fileUrl,
+                  selectedCharacter: newCharId,
+                  characterName: charName,
+                  isVideo: true,
+                  isPlaying: true,
+                  videoCurrentTime: 0,
+                  updatedAt: Date.now()
+                }, socketRef.current);
+                sendVideoControl({
+                  action: 'play',
+                  mediaUrl: fileUrl,
+                  isPlaying: true,
+                  currentTime: 0,
+                  force: true,
+                  timestamp: Date.now()
+                }, socketRef.current);
+              }
+            } catch (e) {}
           }
         }).catch(() => {});
       } else {
@@ -6019,7 +6043,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
                 {/* 2. KẾT NỐI IDOL */}
                 <button 
-                  onClick={() => { setActiveSettingsModal('workspace_events'); setIsSettingsDropdownOpen(false); }}
+                  onClick={() => { setActiveSettingsModal('idol_connect'); setIsSettingsDropdownOpen(false); }}
                   className={`w-full text-left px-3 py-2 mb-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-purple-900/40 to-purple-800/20 hover:from-purple-600 hover:to-purple-500 text-purple-100 hover:text-white border border-purple-800/50' : 'bg-purple-50 hover:bg-purple-500 text-purple-800 hover:text-white'}`}
                 >
                   <Radio size={16} className="text-purple-400 shrink-0" />
@@ -7248,6 +7272,28 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     </div>
     </div>
       )}
+
+      {/* Idol Connect Modal (TikTok Live) */}
+      <IdolConnectModal
+        isOpen={activeSettingsModal === 'idol_connect'}
+        onClose={() => setActiveSettingsModal(null)}
+        isDarkMode={isDarkMode}
+        tiktokId={tiktokId}
+        setTiktokId={(id) => {
+          setTiktokId(id);
+          try { localStorage.setItem('aidol_tiktok_id', id); } catch (e) {}
+        }}
+        videoTiktokId={videoTiktokId}
+        setVideoTiktokId={(id) => {
+          setVideoTiktokId(id);
+          try { localStorage.setItem('aidol_video_tiktok_id', id); } catch (e) {}
+        }}
+        isConnected={isConnected}
+        isConnecting={isConnecting}
+        handleConnect={handleConnect}
+        isMasterLiveRunning={isMasterLiveRunning}
+        handleToggleMasterLive={handleToggleMasterLive}
+      />
 
       {/* Shopee Live Connect Modal (RTMP URL & Stream Key) */}
       <ShopeeLiveConnectModal
