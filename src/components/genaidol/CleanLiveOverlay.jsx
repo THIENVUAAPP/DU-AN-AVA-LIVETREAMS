@@ -2568,6 +2568,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               loop={false}
               muted={isVideoAudioMuted}
               preload="auto"
+              onLoadedData={(e) => {
+                try {
+                  e.currentTarget.play().catch(() => {
+                    e.currentTarget.muted = true;
+                    e.currentTarget.play().catch(() => {});
+                  });
+                } catch (err) {}
+              }}
               onEnded={() => setActiveEventVideo(null)}
               onError={() => setActiveEventVideo(null)}
               className="w-full h-full object-cover bg-black"

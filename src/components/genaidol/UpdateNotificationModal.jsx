@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.22';
+export const APP_VERSION = '4.9.23';
 export const RELEASE_DATE = '24/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.23 - Kích Hoạt Toàn Diện Thanh Điều Khiển Window Capture, Khắc Phục Màn Hình Đen 14 Sự Kiện Live & Tối Ưu Tải Mọi Định Dạng Video',
+    description: '1. Thanh Điều Khiển Window Capture Nổi (Floating Dock): Các nút Tạm dừng/Phát, Bật/Tắt Tiếng, Tràn/Vừa Khung, và Ẩn Dock phản hồi tức thì 100%. 2. Khắc Phục Triệt Để Màn Hình Đen 14 Sự Kiện: Tự động trích xuất frame đầu làm Thumbnail sắc nét, đồng bộ đường dẫn máy chủ chuẩn xác sang Sân khấu chính, OBS và TikTok Live Studio; video sự kiện phát xong tự động chuyển tiếp mượt mà về video chạy nền. 3. Tải Mọi Định Dạng Video Cho Luồng Live Idol Avatar: Mở rộng tiếp nhận mọi định dạng video (.mp4, .webm, .mov, .mkv, .avi, v.v.) không bị giới hạn.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.22 - Khôi Phục Hoàn Toàn Bản v4.9.14: Tự Động Đẩy Toàn Bộ Video Sân Khấu Phụ & 14 Sự Kiện Vào Uploads Đồng Bộ OBS & TikTok Live',
     description: '1. Khôi Phục Nguyên Bản 100% Cấu Trúc Bản v4.9.14: Tự động đẩy toàn bộ video, hình ảnh và tiêu đề từ Sân khấu phụ (Luồng Live Idol 1-4 Avatar / Sequencer) và 14 sự kiện tương tác vào thư mục uploads của máy chủ, đồng bộ mượt mà sang Window Capture OBS và TikTok Live Studio 60 FPS. 2. Đảm bảo toàn bộ hệ thống module, tab chức năng và subview vận hành chuẩn xác theo đúng cấu hình v4.9.14.'

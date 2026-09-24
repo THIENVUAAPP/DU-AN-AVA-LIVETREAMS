@@ -166,27 +166,33 @@ export default function UniversalMediaPicker({
     });
 
     try {
-      registerFileInRAM(file, objectUrl);
+      registerFileInRAM(file, file.name);
     } catch (e) {}
 
-    // 1. Phản hồi tức thì 0ms cho giao diện
-    if (onSelectFile) {
-      onSelectFile(file, objectUrl);
-    }
     toast.success(`Đang nạp file: ${file.name}...`);
 
-    // 2. Tự động đẩy file vào thư mục uploads/ của server siêu tốc
+    // ⚡ Tự động đẩy file vào thư mục uploads/ của server siêu tốc
     fastStreamUpload(file, {
       onInit: ({ fileUrl }) => {
-        if (fileUrl) {
-          setLocalPreviewUrl(fileUrl);
-          if (onSelectFile) {
-            onSelectFile(file, fileUrl);
-          }
-          toast.success(`✅ Đã đồng bộ ${file.name} vào hệ thống uploads`);
+        const finalUrl = fileUrl || `/uploads/${file.name}`;
+        setLocalPreviewUrl(finalUrl);
+        if (onSelectFile) {
+          onSelectFile(file, finalUrl);
+        }
+        toast.success(`✅ Đã đồng bộ ${file.name} vào hệ thống uploads`);
+      }
+    }).then(res => {
+      if (res && res.url) {
+        setLocalPreviewUrl(res.url);
+        if (onSelectFile) {
+          onSelectFile(file, res.url);
         }
       }
-    }).catch(() => {});
+    }).catch(() => {
+      if (onSelectFile) {
+        onSelectFile(file, objectUrl);
+      }
+    });
 
     e.target.value = '';
   };

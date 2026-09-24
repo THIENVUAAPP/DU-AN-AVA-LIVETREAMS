@@ -1238,10 +1238,21 @@ export default function WindowCapturePlayer() {
             playsInline
             webkit-playsinline="true"
             loop={false}
-            muted={isUserMutedRef.current}
+            muted={isUserMuted}
             preload="auto"
+            onLoadedData={(e) => {
+              try {
+                e.currentTarget.play().catch(() => {
+                  e.currentTarget.muted = true;
+                  e.currentTarget.play().catch(() => {});
+                });
+              } catch (err) {}
+            }}
             onEnded={() => setActiveEventVideo(null)}
-            onError={() => setActiveEventVideo(null)}
+            onError={(e) => {
+              console.warn('[WindowCapture] Event video playback error:', activeEventVideo.url, e);
+              setActiveEventVideo(null);
+            }}
             style={{
               width: '100%',
               height: '100%',
