@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.20';
+export const APP_VERSION = '4.9.21';
 export const RELEASE_DATE = '24/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v4.9.20 - Khôi Phục Hoàn Toàn Bản v4.9.14: Tự Động Đẩy Toàn Bộ Video Sân Khấu Phụ & 14 Sự Kiện Vào Uploads Đồng Bộ OBS & TikTok Live',
+    title: '🚀 Bản Cập Nhật v4.9.21 - Khôi Phục Hoàn Toàn Bản v4.9.14: Tự Động Đẩy Toàn Bộ Video Sân Khấu Phụ & 14 Sự Kiện Vào Uploads Đồng Bộ OBS & TikTok Live',
     description: '1. Khôi Phục Nguyên Bản 100% Cấu Trúc Bản v4.9.14: Tự động đẩy toàn bộ video, hình ảnh và tiêu đề từ Sân khấu phụ (Luồng Live Idol 1-4 Avatar / Sequencer) và 14 sự kiện tương tác vào thư mục uploads của máy chủ, đồng bộ mượt mà sang Window Capture OBS và TikTok Live Studio 60 FPS. 2. Đảm bảo toàn bộ hệ thống module, tab chức năng và subview vận hành chuẩn xác theo đúng cấu hình v4.9.14.'
   },
   {
