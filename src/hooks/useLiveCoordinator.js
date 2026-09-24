@@ -5,6 +5,7 @@ import autoPinProductService from '../utils/autoPinProductService';
 import { resolveEffectiveVoice } from '../utils/voiceSyncService';
 import { isSmartSpamOrToxicComment, cleanUserNameForSpeech, isMeaningfulCommercialOrEngagingComment } from '../utils/vietnamesePronunciationMaster';
 import { syncMasterLiveState, sendVideoControl } from '../lib/masterLiveSync';
+import { ensureServerMediaUrl } from '../utils/mediaUploadService';
 
 export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack = 'talk' }) {
   const [liveMedia, setLiveMedia] = useState([]);
@@ -820,6 +821,26 @@ function fillTemplate(template, vars = {}) {
           currentTime: 0,
           force: true
         });
+
+        // 🚀 Tự động chuyển đổi sang link uploads server nếu là blob hoặc data URL
+        if (matchedEventVideo.mediaUrl && (matchedEventVideo.mediaUrl.startsWith('blob:') || matchedEventVideo.mediaUrl.startsWith('data:'))) {
+          ensureServerMediaUrl(matchedEventVideo.mediaUrl, matchedEventVideo.name || `${evKey}_video.mp4`).then(srvUrl => {
+            if (srvUrl && srvUrl !== matchedEventVideo.mediaUrl) {
+              syncMasterLiveState({
+                stage: 'idol',
+                mediaUrl: srvUrl,
+                eventVideoUrl: srvUrl,
+                updatedAt: Date.now()
+              });
+              sendVideoControl({
+                action: 'play',
+                mediaUrl: srvUrl,
+                currentTime: 0,
+                force: true
+              });
+            }
+          }).catch(() => {});
+        }
 
         // Bắn sự kiện toàn cục để Sân Khấu Chính lập tức hiển thị video sự kiện này tràn khớp màn hình
         if (typeof window !== 'undefined') {

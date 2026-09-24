@@ -16,6 +16,7 @@ import UniversalMediaPicker, { SAMPLE_IDOL_VIDEOS } from './UniversalMediaPicker
 import MultiAvatarStudioModal, { MultiAvatarStudioPanel } from './MultiAvatarStudioModal';
 import LivestreamFlowSequencer from './LivestreamFlowSequencer';
 import autoPinProductService from '../../utils/autoPinProductService';
+import { uploadMediaToServer } from '../../utils/mediaUploadService';
 
 const toast = {
   success: (message) => {
@@ -1236,12 +1237,20 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
     if (!file) return;
     const objectUrl = URL.createObjectURL(file);
     handleProductChange(productId, 'videoUrl', objectUrl);
+    handleProductChange(productId, 'videoFile', objectUrl);
     handleProductChange(productId, 'videoFileName', file.name);
     const existingFolder = currentConfig.checkoutProducts?.find(p => p.id === productId)?.videoFolder;
     if (!existingFolder) {
       handleProductChange(productId, 'videoFolder', file.name);
     }
     event.target.value = '';
+
+    uploadMediaToServer(file, file.name, { noStageTakeover: true }).then((serverUrl) => {
+      if (serverUrl) {
+        handleProductChange(productId, 'videoUrl', serverUrl);
+        handleProductChange(productId, 'videoFile', serverUrl);
+      }
+    }).catch(() => {});
   };
 
   const selectFolder = async (fieldName = 'videoFolder') => {
@@ -2844,9 +2853,10 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                                 label="Thư mục / File Video Minh Họa Sản Phẩm"
                                 currentPath={prod.videoFileName ? `🎬 ${prod.videoFileName}` : (prod.videoFolder || '')}
                                 defaultText="Chưa chọn video minh họa (Dùng video Idol mặc định)"
-                                onSelectFile={(file) => {
-                                  const localUrl = URL.createObjectURL(file);
+                                onSelectFile={(file, mediaUrl) => {
+                                  const localUrl = mediaUrl || URL.createObjectURL(file);
                                   handleProductChange(prod.id, 'videoFile', localUrl);
+                                  handleProductChange(prod.id, 'videoUrl', localUrl);
                                   handleProductChange(prod.id, 'videoFileName', file.name);
                                   handleProductChange(prod.id, 'videoFolder', file.name);
                                   toast.success(`Đã nạp video minh họa: ${file.name}`);

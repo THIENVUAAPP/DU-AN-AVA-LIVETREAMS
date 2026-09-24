@@ -48,6 +48,7 @@ import { setActiveMedia, removeActiveMedia, clearActiveMedia } from '../../utils
 import ShopeeLiveConnectModal from './ShopeeLiveConnectModal';
 import autoPinProductService from '../../utils/autoPinProductService';
 import { generateAiKnowledgeScript } from '../../utils/aiScriptGenerator';
+import { ensureServerMediaUrl, uploadMediaToServer } from '../../utils/mediaUploadService';
 
 const CHARACTERS = {};
 
@@ -2907,6 +2908,55 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         overlayTextColor: overlayTextColor || '#ffffff'
       }, socketRef.current);
 
+      // 🚀 TỰ ĐỘNG ĐẨY VIDEO/ẢNH/TIÊU ĐỀ TỪ SEQUENCER VÀO THƯ MỤC UPLOADS CỦA SERVER
+      if (effectiveMediaUrl && (effectiveMediaUrl.startsWith('blob:') || effectiveMediaUrl.startsWith('data:'))) {
+        ensureServerMediaUrl(effectiveMediaUrl, `sequencer_${Date.now()}.mp4`).then(serverUrl => {
+          if (serverUrl && serverUrl !== effectiveMediaUrl) {
+            setUserLockedMediaUrl(serverUrl);
+            setUserLockedMedia(serverUrl);
+            try {
+              localStorage.setItem('avalive_user_locked_media', serverUrl);
+            } catch (err) {}
+            syncMasterLiveState({
+              stage: 'idol',
+              mediaUrl: serverUrl,
+              isVideo: true,
+              isPlaying: true,
+              aspectRatio: globalAspectRatio || '9:16',
+              stepTitle: title,
+              actionType: actionType
+            }, socketRef.current);
+            postMasterBroadcast({
+              type: 'GLOBAL_MEDIA_CHANGE',
+              mediaUrl: serverUrl,
+              blobUrl: serverUrl,
+              isVideo: true,
+              isPlaying: true,
+              source: 'sequencer_auto_upload',
+              timestamp: Date.now()
+            });
+          }
+        }).catch(() => {});
+      }
+
+      if (secondaryMediaUrl && (secondaryMediaUrl.startsWith('blob:') || secondaryMediaUrl.startsWith('data:'))) {
+        ensureServerMediaUrl(secondaryMediaUrl, `pip_${Date.now()}.mp4`).then(serverSecUrl => {
+          if (serverSecUrl) {
+            syncMasterLiveState({ secondaryMediaUrl: serverSecUrl }, socketRef.current);
+            postMasterBroadcast({ type: 'GLOBAL_MEDIA_CHANGE', secondaryMediaUrl: serverSecUrl, timestamp: Date.now() });
+          }
+        }).catch(() => {});
+      }
+
+      if (overlayImage && (overlayImage.startsWith('blob:') || overlayImage.startsWith('data:'))) {
+        ensureServerMediaUrl(overlayImage, `banner_${Date.now()}.png`).then(serverImgUrl => {
+          if (serverImgUrl) {
+            syncMasterLiveState({ overlayImage: serverImgUrl }, socketRef.current);
+            postMasterBroadcast({ type: 'GLOBAL_MEDIA_CHANGE', overlayImage: serverImgUrl, timestamp: Date.now() });
+          }
+        }).catch(() => {});
+      }
+
       // 5. Tự động ghim sản phẩm giỏ hàng lên màn hình nếu phân đoạn có chứa thông tin sản phẩm
       if (e.detail?.productName) {
         const productObj = {
@@ -3146,13 +3196,19 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         setTimeout(() => bc.close(), 100);
       } catch (err) {}
 
-      if (rawBlob && videoUrl.startsWith('blob:')) {
-        fastStreamUpload(rawBlob).then(res => {
-          if (res && res.fileUrl) {
+      // 🚀 TỰ ĐỘNG ĐẨY VIDEO SỰ KIỆN VÀO THƯ MỤC UPLOADS CỦA SERVER ĐỒNG BỘ OBS & TIKTOK LIVE STUDIO
+      if (videoUrl.startsWith('blob:') || videoUrl.startsWith('data:')) {
+        ensureServerMediaUrl(rawBlob || videoUrl, `event_${eventKey || eventType || 'video'}_${Date.now()}.mp4`).then(serverUrl => {
+          if (serverUrl && serverUrl !== videoUrl) {
+            setUserLockedMediaUrl(serverUrl);
+            try {
+              localStorage.setItem('avalive_user_locked_media', serverUrl);
+              localStorage.setItem('avalive_active_video_src', serverUrl);
+            } catch (err) {}
             syncMasterLiveState({
               stage: 'idol',
-              mediaUrl: res.fileUrl,
-              eventVideoUrl: res.fileUrl,
+              mediaUrl: serverUrl,
+              eventVideoUrl: serverUrl,
               characterName: name || `${eventType || 'Live'} Video`,
               isVideo: true,
               videoPlaybackEvent: 'play',
@@ -3160,6 +3216,22 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               videoCurrentTime: 0,
               updatedAt: Date.now()
             }, socketRef.current);
+            try {
+              const bc = new BroadcastChannel('avalive_master_live_stream');
+              bc.postMessage({
+                type: 'EVENT_VIDEO_PLAY',
+                eventVideoUrl: serverUrl,
+                videoUrl: serverUrl,
+                mediaUrl: serverUrl,
+                name: name || `${eventType || 'Live'} Video`,
+                eventType: eventType || 'event',
+                muteSourceVideo: muteSourceVideo,
+                isPlaying: true,
+                currentTime: 0,
+                timestamp: Date.now()
+              });
+              setTimeout(() => bc.close(), 100);
+            } catch (_) {}
           }
         }).catch(() => {});
       }

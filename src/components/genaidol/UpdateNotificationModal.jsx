@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.13';
+export const APP_VERSION = '4.9.14';
 export const RELEASE_DATE = '24/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.14 - Tự Động Đẩy Toàn Bộ Video, Hình Ảnh & Tiêu Đề Từ Sân Khấu Phụ (Luồng Live Idol) & 14 Sự Kiện Vào Uploads Đồng Bộ OBS & Link TikTok Live',
+    description: '1. Tự Động Đẩy File Vào Uploads Của Server: Mọi video và hình ảnh được thiết lập từ Luồng Live Idol Avatar (Sân khấu phụ / Sequencer), Multi-Avatar cũng như 14 Sự kiện live (Quà tặng, Chốt đơn, Hành động, Nền, v.v.) đều được tự động lưu trữ và đồng bộ vào thư mục uploads trên máy chủ với đường dẫn /uploads/... cố định, triệt tiêu 100% tình trạng mất link hay đen màn hình. 2. Đồng Bộ Tức Thì 0ms Sang OBS & TikTok Live: Toàn bộ nội dung phát, video, hình ảnh và tiêu đề chữ được đồng bộ sang Window Capture OBS và Đường link liên kết TikTok Live Studio siêu mượt, siêu nét 60 FPS theo thời gian thực.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.13 - Đồng Bộ 100% Sân Khấu Chính, Triệt Tiêu Tự Phát Video Lung Tung & Đồng Bộ Trọn Vẹn Tiêu Đề',
     description: '1. Sân Khấu Chính Phát Gì Thì Phát Đúng Cái Đó: Loại bỏ hoàn toàn cơ chế tự ý quét bốc video cũ hoặc ngẫu nhiên từ uploads/IndexedDB. Cửa sổ Window Capture OBS và Đường link liên kết TikTok Live Studio chỉ phát chuẩn xác 100% video, hình ảnh và âm thanh do Sân khấu chính hiển thị, triệt tiêu tình trạng phát video lung tung. 2. Đồng Bộ Trọn Vẹn Nội Dung Tiêu Đề: Toàn bộ tiêu đề phát, chữ banner khuyến mãi, phong cách chữ và màu sắc trên Sân khấu chính được đồng bộ tức thì sang Window Capture và Link TikTok Live Studio siêu mượt 60 FPS.'

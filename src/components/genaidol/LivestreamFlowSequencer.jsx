@@ -26,6 +26,7 @@ import {
   stopVoiceAudio,
   unlockAudioContext
 } from '../../utils/voiceSyncService';
+import { uploadMediaToServer, ensureServerMediaUrl } from '../../utils/mediaUploadService';
 
 // 🎙️ Danh sách các Giọng Đọc AI Tiếng Việt Top 1 & Đồng Bộ Bộ Não Voice AI Brain
 export const CURATED_STUDIO_VOICES = [
@@ -802,6 +803,19 @@ export default function LivestreamFlowSequencer() {
         updatedAt: Date.now()
       })
     }).catch(() => {});
+
+    // 🚀 Đảm bảo mọi video/ảnh blob từ sequencer đều được đẩy vào uploads/ của server
+    if (mediaToPlay && (mediaToPlay.startsWith('blob:') || mediaToPlay.startsWith('data:'))) {
+      ensureServerMediaUrl(mediaToPlay, `sequencer_step_${step.id || Date.now()}.mp4`).then(srvUrl => {
+        if (srvUrl && srvUrl !== mediaToPlay) {
+          fetch('/api/live-state', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mediaUrl: srvUrl, currentMedia: srvUrl, updatedAt: Date.now() })
+          }).catch(() => {});
+        }
+      }).catch(() => {});
+    }
   };
   // Gán syncStepToServerRef để undo/redo có thể gọi mà không bị stale closure
   syncStepToServerRef.current = syncStepToServer;
@@ -1512,7 +1526,15 @@ export default function LivestreamFlowSequencer() {
     const rawFiles = Array.from(e.target.files || []);
     if (rawFiles.length === 0) return;
 
-    const getFileUrl = (file) => {
+    const getFileUrl = async (file) => {
+      try {
+        const serverUrl = await uploadMediaToServer(file, file.name, { noStageTakeover: true });
+        if (serverUrl) {
+          const isImg = file.type.startsWith('image/') || file.name.match(/\.(png|jpe?g|webp|gif|svg|avif|bmp)$/i);
+          return isImg ? serverUrl : (serverUrl + '#type=video');
+        }
+      } catch (e) {}
+
       const isImg = file.type.startsWith('image/') || file.name.match(/\.(png|jpe?g|webp|gif|svg|avif|bmp)$/i);
       if (isImg) {
         return new Promise((resolve) => {
@@ -1523,7 +1545,7 @@ export default function LivestreamFlowSequencer() {
         });
       } else {
         try {
-          return Promise.resolve(URL.createObjectURL(file) + '#type=video');
+          return URL.createObjectURL(file) + '#type=video';
         } catch {
           return new Promise((resolve) => {
             const reader = new FileReader();
@@ -1604,7 +1626,15 @@ export default function LivestreamFlowSequencer() {
     const firstFile = rawFiles[0];
     const isImgFirst = firstFile.type.startsWith('image/') || firstFile.name.match(/\.(png|jpe?g|webp|gif|svg|avif|bmp)$/i);
 
-    const getFileUrl = (file) => {
+    const getFileUrl = async (file) => {
+      try {
+        const serverUrl = await uploadMediaToServer(file, file.name, { noStageTakeover: true });
+        if (serverUrl) {
+          const isImg = file.type.startsWith('image/') || file.name.match(/\.(png|jpe?g|webp|gif|svg|avif|bmp)$/i);
+          return isImg ? serverUrl : (serverUrl + '#type=video');
+        }
+      } catch (e) {}
+
       const isImg = file.type.startsWith('image/') || file.name.match(/\.(png|jpe?g|webp|gif|svg|avif|bmp)$/i);
       if (isImg) {
         return new Promise((resolve) => {
@@ -1615,7 +1645,7 @@ export default function LivestreamFlowSequencer() {
         });
       } else {
         try {
-          return Promise.resolve(URL.createObjectURL(file) + '#type=video');
+          return URL.createObjectURL(file) + '#type=video';
         } catch {
           return new Promise((resolve) => {
             const reader = new FileReader();

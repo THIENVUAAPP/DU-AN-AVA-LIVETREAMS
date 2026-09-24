@@ -98,9 +98,11 @@ if (!fs.existsSync(uploadsDir)) {
 
 const candidateUploadDirs = [
   uploadsDir,
+  path.join(process.cwd(), 'system', 'uploads'),
   path.join(process.cwd(), 'backend', 'uploads'),
   path.join(process.cwd(), 'uploads'),
-  path.join(__dirname, '..', 'uploads')
+  path.join(__dirname, '..', 'uploads'),
+  path.join(__dirname, '..', 'system', 'uploads')
 ];
 
 function findFileInUploadDirs(filename) {
@@ -826,6 +828,35 @@ app.post('/api/upload-chunk', (req, res) => {
   });
 });
 
+function saveBase64MediaToUploads(dataUrl, prefix = 'media') {
+  try {
+    if (!dataUrl || typeof dataUrl !== 'string' || !dataUrl.startsWith('data:')) return dataUrl;
+    const matches = dataUrl.match(/^data:([A-Za-z-+\/]+);base64,(.+)$/);
+    if (!matches || matches.length !== 3) return dataUrl;
+    const mime = matches[1];
+    const ext = mime.includes('png') ? 'png' : mime.includes('webp') ? 'webp' : mime.includes('gif') ? 'gif' : mime.includes('mp4') ? 'mp4' : mime.includes('webm') ? 'webm' : 'jpg';
+    const buffer = Buffer.from(matches[2], 'base64');
+    const filename = `${prefix}_${Date.now()}_${Math.random().toString(36).substring(2, 7)}.${ext}`;
+    const filePath = path.join(uploadsDir, filename);
+    fs.writeFileSync(filePath, buffer);
+    const extraDirs = [
+      path.join(process.cwd(), 'system', 'uploads'),
+      path.join(process.cwd(), 'uploads'),
+      path.join(__dirname, '..', 'uploads'),
+      path.join(__dirname, '..', 'system', 'uploads')
+    ];
+    for (const ed of extraDirs) {
+      if (fs.existsSync(ed) && ed !== uploadsDir) {
+        try { fs.writeFileSync(path.join(ed, filename), buffer); } catch(e) {}
+      }
+    }
+    return `/uploads/${filename}`;
+  } catch (e) {
+    console.warn('[saveBase64MediaToUploads] Error:', e);
+    return dataUrl;
+  }
+}
+
 app.post('/api/upload-media', upload.single('file'), (req, res) => {
   if (!req.file) {
     return res.status(400).json({ error: 'No file uploaded' });
@@ -891,20 +922,41 @@ app.post('/api/upload-media', upload.single('file'), (req, res) => {
     ensureMp4FastStart(finalFilePath);
   }
 
+  // Đảm bảo file được đồng bộ sang tất cả các thư mục uploads khả dụng
+  try {
+    const extraDirs = [
+      path.join(process.cwd(), 'system', 'uploads'),
+      path.join(process.cwd(), 'uploads'),
+      path.join(__dirname, '..', 'uploads'),
+      path.join(__dirname, '..', 'system', 'uploads')
+    ];
+    for (const ed of extraDirs) {
+      if (fs.existsSync(ed) && ed !== uploadsDir) {
+        const dest = path.join(ed, finalFilename);
+        if (!fs.existsSync(dest) && fs.existsSync(finalFilePath)) {
+          try { fs.copyFileSync(finalFilePath, dest); } catch(e) {}
+        }
+      }
+    }
+  } catch(e) {}
+
   const fileUrl = `/uploads/${finalFilename}`;
   const isImageFile = /\.(png|jpe?g|webp|gif|svg|avif|bmp)$/i.test(finalFilename) || (req.file.mimetype && req.file.mimetype.startsWith('image/'));
-  currentMasterLiveState = {
-    ...currentMasterLiveState,
-    stage: 'idol',
-    mediaUrl: fileUrl,
-    isVideo: !isImageFile,
-    videoPlaybackEvent: 'play',
-    isPlaying: true,
-    isUserExplicitMediaLocked: true,
-    updatedAt: Date.now()
-  };
-  io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
-  saveLiveStateToFile();
+  const noStageTakeover = req.body?.noStageTakeover === 'true' || req.body?.isConfigOnly === 'true' || req.body?.setAsMaster === 'false';
+  if (!noStageTakeover) {
+    currentMasterLiveState = {
+      ...currentMasterLiveState,
+      stage: 'idol',
+      mediaUrl: fileUrl,
+      isVideo: !isImageFile,
+      videoPlaybackEvent: 'play',
+      isPlaying: true,
+      isUserExplicitMediaLocked: true,
+      updatedAt: Date.now()
+    };
+    io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+    saveLiveStateToFile();
+  }
   res.json({ url: fileUrl, filename: finalFilename, isVideo: !isImageFile, reused: reused, success: true });
 });
 
@@ -2082,7 +2134,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.13';
+  let ver = '4.9.14';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -2120,7 +2172,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.13';
+  let ver = '4.9.14';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -3248,15 +3300,42 @@ app.post('/api/live-state', (req, res) => {
     const payload = { ...req.body };
     delete payload.force; // Không lưu cờ force vào live state
     
-    // Nếu payload có chứa mediaUrl hợp lệ thì mới cập nhật, ngược lại giữ nguyên mediaUrl hiện tại
+    // Tự động chuyển đổi base64 data: thành file thật trong uploads/
     if (payload.mediaUrl && typeof payload.mediaUrl === 'string') {
-      if (payload.mediaUrl.startsWith('blob:')) {
+      if (payload.mediaUrl.startsWith('data:')) {
+        payload.mediaUrl = saveBase64MediaToUploads(payload.mediaUrl, 'master_live');
+      } else if (payload.mediaUrl.startsWith('blob:')) {
         delete payload.mediaUrl; // Không lưu blob URL tạm thời
       } else if (payload.mediaUrl.includes('/uploads/')) {
         payload.mediaUrl = payload.mediaUrl.substring(payload.mediaUrl.indexOf('/uploads/'));
       }
     } else if (!payload.mediaUrl && !payload.clearMedia && currentMasterLiveState.mediaUrl) {
       delete payload.mediaUrl; // Bảo vệ video hiện tại không bị gán đè null
+    }
+
+    if (payload.secondaryMediaUrl && typeof payload.secondaryMediaUrl === 'string') {
+      if (payload.secondaryMediaUrl.startsWith('data:')) {
+        payload.secondaryMediaUrl = saveBase64MediaToUploads(payload.secondaryMediaUrl, 'pip');
+      } else if (payload.secondaryMediaUrl.includes('/uploads/')) {
+        payload.secondaryMediaUrl = payload.secondaryMediaUrl.substring(payload.secondaryMediaUrl.indexOf('/uploads/'));
+      }
+    }
+
+    if (payload.overlayImage && typeof payload.overlayImage === 'string') {
+      if (payload.overlayImage.startsWith('data:')) {
+        payload.overlayImage = saveBase64MediaToUploads(payload.overlayImage, 'banner');
+      } else if (payload.overlayImage.includes('/uploads/')) {
+        payload.overlayImage = payload.overlayImage.substring(payload.overlayImage.indexOf('/uploads/'));
+      }
+    }
+
+    if (Array.isArray(payload.syncedAvatars)) {
+      payload.syncedAvatars = payload.syncedAvatars.map(av => {
+        if (av.talkVideo && av.talkVideo.startsWith('data:')) av.talkVideo = saveBase64MediaToUploads(av.talkVideo, 'avatar_talk');
+        if (av.idleVideo && av.idleVideo.startsWith('data:')) av.idleVideo = saveBase64MediaToUploads(av.idleVideo, 'avatar_idle');
+        if (av.resolvedVidSrc && av.resolvedVidSrc.startsWith('data:')) av.resolvedVidSrc = saveBase64MediaToUploads(av.resolvedVidSrc, 'avatar_src');
+        return av;
+      });
     }
 
     if (currentTunnelUrl && !payload.tunnelUrl) {
