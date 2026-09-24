@@ -15,6 +15,25 @@ const toast = {
   }
 };
 
+const resolveMediaUrl = (url) => {
+  if (!url || typeof url !== 'string') return '';
+  if (url.startsWith('blob:') || url.startsWith('data:')) return url;
+  if (url.startsWith('http://') || url.startsWith('https://')) return url;
+  if (url.startsWith('/uploads/') || url.includes('/uploads/')) {
+    const pathPart = url.substring(url.indexOf('/uploads/'));
+    return `${typeof window !== 'undefined' ? window.location.origin : ''}${pathPart}`;
+  }
+  if (url.startsWith('/')) {
+    return `${typeof window !== 'undefined' ? window.location.origin : ''}${url}`;
+  }
+  return url;
+};
+
+const isImageUrl = (url) => {
+  if (!url || typeof url !== 'string') return false;
+  return /\.(jpeg|jpg|png|gif|webp|svg)(\?.*)?$/i.test(url) || url.startsWith('data:image/');
+};
+
 // 5 Video Mẫu Idol AI Dựng Sẵn Chuẩn 9:16
 export const SAMPLE_IDOL_VIDEOS = [
   { 
@@ -85,8 +104,10 @@ export default function UniversalMediaPicker({
   useEffect(() => {
     if (videoUrl) {
       setLocalPreviewUrl(videoUrl);
-    } else if (currentPath && (currentPath.startsWith('http') || currentPath.startsWith('blob:') || currentPath.startsWith('data:'))) {
-      setLocalPreviewUrl(currentPath);
+    } else if (currentPath) {
+      if (currentPath.startsWith('http') || currentPath.startsWith('blob:') || currentPath.startsWith('data:') || currentPath.startsWith('/') || currentPath.includes('/uploads/')) {
+        setLocalPreviewUrl(currentPath);
+      }
     }
   }, [videoUrl, currentPath]);
 
@@ -157,8 +178,15 @@ export default function UniversalMediaPicker({
     toast.success('Đã đặt lại ô video');
   };
 
-  const hasValue = !!(currentPath || localPreviewUrl);
-  const isVideoUrlAvailable = !!(localPreviewUrl && (localPreviewUrl.startsWith('http') || localPreviewUrl.startsWith('blob:') || localPreviewUrl.startsWith('data:')));
+  const effectiveMediaSrc = resolveMediaUrl(localPreviewUrl || videoUrl || (currentPath && (currentPath.startsWith('http') || currentPath.startsWith('blob:') || currentPath.startsWith('data:') || currentPath.startsWith('/') || currentPath.includes('/uploads/')) ? currentPath : ''));
+  const hasValue = !!(currentPath || localPreviewUrl || videoUrl);
+  const isMediaAvailable = !!(effectiveMediaSrc && (
+    effectiveMediaSrc.startsWith('http') || 
+    effectiveMediaSrc.startsWith('blob:') || 
+    effectiveMediaSrc.startsWith('data:') || 
+    effectiveMediaSrc.startsWith('/')
+  ));
+  const isImage = isImageUrl(effectiveMediaSrc);
 
   return (
     <div className={`flex flex-col gap-1.5 w-full ${className}`}>
@@ -181,32 +209,44 @@ export default function UniversalMediaPicker({
       {/* Khung tương tác chính */}
       <div className="flex items-center gap-2.5 bg-gray-50/70 hover:bg-gray-50 border border-gray-200 rounded-xl p-2 transition-all shadow-2xs">
         
-        {/* 🎬 1. Ô THUMBNAIL PREVIEW NHỎ (HIỂN THỊ TRỰC QUAN VIDEO ĐÃ NẠP) */}
+        {/* 🎬 1. Ô THUMBNAIL PREVIEW NHỎ (HIỂN THỊ TRỰC QUAN VIDEO HOẶC HÌNH ẢNH ĐÃ NẠP) */}
         <div className="relative shrink-0 w-[54px] h-[54px] rounded-lg overflow-hidden bg-slate-900 border border-slate-300 shadow-inner flex items-center justify-center group">
-          {isVideoUrlAvailable ? (
+          {isMediaAvailable ? (
             <>
-              <video 
-                ref={previewVideoRef}
-                src={localPreviewUrl} 
-                className="w-full h-full object-cover cursor-pointer"
-                muted 
-                playsInline
-                loop
-                onMouseEnter={(e) => {
-                  try { e.target.play(); } catch (err) {}
-                }}
-                onMouseLeave={(e) => {
-                  try { 
-                    e.target.pause(); 
-                    e.target.currentTime = 0; 
-                  } catch (err) {}
-                }}
-                onClick={() => setPreviewModalOpen(true)}
-              />
+              {isImage ? (
+                <img
+                  src={effectiveMediaSrc}
+                  alt="Thumbnail"
+                  className="w-full h-full object-cover cursor-pointer"
+                  onClick={() => setPreviewModalOpen(true)}
+                  onError={(e) => {
+                    e.currentTarget.style.display = 'none';
+                  }}
+                />
+              ) : (
+                <video 
+                  ref={previewVideoRef}
+                  src={effectiveMediaSrc} 
+                  className="w-full h-full object-cover cursor-pointer"
+                  muted 
+                  playsInline
+                  loop
+                  onMouseEnter={(e) => {
+                    try { e.target.play(); } catch (err) {}
+                  }}
+                  onMouseLeave={(e) => {
+                    try { 
+                      e.target.pause(); 
+                      e.target.currentTime = 0; 
+                    } catch (err) {}
+                  }}
+                  onClick={() => setPreviewModalOpen(true)}
+                />
+              )}
               <div 
                 onClick={() => setPreviewModalOpen(true)}
                 className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
-                title="Bấm để xem video phóng to"
+                title="Bấm để xem phóng to"
               >
                 <Eye size={16} className="text-white drop-shadow-md" />
               </div>
@@ -329,28 +369,37 @@ export default function UniversalMediaPicker({
         </div>
       </div>
 
-      {/* 🔍 MODAL XEM TRƯỚC VIDEO PHÓNG TO KHI BẤM VÀO THUMBNAIL */}
-      {previewModalOpen && isVideoUrlAvailable && (
+      {/* 🔍 MODAL XEM TRƯỚC MEDIA PHÓNG TO KHI BẤM VÀO THUMBNAIL */}
+      {previewModalOpen && isMediaAvailable && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
           <div className="bg-slate-900 text-white rounded-2xl max-w-lg w-full overflow-hidden border border-cyan-500/30 shadow-2xl">
             <div className="p-3 border-b border-slate-700 flex items-center justify-between">
               <div className="font-bold text-sm text-cyan-300 flex items-center gap-2">
-                <Play size={16} /> Xem Thử Video: {currentPath || 'Video Idol AI'}
+                <Play size={16} /> Xem Thử Media: {currentPath || 'Idol Media'}
               </div>
               <button 
+                type="button"
                 onClick={() => setPreviewModalOpen(false)}
-                className="text-gray-400 hover:text-white p-1 rounded-lg"
+                className="text-gray-400 hover:text-white p-1 rounded-lg cursor-pointer"
               >
                 <X size={18} />
               </button>
             </div>
             <div className="relative aspect-[9/16] max-h-[65vh] w-full bg-black flex items-center justify-center mx-auto overflow-hidden">
-              <video 
-                src={localPreviewUrl} 
-                controls 
-                autoPlay 
-                className="w-full h-full object-contain"
-              />
+              {isImage ? (
+                <img 
+                  src={effectiveMediaSrc} 
+                  alt="Xem Thử Media"
+                  className="w-full h-full object-contain"
+                />
+              ) : (
+                <video 
+                  src={effectiveMediaSrc} 
+                  controls 
+                  autoPlay 
+                  className="w-full h-full object-contain"
+                />
+              )}
             </div>
             <div className="p-3 bg-slate-800 text-center text-xs text-gray-300">
               Khung hình chuẩn 9:16 - Sẵn sàng phát sóng trên TikTok Live Studio / OBS

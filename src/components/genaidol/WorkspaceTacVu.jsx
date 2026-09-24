@@ -2852,6 +2852,7 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                               <UniversalMediaPicker 
                                 label="Thư mục / File Video Minh Họa Sản Phẩm"
                                 currentPath={prod.videoFileName ? `🎬 ${prod.videoFileName}` : (prod.videoFolder || '')}
+                                videoUrl={prod.videoUrl || prod.videoFile || ''}
                                 defaultText="Chưa chọn video minh họa (Dùng video Idol mặc định)"
                                 onSelectFile={(file, mediaUrl) => {
                                   const localUrl = mediaUrl || URL.createObjectURL(file);

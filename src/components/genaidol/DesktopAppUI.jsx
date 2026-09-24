@@ -4053,6 +4053,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             setTimeout(() => bc.close(), 100);
           } catch (err) {}
 
+          syncMasterLiveState({
+            stage: 'idol',
+            mediaUrl: targetMediaUrl || localUrl,
+            characterName: charName,
+            selectedCharacter: targetId,
+            isVideo: true,
+            videoPlaybackEvent: 'play',
+            isPlaying: true,
+            videoCurrentTime: 0,
+            updatedAt: Date.now()
+          }, socketRef.current);
+
           showToast(`⚡ Video "${charName}" đã có sẵn trong hệ thống! Đã kích hoạt sử dụng ngay lập tức.`, 'success');
           return;
         }
@@ -4126,6 +4138,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           setTimeout(() => bc.close(), 100);
         } catch (err) {}
 
+        syncMasterLiveState({
+          stage: 'idol',
+          selectedCharacter: newCharId,
+          characterName: charName,
+          mediaUrl: localUrl,
+          isVideo: true,
+          isPlaying: true,
+          videoPlaybackEvent: 'play',
+          videoCurrentTime: 0,
+          updatedAt: Date.now()
+        }, socketRef.current);
+
         showToast(`⚡ Đã phát ngay video "${charName}" trên sân khấu chính!`, 'success');
 
         // 🚀 2. PHÁT LUỒNG SIÊU TỐC TỪNG PHẦN (FAST-STREAM PIPELINE) LÊN SERVER & TIKTOK LIVE STUDIO TRONG BACKGROUND
@@ -4155,6 +4179,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               fileData: file,
               mediaUrl: fileUrl
             }).catch(() => {});
+
+            syncMasterLiveState({
+              stage: 'idol',
+              selectedCharacter: newCharId,
+              characterName: charName,
+              mediaUrl: fileUrl,
+              isVideo: true,
+              isPlaying: true,
+              videoPlaybackEvent: 'play',
+              videoCurrentTime: 0,
+              updatedAt: Date.now()
+            }, socketRef.current);
 
             try {
               const bc = new BroadcastChannel('avalive_master_live_stream');
@@ -5042,48 +5078,47 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 e.currentTarget.dataset.userPaused = 'false';
                 setIsVideoPlaying(true);
                 
-                // Đồng bộ playback sang các kênh nếu phiên live đang chạy
-                if (isMasterLiveRunning) {
-                  const curTime = e.currentTarget.currentTime;
-                  let playUrl = selected.url;
-                  if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
-                    playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
-                  }
-                  sendVideoControl({
-                    action: 'play',
-                    currentTime: curTime,
-                    isPlaying: true,
-                    force: false,
-                    mediaUrl: playUrl,
-                    timestamp: Date.now()
-                  }, socketRef.current);
-
-                  syncMasterLiveState({
-                    stage: 'idol',
-                    mediaUrl: playUrl,
-                    title: flowSequencerOverlay?.overlayText || selected?.name || null,
-                    overlayText: flowSequencerOverlay?.overlayText || null,
-                    isVideo: true,
-                    videoPlaybackEvent: 'play',
-                    videoCurrentTime: curTime,
-                    force: false,
-                    isPlaying: true
-                  }, socketRef.current);
-
-                  try {
-                    const bc = new BroadcastChannel('avalive_master_live_stream');
-                    bc.postMessage({ 
-                      type: 'GLOBAL_PLAYBACK_CHANGE', 
-                      isPlaying: true, 
-                      userPaused: false, 
-                      currentTime: curTime, 
-                      force: false,
-                      source: 'desktop',
-                      timestamp: Date.now() 
-                    });
-                    setTimeout(() => bc.close(), 100);
-                  } catch (err) {}
+                // Đồng bộ playback sang các kênh Window Capture và link phát TikTok
+                const curTime = e.currentTarget.currentTime;
+                let playUrl = (selected && selected.url) || currentBlobUrlRef.current || '';
+                if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
+                  playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
                 }
+                sendVideoControl({
+                  action: 'play',
+                  currentTime: curTime,
+                  isPlaying: true,
+                  force: false,
+                  mediaUrl: playUrl,
+                  timestamp: Date.now()
+                }, socketRef.current);
+
+                syncMasterLiveState({
+                  stage: 'idol',
+                  mediaUrl: playUrl,
+                  title: flowSequencerOverlay?.overlayText || selected?.name || null,
+                  overlayText: flowSequencerOverlay?.overlayText || null,
+                  isVideo: true,
+                  videoPlaybackEvent: 'play',
+                  videoCurrentTime: curTime,
+                  force: false,
+                  isPlaying: true
+                }, socketRef.current);
+
+                try {
+                  const bc = new BroadcastChannel('avalive_master_live_stream');
+                  bc.postMessage({ 
+                    type: 'GLOBAL_PLAYBACK_CHANGE', 
+                    isPlaying: true, 
+                    userPaused: false, 
+                    currentTime: curTime, 
+                    force: false,
+                    mediaUrl: playUrl,
+                    source: 'desktop',
+                    timestamp: Date.now() 
+                  });
+                  setTimeout(() => bc.close(), 100);
+                } catch (err) {}
               }}
               onPause={(e) => {
                 if (isInternalPlaybackChangeRef.current) return;
