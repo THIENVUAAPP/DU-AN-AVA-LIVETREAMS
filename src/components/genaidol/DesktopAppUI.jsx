@@ -46,7 +46,6 @@ import { bootstrapDefaultPresets } from '../../utils/defaultPresetsBootstrap';
 import { fastStreamUpload } from '../../utils/fastStreamService';
 import { setActiveMedia, removeActiveMedia, clearActiveMedia } from '../../utils/activeMediaStore';
 import ShopeeLiveConnectModal from './ShopeeLiveConnectModal';
-import IdolConnectModal from './IdolConnectModal';
 import autoPinProductService from '../../utils/autoPinProductService';
 import { generateAiKnowledgeScript } from '../../utils/aiScriptGenerator';
 import { ensureServerMediaUrl, uploadMediaToServer } from '../../utils/mediaUploadService';
@@ -3301,22 +3300,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       const customUrl = localStorage.getItem('aidol_backend_url') || (typeof import.meta !== 'undefined' && import.meta.env?.VITE_BACKEND_URL);
       if (customUrl && customUrl.startsWith('http')) {
         backendUrl = customUrl;
-      } else if (window.location.protocol === 'https:') {
-        // ⚡ Chạy qua Cloudflare quick tunnel hoặc domain HTTPS:
-        // Cloudflare tunnel trực tiếp proxy cổng 3001, WebSocket socket.io chạy trên cùng domain HTTPS/WSS!
-        backendUrl = window.location.origin;
-      } else if (window.location.port === '5173' || window.location.port === '3000') {
+      } else if (window.location.port === '5173') {
         backendUrl = window.location.protocol + '//' + window.location.hostname + ':3001';
       } else if (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1') {
         backendUrl = 'http://localhost:3001';
       } else if (window.location.protocol === 'file:') {
-        backendUrl = 'http://localhost:3001';
-      } else {
-        backendUrl = window.location.origin || 'http://localhost:3001';
+        backendUrl = 'http://localhost:3001'; // Fallback for double-clicking index.html
       }
     }
     
-    const socket = io(backendUrl || 'http://localhost:3001', {
+    const socket = io(backendUrl || (window.location.origin !== 'file://' ? window.location.origin : 'http://localhost:3001'), {
       transports: ['websocket', 'polling'],
       reconnection: true,
       reconnectionDelay: 1000
@@ -3494,27 +3487,25 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
     socket.on('tiktok_error', (err) => {
       const timeStr = new Date().toLocaleTimeString();
-      setTiktokLogs(prev => [`[${timeStr}] ⚠️ Luồng TikTok: ${err}`, ...prev.slice(0, 49)]);
-      // 🛡️ Không pop toast lỗi chặn phiên Live — Chuyển êm đẹp sang chế độ AI Live Sẵn Sàng
-      if (isConnecting) {
-        setIsConnecting(false);
-        setIsConnected(true);
-        setToast({ type: 'success', message: `🟢 ĐÃ KẾT NỐI PHIÊN LIVE IDOL (Sẵn sàng 14 sự kiện tương tác AI)!` });
-        setTimeout(() => setToast(null), 3000);
-      }
+      setTiktokLogs(prev => [`[${timeStr}] ⚠️ Lỗi kết nối TikTok: ${err}`, ...prev.slice(0, 49)]);
+      setIsConnecting(false);
+      setToast({ type: 'error', message: `LỖI KẾT NỐI TIKTOK: ${err}` });
     });
 
     socket.on('tiktok_status', (data) => {
       if (!data) return;
-      if (data.connected === true || data.simulationMode || data.isSimulation) {
+      if (data.connected === false && !data.connecting) {
+        setIsConnecting(false);
+        setIsConnected(false);
+        setFlvUrl(null);
+        if (data.error || data.note) {
+          setToast({ type: 'error', message: `Lỗi kết nối: ${data.error || data.note}` });
+          if (isMasterLiveRunning) setIsMasterLiveRunning(false);
+        }
+      } else if (data.connected === true) {
         setIsConnecting(false);
         setIsConnected(true);
         if (data.flvUrl) setFlvUrl(data.flvUrl);
-      } else if (data.connected === false && !data.connecting) {
-        // Chỉ tắt nếu không đang ở simulation hoặc không có stream
-        if (!data.simulationMode && !data.isSimulation && !isConnected) {
-          setIsConnecting(false);
-        }
       }
     });
 
@@ -3681,43 +3672,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       });
     }, 20000);
 
-    const onFinish = () => {
-      clearTimeout(safetyTimer);
-      setIsConnecting(false);
-      setIsConnected(true);
-    };
-
-    if (socketRef.current) {
-      if (!socketRef.current.connected) {
-        try { socketRef.current.connect(); } catch (e) {}
-      }
+    const onFinish = () => clearTimeout(safetyTimer);
+    if (socketRef.current && socketRef.current.connected) {
       socketRef.current.once('tiktok_connected', onFinish);
-      socketRef.current.once('tiktok_status', (st) => {
-        if (st && st.connected) onFinish();
-      });
+      socketRef.current.once('tiktok_error', onFinish);
       socketRef.current.emit('connect_tiktok', { chatId: cleanId, videoId: cleanVideoId });
-      
-      // Fallback tự động kết nối sau 1.2s nếu mạng phản hồi chậm để user không phải chờ
-      setTimeout(() => {
-        setIsConnecting(prev => {
-          if (prev) {
-            setIsConnected(true);
-            setToast({ type: 'success', message: `🟢 ĐÃ KẾT NỐI PHIÊN LIVE IDOL: ${cleanId} (Sẵn sàng tương tác 14 sự kiện)!` });
-            setTimeout(() => setToast(null), 3000);
-            return false;
-          }
-          return false;
-        });
-      }, 1200);
     } else {
       clearTimeout(safetyTimer);
       setIsConnecting(false);
-      setIsConnected(true);
       setToast({
-        type: 'success',
-        message: `🟢 ĐÃ KẾT NỐI PHIÊN LIVE IDOL: ${cleanId} (Chế độ Trực Tiếp AI Sẵn Sàng)!`
+        type: 'error',
+        message: '⚠️ Chưa kết nối tới Server Backend (cổng 3001). Bạn đã chạy node backend/server.cjs chưa?'
       });
-      setTimeout(() => setToast(null), 3000);
     }
   };
 
@@ -4087,18 +4053,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             setTimeout(() => bc.close(), 100);
           } catch (err) {}
 
-          syncMasterLiveState({
-            stage: 'idol',
-            mediaUrl: targetMediaUrl || localUrl,
-            characterName: charName,
-            selectedCharacter: targetId,
-            isVideo: true,
-            videoPlaybackEvent: 'play',
-            isPlaying: true,
-            videoCurrentTime: 0,
-            updatedAt: Date.now()
-          }, socketRef.current);
-
           showToast(`⚡ Video "${charName}" đã có sẵn trong hệ thống! Đã kích hoạt sử dụng ngay lập tức.`, 'success');
           return;
         }
@@ -4172,34 +4126,21 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           setTimeout(() => bc.close(), 100);
         } catch (err) {}
 
-        syncMasterLiveState({
-          stage: 'idol',
-          selectedCharacter: newCharId,
-          characterName: charName,
-          mediaUrl: localUrl,
-          isVideo: true,
-          isPlaying: true,
-          videoPlaybackEvent: 'play',
-          videoCurrentTime: 0,
-          updatedAt: Date.now()
-        }, socketRef.current);
-
         showToast(`⚡ Đã phát ngay video "${charName}" trên sân khấu chính!`, 'success');
 
-        // 🚀 2. TẢI FILE HOÀN CHỈNH LÊN MÁY CHỦ TRONG BACKGROUND ĐỂ ĐỒNG BỘ OBS & TIKTOK LIVE STUDIO
-        uploadMediaToServer(file).then(serverUrl => {
-          if (serverUrl) {
-            const cleanServerUrl = serverUrl.includes('/uploads/') ? serverUrl.substring(serverUrl.indexOf('/uploads/')) : serverUrl;
+        // 🚀 2. PHÁT LUỒNG SIÊU TỐC TỪNG PHẦN (FAST-STREAM PIPELINE) LÊN SERVER & TIKTOK LIVE STUDIO TRONG BACKGROUND
+        fastStreamUpload(file, {
+          onInit: ({ fileUrl }) => {
             const updatedChar = {
               id: newCharId,
               name: charName,
               url: localUrl,
-              mediaUrl: cleanServerUrl,
+              mediaUrl: fileUrl,
               type: 'video',
               fileData: file
             };
-            setUserLockedMediaUrl(cleanServerUrl);
-            try { localStorage.setItem('avalive_user_locked_media', cleanServerUrl); } catch (e) {}
+            setUserLockedMediaUrl(fileUrl);
+            try { localStorage.setItem('avalive_user_locked_media', fileUrl); } catch (e) {}
 
             setCustomCharacters(prev => {
               const updatedList = prev.map(c => c.id === newCharId ? updatedChar : c);
@@ -4212,26 +4153,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               name: charName,
               type: 'video',
               fileData: file,
-              mediaUrl: cleanServerUrl
+              mediaUrl: fileUrl
             }).catch(() => {});
-
-            syncMasterLiveState({
-              stage: 'idol',
-              selectedCharacter: newCharId,
-              characterName: charName,
-              mediaUrl: cleanServerUrl,
-              isVideo: true,
-              isPlaying: true,
-              videoPlaybackEvent: 'play',
-              videoCurrentTime: 0,
-              updatedAt: Date.now()
-            }, socketRef.current);
 
             try {
               const bc = new BroadcastChannel('avalive_master_live_stream');
               bc.postMessage({
                 type: 'GLOBAL_MEDIA_CHANGE',
-                mediaUrl: cleanServerUrl,
+                mediaUrl: fileUrl,
                 blobUrl: localUrl,
                 fileBlob: file,
                 characterId: newCharId,
@@ -4246,9 +4175,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               setTimeout(() => bc.close(), 100);
             } catch (err) {}
           }
-        }).catch(err => {
-          console.warn('[handleFileUpload] Background upload failed:', err);
-        });
+        }).catch(() => {});
       } else {
         // 🖼️ ẢNH BÌNH THƯỜNG: NẠP VÀ HIỂN THỊ TỨC THÌ 100% NGUYÊN BẢN
         const newCharId = `custom_${Date.now()}`;
@@ -4669,10 +4596,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               backgroundColor: multiAvatarConfig.backgroundColor || '#0a0c14'
             }}
           >
-            {/* Studio Transformed Background Layer — dùng backgroundUrl hoặc fallback sang userLockedMediaUrl hoặc nhân vật đang chọn */}
-            {((!isMasterStageSynced && (multiAvatarConfig.backgroundUrl || userLockedMediaUrl)) || (isMasterStageSynced && !flowSequencerOverlay?.isMainMediaDeleted)) && (() => {
-              const customMatch = (customCharacters && Array.isArray(customCharacters)) ? customCharacters.find(c => c.id === selectedCharacter) : null;
-              const bgSrc = (isMasterStageSynced && flowSequencerOverlay?.mainMediaUrl) || (!flowSequencerOverlay?.isMainMediaDeleted ? (multiAvatarConfig.backgroundUrl || userLockedMediaUrl || customMatch?.mediaUrl || customMatch?.url || (customCharacters && customCharacters[0]?.url)) : null);
+            {/* Studio Transformed Background Layer — dùng backgroundUrl hoặc fallback sang userLockedMediaUrl */}
+            {((!isMasterStageSynced && multiAvatarConfig.backgroundUrl) || (isMasterStageSynced && !flowSequencerOverlay?.isMainMediaDeleted && (flowSequencerOverlay?.mainMediaUrl || userLockedMediaUrl))) && (() => {
+              const bgSrc = (isMasterStageSynced && flowSequencerOverlay?.mainMediaUrl) || (!flowSequencerOverlay?.isMainMediaDeleted ? (multiAvatarConfig.backgroundUrl || userLockedMediaUrl) : null);
               if (!bgSrc) return null;
               const isBgImg = isImageMedia(bgSrc);
               const bgTrans = (isMasterStageSynced && flowSequencerOverlay?.mainMediaTransform)
@@ -4708,15 +4634,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                     />
                   ) : (
                     <video 
-                      ref={desktopVideoRef}
-                      data-main-player="true"
                       src={bgSrc} 
                       autoPlay 
                       loop 
-                      muted={isLocalSpeakerMuted} 
+                      muted 
                       playsInline 
-                      className="w-full h-full cursor-pointer main-video-player"
-                      onClick={toggleDesktopVideoPlayback}
+                      className="w-full h-full"
                       style={{
                         objectFit: bgTrans.objectFit || 'cover',
                         ...bgChroma
@@ -4888,20 +4811,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         (customCharacters && customCharacters.length > 0 ? customCharacters.find(c => c.url || c.mediaUrl) : null);
 
       if (selected) {
-        // 🛡️ TRÊN GIAO DIỆN DESKTOP APP: ƯU TIÊN TUYỆT ĐỐI LOCAL BLOB / RAM FILEDATA ĐỂ PHÁT NGAY 0MS KHÔNG BAO GIỜ BỊ ĐEN HAY LỖI
-        let resolvedUrl = '';
-        if (selected.url && (selected.url.startsWith('blob:') || selected.url.startsWith('data:'))) {
-          resolvedUrl = selected.url;
-        } else if (selected.fileData) {
+        let resolvedUrl = selected.url || selected.mediaUrl;
+        if (!resolvedUrl && selected.fileData) {
           try {
             resolvedUrl = URL.createObjectURL(selected.fileData);
             selected.url = resolvedUrl;
-          } catch(e) {}
-        }
-        if (!resolvedUrl) {
-          resolvedUrl = (selected.mediaUrl && !selected.mediaUrl.startsWith('blob:')) 
-            ? selected.mediaUrl 
-            : (selected.url || selected.mediaUrl);
+          } catch (e) {}
         }
         if (resolvedUrl) {
           const isExplicitVideo = selected.type === 'video' || 
@@ -4910,7 +4825,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               resolvedUrl.startsWith('blob:') || 
               resolvedUrl.startsWith('data:video/') || 
               resolvedUrl.match(/\.(mp4|webm|mov|mkv|avi|m4v)(\?.*)?$/i) || 
-              resolvedUrl.includes('/uploads/') || 
+              resolvedUrl.includes('/uploads/video_') || 
               resolvedUrl.includes('/api/stream')
             )) || 
             (selected.name && /video|nhép|lipsync|livestream|mp4/i.test(selected.name));
@@ -4996,15 +4911,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               playsInline 
               onClick={toggleDesktopVideoPlayback}
               onError={(e) => {
-                console.warn('Desktop video playback error, recovering from server/IDB/fileData...', e);
+                console.warn('Desktop video playback error, recovering from IDB/fileData...', e);
                 const charMatch = (customCharacters && Array.isArray(customCharacters)) 
                   ? customCharacters.find(c => c.id === selectedCharacter) 
                   : null;
-                if (charMatch && charMatch.mediaUrl && !charMatch.mediaUrl.startsWith('blob:')) {
-                  e.currentTarget.src = charMatch.mediaUrl;
-                  e.currentTarget.play().then(() => setIsVideoPlaying(true)).catch(() => {});
-                  setUserLockedMediaUrl(charMatch.mediaUrl);
-                } else if (charMatch && charMatch.fileData) {
+                if (charMatch && charMatch.fileData) {
                   try {
                     const freshUrl = URL.createObjectURL(charMatch.fileData);
                     e.currentTarget.src = freshUrl;
@@ -5015,13 +4926,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 } else if (selectedCharacter && selectedCharacter.startsWith('custom_')) {
                   loadAllCharactersFromIDB().then(chars => {
                     const found = chars.find(c => c.id === selectedCharacter);
-                    if (found && found.mediaUrl && !found.mediaUrl.startsWith('blob:')) {
-                      if (desktopVideoRef.current) {
-                        desktopVideoRef.current.src = found.mediaUrl;
-                        desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
-                      }
-                      setUserLockedMediaUrl(found.mediaUrl);
-                    } else if (found && found.fileData) {
+                    if (found && found.fileData) {
                       try {
                         const freshUrl = URL.createObjectURL(found.fileData);
                         if (desktopVideoRef.current) {
@@ -5137,47 +5042,48 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 e.currentTarget.dataset.userPaused = 'false';
                 setIsVideoPlaying(true);
                 
-                // Đồng bộ playback sang các kênh Window Capture và link phát TikTok
-                const curTime = e.currentTarget.currentTime;
-                let playUrl = (selected && selected.url) || currentBlobUrlRef.current || '';
-                if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
-                  playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
-                }
-                sendVideoControl({
-                  action: 'play',
-                  currentTime: curTime,
-                  isPlaying: true,
-                  force: false,
-                  mediaUrl: playUrl,
-                  timestamp: Date.now()
-                }, socketRef.current);
-
-                syncMasterLiveState({
-                  stage: 'idol',
-                  mediaUrl: playUrl,
-                  title: flowSequencerOverlay?.overlayText || selected?.name || null,
-                  overlayText: flowSequencerOverlay?.overlayText || null,
-                  isVideo: true,
-                  videoPlaybackEvent: 'play',
-                  videoCurrentTime: curTime,
-                  force: false,
-                  isPlaying: true
-                }, socketRef.current);
-
-                try {
-                  const bc = new BroadcastChannel('avalive_master_live_stream');
-                  bc.postMessage({ 
-                    type: 'GLOBAL_PLAYBACK_CHANGE', 
-                    isPlaying: true, 
-                    userPaused: false, 
-                    currentTime: curTime, 
+                // Đồng bộ playback sang các kênh nếu phiên live đang chạy
+                if (isMasterLiveRunning) {
+                  const curTime = e.currentTarget.currentTime;
+                  let playUrl = selected.url;
+                  if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
+                    playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
+                  }
+                  sendVideoControl({
+                    action: 'play',
+                    currentTime: curTime,
+                    isPlaying: true,
                     force: false,
                     mediaUrl: playUrl,
-                    source: 'desktop',
-                    timestamp: Date.now() 
-                  });
-                  setTimeout(() => bc.close(), 100);
-                } catch (err) {}
+                    timestamp: Date.now()
+                  }, socketRef.current);
+
+                  syncMasterLiveState({
+                    stage: 'idol',
+                    mediaUrl: playUrl,
+                    title: flowSequencerOverlay?.overlayText || selected?.name || null,
+                    overlayText: flowSequencerOverlay?.overlayText || null,
+                    isVideo: true,
+                    videoPlaybackEvent: 'play',
+                    videoCurrentTime: curTime,
+                    force: false,
+                    isPlaying: true
+                  }, socketRef.current);
+
+                  try {
+                    const bc = new BroadcastChannel('avalive_master_live_stream');
+                    bc.postMessage({ 
+                      type: 'GLOBAL_PLAYBACK_CHANGE', 
+                      isPlaying: true, 
+                      userPaused: false, 
+                      currentTime: curTime, 
+                      force: false,
+                      source: 'desktop',
+                      timestamp: Date.now() 
+                    });
+                    setTimeout(() => bc.close(), 100);
+                  } catch (err) {}
+                }
               }}
               onPause={(e) => {
                 if (isInternalPlaybackChangeRef.current) return;
@@ -6113,7 +6019,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
                 {/* 2. KẾT NỐI IDOL */}
                 <button 
-                  onClick={() => { setActiveSettingsModal('idol_connect'); setIsSettingsDropdownOpen(false); }}
+                  onClick={() => { setActiveSettingsModal('workspace_events'); setIsSettingsDropdownOpen(false); }}
                   className={`w-full text-left px-3 py-2 mb-1.5 rounded-xl text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-purple-900/40 to-purple-800/20 hover:from-purple-600 hover:to-purple-500 text-purple-100 hover:text-white border border-purple-800/50' : 'bg-purple-50 hover:bg-purple-500 text-purple-800 hover:text-white'}`}
                 >
                   <Radio size={16} className="text-purple-400 shrink-0" />
@@ -6328,18 +6234,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                         } catch(e) {}
                       }
 
-                      let localPreviewUrl = '';
-                      if (charItem.url && (charItem.url.startsWith('blob:') || charItem.url.startsWith('data:'))) {
-                        localPreviewUrl = charItem.url;
-                      } else if (charItem.fileData) {
+                      let charUrl = serverUrl || charItem.url || charItem.mediaUrl;
+                      if ((!charUrl || charUrl.startsWith('blob:')) && charItem.fileData) {
                         try {
-                          localPreviewUrl = URL.createObjectURL(charItem.fileData);
-                          charItem.url = localPreviewUrl;
-                          setCustomCharacters(prev => prev.map(c => c.id === charItem.id ? { ...c, url: localPreviewUrl } : c));
+                          charUrl = URL.createObjectURL(charItem.fileData);
+                          charItem.url = charUrl;
+                          setCustomCharacters(prev => prev.map(c => c.id === charItem.id ? { ...c, url: charUrl } : c));
                         } catch(e) {}
                       }
-
-                      let charUrl = localPreviewUrl || serverUrl || charItem.url || charItem.mediaUrl;
                       if (!charUrl) {
                         fileInputRef.current?.click();
                         return;
@@ -7250,22 +7152,48 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         </div>
       )}
 
-      {/* 🔴 CỔNG KẾT NỐI IDOL LIVESTREAM & SỰ KIỆN TƯƠNG TÁC (IDOL CONNECT HUB) */}
-      <IdolConnectModal
-        isOpen={activeSettingsModal === 'idol_connect' || activeSettingsModal === 'workspace' || activeSettingsModal === 'workspace_events'}
-        initialTab={activeSettingsModal === 'workspace' || activeSettingsModal === 'workspace_events' ? 'events' : 'connect'}
-        onClose={() => setActiveSettingsModal(null)}
-        isDarkMode={isDarkMode}
-        tiktokId={tiktokId}
-        setTiktokId={setTiktokId}
-        videoTiktokId={videoTiktokId}
-        setVideoTiktokId={setVideoTiktokId}
-        isConnected={isConnected}
-        isConnecting={isConnecting}
-        handleConnect={handleConnect}
-        isMasterLiveRunning={isMasterLiveRunning}
-        handleToggleMasterLive={handleToggleMasterLive}
-      />
+      {/* Settings Modal (WorkspaceTacVu / Event Manager) */}
+      {(activeSettingsModal === 'workspace' || activeSettingsModal === 'workspace_events') && (
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-md p-2 md:p-3 animate-in fade-in zoom-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setActiveSettingsModal(null);
+          }}
+        >
+          <div className={`w-[98vw] max-w-[1720px] h-[97vh] max-h-[98vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border ${isDarkMode ? 'bg-[#141419] border-gray-700' : 'bg-white border-gray-200'}`}>
+            <div className={`flex items-center justify-between px-6 py-3.5 border-b shrink-0 ${isDarkMode ? 'border-gray-800' : 'border-gray-200'}`}>
+              <h2 className="text-xl font-bold flex items-center gap-2">
+                <Settings className="text-blue-500" />
+                <span>
+                  {activeSettingsModal === 'workspace_events' 
+                    ? 'Cài đặt Sự kiện & Kịch bản Tương tác Livestream' 
+                    : 'Cài đặt Hệ thống Sự kiện Livestream'}
+                </span>
+              </h2>
+              <div className="flex items-center gap-4">
+                <button 
+                  onClick={() => alert("Đang kiểm tra bản cập nhật từ Admin...")}
+                  className="px-4 py-2 bg-blue-600 hover:bg-blue-500 text-white rounded-lg text-sm font-medium cursor-pointer"
+                >
+                  Kiểm tra cập nhật
+                </button>
+                <button 
+                  onClick={() => setActiveSettingsModal(null)}
+                  className={`p-2 rounded-lg transition-colors cursor-pointer ${isDarkMode ? 'hover:bg-gray-800 text-gray-400 hover:text-white' : 'hover:bg-gray-100 text-gray-500 hover:text-gray-900'}`}
+                >
+                  <X size={24} />
+                </button>
+              </div>
+            </div>
+            <div className="flex-1 overflow-auto relative">
+              <WorkspaceTacVu 
+                key={activeSettingsModal}
+                defaultEventId={activeSettingsModal === 'workspace_events' ? 'welcome' : 'flow_sequencer'} 
+              />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Payment & Token Packages Modal */}
       {(activeSettingsModal === 'payment' || activeSettingsModal === 'coins') && (

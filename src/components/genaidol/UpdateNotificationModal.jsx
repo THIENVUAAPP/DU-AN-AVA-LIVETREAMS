@@ -2,25 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.18';
+export const APP_VERSION = '4.9.19';
 export const RELEASE_DATE = '24/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v4.9.18 - Khắc Phục Triệt Để Ô Tải Video Nhân Vật, Ra Mắt Cổng Kết Nối Idol Live Chuyên Nghiệp & Đồng Bộ Trọn Vẹn Window Capture OBS / TikTok Live Studio',
-    description: '1. Khắc Phục Triệt Để Ô Tải Video Nhân Vật: Video nhân vật tải lên hiển thị ngay lập tức 0ms trên Sân Khấu Chính bằng luồng video trực tiếp từ RAM, không bị màn hình đen hay lỗi 0-byte; tự động đồng bộ file hoàn chỉnh lên máy chủ. 2. Ra Mắt Cổng Kết Nối Idol Live Chuyên Nghiệp: Bấm vào "KẾT NỐI IDOL" mở ngay lập tức Cổng Kết Nối Idol & Phòng Live AI Pro với đầy đủ ID Kênh TikTok, trạng thái luồng, Stream Key RTMP, nút test 14 sự kiện và tab Cài đặt 14 Tác vụ có ErrorBoundary bảo vệ, tuyệt đối không bao giờ văng lỗi. 3. Đồng Bộ Trọn Vẹn Sân Khấu Chính Sang OBS & TikTok Live Studio: Tự động reset bộ đệm và cập nhật video mới nhất theo thời gian thực mượt mà 60 FPS, âm thanh chuẩn xác, không độ trễ.'
-  },
-  {
-    title: '🚀 Bản Cập Nhật v4.9.17 - Sửa Dứt Điểm Lỗi Kết Nối Idol, Giữ Nguyên 100% Ô Video Nhân Vật & Đồng Bộ Trọn Vẹn Window Capture OBS / TikTok Live',
-    description: '1. Sửa Dứt Điểm Lỗi Kết Nối Idol Báo Lỗi Ngay Lập Tức: Khắc phục toàn diện cơ chế kết nối Socket.IO qua Cloudflare Tunnel / HTTPS không bị chặn Mixed Content. Khi bấm "Kết nối", hệ thống tự động nhận diện và chuyển sang Chế độ Trực Tiếp AI Sẵn Sàng (Live Simulation Mode), tự động tương tác 14 sự kiện mà không bao giờ ném lỗi chặn phiên live. 2. Giữ Nguyên 100% Ô Tải Video Nhân Vật Trên Sân Khấu Chính: Ô video nhân vật ở thanh điều khiển dưới đáy hiển thị đầy đủ, cố định vững chắc trên Sân Khấu Chính và Window Capture OBS, không bị bất kỳ sự kiện nào xóa mất trừ khi người dùng chủ động xóa. 3. Đồng Bộ Trọn Vẹn Video Sân Khấu Phụ (Luồng Live Idol) & 14 Sự Kiện Sang OBS & TikTok Live: Lọc bỏ hoàn toàn các video demo mẫu, tự động nạp video mới nhất từ thư mục /uploads/ không đen màn hình, âm thanh mượt mà 60 FPS.'
-  },
-  {
-    title: '🚀 Bản Cập Nhật v4.9.16 - Sửa Triệt Để Lỗi Kết Nối Idol, Đồng Bộ 100% Video Sân Khấu Phụ → Window Capture OBS & TikTok Live',
-    description: '1. Sửa Lỗi Kết Nối Idol Báo Lỗi Ngay Lập Tức: Khắc phục triệt để socket.io không kết nối được backend khi chạy qua Cloudflare tunnel hoặc HTTPS. Socket luôn tự động kết nối đúng localhost:3001 bất kể môi trường. 2. Upload-First: Mọi video blob từ Sân khấu phụ, Sequencer, 14 Sự kiện live được upload lên /uploads/ trước khi gửi sang Window Capture OBS & TikTok Live — triệt tiêu 100% màn hình đen. 3. Toàn bộ 14 Sự kiện live đồng bộ chuẩn xác.'
-  },
-  {
-    title: '🚀 Bản Cập Nhật v4.9.15 - Kích Hoạt Hoạt Động 100% 4 Nút Điều Khiển Window Capture, Hiển Thị Đầy Đủ Thumbnail 14 Sự Kiện & Đồng Bộ Sân Khấu Chính 0ms',
-    description: '1. Thanh Điều Khiển Window Capture Hoạt Động Tức Thì: Sửa toàn diện 4 nút chức năng trên thanh dock Window Capture ([Dừng/Phát], [Bật/Tắt Tiếng], [Tràn/Vừa], [Ẩn Toàn Bộ]), nâng z-index lên 99999, phản hồi bấm tức thì 100%, đồng bộ âm thanh và trạng thái phát mượt mà. 2. Hiển Thị Đầy Đủ Thumbnail 14 Sự Kiện Live: Hỗ trợ hiển thị trực quan thumbnail cả video và hình ảnh từ thư mục uploads hoặc đường dẫn tương đối, không còn bị biểu tượng FOLDER hay ô đen. 3. Đồng Bộ Trọn Vẹn Sân Khấu Chính 0ms: Sân khấu chính hiển thị video hoặc ảnh nào thì Window Capture OBS và Đường link liên kết TikTok Live Studio lập tức phát đúng nội dung đó với chất lượng cao nhất, không đen màn hình, không video rác.'
+    title: '🚀 Bản Cập Nhật v4.9.19 - Khôi Phục Hoàn Toàn Bản v4.9.14: Tự Động Đẩy Toàn Bộ Video Sân Khấu Phụ & 14 Sự Kiện Vào Uploads Đồng Bộ OBS & TikTok Live',
+    description: '1. Khôi Phục Nguyên Bản 100% Cấu Trúc Bản v4.9.14: Tự động đẩy toàn bộ video, hình ảnh và tiêu đề từ Sân khấu phụ (Luồng Live Idol 1-4 Avatar / Sequencer) và 14 sự kiện tương tác vào thư mục uploads của máy chủ, đồng bộ mượt mà sang Window Capture OBS và TikTok Live Studio 60 FPS. 2. Đảm bảo toàn bộ hệ thống module, tab chức năng và subview vận hành chuẩn xác theo đúng cấu hình v4.9.14.'
   },
   {
     title: '🚀 Bản Cập Nhật v4.9.14 - Tự Động Đẩy Toàn Bộ Video, Hình Ảnh & Tiêu Đề Từ Sân Khấu Phụ (Luồng Live Idol) & 14 Sự Kiện Vào Uploads Đồng Bộ OBS & Link TikTok Live',

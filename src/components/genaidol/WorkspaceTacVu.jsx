@@ -16,7 +16,7 @@ import UniversalMediaPicker, { SAMPLE_IDOL_VIDEOS } from './UniversalMediaPicker
 import MultiAvatarStudioModal, { MultiAvatarStudioPanel } from './MultiAvatarStudioModal';
 import LivestreamFlowSequencer from './LivestreamFlowSequencer';
 import autoPinProductService from '../../utils/autoPinProductService';
-import { uploadMediaToServer, ensureServerMediaUrl } from '../../utils/mediaUploadService';
+import { uploadMediaToServer } from '../../utils/mediaUploadService';
 
 const toast = {
   success: (message) => {
@@ -774,25 +774,15 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
           detail: { videoUrl: vidUrl, eventConfigs: { ...eventConfigs, [id]: { ...eventConfigs[id], ...partial } } }
         }));
       } else {
-        // 🚀 UPLOAD-FIRST: Nếu blob/data → upload lên server trước, dispatch sau với /uploads/ URL
-        const _dispatchEventTrigger = (finalUrl) => {
-          window.dispatchEvent(new CustomEvent('avalive:event_video_trigger', {
-            detail: {
-              videoUrl: finalUrl,
-              name: `${id.toUpperCase()} Video`,
-              eventType: id,
-              isPreRecorded: partial.isPreRecorded ?? eventConfigs[id]?.isPreRecorded,
-              muteSourceVideo: partial.muteSourceVideo ?? eventConfigs[id]?.muteSourceVideo
-            }
-          }));
-        };
-        if (typeof vidUrl === 'string' && (vidUrl.startsWith('blob:') || vidUrl.startsWith('data:'))) {
-          ensureServerMediaUrl(vidUrl, `${id}_video.mp4`).then(srvUrl => {
-            _dispatchEventTrigger((srvUrl && typeof srvUrl === 'string' && !srvUrl.startsWith('blob:') && !srvUrl.startsWith('data:')) ? srvUrl : vidUrl);
-          }).catch(() => _dispatchEventTrigger(vidUrl));
-        } else {
-          _dispatchEventTrigger(vidUrl);
-        }
+        window.dispatchEvent(new CustomEvent('avalive:event_video_trigger', {
+          detail: {
+            videoUrl: vidUrl,
+            name: `${id.toUpperCase()} Video`,
+            eventType: id,
+            isPreRecorded: partial.isPreRecorded ?? eventConfigs[id]?.isPreRecorded,
+            muteSourceVideo: partial.muteSourceVideo ?? eventConfigs[id]?.muteSourceVideo
+          }
+        }));
       }
     }
   };
@@ -1171,24 +1161,14 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
     });
 
     if (name === 'videoFile' && value && typeof window !== 'undefined') {
-      // 🚀 UPLOAD-FIRST: Nếu blob/data → upload lên server trước, dispatch sau với /uploads/ URL
-      const _dispatchProductTrigger = (finalUrl) => {
-        window.dispatchEvent(new CustomEvent('avalive:event_video_trigger', {
-          detail: {
-            videoUrl: finalUrl,
-            name: `Sản Phẩm ${productId}`,
-            eventType: 'checkout',
-            isPreRecorded: true
-          }
-        }));
-      };
-      if (typeof value === 'string' && (value.startsWith('blob:') || value.startsWith('data:'))) {
-        ensureServerMediaUrl(value, `checkout_product_${productId}.mp4`).then(srvUrl => {
-          _dispatchProductTrigger((srvUrl && typeof srvUrl === 'string' && !srvUrl.startsWith('blob:') && !srvUrl.startsWith('data:')) ? srvUrl : value);
-        }).catch(() => _dispatchProductTrigger(value));
-      } else {
-        _dispatchProductTrigger(value);
-      }
+      window.dispatchEvent(new CustomEvent('avalive:event_video_trigger', {
+        detail: {
+          videoUrl: value,
+          name: `Sản Phẩm ${productId}`,
+          eventType: 'checkout',
+          isPreRecorded: true
+        }
+      }));
     }
   };
 
@@ -2872,7 +2852,6 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                               <UniversalMediaPicker 
                                 label="Thư mục / File Video Minh Họa Sản Phẩm"
                                 currentPath={prod.videoFileName ? `🎬 ${prod.videoFileName}` : (prod.videoFolder || '')}
-                                videoUrl={prod.videoUrl || prod.videoFile || ''}
                                 defaultText="Chưa chọn video minh họa (Dùng video Idol mặc định)"
                                 onSelectFile={(file, mediaUrl) => {
                                   const localUrl = mediaUrl || URL.createObjectURL(file);

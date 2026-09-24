@@ -25,7 +25,6 @@ export default function WindowCapturePlayer() {
   const activeBlobUrlRef = useRef(null);
   const isHardwareLocalBlobRef = useRef(false);
   const isExplicitlyPausedRef = useRef(false);
-  const [isStandaloneMuted, setIsStandaloneMuted] = useState(false);
   const isUserMutedRef = useRef(false);
   const currentCharIdRef = useRef(null);
 
@@ -254,34 +253,24 @@ export default function WindowCapturePlayer() {
   const tryLoadFromLocalDB = useCallback(async (targetUrlOrCharId) => {
     if (typeof window === 'undefined') return null;
     try {
-      // 0. Ưu tiên số 0: Lấy trực tiếp __activeMediaBlob từ opener nếu khớp targetUrlOrCharId hoặc không chỉ định target
+      // 0. Ưu tiên số 0: Lấy trực tiếp __activeMediaBlob từ opener (0ms tức thì)
       if (window.opener && window.opener.__activeMediaBlob && (window.opener.__activeMediaBlob instanceof Blob || window.opener.__activeMediaBlob instanceof File)) {
-        const matchesOpener = !targetUrlOrCharId || 
-          targetUrlOrCharId === window.opener.__activeMediaBlobUrl || 
-          targetUrlOrCharId === window.opener.__activeMediaBlobId;
-        if (matchesOpener) {
-          if (activeBlobUrlRef.current) {
-            try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
-          }
-          const bUrl = URL.createObjectURL(window.opener.__activeMediaBlob);
-          activeBlobUrlRef.current = bUrl;
-          isHardwareLocalBlobRef.current = true;
-          return bUrl;
+        if (activeBlobUrlRef.current) {
+          try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
         }
+        const bUrl = URL.createObjectURL(window.opener.__activeMediaBlob);
+        activeBlobUrlRef.current = bUrl;
+        isHardwareLocalBlobRef.current = true;
+        return bUrl;
       }
       if (window.__activeMediaBlob && (window.__activeMediaBlob instanceof Blob || window.__activeMediaBlob instanceof File)) {
-        const matchesWindow = !targetUrlOrCharId || 
-          targetUrlOrCharId === window.__activeMediaBlobUrl || 
-          targetUrlOrCharId === window.__activeMediaBlobId;
-        if (matchesWindow) {
-          if (activeBlobUrlRef.current) {
-            try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
-          }
-          const bUrl = URL.createObjectURL(window.__activeMediaBlob);
-          activeBlobUrlRef.current = bUrl;
-          isHardwareLocalBlobRef.current = true;
-          return bUrl;
+        if (activeBlobUrlRef.current) {
+          try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
         }
+        const bUrl = URL.createObjectURL(window.__activeMediaBlob);
+        activeBlobUrlRef.current = bUrl;
+        isHardwareLocalBlobRef.current = true;
+        return bUrl;
       }
 
       // 1. Kiểm tra RAM Blob Map trực tiếp từ Opener hoặc Window hiện tại theo ID / Key
@@ -1026,7 +1015,6 @@ export default function WindowCapturePlayer() {
         if (err.name === 'NotAllowedError') {
           vid.muted = true;
           isUserMutedRef.current = true;
-          setIsStandaloneMuted(true);
           try {
             await vid.play();
             if (isSubscribed) {
@@ -1122,55 +1110,29 @@ export default function WindowCapturePlayer() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   });
 
-  const toggleStandalonePlay = (e) => {
-    if (e && typeof e.stopPropagation === 'function') {
-      e.preventDefault();
-      e.stopPropagation();
+  const toggleStandalonePlay = () => {
+    const vid = videoRef.current;
+    if (!vid) return;
+    if (vid.paused) {
+      isExplicitlyPausedRef.current = false;
+      vid.play().then(() => setIsPlaybackActive(true)).catch(() => {});
+    } else {
+      isExplicitlyPausedRef.current = true;
+      vid.pause();
+      setIsPlaybackActive(false);
     }
-    setIsPlaybackActive(prev => {
-      const willPlay = !prev;
-      isExplicitlyPausedRef.current = !willPlay;
-      const mediaElements = document.querySelectorAll('video');
-      mediaElements.forEach(vid => {
-        if (willPlay) {
-          vid.play().catch(() => {});
-        } else {
-          vid.pause();
-        }
-      });
-      return willPlay;
-    });
   };
 
-  const toggleStandaloneMute = (e) => {
-    if (e && typeof e.stopPropagation === 'function') {
-      e.preventDefault();
-      e.stopPropagation();
-    }
-    setIsStandaloneMuted(prev => {
-      const nextMuted = !prev;
-      isUserMutedRef.current = nextMuted;
-      const mediaElements = document.querySelectorAll('video, audio');
-      mediaElements.forEach(el => {
-        el.muted = nextMuted;
-      });
-      return nextMuted;
-    });
+  const toggleStandaloneMute = () => {
+    const vid = videoRef.current;
+    if (!vid) return;
+    vid.muted = !vid.muted;
+    isUserMutedRef.current = vid.muted;
   };
 
-  const toggleStandaloneFit = (e) => {
-    if (e && typeof e.stopPropagation === 'function') {
-      e.preventDefault();
-      e.stopPropagation();
-    }
+  const toggleStandaloneFit = () => {
     const nextFit = fitMode === 'cover' ? 'contain' : 'cover';
     setFitMode(nextFit);
-    const mediaElements = document.querySelectorAll('video, img');
-    mediaElements.forEach(el => {
-      if (el.dataset && el.dataset.allowFitToggle !== 'false') {
-        el.style.objectFit = nextFit;
-      }
-    });
   };
 
   const resolvedFinalSrc = resolveUrl(videoSrc);
@@ -1216,7 +1178,7 @@ export default function WindowCapturePlayer() {
             playsInline
             webkit-playsinline="true"
             loop={Boolean(quickResponseVideo.loop)}
-            muted={isStandaloneMuted || quickResponseVideo.muted}
+            muted={isUserMutedRef.current || quickResponseVideo.muted}
             preload="auto"
             onEnded={() => {
               if (!quickResponseVideo.loop) setQuickResponseVideo(null);
@@ -1258,7 +1220,7 @@ export default function WindowCapturePlayer() {
             playsInline
             webkit-playsinline="true"
             loop={false}
-            muted={isStandaloneMuted}
+            muted={isUserMutedRef.current}
             preload="auto"
             onEnded={() => setActiveEventVideo(null)}
             onError={() => setActiveEventVideo(null)}
@@ -1283,7 +1245,7 @@ export default function WindowCapturePlayer() {
           playsInline
           webkit-playsinline="true"
           loop
-          muted={isStandaloneMuted}
+          muted={isUserMutedRef.current}
           preload="auto"
           onError={() => setLipSyncVideoUrl(null)}
           style={{
@@ -1322,12 +1284,11 @@ export default function WindowCapturePlayer() {
           return (
             <div style={gridStyle}>
               {activeList.map((avatar, idx) => {
-                const cleanTalk = (avatar.talkVideo && !avatar.talkVideo.includes('commondatastorage.googleapis.com') && !avatar.talkVideo.includes('demo_dancer')) ? avatar.talkVideo : '';
-                const cleanIdle = (avatar.idleVideo && !avatar.idleVideo.includes('commondatastorage.googleapis.com') && !avatar.idleVideo.includes('demo_dancer')) ? avatar.idleVideo : '';
-                const talkSrc = cleanTalk || avatar.videoUrl || avatar.mediaUrl || '';
-                const idleSrc = cleanIdle || avatar.videoUrl || avatar.mediaUrl || '';
-                const rawSrc = isSpeakingNow ? (talkSrc || idleSrc || videoSrc) : (idleSrc || talkSrc || videoSrc);
-                const avatarVidSrc = resolveUrl(rawSrc || videoSrc);
+                const isSpeakingNow = isSpeakerActive && (activeSpeakerId === avatar.id || (!activeSpeakerId && avatar.id === 'idol'));
+                const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || '';
+                const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || '';
+                const rawSrc = isSpeakingNow ? (talkSrc || idleSrc || (idx === 0 ? videoSrc : '')) : (idleSrc || talkSrc || (idx === 0 ? videoSrc : ''));
+                const avatarVidSrc = resolveUrl(rawSrc);
                 const isImg = isImageMedia(avatarVidSrc);
 
                 return (
@@ -1351,16 +1312,16 @@ export default function WindowCapturePlayer() {
                   >
                     {avatarVidSrc ? (
                       isImg ? (
-                        <img src={avatarVidSrc} alt={avatar.name} style={{ width: '100%', height: '100%', objectFit: fitMode || 'cover' }} />
+                        <img src={avatarVidSrc} alt={avatar.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} />
                       ) : (
                         <video
                           key={`${avatar.id}_${isSpeakingNow ? 'talk' : 'idle'}_${avatarVidSrc}`}
                           src={avatarVidSrc}
                           autoPlay
                           loop
-                          muted={isStandaloneMuted}
+                          muted={isUserMutedRef.current}
                           playsInline
-                          style={{ width: '100%', height: '100%', objectFit: fitMode || 'cover', backgroundColor: '#000' }}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', backgroundColor: '#000' }}
                         />
                       )
                     ) : (
@@ -1392,52 +1353,33 @@ export default function WindowCapturePlayer() {
               backgroundColor: multiAvatarConfig.backgroundColor || '#0a0c14'
             }}
           >
-            {/* Background Layer: Dùng backgroundUrl hoặc videoSrc (nền phát live chính) */}
-            {(multiAvatarConfig.backgroundUrl || (!multiAvatarConfig.isMainMediaDeleted && videoSrc)) && (() => {
-              const bgMedia = resolveUrl(multiAvatarConfig.backgroundUrl || videoSrc);
-              const isBgImg = isImageMedia(bgMedia);
-              return (
-                <div
+            {/* Background Layer */}
+            {multiAvatarConfig.backgroundUrl && (
+              <div
+                style={{
+                  position: 'absolute',
+                  pointerEvents: 'none',
+                  left: `${multiAvatarConfig.backgroundTransform?.x ?? 0}%`,
+                  top: `${multiAvatarConfig.backgroundTransform?.y ?? 0}%`,
+                  width: `${multiAvatarConfig.backgroundTransform?.width ?? 100}%`,
+                  height: `${multiAvatarConfig.backgroundTransform?.height ?? 100}%`,
+                  transform: (multiAvatarConfig.backgroundTransform?.scale && multiAvatarConfig.backgroundTransform?.scale !== 100) ? `scale(${multiAvatarConfig.backgroundTransform.scale / 100})` : 'none',
+                  transformOrigin: 'center center',
+                  zIndex: 0
+                }}
+              >
+                <img 
+                  src={resolveUrl(multiAvatarConfig.backgroundUrl)}
+                  alt="Studio Background"
                   style={{
-                    position: 'absolute',
-                    pointerEvents: 'none',
-                    left: `${multiAvatarConfig.backgroundTransform?.x ?? 0}%`,
-                    top: `${multiAvatarConfig.backgroundTransform?.y ?? 0}%`,
-                    width: `${multiAvatarConfig.backgroundTransform?.width ?? 100}%`,
-                    height: `${multiAvatarConfig.backgroundTransform?.height ?? 100}%`,
-                    transform: (multiAvatarConfig.backgroundTransform?.scale && multiAvatarConfig.backgroundTransform?.scale !== 100) ? `scale(${multiAvatarConfig.backgroundTransform.scale / 100})` : 'none',
-                    transformOrigin: 'center center',
-                    zIndex: 0
+                    width: '100%',
+                    height: '100%',
+                    objectFit: multiAvatarConfig.backgroundTransform?.objectFit || 'cover',
+                    filter: `${multiAvatarConfig.backgroundTransform?.blur ? `blur(${multiAvatarConfig.backgroundTransform.blur}px)` : ''} ${multiAvatarConfig.backgroundTransform?.brightness ? `brightness(${multiAvatarConfig.backgroundTransform.brightness}%)` : ''}`.trim() || 'none'
                   }}
-                >
-                  {isBgImg ? (
-                    <img 
-                      src={bgMedia}
-                      alt="Studio Background"
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: multiAvatarConfig.backgroundTransform?.objectFit || 'cover',
-                        filter: `${multiAvatarConfig.backgroundTransform?.blur ? `blur(${multiAvatarConfig.backgroundTransform.blur}px)` : ''} ${multiAvatarConfig.backgroundTransform?.brightness ? `brightness(${multiAvatarConfig.backgroundTransform.brightness}%)` : ''}`.trim() || 'none'
-                      }}
-                    />
-                  ) : (
-                    <video 
-                      src={bgMedia}
-                      autoPlay
-                      loop
-                      muted={isStandaloneMuted}
-                      playsInline
-                      style={{
-                        width: '100%',
-                        height: '100%',
-                        objectFit: multiAvatarConfig.backgroundTransform?.objectFit || 'cover'
-                      }}
-                    />
-                  )}
-                </div>
-              );
-            })()}
+                />
+              </div>
+            )}
 
             {/* Extra Layers */}
             {(multiAvatarConfig.extraImageLayers || []).map(layer => {
@@ -1482,12 +1424,10 @@ export default function WindowCapturePlayer() {
                 borderRadius: 16
               };
               const isSpeakingNow = isSpeakerActive && (activeSpeakerId === avatar.id || (!activeSpeakerId && avatar.id === 'idol'));
-              const cleanTalk = (avatar.talkVideo && !avatar.talkVideo.includes('commondatastorage.googleapis.com') && !avatar.talkVideo.includes('demo_dancer')) ? avatar.talkVideo : '';
-              const cleanIdle = (avatar.idleVideo && !avatar.idleVideo.includes('commondatastorage.googleapis.com') && !avatar.idleVideo.includes('demo_dancer')) ? avatar.idleVideo : '';
-              const talkSrc = cleanTalk || avatar.videoUrl || avatar.mediaUrl || '';
-              const idleSrc = cleanIdle || avatar.videoUrl || avatar.mediaUrl || '';
-              const rawSrc = isSpeakingNow ? (talkSrc || idleSrc || videoSrc) : (idleSrc || talkSrc || videoSrc);
-              const avatarVidSrc = resolveUrl(rawSrc || videoSrc);
+              const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || '';
+              const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || '';
+              const rawSrc = isSpeakingNow ? (talkSrc || idleSrc || (idx === 0 ? videoSrc : '')) : (idleSrc || talkSrc || (idx === 0 ? videoSrc : ''));
+              const avatarVidSrc = resolveUrl(rawSrc);
               const isImg = isImageMedia(avatarVidSrc);
               const chromaStyle = getChromaStyle(avatar.chromaKey || multiAvatarConfig.chromaKey);
 
@@ -1511,16 +1451,16 @@ export default function WindowCapturePlayer() {
                   <div style={{ width: '100%', height: '100%', overflow: 'hidden', borderRadius: 'inherit', backgroundColor: 'transparent', ...chromaStyle }}>
                     {avatarVidSrc ? (
                       isImg ? (
-                        <img src={avatarVidSrc} alt={avatar.name} style={{ width: '100%', height: '100%', objectFit: fitMode || transform.objectFit || 'cover', ...chromaStyle }} />
+                        <img src={avatarVidSrc} alt={avatar.name} style={{ width: '100%', height: '100%', objectFit: transform.objectFit || 'cover', ...chromaStyle }} />
                       ) : (
                         <video
                           key={`${avatar.id}_${isSpeakingNow ? 'talk' : 'idle'}_${avatarVidSrc}`}
                           src={avatarVidSrc}
                           autoPlay
                           loop
-                          muted={isStandaloneMuted}
+                          muted={isUserMutedRef.current}
                           playsInline
-                          style={{ width: '100%', height: '100%', objectFit: fitMode || transform.objectFit || 'cover', backgroundColor: 'transparent', ...chromaStyle }}
+                          style={{ width: '100%', height: '100%', objectFit: transform.objectFit || 'cover', backgroundColor: 'transparent', ...chromaStyle }}
                         />
                       )
                     ) : (
@@ -1565,7 +1505,6 @@ export default function WindowCapturePlayer() {
             playsInline
             webkit-playsinline="true"
             loop
-            muted={isStandaloneMuted}
             preload="auto"
             disablePictureInPicture
             controlsList="nodownload nofullscreen noremoteplayback"
@@ -1719,39 +1658,35 @@ export default function WindowCapturePlayer() {
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            background: 'rgba(0, 0, 0, 0.85)',
-            backdropFilter: 'blur(10px)',
+            background: 'rgba(0, 0, 0, 0.75)',
+            backdropFilter: 'blur(8px)',
             padding: '6px 12px',
             borderRadius: '20px',
-            border: '1px solid rgba(6, 182, 212, 0.45)',
-            boxShadow: '0 4px 20px rgba(0, 0, 0, 0.75)',
-            zIndex: 99999,
-            pointerEvents: 'auto',
+            border: '1px solid rgba(6, 182, 212, 0.35)',
+            boxShadow: '0 4px 16px rgba(0, 0, 0, 0.6)',
+            zIndex: 40,
             transition: 'opacity 0.2s ease',
-            opacity: 0.95
+            opacity: 0.85
           }}
           onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
-          onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.95')}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.85')}
         >
-          <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', userSelect: 'none' }}>
+          <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px' }}>
             <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
             WINDOW CAPTURE
           </span>
 
           <button
-            type="button"
             onClick={toggleStandalonePlay}
             style={{
-              background: 'rgba(255, 255, 255, 0.15)',
-              border: '1px solid rgba(255, 255, 255, 0.25)',
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
               color: '#fff',
               fontSize: '11px',
               fontWeight: 'bold',
-              padding: '5px 10px',
+              padding: '4px 8px',
               borderRadius: '12px',
-              cursor: 'pointer',
-              userSelect: 'none',
-              pointerEvents: 'auto'
+              cursor: 'pointer'
             }}
             title="Tạm dừng / Tiếp tục độc lập (Space)"
           >
@@ -1759,39 +1694,33 @@ export default function WindowCapturePlayer() {
           </button>
 
           <button
-            type="button"
             onClick={toggleStandaloneMute}
             style={{
-              background: 'rgba(255, 255, 255, 0.15)',
-              border: '1px solid rgba(255, 255, 255, 0.25)',
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
               color: '#fff',
               fontSize: '11px',
               fontWeight: 'bold',
-              padding: '5px 10px',
+              padding: '4px 8px',
               borderRadius: '12px',
-              cursor: 'pointer',
-              userSelect: 'none',
-              pointerEvents: 'auto'
+              cursor: 'pointer'
             }}
             title="Bật / Tắt âm thanh độc lập (M)"
           >
-            {isStandaloneMuted ? '🔊 Bật Tiếng' : '🔇 Tắt Tiếng'}
+            {isUserMutedRef.current ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}
           </button>
 
           <button
-            type="button"
             onClick={toggleStandaloneFit}
             style={{
-              background: 'rgba(255, 255, 255, 0.15)',
-              border: '1px solid rgba(255, 255, 255, 0.25)',
+              background: 'rgba(255, 255, 255, 0.1)',
+              border: '1px solid rgba(255, 255, 255, 0.2)',
               color: '#fff',
               fontSize: '11px',
               fontWeight: 'bold',
-              padding: '5px 10px',
+              padding: '4px 8px',
               borderRadius: '12px',
-              cursor: 'pointer',
-              userSelect: 'none',
-              pointerEvents: 'auto'
+              cursor: 'pointer'
             }}
             title="Chuyển chế độ Khung hình (Tràn / Vừa)"
           >
@@ -1800,25 +1729,16 @@ export default function WindowCapturePlayer() {
 
           {/* ⭐ NÚT ẨN HẾT TẤT CẢ CÁC TAB / NÚT TRÊN GIAO DIỆN VIDEO */}
           <button
-            type="button"
-            onClick={(e) => {
-              if (e) {
-                e.preventDefault();
-                e.stopPropagation();
-              }
-              toggleControlsHidden(true);
-            }}
+            onClick={() => toggleControlsHidden(true)}
             style={{
-              background: 'rgba(239, 68, 68, 0.3)',
-              border: '1px solid rgba(239, 68, 68, 0.5)',
+              background: 'rgba(239, 68, 68, 0.25)',
+              border: '1px solid rgba(239, 68, 68, 0.45)',
               color: '#fca5a5',
               fontSize: '11px',
               fontWeight: 'bold',
-              padding: '5px 10px',
+              padding: '4px 10px',
               borderRadius: '12px',
               cursor: 'pointer',
-              userSelect: 'none',
-              pointerEvents: 'auto',
               display: 'flex',
               alignItems: 'center',
               gap: '3px'
@@ -1833,26 +1753,24 @@ export default function WindowCapturePlayer() {
       {/* 👁️ NÚT PHỤC HỒI NHỎ GỌN TRÊN GÓC PHẢI KHI ĐANG ẨN */}
       {isControlsHidden && (
         <button
-          type="button"
           onClick={() => toggleControlsHidden(false)}
           style={{
             position: 'absolute',
             top: '8px',
             right: '8px',
-            zIndex: 99999,
-            pointerEvents: 'auto',
+            zIndex: 50,
             width: '28px',
             height: '28px',
             borderRadius: '50%',
-            background: 'rgba(0, 0, 0, 0.75)',
-            border: '1px solid rgba(6, 182, 212, 0.6)',
+            background: 'rgba(0, 0, 0, 0.55)',
+            border: '1px solid rgba(6, 182, 212, 0.4)',
             color: '#06b6d4',
             fontSize: '13px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            opacity: 0.5,
+            opacity: 0.25,
             backdropFilter: 'blur(4px)',
             transition: 'all 0.25s ease'
           }}

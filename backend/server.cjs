@@ -733,6 +733,19 @@ app.post('/api/upload-stream-init', (req, res) => {
 
     const fileUrl = `/uploads/${filename}`;
 
+    currentMasterLiveState = {
+      ...currentMasterLiveState,
+      stage: 'idol',
+      mediaUrl: fileUrl,
+      isVideo: true,
+      videoPlaybackEvent: 'play',
+      isPlaying: true,
+      isUserExplicitMediaLocked: true,
+      updatedAt: Date.now()
+    };
+    io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+    saveLiveStateToFile();
+
     res.json({
       success: true,
       uploadId,
@@ -2121,7 +2134,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.18';
+  let ver = '4.9.19';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -2159,7 +2172,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.18';
+  let ver = '4.9.19';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -2984,65 +2997,11 @@ io.on('connection', (socket) => {
           }).catch(e => {});
         }, 15000);
       } else {
-        // 🌟 Kênh TikTok chưa phát Live thực tế: Tự động kích hoạt Chế độ Trực Tiếp AI Sẵn Sàng (Simulation & Auto Events)
-        console.log(`[TikTok Live] ℹ️ Kênh @${targetUser} hiện chưa phát trực tiếp trên TikTok. Tự động chuyển sang Chế độ Trực Tiếp AI Sẵn Sàng (Simulation & 14 Sự kiện live test)...`);
-        startSimulationMode();
-        currentUsername = targetUser;
-        const finalFlv = flvUrl || globalFlvUrl || null;
-        const finalHls = hlsUrl || null;
-
-        currentMasterLiveState = {
-          ...currentMasterLiveState,
-          flvUrl: finalFlv,
-          hlsUrl: finalHls,
-          mediaUrl: currentMasterLiveState.mediaUrl || finalFlv,
-          isVideo: true,
-          isConnected: true,
-          stage: currentMasterLiveState.stage || 'idol',
-          updatedAt: Date.now()
-        };
-        io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
-
-        io.emit('tiktok_connected', { 
-          username: targetUser, 
-          roomId: `SIM_${targetUser}_READY`, 
-          flvUrl: finalFlv, 
-          hlsUrl: finalHls,
-          isSimulation: true 
-        });
-        io.emit('tiktok_status', { 
-          connected: true, 
-          username: targetUser, 
-          roomId: `SIM_${targetUser}_READY`, 
-          flvUrl: finalFlv, 
-          hlsUrl: finalHls,
-          isSimulation: true,
-          note: 'Chế độ Trực Tiếp AI Sẵn Sàng — Tự động nhận diện 14 sự kiện live'
-        });
-
-        // Tự động kiểm tra kết nối lại ngầm mỗi 20s khi streamer chính thức bấm Phát Live trên TikTok
-        if (autoReconnectTimer) clearInterval(autoReconnectTimer);
-        autoReconnectTimer = setInterval(() => {
-          if (!currentUsername) return;
-          console.log(`[TikTok Live] 🔄 Đang kiểm tra luồng phát thực tế cho @${currentUsername}...`);
-          const testConn = new TikTokConnector(currentUsername, {
-            processInitialData: true,
-            enableExtendedGiftInfo: false,
-            sessionId,
-            requestHeaders: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-          });
-          testConn.connect().then(realState => {
-            console.log(`[TikTok Live] 🎉 Streamer @${currentUsername} ĐÃ BẮT ĐẦU PHÁT TRỰC TIẾP TRÊN TIKTOK! Nâng cấp luồng thật...`);
-            clearInterval(autoReconnectTimer);
-            autoReconnectTimer = null;
-            stopSimulationMode();
-            tiktokConnection = testConn;
-            const res = extractFlv(realState);
-            const liveFlv = res.bestUrl || globalFlvUrl || null;
-            io.emit('tiktok_status', { connected: true, username: currentUsername, roomId: realState?.roomId, flvUrl: liveFlv, isSimulation: false });
-            io.emit('tiktok_connected', { username: currentUsername, roomId: realState?.roomId, flvUrl: liveFlv, isSimulation: false });
-          }).catch(() => {});
-        }, 20000);
+        // Cả hai đều thất bại
+        let userFriendlyError = 'Kênh chưa phát Live hoặc ID không tồn tại!';
+        io.emit('tiktok_error', userFriendlyError);
+        io.emit('tiktok_status', { connected: false, username: targetUser });
+        tiktokConnection = null;
       }
     });
 

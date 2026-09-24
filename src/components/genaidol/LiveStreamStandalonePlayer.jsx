@@ -373,8 +373,9 @@ export default function LiveStreamStandalonePlayer() {
             setVideoSrc(localBlob);
             setIsVideoLoading(false);
           } else if (data.mediaUrl && !isSameMedia(videoSrc, data.mediaUrl)) {
-            isHardwareLocalBlobRef.current = false;
-            setVideoSrc(data.mediaUrl);
+            if (!isHardwareLocalBlobRef.current) {
+              setVideoSrc(data.mediaUrl);
+            }
           }
         }
         if (!isExplicitlyPausedRef.current && videoRef.current && videoRef.current.paused) {
@@ -413,7 +414,6 @@ export default function LiveStreamStandalonePlayer() {
       socket.on('VIDEO_PLAYBACK_CONTROL', (control) => {
         // Tự động nhận video mới tức thì 0ms
         if (control.mediaUrl && !isSameMedia(videoSrc, control.mediaUrl)) {
-          isHardwareLocalBlobRef.current = false;
           setVideoSrc(control.mediaUrl);
         }
         if (control.action === 'play' || control.isPlaying === true) {

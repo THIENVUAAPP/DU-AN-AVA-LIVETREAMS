@@ -633,11 +633,9 @@ export default function LivestreamFlowSequencer() {
         || (step.avatarTransforms && step.avatarTransforms[av.id]) 
         || av.transform 
         || { x: 5 + avIdx * 24, y: 15, width: 45, height: 75, zIndex: 10 + avIdx };
-      const cleanTalk = (av.talkVideo && !av.talkVideo.includes('commondatastorage.googleapis.com') && !av.talkVideo.includes('demo_dancer') && !av.talkVideo.includes('nhep_mieng')) ? av.talkVideo : '';
-      const cleanIdle = (av.idleVideo && !av.idleVideo.includes('commondatastorage.googleapis.com') && !av.idleVideo.includes('demo_dancer') && !av.idleVideo.includes('nhep_mieng')) ? av.idleVideo : '';
       const vidSrc = isCurrentSpeaker 
-        ? (cleanTalk || cleanIdle || mediaToPlay) 
-        : (cleanIdle || cleanTalk || mediaToPlay);
+        ? (av.talkVideo || av.idleVideo || mediaToPlay) 
+        : (av.idleVideo || av.talkVideo || mediaToPlay);
       return {
         ...av,
         id: av.id,
@@ -649,19 +647,101 @@ export default function LivestreamFlowSequencer() {
       };
     });
 
-    // 🚀 HÀM NỘI BỘ: BROADCAST VỚI URL ĐÃ RESOLVE (không bao giờ gửi blob: ra Window Capture / TikTok)
-    const _doBroadcast = (finalMediaUrl) => {
-      const payload = {
-        mediaUrl: finalMediaUrl,
-        blobUrl: finalMediaUrl,
-        title: step.title,
-        actionType: step.actionType,
-        scriptText: step.scriptText || '',
-        voiceId: step.voiceId || 'brain_auto',
-        durationSeconds: step.durationSeconds || 60,
-        stepIndex: index + 1,
-        totalSteps: activePreset?.steps?.length || 1,
-        presetName: activePreset?.name || 'Kịch bản Sequencer',
+    const payload = {
+      mediaUrl: mediaToPlay,
+      blobUrl: mediaToPlay,
+      title: step.title,
+      actionType: step.actionType,
+      scriptText: step.scriptText || '',
+      voiceId: step.voiceId || 'brain_auto',
+      durationSeconds: step.durationSeconds || 60,
+      stepIndex: index + 1,
+      totalSteps: activePreset?.steps?.length || 1,
+      presetName: activePreset?.name || 'Kịch bản Sequencer',
+      mainMediaTransform: resolved.mainMediaTransform || step.mainMediaTransform || null,
+      mainMediaChromaKey: resolved.mainMediaChromaKey || step.mainMediaChromaKey || null,
+      secondaryMediaUrl: secondaryToPlay || null,
+      secondaryMediaTransform: resolved.secondaryMediaTransform || step.secondaryMediaTransform || null,
+      secondaryMediaChromaKey: resolved.secondaryMediaChromaKey || step.secondaryMediaChromaKey || null,
+      overlayImage: overlayImgToPlay || null,
+      overlayImageTransform: resolved.overlayImageTransform || step.overlayImageTransform || null,
+      overlayImageChromaKey: resolved.overlayImageChromaKey || step.overlayImageChromaKey || null,
+      overlayText: overlayTxtToPlay || null,
+      overlayTextStyle: resolved.overlayTextStyle || step.overlayTextStyle || 'fire_sale',
+      overlayTextFontFamily: resolved.overlayTextFontFamily || step.overlayTextFontFamily || 'be_vietnam',
+      overlayTextFontSize: resolved.overlayTextFontSize || step.overlayTextFontSize || 20,
+      overlayTextColor: resolved.overlayTextColor || step.overlayTextColor || '#ffffff',
+      overlayTextTransform: resolved.overlayTextTransform || step.overlayTextTransform || null,
+      avatarSpeaker: step.avatarSpeaker || 'avatar_1',
+      avatarTransforms: resolved.avatarTransforms || step.avatarTransforms || null,
+      syncedAvatars: syncedAvatars,
+      isMediaPinned: !!step.isMediaPinned,
+      isPlaying: isLivePlaying
+    };
+
+    // 1. BroadcastChannel trực tiếp cho Window Capture OBS & TikTok Live Studio
+    try {
+      const bc = new BroadcastChannel('avalive_master_live_stream');
+      bc.postMessage({
+        type: 'GLOBAL_MEDIA_CHANGE',
+        mediaUrl: mediaToPlay,
+        blobUrl: mediaToPlay,
+        isVideo: !isImageMedia(mediaToPlay),
+        isPlaying: isLivePlaying,
+        currentTime: 0,
+        source: 'sequencer',
+        mainMediaTransform: resolved.mainMediaTransform || null,
+        mainMediaChromaKey: resolved.mainMediaChromaKey || null,
+        secondaryMediaUrl: secondaryToPlay || null,
+        secondaryMediaTransform: resolved.secondaryMediaTransform || null,
+        secondaryMediaChromaKey: resolved.secondaryMediaChromaKey || null,
+        overlayImage: overlayImgToPlay || null,
+        overlayImageTransform: resolved.overlayImageTransform || null,
+        overlayImageChromaKey: resolved.overlayImageChromaKey || null,
+        overlayText: overlayTxtToPlay || null,
+        overlayTextStyle: resolved.overlayTextStyle || step.overlayTextStyle || 'fire_sale',
+        overlayTextFontFamily: resolved.overlayTextFontFamily || step.overlayTextFontFamily || 'be_vietnam',
+        overlayTextFontSize: resolved.overlayTextFontSize || step.overlayTextFontSize || 20,
+        overlayTextTransform: resolved.overlayTextTransform || null,
+        avatarSpeaker: step.avatarSpeaker || 'avatar_1',
+        avatarTransforms: resolved.avatarTransforms || null,
+        syncedAvatars: syncedAvatars,
+        timestamp: Date.now()
+      });
+    } catch (e) {}
+
+    // 2. Custom Events nội bộ — GỬI TOÀN BỘ multiAvatarConfig & syncedAvatars
+    // ⚡ Tái hiện 100% nguyên vẹn toàn bộ 5 lớp từ Sân Khấu Phụ sang Sân Khấu Chính
+    const syncedConfig = {
+      ...(multiAvatarConfig || {}),
+      enabled: true,
+      activeCount: avatarsList.length,
+      avatars: syncedAvatars,
+      activeSpeakerId: step.avatarSpeaker || 'avatar_1',
+      fromSequencer: true,
+      syncedAt: Date.now()
+    };
+
+    const fullSyncPayload = {
+      ...payload,
+      isMainMediaDeleted: !!step.isMainMediaDeleted,
+      syncedAvatars: syncedAvatars,
+      multiAvatarConfig: syncedConfig
+    };
+
+    // Lưu vào localStorage khi người dùng bật đồng bộ
+    try {
+      if (isMasterSynced) {
+        localStorage.setItem('avalive_master_sync_active', 'true');
+      }
+      if (mediaToPlay && !step.isMainMediaDeleted) {
+        localStorage.setItem('avalive_user_locked_media', mediaToPlay);
+      } else {
+        localStorage.removeItem('avalive_user_locked_media');
+      }
+      localStorage.setItem('avalive_sequencer_overlay', JSON.stringify({
+        mainMediaUrl: step.isMainMediaDeleted ? '' : mediaToPlay,
+        isMainMediaDeleted: !!step.isMainMediaDeleted,
         mainMediaTransform: resolved.mainMediaTransform || step.mainMediaTransform || null,
         mainMediaChromaKey: resolved.mainMediaChromaKey || step.mainMediaChromaKey || null,
         secondaryMediaUrl: secondaryToPlay || null,
@@ -679,149 +759,62 @@ export default function LivestreamFlowSequencer() {
         avatarSpeaker: step.avatarSpeaker || 'avatar_1',
         avatarTransforms: resolved.avatarTransforms || step.avatarTransforms || null,
         syncedAvatars: syncedAvatars,
-        isMediaPinned: !!step.isMediaPinned,
-        isPlaying: isLivePlaying
-      };
-
-      // 1. BroadcastChannel trực tiếp cho Window Capture OBS & TikTok Live Studio
-      try {
-        const bc = new BroadcastChannel('avalive_master_live_stream');
-        bc.postMessage({
-          type: 'GLOBAL_MEDIA_CHANGE',
-          mediaUrl: finalMediaUrl,
-          blobUrl: finalMediaUrl,
-          isVideo: !isImageMedia(finalMediaUrl),
-          isPlaying: isLivePlaying,
-          currentTime: 0,
-          source: 'sequencer',
-          mainMediaTransform: resolved.mainMediaTransform || null,
-          mainMediaChromaKey: resolved.mainMediaChromaKey || null,
-          secondaryMediaUrl: secondaryToPlay || null,
-          secondaryMediaTransform: resolved.secondaryMediaTransform || null,
-          secondaryMediaChromaKey: resolved.secondaryMediaChromaKey || null,
-          overlayImage: overlayImgToPlay || null,
-          overlayImageTransform: resolved.overlayImageTransform || null,
-          overlayImageChromaKey: resolved.overlayImageChromaKey || null,
-          overlayText: overlayTxtToPlay || null,
-          overlayTextStyle: resolved.overlayTextStyle || step.overlayTextStyle || 'fire_sale',
-          overlayTextFontFamily: resolved.overlayTextFontFamily || step.overlayTextFontFamily || 'be_vietnam',
-          overlayTextFontSize: resolved.overlayTextFontSize || step.overlayTextFontSize || 20,
-          overlayTextTransform: resolved.overlayTextTransform || null,
-          avatarSpeaker: step.avatarSpeaker || 'avatar_1',
-          avatarTransforms: resolved.avatarTransforms || null,
-          syncedAvatars: syncedAvatars,
-          timestamp: Date.now()
-        });
-      } catch (e) {}
-
-      // 2. Custom Events nội bộ — GỬI TOÀN BỘ multiAvatarConfig & syncedAvatars
-      // ⚡ Tái hiện 100% nguyên vẹn toàn bộ 5 lớp từ Sân Khấu Phụ sang Sân Khấu Chính
-      const syncedConfig = {
-        ...(multiAvatarConfig || {}),
-        enabled: true,
-        activeCount: avatarsList.length,
-        avatars: syncedAvatars,
-        activeSpeakerId: step.avatarSpeaker || 'avatar_1',
-        fromSequencer: true,
-        syncedAt: Date.now()
-      };
-
-      const fullSyncPayload = {
-        ...payload,
-        isMainMediaDeleted: !!step.isMainMediaDeleted,
-        syncedAvatars: syncedAvatars,
-        multiAvatarConfig: syncedConfig
-      };
-
-      // Lưu vào localStorage khi người dùng bật đồng bộ
-      try {
-        if (isMasterSynced) {
-          localStorage.setItem('avalive_master_sync_active', 'true');
-        }
-        if (finalMediaUrl && !step.isMainMediaDeleted) {
-          localStorage.setItem('avalive_user_locked_media', finalMediaUrl);
-        } else {
-          localStorage.removeItem('avalive_user_locked_media');
-        }
-        localStorage.setItem('avalive_sequencer_overlay', JSON.stringify({
-          mainMediaUrl: step.isMainMediaDeleted ? '' : finalMediaUrl,
-          isMainMediaDeleted: !!step.isMainMediaDeleted,
-          mainMediaTransform: resolved.mainMediaTransform || step.mainMediaTransform || null,
-          mainMediaChromaKey: resolved.mainMediaChromaKey || step.mainMediaChromaKey || null,
-          secondaryMediaUrl: secondaryToPlay || null,
-          secondaryMediaTransform: resolved.secondaryMediaTransform || step.secondaryMediaTransform || null,
-          secondaryMediaChromaKey: resolved.secondaryMediaChromaKey || step.secondaryMediaChromaKey || null,
-          overlayImage: overlayImgToPlay || null,
-          overlayImageTransform: resolved.overlayImageTransform || step.overlayImageTransform || null,
-          overlayImageChromaKey: resolved.overlayImageChromaKey || step.overlayImageChromaKey || null,
-          overlayText: overlayTxtToPlay || null,
-          overlayTextStyle: resolved.overlayTextStyle || step.overlayTextStyle || 'fire_sale',
-          overlayTextFontFamily: resolved.overlayTextFontFamily || step.overlayTextFontFamily || 'be_vietnam',
-          overlayTextFontSize: resolved.overlayTextFontSize || step.overlayTextFontSize || 20,
-          overlayTextColor: resolved.overlayTextColor || step.overlayTextColor || '#ffffff',
-          overlayTextTransform: resolved.overlayTextTransform || step.overlayTextTransform || null,
-          avatarSpeaker: step.avatarSpeaker || 'avatar_1',
-          avatarTransforms: resolved.avatarTransforms || step.avatarTransforms || null,
-          syncedAvatars: syncedAvatars,
-          isMediaPinned: !!step.isMediaPinned
-        }));
-      } catch (e) {}
-
-      window.dispatchEvent(new CustomEvent('avalive:update_master_media', { detail: fullSyncPayload }));
-      window.dispatchEvent(new CustomEvent('avalive_flow_step_changed', { detail: fullSyncPayload }));
-      if (step.avatarSpeaker) {
-        window.dispatchEvent(new CustomEvent('avalive:speaker_change', { detail: { speakerId: step.avatarSpeaker, avatarId: step.avatarSpeaker, isSpeaking: isLivePlaying } }));
-        window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', { detail: { speakerId: step.avatarSpeaker, avatarId: step.avatarSpeaker, isSpeaking: isLivePlaying } }));
-      }
-      // Luôn dispatch multiAvatarConfig đã đồng bộ để các listener nhận ngay
-      window.dispatchEvent(new CustomEvent('avalive_multi_avatar_changed', {
-        detail: syncedConfig
+        isMediaPinned: !!step.isMediaPinned
       }));
+    } catch (e) {}
 
-      // 3. Gửi sang Backend API Live State
-      fetch('/api/live-state', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          mediaUrl: finalMediaUrl,
-          currentMedia: finalMediaUrl,
-          activeTab: 'flow_sequencer',
-          stepTitle: step.title,
-          actionType: step.actionType,
-          scriptText: step.scriptText,
-          voiceId: step.voiceId || 'brain_auto',
-          avatarSpeaker: step.avatarSpeaker || 'avatar_1',
-          secondaryMediaUrl: secondaryToPlay || null,
-          secondaryMediaTransform: resolved.secondaryMediaTransform || null,
-          overlayImage: overlayImgToPlay || null,
-          overlayImageTransform: resolved.overlayImageTransform || null,
-          overlayText: overlayTxtToPlay || null,
-          overlayTextStyle: resolved.overlayTextStyle || step.overlayTextStyle || 'fire_sale',
-          overlayTextFontFamily: resolved.overlayTextFontFamily || step.overlayTextFontFamily || 'be_vietnam',
-          overlayTextFontSize: resolved.overlayTextFontSize || step.overlayTextFontSize || 20,
-          overlayTextTransform: resolved.overlayTextTransform || null,
-          isMediaPinned: !!step.isMediaPinned,
-          isPlaying: isLivePlaying,
-          fit: 'cover',
-          sound: true,
-          updatedAt: Date.now()
-        })
-      }).catch(() => {});
-    };
+    window.dispatchEvent(new CustomEvent('avalive:update_master_media', { detail: fullSyncPayload }));
+    window.dispatchEvent(new CustomEvent('avalive_flow_step_changed', { detail: fullSyncPayload }));
+    if (step.avatarSpeaker) {
+      window.dispatchEvent(new CustomEvent('avalive:speaker_change', { detail: { speakerId: step.avatarSpeaker, avatarId: step.avatarSpeaker, isSpeaking: isLivePlaying } }));
+      window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', { detail: { speakerId: step.avatarSpeaker, avatarId: step.avatarSpeaker, isSpeaking: isLivePlaying } }));
+    }
+    // Luôn dispatch multiAvatarConfig đã đồng bộ để các listener nhận ngay
+    window.dispatchEvent(new CustomEvent('avalive_multi_avatar_changed', {
+      detail: syncedConfig
+    }));
 
-    // 🚀 UPLOAD-FIRST: Nếu mediaUrl là blob:/data: → upload lên server TRƯỚC, broadcast SAU với /uploads/ URL
-    // blob: URL không thể dùng từ Window Capture OBS hay TikTok Live Studio (cross-origin/cross-window)
+    // 3. Gửi sang Backend API Live State
+    fetch('/api/live-state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        mediaUrl: mediaToPlay,
+        currentMedia: mediaToPlay,
+        activeTab: 'flow_sequencer',
+        stepTitle: step.title,
+        actionType: step.actionType,
+        scriptText: step.scriptText,
+        voiceId: step.voiceId || 'brain_auto',
+        avatarSpeaker: step.avatarSpeaker || 'avatar_1',
+        secondaryMediaUrl: secondaryToPlay || null,
+        secondaryMediaTransform: resolved.secondaryMediaTransform || null,
+        overlayImage: overlayImgToPlay || null,
+        overlayImageTransform: resolved.overlayImageTransform || null,
+        overlayText: overlayTxtToPlay || null,
+        overlayTextStyle: resolved.overlayTextStyle || step.overlayTextStyle || 'fire_sale',
+        overlayTextFontFamily: resolved.overlayTextFontFamily || step.overlayTextFontFamily || 'be_vietnam',
+        overlayTextFontSize: resolved.overlayTextFontSize || step.overlayTextFontSize || 20,
+        overlayTextTransform: resolved.overlayTextTransform || null,
+        isMediaPinned: !!step.isMediaPinned,
+        isPlaying: isLivePlaying,
+        fit: 'cover',
+        sound: true,
+        updatedAt: Date.now()
+      })
+    }).catch(() => {});
+
+    // 🚀 Đảm bảo mọi video/ảnh blob từ sequencer đều được đẩy vào uploads/ của server
     if (mediaToPlay && (mediaToPlay.startsWith('blob:') || mediaToPlay.startsWith('data:'))) {
       ensureServerMediaUrl(mediaToPlay, `sequencer_step_${step.id || Date.now()}.mp4`).then(srvUrl => {
-        const finalUrl = (srvUrl && !srvUrl.startsWith('blob:') && !srvUrl.startsWith('data:')) ? srvUrl : mediaToPlay;
-        _doBroadcast(finalUrl);
-      }).catch(() => {
-        // Fallback: broadcast với blob URL (chỉ hoạt động trong cùng tab)
-        _doBroadcast(mediaToPlay);
-      });
-    } else {
-      // URL đã là /uploads/ hoặc HTTPS → broadcast ngay
-      _doBroadcast(mediaToPlay || '');
+        if (srvUrl && srvUrl !== mediaToPlay) {
+          fetch('/api/live-state', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mediaUrl: srvUrl, currentMedia: srvUrl, updatedAt: Date.now() })
+          }).catch(() => {});
+        }
+      }).catch(() => {});
     }
   };
   // Gán syncStepToServerRef để undo/redo có thể gọi mà không bị stale closure
