@@ -4312,6 +4312,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   const removeCustomCharacter = async (e, id) => {
     if (e && e.stopPropagation) e.stopPropagation();
     try {
+      const charToDelete = (customCharacters || []).find(c => c.id === id);
+      const targetMediaUrl = charToDelete?.mediaUrl || charToDelete?.url;
+      if (targetMediaUrl && typeof targetMediaUrl === 'string' && targetMediaUrl.includes('/uploads/')) {
+        try {
+          fetch('/api/delete-upload', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ url: targetMediaUrl })
+          }).catch(() => {});
+        } catch (e) {}
+      }
+
       const remaining = (customCharacters || []).filter(c => c.id !== id);
       setCustomCharacters(remaining);
       try { localStorage.setItem('avalive_custom_characters', JSON.stringify(remaining)); } catch (err) {}

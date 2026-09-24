@@ -960,6 +960,66 @@ app.post('/api/upload-media', upload.single('file'), (req, res) => {
   res.json({ url: fileUrl, filename: finalFilename, isVideo: !isImageFile, reused: reused, success: true });
 });
 
+// 🗑️ ROUTE XÓA FILE UPLOAD TRÊN SERVER THEO YÊU CẦU NGƯỜI DÙNG & TRIỆT TIÊU VIDEO ĐEN / RÁC
+app.post(['/api/delete-upload', '/api/delete-media'], (req, res) => {
+  try {
+    const { url, filename, fileUrl } = req.body || {};
+    const target = url || filename || fileUrl;
+    if (!target || typeof target !== 'string') {
+      return res.status(400).json({ error: 'Missing target file URL' });
+    }
+
+    const baseName = path.basename(target.replace(/\?.*$/, ''));
+    if (!baseName || baseName === '.' || baseName === '..') {
+      return res.status(400).json({ error: 'Invalid file name' });
+    }
+
+    let deleted = false;
+    const allUploadDirs = [
+      uploadsDir,
+      path.join(process.cwd(), 'system', 'uploads'),
+      path.join(process.cwd(), 'uploads'),
+      path.join(__dirname, '..', 'uploads'),
+      path.join(__dirname, '..', 'system', 'uploads')
+    ];
+
+    for (const dir of allUploadDirs) {
+      if (fs.existsSync(dir)) {
+        const targetPath = path.join(dir, baseName);
+        if (fs.existsSync(targetPath)) {
+          try {
+            fs.unlinkSync(targetPath);
+            deleted = true;
+            console.log(`[Storage Delete] 🗑️ Đã xóa vĩnh viễn file upload: ${baseName} khỏi ${dir}`);
+          } catch (err) {
+            console.warn(`[Storage Delete warning] Không thể xóa ${baseName} tại ${dir}:`, err.message);
+          }
+        }
+      }
+    }
+
+    // Tự động dọn dẹp các file rác 0-byte hoặc file tạm
+    for (const dir of allUploadDirs) {
+      if (fs.existsSync(dir)) {
+        try {
+          const files = fs.readdirSync(dir);
+          for (const f of files) {
+            const fp = path.join(dir, f);
+            const st = fs.statSync(fp);
+            if (st.size === 0 || f.endsWith('.tmp') || f.endsWith('.crdownload')) {
+              try { fs.unlinkSync(fp); } catch (e) {}
+            }
+          }
+        } catch (e) {}
+      }
+    }
+
+    return res.json({ success: true, deleted, file: baseName });
+  } catch (e) {
+    return res.status(500).json({ error: e.message });
+  }
+});
+
 // ============================================================
 // 🎬 ROUTE PHÁT SÓNG ĐỘC LẬP /live-stream CHO TIKTOK LIVE STUDIO & OBS
 // Tối ưu hóa GPU Hardware Acceleration 100%, 4K 60 FPS siêu sắc nét, không bao giờ đen màn hình hay lỗi link
@@ -2134,7 +2194,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.23';
+  let ver = '4.9.24';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -2172,7 +2232,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.23';
+  let ver = '4.9.24';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));

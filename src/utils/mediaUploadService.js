@@ -212,3 +212,38 @@ export async function pushMediaToStageAndCapture(payload = {}, socket = null) {
 
   return effectiveUrl;
 }
+
+/**
+ * 🗑️ Xóa vĩnh viễn file upload khỏi máy chủ khi người dùng xóa trên giao diện
+ */
+export async function deleteServerMedia(fileUrl) {
+  if (!fileUrl || typeof fileUrl !== 'string') return;
+  try {
+    const backendBase = getBackendBaseUrl();
+    const candidateEndpoints = [
+      `${backendBase}/api/delete-upload`,
+      '/api/delete-upload',
+      'http://127.0.0.1:3001/api/delete-upload',
+      'http://localhost:3001/api/delete-upload'
+    ];
+
+    for (const ep of candidateEndpoints) {
+      try {
+        const res = await fetch(ep, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ url: fileUrl })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          if (data && data.success) {
+            console.log(`[Media Service] 🗑️ Đã xóa vĩnh viễn file khỏi máy chủ: ${fileUrl}`);
+            break;
+          }
+        }
+      } catch (err) {}
+    }
+  } catch (e) {
+    console.warn('[deleteServerMedia error]', e);
+  }
+}

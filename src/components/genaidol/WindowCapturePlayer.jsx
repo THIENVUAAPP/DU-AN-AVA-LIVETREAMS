@@ -1110,7 +1110,11 @@ export default function WindowCapturePlayer() {
     return () => window.removeEventListener('keydown', handleKeyDown);
   });
 
-  const [isUserMuted, setIsUserMuted] = useState(false);
+  const [isUserMuted, setIsUserMuted] = useState(() => {
+    if (typeof window === 'undefined') return false;
+    const params = new URLSearchParams(window.location.search);
+    return params.get('sound') === '1' ? false : true;
+  });
 
   const toggleStandalonePlay = (e) => {
     if (e) {
@@ -1141,7 +1145,13 @@ export default function WindowCapturePlayer() {
     isUserMutedRef.current = nextMuted;
     const allMedia = document.querySelectorAll('video, audio');
     allMedia.forEach(m => {
-      try { m.muted = nextMuted; } catch (err) {}
+      try {
+        m.muted = nextMuted;
+        if (!nextMuted) {
+          m.volume = 1.0;
+          m.play().catch(() => {});
+        }
+      } catch (err) {}
     });
   };
 
@@ -1151,6 +1161,10 @@ export default function WindowCapturePlayer() {
     }
     const nextFit = fitMode === 'cover' ? 'contain' : 'cover';
     setFitMode(nextFit);
+    const allMediaEls = document.querySelectorAll('video, img');
+    allMediaEls.forEach(el => {
+      try { el.style.objectFit = nextFit; } catch (err) {}
+    });
   };
 
   const resolvedFinalSrc = resolveUrl(videoSrc);
@@ -1709,17 +1723,20 @@ export default function WindowCapturePlayer() {
           <button
             type="button"
             onClick={toggleStandalonePlay}
+            onPointerDown={(e) => { e.stopPropagation(); }}
             onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
             style={{
-              background: isPlaybackActive ? 'rgba(239, 68, 68, 0.3)' : 'rgba(16, 185, 129, 0.3)',
-              border: '1px solid rgba(255, 255, 255, 0.25)',
+              background: isPlaybackActive ? 'rgba(239, 68, 68, 0.4)' : 'rgba(16, 185, 129, 0.4)',
+              border: '1px solid rgba(255, 255, 255, 0.35)',
               color: '#fff',
               fontSize: '11px',
               fontWeight: 'bold',
-              padding: '4px 10px',
+              padding: '4px 12px',
               borderRadius: '12px',
               cursor: 'pointer',
-              pointerEvents: 'auto'
+              pointerEvents: 'auto',
+              userSelect: 'none'
             }}
             title="Tạm dừng / Tiếp tục độc lập (Phím tắt: Space)"
           >
@@ -1729,17 +1746,20 @@ export default function WindowCapturePlayer() {
           <button
             type="button"
             onClick={toggleStandaloneMute}
+            onPointerDown={(e) => { e.stopPropagation(); }}
             onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
             style={{
-              background: isUserMuted ? 'rgba(239, 68, 68, 0.3)' : 'rgba(6, 182, 212, 0.3)',
-              border: '1px solid rgba(255, 255, 255, 0.25)',
+              background: isUserMuted ? 'rgba(239, 68, 68, 0.4)' : 'rgba(6, 182, 212, 0.4)',
+              border: '1px solid rgba(255, 255, 255, 0.35)',
               color: '#fff',
               fontSize: '11px',
               fontWeight: 'bold',
-              padding: '4px 10px',
+              padding: '4px 12px',
               borderRadius: '12px',
               cursor: 'pointer',
-              pointerEvents: 'auto'
+              pointerEvents: 'auto',
+              userSelect: 'none'
             }}
             title="Bật / Tắt âm thanh độc lập (Phím tắt: M)"
           >
@@ -1749,17 +1769,20 @@ export default function WindowCapturePlayer() {
           <button
             type="button"
             onClick={toggleStandaloneFit}
+            onPointerDown={(e) => { e.stopPropagation(); }}
             onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
             style={{
-              background: 'rgba(255, 255, 255, 0.15)',
-              border: '1px solid rgba(255, 255, 255, 0.25)',
+              background: 'rgba(255, 255, 255, 0.2)',
+              border: '1px solid rgba(255, 255, 255, 0.35)',
               color: '#fff',
               fontSize: '11px',
               fontWeight: 'bold',
-              padding: '4px 10px',
+              padding: '4px 12px',
               borderRadius: '12px',
               cursor: 'pointer',
-              pointerEvents: 'auto'
+              pointerEvents: 'auto',
+              userSelect: 'none'
             }}
             title="Chuyển chế độ Khung hình (Tràn / Vừa)"
           >
@@ -1770,20 +1793,23 @@ export default function WindowCapturePlayer() {
           <button
             type="button"
             onClick={() => toggleControlsHidden(true)}
+            onPointerDown={(e) => { e.stopPropagation(); }}
             onMouseDown={(e) => e.stopPropagation()}
+            onTouchStart={(e) => e.stopPropagation()}
             style={{
-              background: 'rgba(239, 68, 68, 0.35)',
-              border: '1px solid rgba(239, 68, 68, 0.6)',
+              background: 'rgba(239, 68, 68, 0.45)',
+              border: '1px solid rgba(239, 68, 68, 0.7)',
               color: '#fca5a5',
               fontSize: '11px',
               fontWeight: 'bold',
-              padding: '4px 10px',
+              padding: '4px 12px',
               borderRadius: '12px',
               cursor: 'pointer',
               pointerEvents: 'auto',
               display: 'flex',
               alignItems: 'center',
-              gap: '3px'
+              gap: '3px',
+              userSelect: 'none'
             }}
             title="Ẩn sạch toàn bộ các nút trên video để TikTok Studio / OBS quay khung hình tinh khiết (Phím tắt: H)"
           >

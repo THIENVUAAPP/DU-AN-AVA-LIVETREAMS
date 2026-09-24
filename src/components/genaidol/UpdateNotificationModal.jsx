@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.23';
+export const APP_VERSION = '4.9.24';
 export const RELEASE_DATE = '24/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.24 - Tối Ưu Triệt Để Xóa Video & Dọn Sạch Thư Mục Uploads, 1-Click Xóa Avatar / Khung, Gỡ Bỏ Tab 1 Kết Nối Idol, Đồng Bộ Chuẩn OBS & TikTok Live',
+    description: '1. Xóa Video Là Xóa Sạch Vĩnh Viễn Khỏi Máy Chủ (Uploads): Khi người dùng bấm xóa nhân vật hoặc video trên bất kỳ tab nào, hệ thống lập tức thanh lọc và xóa vĩnh viễn file vật lý khỏi máy chủ và RAM, loại bỏ 100% video đen hoặc file rác tồn đọng. 2. Nút Xóa (1-Click) Sân Khấu Phụ: Nút Xóa trên thanh công cụ Avatar / Lớp lập tức xóa đứt điểm toàn bộ nhân vật, video và khung viền trong 1 thao tác duy nhất. 3. Gỡ Bỏ Tab 1 Kết Nối Idol: Tối giản cổng Kết Nối Idol để hiển thị trực tiếp 100% không gian 14 Tác Vụ Sự Kiện Live. 4. Đồng Bộ Có Kiểm Soát Sân Khấu Phụ: Chỉ khi người dùng bấm Bật Đồng Bộ thì Sân khấu phụ mới chuyển tiếp luồng sang Sân khấu chính và Window Capture OBS.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.23 - Kích Hoạt Toàn Diện Thanh Điều Khiển Window Capture, Khắc Phục Màn Hình Đen 14 Sự Kiện Live & Tối Ưu Tải Mọi Định Dạng Video',
     description: '1. Thanh Điều Khiển Window Capture Nổi (Floating Dock): Các nút Tạm dừng/Phát, Bật/Tắt Tiếng, Tràn/Vừa Khung, và Ẩn Dock phản hồi tức thì 100%. 2. Khắc Phục Triệt Để Màn Hình Đen 14 Sự Kiện: Tự động trích xuất frame đầu làm Thumbnail sắc nét, đồng bộ đường dẫn máy chủ chuẩn xác sang Sân khấu chính, OBS và TikTok Live Studio; video sự kiện phát xong tự động chuyển tiếp mượt mà về video chạy nền. 3. Tải Mọi Định Dạng Video Cho Luồng Live Idol Avatar: Mở rộng tiếp nhận mọi định dạng video (.mp4, .webm, .mov, .mkv, .avi, v.v.) không bị giới hạn.'

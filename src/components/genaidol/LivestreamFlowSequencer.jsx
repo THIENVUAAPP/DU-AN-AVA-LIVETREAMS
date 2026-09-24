@@ -26,7 +26,7 @@ import {
   stopVoiceAudio,
   unlockAudioContext
 } from '../../utils/voiceSyncService';
-import { uploadMediaToServer, ensureServerMediaUrl } from '../../utils/mediaUploadService';
+import { uploadMediaToServer, ensureServerMediaUrl, deleteServerMedia } from '../../utils/mediaUploadService';
 
 // 🎙️ Danh sách các Giọng Đọc AI Tiếng Việt Top 1 & Đồng Bộ Bộ Não Voice AI Brain
 export const CURATED_STUDIO_VOICES = [
@@ -608,9 +608,9 @@ export default function LivestreamFlowSequencer() {
   // 📡 Đẩy video và dữ liệu phân đoạn của bước hiện tại lên Sân khấu chính (OBS / TikTok Live / Master)
   const syncStepToServer = (step, index = 0, isLivePlaying = true, forceSync = false) => {
     if (!step) return;
-    // 🛡️ CHỈ ĐỒNG BỘ RA SÂN KHẤU CHÍNH KHI NGƯỜI DÙNG BẬT ĐỒNG BỘ (ẢNH 2) HOẶC ĐANG CHẠY KỊCH BẢN
-    const isSyncActive = forceSync || isMasterSynced || (typeof window !== 'undefined' && localStorage.getItem('avalive_master_sync_active') === 'true');
-    if (!isSyncActive && !isPlayingFlow && !isLivePlaying) {
+    // 🛡️ CHỈ ĐỒNG BỘ RA SÂN KHẤU CHÍNH KHI NGƯỜI DÙNG BẬT ĐỒNG BỘ HOẶC BẤM ĐỒNG BỘ
+    const isSyncActive = forceSync || isMasterSynced;
+    if (!isSyncActive) {
       return;
     }
     
@@ -1132,244 +1132,130 @@ export default function LivestreamFlowSequencer() {
     }
   };
 
-  // 🗑️ XÓA LAYER KHỎI BƯỚC: LOGIC 2 BƯỚC (BƯỚC 1: XÓA NỘI DUNG GIỮ KHUNG -> BƯỚC 2: XÓA HẲN KHUNG)
+  // 🗑️ XÓA LAYER KHỎI BƯỚC: 1-CLICK XÓA SẠCH 100% NỘI DUNG, KHUNG & FILE SERVER
   const handleDeleteLayerFromStep = (stepId, layerType, avatarId = null) => {
     pushUndoSnapshot();
 
     if (layerType === 'avatar') {
       const targetId = avatarId || selectedLayer?.id || 'avatar_1';
       const targetAv = (multiAvatarConfig?.avatars || []).find(a => a.id === targetId);
-      const hasMedia = Boolean(targetAv && (targetAv.talkVideo || targetAv.idleVideo || targetAv.mediaUrl));
+      const mediaToDelete = targetAv?.talkVideo || targetAv?.idleVideo || targetAv?.mediaUrl;
 
-      if (hasMedia) {
-        // LẦN 1: Xóa nội dung video/ảnh bên trong, GIỮ NGUYÊN KHUNG trên sân khấu
-        const updatedAvatars = (multiAvatarConfig?.avatars || []).map(a => {
-          if (a.id === targetId) {
-            return {
-              ...a,
-              talkVideo: '',
-              idleVideo: '',
-              mediaUrl: ''
-            };
-          }
-          return a;
-        });
-        const updated = {
-          ...multiAvatarConfig,
-          avatars: updatedAvatars
-        };
-        setMultiAvatarConfig(updated);
-        saveMultiAvatarConfig(updated);
-        // Giữ selectedLayer để khung viền và 8 điểm co giãn vẫn hiển thị cho phép bấm Tải Lên hoặc Xóa lần 2
-        setSelectedLayer({ type: 'avatar', id: targetId });
-        toast.info('🗑️ Đã xóa video/ảnh của Avatar! (Khung viền vẫn giữ nguyên, bấm Xóa lần nữa để xóa hẳn khung)');
-        if (isMasterSynced && currentStep) {
-          setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
-        }
-        return;
-      } else {
-        // LẦN 2: Khung đã trống -> XÓA HOÀN TOÀN KHUNG khỏi sân khấu
-        handleDeleteAvatarLayer(targetId, true);
-        setPresets(prev => prev.map(p => {
-          if (p.id !== activePresetId) return p;
-          return {
-            ...p,
-            steps: p.steps.map(s => {
-              if (s.id !== stepId) return s;
-              const newTransforms = { ...(s.avatarTransforms || {}) };
-              delete newTransforms[targetId];
-              return { ...s, avatarTransforms: newTransforms };
-            })
-          };
-        }));
-        setSelectedLayer(null);
-        toast.info('🗑️ Đã xóa hoàn toàn khung Avatar khỏi sân khấu!');
-        if (isMasterSynced && currentStep) {
-          setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
-        }
-        return;
+      // Xóa file vật lý trên server nếu có
+      if (mediaToDelete && mediaToDelete.includes('/uploads/')) {
+        deleteServerMedia(mediaToDelete);
       }
+
+      handleDeleteAvatarLayer(targetId, true);
+      setPresets(prev => prev.map(p => {
+        if (p.id !== activePresetId) return p;
+        return {
+          ...p,
+          steps: p.steps.map(s => {
+            if (s.id !== stepId) return s;
+            const newTransforms = { ...(s.avatarTransforms || {}) };
+            delete newTransforms[targetId];
+            return { ...s, avatarTransforms: newTransforms };
+          })
+        };
+      }));
+      setSelectedLayer(null);
+      toast.success('🗑️ Đã xóa hoàn toàn Avatar & khung khỏi Sân Khấu!');
+      if (isMasterSynced && currentStep) {
+        setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
+      }
+      return;
     }
 
     if (layerType === 'main_media') {
-      const hasMedia = Boolean(currentStep?.mediaUrl) && !currentStep?.isMainMediaDeleted;
-      if (hasMedia) {
-        // LẦN 1: Xóa nội dung video/ảnh nền chính, giữ khung
-        setPresets(prev => prev.map(p => {
-          if (p.id !== activePresetId) return p;
-          return {
-            ...p,
-            steps: p.steps.map(s => {
-              if (s.id !== stepId) return s;
-              return {
-                ...s,
-                mediaUrl: '',
-                isMainMediaDeleted: false,
-                mainMediaTransform: s.mainMediaTransform || { x: 0, y: 0, width: 100, height: 100, zIndex: 1 }
-              };
-            })
-          };
-        }));
-        setSelectedLayer({ type: 'main_media', id: null });
-        toast.info('🗑️ Đã xóa video/ảnh Nền Chính! (Khung vẫn giữ nguyên, bấm Xóa lần nữa để xóa hẳn khung)');
-        if (isMasterSynced && currentStep) {
-          setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
-        }
-        return;
-      } else {
-        // LẦN 2: Xóa hoàn toàn khung nền chính
-        setPresets(prev => prev.map(p => {
-          if (p.id !== activePresetId) return p;
-          return {
-            ...p,
-            steps: p.steps.map(s => {
-              if (s.id !== stepId) return s;
-              return { ...s, mediaUrl: '', isMainMediaDeleted: true, mainMediaTransform: null };
-            })
-          };
-        }));
-        setSelectedLayer(null);
-        toast.info('🗑️ Đã xóa hoàn toàn khung Nền Chính khỏi sân khấu!');
-        if (isMasterSynced && currentStep) {
-          setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
-        }
-        return;
+      const mediaToDelete = currentStep?.mediaUrl;
+      if (mediaToDelete && mediaToDelete.includes('/uploads/')) {
+        deleteServerMedia(mediaToDelete);
       }
+
+      setPresets(prev => prev.map(p => {
+        if (p.id !== activePresetId) return p;
+        return {
+          ...p,
+          steps: p.steps.map(s => {
+            if (s.id !== stepId) return s;
+            return { ...s, mediaUrl: '', isMainMediaDeleted: true, mainMediaTransform: null };
+          })
+        };
+      }));
+      setSelectedLayer(null);
+      toast.success('🗑️ Đã xóa hoàn toàn Video/Ảnh Nền Chính!');
+      if (isMasterSynced && currentStep) {
+        setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
+      }
+      return;
     }
 
     if (layerType === 'pip') {
-      const hasMedia = Boolean(currentStep?.secondaryMediaUrl);
-      if (hasMedia) {
-        // LẦN 1: Xóa video/ảnh PiP, giữ khung
-        setPresets(prev => prev.map(p => {
-          if (p.id !== activePresetId) return p;
-          return {
-            ...p,
-            steps: p.steps.map(s => {
-              if (s.id !== stepId) return s;
-              return {
-                ...s,
-                secondaryMediaUrl: '',
-                secondaryMediaTransform: s.secondaryMediaTransform || { x: 55, y: 8, width: 40, height: 25, zIndex: 20 }
-              };
-            })
-          };
-        }));
-        setSelectedLayer({ type: 'pip', id: null });
-        toast.info('🗑️ Đã xóa video/ảnh PiP! (Khung vẫn giữ nguyên, bấm Xóa lần nữa để xóa hẳn khung)');
-        if (isMasterSynced && currentStep) {
-          setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
-        }
-        return;
-      } else {
-        // LẦN 2: Xóa hoàn toàn khung PiP
-        setPresets(prev => prev.map(p => {
-          if (p.id !== activePresetId) return p;
-          return {
-            ...p,
-            steps: p.steps.map(s => {
-              if (s.id !== stepId) return s;
-              return { ...s, secondaryMediaUrl: '', secondaryMediaTransform: null };
-            })
-          };
-        }));
-        setSelectedLayer(null);
-        toast.info('🗑️ Đã xóa hoàn toàn khung PiP khỏi sân khấu!');
-        if (isMasterSynced && currentStep) {
-          setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
-        }
-        return;
+      const mediaToDelete = currentStep?.secondaryMediaUrl;
+      if (mediaToDelete && mediaToDelete.includes('/uploads/')) {
+        deleteServerMedia(mediaToDelete);
       }
+
+      setPresets(prev => prev.map(p => {
+        if (p.id !== activePresetId) return p;
+        return {
+          ...p,
+          steps: p.steps.map(s => {
+            if (s.id !== stepId) return s;
+            return { ...s, secondaryMediaUrl: '', secondaryMediaTransform: null };
+          })
+        };
+      }));
+      setSelectedLayer(null);
+      toast.success('🗑️ Đã xóa hoàn toàn Video PiP!');
+      if (isMasterSynced && currentStep) {
+        setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
+      }
+      return;
     }
 
     if (layerType === 'banner') {
-      const hasMedia = Boolean(currentStep?.overlayImage);
-      if (hasMedia) {
-        // LẦN 1: Xóa ảnh Banner, giữ khung
-        setPresets(prev => prev.map(p => {
-          if (p.id !== activePresetId) return p;
-          return {
-            ...p,
-            steps: p.steps.map(s => {
-              if (s.id !== stepId) return s;
-              return {
-                ...s,
-                overlayImage: '',
-                overlayImageTransform: s.overlayImageTransform || { x: 10, y: 12, width: 80, height: 20, zIndex: 25 }
-              };
-            })
-          };
-        }));
-        setSelectedLayer({ type: 'banner', id: null });
-        toast.info('🗑️ Đã xóa ảnh Banner! (Khung vẫn giữ nguyên, bấm Xóa lần nữa để xóa hẳn khung)');
-        if (isMasterSynced && currentStep) {
-          setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
-        }
-        return;
-      } else {
-        // LẦN 2: Xóa hoàn toàn khung Banner
-        setPresets(prev => prev.map(p => {
-          if (p.id !== activePresetId) return p;
-          return {
-            ...p,
-            steps: p.steps.map(s => {
-              if (s.id !== stepId) return s;
-              return { ...s, overlayImage: '', overlayImageTransform: null };
-            })
-          };
-        }));
-        setSelectedLayer(null);
-        toast.info('🗑️ Đã xóa hoàn toàn khung Banner khỏi sân khấu!');
-        if (isMasterSynced && currentStep) {
-          setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
-        }
-        return;
+      const mediaToDelete = currentStep?.overlayImage;
+      if (mediaToDelete && mediaToDelete.includes('/uploads/')) {
+        deleteServerMedia(mediaToDelete);
       }
+
+      setPresets(prev => prev.map(p => {
+        if (p.id !== activePresetId) return p;
+        return {
+          ...p,
+          steps: p.steps.map(s => {
+            if (s.id !== stepId) return s;
+            return { ...s, overlayImage: '', overlayImageTransform: null };
+          })
+        };
+      }));
+      setSelectedLayer(null);
+      toast.success('🗑️ Đã xóa hoàn toàn Ảnh Banner!');
+      if (isMasterSynced && currentStep) {
+        setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
+      }
+      return;
     }
 
     if (layerType === 'text') {
-      const hasText = Boolean(currentStep?.overlayText);
-      if (hasText) {
-        // LẦN 1: Xóa nội dung chữ, giữ khung
-        setPresets(prev => prev.map(p => {
-          if (p.id !== activePresetId) return p;
-          return {
-            ...p,
-            steps: p.steps.map(s => {
-              if (s.id !== stepId) return s;
-              return {
-                ...s,
-                overlayText: '',
-                overlayTextTransform: s.overlayTextTransform || { x: 5, y: 5, width: 90, height: 12, zIndex: 30 }
-              };
-            })
-          };
-        }));
-        setSelectedLayer({ type: 'text', id: null });
-        toast.info('🗑️ Đã xóa chữ tiêu đề! (Khung vẫn giữ nguyên, bấm Xóa lần nữa để xóa hẳn khung)');
-        if (isMasterSynced && currentStep) {
-          setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
-        }
-        return;
-      } else {
-        // LẦN 2: Xóa hoàn toàn khung Chữ
-        setPresets(prev => prev.map(p => {
-          if (p.id !== activePresetId) return p;
-          return {
-            ...p,
-            steps: p.steps.map(s => {
-              if (s.id !== stepId) return s;
-              return { ...s, overlayText: '', overlayTextTransform: null };
-            })
-          };
-        }));
-        setSelectedLayer(null);
-        toast.info('🗑️ Đã xóa hoàn toàn khung Chữ khỏi sân khấu!');
-        if (isMasterSynced && currentStep) {
-          setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
-        }
-        return;
+      setPresets(prev => prev.map(p => {
+        if (p.id !== activePresetId) return p;
+        return {
+          ...p,
+          steps: p.steps.map(s => {
+            if (s.id !== stepId) return s;
+            return { ...s, overlayText: '', overlayTextTransform: null };
+          })
+        };
+      }));
+      setSelectedLayer(null);
+      toast.success('🗑️ Đã xóa hoàn toàn Tiêu Đề Chữ!');
+      if (isMasterSynced && currentStep) {
+        setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
       }
+      return;
     }
   };
 
