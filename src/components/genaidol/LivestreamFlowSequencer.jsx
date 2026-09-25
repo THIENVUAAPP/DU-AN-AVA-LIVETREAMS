@@ -1447,6 +1447,11 @@ export default function LivestreamFlowSequencer() {
               })
             };
           });
+          if (isMasterSynced && activePreset?.steps?.[currentStepIndex]) {
+            setTimeout(() => {
+              syncStepToServer(activePreset.steps[currentStepIndex], currentStepIndex, isPlayingFlow, true);
+            }, 60);
+          }
         }
       }).catch(() => {});
 
@@ -1542,18 +1547,31 @@ export default function LivestreamFlowSequencer() {
       // Tự động đẩy file lên máy chủ trong nền
       uploadMediaToServer(file, file.name).then(srvUrl => {
         if (srvUrl) {
-          setPresets(prev => prev.map(p => {
-            if (p.id !== activePresetId) return p;
-            return {
-              ...p,
-              steps: p.steps.map(s => {
-                if (s[targetField] === localUrl) {
-                  return { ...s, [targetField]: srvUrl };
-                }
-                return s;
-              })
-            };
-          }));
+          setPresets(prev => {
+            const nextPresets = prev.map(p => {
+              if (p.id !== activePresetId) return p;
+              return {
+                ...p,
+                steps: p.steps.map(s => {
+                  if (s[targetField] === localUrl) {
+                    return { ...s, [targetField]: srvUrl };
+                  }
+                  return s;
+                })
+              };
+            });
+            return nextPresets;
+          });
+          if (isMasterSynced) {
+            setTimeout(() => {
+              const active = presets.find(p => p.id === activePresetId);
+              const curStep = active?.steps?.[currentStepIndex];
+              if (curStep) {
+                const updatedStep = curStep[targetField] === localUrl ? { ...curStep, [targetField]: srvUrl } : curStep;
+                syncStepToServer(updatedStep, currentStepIndex, isPlayingFlow, true);
+              }
+            }, 80);
+          }
         }
       }).catch(() => {});
 

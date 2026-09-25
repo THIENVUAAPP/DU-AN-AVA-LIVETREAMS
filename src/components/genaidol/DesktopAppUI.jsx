@@ -669,7 +669,14 @@ export default function DesktopAppUI() {
 
     const handleClearEventVideo = (e) => {
       const { eventType, oldUrl } = e.detail || {};
-      if (eventType === 'idle' || (oldUrl && (userLockedMediaUrl === oldUrl || activeVideoItem?.url === oldUrl))) {
+      const currentSrc = desktopVideoRef.current?.src || '';
+      const isMatchingCurrent = oldUrl && (
+        userLockedMediaUrl === oldUrl || 
+        activeVideoItem?.url === oldUrl ||
+        (typeof currentSrc === 'string' && currentSrc.includes(oldUrl)) ||
+        (typeof oldUrl === 'string' && currentSrc && oldUrl.includes(currentSrc))
+      );
+      if (eventType === 'idle' || isMatchingCurrent) {
         setUserLockedMediaUrl(null);
         setActiveVideoItem(null);
         try {
@@ -3350,6 +3357,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             vid.play().then(() => setIsVideoPlaying(true)).catch(() => {});
             setIsVideoPlaying(true);
           }
+        } else if (msg.type === 'CLEAR_EVENT_VIDEO') {
+          handleClearEventVideo({ detail: { eventType: msg.eventType, oldUrl: msg.oldUrl } });
         }
       };
     } catch (e) {}
@@ -4124,7 +4133,62 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             setTimeout(() => bc.close(), 100);
           } catch (err) {}
 
-          showToast(`⚡ Video "${charName}" đã có sẵn trong hệ thống! Đã kích hoạt sử dụng ngay lập tức.`, 'success');
+          // Đảm bảo LUÔN CÓ SERVER URL ĐỂ PHỤC VỤ OBS & TIKTOK LIVE STUDIO
+          const onMatchedServerReady = (srvUrl) => {
+            if (!srvUrl) return;
+            setUserLockedMediaUrl(srvUrl);
+            try { localStorage.setItem('avalive_user_locked_media', srvUrl); } catch (e) {}
+            setCustomCharacters(prev => prev.map(c => c.id === targetId ? { ...c, mediaUrl: srvUrl } : c));
+            saveCharacterToIDB({ ...matchedChar, id: targetId, mediaUrl: srvUrl, fileData: file }).catch(() => {});
+            try {
+              const bc = new BroadcastChannel('avalive_master_live_stream');
+              bc.postMessage({
+                type: 'GLOBAL_MEDIA_CHANGE',
+                mediaUrl: srvUrl,
+                blobUrl: localUrl,
+                fileBlob: file,
+                characterId: targetId,
+                characterName: charName,
+                isVideo: true,
+                isPlaying: true,
+                currentTime: 0,
+                force: true,
+                source: 'desktop',
+                timestamp: Date.now()
+              });
+              setTimeout(() => bc.close(), 100);
+            } catch (err) {}
+            syncMasterLiveState({
+              stage: 'idol',
+              mediaUrl: srvUrl,
+              selectedCharacter: targetId,
+              characterName: charName,
+              isVideo: true,
+              isPlaying: true,
+              videoCurrentTime: 0,
+              updatedAt: Date.now()
+            }, socketRef.current);
+            sendVideoControl({
+              action: 'play',
+              mediaUrl: srvUrl,
+              isPlaying: true,
+              currentTime: 0,
+              force: true,
+              timestamp: Date.now()
+            }, socketRef.current);
+          };
+
+          if (targetMediaUrl) {
+            onMatchedServerReady(targetMediaUrl);
+          } else {
+            uploadMediaToServer(file, file.name).then(srvUrl => {
+              if (srvUrl) onMatchedServerReady(srvUrl);
+            }).catch(() => {
+              fastStreamUpload(file, { onInit: ({ fileUrl }) => onMatchedServerReady(fileUrl) }).catch(() => {});
+            });
+          }
+
+          showToast(`⚡ Video "${charName}" đã sẵn sàng và đồng bộ lên Sân Khấu Chính!`, 'success');
           return;
         }
 
@@ -4199,77 +4263,82 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
         showToast(`⚡ Đã phát ngay video "${charName}" trên sân khấu chính!`, 'success');
 
-        // 🚀 2. PHÁT LUỒNG SIÊU TỐC TỪNG PHẦN (FAST-STREAM PIPELINE) LÊN SERVER & TIKTOK LIVE STUDIO TRONG BACKGROUND
-        fastStreamUpload(file, {
-          onInit: ({ fileUrl }) => {
-            const updatedChar = {
-              id: newCharId,
-              name: charName,
-              url: localUrl,
-              mediaUrl: fileUrl,
-              type: 'video',
-              fileData: file
-            };
-            setUserLockedMediaUrl(fileUrl);
-            try { localStorage.setItem('avalive_user_locked_media', fileUrl); } catch (e) {}
+        // 🚀 2. TỰ ĐỘNG ĐẨY FILE VÀO THƯ MỤC UPLOADS CỦA SERVER ĐỒNG BỘ OBS & TIKTOK LIVE STUDIO TRONG NỀN
+        const applyServerVideo = (serverUrl) => {
+          if (!serverUrl) return;
+          const updatedChar = {
+            id: newCharId,
+            name: charName,
+            url: localUrl,
+            mediaUrl: serverUrl,
+            type: 'video',
+            fileData: file
+          };
+          setUserLockedMediaUrl(serverUrl);
+          try { localStorage.setItem('avalive_user_locked_media', serverUrl); } catch (e) {}
 
-            setCustomCharacters(prev => {
-              const updatedList = prev.map(c => c.id === newCharId ? updatedChar : c);
-              try { localStorage.setItem('avalive_custom_characters', JSON.stringify(updatedList)); } catch (e) {}
-              return updatedList;
+          setCustomCharacters(prev => {
+            const updatedList = prev.map(c => c.id === newCharId ? updatedChar : c);
+            try { localStorage.setItem('avalive_custom_characters', JSON.stringify(updatedList)); } catch (e) {}
+            return updatedList;
+          });
+
+          saveCharacterToIDB({
+            id: newCharId,
+            name: charName,
+            type: 'video',
+            fileData: file,
+            mediaUrl: serverUrl
+          }).catch(() => {});
+
+          try {
+            const bc = new BroadcastChannel('avalive_master_live_stream');
+            bc.postMessage({
+              type: 'GLOBAL_MEDIA_CHANGE',
+              mediaUrl: serverUrl,
+              blobUrl: localUrl,
+              fileBlob: file,
+              characterId: newCharId,
+              characterName: charName,
+              isVideo: true,
+              isPlaying: true,
+              currentTime: 0,
+              force: true,
+              source: 'desktop',
+              timestamp: Date.now()
             });
+            setTimeout(() => bc.close(), 100);
+          } catch (err) {}
 
-            saveCharacterToIDB({
-              id: newCharId,
-              name: charName,
-              type: 'video',
-              fileData: file,
-              mediaUrl: fileUrl
-            }).catch(() => {});
-
-            try {
-              const bc = new BroadcastChannel('avalive_master_live_stream');
-              bc.postMessage({
-                type: 'GLOBAL_MEDIA_CHANGE',
-                mediaUrl: fileUrl,
-                blobUrl: localUrl,
-                fileBlob: file,
-                characterId: newCharId,
+          try {
+            if (socketRef && socketRef.current) {
+              syncMasterLiveState({
+                stage: 'idol',
+                mediaUrl: serverUrl,
+                selectedCharacter: newCharId,
                 characterName: charName,
                 isVideo: true,
                 isPlaying: true,
+                videoCurrentTime: 0,
+                updatedAt: Date.now()
+              }, socketRef.current);
+              sendVideoControl({
+                action: 'play',
+                mediaUrl: serverUrl,
+                isPlaying: true,
                 currentTime: 0,
                 force: true,
-                source: 'desktop',
                 timestamp: Date.now()
-              });
-              setTimeout(() => bc.close(), 100);
-            } catch (err) {}
+              }, socketRef.current);
+            }
+          } catch (e) {}
+        };
 
-            try {
-              if (socketRef && socketRef.current) {
-                syncMasterLiveState({
-                  stage: 'idol',
-                  mediaUrl: fileUrl,
-                  selectedCharacter: newCharId,
-                  characterName: charName,
-                  isVideo: true,
-                  isPlaying: true,
-                  videoCurrentTime: 0,
-                  updatedAt: Date.now()
-                }, socketRef.current);
-                sendVideoControl({
-                  action: 'play',
-                  mediaUrl: fileUrl,
-                  isPlaying: true,
-                  currentTime: 0,
-                  force: true,
-                  timestamp: Date.now()
-                }, socketRef.current);
-              }
-            } catch (e) {}
-          }
-        }).catch(() => {});
+        uploadMediaToServer(file, file.name).then(srv => {
+          if (srv) applyServerVideo(srv);
+        }).catch(() => {
+          fastStreamUpload(file, { onInit: ({ fileUrl }) => applyServerVideo(fileUrl) }).catch(() => {});
+        });
       } else {
         // 🖼️ ẢNH BÌNH THƯỜNG: NẠP VÀ HIỂN THỊ TỨC THÌ 100% NGUYÊN BẢN
         const newCharId = `custom_${Date.now()}`;
@@ -5093,6 +5162,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   if (typeof playUrl === 'string' && playUrl.startsWith('blob:')) {
                     const sMatch = customCharacters.find(c => c.id === selectedCharacter && c.mediaUrl && !c.mediaUrl.startsWith('blob:'));
                     playUrl = sMatch ? sMatch.mediaUrl : (userLockedMediaUrl && !userLockedMediaUrl.startsWith('blob:') ? userLockedMediaUrl : null);
+                  }
+                  if (!playUrl || (typeof playUrl === 'string' && playUrl.startsWith('blob:'))) {
+                    try {
+                      const locked = localStorage.getItem('avalive_user_locked_media');
+                      if (locked && !locked.startsWith('blob:')) playUrl = locked;
+                    } catch(e) {}
                   }
                   if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
                     playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));

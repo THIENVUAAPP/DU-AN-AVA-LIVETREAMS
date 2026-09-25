@@ -769,7 +769,7 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
       return updated;
     });
 
-    // 🎬 TỰ ĐỘNG ĐỒNG BỘ VIDEO SỰ KIỆN RA SÂN KHẤU CHÍNH NGAY KHI CHỌN HOẶC ĐỔI VIDEO
+    // 🎬 ĐỘC LẬP TỪNG SỰ KIỆN: CHỈ DUY NHẤT SỰ KIỆN IDLE (CHỜ/MẶC ĐỊNH) MỚI LÀM VIDEO NỀN SÂN KHẤU CHÍNH
     const vidUrl = partial.videoFile || partial.videoUrl || partial.supportVideoFile;
     if (vidUrl && typeof window !== 'undefined') {
       if (id === 'idle') {
@@ -781,17 +781,9 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
         window.dispatchEvent(new CustomEvent('avalive:idle_video_updated', {
           detail: { videoUrl: vidUrl, eventConfigs: { ...eventConfigs, [id]: { ...eventConfigs[id], ...partial } } }
         }));
-      } else {
-        window.dispatchEvent(new CustomEvent('avalive:event_video_trigger', {
-          detail: {
-            videoUrl: vidUrl,
-            name: `${id.toUpperCase()} Video`,
-            eventType: id,
-            isPreRecorded: partial.isPreRecorded ?? eventConfigs[id]?.isPreRecorded,
-            muteSourceVideo: partial.muteSourceVideo ?? eventConfigs[id]?.muteSourceVideo
-          }
-        }));
       }
+      // Các sự kiện khác (Chào mừng, Like, Share, Follow, Bình luận, PK, Chốt đơn...)
+      // lưu độc lập 100% trong eventConfigs[id], TUYỆT ĐỐI KHÔNG cướp quyền Sân Khấu Chính khi cấu hình!
     } else {
       // 🗑️ NẾU BỊ XÓA (videoFile: null / ''): TRIỆT TIÊU TOÀN DIỆN KHỎI SÂN KHẤU CHÍNH & BỘ NHỚ
       const isClearing = ('videoFile' in partial && !partial.videoFile && !partial.videoUrl) ||
@@ -1258,17 +1250,6 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
         }
       };
     });
-
-    if (name === 'videoFile' && value && typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('avalive:event_video_trigger', {
-        detail: {
-          videoUrl: value,
-          name: `Sản Phẩm ${productId}`,
-          eventType: 'checkout',
-          isPreRecorded: true
-        }
-      }));
-    }
   };
 
   const handleAddProduct = () => {
@@ -3748,6 +3729,33 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                           🎬 Video Có Sẵn Voice
                         </button>
                       </div>
+                    </div>
+
+                    {/* NÚT BẤM THỬ NGHIỆM SỰ KIỆN: CHỈ PHÁT KHI BẤM HOẶC KHI TIKTOK GỬI SỰ KIỆN ĐẾN */}
+                    <div className="pt-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          const vid = currentConfig.videoFile || currentConfig.videoUrl || currentConfig.supportVideoFile;
+                          if (!vid) {
+                            toast.error(`Sự kiện "${selectedEventInfo?.label || selectedEventId}" chưa có video clip để phát thử! Vui lòng tải clip trước.`);
+                            return;
+                          }
+                          window.dispatchEvent(new CustomEvent('avalive:event_video_trigger', {
+                            detail: {
+                              videoUrl: vid,
+                              name: `${selectedEventInfo?.label || selectedEventId.toUpperCase()} (Chạy thử)`,
+                              eventType: selectedEventId,
+                              isPreRecorded: currentConfig.videoMode === 'prerecorded',
+                              muteSourceVideo: currentConfig.muteSourceVideo
+                            }
+                          }));
+                          toast.success(`🎬 Đang phát thử clip sự kiện "${selectedEventInfo?.label || selectedEventId}" lên Sân Khấu Chính!`);
+                        }}
+                        className="w-full py-2 px-3 bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white font-bold text-xs rounded-xl flex items-center justify-center gap-2 shadow-sm transition-all cursor-pointer active:scale-98"
+                      >
+                        <span>▶️ Chạy Thử Clip Sự Kiện Này Lên Sân Khấu (Kiểm tra hình ảnh & khớp kịch bản)</span>
+                      </button>
                     </div>
                     
                     <div className="border-t border-gray-200 pt-3">

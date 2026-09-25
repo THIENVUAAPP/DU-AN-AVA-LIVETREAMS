@@ -625,17 +625,34 @@ export default function WindowCapturePlayer() {
           }
         }
 
-        if (msg.type === 'CLEAR_STAGE' || msg.clearMedia) {
-          setActiveEventVideo(null);
-          setLipSyncVideoUrl(null);
-          setQuickResponseVideo(null);
-          setVideoSrc('');
-          if (videoRef.current) {
-            try {
-              videoRef.current.pause();
-              videoRef.current.srcObject = null;
-              videoRef.current.src = '';
-            } catch (e) {}
+        if (msg.type === 'CLEAR_STAGE' || msg.clearMedia || msg.type === 'CLEAR_EVENT_VIDEO') {
+          if (msg.type === 'CLEAR_EVENT_VIDEO') {
+            const isMatch = !msg.oldUrl || (activeEventVideo?.url && activeEventVideo.url.includes(msg.oldUrl)) || (videoSrc && videoSrc.includes(msg.oldUrl)) || msg.eventType === 'idle';
+            if (isMatch) {
+              setActiveEventVideo(null);
+              setLipSyncVideoUrl(null);
+              setQuickResponseVideo(null);
+              setVideoSrc('');
+              if (videoRef.current) {
+                try {
+                  videoRef.current.pause();
+                  videoRef.current.srcObject = null;
+                  videoRef.current.src = '';
+                } catch (e) {}
+              }
+            }
+          } else {
+            setActiveEventVideo(null);
+            setLipSyncVideoUrl(null);
+            setQuickResponseVideo(null);
+            setVideoSrc('');
+            if (videoRef.current) {
+              try {
+                videoRef.current.pause();
+                videoRef.current.srcObject = null;
+                videoRef.current.src = '';
+              } catch (e) {}
+            }
           }
         }
 
@@ -1120,13 +1137,12 @@ export default function WindowCapturePlayer() {
     if (e && typeof e.stopPropagation === 'function') {
       try { e.preventDefault(); e.stopPropagation(); } catch (err) {}
     }
-    const allVideos = Array.from(document.querySelectorAll('video'));
-    const isAnyPlaying = allVideos.some(v => !v.paused && !v.ended && v.readyState > 1);
-    const targetPlay = !isAnyPlaying;
+    const targetPlay = !isPlaybackActive;
 
     isExplicitlyPausedRef.current = !targetPlay;
     setIsPlaybackActive(targetPlay);
 
+    const allVideos = Array.from(document.querySelectorAll('video'));
     allVideos.forEach(vid => {
       try {
         if (targetPlay) {
@@ -1162,7 +1178,15 @@ export default function WindowCapturePlayer() {
     try {
       const bc = new BroadcastChannel('avalive_master_live_stream');
       bc.postMessage({
+        type: 'VIDEO_PLAYBACK_CONTROL',
+        action: targetPlay ? 'play' : 'pause',
+        isPlaying: targetPlay,
+        source: 'window_capture',
+        timestamp: Date.now()
+      });
+      bc.postMessage({
         type: 'GLOBAL_PLAYBACK_CHANGE',
+        action: targetPlay ? 'play' : 'pause',
         isPlaying: targetPlay,
         source: 'window_capture',
         timestamp: Date.now()
@@ -1173,7 +1197,8 @@ export default function WindowCapturePlayer() {
     if (window.opener && !window.opener.closed) {
       try {
         window.opener.postMessage({
-          type: 'GLOBAL_PLAYBACK_CHANGE',
+          type: 'VIDEO_PLAYBACK_CONTROL',
+          action: targetPlay ? 'play' : 'pause',
           isPlaying: targetPlay,
           source: 'window_capture'
         }, '*');
@@ -1777,26 +1802,32 @@ export default function WindowCapturePlayer() {
             top: '12px',
             left: '50%',
             transform: 'translateX(-50%)',
-            display: 'flex',
+            display: 'inline-flex',
+            flexDirection: 'row',
             alignItems: 'center',
-            gap: '8px',
-            background: 'rgba(5, 7, 12, 0.92)',
-            backdropFilter: 'blur(16px)',
-            padding: '6px 14px',
+            justifyContent: 'center',
+            flexWrap: 'nowrap',
+            whiteSpace: 'nowrap',
+            gap: '6px',
+            background: 'rgba(5, 7, 12, 0.95)',
+            backdropFilter: 'blur(20px)',
+            padding: '5px 10px',
             borderRadius: '30px',
-            border: '1px solid rgba(6, 182, 212, 0.6)',
+            border: '1px solid rgba(6, 182, 212, 0.7)',
             boxShadow: '0 8px 32px rgba(0, 0, 0, 0.9), 0 0 15px rgba(6, 182, 212, 0.25)',
             zIndex: 1000000,
             pointerEvents: 'auto',
             transition: 'opacity 0.2s ease',
-            opacity: 0.98
+            opacity: 0.98,
+            maxWidth: 'calc(100vw - 20px)',
+            boxSizing: 'border-box'
           }}
           onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
           onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.98')}
         >
-          <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px', userSelect: 'none', letterSpacing: '0.5px' }}>
-            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981' }} />
-            WINDOW CAPTURE
+          <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px', userSelect: 'none', letterSpacing: '0.5px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981', flexShrink: 0 }} />
+            LIVE
           </span>
 
           {/* Nút Play / Pause */}
@@ -1808,20 +1839,24 @@ export default function WindowCapturePlayer() {
               toggleStandalonePlay(e);
             }}
             style={{
-              background: isPlaybackActive ? 'rgba(239, 68, 68, 0.6)' : 'rgba(16, 185, 129, 0.6)',
+              background: isPlaybackActive ? 'rgba(239, 68, 68, 0.7)' : 'rgba(16, 185, 129, 0.7)',
               border: '1px solid rgba(255, 255, 255, 0.4)',
               color: '#fff',
               fontSize: '11px',
               fontWeight: 'bold',
-              padding: '5px 12px',
+              padding: '5px 10px',
               borderRadius: '14px',
               cursor: 'pointer',
               pointerEvents: 'auto',
               userSelect: 'none',
               transition: 'all 0.15s ease',
               display: 'inline-flex',
+              flexDirection: 'row',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              lineHeight: 1
             }}
             title="Tạm dừng / Tiếp tục độc lập (Phím tắt: Space)"
           >
@@ -1837,20 +1872,24 @@ export default function WindowCapturePlayer() {
               toggleStandaloneMute(e);
             }}
             style={{
-              background: isUserMuted ? 'rgba(239, 68, 68, 0.6)' : 'rgba(6, 182, 212, 0.6)',
+              background: isUserMuted ? 'rgba(239, 68, 68, 0.7)' : 'rgba(6, 182, 212, 0.7)',
               border: '1px solid rgba(255, 255, 255, 0.4)',
               color: '#fff',
               fontSize: '11px',
               fontWeight: 'bold',
-              padding: '5px 12px',
+              padding: '5px 10px',
               borderRadius: '14px',
               cursor: 'pointer',
               pointerEvents: 'auto',
               userSelect: 'none',
               transition: 'all 0.15s ease',
               display: 'inline-flex',
+              flexDirection: 'row',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              lineHeight: 1
             }}
             title="Bật / Tắt âm thanh độc lập (Phím tắt: M)"
           >
@@ -1871,15 +1910,19 @@ export default function WindowCapturePlayer() {
               color: '#fff',
               fontSize: '11px',
               fontWeight: 'bold',
-              padding: '5px 12px',
+              padding: '5px 10px',
               borderRadius: '14px',
               cursor: 'pointer',
               pointerEvents: 'auto',
               userSelect: 'none',
               transition: 'all 0.15s ease',
               display: 'inline-flex',
+              flexDirection: 'row',
               alignItems: 'center',
-              justifyContent: 'center'
+              justifyContent: 'center',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              lineHeight: 1
             }}
             title="Chuyển chế độ Khung hình (Tràn / Vừa)"
           >
@@ -1895,20 +1938,25 @@ export default function WindowCapturePlayer() {
               toggleControlsHidden(true);
             }}
             style={{
-              background: 'rgba(239, 68, 68, 0.55)',
-              border: '1px solid rgba(239, 68, 68, 0.8)',
+              background: 'rgba(239, 68, 68, 0.65)',
+              border: '1px solid rgba(239, 68, 68, 0.9)',
               color: '#fecaca',
               fontSize: '11px',
               fontWeight: 'bold',
-              padding: '5px 12px',
+              padding: '5px 10px',
               borderRadius: '14px',
               cursor: 'pointer',
               pointerEvents: 'auto',
               display: 'inline-flex',
+              flexDirection: 'row',
               alignItems: 'center',
+              justifyContent: 'center',
               gap: '4px',
               userSelect: 'none',
-              transition: 'all 0.15s ease'
+              transition: 'all 0.15s ease',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              lineHeight: 1
             }}
             title="Ẩn sạch toàn bộ các nút trên video để TikTok Studio / OBS quay khung hình tinh khiết (Phím tắt: H)"
           >
