@@ -1117,28 +1117,40 @@ export default function WindowCapturePlayer() {
   });
 
   const toggleStandalonePlay = (e) => {
-    if (e) {
+    if (e && typeof e.stopPropagation === 'function') {
       try { e.preventDefault(); e.stopPropagation(); } catch (err) {}
     }
-    const nextPlay = !isPlaybackActive;
-    isExplicitlyPausedRef.current = !nextPlay;
-    setIsPlaybackActive(nextPlay);
+    const allVideos = Array.from(document.querySelectorAll('video'));
+    const isAnyPlaying = allVideos.some(v => !v.paused && !v.ended && v.readyState > 1);
+    const targetPlay = !isAnyPlaying;
 
-    // 1. Điều khiển tức thì tất cả video & audio trong cửa sổ
-    const allVideos = document.querySelectorAll('video');
+    isExplicitlyPausedRef.current = !targetPlay;
+    setIsPlaybackActive(targetPlay);
+
     allVideos.forEach(vid => {
       try {
-        if (nextPlay) {
-          vid.play().catch(() => {});
+        if (targetPlay) {
+          const p = vid.play();
+          if (p && typeof p.catch === 'function') p.catch(() => {});
         } else {
           vid.pause();
         }
       } catch (err) {}
     });
 
-    // 2. Lưu trạng thái
+    if (videoRef.current) {
+      try {
+        if (targetPlay) {
+          const p = videoRef.current.play();
+          if (p && typeof p.catch === 'function') p.catch(() => {});
+        } else {
+          videoRef.current.pause();
+        }
+      } catch (err) {}
+    }
+
     try {
-      if (!nextPlay) {
+      if (!targetPlay) {
         localStorage.setItem('avalive_window_capture_paused', 'true');
         localStorage.setItem('avalive_user_paused', 'true');
       } else {
@@ -1147,24 +1159,22 @@ export default function WindowCapturePlayer() {
       }
     } catch (err) {}
 
-    // 3. Đồng bộ 2 chiều sang Sân Khấu Chính & các luồng phát qua BroadcastChannel
     try {
       const bc = new BroadcastChannel('avalive_master_live_stream');
       bc.postMessage({
         type: 'GLOBAL_PLAYBACK_CHANGE',
-        isPlaying: nextPlay,
+        isPlaying: targetPlay,
         source: 'window_capture',
         timestamp: Date.now()
       });
       setTimeout(() => bc.close(), 150);
     } catch (err) {}
 
-    // 4. Gửi trực tiếp cho cửa sổ mẹ nếu có
     if (window.opener && !window.opener.closed) {
       try {
         window.opener.postMessage({
           type: 'GLOBAL_PLAYBACK_CHANGE',
-          isPlaying: nextPlay,
+          isPlaying: targetPlay,
           source: 'window_capture'
         }, '*');
       } catch (err) {}
@@ -1172,34 +1182,47 @@ export default function WindowCapturePlayer() {
   };
 
   const toggleStandaloneMute = (e) => {
-    if (e) {
+    if (e && typeof e.stopPropagation === 'function') {
       try { e.preventDefault(); e.stopPropagation(); } catch (err) {}
     }
-    const nextMuted = !isUserMuted;
-    setIsUserMuted(nextMuted);
-    isUserMutedRef.current = nextMuted;
+    const allMedia = Array.from(document.querySelectorAll('video, audio'));
+    const anyUnmuted = allMedia.some(m => !m.muted);
+    const targetMuted = anyUnmuted ? true : false;
 
-    const allMedia = document.querySelectorAll('video, audio');
+    setIsUserMuted(targetMuted);
+    isUserMutedRef.current = targetMuted;
+
     allMedia.forEach(m => {
       try {
-        m.muted = nextMuted;
-        if (!nextMuted) {
+        m.muted = targetMuted;
+        if (!targetMuted) {
           m.volume = 1.0;
-          m.play().catch(() => {});
+          const p = m.play();
+          if (p && typeof p.catch === 'function') p.catch(() => {});
         }
       } catch (err) {}
     });
 
+    if (videoRef.current) {
+      try {
+        videoRef.current.muted = targetMuted;
+        if (!targetMuted) {
+          videoRef.current.volume = 1.0;
+          const p = videoRef.current.play();
+          if (p && typeof p.catch === 'function') p.catch(() => {});
+        }
+      } catch (err) {}
+    }
+
     try {
-      localStorage.setItem('avalive_window_capture_muted', String(nextMuted));
+      localStorage.setItem('avalive_window_capture_muted', String(targetMuted));
     } catch (err) {}
 
-    // Đồng bộ trạng thái âm thanh
     try {
       const bc = new BroadcastChannel('avalive_master_live_stream');
       bc.postMessage({
         type: 'GLOBAL_SOUND_MUTE_CHANGE',
-        isMuted: nextMuted,
+        isMuted: targetMuted,
         source: 'window_capture',
         timestamp: Date.now()
       });
@@ -1208,7 +1231,7 @@ export default function WindowCapturePlayer() {
   };
 
   const toggleStandaloneFit = (e) => {
-    if (e) {
+    if (e && typeof e.stopPropagation === 'function') {
       try { e.preventDefault(); e.stopPropagation(); } catch (err) {}
     }
     const nextFit = fitMode === 'cover' ? 'contain' : 'cover';
@@ -1746,99 +1769,117 @@ export default function WindowCapturePlayer() {
         </div>
       )}
 
-      {/* 👑 DOCK ĐIỀU KHIỂN NỔI CỦA CỬA SỔ WINDOW CAPTURE */}
+      {/* 👑 DOCK ĐIỀU KHIỂN NỔI CỦA CỬA SỔ WINDOW CAPTURE (100% PHẢN HỒI TỨC THÌ) */}
       {!isControlsHidden && (
         <div
           style={{
-            position: 'absolute',
-            top: '8px',
+            position: 'fixed',
+            top: '12px',
             left: '50%',
             transform: 'translateX(-50%)',
             display: 'flex',
             alignItems: 'center',
             gap: '8px',
-            background: 'rgba(0, 0, 0, 0.88)',
-            backdropFilter: 'blur(12px)',
+            background: 'rgba(5, 7, 12, 0.92)',
+            backdropFilter: 'blur(16px)',
             padding: '6px 14px',
-            borderRadius: '24px',
-            border: '1px solid rgba(6, 182, 212, 0.5)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.8)',
-            zIndex: 99999,
+            borderRadius: '30px',
+            border: '1px solid rgba(6, 182, 212, 0.6)',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.9), 0 0 15px rgba(6, 182, 212, 0.25)',
+            zIndex: 1000000,
             pointerEvents: 'auto',
             transition: 'opacity 0.2s ease',
-            opacity: 0.95
+            opacity: 0.98
           }}
           onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
-          onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.95')}
+          onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.98')}
         >
-          <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '4px', userSelect: 'none' }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', display: 'inline-block' }} />
+          <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 'bold', display: 'flex', alignItems: 'center', gap: '5px', userSelect: 'none', letterSpacing: '0.5px' }}>
+            <span style={{ width: '7px', height: '7px', borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981' }} />
             WINDOW CAPTURE
           </span>
 
+          {/* Nút Play / Pause */}
           <button
             type="button"
-            onClick={toggleStandalonePlay}
-            onPointerDown={(e) => { e.stopPropagation(); }}
-            onMouseDown={(e) => e.stopPropagation()}
-            onTouchStart={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleStandalonePlay(e);
+            }}
             style={{
-              background: isPlaybackActive ? 'rgba(239, 68, 68, 0.4)' : 'rgba(16, 185, 129, 0.4)',
-              border: '1px solid rgba(255, 255, 255, 0.35)',
+              background: isPlaybackActive ? 'rgba(239, 68, 68, 0.6)' : 'rgba(16, 185, 129, 0.6)',
+              border: '1px solid rgba(255, 255, 255, 0.4)',
               color: '#fff',
               fontSize: '11px',
               fontWeight: 'bold',
-              padding: '4px 12px',
-              borderRadius: '12px',
+              padding: '5px 12px',
+              borderRadius: '14px',
               cursor: 'pointer',
               pointerEvents: 'auto',
-              userSelect: 'none'
+              userSelect: 'none',
+              transition: 'all 0.15s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
             title="Tạm dừng / Tiếp tục độc lập (Phím tắt: Space)"
           >
             {isPlaybackActive ? '⏸️ Dừng' : '▶️ Phát'}
           </button>
 
+          {/* Nút Bật / Tắt Tiếng */}
           <button
             type="button"
-            onClick={toggleStandaloneMute}
-            onPointerDown={(e) => { e.stopPropagation(); }}
-            onMouseDown={(e) => e.stopPropagation()}
-            onTouchStart={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleStandaloneMute(e);
+            }}
             style={{
-              background: isUserMuted ? 'rgba(239, 68, 68, 0.4)' : 'rgba(6, 182, 212, 0.4)',
-              border: '1px solid rgba(255, 255, 255, 0.35)',
+              background: isUserMuted ? 'rgba(239, 68, 68, 0.6)' : 'rgba(6, 182, 212, 0.6)',
+              border: '1px solid rgba(255, 255, 255, 0.4)',
               color: '#fff',
               fontSize: '11px',
               fontWeight: 'bold',
-              padding: '4px 12px',
-              borderRadius: '12px',
+              padding: '5px 12px',
+              borderRadius: '14px',
               cursor: 'pointer',
               pointerEvents: 'auto',
-              userSelect: 'none'
+              userSelect: 'none',
+              transition: 'all 0.15s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
             title="Bật / Tắt âm thanh độc lập (Phím tắt: M)"
           >
             {isUserMuted ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}
           </button>
 
+          {/* Nút Tràn / Vừa */}
           <button
             type="button"
-            onClick={toggleStandaloneFit}
-            onPointerDown={(e) => { e.stopPropagation(); }}
-            onMouseDown={(e) => e.stopPropagation()}
-            onTouchStart={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleStandaloneFit(e);
+            }}
             style={{
-              background: 'rgba(255, 255, 255, 0.2)',
-              border: '1px solid rgba(255, 255, 255, 0.35)',
+              background: 'rgba(255, 255, 255, 0.25)',
+              border: '1px solid rgba(255, 255, 255, 0.4)',
               color: '#fff',
               fontSize: '11px',
               fontWeight: 'bold',
-              padding: '4px 12px',
-              borderRadius: '12px',
+              padding: '5px 12px',
+              borderRadius: '14px',
               cursor: 'pointer',
               pointerEvents: 'auto',
-              userSelect: 'none'
+              userSelect: 'none',
+              transition: 'all 0.15s ease',
+              display: 'inline-flex',
+              alignItems: 'center',
+              justifyContent: 'center'
             }}
             title="Chuyển chế độ Khung hình (Tràn / Vừa)"
           >
@@ -1848,24 +1889,26 @@ export default function WindowCapturePlayer() {
           {/* ⭐ NÚT ẨN HẾT TẤT CẢ CÁC TAB / NÚT TRÊN GIAO DIỆN VIDEO */}
           <button
             type="button"
-            onClick={() => toggleControlsHidden(true)}
-            onPointerDown={(e) => { e.stopPropagation(); }}
-            onMouseDown={(e) => e.stopPropagation()}
-            onTouchStart={(e) => e.stopPropagation()}
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              toggleControlsHidden(true);
+            }}
             style={{
-              background: 'rgba(239, 68, 68, 0.45)',
-              border: '1px solid rgba(239, 68, 68, 0.7)',
-              color: '#fca5a5',
+              background: 'rgba(239, 68, 68, 0.55)',
+              border: '1px solid rgba(239, 68, 68, 0.8)',
+              color: '#fecaca',
               fontSize: '11px',
               fontWeight: 'bold',
-              padding: '4px 12px',
-              borderRadius: '12px',
+              padding: '5px 12px',
+              borderRadius: '14px',
               cursor: 'pointer',
               pointerEvents: 'auto',
-              display: 'flex',
+              display: 'inline-flex',
               alignItems: 'center',
-              gap: '3px',
-              userSelect: 'none'
+              gap: '4px',
+              userSelect: 'none',
+              transition: 'all 0.15s ease'
             }}
             title="Ẩn sạch toàn bộ các nút trên video để TikTok Studio / OBS quay khung hình tinh khiết (Phím tắt: H)"
           >
@@ -1878,31 +1921,35 @@ export default function WindowCapturePlayer() {
       {isControlsHidden && (
         <button
           type="button"
-          onClick={() => toggleControlsHidden(false)}
-          onMouseDown={(e) => e.stopPropagation()}
+          onClick={(e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            toggleControlsHidden(false);
+          }}
           style={{
-            position: 'absolute',
-            top: '8px',
-            right: '8px',
-            zIndex: 99999,
+            position: 'fixed',
+            top: '12px',
+            right: '12px',
+            zIndex: 1000000,
             pointerEvents: 'auto',
-            width: '32px',
-            height: '32px',
+            width: '36px',
+            height: '36px',
             borderRadius: '50%',
-            background: 'rgba(0, 0, 0, 0.75)',
-            border: '1px solid rgba(6, 182, 212, 0.6)',
+            background: 'rgba(5, 7, 12, 0.85)',
+            border: '1px solid rgba(6, 182, 212, 0.8)',
             color: '#06b6d4',
-            fontSize: '15px',
+            fontSize: '16px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            opacity: 0.85,
-            backdropFilter: 'blur(6px)',
+            opacity: 0.9,
+            backdropFilter: 'blur(8px)',
+            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.6)',
             transition: 'all 0.25s ease'
           }}
           onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'scale(1.15)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.85'; e.currentTarget.style.transform = 'scale(1)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'scale(1)'; }}
           title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)"
         >
           👁️

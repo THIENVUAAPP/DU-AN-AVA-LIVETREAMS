@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.28';
+export const APP_VERSION = '4.9.29';
 export const RELEASE_DATE = '25/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v4.9.28 - Phát Toàn Bộ Video Sự Kiện Siêu Mượt 60 FPS Không Giật Lag, Khắc Phục Triệt Để Lỗi Tải Video/Ảnh Sân Khấu Phụ, Đồng Bộ Toàn Diện OBS & TikTok Live Studio',
-    description: '1. Sân Khấu Chính Phát Toàn Bộ Video Sự Kiện Siêu Mượt 60 FPS: Kích hoạt GPU Hardware Acceleration, tự động nạp trước và tối ưu giải mã luồng, đảm bảo 100% video từ tất cả các sự kiện phát siêu mượt mà, vừa khớp hoàn hảo khung hình sân khấu, không bao giờ bị đứng hình hay giật lag. 2. Tải Mọi Video & Ảnh Lên Sân Khấu Phụ Thành Công 100%: Tiếp nhận và hiển thị tức thì (0ms) tất cả các định dạng video (.mp4, .webm, .mov, .mkv, .avi, .m4v, .flv, .ts...) và hình ảnh (.png, .jpg, .webp, .gif...), loại bỏ triệt để lỗi không tải được hoặc xung đột URL. 3. Tự Động Đẩy Lên Thư Mục Uploads: Đồng bộ hóa nền tự động lên máy chủ để Window Capture OBS và đường link TikTok Live Studio trực tiếp nhận luồng sắc nét 60 FPS. 4. Khóa Chặt 100% Các Module Hệ Thống.'
+    title: '🚀 Bản Cập Nhật v4.9.29 - Xóa Triệt Để Video Sự Kiện Không Hồi Sinh Sân Khấu Chính, Kích Hoạt 100% Nút Bấm Window Capture, Khắc Phục Link TikTok Live Studio 60 FPS Mượt Mà & Tiếp Nhận Mọi Định Dạng Video',
+    description: '1. Xóa Triệt Để Video Sự Kiện Không Hồi Sinh: Khi người dùng bấm xóa video/thư mục ở các tab sự kiện (14 tác vụ, bao gồm cả tab idle Đứng Chờ), video lập tức bị thanh lọc và xóa vĩnh viễn khỏi máy chủ, RAM và localStorage, sân khấu chính dừng phát và xóa sạch ngay tức thì, không bao giờ tự ý hồi sinh. 2. Kích Hoạt 100% Nút Bấm Window Capture: Toàn bộ nút nổi gồm Tạm dừng/Phát (Space), Bật/Tắt Tiếng (M), Tràn/Vừa Khung Hình, và Ẩn Toàn Bộ (H) phản hồi lập tức, loại bỏ chặn chuột và đồng bộ 2 chiều mượt mà. 3. Khắc Phục Link TikTok Live Studio (/live-stream) Quay Vòng Vòng: Triệt tiêu triệt để tình trạng treo vòng lặp spinner "Đang Đồng Bộ Luồng 60 FPS...", tự động đồng bộ video chuẩn xác 60 FPS mượt mà không giật lag. 4. Ô Tải Nhân Vật Tiếp Nhận Mọi Định Dạng Video: Không kén video, nhận ngay lập tức mọi định dạng (.mp4, .webm, .mov, .mkv, .avi, .m4v, .flv, .ts...) phát 0ms lên sân khấu chính. 5. Dọn Sạch Video Rác & File 0-Byte Trong Uploads: Tự động quét dọn triệt để các file 0-byte và dữ liệu tạm dang dở. 6. Khóa Chặt 100% Các Module Hệ Thống.'
   },
   {
     title: '🚀 Bản Cập Nhật v4.9.27 - Tích Hợp Đồng Bộ TikTok Shop & Ghim Giỏ Hàng Tự Động 24/7 Vào Modal Vượt Captcha AI, Vượt Captcha Chuẩn TikTok/Shopee/Cloudflare (0ms)',

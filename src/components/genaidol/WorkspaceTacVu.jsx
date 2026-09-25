@@ -16,7 +16,7 @@ import UniversalMediaPicker, { SAMPLE_IDOL_VIDEOS } from './UniversalMediaPicker
 import MultiAvatarStudioModal, { MultiAvatarStudioPanel } from './MultiAvatarStudioModal';
 import LivestreamFlowSequencer from './LivestreamFlowSequencer';
 import autoPinProductService from '../../utils/autoPinProductService';
-import { uploadMediaToServer } from '../../utils/mediaUploadService';
+import { uploadMediaToServer, deleteServerMedia } from '../../utils/mediaUploadService';
 
 const toast = {
   success: (message) => {
@@ -688,7 +688,15 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
           }));
         }
       } else {
+        try {
+          localStorage.removeItem('avalive_user_locked_media');
+          localStorage.removeItem('aidol_idle_media_url');
+          localStorage.removeItem('avalive_active_video_src');
+        } catch (err) {}
         if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('avalive:idle_video_updated', {
+            detail: { videoUrl: null, eventConfigs }
+          }));
           window.dispatchEvent(new CustomEvent('avalive_event_configs_updated', {
             detail: { eventConfigs }
           }));
@@ -784,6 +792,97 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
           }
         }));
       }
+    } else {
+      // 🗑️ NẾU BỊ XÓA (videoFile: null / ''): TRIỆT TIÊU TOÀN DIỆN KHỎI SÂN KHẤU CHÍNH & BỘ NHỚ
+      const isClearing = ('videoFile' in partial && !partial.videoFile && !partial.videoUrl) ||
+                         ('supportVideoFile' in partial && !partial.supportVideoFile && !partial.supportVideoUrl);
+      if (isClearing && typeof window !== 'undefined') {
+        if (id === 'idle') {
+          try {
+            localStorage.removeItem('avalive_user_locked_media');
+            localStorage.removeItem('aidol_idle_media_url');
+            localStorage.removeItem('avalive_active_video_src');
+          } catch (e) {}
+          window.dispatchEvent(new CustomEvent('avalive:idle_video_updated', {
+            detail: { videoUrl: null, eventConfigs: { ...eventConfigs, [id]: { ...eventConfigs[id], ...partial } } }
+          }));
+        }
+        window.dispatchEvent(new CustomEvent('avalive:clear_event_video', {
+          detail: { eventType: id }
+        }));
+        try {
+          const bc = new BroadcastChannel('avalive_master_live_stream');
+          bc.postMessage({
+            type: 'CLEAR_EVENT_VIDEO',
+            eventType: id,
+            timestamp: Date.now()
+          });
+          setTimeout(() => bc.close(), 100);
+        } catch (e) {}
+      }
+    }
+  };
+
+  // 🗑️ HÀM XÓA TRIỆT ĐỂ FILE MEDIA SỰ KIỆN: XÓA KHỎI SERVER, LOCALSTORAGE, VÀ RESET SÂN KHẤU CHÍNH
+  const handleClearMediaSlot = (slotType, extraIdx = null) => {
+    const currentConf = eventConfigs[selectedEventId] || {};
+    let oldUrl = null;
+
+    if (slotType === 'action') {
+      oldUrl = currentConf.videoFile || currentConf.videoUrl;
+      updateEventConfig(selectedEventId, {
+        videoFolder: '',
+        videoFileName: '',
+        videoFile: null,
+        videoUrl: ''
+      });
+      toast.success('Đã xóa clip hành động vĩnh viễn');
+    } else if (slotType === 'support') {
+      oldUrl = currentConf.supportVideoFile || currentConf.supportVideoUrl;
+      updateEventConfig(selectedEventId, {
+        supportVideoFolder: '',
+        supportVideoFileName: '',
+        supportVideoFile: null,
+        supportVideoUrl: ''
+      });
+      toast.success('Đã xóa clip nền hỗ trợ vĩnh viễn');
+    } else if (slotType === 'extra' && extraIdx !== null) {
+      const eSlot = currentConf.extraVideoSlots?.[extraIdx];
+      oldUrl = eSlot?.url;
+      handleUpdateExtraVideoSlot(extraIdx, { folder: '', url: '' });
+      toast.success('Đã xóa video bổ trợ vĩnh viễn');
+    }
+
+    // Xóa file vật lý khỏi máy chủ nếu là file upload
+    if (oldUrl && typeof oldUrl === 'string' && (oldUrl.includes('/uploads/') || oldUrl.includes('media-'))) {
+      deleteServerMedia(oldUrl).catch(() => {});
+    }
+
+    // Xóa sạch trạng thái trong localStorage nếu là event idle
+    if (selectedEventId === 'idle') {
+      try {
+        localStorage.removeItem('avalive_user_locked_media');
+        localStorage.removeItem('aidol_idle_media_url');
+        localStorage.removeItem('avalive_active_video_src');
+      } catch (e) {}
+    }
+
+    if (typeof window !== 'undefined') {
+      window.dispatchEvent(new CustomEvent('avalive:clear_event_video', {
+        detail: { eventType: selectedEventId, oldUrl }
+      }));
+      window.dispatchEvent(new CustomEvent('avalive:idle_video_updated', {
+        detail: { videoUrl: null }
+      }));
+      try {
+        const bc = new BroadcastChannel('avalive_master_live_stream');
+        bc.postMessage({
+          type: 'CLEAR_EVENT_VIDEO',
+          eventType: selectedEventId,
+          timestamp: Date.now()
+        });
+        setTimeout(() => bc.close(), 100);
+      } catch (e) {}
     }
   };
 
@@ -3672,11 +3771,7 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                           handleChange({ target: { name: 'videoFile', value: sample.url } });
                           toast.success(`Đã nạp video mẫu: ${sample.name}`);
                         }}
-                        onClear={() => {
-                          handleChange({ target: { name: 'videoFolder', value: '' } });
-                          handleChange({ target: { name: 'videoFile', value: null } });
-                          toast.success('Đã đặt lại video hành động');
-                        }}
+                        onClear={() => handleClearMediaSlot('action')}
                         inputId={`upload-action-video-${selectedEventId}`}
                       />
                     </div>
@@ -3702,11 +3797,7 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                           handleChange({ target: { name: 'supportVideoFile', value: sample.url } });
                           toast.success(`Đã nạp video nền mẫu: ${sample.name}`);
                         }}
-                        onClear={() => {
-                          handleChange({ target: { name: 'supportVideoFolder', value: '' } });
-                          handleChange({ target: { name: 'supportVideoFile', value: null } });
-                          toast.success('Đã đặt lại video nền');
-                        }}
+                        onClear={() => handleClearMediaSlot('support')}
                         inputId={`upload-support-video-${selectedEventId}`}
                       />
                     </div>
@@ -3732,7 +3823,7 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                           onSelectFile={(file, objectUrl) => handleUpdateExtraVideoSlot(idx, { folder: file.name, url: objectUrl })}
                           onSelectFolder={(folderName) => handleUpdateExtraVideoSlot(idx, { folder: folderName, url: '' })}
                           onSelectSample={(sample) => handleUpdateExtraVideoSlot(idx, { folder: sample.name, url: sample.url })}
-                          onClear={() => handleUpdateExtraVideoSlot(idx, { folder: '', url: '' })}
+                          onClear={() => handleClearMediaSlot('extra', idx)}
                           inputId={`upload-extra-video-${idx}`}
                         />
                       </div>

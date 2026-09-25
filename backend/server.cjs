@@ -133,10 +133,16 @@ function cleanupDuplicateUploads() {
     const crypto = require('crypto');
 
     for (const file of files) {
-      if (!file.startsWith('media-') || file.includes('.part')) continue;
       const fullPath = path.join(uploadsDir, file);
       try {
         const stat = fs.statSync(fullPath);
+        // Tự động xóa file 0 byte hoặc file tạm dang dở
+        if (stat.size === 0 || file.endsWith('.tmp') || file.endsWith('.crdownload') || (file.includes('.part') && Date.now() - stat.mtimeMs > 180000)) {
+          fs.unlinkSync(fullPath);
+          console.log(`[Storage Cleanup] 🧹 Đã dọn sạch file 0-byte / rác / dang dở: ${file}`);
+          continue;
+        }
+        if (!file.startsWith('media-') || file.includes('.part')) continue;
         if (stat.size < 1000) continue;
 
         // Tính hash MD5 1MB đầu hoặc toàn bộ file nếu nhỏ hơn 20MB
@@ -2198,7 +2204,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.28';
+  let ver = '4.9.29';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -2236,7 +2242,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.28';
+  let ver = '4.9.29';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));

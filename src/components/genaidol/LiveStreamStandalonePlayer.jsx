@@ -307,6 +307,14 @@ export default function LiveStreamStandalonePlayer() {
     return () => clearTimeout(t);
   }, []);
 
+  // ⚡ Chống treo spinner trong TikTok Live Studio: Sau 2.5s luôn tự động tắt spinner để hiển thị màn hình sẵn sàng
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setIsVideoLoading(false);
+    }, 2500);
+    return () => clearTimeout(timer);
+  }, [videoSrc]);
+
   // Cập nhật live state và tunnel URL định kỳ (chống đen màn hình 100%)
   useEffect(() => {
     const fetchLiveState = () => {
@@ -318,10 +326,16 @@ export default function LiveStreamStandalonePlayer() {
             setTunnelUrl(d.tunnelUrl);
             try { localStorage.setItem('avalive_tunnel_url', d.tunnelUrl); } catch (e) {}
           }
-          if (d.mediaUrl) {
+          if (d.clearMedia) {
+            setVideoSrc('');
+            setIsVideoLoading(false);
+            return;
+          }
+          const nextMedia = d.mediaUrl || d.currentMedia;
+          if (nextMedia) {
             setVideoSrc(prev => {
-              if (!prev || !isSameMedia(prev, d.mediaUrl)) {
-                return d.mediaUrl;
+              if (!prev || !isSameMedia(prev, nextMedia)) {
+                return nextMedia;
               }
               return prev;
             });
@@ -331,7 +345,9 @@ export default function LiveStreamStandalonePlayer() {
             tryPlayWithSound();
           }
         })
-        .catch(() => {});
+        .catch(() => {
+          setIsVideoLoading(false);
+        });
     };
 
     fetchLiveState();
@@ -788,7 +804,7 @@ export default function LiveStreamStandalonePlayer() {
       </div>
 
       {/* Hiển thị chỉ báo đang tải mượt mà (chống đen màn hình chết nếu mạng lag) */}
-      {isVideoLoading && !isPlaybackActive && (
+      {isVideoLoading && !isPlaybackActive && Boolean(videoSrc) && (
         <div
           style={{
             position: 'absolute',
@@ -818,6 +834,56 @@ export default function LiveStreamStandalonePlayer() {
             Đang Đồng Bộ Luồng 60 FPS...
           </span>
           <style>{`@keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }`}</style>
+        </div>
+      )}
+
+      {/* 📡 MÀN HÌNH SẴN SÀNG PHÁT SÓNG 60 FPS KHI CHƯA CHỌN VIDEO HOẶC VỪA XÓA MEDIA */}
+      {!videoSrc && (
+        <div
+          style={{
+            position: 'absolute',
+            inset: 0,
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            backgroundColor: '#05070c',
+            backgroundImage: 'radial-gradient(ellipse at center, rgba(6, 182, 212, 0.15) 0%, rgba(5, 7, 12, 0.98) 75%)',
+            color: '#94a3b8',
+            fontFamily: 'system-ui, -apple-system, sans-serif',
+            gap: '14px',
+            zIndex: 2,
+            textAlign: 'center',
+            padding: '24px',
+            userSelect: 'none'
+          }}
+        >
+          <div style={{
+            width: '56px',
+            height: '56px',
+            borderRadius: '50%',
+            background: 'linear-gradient(135deg, rgba(6, 182, 212, 0.2), rgba(59, 130, 246, 0.2))',
+            border: '2px solid rgba(6, 182, 212, 0.5)',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            fontSize: '28px',
+            boxShadow: '0 0 25px rgba(6, 182, 212, 0.35)'
+          }}>
+            📡
+          </div>
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '4px' }}>
+            <span style={{ fontSize: '15px', fontWeight: '900', color: '#38bdf8', letterSpacing: '1px', textTransform: 'uppercase' }}>
+              AVA LIVE PRO • SÂN KHẤU 60 FPS
+            </span>
+            <span style={{ fontSize: '11px', color: '#64748b', maxWidth: '320px', lineHeight: '1.5' }}>
+              Đã kết nối TikTok Live Studio & OBS siêu mượt. Vui lòng chọn nhân vật hoặc bắt đầu live trên ứng dụng chính.
+            </span>
+          </div>
+          <div style={{ display: 'flex', alignItems: 'center', gap: '8px', padding: '4px 12px', borderRadius: '16px', background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.4)' }}>
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', boxShadow: '0 0 8px #10b981' }} />
+            <span style={{ fontSize: '10px', fontWeight: 'bold', color: '#34d399' }}>TÍN HIỆU LIVE TRỰC TUYẾN 100% ONLINE</span>
+          </div>
         </div>
       )}
 

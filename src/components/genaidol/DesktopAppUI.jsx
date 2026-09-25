@@ -612,7 +612,8 @@ export default function DesktopAppUI() {
           characterName: 'Video Chờ (Idle Studio)',
           isVideo: true,
           videoPlaybackEvent: 'play',
-          isPlaying: true
+          isPlaying: true,
+          clearMedia: false
         }, socketRef.current);
 
         try {
@@ -627,6 +628,72 @@ export default function DesktopAppUI() {
           });
           setTimeout(() => bc.close(), 100);
         } catch (err) {}
+      } else {
+        // 🗑️ XÓA SẠCH SÂN KHẤU CHÍNH KHI VIDEO BỊ XÓA (KHÔNG ĐƯỢC PHÉP HỒI SINH)
+        setUserLockedMediaUrl(null);
+        setActiveVideoItem(null);
+        try {
+          localStorage.removeItem('avalive_user_locked_media');
+          localStorage.removeItem('aidol_idle_media_url');
+          localStorage.removeItem('avalive_active_video_src');
+        } catch (err) {}
+        if (desktopVideoRef.current) {
+          try {
+            desktopVideoRef.current.pause();
+            desktopVideoRef.current.removeAttribute('src');
+            desktopVideoRef.current.srcObject = null;
+            desktopVideoRef.current.load();
+          } catch (err) {}
+        }
+        syncMasterLiveState({
+          stage: 'idol',
+          mediaUrl: null,
+          characterName: null,
+          isVideo: false,
+          videoPlaybackEvent: 'pause',
+          isPlaying: false,
+          clearMedia: true
+        }, socketRef.current);
+        try {
+          const bc = new BroadcastChannel('avalive_master_live_stream');
+          bc.postMessage({
+            type: 'CLEAR_EVENT_VIDEO',
+            eventType: 'idle',
+            clearMedia: true,
+            timestamp: Date.now()
+          });
+          setTimeout(() => bc.close(), 100);
+        } catch (err) {}
+      }
+    };
+
+    const handleClearEventVideo = (e) => {
+      const { eventType, oldUrl } = e.detail || {};
+      if (eventType === 'idle' || (oldUrl && (userLockedMediaUrl === oldUrl || activeVideoItem?.url === oldUrl))) {
+        setUserLockedMediaUrl(null);
+        setActiveVideoItem(null);
+        try {
+          localStorage.removeItem('avalive_user_locked_media');
+          localStorage.removeItem('aidol_idle_media_url');
+          localStorage.removeItem('avalive_active_video_src');
+        } catch (err) {}
+        if (desktopVideoRef.current) {
+          try {
+            desktopVideoRef.current.pause();
+            desktopVideoRef.current.removeAttribute('src');
+            desktopVideoRef.current.srcObject = null;
+            desktopVideoRef.current.load();
+          } catch (err) {}
+        }
+        syncMasterLiveState({
+          stage: 'idol',
+          mediaUrl: null,
+          characterName: null,
+          isVideo: false,
+          videoPlaybackEvent: 'pause',
+          isPlaying: false,
+          clearMedia: true
+        }, socketRef.current);
       }
     };
 
@@ -692,6 +759,7 @@ export default function DesktopAppUI() {
     window.addEventListener('avalive_speaker_change', handleSpeakerChange);
     window.addEventListener('avalive:master_sync_state_changed', handleMasterSyncChange);
     window.addEventListener('avalive:idle_video_updated', handleIdleVideoUpdate);
+    window.addEventListener('avalive:clear_event_video', handleClearEventVideo);
     window.addEventListener('avalive:sequencer_sync_disconnected', handleSequencerSyncDisconnected);
     window.addEventListener('avalive:sequencer_undo_redo', handleSequencerUndoRedo);
     return () => {
@@ -700,6 +768,7 @@ export default function DesktopAppUI() {
       window.removeEventListener('avalive_speaker_change', handleSpeakerChange);
       window.removeEventListener('avalive:master_sync_state_changed', handleMasterSyncChange);
       window.removeEventListener('avalive:idle_video_updated', handleIdleVideoUpdate);
+      window.removeEventListener('avalive:clear_event_video', handleClearEventVideo);
       window.removeEventListener('avalive:sequencer_sync_disconnected', handleSequencerSyncDisconnected);
       window.removeEventListener('avalive:sequencer_undo_redo', handleSequencerUndoRedo);
     };
@@ -3990,9 +4059,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
       const rawName = file.name.replace(/\.[^/.]+$/, "") || "Idol Live AI Pro";
       const charName = rawName.length > 20 ? rawName.substring(0, 18) + "…" : rawName;
-      const isVideo = file.type.startsWith('video/') || 
-        /\.(mp4|webm|mov|mkv|avi|m4v)$/i.test(file.name) ||
-        /video|nhép|lipsync|livestream/i.test(file.name);
+      const isVideo = (file.type && file.type.startsWith('video/')) || 
+        /\.(mp4|webm|mov|mkv|avi|m4v|flv|wmv|ts|3gp|m2ts|mts|ogv)$/i.test(file.name) ||
+        /video|nhép|lipsync|livestream/i.test(file.name) ||
+        (!file.type?.startsWith('image/') && !/\.(png|jpg|jpeg|webp|gif|svg)$/i.test(file.name));
       const localUrl = URL.createObjectURL(file);
       const fileSig = generateFileSignature(file);
 
@@ -6469,7 +6539,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 type="file" 
                 ref={fileInputRef} 
                 style={{ display: 'none' }} 
-                accept="video/*,image/*" 
+                accept="video/*,image/*,.mp4,.webm,.mov,.mkv,.avi,.m4v,.flv,.wmv,.ts,.3gp,.m2ts,.mts" 
                 onChange={handleFileUpload} 
               />
             </div>
