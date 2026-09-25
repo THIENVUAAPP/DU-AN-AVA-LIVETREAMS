@@ -27,6 +27,7 @@ import {
   unlockAudioContext
 } from '../../utils/voiceSyncService';
 import { uploadMediaToServer, ensureServerMediaUrl, deleteServerMedia } from '../../utils/mediaUploadService';
+import { syncMasterLiveState, sendVideoControl } from '../../lib/masterLiveSync';
 
 // 🎙️ Danh sách các Giọng Đọc AI Tiếng Việt Top 1 & Đồng Bộ Bộ Não Voice AI Brain
 export const CURATED_STUDIO_VOICES = [
@@ -191,12 +192,13 @@ export default function LivestreamFlowSequencer() {
   const [presetNameInput, setPresetNameInput] = useState('');
   const [isStageMediaPaused, setIsStageMediaPaused] = useState(false);
 
-  // 📡 State Đồng Bộ Ra Sân Khấu Chính (OBS / TikTok Live Studio) — Chỉ người dùng bấm bật/tắt, không tự ý tắt
+  // 📡 State Đồng Bộ Ra Sân Khấu Chính (OBS / TikTok Live Studio) — Mặc định luôn bật để đồng bộ 100% giống các luồng live khác
   const [isMasterSynced, setIsMasterSynced] = useState(() => {
     try {
-      return localStorage.getItem('avalive_master_sync_active') === 'true';
+      const saved = localStorage.getItem('avalive_master_sync_active');
+      return saved !== 'false';
     } catch (e) {
-      return false;
+      return true;
     }
   });
 
@@ -774,7 +776,35 @@ export default function LivestreamFlowSequencer() {
       detail: syncedConfig
     }));
 
-    // 3. Gửi sang Backend API Live State
+    // 3. Gửi sang Master Live State Hub (Supabase, Sockets, LocalStorage, BroadcastChannel, REST API)
+    syncMasterLiveState({
+      stage: 'idol',
+      mediaUrl: mediaToPlay,
+      isVideo: !isImageMedia(mediaToPlay),
+      isPlaying: isLivePlaying,
+      aspectRatio: '9:16',
+      stepTitle: step.title,
+      actionType: step.actionType,
+      secondaryMediaUrl: secondaryToPlay || null,
+      overlayImage: overlayImgToPlay || null,
+      overlayText: overlayTxtToPlay || null,
+      multiAvatarConfig: syncedConfig,
+      syncedAvatars: syncedAvatars,
+      videoPlaybackEvent: isLivePlaying ? 'play' : 'pause',
+      videoCurrentTime: 0,
+      updatedAt: Date.now()
+    });
+
+    sendVideoControl({
+      action: isLivePlaying ? 'play' : 'pause',
+      isPlaying: isLivePlaying,
+      currentTime: 0,
+      mediaUrl: mediaToPlay,
+      force: true,
+      timestamp: Date.now()
+    });
+
+    // 4. Gửi sang Backend API Live State
     fetch('/api/live-state', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -808,6 +838,13 @@ export default function LivestreamFlowSequencer() {
     if (mediaToPlay && (mediaToPlay.startsWith('blob:') || mediaToPlay.startsWith('data:'))) {
       ensureServerMediaUrl(mediaToPlay, `sequencer_step_${step.id || Date.now()}.mp4`).then(srvUrl => {
         if (srvUrl && srvUrl !== mediaToPlay) {
+          syncMasterLiveState({
+            stage: 'idol',
+            mediaUrl: srvUrl,
+            isVideo: true,
+            isPlaying: isLivePlaying,
+            updatedAt: Date.now()
+          });
           fetch('/api/live-state', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -2536,6 +2573,47 @@ export default function LivestreamFlowSequencer() {
           >
             {isMasterVoiceEnabled ? <Volume2 size={13} className="text-emerald-400" /> : <Volume2 size={13} className="text-rose-400 opacity-60" />}
             <span className="hidden sm:inline">{isMasterVoiceEnabled ? 'VOICE AI: BẬT' : 'VOICE AI: TẮT'}</span>
+          </button>
+
+          {/* 🖥️ NÚT MỞ CỬA SỔ WINDOW CAPTURE OBS */}
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                window.open('/window-capture?stage=idol&mode=window_capture&sound=1&autoplay=1&fit=cover', 'AvaLiveWindowCaptureIdol', 'width=450,height=800,menubar=no,toolbar=no,location=no,status=no');
+                toast.success('🖥️ Đã mở Cửa Sổ Window Capture OBS cho Luồng Live Idol Avatar!');
+              }
+            }}
+            className="px-2.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md cursor-pointer bg-cyan-950/90 hover:bg-cyan-900 text-cyan-300 border border-cyan-500/50"
+            title="Mở Cửa Sổ 9:16 Siêu Nét Để Thêm Vào Nguồn Window Capture Trên OBS / TikTok Live Studio"
+          >
+            <Monitor size={13} className="text-cyan-400" />
+            <span className="hidden sm:inline">OBS CAPTURE</span>
+          </button>
+
+          {/* 📋 NÚT COPY LINK TIKTOK LIVE STUDIO (ONLINE HTTPS) */}
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                let liveUrl = `${window.location.origin}/live-stream`;
+                try {
+                  const savedTunnel = localStorage.getItem('avalive_tunnel_url') || localStorage.getItem('aidol_online_stream_url');
+                  if (savedTunnel && savedTunnel.startsWith('http')) {
+                    liveUrl = `${savedTunnel.replace(/\/$/, '')}/live-stream`;
+                  }
+                } catch(e) {}
+                if (navigator.clipboard) {
+                  navigator.clipboard.writeText(liveUrl);
+                  toast.success(`📋 Đã sao chép link TikTok Live Studio: ${liveUrl}`);
+                }
+              }
+            }}
+            className="px-2.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md cursor-pointer bg-fuchsia-950/90 hover:bg-fuchsia-900 text-fuchsia-300 border border-fuchsia-500/50"
+            title="Sao chép đường link Online HTTPS để dán vào TikTok Live Studio (Browser Source)"
+          >
+            <Radio size={13} className="text-fuchsia-400 animate-pulse" />
+            <span className="hidden sm:inline">LINK TIKTOK</span>
           </button>
 
           {/* 📡 NÚT ĐỒNG BỘ RA SÂN KHẤU CHÍNH (BẬT = MÀU XANH, TẮT = MÀU ĐỎ - DO NGƯỜI DÙNG BẤM TẮT/MỞ) */}

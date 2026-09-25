@@ -988,19 +988,30 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     return () => window.removeEventListener('keydown', handleKeyDown);
   }, [selectedAvatarId, config, safeAvatars, extraImageLayers]);
 
-  const liveOverlayUrl = typeof window !== 'undefined' ? `${window.location.origin}/?overlay=studio` : 'http://localhost:5173/?overlay=studio';
+  const getOnlineLiveUrl = () => {
+    if (typeof window === 'undefined') return 'https://avalivepro.vercel.app/live-stream';
+    let base = window.location.origin;
+    try {
+      const savedTunnel = localStorage.getItem('avalive_tunnel_url') || localStorage.getItem('aidol_online_stream_url');
+      if (savedTunnel && savedTunnel.startsWith('http')) {
+        base = savedTunnel.replace(/\/$/, '');
+      }
+    } catch(e) {}
+    return `${base}/live-stream`;
+  };
 
   const handleCopyOverlayLink = () => {
     if (typeof navigator !== 'undefined' && navigator.clipboard) {
-      navigator.clipboard.writeText(liveOverlayUrl);
-      toast.success('📋 Đã sao chép Link Browser Source cho TikTok Live Studio & OBS!');
+      const link = getOnlineLiveUrl();
+      navigator.clipboard.writeText(link);
+      toast.success(`📋 Đã sao chép Link TikTok Live Studio: ${link}`);
     }
   };
 
   const handleOpenCleanWindow = () => {
     if (typeof window !== 'undefined') {
-      window.open(liveOverlayUrl + '&window_capture=true', 'AvaLiveStudioClean', 'width=1080,height=1920,menubar=no,toolbar=no,location=no,status=no');
-      toast.success('🖥️ Đã mở Cửa sổ Livestream Sạch 1080p cho Window Capture!');
+      window.open('/window-capture?stage=idol&mode=window_capture&sound=1&autoplay=1&fit=cover', 'AvaLiveStudioClean', 'width=450,height=800,menubar=no,toolbar=no,location=no,status=no');
+      toast.success('🖥️ Đã mở Cửa Sổ Window Capture OBS 9:16 Siêu Nét!');
     }
   };
 

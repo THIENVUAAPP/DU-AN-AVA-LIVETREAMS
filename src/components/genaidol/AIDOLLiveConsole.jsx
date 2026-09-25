@@ -658,6 +658,46 @@ export default function AIDOLLiveConsole() {
               <span className="text-[10px] font-black text-red-400">ĐANG LIVE</span>
             </div>
           )}
+
+          {/* 🖥️ NÚT MỞ CỬA SỔ WINDOW CAPTURE OBS */}
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                window.open('/window-capture?stage=idol&mode=window_capture&sound=1&autoplay=1&fit=cover', 'AvaLiveWindowCaptureIdol', 'width=450,height=800,menubar=no,toolbar=no,location=no,status=no');
+              }
+            }}
+            className="px-3 py-1.5 bg-cyan-950/90 hover:bg-cyan-900 text-cyan-300 border border-cyan-500/50 rounded-lg text-[11px] font-black flex items-center gap-1.5 shadow-md cursor-pointer transition-all"
+            title="Mở Cửa Sổ 9:16 Siêu Nét Để Thêm Vào Nguồn Window Capture Trên OBS / TikTok Live Studio"
+          >
+            <Monitor className="w-3.5 h-3.5 text-cyan-400" />
+            <span className="hidden sm:inline">OBS CAPTURE</span>
+          </button>
+
+          {/* 📋 NÚT COPY LINK TIKTOK LIVE STUDIO (ONLINE HTTPS) */}
+          <button
+            type="button"
+            onClick={() => {
+              if (typeof window !== 'undefined') {
+                let liveUrl = `${window.location.origin}/live-stream`;
+                try {
+                  const savedTunnel = localStorage.getItem('avalive_tunnel_url') || localStorage.getItem('aidol_online_stream_url');
+                  if (savedTunnel && savedTunnel.startsWith('http')) {
+                    liveUrl = `${savedTunnel.replace(/\/$/, '')}/live-stream`;
+                  }
+                } catch(e) {}
+                if (navigator.clipboard) {
+                  navigator.clipboard.writeText(liveUrl);
+                  alert(`📋 Đã sao chép link TikTok Live Studio:\n${liveUrl}`);
+                }
+              }
+            }}
+            className="px-3 py-1.5 bg-fuchsia-950/90 hover:bg-fuchsia-900 text-fuchsia-300 border border-fuchsia-500/50 rounded-lg text-[11px] font-black flex items-center gap-1.5 shadow-md cursor-pointer transition-all"
+            title="Sao chép đường link Online HTTPS để dán vào TikTok Live Studio (Browser Source)"
+          >
+            <Radio className="w-3.5 h-3.5 text-fuchsia-400 animate-pulse" />
+            <span className="hidden sm:inline">LINK TIKTOK</span>
+          </button>
         </div>
 
         <div className="flex items-center gap-2">
