@@ -610,14 +610,9 @@ export default function LivestreamFlowSequencer() {
   // 📡 Đẩy video và dữ liệu phân đoạn của bước hiện tại lên Sân khấu chính (OBS / TikTok Live / Master)
   const syncStepToServer = (step, index = 0, isLivePlaying = true, forceSync = false) => {
     if (!step) return;
-    // 🛡️ CHỈ ĐỒNG BỘ RA SÂN KHẤU CHÍNH KHI NGƯỜI DÙNG BẬT ĐỒNG BỘ HOẶC BẤM ĐỒNG BỘ
-    const isSyncActive = forceSync || isMasterSynced;
-    if (!isSyncActive) {
-      return;
-    }
     
     const resolved = resolveStepMedia(index);
-    const mediaToPlay = resolved.mediaUrl;
+    let mediaToPlay = resolved.mediaUrl || step.mediaUrl || '';
     const secondaryToPlay = resolved.secondaryMediaUrl;
     const overlayImgToPlay = resolved.overlayImage;
     const overlayTxtToPlay = resolved.overlayText;
@@ -649,9 +644,17 @@ export default function LivestreamFlowSequencer() {
       };
     });
 
+    // ⚡ FALLBACK THẦN TỐC: Nếu bước này không chọn video nền riêng, tự động lấy video của Avatar 1 làm nền chính
+    if (!mediaToPlay && syncedAvatars.length > 0) {
+      mediaToPlay = syncedAvatars[0].resolvedVidSrc || syncedAvatars[0].talkVideo || syncedAvatars[0].idleVideo || '';
+    }
+
     const payload = {
       mediaUrl: mediaToPlay,
+      currentMedia: mediaToPlay,
       blobUrl: mediaToPlay,
+      videoUrl: mediaToPlay,
+      eventVideoUrl: mediaToPlay,
       title: step.title,
       actionType: step.actionType,
       scriptText: step.scriptText || '',
@@ -862,6 +865,19 @@ export default function LivestreamFlowSequencer() {
             headers: { 'Content-Type': 'application/json' },
             body: JSON.stringify({ mediaUrl: srvUrl, currentMedia: srvUrl, updatedAt: Date.now() })
           }).catch(() => {});
+          try {
+            const bc = new BroadcastChannel('avalive_master_live_stream');
+            bc.postMessage({
+              type: 'GLOBAL_MEDIA_CHANGE',
+              mediaUrl: srvUrl,
+              blobUrl: srvUrl,
+              videoUrl: srvUrl,
+              isPlaying: isLivePlaying,
+              source: 'sequencer_uploaded',
+              timestamp: Date.now()
+            });
+            setTimeout(() => bc.close(), 100);
+          } catch (e) {}
         }
       }).catch(() => {});
     }

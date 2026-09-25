@@ -328,7 +328,12 @@ export default function WindowCapturePlayer() {
     return null;
   }, []);
 
+  const lastDockActionTimeRef = useRef(0);
+
   const toggleControlsHidden = (val) => {
+    const now = Date.now();
+    if (now - lastDockActionTimeRef.current < 250) return;
+    lastDockActionTimeRef.current = now;
     const nextVal = typeof val === 'boolean' ? val : !isControlsHidden;
     setIsControlsHidden(nextVal);
     try {
@@ -926,34 +931,41 @@ export default function WindowCapturePlayer() {
             localStorage.removeItem('avalive_active_video_src');
             localStorage.removeItem('avalive_user_locked_media');
           } catch (e) {}
-        } else if (state.mediaUrl || state.selectedCharacter) {
-          if (state.selectedCharacter) {
-            currentCharIdRef.current = state.selectedCharacter;
+        } else {
+          let effectiveStateMedia = state.mediaUrl || state.currentMedia || state.eventVideoUrl || state.videoUrl;
+          if (!effectiveStateMedia && Array.isArray(state.syncedAvatars) && state.syncedAvatars.length > 0) {
+            effectiveStateMedia = state.syncedAvatars[0].resolvedVidSrc || state.syncedAvatars[0].talkVideo || state.syncedAvatars[0].idleVideo || '';
           }
-          if (!isDirectStreamActiveRef.current) {
-            const localBlob = await tryLoadFromLocalDB(state.selectedCharacter || state.mediaUrl);
-            if (localBlob) {
-              isHardwareLocalBlobRef.current = true;
-              if (videoRef.current) {
-                videoRef.current.srcObject = null;
-              }
-              setVideoSrc(localBlob);
-              setIsVideoLoading(false);
-            } else if (state.mediaUrl) {
-              const resolved = resolveUrl(state.mediaUrl);
-              if (resolved && !isSameMedia(resolved, videoSrc)) {
-                isHardwareLocalBlobRef.current = false;
-                if (activeBlobUrlRef.current) {
-                  try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
-                  activeBlobUrlRef.current = null;
-                }
+
+          if (effectiveStateMedia || state.selectedCharacter) {
+            if (state.selectedCharacter) {
+              currentCharIdRef.current = state.selectedCharacter;
+            }
+            if (!isDirectStreamActiveRef.current) {
+              const localBlob = await tryLoadFromLocalDB(state.selectedCharacter || effectiveStateMedia);
+              if (localBlob) {
+                isHardwareLocalBlobRef.current = true;
                 if (videoRef.current) {
                   videoRef.current.srcObject = null;
-                  videoRef.current.src = resolved;
-                  videoRef.current.play().catch(() => {});
                 }
-                setVideoSrc(resolved);
-                setIsVideoLoading(true);
+                setVideoSrc(localBlob);
+                setIsVideoLoading(false);
+              } else if (effectiveStateMedia) {
+                const resolved = resolveUrl(effectiveStateMedia);
+                if (resolved && !isSameMedia(resolved, videoSrc)) {
+                  isHardwareLocalBlobRef.current = false;
+                  if (activeBlobUrlRef.current) {
+                    try { URL.revokeObjectURL(activeBlobUrlRef.current); } catch (e) {}
+                    activeBlobUrlRef.current = null;
+                  }
+                  if (videoRef.current) {
+                    videoRef.current.srcObject = null;
+                    videoRef.current.src = resolved;
+                    videoRef.current.play().catch(() => {});
+                  }
+                  setVideoSrc(resolved);
+                  setIsVideoLoading(true);
+                }
               }
             }
           }
@@ -1193,6 +1205,10 @@ export default function WindowCapturePlayer() {
     if (e && typeof e.stopPropagation === 'function') {
       try { e.preventDefault(); e.stopPropagation(); } catch (err) {}
     }
+    const now = Date.now();
+    if (now - lastDockActionTimeRef.current < 250) return;
+    lastDockActionTimeRef.current = now;
+
     const targetPlay = !isPlaybackActive;
 
     isExplicitlyPausedRef.current = !targetPlay;
@@ -1266,6 +1282,10 @@ export default function WindowCapturePlayer() {
     if (e && typeof e.stopPropagation === 'function') {
       try { e.preventDefault(); e.stopPropagation(); } catch (err) {}
     }
+    const now = Date.now();
+    if (now - lastDockActionTimeRef.current < 250) return;
+    lastDockActionTimeRef.current = now;
+
     const allMedia = Array.from(document.querySelectorAll('video, audio'));
     const anyUnmuted = allMedia.some(m => !m.muted);
     const targetMuted = anyUnmuted ? true : false;
@@ -1315,6 +1335,10 @@ export default function WindowCapturePlayer() {
     if (e && typeof e.stopPropagation === 'function') {
       try { e.preventDefault(); e.stopPropagation(); } catch (err) {}
     }
+    const now = Date.now();
+    if (now - lastDockActionTimeRef.current < 250) return;
+    lastDockActionTimeRef.current = now;
+
     const nextFit = fitMode === 'cover' ? 'contain' : 'cover';
     setFitMode(nextFit);
     try {
@@ -2129,7 +2153,7 @@ export default function WindowCapturePlayer() {
       )}
 
       {/* LỚP VIDEO PHỤ PIP (PICTURE-IN-PICTURE) */}
-      {flowSequencerOverlay?.secondaryMediaUrl && !isControlsHidden && (() => {
+      {flowSequencerOverlay?.secondaryMediaUrl && (() => {
         const trans = flowSequencerOverlay.secondaryMediaTransform;
         const chroma = getChromaStyle(flowSequencerOverlay.secondaryMediaChromaKey);
         const style = trans ? {
@@ -2178,7 +2202,7 @@ export default function WindowCapturePlayer() {
       })()}
 
       {/* LỚP ẢNH BANNER OVERLAY */}
-      {flowSequencerOverlay?.overlayImage && !isControlsHidden && (() => {
+      {flowSequencerOverlay?.overlayImage && (() => {
         const trans = flowSequencerOverlay.overlayImageTransform;
         const chroma = getChromaStyle(flowSequencerOverlay.overlayImageChromaKey);
         const style = trans ? {

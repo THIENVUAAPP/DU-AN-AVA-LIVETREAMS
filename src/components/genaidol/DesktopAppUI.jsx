@@ -522,7 +522,13 @@ export default function DesktopAppUI() {
   const currentActiveVoiceName = currentActiveVoiceObj?.name || 'Hoài My 👑 (Nữ Chuẩn - Bắc)';
 
   // 👥 MULTI-AVATAR STUDIO (2–4 NHÂN VẬT) & MASTER STAGE SYNC
-  const [isMasterStageSynced, setIsMasterStageSynced] = useState(false);
+  const [isMasterStageSynced, setIsMasterStageSynced] = useState(() => {
+    try {
+      return localStorage.getItem('avalive_master_sync_active') !== 'false';
+    } catch (e) {
+      return true;
+    }
+  });
 
   const [multiAvatarConfig, setMultiAvatarConfig] = useState(() => {
     try {
@@ -4708,8 +4714,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       );
     }
 
-    // 🎬 KHI isMasterStageSynced=true: Luôn render visual canvas đầy đủ mọi lớp đồng bộ từ sequencer (CHỈ KHI CÓ OVERLAY DỮ LIỆU)
-    const hasSequencerData = isMasterStageSynced === true && !!flowSequencerOverlay && (
+    // 🎬 Luôn render visual canvas đầy đủ mọi lớp đồng bộ từ sequencer khi có dữ liệu
+    const hasSequencerData = !!flowSequencerOverlay && (
       !!flowSequencerOverlay.mainMediaUrl || 
       (Array.isArray(flowSequencerOverlay.syncedAvatars) && flowSequencerOverlay.syncedAvatars.length > 0) || 
       !!flowSequencerOverlay.secondaryMediaUrl || 
@@ -5567,7 +5573,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               {renderAiIdolLiveStage()}
 
               {/* LỚP 1.5: VIDEO PHỤ PIP (PICTURE-IN-PICTURE) XẾP CHỒNG TỪ SEQUENCER (ẢNH 4) */}
-              {isMasterStageSynced && flowSequencerOverlay?.secondaryMediaUrl && (() => {
+              {flowSequencerOverlay?.secondaryMediaUrl && (() => {
                 const pipTrans = flowSequencerOverlay.secondaryMediaTransform || {
                   x: flowSequencerOverlay.secondaryMediaPos === 'top-left' ? 4 : flowSequencerOverlay.secondaryMediaPos === 'bottom-left' ? 4 : flowSequencerOverlay.secondaryMediaPos === 'bottom-right' ? 55 : 55,
                   y: flowSequencerOverlay.secondaryMediaPos === 'bottom-left' || flowSequencerOverlay.secondaryMediaPos === 'bottom-right' ? 70 : 8,
@@ -5614,7 +5620,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               })()}
 
               {/* LỚP 2: OVERLAY HÌNH ẢNH / BANNER / POSTER TỪ SEQUENCER (ẢNH 4) */}
-              {isMasterStageSynced && flowSequencerOverlay?.overlayImage && (() => {
+              {flowSequencerOverlay?.overlayImage && (() => {
                 const bannerTrans = flowSequencerOverlay.overlayImageTransform || {
                   x: flowSequencerOverlay.overlayImagePos === 'top-right' ? 65 : flowSequencerOverlay.overlayImagePos === 'bottom-left' ? 4 : flowSequencerOverlay.overlayImagePos === 'bottom-right' ? 65 : 10,
                   y: flowSequencerOverlay.overlayImagePos === 'bottom-left' || flowSequencerOverlay.overlayImagePos === 'bottom-right' ? 70 : 12,
@@ -5648,7 +5654,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               })()}
 
               {/* LỚP 3: OVERLAY TIÊU ĐỀ / CHỮ NỔI BẬT TỪ SEQUENCER (ẢNH 4) */}
-              {isMasterStageSynced && flowSequencerOverlay?.overlayText && (() => {
+              {flowSequencerOverlay?.overlayText && (() => {
                 const textTrans = flowSequencerOverlay.overlayTextTransform || {
                   x: 4,
                   y: 5,

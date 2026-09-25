@@ -382,15 +382,19 @@ export default function LiveStreamStandalonePlayer() {
         if (data.tunnelUrl && data.tunnelUrl !== tunnelUrl) {
           setTunnelUrl(data.tunnelUrl);
         }
-        if (data.mediaUrl || data.selectedCharacter) {
-          const localBlob = await tryLoadFromLocalDB(data.selectedCharacter || data.mediaUrl);
+        let effectiveStateMedia = data.mediaUrl || data.currentMedia || data.eventVideoUrl || data.videoUrl;
+        if (!effectiveStateMedia && Array.isArray(data.syncedAvatars) && data.syncedAvatars.length > 0) {
+          effectiveStateMedia = data.syncedAvatars[0].resolvedVidSrc || data.syncedAvatars[0].talkVideo || data.syncedAvatars[0].idleVideo || '';
+        }
+        if (effectiveStateMedia || data.selectedCharacter) {
+          const localBlob = await tryLoadFromLocalDB(data.selectedCharacter || effectiveStateMedia);
           if (localBlob) {
             isHardwareLocalBlobRef.current = true;
             setVideoSrc(localBlob);
             setIsVideoLoading(false);
-          } else if (data.mediaUrl && !isSameMedia(videoSrc, data.mediaUrl)) {
+          } else if (effectiveStateMedia && !isSameMedia(videoSrc, effectiveStateMedia)) {
             if (!isHardwareLocalBlobRef.current) {
-              setVideoSrc(data.mediaUrl);
+              setVideoSrc(effectiveStateMedia);
             }
           }
         }
