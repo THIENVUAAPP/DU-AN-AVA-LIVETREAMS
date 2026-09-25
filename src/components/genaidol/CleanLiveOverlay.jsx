@@ -2385,7 +2385,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             </div>
 
             {/* Cụm nút điều khiển Quản trị thu nhỏ */}
-            <div className="flex items-center gap-1 flex-wrap">
+            <div className="flex items-center gap-1 flex-nowrap whitespace-nowrap">
               {/* 1. NÚT PHÁT / TẠM DỪNG (NHỎ GỌN) */}
               <button
                 onClick={togglePlayPause}

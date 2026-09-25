@@ -332,7 +332,7 @@ const getDefaultEventConfigs = () => {
       useVoice: true,
       voiceId: 'free_vi_female',
       muteSourceVideo: ev.id !== 'gift',
-      videoCategory: ev.id === 'welcome' ? 'join' : ev.id === 'call_to_action' ? 'interaction' : ev.id === 'thanks_heart' ? 'thank_for_likes' : ev.id,
+      videoCategory: ev.id,
       videoFolder: '',
       supportVideoFolder: '',
       useAi: ev.id !== 'gift',
@@ -3678,27 +3678,21 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                     <HelpTooltip helpKey="videoFolder" />
                   </legend>
                   <div className="flex flex-col gap-4">
-                    <div className="flex items-center gap-4">
-                      <span className="text-[13px] text-[#a53b3b] font-semibold min-w-[200px]">Danh mục video cho sự kiện này:</span>
-                      <select 
-                        name="videoCategory" 
-                        value={currentConfig.videoCategory || selectedEventId} 
-                        onChange={handleChange} 
-                        className="flex-1 border border-gray-300 rounded px-2.5 py-1.5 text-xs bg-white font-bold text-blue-900 focus:outline-blue-500 cursor-pointer shadow-2xs"
-                      >
-                        <option value="comment">💬 comment - Trả Lời Bình Luận Khách Hàng</option>
-                        <option value="talking">🗣️ talking - Nhân Vật Nói Chuyện / Dẫn Live</option>
-                        <option value="idle">⏱️ idle - Đứng Chờ / Nghỉ Giữa Hiệp (Loop)</option>
-                        <option value="follow">➕ follow - Cảm Ơn Người Theo Dõi Kênh</option>
-                        <option value="gift">🎁 gift - Cảm Ơn Quà Tặng (Thường)</option>
-                        <option value="special_gift">🌟 special_gift - Cảm Ơn Quà Tặng Đặc Biệt</option>
-                        <option value="share">🔄 share - Cảm Ơn Chia Sẻ Phiên Live</option>
-                        <option value="thanks_heart">❤️ thanks_heart - Cảm Ơn Thả Tim Nhiều</option>
-                        <option value="welcome">👋 welcome - Chào Người Mới Vào Phòng</option>
-                        <option value="apology">🙏 apology - Xin Lỗi & Phản Hồi Khi Lỗi</option>
-                        <option value="call_to_action">📢 call_to_action - Kêu Gọi Tương Tác Giờ Vàng</option>
-                        <option value="custom_action">🎬 custom_action - Động Tác / Sự Kiện Tùy Chỉnh</option>
-                      </select>
+                    <div className="flex flex-wrap items-center justify-between gap-3 p-3 bg-gradient-to-r from-blue-50/80 to-indigo-50/80 rounded-xl border border-blue-200">
+                      <div className="flex items-center gap-2">
+                        <span className="text-xs font-bold text-blue-950 flex items-center gap-1.5">
+                          <span>📌 Danh Mục Sự Kiện:</span>
+                          <span className="px-3 py-1 bg-gradient-to-r from-blue-600 to-indigo-600 text-white font-bold rounded-lg text-xs shadow-xs tracking-wide">
+                            {selectedEventInfo?.label || selectedEventId}
+                          </span>
+                        </span>
+                        <span className="px-2 py-0.5 bg-white border border-blue-200 text-blue-700 text-[11px] font-mono font-semibold rounded-md">
+                          ID: {selectedEventId}
+                        </span>
+                      </div>
+                      <span className="text-[11px] text-gray-500 italic">
+                        ⚡ Video độc lập 100% cho sự kiện này — Không tự ý nhân bản sang các tab khác
+                      </span>
                     </div>
 
                     {/* Lựa chọn Chế độ Phát Video: Nhép Miệng vs Video Có Sẵn Âm Thanh/Voice */}
@@ -3763,20 +3757,31 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                         label="Thư mục Video Hành Động / File Clip Sự Kiện"
                         currentPath={currentConfig.videoFolder || ''}
                         videoUrl={currentConfig.videoFile || ''}
-                        defaultText="Chưa chọn thư mục (Dùng video mặc định theo danh mục)"
+                        defaultText="Chưa chọn clip (Chỉ phát khi sự kiện này nổ ra và có video)"
                         onSelectFile={(file, objectUrl) => {
-                          handleChange({ target: { name: 'videoFolder', value: file.name } });
-                          handleChange({ target: { name: 'videoFile', value: objectUrl } });
-                          toast.success(`Đã chọn clip hành động: ${file.name}`);
+                          updateEventConfig(selectedEventId, {
+                            videoFolder: file.name,
+                            videoFileName: file.name,
+                            videoFile: objectUrl,
+                            videoUrl: objectUrl
+                          });
+                          toast.success(`Đã nạp clip hành động: ${file.name}`);
                         }}
                         onSelectFolder={(folderPath) => {
-                          handleChange({ target: { name: 'videoFolder', value: folderPath } });
-                          handleChange({ target: { name: 'videoFile', value: '' } });
+                          updateEventConfig(selectedEventId, {
+                            videoFolder: folderPath,
+                            videoFile: '',
+                            videoUrl: ''
+                          });
                           toast.success(`Đã chọn thư mục: ${folderPath}`);
                         }}
                         onSelectSample={(sample) => {
-                          handleChange({ target: { name: 'videoFolder', value: sample.name } });
-                          handleChange({ target: { name: 'videoFile', value: sample.url } });
+                          updateEventConfig(selectedEventId, {
+                            videoFolder: sample.name,
+                            videoFileName: sample.name,
+                            videoFile: sample.url,
+                            videoUrl: sample.url
+                          });
                           toast.success(`Đã nạp video mẫu: ${sample.name}`);
                         }}
                         onClear={() => handleClearMediaSlot('action')}
@@ -3789,20 +3794,31 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                         label="Thư mục Video Nền Hỗ Trợ / File Nền Studio"
                         currentPath={currentConfig.supportVideoFolder || ''}
                         videoUrl={currentConfig.supportVideoFile || ''}
-                        defaultText="Chưa chọn (Dùng video nền mặc định)"
+                        defaultText="Chưa chọn clip nền (Dùng nền mặc định)"
                         onSelectFile={(file, objectUrl) => {
-                          handleChange({ target: { name: 'supportVideoFolder', value: file.name } });
-                          handleChange({ target: { name: 'supportVideoFile', value: objectUrl } });
-                          toast.success(`Đã chọn clip nền: ${file.name}`);
+                          updateEventConfig(selectedEventId, {
+                            supportVideoFolder: file.name,
+                            supportVideoFileName: file.name,
+                            supportVideoFile: objectUrl,
+                            supportVideoUrl: objectUrl
+                          });
+                          toast.success(`Đã nạp clip nền: ${file.name}`);
                         }}
                         onSelectFolder={(folderPath) => {
-                          handleChange({ target: { name: 'supportVideoFolder', value: folderPath } });
-                          handleChange({ target: { name: 'supportVideoFile', value: '' } });
+                          updateEventConfig(selectedEventId, {
+                            supportVideoFolder: folderPath,
+                            supportVideoFile: '',
+                            supportVideoUrl: ''
+                          });
                           toast.success(`Đã chọn thư mục nền: ${folderPath}`);
                         }}
                         onSelectSample={(sample) => {
-                          handleChange({ target: { name: 'supportVideoFolder', value: sample.name } });
-                          handleChange({ target: { name: 'supportVideoFile', value: sample.url } });
+                          updateEventConfig(selectedEventId, {
+                            supportVideoFolder: sample.name,
+                            supportVideoFileName: sample.name,
+                            supportVideoFile: sample.url,
+                            supportVideoUrl: sample.url
+                          });
                           toast.success(`Đã nạp video nền mẫu: ${sample.name}`);
                         }}
                         onClear={() => handleClearMediaSlot('support')}

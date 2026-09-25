@@ -150,6 +150,9 @@ export default function UniversalMediaPicker({
       extractVideoThumbnail(targetUrl).then(thumb => {
         if (thumb) setThumbnailUrl(thumb);
       });
+    } else {
+      setLocalPreviewUrl('');
+      setThumbnailUrl(null);
     }
   }, [videoUrl, currentPath]);
 
@@ -237,10 +240,13 @@ export default function UniversalMediaPicker({
   const handleClear = () => {
     setLocalPreviewUrl('');
     setThumbnailUrl(null);
+    if (fileInputRef.current) {
+      fileInputRef.current.value = '';
+    }
     if (onClear) {
       onClear();
     }
-    toast.success('Đã đặt lại ô video');
+    toast.success('Đã xóa clip thành công');
   };
 
   const isMediaAvailable = !!(localPreviewUrl && (

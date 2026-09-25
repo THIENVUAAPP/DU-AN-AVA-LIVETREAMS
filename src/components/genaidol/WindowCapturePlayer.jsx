@@ -1855,6 +1855,7 @@ export default function WindowCapturePlayer() {
               alignItems: 'center',
               justifyContent: 'center',
               whiteSpace: 'nowrap',
+              wordBreak: 'keep-all',
               flexShrink: 0,
               lineHeight: 1
             }}
@@ -1888,6 +1889,7 @@ export default function WindowCapturePlayer() {
               alignItems: 'center',
               justifyContent: 'center',
               whiteSpace: 'nowrap',
+              wordBreak: 'keep-all',
               flexShrink: 0,
               lineHeight: 1
             }}
@@ -1921,6 +1923,7 @@ export default function WindowCapturePlayer() {
               alignItems: 'center',
               justifyContent: 'center',
               whiteSpace: 'nowrap',
+              wordBreak: 'keep-all',
               flexShrink: 0,
               lineHeight: 1
             }}
@@ -1955,12 +1958,13 @@ export default function WindowCapturePlayer() {
               userSelect: 'none',
               transition: 'all 0.15s ease',
               whiteSpace: 'nowrap',
+              wordBreak: 'keep-all',
               flexShrink: 0,
               lineHeight: 1
             }}
             title="Ẩn sạch toàn bộ các nút trên video để TikTok Studio / OBS quay khung hình tinh khiết (Phím tắt: H)"
           >
-            ✕ Ẩn Toàn Bộ (H)
+            ✕ Ẩn (H)
           </button>
         </div>
       )}
