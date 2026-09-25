@@ -966,7 +966,7 @@ app.get([
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.9.35</title>
+  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.9.36</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -1095,7 +1095,7 @@ app.get([
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.35</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.36</div>
   </div>
   <script>
     (function() {
@@ -1502,7 +1502,7 @@ app.get([
             }, 3000);
 
             socket.on('connect', function() {
-              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.35';
+              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.36';
               socket.emit('REQUEST_MASTER_LIVE_STATE');
             });
 
@@ -1512,6 +1512,32 @@ app.get([
 
             socket.on('MASTER_LIVE_STATE_UPDATE', function(data) {
               applyLiveState(data);
+            });
+
+            socket.on('EVENT_VIDEO_PLAY', function(data) {
+              if (data && (data.eventVideoUrl || data.videoUrl || data.mediaUrl)) {
+                loadAndPlay(data.eventVideoUrl || data.videoUrl || data.mediaUrl);
+              }
+            });
+
+            socket.on('EVENT_VIDEO_TRIGGER', function(data) {
+              if (data && (data.eventVideoUrl || data.videoUrl || data.mediaUrl)) {
+                loadAndPlay(data.eventVideoUrl || data.videoUrl || data.mediaUrl);
+              }
+            });
+
+            socket.on('GLOBAL_MEDIA_CHANGE', function(data) {
+              if (data && (data.mediaUrl || data.blobUrl)) {
+                loadAndPlay(data.mediaUrl || data.blobUrl, data.currentTime);
+              }
+            });
+
+            socket.on('CLEAR_EVENT_VIDEO', function() {
+              applyLiveState({ clearMedia: true });
+            });
+
+            socket.on('CLEAR_STAGE', function() {
+              applyLiveState({ clearMedia: true });
             });
 
             socket.on('VIDEO_PLAYBACK_CONTROL', function(control) {
@@ -1793,7 +1819,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     <div id="overlayTextBanner" style="position: absolute; left: 4%; top: 5%; width: 92%; z-index: 35; text-align: center; pointer-events: none; display: none;">
       <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);"></div>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.35</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.36</div>
   </div>
 
   <!-- BẢNG ĐIỀU KHIỂN NỔI DOCK TOÀN CỤC CẤP BODY — CHỐNG BỊ GPU VIDEO LAYER CHE KHUẤT -->
@@ -2095,7 +2121,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         });
 
         socket.on('connect', function() {
-          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.35';
+          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.36';
           socket.emit('REQUEST_MASTER_LIVE_STATE');
         });
 
@@ -2278,7 +2304,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.35';
+  let ver = '4.9.36';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -2316,7 +2342,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.35';
+  let ver = '4.9.36';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));

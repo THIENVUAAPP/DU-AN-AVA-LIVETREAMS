@@ -339,7 +339,7 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
 
   // Stream Source Mode & Active Switcher Channel
   const [streamSourceMode, setStreamSourceMode] = useState('video');
-  const [videoUrlInput, setVideoUrlInput] = useState('https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4');
+  const [videoUrlInput, setVideoUrlInput] = useState('');
   const [isPreviewingUrl, setIsPreviewingUrl] = useState(false);
   const [isPreviewingCamera, setIsPreviewingCamera] = useState(false);
   const [liveChannelIds, setLiveChannelIds] = useState([]); // 'video' | 'direct'
@@ -683,7 +683,6 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
                     { label: '🌐 Sân Khấu Live Sạch (Khuyên dùng)', url: `${typeof window !== 'undefined' ? window.location.origin : ''}/live` },
                     { label: '⚔️ Đấu Trường PK (Đã hợp nhất 1 Link)', url: `${typeof window !== 'undefined' ? window.location.origin : ''}/live` },
                     { label: '🗺️ Bản Đồ Live (Đã hợp nhất 1 Link)', url: `${typeof window !== 'undefined' ? window.location.origin : ''}/live` },
-                    { label: '📹 Video Mẫu HD', url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/BigBuckBunny.mp4' },
                     { label: '🎵 Lo-fi YouTube 4K', url: 'https://www.youtube.com/watch?v=jfKfPfyJRdk' }
                   ].map((preset, idx) => (
                     <button

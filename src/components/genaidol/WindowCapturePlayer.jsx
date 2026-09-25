@@ -506,6 +506,53 @@ export default function WindowCapturePlayer() {
       }
     };
 
+    const handleSubstagePlayVideo = (e) => {
+      const url = e?.detail?.playUrl || e?.detail?.item?.mediaUrl;
+      if (url) {
+        const resolved = resolveUrl(url);
+        if (resolved) {
+          setVideoSrc(resolved);
+          setActiveEventVideo({
+            url: resolved,
+            name: e?.detail?.item?.name || 'Live Idol Video',
+            eventType: 'idol_live'
+          });
+          if (videoRef.current) {
+            videoRef.current.srcObject = null;
+            videoRef.current.src = resolved;
+            videoRef.current.play().catch(() => {});
+          }
+          setIsPlaybackActive(true);
+          setIsVideoLoading(false);
+        }
+      }
+    };
+
+    const handleMasterMediaUpdate = (e) => {
+      const detail = e?.detail;
+      if (!detail) return;
+      if (detail.multiAvatarConfig) {
+        setMultiAvatarConfig(detail.multiAvatarConfig);
+      }
+      const url = detail.mediaUrl || detail.blobUrl || detail.eventVideoUrl;
+      if (url) {
+        const resolved = resolveUrl(url);
+        if (resolved) {
+          setVideoSrc(resolved);
+          if (videoRef.current) {
+            videoRef.current.srcObject = null;
+            videoRef.current.src = resolved;
+            videoRef.current.play().catch(() => {});
+          }
+          setIsPlaybackActive(true);
+          setIsVideoLoading(false);
+        }
+      }
+      if (detail.overlayText) {
+        setOverlayText(detail.overlayText);
+      }
+    };
+
     window.addEventListener('avalive_multi_avatar_changed', handleMultiAvatarChange);
     window.addEventListener('avalive_active_speaker_changed', handleSpeakerChange);
     window.addEventListener('avalive_speaker_change', handleSpeakerChange);
@@ -514,6 +561,9 @@ export default function WindowCapturePlayer() {
     window.addEventListener('avalive:lipsync_video_trigger', handleLipSyncVideoTrigger);
     window.addEventListener('avalive:quick_response_video', handleQuickResponseVideo);
     window.addEventListener('avalive:stage_change', handleStageChange);
+    window.addEventListener('avalive:substage_play_video', handleSubstagePlayVideo);
+    window.addEventListener('avalive:update_master_media', handleMasterMediaUpdate);
+    window.addEventListener('avalive_flow_step_changed', handleMasterMediaUpdate);
 
     return () => {
       window.removeEventListener('avalive_multi_avatar_changed', handleMultiAvatarChange);
@@ -524,6 +574,9 @@ export default function WindowCapturePlayer() {
       window.removeEventListener('avalive:lipsync_video_trigger', handleLipSyncVideoTrigger);
       window.removeEventListener('avalive:quick_response_video', handleQuickResponseVideo);
       window.removeEventListener('avalive:stage_change', handleStageChange);
+      window.removeEventListener('avalive:substage_play_video', handleSubstagePlayVideo);
+      window.removeEventListener('avalive:update_master_media', handleMasterMediaUpdate);
+      window.removeEventListener('avalive_flow_step_changed', handleMasterMediaUpdate);
     };
   }, [resolveUrl]);
 

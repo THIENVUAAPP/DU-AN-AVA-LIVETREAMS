@@ -134,8 +134,8 @@ export const DEFAULT_PRESETS = [
         avatarSpeaker: 'avatar_1',
         durationSeconds: 60,
         scriptText: 'Dạ em xin chào tất cả mọi người đã vào xem phiên livestream hôm nay nha! Các bạn bấm thả tim và bình luận để nhận ưu đãi đặc biệt nhé!',
-        mediaUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
-        lipsyncUrl: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+        mediaUrl: '',
+        lipsyncUrl: '',
         voiceMode: 'avatar_lipsync',
         commentHandling: 'ai_brain',
         overlayText: '🌸 CHÀO MỪNG ĐẾN VỚI PHIÊN LIVESTREAM',
@@ -488,7 +488,7 @@ export default function LivestreamFlowSequencer() {
     const steps = activePreset?.steps || [];
     if (steps.length === 0) {
       return {
-        mediaUrl: multiAvatarConfig?.backgroundUrl || 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4',
+        mediaUrl: multiAvatarConfig?.backgroundUrl || '',
         mainMediaTransform: null,
         mainMediaChromaKey: null,
         secondaryMediaUrl: null,
@@ -710,6 +710,18 @@ export default function LivestreamFlowSequencer() {
         syncedAvatars: syncedAvatars,
         timestamp: Date.now()
       });
+      if (mediaToPlay) {
+        bc.postMessage({
+          type: 'EVENT_VIDEO_PLAY',
+          mediaUrl: mediaToPlay,
+          eventVideoUrl: mediaToPlay,
+          videoUrl: mediaToPlay,
+          name: step.title || 'Sequencer Video',
+          eventType: 'flow_sequencer',
+          timestamp: Date.now()
+        });
+      }
+      setTimeout(() => bc.close(), 100);
     } catch (e) {}
 
     // 2. Custom Events nội bộ — GỬI TOÀN BỘ multiAvatarConfig & syncedAvatars

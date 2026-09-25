@@ -3683,7 +3683,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
     if (typeof currentMedia === 'string' && currentMedia.includes('/uploads/')) {
       currentMedia = currentMedia.substring(currentMedia.indexOf('/uploads/'));
-    } else if (typeof currentMedia === 'string' && (currentMedia.includes('nhep_mieng.mp4') || currentMedia.includes('demo_dancer.mp4') || currentMedia.includes('default_idol.mp4'))) {
+    } else if (typeof currentMedia === 'string' && (currentMedia.includes('nhep_mieng.mp4') || currentMedia.includes('demo_dancer.mp4') || currentMedia.includes('default_idol.mp4') || currentMedia.includes('commondatastorage.googleapis.com') || currentMedia.includes('ForBigger') || currentMedia.includes('BigBuckBunny'))) {
       currentMedia = null;
     }
 

@@ -493,6 +493,9 @@ export default function AIDOLLiveConsole() {
       window.dispatchEvent(new CustomEvent('avalive:substage_play_video', {
         detail: { item, playUrl, currentTime: 0 }
       }));
+      window.dispatchEvent(new CustomEvent('avalive:event_video_trigger', {
+        detail: { videoUrl: playUrl, eventVideoUrl: playUrl, name: item?.name || 'AI Idol Video', eventType: 'idol_kho' }
+      }));
       try {
         const bc = new BroadcastChannel('avalive_master_live_stream');
         bc.postMessage({
@@ -506,6 +509,16 @@ export default function AIDOLLiveConsole() {
           action: 'play',
           isPlaying: true,
           currentTime: 0,
+          timestamp: Date.now()
+        });
+        bc.postMessage({
+          type: 'EVENT_VIDEO_PLAY',
+          mediaUrl: playUrl,
+          eventVideoUrl: playUrl,
+          videoUrl: playUrl,
+          fileBlob: item?.fileBlob || item?.fileData || null,
+          name: item?.name || 'AI Idol Video',
+          eventType: 'idol_kho',
           timestamp: Date.now()
         });
         setTimeout(() => bc.close(), 100);

@@ -15,49 +15,8 @@ const toast = {
   }
 };
 
-// 5 Video Mẫu Idol AI Dựng Sẵn Chuẩn 9:16
-export const SAMPLE_IDOL_VIDEOS = [
-  { 
-    id: 'sample_idle', 
-    name: '🎬 Idol Đứng Chờ (Idle Loop 60fps)', 
-    desc: 'Nhân vật đứng thở nhẹ, mỉm cười tự nhiên khi chưa có thoại', 
-    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerBlazes.mp4', 
-    folder: 'video_mau_idol_idle',
-    badge: 'Idle Loop'
-  },
-  { 
-    id: 'sample_talking', 
-    name: '🎬 Idol Đang Nói & Bán Hàng (Talk 60fps)', 
-    desc: 'Khớp khẩu hình miệng 60 FPS khi đọc kịch bản hoặc trả lời khách', 
-    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerEscapes.mp4', 
-    folder: 'video_mau_idol_talking',
-    badge: 'Talking 60fps'
-  },
-  { 
-    id: 'sample_thanks', 
-    name: '🎬 Idol Cảm Ơn Quà / Follow (Thanking)', 
-    desc: 'Cử chỉ vỗ tay, thả tim, cúi chào tri ân người xem', 
-    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerFun.mp4', 
-    folder: 'video_mau_idol_thanks',
-    badge: 'Thanking'
-  },
-  { 
-    id: 'sample_selling', 
-    name: '🎬 Idol Chốt Đơn & Flash Sale (Selling Deal)', 
-    desc: 'Chỉ tay vào giỏ hàng góc trái, đếm ngược deal nóng', 
-    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerJoyBlazes.mp4', 
-    folder: 'video_mau_idol_selling',
-    badge: 'Flash Deal'
-  },
-  { 
-    id: 'sample_bg', 
-    name: '🎬 Video Nền Studio 4K Sang Trọng', 
-    desc: 'Phông nền livestream chuẩn phòng thu thương mại', 
-    url: 'https://commondatastorage.googleapis.com/gtv-videos-bucket/sample/ForBiggerMeltdowns.mp4', 
-    folder: 'video_mau_studio_bg',
-    badge: 'Studio 4K'
-  }
-];
+// Danh sách Video Mẫu (Để trống để phần mềm không tự nạp bất kỳ video chạy nền nào)
+export const SAMPLE_IDOL_VIDEOS = [];
 
 // Helper trích xuất Thumbnail ảnh trực quan từ video trong 50ms (Chống hoàn toàn đen màn hình)
 function extractVideoThumbnail(urlOrFile) {
@@ -387,42 +346,44 @@ export default function UniversalMediaPicker({
             <FolderOpen size={13} /> Thư Mục...
           </button>
 
-          {/* Nút Nạp Video Mẫu Idol AI */}
-          <div className="relative shrink-0">
-            <button 
-              type="button"
-              onClick={() => setShowSamples(!showSamples)}
-              title="Chọn nhanh video mẫu Idol AI dựng sẵn chuẩn 9:16"
-              className="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1 cursor-pointer transition-all shadow-2xs shrink-0"
-            >
-              <Sparkles size={13} className="text-amber-600" /> Video Mẫu <ChevronDown size={11} />
-            </button>
+          {/* Nút Nạp Video Mẫu Idol AI (Chỉ hiện khi có mẫu) */}
+          {SAMPLE_IDOL_VIDEOS.length > 0 && (
+            <div className="relative shrink-0">
+              <button 
+                type="button"
+                onClick={() => setShowSamples(!showSamples)}
+                title="Chọn nhanh video mẫu Idol AI dựng sẵn chuẩn 9:16"
+                className="bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 font-bold px-2.5 py-1.5 rounded-lg text-xs flex items-center gap-1 cursor-pointer transition-all shadow-2xs shrink-0"
+              >
+                <Sparkles size={13} className="text-amber-600" /> Video Mẫu <ChevronDown size={11} />
+              </button>
 
-            {showSamples && (
-              <div className="absolute right-0 top-full mt-1.5 w-72 bg-white rounded-xl shadow-2xl border border-amber-200 p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
-                <div className="text-[11px] font-black text-amber-900 px-2 py-1 mb-1 border-b border-amber-100 flex items-center justify-between">
-                  <span>🌟 5 VIDEO MẪU IDOL AI CHUẨN 9:16:</span>
-                  <span className="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded font-bold">60fps</span>
+              {showSamples && (
+                <div className="absolute right-0 top-full mt-1.5 w-72 bg-white rounded-xl shadow-2xl border border-amber-200 p-2 z-50 animate-in fade-in zoom-in-95 duration-150">
+                  <div className="text-[11px] font-black text-amber-900 px-2 py-1 mb-1 border-b border-amber-100 flex items-center justify-between">
+                    <span>🌟 VIDEO MẪU IDOL AI CHUẨN 9:16:</span>
+                    <span className="text-[9px] bg-amber-200 text-amber-900 px-1.5 py-0.5 rounded font-bold">60fps</span>
+                  </div>
+                  <div className="space-y-1 max-h-60 overflow-y-auto">
+                    {SAMPLE_IDOL_VIDEOS.map(sample => (
+                      <button
+                        key={sample.id}
+                        type="button"
+                        onClick={() => handlePickSample(sample)}
+                        className="w-full text-left p-2 rounded-lg hover:bg-amber-50 text-xs transition-colors cursor-pointer group"
+                      >
+                        <div className="font-bold text-gray-800 group-hover:text-amber-800 flex items-center justify-between">
+                          <span>{sample.name}</span>
+                          <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.2 rounded font-semibold">{sample.badge}</span>
+                        </div>
+                        <div className="text-[10.5px] text-gray-500 line-clamp-1 mt-0.5">{sample.desc}</div>
+                      </button>
+                    ))}
+                  </div>
                 </div>
-                <div className="space-y-1 max-h-60 overflow-y-auto">
-                  {SAMPLE_IDOL_VIDEOS.map(sample => (
-                    <button
-                      key={sample.id}
-                      type="button"
-                      onClick={() => handlePickSample(sample)}
-                      className="w-full text-left p-2 rounded-lg hover:bg-amber-50 text-xs transition-colors cursor-pointer group"
-                    >
-                      <div className="font-bold text-gray-800 group-hover:text-amber-800 flex items-center justify-between">
-                        <span>{sample.name}</span>
-                        <span className="text-[9px] bg-blue-100 text-blue-700 px-1.5 py-0.2 rounded font-semibold">{sample.badge}</span>
-                      </div>
-                      <div className="text-[10.5px] text-gray-500 line-clamp-1 mt-0.5">{sample.desc}</div>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-          </div>
+              )}
+            </div>
+          )}
 
           {/* Nút Xóa / Reset */}
           {hasValue && (
