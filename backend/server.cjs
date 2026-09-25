@@ -966,7 +966,7 @@ app.get([
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.9.33</title>
+  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.9.34</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -1095,7 +1095,7 @@ app.get([
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.33</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.34</div>
   </div>
   <script>
     (function() {
@@ -1502,7 +1502,7 @@ app.get([
             }, 3000);
 
             socket.on('connect', function() {
-              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.33';
+              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.34';
               socket.emit('REQUEST_MASTER_LIVE_STATE');
             });
 
@@ -1516,8 +1516,32 @@ app.get([
 
             socket.on('VIDEO_PLAYBACK_CONTROL', function(control) {
               if (!control) return;
-              if (control.mediaUrl && !isSameMedia(vid.src, control.mediaUrl)) {
-                loadAndPlay(control.mediaUrl);
+              if (control.mediaUrl) {
+                const resolved = resolveUrl(control.mediaUrl);
+                if (resolved && !isSameMedia(vid.src, resolved)) {
+                  loadAndPlay(resolved, control.currentTime);
+                }
+              }
+              if (typeof control.currentTime === 'number' && control.currentTime >= 0) {
+                if (Math.abs(vid.currentTime - control.currentTime) > 0.6) {
+                  try { vid.currentTime = control.currentTime; } catch(e) {}
+                }
+              }
+              if (control.action === 'pause' || control.isPlaying === false) {
+                isStreamUserPaused = true;
+                vid.pause();
+                updateDockUI();
+              } else if (control.action === 'play' || control.isPlaying === true) {
+                isStreamUserPaused = false;
+                if (vid.paused && vid.src) {
+                  safePlay();
+                }
+                updateDockUI();
+              }
+              if (typeof control.isMuted === 'boolean') {
+                targetSoundEnabled = !control.isMuted;
+                vid.muted = control.isMuted;
+                updateDockUI();
               }
             });
           } catch (err) {
@@ -1634,67 +1658,71 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       display: ${isInitialImg ? 'block' : 'none'};
     }
     #controlsDock {
-      position: absolute;
-      position: absolute;
-      top: 6px; left: 50%;
-      transform: translateX(-50%);
-      display: inline-flex;
-      flex-direction: row;
-      align-items: center;
-      justify-content: center;
-      flex-wrap: nowrap;
-      white-space: nowrap;
-      gap: 5px;
-      background: rgba(5, 7, 12, 0.92);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      padding: 3px 8px;
-      border-radius: 24px;
-      border: 1px solid rgba(6, 182, 212, 0.7);
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.9), 0 0 12px rgba(6, 182, 212, 0.3);
-      z-index: 1000000;
-      opacity: 0.98;
-      pointer-events: auto;
-      touch-action: manipulation;
-      max-width: calc(100vw - 16px);
-      box-sizing: border-box;
-      transition: opacity 0.2s ease;
+      position: fixed !important;
+      top: 6px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      display: inline-flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      justify-content: center !important;
+      flex-wrap: nowrap !important;
+      white-space: nowrap !important;
+      gap: 5px !important;
+      background: rgba(5, 7, 12, 0.94) !important;
+      backdrop-filter: blur(20px) !important;
+      -webkit-backdrop-filter: blur(20px) !important;
+      padding: 4px 10px !important;
+      border-radius: 24px !important;
+      border: 1px solid rgba(6, 182, 212, 0.8) !important;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.9), 0 0 14px rgba(6, 182, 212, 0.4) !important;
+      z-index: 2147483647 !important;
+      opacity: 0.98 !important;
+      pointer-events: auto !important;
+      -webkit-app-region: no-drag !important;
+      touch-action: manipulation !important;
+      max-width: calc(100vw - 12px) !important;
+      box-sizing: border-box !important;
+      user-select: none !important;
+      -webkit-user-select: none !important;
+      transition: opacity 0.2s ease !important;
     }
     #controlsDock.is-hidden {
       display: none !important;
     }
-    #controlsDock:hover { opacity: 1; }
+    #controlsDock:hover { opacity: 1 !important; }
     .dock-btn {
-      background: rgba(255, 255, 255, 0.2);
-      border: 1px solid rgba(255, 255, 255, 0.4);
-      color: #fff;
-      font-size: 10px;
-      font-weight: 900;
-      padding: 3px 8px;
-      border-radius: 12px;
-      cursor: pointer;
-      outline: none;
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      white-space: nowrap;
-      flex-shrink: 0;
-      line-height: 1;
-      pointer-events: auto;
-      touch-action: manipulation;
-      user-select: none;
-      -webkit-user-select: none;
-      transition: all 0.12s ease;
+      background: rgba(255, 255, 255, 0.22) !important;
+      border: 1px solid rgba(255, 255, 255, 0.45) !important;
+      color: #fff !important;
+      font-size: 11px !important;
+      font-weight: 900 !important;
+      padding: 4px 9px !important;
+      border-radius: 12px !important;
+      cursor: pointer !important;
+      outline: none !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      white-space: nowrap !important;
+      flex-shrink: 0 !important;
+      line-height: 1 !important;
+      pointer-events: auto !important;
+      -webkit-app-region: no-drag !important;
+      touch-action: manipulation !important;
+      user-select: none !important;
+      -webkit-user-select: none !important;
+      transition: all 0.12s ease !important;
     }
-    .dock-btn:hover { background: rgba(6, 182, 212, 0.6); border-color: #06b6d4; }
+    .dock-btn:hover { background: rgba(6, 182, 212, 0.7) !important; border-color: #06b6d4 !important; }
+    .dock-btn:active { transform: scale(0.95) !important; }
     .dock-btn-hide {
-      background: rgba(239, 68, 68, 0.75) !important;
+      background: rgba(239, 68, 68, 0.8) !important;
       border-color: rgba(239, 68, 68, 0.95) !important;
       color: #fff !important;
-      padding: 3px 8px !important;
     }
     .dock-btn-hide:hover {
-      background: rgba(239, 68, 68, 0.95) !important;
+      background: rgba(239, 68, 68, 1) !important;
     }
     #badge {
       position: absolute; bottom: 8px; right: 8px;
@@ -1708,27 +1736,36 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       display: none !important;
     }
     #btnRestoreIcon {
-      position: absolute; top: 6px; right: 8px;
-      z-index: 1000000; width: 28px; height: 28px;
-      border-radius: 50%;
-      background: rgba(5, 7, 12, 0.88);
-      border: 1px solid rgba(6, 182, 212, 0.85);
-      color: #06b6d4; font-size: 13px;
-      display: none; align-items: center; justify-content: center;
-      cursor: pointer; opacity: 0.9;
-      pointer-events: auto;
-      touch-action: manipulation;
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
-      transition: all 0.2s ease;
+      position: fixed !important;
+      top: 6px !important;
+      right: 8px !important;
+      z-index: 2147483647 !important;
+      width: 28px !important;
+      height: 28px !important;
+      border-radius: 50% !important;
+      background: rgba(5, 7, 12, 0.9) !important;
+      border: 1px solid rgba(6, 182, 212, 0.9) !important;
+      color: #06b6d4 !important;
+      font-size: 13px !important;
+      display: none;
+      align-items: center !important;
+      justify-content: center !important;
+      cursor: pointer !important;
+      pointer-events: auto !important;
+      -webkit-app-region: no-drag !important;
+      touch-action: manipulation !important;
+      backdrop-filter: blur(10px) !important;
+      -webkit-backdrop-filter: blur(10px) !important;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8) !important;
+      transition: all 0.2s ease !important;
     }
     #btnRestoreIcon.is-visible {
       display: flex !important;
     }
     #btnRestoreIcon:hover {
-      opacity: 1 !important;
-      transform: scale(1.15);
+      transform: scale(1.15) !important;
+      border-color: #22d3ee !important;
+      color: #fff !important;
     }
   </style>
   <script src="/socket.io/socket.io.js"></script>
@@ -1756,21 +1793,23 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     <div id="overlayTextBanner" style="position: absolute; left: 4%; top: 5%; width: 92%; z-index: 35; text-align: center; pointer-events: none; display: none;">
       <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);"></div>
     </div>
-    
-    <div id="controlsDock">
-      <span style="font-size:9px; color:#10b981; font-weight:900; display:inline-flex; align-items:center; gap:3px; user-select:none; white-space:nowrap; flex-shrink:0;">
-        <span style="width:5px; height:5px; border-radius:50%; background:#10b981; display:inline-block; box-shadow:0 0 6px #10b981; flex-shrink:0;"></span>
-        LIVE
-      </span>
-      <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập (Space)">⏸️ Dừng</button>
-      <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập (M)">${soundParam ? '🔊 Bật Tiếng' : '🔇 Tắt Tiếng'}</button>
-      <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa' : '📐 Tràn'}</button>
-      <button id="btnHideAll" class="dock-btn dock-btn-hide" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn (H)</button>
-    </div>
-
-    <button id="btnRestoreIcon" title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)">👁️</button>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.33</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.34</div>
   </div>
+
+  <!-- BẢNG ĐIỀU KHIỂN NỔI DOCK TOÀN CỤC CẤP BODY — CHỐNG BỊ GPU VIDEO LAYER CHE KHUẤT -->
+  <div id="controlsDock">
+    <span style="font-size:9px; color:#10b981; font-weight:900; display:inline-flex; align-items:center; gap:3px; user-select:none; white-space:nowrap; flex-shrink:0;">
+      <span style="width:5px; height:5px; border-radius:50%; background:#10b981; display:inline-block; box-shadow:0 0 6px #10b981; flex-shrink:0;"></span>
+      LIVE
+    </span>
+    <button id="btnPlayPause" class="dock-btn" onclick="handlePlayPauseToggle(event)" title="Tạm dừng / Tiếp tục độc lập (Space)">⏸️ Dừng</button>
+    <button id="btnMuteUnmute" class="dock-btn" onclick="handleMuteToggle(event)" title="Bật / Tắt âm thanh độc lập (M)">${soundParam ? '🔊 Bật Tiếng' : '🔇 Tắt Tiếng'}</button>
+    <button id="btnFitToggle" class="dock-btn" onclick="handleFitToggle(event)" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa' : '📐 Tràn'}</button>
+    <button id="btnHideAll" class="dock-btn dock-btn-hide" onclick="handleHideDock(event)" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn (H)</button>
+  </div>
+
+  <button id="btnRestoreIcon" onclick="handleRestoreDock(event)" title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)">👁️</button>
+
   <script>
     (function() {
       const vid = document.getElementById('videoPlayer');
@@ -1821,20 +1860,15 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         applyDockVisibility();
       }
 
-      if (btnHideAll) {
-        btnHideAll.addEventListener('click', function(e) {
-          e.preventDefault(); e.stopPropagation();
-          toggleHideAll(true);
-        });
-      }
-      if (btnRestore) {
-        btnRestore.addEventListener('click', function(e) {
-          e.preventDefault(); e.stopPropagation();
-          toggleHideAll(false);
-        });
-      }
+      window.handleHideDock = function(e) {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+        toggleHideAll(true);
+      };
 
-      setTimeout(function() { if (badge) badge.style.opacity = '0.2'; }, 6000);
+      window.handleRestoreDock = function(e) {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+        toggleHideAll(false);
+      };
 
       function updateDockUI() {
         if (btnPlayPause) {
@@ -1848,80 +1882,151 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         }
       }
 
-      if (btnPlayPause) {
-        btnPlayPause.addEventListener('click', function(e) {
-          e.preventDefault(); e.stopPropagation();
-          if (vid.paused) {
-            isStreamUserPaused = false;
-            vid.play().catch(function() {});
+      function safePlay() {
+        if (isStreamUserPaused) return;
+        vid.muted = targetMuted;
+        try {
+          const p = vid.play();
+          if (p !== undefined && typeof p.then === 'function') {
+            p.then(function() {
+              updateDockUI();
+            }).catch(function() {
+              vid.muted = true;
+              vid.play().then(function() {
+                updateDockUI();
+              }).catch(function() {});
+            });
           } else {
-            isStreamUserPaused = true;
-            vid.pause();
+            updateDockUI();
           }
+        } catch(e) {}
+      }
+
+      window.handlePlayPauseToggle = function(e) {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+        if (vid.paused) {
+          isStreamUserPaused = false;
+          safePlay();
+        } else {
+          isStreamUserPaused = true;
+          vid.pause();
           updateDockUI();
-          if (socket) {
-            socket.emit('VIDEO_PLAYBACK_CONTROL', {
+        }
+        if (socket) {
+          socket.emit('VIDEO_PLAYBACK_CONTROL', {
+            action: vid.paused ? 'pause' : 'play',
+            isPlaying: !vid.paused,
+            currentTime: vid.currentTime || 0,
+            timestamp: Date.now()
+          });
+        }
+        if (bc) {
+          try {
+            bc.postMessage({
+              type: 'VIDEO_PLAYBACK_CONTROL',
               action: vid.paused ? 'pause' : 'play',
               isPlaying: !vid.paused,
-              currentTime: vid.currentTime || 0
+              currentTime: vid.currentTime || 0,
+              timestamp: Date.now()
             });
-          }
-          if (bc) {
-            try {
-              bc.postMessage({
-                type: 'VIDEO_PLAYBACK_CONTROL',
-                action: vid.paused ? 'pause' : 'play',
-                isPlaying: !vid.paused,
-                currentTime: vid.currentTime || 0
-              });
-            } catch(e) {}
-          }
-        });
-      }
+          } catch(e) {}
+        }
+      };
 
-      if (btnMuteUnmute) {
-        btnMuteUnmute.addEventListener('click', function(e) {
-          e.preventDefault(); e.stopPropagation();
-          vid.muted = !vid.muted;
-          targetMuted = vid.muted;
-          updateDockUI();
-          if (socket) {
-            socket.emit('VIDEO_PLAYBACK_CONTROL', { isMuted: vid.muted });
-          }
-        });
-      }
+      window.handleMuteToggle = function(e) {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+        targetMuted = !targetMuted;
+        vid.muted = targetMuted;
+        if (!targetMuted && vid.paused && !isStreamUserPaused) {
+          safePlay();
+        }
+        updateDockUI();
+        if (socket) {
+          socket.emit('VIDEO_PLAYBACK_CONTROL', { isMuted: targetMuted, timestamp: Date.now() });
+        }
+        if (bc) {
+          try {
+            bc.postMessage({
+              type: 'VIDEO_PLAYBACK_CONTROL',
+              isMuted: targetMuted,
+              timestamp: Date.now()
+            });
+          } catch(e) {}
+        }
+      };
 
-      if (btnFitToggle) {
-        btnFitToggle.addEventListener('click', function(e) {
-          e.preventDefault(); e.stopPropagation();
-          currentFit = currentFit === 'cover' ? 'contain' : 'cover';
-          vid.style.objectFit = currentFit;
-          const imgEl = document.getElementById('imagePlayer');
-          if (imgEl) imgEl.style.objectFit = currentFit;
-          updateDockUI();
-        });
-      }
+      window.handleFitToggle = function(e) {
+        if (e) { e.preventDefault(); e.stopPropagation(); }
+        currentFit = currentFit === 'cover' ? 'contain' : 'cover';
+        if (vid) vid.style.objectFit = currentFit;
+        const imgEl = document.getElementById('imagePlayer');
+        if (imgEl) imgEl.style.objectFit = currentFit;
+        updateDockUI();
+      };
+
+      // Đăng ký thêm sự kiện pointerdown & touchstart để phản hồi tức thì 0ms
+      ['pointerdown', 'touchstart', 'click'].forEach(function(evtName) {
+        if (btnPlayPause) btnPlayPause.addEventListener(evtName, window.handlePlayPauseToggle);
+        if (btnMuteUnmute) btnMuteUnmute.addEventListener(evtName, window.handleMuteToggle);
+        if (btnFitToggle) btnFitToggle.addEventListener(evtName, window.handleFitToggle);
+        if (btnHideAll) btnHideAll.addEventListener(evtName, window.handleHideDock);
+        if (btnRestore) btnRestore.addEventListener(evtName, window.handleRestoreDock);
+      });
 
       window.addEventListener('keydown', function(e) {
         if (['input', 'textarea', 'select'].includes(document.activeElement?.tagName?.toLowerCase())) return;
         if (e.code === 'Space') {
           e.preventDefault();
-          if (btnPlayPause) btnPlayPause.click();
+          window.handlePlayPauseToggle(e);
         } else if (e.key === 'm' || e.key === 'M') {
           e.preventDefault();
-          if (btnMuteUnmute) btnMuteUnmute.click();
+          window.handleMuteToggle(e);
         } else if (e.key === 'h' || e.key === 'H') {
           e.preventDefault();
           toggleHideAll();
         }
       });
 
-      function isSameMedia(a, b) {
-        if (!a || !b) return false;
-        if (a === b) return true;
-        const cleanA = a.split('?')[0].split('#')[0];
-        const cleanB = b.split('?')[0].split('#')[0];
-        return cleanA === cleanB || cleanA.endsWith(cleanB) || cleanB.endsWith(cleanA);
+      function isSameMedia(srcA, srcB) {
+        if (!srcA || !srcB) return false;
+        try {
+          const pA = String(srcA).split('?')[0].split('#')[0];
+          const pB = String(srcB).split('?')[0].split('#')[0];
+          if (pA === pB) return true;
+          const fA = pA.substring(pA.lastIndexOf('/') + 1);
+          const fB = pB.substring(pB.lastIndexOf('/') + 1);
+          if (fA && fB && fA === fB && !fA.startsWith('blob:') && !fB.startsWith('blob:')) return true;
+          const uA = new URL(srcA, window.location.href);
+          const uB = new URL(srcB, window.location.href);
+          return uA.pathname === uB.pathname;
+        } catch (e) {
+          const pA = String(srcA).split('?')[0].split('#')[0];
+          const pB = String(srcB).split('?')[0].split('#')[0];
+          return pA === pB || pA.endsWith(pB) || pB.endsWith(pA);
+        }
+      }
+
+      function resolveUrl(url) {
+        if (!url || typeof url !== 'string' || url === 'null' || url === 'undefined' || url.trim() === '') return '';
+        if (url.startsWith('blob:')) return '';
+        try { url = decodeURIComponent(url); } catch(e) {}
+        if (url.startsWith('http://') || url.startsWith('https://')) {
+          if (url.includes('localhost:') || url.includes('127.0.0.1:') || url.includes('vercel.app')) {
+            try {
+              const u = new URL(url);
+              if (u.pathname.startsWith('/uploads/')) {
+                return window.location.origin + u.pathname + u.search;
+              }
+            } catch(e) {}
+          }
+          return url;
+        }
+        if (url.startsWith('/uploads/') || url.includes('/uploads/')) {
+          const pathPart = url.substring(url.indexOf('/uploads/'));
+          return window.location.origin + pathPart;
+        }
+        if (url.startsWith('/')) return window.location.origin + url;
+        return window.location.origin + '/' + url;
       }
 
       function isImage(u) {
@@ -1929,23 +2034,16 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         return /\.(png|jpe?g|webp|gif|svg|avif|bmp)($|\?|#)/i.test(u) || u.startsWith('data:image/');
       }
 
-      function loadAndPlay(src) {
+      function loadAndPlay(src, forceSeekTime) {
+        if (!src) src = currentSrc || '';
         if (!src) return;
-        let cleanSrc = src;
-        if (cleanSrc.startsWith('http://') || cleanSrc.startsWith('https://')) {
-          try {
-            const u = new URL(cleanSrc);
-            cleanSrc = u.pathname + u.search;
-          } catch(e) {}
-        }
-        if (!cleanSrc.startsWith('/') && !cleanSrc.startsWith('http')) {
-          cleanSrc = '/' + cleanSrc;
-        }
+        const fullUrl = resolveUrl(src);
+        if (!fullUrl) return;
 
         const imgEl = document.getElementById('imagePlayer');
-        if (isImage(cleanSrc)) {
+        if (isImage(fullUrl)) {
           if (imgEl) {
-            imgEl.src = cleanSrc;
+            imgEl.src = fullUrl;
             imgEl.style.display = 'block';
           }
           if (vid) {
@@ -1960,17 +2058,15 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         }
         if (vid) {
           vid.style.display = 'block';
-          if (isSameMedia(vid.src, cleanSrc)) return;
-
-          currentSrc = cleanSrc;
-          vid.src = cleanSrc;
-          vid.load();
+          if (!isSameMedia(vid.src, fullUrl)) {
+            currentSrc = fullUrl;
+            vid.src = fullUrl;
+          }
+          if (typeof forceSeekTime === 'number' && forceSeekTime > 0) {
+            try { vid.currentTime = forceSeekTime; } catch(e) {}
+          }
           if (!isStreamUserPaused) {
-            vid.muted = targetMuted;
-            vid.play().catch(function() {
-              vid.muted = true;
-              vid.play().catch(function() {});
-            });
+            safePlay();
           }
           updateDockUI();
         }
@@ -1978,14 +2074,19 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
 
       vid.addEventListener('loadedmetadata', function() {
         if (!isStreamUserPaused) {
-          vid.muted = targetMuted;
-          vid.play().catch(function() {});
+          safePlay();
         }
         updateDockUI();
       });
 
       vid.addEventListener('play', updateDockUI);
       vid.addEventListener('pause', updateDockUI);
+      vid.addEventListener('ended', function() {
+        if (!isStreamUserPaused) {
+          try { vid.currentTime = 0; } catch (e) {}
+          safePlay();
+        }
+      });
 
       try {
         socket = io(window.location.origin, {
@@ -1994,7 +2095,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         });
 
         socket.on('connect', function() {
-          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.33';
+          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.34';
           socket.emit('REQUEST_MASTER_LIVE_STATE');
         });
 
@@ -2027,20 +2128,54 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
               imgEl.style.display = 'none';
             }
           } else if (targetUrl && !isSameMedia(vid.src, targetUrl)) {
-            loadAndPlay(targetUrl);
+            loadAndPlay(targetUrl, data.videoCurrentTime || data.currentTime);
           }
           if (data.videoPlaybackEvent === 'pause' || data.isPlaying === false) {
             isStreamUserPaused = true;
             vid.pause();
           } else if ((data.videoPlaybackEvent === 'play' || data.isPlaying === true) && vid.paused && vid.src) {
             isStreamUserPaused = false;
-            vid.play().catch(function() {});
+            safePlay();
+          }
+          if (typeof data.videoCurrentTime === 'number' && Math.abs(vid.currentTime - data.videoCurrentTime) > 0.6) {
+            try { vid.currentTime = data.videoCurrentTime; } catch(e) {}
           }
           updateDockUI();
         }
 
         socket.on('MASTER_LIVE_STATE_UPDATE', function(data) {
           applyLiveState(data);
+        });
+
+        socket.on('VIDEO_PLAYBACK_CONTROL', function(control) {
+          if (!control) return;
+          if (control.mediaUrl) {
+            const resolved = resolveUrl(control.mediaUrl);
+            if (resolved && !isSameMedia(vid.src, resolved)) {
+              loadAndPlay(resolved, control.currentTime);
+            }
+          }
+          if (typeof control.currentTime === 'number' && control.currentTime >= 0) {
+            if (Math.abs(vid.currentTime - control.currentTime) > 0.6) {
+              try { vid.currentTime = control.currentTime; } catch(e) {}
+            }
+          }
+          if (control.action === 'pause' || control.isPlaying === false) {
+            isStreamUserPaused = true;
+            vid.pause();
+            updateDockUI();
+          } else if (control.action === 'play' || control.isPlaying === true) {
+            isStreamUserPaused = false;
+            if (vid.paused && vid.src) {
+              safePlay();
+            }
+            updateDockUI();
+          }
+          if (typeof control.isMuted === 'boolean') {
+            targetMuted = control.isMuted;
+            vid.muted = targetMuted;
+            updateDockUI();
+          }
         });
 
         if (bc) {
@@ -2050,6 +2185,16 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
               applyLiveState(ev.data);
             } else if (ev.data.type === 'CLEAR_STAGE' || ev.data.type === 'CLEAR_EVENT_VIDEO') {
               applyLiveState({ clearMedia: true, isPlaying: false });
+            } else if (ev.data.type === 'VIDEO_PLAYBACK_CONTROL') {
+              if (ev.data.action === 'pause' || ev.data.isPlaying === false) {
+                isStreamUserPaused = true;
+                vid.pause();
+                updateDockUI();
+              } else if (ev.data.action === 'play' || ev.data.isPlaying === true) {
+                isStreamUserPaused = false;
+                if (vid.paused && vid.src) safePlay();
+                updateDockUI();
+              }
             }
           };
         }
@@ -2133,7 +2278,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.33';
+  let ver = '4.9.34';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -2171,7 +2316,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.33';
+  let ver = '4.9.34';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));

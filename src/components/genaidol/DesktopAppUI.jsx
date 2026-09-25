@@ -2380,7 +2380,39 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       aspectRatio: globalAspectRatio || '9:16'
     }, socketRef.current);
 
-    // 🚀 Nếu chưa có server URL (/uploads/...), tự động kích hoạt fastStreamUpload để lấy link server ngay trong 2ms cho TikTok Live Studio
+    // 🚀 Nếu chưa có server URL (/uploads/...), tự động kích hoạt ensureServerMediaUrl và fastStreamUpload
+    if (!finalServerMediaUrl) {
+      ensureServerMediaUrl(fileBlob || charUrl || blobUrl, charItem.name || `idol_${charItem.id}.mp4`).then(srvUrl => {
+        if (srvUrl) {
+          charItem.mediaUrl = srvUrl;
+          setUserLockedMediaUrl(srvUrl);
+          try { localStorage.setItem('avalive_user_locked_media', srvUrl); } catch(e) {}
+          setCustomCharacters(prev => prev.map(c => c.id === charItem.id ? { ...c, mediaUrl: srvUrl } : c));
+          saveCharacterToIDB({ ...charItem, mediaUrl: srvUrl }).catch(() => {});
+          syncMasterLiveState({
+            stage: 'idol',
+            selectedCharacter: charItem.id,
+            characterName: charItem.name || 'AI Idol',
+            title: flowSequencerOverlay?.overlayText || charItem.name || 'AI Idol',
+            overlayText: flowSequencerOverlay?.overlayText || null,
+            mediaUrl: srvUrl,
+            isVideo: !isImageMedia(srvUrl),
+            videoPlaybackEvent: 'play',
+            isPlaying: true,
+            aspectRatio: globalAspectRatio || '9:16'
+          }, socketRef.current);
+          sendVideoControl({
+            action: 'play',
+            mediaUrl: srvUrl,
+            isPlaying: true,
+            currentTime: 0,
+            force: true,
+            timestamp: Date.now()
+          }, socketRef.current);
+        }
+      }).catch(() => {});
+    }
+
     if (!finalServerMediaUrl && fileBlob) {
       fastStreamUpload(fileBlob, {
         onInit: ({ fileUrl }) => {

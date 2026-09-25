@@ -40,5 +40,6 @@
   "isVideoAudioMuted": false,
   "isMuted": false,
   "videoVolume": 1,
-  "clearMedia": true
+  "clearMedia": true,
+  "tunnelUrl": "https://dominant-quotations-evolution-subdivision.trycloudflare.com"
 }
