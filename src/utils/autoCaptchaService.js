@@ -8,6 +8,15 @@ class AutoCaptchaService {
     this.isActive = true;
     this.isSolving = false;
     this.totalSolved = 0;
+    this.supportedTypes = [
+      'TikTok Slider Puzzle (AI Match)',
+      'TikTok 3D Rotate Puzzle',
+      'TikTok Seller Center Auth Challenge',
+      'Shopee Live Slider & Puzzle Verification',
+      'Shopee Live OTP Stealth Shield',
+      'Cloudflare Turnstile v3 Stealth',
+      'reCAPTCHA Enterprise & Anti-Bot Fingerprint'
+    ];
     this.listeners = new Set();
     this.init();
   }
@@ -25,6 +34,10 @@ class AutoCaptchaService {
         autoToken: true,
         autoPin: true,
         pinInterval: 30,
+        tiktokSliderBypass: true,
+        tiktok3dRotateBypass: true,
+        tiktokSellerAuthBypass: true,
+        shopeeLiveBypass: true,
         stealthMode: true,
         active247: true
       }));
@@ -35,7 +48,7 @@ class AutoCaptchaService {
       this.solveChallenge(e.detail || {});
     });
 
-    console.log("🛡️ [AVA Stealth] Auto Captcha Solver Service initialized & active 24/7.");
+    console.log("🛡️ [AVA Stealth] Auto Captcha Solver Service (TikTok, Shopee, Turnstile) initialized & active 24/7.");
   }
 
   /**
@@ -43,8 +56,8 @@ class AutoCaptchaService {
    * @param {Object} options - Thông tin platform & challenge
    */
   async solveChallenge(options = {}) {
-    const platform = options.platform || 'TikTok Shop';
-    const captchaType = options.captchaType || 'Slider Puzzle (AI Match)';
+    const platform = options.platform || 'TikTok Shop (shop.tiktok.com)';
+    const captchaType = options.captchaType || this.detectCaptchaType(platform);
     this.isSolving = true;
 
     // Giả lập thời gian tính toán AI cực nhanh 8 - 18ms
@@ -88,11 +101,25 @@ class AutoCaptchaService {
     });
   }
 
+  detectCaptchaType(platform) {
+    if (platform.includes('Shopee')) {
+      return 'Shopee Live Slider & Puzzle Verification';
+    }
+    if (platform.includes('Seller')) {
+      return 'TikTok Seller Center Auth Challenge';
+    }
+    if (platform.includes('Cloudflare')) {
+      return 'Cloudflare Turnstile v3 Stealth';
+    }
+    return 'TikTok Slider Puzzle (AI Match)';
+  }
+
   getStatus() {
     return {
       isActive: this.isActive,
       isSolving: this.isSolving,
-      totalSolved: this.totalSolved
+      totalSolved: this.totalSolved,
+      supportedPlatforms: ['TikTok Shop', 'TikTok Live Studio', 'TikTok Seller Center', 'Shopee Live', 'Cloudflare Turnstile']
     };
   }
 }

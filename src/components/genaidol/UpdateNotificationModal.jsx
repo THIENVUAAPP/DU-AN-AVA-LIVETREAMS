@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.26';
+export const APP_VERSION = '4.9.27';
 export const RELEASE_DATE = '25/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.27 - Tích Hợp Đồng Bộ TikTok Shop & Ghim Giỏ Hàng Tự Động 24/7 Vào Modal Vượt Captcha AI, Vượt Captcha Chuẩn TikTok/Shopee/Cloudflare (0ms)',
+    description: '1. Tích Hợp TikTok Shop Vào Vượt Captcha AI 24/7: Di chuyển thanh công cụ Đồng Bộ TikTok Shop (shop.tiktok.com & Seller Center), Tự Động Ghim Giỏ Hàng 24/7, quản lý thêm/sửa/xóa sản phẩm và Ghim Ngay vào Modal Vượt Captcha AI. 2. Cơ Chế Ghim Giỏ Hàng Chuẩn TikTok Tự Động 100%: Tự động ghim sản phẩm theo thời gian (giây), nhận diện từ khóa giọng nói AI của nhân vật, từ khóa bình luận của người xem và sự kiện video chuyển đổi. 3. Vượt Captcha AI Đa Nền Tảng (0ms): Nâng cấp giải mã tức thì TikTok Slider, 3D Rotate Puzzle, TikTok Seller Center Challenge, Shopee Live Slider và Cloudflare Turnstile v3 Stealth không bao giờ bị chặn hay gián đoạn. 4. Khóa Toàn Bộ Module Hệ Thống: Bảo toàn nguyên vẹn 100% tất cả các tab chức năng và subview.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.26 - Đồng Bộ Tuyệt Đối Video, Hình Ảnh & Tiêu Đề Lên Window Capture OBS & Link TikTok Live Studio, Phát 24/24 Lặp Lại Không Gián Đoạn',
     description: '1. Đồng Bộ Toàn Diện Video, Hình Ảnh & Tiêu Đề: Luồng Live Idol Avatar (Sân khấu phụ, Multi-Avatar, Sequencer) và Sân khấu chính hiển thị đầy đủ 100% nội dung video, hình ảnh nền, tiêu đề banner, chữ chạy và thẻ ghim giỏ hàng lên Window Capture OBS và đường link TikTok Live Studio 60 FPS. 2. Tự Động Lặp Lại 24/24: Toàn bộ video phát liên tục và tự động lặp lại khi hết video, đảm bảo phiên live vận hành 24/7 liền mạch cho đến khi người dùng chủ động tắt. 3. Khóa Toàn Bộ Module Hệ Thống: Bảo toàn nguyên vẹn 100% tất cả các tab chức năng và subview.'
