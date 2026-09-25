@@ -1412,84 +1412,92 @@ export default function LivestreamFlowSequencer() {
     const rawFiles = Array.from(e.target.files || []);
     if (rawFiles.length === 0) return;
 
-    const getFileUrl = async (file) => {
+    // ⚡ 1. TẠO NGAY OBJECT URL 0MS CHO TẤT CẢ CÁC TỆP ĐƯỢC CHỌN (KHÔNG BAO GIỜ BỊ LỖI HAY ĐỨNG HÌNH)
+    const loadedUrls = rawFiles.map(file => {
+      const isImg = file.type.startsWith('image/') || file.name.match(/\.(png|jpe?g|webp|gif|svg|avif|bmp)$/i);
+      let localUrl = '';
       try {
-        const serverUrl = await uploadMediaToServer(file, file.name, { noStageTakeover: true });
-        if (serverUrl) {
-          const isImg = file.type.startsWith('image/') || file.name.match(/\.(png|jpe?g|webp|gif|svg|avif|bmp)$/i);
-          return isImg ? serverUrl : (serverUrl + '#type=video');
+        localUrl = URL.createObjectURL(file);
+      } catch (err) {
+        localUrl = `/uploads/${file.name}`;
+      }
+
+      // Lưu trữ file vào bộ nhớ toàn cục để các player và Window Capture truy cập ngay
+      try {
+        if (typeof window !== 'undefined') {
+          window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+          window.__activeMediaBlobMap.set(file.name, file);
+          window.__activeMediaBlobMap.set(localUrl, file);
+          window.__activeMediaBlobMap.set('latest', file);
         }
       } catch (e) {}
 
-      const isImg = file.type.startsWith('image/') || file.name.match(/\.(png|jpe?g|webp|gif|svg|avif|bmp)$/i);
-      if (isImg) {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (ev) => resolve(ev.target?.result || '');
-          reader.onerror = () => resolve('');
-          reader.readAsDataURL(file);
-        });
-      } else {
-        try {
-          return URL.createObjectURL(file) + '#type=video';
-        } catch {
-          return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (ev) => resolve(ev.target?.result || '');
-            reader.onerror = () => resolve('');
-            reader.readAsDataURL(file);
+      // Tự động đẩy file lên máy chủ trong nền để OBS & TikTok Live Studio sử dụng
+      uploadMediaToServer(file, file.name).then(srvUrl => {
+        if (srvUrl) {
+          setMultiAvatarConfig(prev => {
+            if (!prev || !prev.avatars) return prev;
+            return {
+              ...prev,
+              avatars: prev.avatars.map(a => {
+                if (a.talkVideo === localUrl || a.mediaUrl === localUrl || a.idleVideo === localUrl) {
+                  return { ...a, talkVideo: srvUrl, idleVideo: srvUrl, mediaUrl: srvUrl };
+                }
+                return a;
+              })
+            };
           });
         }
-      }
-    };
+      }).catch(() => {});
 
-    Promise.all(rawFiles.map(f => getFileUrl(f))).then((loadedUrls) => {
-      pushUndoSnapshot();
-      const currentAvatars = (multiAvatarConfig?.avatars && multiAvatarConfig.avatars.length > 0)
-        ? multiAvatarConfig.avatars
-        : DEFAULT_MULTI_AVATAR_CONFIG.avatars;
-
-      const curNum = parseInt(String(avatarId).replace(/\D/g, '') || '1', 10);
-
-      // Gán lần lượt các file cho avatarId, avatar tiếp theo...
-      const updatedAvatars = currentAvatars.map(a => {
-        const aNum = parseInt(String(a.id).replace(/\D/g, '') || '1', 10);
-        const fileOffset = aNum - curNum;
-        if (fileOffset >= 0 && fileOffset < loadedUrls.length) {
-          const mediaUrl = loadedUrls[fileOffset];
-          return {
-            ...a,
-            talkVideo: mediaUrl,
-            idleVideo: mediaUrl,
-            mediaUrl: mediaUrl,
-            chromaKey: { enabled: false, mode: 'green', color: '#00ff00' }
-          };
-        }
-        return a;
-      });
-
-      const maxAffectedAvatar = Math.min(5, curNum + loadedUrls.length - 1);
-      const targetCount = Math.max(multiAvatarConfig?.activeCount || 1, maxAffectedAvatar);
-
-      const updated = {
-        ...multiAvatarConfig,
-        enabled: true,
-        activeCount: targetCount,
-        avatars: updatedAvatars
-      };
-      setMultiAvatarConfig(updated);
-      saveMultiAvatarConfig(updated);
-
-      if (loadedUrls.length > 1) {
-        toast.success(`👥 Đã nạp thành công ${loadedUrls.length} Avatar (từ Nhân Vật ${curNum} đến Nhân Vật ${maxAffectedAvatar})!`);
-      } else {
-        toast.success(`🎭 Đã nạp Avatar ${String(avatarId).toUpperCase()} (Giữ nguyên phông gốc)!`);
-      }
-
-      if (isMasterSynced && currentStep) {
-        setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
-      }
+      return localUrl;
     });
+
+    pushUndoSnapshot();
+    const currentAvatars = (multiAvatarConfig?.avatars && multiAvatarConfig.avatars.length > 0)
+      ? multiAvatarConfig.avatars
+      : DEFAULT_MULTI_AVATAR_CONFIG.avatars;
+
+    const curNum = parseInt(String(avatarId).replace(/\D/g, '') || '1', 10);
+
+    // Gán lần lượt các file cho avatarId, avatar tiếp theo...
+    const updatedAvatars = currentAvatars.map(a => {
+      const aNum = parseInt(String(a.id).replace(/\D/g, '') || '1', 10);
+      const fileOffset = aNum - curNum;
+      if (fileOffset >= 0 && fileOffset < loadedUrls.length) {
+        const mediaUrl = loadedUrls[fileOffset];
+        return {
+          ...a,
+          talkVideo: mediaUrl,
+          idleVideo: mediaUrl,
+          mediaUrl: mediaUrl,
+          chromaKey: { enabled: false, mode: 'green', color: '#00ff00' }
+        };
+      }
+      return a;
+    });
+
+    const maxAffectedAvatar = Math.min(5, curNum + loadedUrls.length - 1);
+    const targetCount = Math.max(multiAvatarConfig?.activeCount || 1, maxAffectedAvatar);
+
+    const updated = {
+      ...multiAvatarConfig,
+      enabled: true,
+      activeCount: targetCount,
+      avatars: updatedAvatars
+    };
+    setMultiAvatarConfig(updated);
+    saveMultiAvatarConfig(updated);
+
+    if (loadedUrls.length > 1) {
+      toast.success(`👥 Đã nạp thành công ${loadedUrls.length} Avatar (từ Nhân Vật ${curNum} đến Nhân Vật ${maxAffectedAvatar})!`);
+    } else {
+      toast.success(`🎭 Đã nạp Avatar ${String(avatarId).toUpperCase()} (Giữ nguyên phông gốc)!`);
+    }
+
+    if (isMasterSynced && currentStep) {
+      setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
+    }
 
     e.target.value = '';
   };
@@ -1512,108 +1520,115 @@ export default function LivestreamFlowSequencer() {
     const firstFile = rawFiles[0];
     const isImgFirst = firstFile.type.startsWith('image/') || firstFile.name.match(/\.(png|jpe?g|webp|gif|svg|avif|bmp)$/i);
 
-    const getFileUrl = async (file) => {
+    // ⚡ 1. TẠO NGAY OBJECT URL 0MS CHO TẤT CẢ FILE ĐƯỢC TẢI LÊN (KHÔNG CHỜ MẠNG, KHÔNG THÊM HASH LÀM LỖI VIDEO)
+    const loadedUrls = rawFiles.map(file => {
+      let localUrl = '';
       try {
-        const serverUrl = await uploadMediaToServer(file, file.name, { noStageTakeover: true });
-        if (serverUrl) {
-          const isImg = file.type.startsWith('image/') || file.name.match(/\.(png|jpe?g|webp|gif|svg|avif|bmp)$/i);
-          return isImg ? serverUrl : (serverUrl + '#type=video');
+        localUrl = URL.createObjectURL(file);
+      } catch (err) {
+        localUrl = `/uploads/${file.name}`;
+      }
+
+      // Lưu trữ file vào bộ nhớ
+      try {
+        if (typeof window !== 'undefined') {
+          window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+          window.__activeMediaBlobMap.set(file.name, file);
+          window.__activeMediaBlobMap.set(localUrl, file);
+          window.__activeMediaBlobMap.set('latest', file);
         }
       } catch (e) {}
 
-      const isImg = file.type.startsWith('image/') || file.name.match(/\.(png|jpe?g|webp|gif|svg|avif|bmp)$/i);
-      if (isImg) {
-        return new Promise((resolve) => {
-          const reader = new FileReader();
-          reader.onload = (ev) => resolve(ev.target?.result || '');
-          reader.onerror = () => resolve('');
-          reader.readAsDataURL(file);
-        });
-      } else {
-        try {
-          return URL.createObjectURL(file) + '#type=video';
-        } catch {
-          return new Promise((resolve) => {
-            const reader = new FileReader();
-            reader.onload = (ev) => resolve(ev.target?.result || '');
-            reader.onerror = () => resolve('');
-            reader.readAsDataURL(file);
-          });
-        }
-      }
-    };
-
-    Promise.all(rawFiles.map(f => getFileUrl(f))).then((loadedUrls) => {
-      pushUndoSnapshot();
-      let updatedCurrentStep = null;
-
-      setPresets(prev => prev.map(p => {
-        if (p.id !== activePresetId) return p;
-        const curIdx = p.steps.findIndex(s => s.id === stepId);
-        if (curIdx === -1) return p;
-
-        const baseStep = p.steps[curIdx];
-        const firstUrl = loadedUrls[0];
-
-        // Cập nhật bước hiện tại với file đầu tiên
-        const updatedFirstStep = {
-          ...baseStep,
-          [targetField]: firstUrl
-        };
-        if (targetField === 'mediaUrl') {
-          updatedFirstStep.isMainMediaDeleted = false;
-          updatedFirstStep.mainMediaChromaKey = { enabled: false, mode: 'green', color: '#00ff00' };
-        } else if (targetField === 'secondaryMediaUrl') {
-          updatedFirstStep.secondaryMediaChromaKey = { enabled: false, mode: 'green', color: '#00ff00' };
-        } else if (targetField === 'overlayImage') {
-          updatedFirstStep.overlayImageChromaKey = { enabled: false, mode: 'green', color: '#00ff00' };
-        }
-
-        if (baseStep.id === currentStep?.id) {
-          updatedCurrentStep = updatedFirstStep;
-        }
-
-        const newSteps = [...p.steps];
-        newSteps[curIdx] = updatedFirstStep;
-
-        // Nếu có nhiều file (> 1): Tự động tạo thêm các bước kịch bản tiếp nối
-        if (loadedUrls.length > 1) {
-          const extraSteps = [];
-          for (let i = 1; i < loadedUrls.length; i++) {
-            const extraFile = rawFiles[i];
-            const extraUrl = loadedUrls[i];
-            const cleanTitle = extraFile.name.replace(/\.[^/.]+$/, "");
-            const newStep = {
-              ...baseStep,
-              id: `step_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 6)}`,
-              title: cleanTitle ? `Bước: ${cleanTitle}` : `${baseStep.title} (${i + 1})`,
-              [targetField]: extraUrl,
-              isMainMediaDeleted: false,
-              mainMediaChromaKey: { enabled: false, mode: 'green', color: '#00ff00' },
-              secondaryMediaChromaKey: { enabled: false, mode: 'green', color: '#00ff00' },
-              overlayImageChromaKey: { enabled: false, mode: 'green', color: '#00ff00' }
+      // Tự động đẩy file lên máy chủ trong nền
+      uploadMediaToServer(file, file.name).then(srvUrl => {
+        if (srvUrl) {
+          setPresets(prev => prev.map(p => {
+            if (p.id !== activePresetId) return p;
+            return {
+              ...p,
+              steps: p.steps.map(s => {
+                if (s[targetField] === localUrl) {
+                  return { ...s, [targetField]: srvUrl };
+                }
+                return s;
+              })
             };
-            extraSteps.push(newStep);
-          }
-          newSteps.splice(curIdx + 1, 0, ...extraSteps);
+          }));
         }
+      }).catch(() => {});
 
-        return { ...p, steps: newSteps };
-      }));
-
-      if (rawFiles.length > 1) {
-        toast.success(`🎉 Đã tải lên thành công ${rawFiles.length} tệp! 1 tệp vào bước hiện tại và ${rawFiles.length - 1} bước kịch bản tiếp theo đã tự động được tạo!`);
-      } else {
-        toast.success(`🎬 Đã nạp ${isImgFirst ? 'ảnh' : 'video'} "${firstFile.name}" lên Sân Khấu 9:16 (Giữ nguyên phông gốc)!`);
-      }
-
-      if (isMasterSynced) {
-        setTimeout(() => {
-          const sToSync = updatedCurrentStep || currentStep;
-          if (sToSync) syncStepToServer(sToSync, currentStepIndex, isPlayingFlow);
-        }, 50);
-      }
+      return localUrl;
     });
+
+    pushUndoSnapshot();
+    let updatedCurrentStep = null;
+
+    setPresets(prev => prev.map(p => {
+      if (p.id !== activePresetId) return p;
+      const curIdx = p.steps.findIndex(s => s.id === stepId);
+      if (curIdx === -1) return p;
+
+      const baseStep = p.steps[curIdx];
+      const firstUrl = loadedUrls[0];
+
+      // Cập nhật bước hiện tại với file đầu tiên
+      const updatedFirstStep = {
+        ...baseStep,
+        [targetField]: firstUrl
+      };
+      if (targetField === 'mediaUrl') {
+        updatedFirstStep.isMainMediaDeleted = false;
+        updatedFirstStep.mainMediaChromaKey = { enabled: false, mode: 'green', color: '#00ff00' };
+      } else if (targetField === 'secondaryMediaUrl') {
+        updatedFirstStep.secondaryMediaChromaKey = { enabled: false, mode: 'green', color: '#00ff00' };
+      } else if (targetField === 'overlayImage') {
+        updatedFirstStep.overlayImageChromaKey = { enabled: false, mode: 'green', color: '#00ff00' };
+      }
+
+      if (baseStep.id === currentStep?.id) {
+        updatedCurrentStep = updatedFirstStep;
+      }
+
+      const newSteps = [...p.steps];
+      newSteps[curIdx] = updatedFirstStep;
+
+      // Nếu có nhiều file (> 1): Tự động tạo thêm các bước kịch bản tiếp nối
+      if (loadedUrls.length > 1) {
+        const extraSteps = [];
+        for (let i = 1; i < loadedUrls.length; i++) {
+          const extraFile = rawFiles[i];
+          const extraUrl = loadedUrls[i];
+          const cleanTitle = extraFile.name.replace(/\.[^/.]+$/, "");
+          const newStep = {
+            ...baseStep,
+            id: `step_${Date.now()}_${i}_${Math.random().toString(36).substring(2, 6)}`,
+            title: cleanTitle ? `Bước: ${cleanTitle}` : `${baseStep.title} (${i + 1})`,
+            [targetField]: extraUrl,
+            isMainMediaDeleted: false,
+            mainMediaChromaKey: { enabled: false, mode: 'green', color: '#00ff00' },
+            secondaryMediaChromaKey: { enabled: false, mode: 'green', color: '#00ff00' },
+            overlayImageChromaKey: { enabled: false, mode: 'green', color: '#00ff00' }
+          };
+          extraSteps.push(newStep);
+        }
+        newSteps.splice(curIdx + 1, 0, ...extraSteps);
+      }
+
+      return { ...p, steps: newSteps };
+    }));
+
+    if (rawFiles.length > 1) {
+      toast.success(`🎉 Đã tải lên thành công ${rawFiles.length} tệp! 1 tệp vào bước hiện tại và ${rawFiles.length - 1} bước kịch bản tiếp theo đã tự động được tạo!`);
+    } else {
+      toast.success(`🎬 Đã nạp ${isImgFirst ? 'ảnh' : 'video'} "${firstFile.name}" lên Sân Khấu 9:16 (Giữ nguyên phông gốc)!`);
+    }
+
+    if (isMasterSynced) {
+      setTimeout(() => {
+        const sToSync = updatedCurrentStep || currentStep;
+        if (sToSync) syncStepToServer(sToSync, currentStepIndex, isPlayingFlow);
+      }, 50);
+    }
 
     e.target.value = '';
   };

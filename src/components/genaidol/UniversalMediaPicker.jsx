@@ -157,41 +157,46 @@ export default function UniversalMediaPicker({
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // ⚡ 1. TẠO NGAY OBJECT URL PHỤC VỤ SÂN KHẤU TRONG 0MS (KHÔNG BAO GIỜ BỊ ĐỨNG HÌNH HOẶC CHỜ MẠNG)
     const objectUrl = URL.createObjectURL(file);
     setLocalPreviewUrl(objectUrl);
     
+    // Đăng ký file vào RAM và global map
+    try {
+      registerFileInRAM(file, file.name);
+      if (typeof window !== 'undefined') {
+        window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+        window.__activeMediaBlobMap.set(file.name, file);
+        window.__activeMediaBlobMap.set(objectUrl, file);
+        window.__activeMediaBlobMap.set('latest', file);
+      }
+    } catch (e) {}
+
+    // Kích hoạt ngay lập tức cho caller để hiển thị ngay trên sân khấu
+    if (onSelectFile) {
+      onSelectFile(file, objectUrl);
+    }
+
     // 🖼️ Trích xuất thumbnail tức thì từ file tải lên (0ms)
     extractVideoThumbnail(file).then(thumb => {
       if (thumb) setThumbnailUrl(thumb);
     });
 
-    try {
-      registerFileInRAM(file, file.name);
-    } catch (e) {}
+    toast.success(`🎬 Đã nạp thành công: ${file.name}`);
 
-    toast.success(`Đang nạp file: ${file.name}...`);
-
-    // ⚡ Tự động đẩy file vào thư mục uploads/ của server siêu tốc
-    fastStreamUpload(file, {
-      onInit: ({ fileUrl }) => {
-        const finalUrl = fileUrl || `/uploads/${file.name}`;
-        setLocalPreviewUrl(finalUrl);
-        if (onSelectFile) {
-          onSelectFile(file, finalUrl);
-        }
-        toast.success(`✅ Đã đồng bộ ${file.name} vào hệ thống uploads`);
-      }
-    }).then(res => {
-      if (res && res.url) {
-        setLocalPreviewUrl(res.url);
-        if (onSelectFile) {
-          onSelectFile(file, res.url);
-        }
+    // ⚡ 2. TỰ ĐỘNG ĐẨY FILE VÀO THƯ MỤC UPLOADS CỦA SERVER TRONG NỀN (CHO OBS & TIKTOK LIVE STUDIO)
+    uploadMediaToServer(file, file.name).then(serverUrl => {
+      if (serverUrl && onSelectFile) {
+        onSelectFile(file, serverUrl);
+        setLocalPreviewUrl(serverUrl);
       }
     }).catch(() => {
-      if (onSelectFile) {
-        onSelectFile(file, objectUrl);
-      }
+      fastStreamUpload(file).then(res => {
+        if (res && res.fileUrl && onSelectFile) {
+          onSelectFile(file, res.fileUrl);
+          setLocalPreviewUrl(res.fileUrl);
+        }
+      }).catch(() => {});
     });
 
     e.target.value = '';

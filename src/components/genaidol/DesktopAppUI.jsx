@@ -4885,15 +4885,41 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             data-is-event-video="true"
             src={activeVideoItem.mediaUrl} 
             className="w-full h-full object-cover bg-black cursor-pointer main-video-player"
+            style={{
+              transform: 'translateZ(0)',
+              willChange: 'transform',
+              backfaceVisibility: 'hidden',
+              imageRendering: 'auto'
+            }}
             autoPlay
             loop={!isProcessingEvent}
             controls={false}
-            muted={liveAudioMuted}
+            preload="auto"
+            disablePictureInPicture
+            disableRemotePlayback
+            muted={liveAudioMuted || isLocalSpeakerMuted}
+            onLoadedData={(e) => {
+              try {
+                e.currentTarget.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+              } catch (err) {}
+            }}
             onEnded={() => {
               handleVideoEnded();
             }}
-            onError={() => {
-              console.warn('Lỗi tải video sự kiện / substage');
+            onError={(e) => {
+              console.warn('Lỗi tải video sự kiện / substage, recovering...', e);
+              // Thử tìm trong Blob map nếu link server bị ngắt
+              if (typeof window !== 'undefined' && window.__activeMediaBlobMap) {
+                const blob = window.__activeMediaBlobMap.get(activeVideoItem.mediaUrl) || window.__activeMediaBlobMap.get(activeVideoItem.name) || window.__activeMediaBlobMap.get('latest');
+                if (blob instanceof Blob || blob instanceof File) {
+                  try {
+                    const freshUrl = URL.createObjectURL(blob);
+                    e.currentTarget.src = freshUrl;
+                    e.currentTarget.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+                    return;
+                  } catch (recErr) {}
+                }
+              }
               handleVideoEnded();
             }}
             playsInline 
@@ -4935,6 +4961,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               src={selected.url} 
               className="w-full h-full object-cover bg-black cursor-pointer main-video-player"
               style={{ 
+                transform: 'translateZ(0)',
+                willChange: 'transform',
+                backfaceVisibility: 'hidden',
                 imageRendering: 'auto'
               }}
               autoPlay
