@@ -18,7 +18,7 @@ import { COUNTRY_FILTERS } from './game/GameVoiceConfigPanel';
 import { DEFAULT_BRAIN_PACKS } from '../../utils/defaultPresetsBootstrap';
 import { syncMasterLiveState, sendVideoControl } from '../../lib/masterLiveSync';
 import { fastStreamUpload } from '../../utils/fastStreamService';
-import { deleteServerMedia } from '../../utils/mediaUploadService';
+import { deleteServerMedia, ensureServerMediaUrl } from '../../utils/mediaUploadService';
 
 // ──────────────────────────────────────────────
 // AIDOL_DB (dùng lại kho AIDOL của tôi)
@@ -448,25 +448,18 @@ export default function AIDOLLiveConsole() {
       } catch (e) {}
     }
 
-    // Nếu mediaUrl là blob, tự động nạp fast-stream lên server để TikTok Studio phát được ngay
-    if (playUrl && playUrl.startsWith('blob:') && item.fileBlob) {
-      fastStreamUpload(item.fileBlob).then((res) => {
-        if (res && res.fileUrl) {
-          playUrl = res.fileUrl;
-          item.mediaUrl = playUrl;
+    // Tự động đảm bảo URL video có mặt trên máy chủ để Window Capture và TikTok Live Studio luôn phát được
+    if (playUrl && (playUrl.startsWith('blob:') || playUrl.startsWith('data:'))) {
+      try {
+        const serverUrl = await ensureServerMediaUrl(item.fileBlob || playUrl, item.name || 'substage_video.mp4');
+        if (serverUrl) {
+          playUrl = serverUrl;
+          item.mediaUrl = serverUrl;
           addLiveMedia(item).catch(() => {});
-          syncMasterLiveState({
-            stage: 'idol',
-            mediaUrl: playUrl,
-            isVideo: item.type === 'video',
-            characterName: item.name,
-            videoPlaybackEvent: 'play',
-            isPlaying: true,
-            videoCurrentTime: 0,
-            updatedAt: Date.now()
-          });
         }
-      }).catch(() => {});
+      } catch (e) {
+        console.warn('[handlePlayFromKho ensureServerMediaUrl]', e);
+      }
     }
 
     setActiveVideoItem(item);

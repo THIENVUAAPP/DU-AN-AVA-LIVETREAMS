@@ -1,7 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import { Video, FolderOpen, Sparkles, X, ChevronDown, Play, Eye, CheckCircle2, Film } from 'lucide-react';
-import { registerFileInRAM } from '../../utils/mediaDeduplication';
-import { uploadMediaToServer } from '../../utils/mediaUploadService';
+import { uploadMediaToServer, deleteServerMedia } from '../../utils/mediaUploadService';
 import { fastStreamUpload } from '../../utils/fastStreamService';
 const toast = {
   success: (message) => {
@@ -238,6 +237,9 @@ export default function UniversalMediaPicker({
   };
 
   const handleClear = () => {
+    if (localPreviewUrl && typeof localPreviewUrl === 'string' && (localPreviewUrl.includes('/uploads/') || localPreviewUrl.includes('media-'))) {
+      deleteServerMedia(localPreviewUrl).catch(() => {});
+    }
     setLocalPreviewUrl('');
     setThumbnailUrl(null);
     if (fileInputRef.current) {

@@ -552,18 +552,6 @@ app.post('/api/upload-stream-init', (req, res) => {
         }
 
         const fileUrl = `/uploads/${targetFilename}`;
-        currentMasterLiveState = {
-          ...currentMasterLiveState,
-          stage: 'idol',
-          mediaUrl: fileUrl,
-          isVideo: true,
-          videoPlaybackEvent: 'play',
-          isPlaying: true,
-          isUserExplicitMediaLocked: true,
-          updatedAt: Date.now()
-        };
-        io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
-        saveLiveStateToFile();
 
         if (isLinked) {
           if (targetFilename.endsWith('.mp4') || targetFilename.endsWith('.mov')) {
@@ -598,18 +586,6 @@ app.post('/api/upload-stream-init', (req, res) => {
                 // TÌM THẤY VIDEO ĐÃ CÓ SẴN TRÊN MÁY!
                 console.log(`[FastStream Deduplication] ⚡ Tái sử dụng video đã có sẵn 0ms (${totalSize} bytes): ${f}`);
                 const fileUrl = `/uploads/${f}`;
-                currentMasterLiveState = {
-                  ...currentMasterLiveState,
-                  stage: 'idol',
-                  mediaUrl: fileUrl,
-                  isVideo: true,
-                  videoPlaybackEvent: 'play',
-                  isPlaying: true,
-                  isUserExplicitMediaLocked: true,
-                  updatedAt: Date.now()
-                };
-                io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
-                saveLiveStateToFile();
                 return res.json({
                   success: true,
                   instant: true,
@@ -652,19 +628,6 @@ app.post('/api/upload-stream-init', (req, res) => {
     };
 
     const fileUrl = `/uploads/${filename}`;
-
-    currentMasterLiveState = {
-      ...currentMasterLiveState,
-      stage: 'idol',
-      mediaUrl: fileUrl,
-      isVideo: true,
-      videoPlaybackEvent: 'play',
-      isPlaying: true,
-      isUserExplicitMediaLocked: true,
-      updatedAt: Date.now()
-    };
-    io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
-    saveLiveStateToFile();
 
     res.json({
       success: true,
@@ -725,19 +688,7 @@ app.post('/api/upload-chunk', (req, res) => {
           ensureMp4FastStart(uploadedFilePath);
         }
 
-        currentMasterLiveState = {
-          ...currentMasterLiveState,
-          stage: 'idol',
-          mediaUrl: `/uploads/${uploadedFilename}`,
-          isVideo: true,
-          videoPlaybackEvent: 'play',
-          isPlaying: true,
-          isUserExplicitMediaLocked: true,
-          updatedAt: Date.now()
-        };
-        io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
-        saveLiveStateToFile();
-        console.log(`[FastStream] 👑 Đã phát sóng video FastStart hoàn chỉnh sang TikTok Live Studio: ${uploadedFilename}`);
+        console.log(`[FastStream] 👑 Đã hoàn tất xử lý video: ${uploadedFilename}`);
       }
 
       res.json({ success: true, written: buffer.length, offset });
@@ -862,8 +813,8 @@ app.post('/api/upload-media', upload.single('file'), (req, res) => {
 
   const fileUrl = `/uploads/${finalFilename}`;
   const isImageFile = /\.(png|jpe?g|webp|gif|svg|avif|bmp)$/i.test(finalFilename) || (req.file.mimetype && req.file.mimetype.startsWith('image/'));
-  const noStageTakeover = req.body?.noStageTakeover === 'true' || req.body?.isConfigOnly === 'true' || req.body?.setAsMaster === 'false';
-  if (!noStageTakeover) {
+  const shouldSetMaster = req.body?.setAsMaster === 'true';
+  if (shouldSetMaster) {
     currentMasterLiveState = {
       ...currentMasterLiveState,
       stage: 'idol',
@@ -1015,7 +966,7 @@ app.get([
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.9.32</title>
+  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.9.33</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -1144,7 +1095,7 @@ app.get([
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.32</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.33</div>
   </div>
   <script>
     (function() {
@@ -1467,7 +1418,8 @@ app.get([
             banner.style.display = 'none';
           }
         }
-        if (data.clearMedia || data.mediaUrl === null) {
+        const targetUrl = data.mediaUrl || data.eventVideoUrl || data.videoUrl;
+        if (data.clearMedia || (targetUrl === null && data.isPlaying === false)) {
           if (vid) {
             try { vid.pause(); vid.removeAttribute('src'); vid.src = ''; vid.load(); } catch(e) {}
             vid.style.display = 'none';
@@ -1477,8 +1429,8 @@ app.get([
             try { imgEl.removeAttribute('src'); imgEl.src = ''; } catch(e) {}
             imgEl.style.display = 'none';
           }
-        } else if (data.mediaUrl && !isSameMedia(vid.src, data.mediaUrl)) {
-          loadAndPlay(data.mediaUrl);
+        } else if (targetUrl && !isSameMedia(vid.src, targetUrl)) {
+          loadAndPlay(targetUrl);
         }
         if (!isStreamUserPaused && vid.paused && vid.src) {
           safePlay();
@@ -1550,7 +1502,7 @@ app.get([
             }, 3000);
 
             socket.on('connect', function() {
-              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.6.2';
+              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.33';
               socket.emit('REQUEST_MASTER_LIVE_STATE');
             });
 
@@ -1582,8 +1534,10 @@ app.get([
           const bc = new BroadcastChannel('avalive_master_live_stream');
           bc.onmessage = function(ev) {
             if (!ev.data) return;
-            if (ev.data.type === 'GLOBAL_MEDIA_CHANGE' || ev.data.type === 'MASTER_MEDIA_CHANGE') {
+            if (ev.data.type === 'GLOBAL_MEDIA_CHANGE' || ev.data.type === 'MASTER_MEDIA_CHANGE' || ev.data.type === 'EVENT_VIDEO_PLAY') {
               applyLiveState(ev.data);
+            } else if (ev.data.type === 'CLEAR_STAGE' || ev.data.type === 'CLEAR_EVENT_VIDEO') {
+              applyLiveState({ clearMedia: true, isPlaying: false });
             }
           };
         } catch(e) {}
@@ -1681,46 +1635,66 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     }
     #controlsDock {
       position: absolute;
-      top: 8px; left: 50%;
+      position: absolute;
+      top: 6px; left: 50%;
       transform: translateX(-50%);
-      display: flex; align-items: center; gap: 8px;
-      background: rgba(0, 0, 0, 0.75);
-      backdrop-filter: blur(8px);
-      -webkit-backdrop-filter: blur(8px);
-      padding: 6px 12px;
-      border-radius: 20px;
-      border: 1px solid rgba(6, 182, 212, 0.35);
-      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.6);
-      z-index: 40;
-      opacity: 0.85;
-      transition: opacity 0.25s ease, transform 0.25s ease;
+      display: inline-flex;
+      flex-direction: row;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: nowrap;
+      white-space: nowrap;
+      gap: 5px;
+      background: rgba(5, 7, 12, 0.92);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      padding: 3px 8px;
+      border-radius: 24px;
+      border: 1px solid rgba(6, 182, 212, 0.7);
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.9), 0 0 12px rgba(6, 182, 212, 0.3);
+      z-index: 1000000;
+      opacity: 0.98;
+      pointer-events: auto;
+      touch-action: manipulation;
+      max-width: calc(100vw - 16px);
+      box-sizing: border-box;
+      transition: opacity 0.2s ease;
     }
     #controlsDock.is-hidden {
       display: none !important;
     }
     #controlsDock:hover { opacity: 1; }
     .dock-btn {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
+      background: rgba(255, 255, 255, 0.2);
+      border: 1px solid rgba(255, 255, 255, 0.4);
       color: #fff;
-      font-size: 11px;
-      font-weight: bold;
-      padding: 4px 8px;
+      font-size: 10px;
+      font-weight: 900;
+      padding: 3px 8px;
       border-radius: 12px;
       cursor: pointer;
       outline: none;
-      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      white-space: nowrap;
+      flex-shrink: 0;
+      line-height: 1;
+      pointer-events: auto;
+      touch-action: manipulation;
+      user-select: none;
+      -webkit-user-select: none;
+      transition: all 0.12s ease;
     }
-    .dock-btn:hover { background: rgba(6, 182, 212, 0.4); border-color: #06b6d4; }
+    .dock-btn:hover { background: rgba(6, 182, 212, 0.6); border-color: #06b6d4; }
     .dock-btn-hide {
-      background: rgba(239, 68, 68, 0.25) !important;
-      border-color: rgba(239, 68, 68, 0.45) !important;
-      color: #fca5a5 !important;
-      padding: 4px 10px !important;
+      background: rgba(239, 68, 68, 0.75) !important;
+      border-color: rgba(239, 68, 68, 0.95) !important;
+      color: #fff !important;
+      padding: 3px 8px !important;
     }
     .dock-btn-hide:hover {
-      background: rgba(239, 68, 68, 0.45) !important;
-      color: #fff !important;
+      background: rgba(239, 68, 68, 0.95) !important;
     }
     #badge {
       position: absolute; bottom: 8px; right: 8px;
@@ -1734,17 +1708,20 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       display: none !important;
     }
     #btnRestoreIcon {
-      position: absolute; top: 8px; right: 8px;
-      z-index: 50; width: 28px; height: 28px;
+      position: absolute; top: 6px; right: 8px;
+      z-index: 1000000; width: 28px; height: 28px;
       border-radius: 50%;
-      background: rgba(0, 0, 0, 0.55);
-      border: 1px solid rgba(6, 182, 212, 0.4);
+      background: rgba(5, 7, 12, 0.88);
+      border: 1px solid rgba(6, 182, 212, 0.85);
       color: #06b6d4; font-size: 13px;
       display: none; align-items: center; justify-content: center;
-      cursor: pointer; opacity: 0.25;
-      backdrop-filter: blur(4px);
-      -webkit-backdrop-filter: blur(4px);
-      transition: all 0.25s ease;
+      cursor: pointer; opacity: 0.9;
+      pointer-events: auto;
+      touch-action: manipulation;
+      backdrop-filter: blur(8px);
+      -webkit-backdrop-filter: blur(8px);
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.7);
+      transition: all 0.2s ease;
     }
     #btnRestoreIcon.is-visible {
       display: flex !important;
@@ -1781,18 +1758,18 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     </div>
     
     <div id="controlsDock">
-      <span style="font-size:10px; color:#10b981; font-weight:bold; display:flex; align-items:center; gap:4px;">
-        <span style="width:6px; height:6px; border-radius:50%; background:#10b981; display:inline-block;"></span>
-        WINDOW CAPTURE
+      <span style="font-size:9px; color:#10b981; font-weight:900; display:inline-flex; align-items:center; gap:3px; user-select:none; white-space:nowrap; flex-shrink:0;">
+        <span style="width:5px; height:5px; border-radius:50%; background:#10b981; display:inline-block; box-shadow:0 0 6px #10b981; flex-shrink:0;"></span>
+        LIVE
       </span>
       <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập (Space)">⏸️ Dừng</button>
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập (M)">${soundParam ? '🔊 Bật Tiếng' : '🔇 Tắt Tiếng'}</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa' : '📐 Tràn'}</button>
-      <button id="btnHideAll" class="dock-btn dock-btn-hide" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn Toàn Bộ (H)</button>
+      <button id="btnHideAll" class="dock-btn dock-btn-hide" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn (H)</button>
     </div>
 
     <button id="btnRestoreIcon" title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)">👁️</button>
-    <div id="badge">🔴 4K 60 FPS REALTIME v1.3.4</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.33</div>
   </div>
   <script>
     (function() {
@@ -1810,6 +1787,14 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       let targetMuted = ${soundParam ? 'false' : 'true'};
       let currentFit = ${JSON.stringify(fitParam)};
       let isDockHidden = false;
+      let socket = null;
+      let bc = null;
+
+      try {
+        if (typeof BroadcastChannel !== 'undefined') {
+          bc = new BroadcastChannel('avalive_master_live_stream');
+        }
+      } catch(e) {}
 
       try {
         isDockHidden = localStorage.getItem('avalive_window_capture_dock_hidden') === 'true';
@@ -1837,10 +1822,16 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       }
 
       if (btnHideAll) {
-        btnHideAll.onclick = function() { toggleHideAll(true); };
+        btnHideAll.addEventListener('click', function(e) {
+          e.preventDefault(); e.stopPropagation();
+          toggleHideAll(true);
+        });
       }
       if (btnRestore) {
-        btnRestore.onclick = function() { toggleHideAll(false); };
+        btnRestore.addEventListener('click', function(e) {
+          e.preventDefault(); e.stopPropagation();
+          toggleHideAll(false);
+        });
       }
 
       setTimeout(function() { if (badge) badge.style.opacity = '0.2'; }, 6000);
@@ -1858,7 +1849,8 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       }
 
       if (btnPlayPause) {
-        btnPlayPause.onclick = function() {
+        btnPlayPause.addEventListener('click', function(e) {
+          e.preventDefault(); e.stopPropagation();
           if (vid.paused) {
             isStreamUserPaused = false;
             vid.play().catch(function() {});
@@ -1867,23 +1859,47 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
             vid.pause();
           }
           updateDockUI();
-        };
+          if (socket) {
+            socket.emit('VIDEO_PLAYBACK_CONTROL', {
+              action: vid.paused ? 'pause' : 'play',
+              isPlaying: !vid.paused,
+              currentTime: vid.currentTime || 0
+            });
+          }
+          if (bc) {
+            try {
+              bc.postMessage({
+                type: 'VIDEO_PLAYBACK_CONTROL',
+                action: vid.paused ? 'pause' : 'play',
+                isPlaying: !vid.paused,
+                currentTime: vid.currentTime || 0
+              });
+            } catch(e) {}
+          }
+        });
       }
 
       if (btnMuteUnmute) {
-        btnMuteUnmute.onclick = function() {
+        btnMuteUnmute.addEventListener('click', function(e) {
+          e.preventDefault(); e.stopPropagation();
           vid.muted = !vid.muted;
           targetMuted = vid.muted;
           updateDockUI();
-        };
+          if (socket) {
+            socket.emit('VIDEO_PLAYBACK_CONTROL', { isMuted: vid.muted });
+          }
+        });
       }
 
       if (btnFitToggle) {
-        btnFitToggle.onclick = function() {
+        btnFitToggle.addEventListener('click', function(e) {
+          e.preventDefault(); e.stopPropagation();
           currentFit = currentFit === 'cover' ? 'contain' : 'cover';
           vid.style.objectFit = currentFit;
+          const imgEl = document.getElementById('imagePlayer');
+          if (imgEl) imgEl.style.objectFit = currentFit;
           updateDockUI();
-        };
+        });
       }
 
       window.addEventListener('keydown', function(e) {
@@ -1972,13 +1988,13 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       vid.addEventListener('pause', updateDockUI);
 
       try {
-        const socket = io(window.location.origin, {
+        socket = io(window.location.origin, {
           transports: ['websocket', 'polling'],
           reconnection: true
         });
 
         socket.on('connect', function() {
-          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v1.3.4';
+          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.33';
           socket.emit('REQUEST_MASTER_LIVE_STATE');
         });
 
@@ -1999,7 +2015,8 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
               banner.style.display = 'none';
             }
           }
-          if (data.clearMedia || data.mediaUrl === null) {
+          const targetUrl = data.mediaUrl || data.eventVideoUrl || data.videoUrl;
+          if (data.clearMedia || (targetUrl === null && data.isPlaying === false)) {
             if (vid) {
               try { vid.pause(); vid.removeAttribute('src'); vid.src = ''; vid.load(); } catch(e) {}
               vid.style.display = 'none';
@@ -2009,28 +2026,30 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
               try { imgEl.removeAttribute('src'); imgEl.src = ''; } catch(e) {}
               imgEl.style.display = 'none';
             }
-          } else if (data.mediaUrl && !isSameMedia(vid.src, data.mediaUrl)) {
-            loadAndPlay(data.mediaUrl);
+          } else if (targetUrl && !isSameMedia(vid.src, targetUrl)) {
+            loadAndPlay(targetUrl);
           }
-          if (data.videoPlaybackEvent === 'pause') {
+          if (data.videoPlaybackEvent === 'pause' || data.isPlaying === false) {
             isStreamUserPaused = true;
             vid.pause();
-          } else if (data.videoPlaybackEvent === 'play' && isStreamUserPaused) {
+          } else if ((data.videoPlaybackEvent === 'play' || data.isPlaying === true) && vid.paused && vid.src) {
             isStreamUserPaused = false;
             vid.play().catch(function() {});
           }
+          updateDockUI();
         }
 
         socket.on('MASTER_LIVE_STATE_UPDATE', function(data) {
           applyLiveState(data);
         });
 
-        if (typeof BroadcastChannel !== 'undefined') {
-          const bc = new BroadcastChannel('avalive_master_live_stream');
+        if (bc) {
           bc.onmessage = function(ev) {
             if (!ev.data) return;
-            if (ev.data.type === 'GLOBAL_MEDIA_CHANGE' || ev.data.type === 'MASTER_MEDIA_CHANGE') {
+            if (ev.data.type === 'GLOBAL_MEDIA_CHANGE' || ev.data.type === 'MASTER_MEDIA_CHANGE' || ev.data.type === 'EVENT_VIDEO_PLAY') {
               applyLiveState(ev.data);
+            } else if (ev.data.type === 'CLEAR_STAGE' || ev.data.type === 'CLEAR_EVENT_VIDEO') {
+              applyLiveState({ clearMedia: true, isPlaying: false });
             }
           };
         }
@@ -2114,7 +2133,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.32';
+  let ver = '4.9.33';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -2152,7 +2171,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.32';
+  let ver = '4.9.33';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -3424,13 +3443,18 @@ app.post('/api/clear-media', (req, res) => {
   currentMasterLiveState = {
     ...currentMasterLiveState,
     mediaUrl: null,
+    currentMedia: null,
+    eventVideoUrl: null,
     clearMedia: true,
+    isVideo: false,
+    isPlaying: false,
+    videoPlaybackEvent: 'pause',
     isUserExplicitMediaLocked: false,
     updatedAt: Date.now()
   };
   io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
-  saveLiveStateToFile();
-  res.json({ success: true, message: 'Đã xóa video phát trực tiếp và dọn sạch bộ nhớ theo yêu cầu người dùng' });
+  saveLiveStateToFile(true);
+  res.json({ success: true, message: 'Đã xóa triệt để video phát trực tiếp và dọn sạch bộ nhớ theo yêu cầu người dùng' });
 });
 
 app.get('/api/studio-frame', (req, res) => {

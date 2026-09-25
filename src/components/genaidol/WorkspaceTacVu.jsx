@@ -1816,6 +1816,9 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                                 handleSlotChange(slot.id, 'videoUrl', sample.url);
                               }}
                               onClear={() => {
+                                if (slot.videoUrl && typeof slot.videoUrl === 'string' && (slot.videoUrl.includes('/uploads/') || slot.videoUrl.includes('media-'))) {
+                                  deleteServerMedia(slot.videoUrl).catch(() => {});
+                                }
                                 handleSlotChange(slot.id, 'videoFolder', '');
                                 handleSlotChange(slot.id, 'videoFileName', '');
                                 handleSlotChange(slot.id, 'videoUrl', '');
@@ -1938,6 +1941,9 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                               handleGiftSlotChange(gSlot.id, 'videoUrl', sample.url);
                             }}
                             onClear={() => {
+                              if (gSlot.videoUrl && typeof gSlot.videoUrl === 'string' && (gSlot.videoUrl.includes('/uploads/') || gSlot.videoUrl.includes('media-'))) {
+                                deleteServerMedia(gSlot.videoUrl).catch(() => {});
+                              }
                               handleGiftSlotChange(gSlot.id, 'videoFolder', '');
                               handleGiftSlotChange(gSlot.id, 'videoFileName', '');
                               handleGiftSlotChange(gSlot.id, 'videoUrl', '');
