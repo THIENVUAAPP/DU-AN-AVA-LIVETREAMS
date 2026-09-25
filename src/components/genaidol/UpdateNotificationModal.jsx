@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.24';
-export const RELEASE_DATE = '24/09/2026';
+export const APP_VERSION = '4.9.25';
+export const RELEASE_DATE = '25/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.25 - Tối Ưu Toàn Diện Nút Bấm Window Capture OBS, Video Chờ Im Lặng Phát Liên Tục 24/7, Video Sự Kiện Phát Trọn Vẹn & Thumbnail Phát Trực Tiếp',
+    description: '1. Kích Hoạt & Đồng Bộ 100% Nút Bấm Window Capture: Toàn bộ nút Tạm Dừng/Phát (Space), Bật/Tắt Tiếng (M), Tràn/Vừa Khung, và Ẩn/Hiện Toàn Bộ (H) phản hồi lập tức và đồng bộ 2 chiều tức thì với Sân Khấu Chính. 2. Video Chờ Im Lặng (Tab Cuối Cùng) Phát Liên Tục 24/7: Video chạy nền ở chế độ chờ im lặng được duy trì phát liên tục không bao giờ tự ý tắt hay mất đi trừ khi người dùng xóa. 3. Video Sự Kiện Phát Trọn Vẹn 100%: Mọi video hành động/sự kiện khi được kích hoạt đều phát trọn vẹn từ đầu đến cuối không bị ngắt quãng, khi kết thúc tự động trở về video chờ. 4. Ô Video Hành Động Hiển Thị Video Đang Chạy: Video tải lên trong ô sự kiện hiển thị video đang chạy mượt mà ngay trong thumbnail preview.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.24 - Tối Ưu Triệt Để Xóa Video & Dọn Sạch Thư Mục Uploads, 1-Click Xóa Avatar / Khung, Gỡ Bỏ Tab 1 Kết Nối Idol, Đồng Bộ Chuẩn OBS & TikTok Live',
     description: '1. Xóa Video Là Xóa Sạch Vĩnh Viễn Khỏi Máy Chủ (Uploads): Khi người dùng bấm xóa nhân vật hoặc video trên bất kỳ tab nào, hệ thống lập tức thanh lọc và xóa vĩnh viễn file vật lý khỏi máy chủ và RAM, loại bỏ 100% video đen hoặc file rác tồn đọng. 2. Nút Xóa (1-Click) Sân Khấu Phụ: Nút Xóa trên thanh công cụ Avatar / Lớp lập tức xóa đứt điểm toàn bộ nhân vật, video và khung viền trong 1 thao tác duy nhất. 3. Gỡ Bỏ Tab 1 Kết Nối Idol: Tối giản cổng Kết Nối Idol để hiển thị trực tiếp 100% không gian 14 Tác Vụ Sự Kiện Live. 4. Đồng Bộ Có Kiểm Soát Sân Khấu Phụ: Chỉ khi người dùng bấm Bật Đồng Bộ thì Sân khấu phụ mới chuyển tiếp luồng sang Sân khấu chính và Window Capture OBS.'

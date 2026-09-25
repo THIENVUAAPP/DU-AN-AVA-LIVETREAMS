@@ -1120,11 +1120,12 @@ export default function WindowCapturePlayer() {
     if (e) {
       try { e.preventDefault(); e.stopPropagation(); } catch (err) {}
     }
-    const allVideos = document.querySelectorAll('video');
-    const isCurrentlyPlaying = Array.from(allVideos).some(v => !v.paused);
-    const nextPlay = !isCurrentlyPlaying;
+    const nextPlay = !isPlaybackActive;
     isExplicitlyPausedRef.current = !nextPlay;
     setIsPlaybackActive(nextPlay);
+
+    // 1. Điều khiển tức thì tất cả video & audio trong cửa sổ
+    const allVideos = document.querySelectorAll('video');
     allVideos.forEach(vid => {
       try {
         if (nextPlay) {
@@ -1134,6 +1135,40 @@ export default function WindowCapturePlayer() {
         }
       } catch (err) {}
     });
+
+    // 2. Lưu trạng thái
+    try {
+      if (!nextPlay) {
+        localStorage.setItem('avalive_window_capture_paused', 'true');
+        localStorage.setItem('avalive_user_paused', 'true');
+      } else {
+        localStorage.removeItem('avalive_window_capture_paused');
+        localStorage.removeItem('avalive_user_paused');
+      }
+    } catch (err) {}
+
+    // 3. Đồng bộ 2 chiều sang Sân Khấu Chính & các luồng phát qua BroadcastChannel
+    try {
+      const bc = new BroadcastChannel('avalive_master_live_stream');
+      bc.postMessage({
+        type: 'GLOBAL_PLAYBACK_CHANGE',
+        isPlaying: nextPlay,
+        source: 'window_capture',
+        timestamp: Date.now()
+      });
+      setTimeout(() => bc.close(), 150);
+    } catch (err) {}
+
+    // 4. Gửi trực tiếp cho cửa sổ mẹ nếu có
+    if (window.opener && !window.opener.closed) {
+      try {
+        window.opener.postMessage({
+          type: 'GLOBAL_PLAYBACK_CHANGE',
+          isPlaying: nextPlay,
+          source: 'window_capture'
+        }, '*');
+      } catch (err) {}
+    }
   };
 
   const toggleStandaloneMute = (e) => {
@@ -1143,6 +1178,7 @@ export default function WindowCapturePlayer() {
     const nextMuted = !isUserMuted;
     setIsUserMuted(nextMuted);
     isUserMutedRef.current = nextMuted;
+
     const allMedia = document.querySelectorAll('video, audio');
     allMedia.forEach(m => {
       try {
@@ -1153,6 +1189,22 @@ export default function WindowCapturePlayer() {
         }
       } catch (err) {}
     });
+
+    try {
+      localStorage.setItem('avalive_window_capture_muted', String(nextMuted));
+    } catch (err) {}
+
+    // Đồng bộ trạng thái âm thanh
+    try {
+      const bc = new BroadcastChannel('avalive_master_live_stream');
+      bc.postMessage({
+        type: 'GLOBAL_SOUND_MUTE_CHANGE',
+        isMuted: nextMuted,
+        source: 'window_capture',
+        timestamp: Date.now()
+      });
+      setTimeout(() => bc.close(), 150);
+    } catch (err) {}
   };
 
   const toggleStandaloneFit = (e) => {
@@ -1161,6 +1213,10 @@ export default function WindowCapturePlayer() {
     }
     const nextFit = fitMode === 'cover' ? 'contain' : 'cover';
     setFitMode(nextFit);
+    try {
+      localStorage.setItem('avalive_capture_fit_mode', nextFit);
+    } catch (err) {}
+
     const allMediaEls = document.querySelectorAll('video, img');
     allMediaEls.forEach(el => {
       try { el.style.objectFit = nextFit; } catch (err) {}

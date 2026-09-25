@@ -275,20 +275,13 @@ export default function UniversalMediaPicker({
       {/* Khung tương tác chính */}
       <div className="flex items-center gap-2.5 bg-gray-50/70 hover:bg-gray-50 border border-gray-200 rounded-xl p-2 transition-all shadow-2xs">
         
-        {/* 🎬 1. Ô THUMBNAIL PREVIEW (HIỂN THỊ TRỰC QUAN RÕ NÉT 100% - KHÔNG BAO GIỜ ĐEN) */}
-        <div className="relative shrink-0 w-[54px] h-[54px] rounded-lg overflow-hidden bg-slate-900 border border-slate-300 shadow-inner flex items-center justify-center group">
+        {/* 🎬 1. Ô THUMBNAIL PREVIEW (HIỂN THỊ VIDEO ĐANG CHẠY LIÊN TỤC 100% - KHÔNG BAO GIỜ ĐEN) */}
+        <div className="relative shrink-0 w-[58px] h-[58px] rounded-lg overflow-hidden bg-slate-900 border border-slate-300 shadow-inner flex items-center justify-center group">
           {isMediaAvailable ? (
             <>
-              {thumbnailUrl ? (
+              {isImage ? (
                 <img 
-                  src={thumbnailUrl} 
-                  alt="Thumbnail" 
-                  className="w-full h-full object-cover cursor-pointer"
-                  onClick={() => setPreviewModalOpen(true)}
-                />
-              ) : isImage ? (
-                <img 
-                  src={localPreviewUrl} 
+                  src={thumbnailUrl || localPreviewUrl} 
                   alt="Preview" 
                   className="w-full h-full object-cover cursor-pointer"
                   onClick={() => setPreviewModalOpen(true)}
@@ -296,20 +289,13 @@ export default function UniversalMediaPicker({
               ) : (
                 <video 
                   ref={previewVideoRef}
-                  src={localPreviewUrl.includes('#t=') ? localPreviewUrl : `${localPreviewUrl}#t=0.1`} 
+                  src={localPreviewUrl} 
                   className="w-full h-full object-cover cursor-pointer"
                   muted 
+                  autoPlay
+                  loop
                   playsInline
                   preload="auto"
-                  onMouseEnter={(e) => {
-                    try { e.target.play(); } catch (err) {}
-                  }}
-                  onMouseLeave={(e) => {
-                    try { 
-                      e.target.pause(); 
-                      e.target.currentTime = 0.1; 
-                    } catch (err) {}
-                  }}
                   onClick={() => setPreviewModalOpen(true)}
                 />
               )}
@@ -318,9 +304,9 @@ export default function UniversalMediaPicker({
                 className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center cursor-pointer"
                 title="Bấm để xem video phóng to"
               >
-                <Eye size={16} className="text-white drop-shadow-md" />
+                <Eye size={18} className="text-white drop-shadow-md" />
               </div>
-              <div className="absolute top-0.5 right-0.5 w-2.5 h-2.5 bg-emerald-500 border border-white rounded-full"></div>
+              <div className="absolute top-1 right-1 w-2.5 h-2.5 bg-emerald-500 border border-white rounded-full shadow-xs animate-pulse"></div>
             </>
           ) : hasValue ? (
             <div className="flex flex-col items-center justify-center p-1 text-center" title={currentPath}>
@@ -349,7 +335,7 @@ export default function UniversalMediaPicker({
           </div>
           <div className="text-[10.5px] text-gray-400 truncate mt-0.5">
             {isMediaAvailable 
-              ? '▶ Di chuột vào ảnh nhỏ để xem trước hoặc bấm vào để phóng to' 
+              ? '▶ Video đang phát liên tục — Bấm vào ảnh để phóng to xem thử' 
               : hasValue 
                 ? '📁 Đang liên kết với thư mục chứa video trên máy tính' 
                 : 'Chấp nhận file .mp4, .webm, .mov, .mkv hoặc thư mục'}
@@ -440,7 +426,7 @@ export default function UniversalMediaPicker({
       </div>
 
       {/* 🔍 MODAL XEM TRƯỚC VIDEO PHÓNG TO KHI BẤM VÀO THUMBNAIL */}
-      {previewModalOpen && isVideoUrlAvailable && (
+      {previewModalOpen && isMediaAvailable && (
         <div className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/80 backdrop-blur-sm p-4 animate-in fade-in">
           <div className="bg-slate-900 text-white rounded-2xl max-w-lg w-full overflow-hidden border border-cyan-500/30 shadow-2xl">
             <div className="p-3 border-b border-slate-700 flex items-center justify-between">
@@ -471,3 +457,4 @@ export default function UniversalMediaPicker({
     </div>
   );
 }
+
