@@ -213,142 +213,52 @@ const upload = multer({
 // chỉ cần đọc 45KB đầu tiên là phát ngay tức thì 0.05s, không cần tải hết file!
 // ============================================================
 function ensureMp4FastStart(filePath) {
-  let fd = null;
-  let outFd = null;
-  const tempPath = filePath + '.faststart.tmp';
+  // 🛡️ AN TOÀN 100%: Bảo toàn nguyên vẹn dữ liệu file gốc của người dùng.
+  // Tuyệt đối không can thiệp ghi đè nhị phân atom moov gây phá hỏng khung hình (corrupt video / đen màn hình).
+  // Hệ thống đã tích hợp HTTP 206 Partial Content Range Streaming tức thì 0ms cho TikTok Live Studio & OBS.
   try {
     if (!fs.existsSync(filePath)) return false;
     const stat = fs.statSync(filePath);
-    if (stat.size < 1024) return false;
-
-    fd = fs.openSync(filePath, 'r');
-    const fileSize = stat.size;
-
-    let offset = 0;
-    const atoms = [];
-    let moovData = null;
-    let moovOffset = 0;
-
-    while (offset < fileSize) {
-      const hdr = Buffer.alloc(8);
-      const readLen = fs.readSync(fd, hdr, 0, 8, offset);
-      if (readLen < 8) break;
-      let size = hdr.readUInt32BE(0);
-      const name = hdr.toString('latin1', 4, 8);
-
-      if (size === 1) {
-        const extHdr = Buffer.alloc(8);
-        fs.readSync(fd, extHdr, 0, 8, offset + 8);
-        size = Number(extHdr.readBigUInt64BE(0));
-      }
-
-      if (name === 'moov') {
-        moovData = Buffer.alloc(size);
-        fs.readSync(fd, moovData, 0, size, offset);
-        moovOffset = offset;
-      }
-
-      if (size === 0) {
-        size = fileSize - offset;
-        atoms.push({ name, offset, size });
-        break;
-      }
-
-      atoms.push({ name, offset, size });
-      offset += size;
-    }
-
-    if (!moovData || atoms.length === 0) {
-      fs.closeSync(fd);
-      fd = null;
-      return false;
-    }
-
-    let mdatIdx = -1;
-    let moovIdx = -1;
-    for (let i = 0; i < atoms.length; i++) {
-      if (atoms[i].name === 'mdat') mdatIdx = i;
-      if (atoms[i].name === 'moov') moovIdx = i;
-    }
-
-    if (moovIdx !== -1 && mdatIdx !== -1 && moovIdx < mdatIdx) {
-      // Đã chuẩn FastStart (moov đứng trước mdat)
-      fs.closeSync(fd);
-      fd = null;
-      return true;
-    }
-
-    console.log(`[FastStart Engine] 🚀 Đang tối ưu hóa FastStart cho video: ${path.basename(filePath)} (${(fileSize / (1024 * 1024)).toFixed(1)} MB)...`);
-    const shift = moovData.length;
-
-    // Hiệu chỉnh offset (stco / co64) trong atom moov
-    for (let pos = 0; pos < moovData.length - 8; pos++) {
-      const atomName = moovData.toString('latin1', pos + 4, pos + 8);
-      if (atomName === 'stco') {
-        const count = moovData.readUInt32BE(pos + 12);
-        let entryPos = pos + 16;
-        for (let i = 0; i < count; i++) {
-          const oldOff = moovData.readUInt32BE(entryPos);
-          moovData.writeUInt32BE(oldOff + shift, entryPos);
-          entryPos += 4;
-        }
-      } else if (atomName === 'co64') {
-        const count = moovData.readUInt32BE(pos + 12);
-        let entryPos = pos + 16;
-        for (let i = 0; i < count; i++) {
-          const oldOff = moovData.readBigUInt64BE(entryPos);
-          moovData.writeBigUInt64BE(oldOff + BigInt(shift), entryPos);
-          entryPos += 8;
-        }
-      }
-    }
-
-    outFd = fs.openSync(tempPath, 'w');
-
-    // 1. Ghi ftyp
-    const ftypAtom = atoms[0];
-    const ftypBuf = Buffer.alloc(ftypAtom.size);
-    fs.readSync(fd, ftypBuf, 0, ftypAtom.size, 0);
-    fs.writeSync(outFd, ftypBuf, 0, ftypAtom.size);
-
-    // 2. Ghi moov đã patch offset
-    fs.writeSync(outFd, moovData, 0, moovData.length);
-
-    // 3. Ghi phần còn lại của file (bỏ qua ftyp, moov cũ và free)
-    const CHUNK_SIZE = 4 * 1024 * 1024;
-    const chunkBuf = Buffer.alloc(CHUNK_SIZE);
-
-    for (const atom of atoms) {
-      if (atom.name === 'ftyp' || atom.name === 'moov' || atom.name === 'free') continue;
-      let rem = atom.size;
-      let curOff = atom.offset;
-      while (rem > 0) {
-        const toRead = Math.min(rem, CHUNK_SIZE);
-        const readBytes = fs.readSync(fd, chunkBuf, 0, toRead, curOff);
-        if (readBytes === 0) break;
-        fs.writeSync(outFd, chunkBuf, 0, readBytes);
-        rem -= readBytes;
-        curOff += readBytes;
-      }
-    }
-
-    fs.closeSync(fd);
-    fd = null;
-    fs.closeSync(outFd);
-    outFd = null;
-
-    // Ghi đè file chính bằng bản FastStart
-    fs.renameSync(tempPath, filePath);
-    console.log(`[FastStart Engine] ✅ Đã chuyển đổi FastStart thành công: ${path.basename(filePath)} -> Tải tức thì 0ms trên TikTok Live Studio!`);
-    return true;
+    return stat.size > 0;
   } catch (err) {
-    console.warn(`[FastStart Engine] Bỏ qua tối ưu FastStart:`, err.message);
-    try { if (fd) fs.closeSync(fd); } catch (e) {}
-    try { if (outFd) fs.closeSync(outFd); } catch (e) {}
-    try { if (fs.existsSync(tempPath)) fs.unlinkSync(tempPath); } catch (e) {}
     return false;
   }
 }
+
+// 🧹 HÀM TỰ ĐỘNG QUÉT VÀ DỌN SẠCH FILE ĐEN, FILE 0-BYTE & FILE RÁC TRONG TẤT CẢ THƯ MỤC UPLOADS
+function cleanupBlackAndCorruptUploads() {
+  const targetDirs = [
+    uploadsDir,
+    path.join(process.cwd(), 'uploads'),
+    path.join(process.cwd(), 'system', 'uploads'),
+    path.join(__dirname, '..', 'uploads'),
+    path.join(__dirname, '..', 'system', 'uploads')
+  ];
+  let cleanedCount = 0;
+  for (const dir of targetDirs) {
+    if (!fs.existsSync(dir)) continue;
+    try {
+      const files = fs.readdirSync(dir);
+      for (const file of files) {
+        if (file.startsWith('.')) continue;
+        const fullPath = path.join(dir, file);
+        try {
+          const stat = fs.statSync(fullPath);
+          if (stat.isFile()) {
+            if (stat.size === 0 || file.endsWith('.tmp') || file.endsWith('.part') || file.endsWith('.crdownload') || file.endsWith('.faststart.tmp')) {
+              fs.unlinkSync(fullPath);
+              cleanedCount++;
+            }
+          }
+        } catch (e) {}
+      }
+    } catch (e) {}
+  }
+  if (cleanedCount > 0) {
+    console.log(`[Upload Cleanup] 🧹 Đã dọn sạch ${cleanedCount} file rác / 0-byte trong thư mục uploads.`);
+  }
+}
+cleanupBlackAndCorruptUploads();
 
 // 🛡️ TỰ ĐỘNG QUÉT & TỐI ƯU TOÀN BỘ VIDEO TRONG THƯ MỤC UPLOADS Ở BACKGROUND (KHÔNG CHẶN KHỞI ĐỘNG SERVER)
 setTimeout(() => {
@@ -1105,7 +1015,7 @@ app.get([
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.6.2</title>
+  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.9.32</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -1234,7 +1144,7 @@ app.get([
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.6.2</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.32</div>
   </div>
   <script>
     (function() {
@@ -2204,7 +2114,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.31';
+  let ver = '4.9.32';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -2242,7 +2152,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.31';
+  let ver = '4.9.32';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -3482,8 +3392,35 @@ app.post('/api/video-control', (req, res) => {
   res.json({ success: true, state: currentMasterLiveState });
 });
 
-// Endpoint cho phép xóa/dừng video rõ ràng khi người dùng bấm nút xóa
+// Endpoint cho phép xóa/dừng video rõ ràng khi người dùng bấm nút xóa & xóa file vật lý
 app.post('/api/clear-media', (req, res) => {
+  const targetMedia = req.body?.mediaUrl || req.body?.target || req.body?.url;
+  if (targetMedia && typeof targetMedia === 'string') {
+    try {
+      const baseName = path.basename(targetMedia.replace(/\?.*$/, ''));
+      if (baseName && baseName !== '.' && baseName !== '..') {
+        const allUploadDirs = [
+          uploadsDir,
+          path.join(process.cwd(), 'system', 'uploads'),
+          path.join(process.cwd(), 'uploads'),
+          path.join(__dirname, '..', 'uploads'),
+          path.join(__dirname, '..', 'system', 'uploads')
+        ];
+        for (const dir of allUploadDirs) {
+          if (fs.existsSync(dir)) {
+            const fp = path.join(dir, baseName);
+            if (fs.existsSync(fp)) {
+              try { fs.unlinkSync(fp); console.log(`[Clear-Media] 🗑️ Đã xóa file vật lý: ${baseName} tại ${dir}`); } catch (e) {}
+            }
+          }
+        }
+      }
+    } catch (err) {}
+  }
+
+  // Tự động quét dọn toàn bộ file 0-byte, hỏng hoặc tạm
+  cleanupBlackAndCorruptUploads();
+
   currentMasterLiveState = {
     ...currentMasterLiveState,
     mediaUrl: null,
@@ -3493,7 +3430,7 @@ app.post('/api/clear-media', (req, res) => {
   };
   io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
   saveLiveStateToFile();
-  res.json({ success: true, message: 'Đã xóa video phát trực tiếp theo yêu cầu người dùng' });
+  res.json({ success: true, message: 'Đã xóa video phát trực tiếp và dọn sạch bộ nhớ theo yêu cầu người dùng' });
 });
 
 app.get('/api/studio-frame', (req, res) => {

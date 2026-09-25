@@ -550,9 +550,12 @@ export default function WindowCapturePlayer() {
           setCurrentStage(msg.stage);
         }
 
-        // 👥 Đồng bộ Multi-Avatar 1–4 nhân vật
-        if (msg.multiAvatarConfig || msg.type === 'MULTI_AVATAR_UPDATE') {
-          setMultiAvatarConfig(msg.multiAvatarConfig || getMultiAvatarConfig());
+        // 👥 Đồng bộ Multi-Avatar 1–4 nhân vật (Live Idol Avatar & Sequencer)
+        if (msg.multiAvatarConfig || msg.config || msg.type === 'MULTI_AVATAR_UPDATE') {
+          const incomingConfig = msg.multiAvatarConfig || msg.config || getMultiAvatarConfig();
+          if (incomingConfig) {
+            setMultiAvatarConfig(incomingConfig);
+          }
         }
         if (msg.activeSpeakerId !== undefined) {
           setActiveSpeakerId(msg.activeSpeakerId);
@@ -1415,14 +1418,16 @@ export default function WindowCapturePlayer() {
         <div style={{ position: 'absolute', inset: 0, width: '100%', height: '100%', overflow: 'hidden', backgroundColor: 'transparent' }}>
           <GameChienDau isPopout={true} aspectRatio="9:16" isDarkMode={true} />
         </div>
-      ) : (multiAvatarConfig?.enabled && multiAvatarConfig?.activeCount >= 2 && Array.isArray(multiAvatarConfig?.avatars) && multiAvatarConfig.avatars.some(a => a.talkVideo || a.idleVideo || a.videoUrl)) ? (() => {
-        /* 👥 MULTI-AVATAR STUDIO (2-4 NHÂN VẬT AI IDOL ĐỒNG BỘ) */
+      ) : (multiAvatarConfig?.enabled && multiAvatarConfig?.activeCount >= 1 && Array.isArray(multiAvatarConfig?.avatars) && multiAvatarConfig.avatars.some(a => a.talkVideo || a.idleVideo || a.videoUrl || a.resolvedVidSrc || a.mediaUrl)) ? (() => {
+        /* 👥 MULTI-AVATAR STUDIO (1-4 NHÂN VẬT AI IDOL ĐỒNG BỘ) */
         const activeList = (multiAvatarConfig.avatars || []).filter(a => a.enabled).slice(0, multiAvatarConfig.activeCount);
         const count = activeList.length;
         const isGridOnly = multiAvatarConfig.layoutMode === 'grid';
 
         if (isGridOnly) {
-          const gridStyle = count === 2 
+          const gridStyle = count === 1
+            ? { display: 'flex', width: '100%', height: '100%', padding: '0', backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' }
+            : count === 2 
             ? { display: 'grid', gridTemplateColumns: '1fr 1fr', width: '100%', height: '100%', gap: '4px', padding: '4px', backgroundColor: '#000' }
             : count === 3 
             ? { display: 'grid', gridTemplateColumns: '1fr 1fr 1fr', width: '100%', height: '100%', gap: '4px', padding: '4px', backgroundColor: '#000' }
@@ -1432,8 +1437,8 @@ export default function WindowCapturePlayer() {
             <div style={gridStyle}>
               {activeList.map((avatar, idx) => {
                 const isSpeakingNow = isSpeakerActive && (activeSpeakerId === avatar.id || (!activeSpeakerId && avatar.id === 'idol'));
-                const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || '';
-                const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || '';
+                const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.resolvedVidSrc || avatar.mediaUrl || '';
+                const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.resolvedVidSrc || avatar.mediaUrl || '';
                 const rawSrc = isSpeakingNow ? (talkSrc || idleSrc || (idx === 0 ? videoSrc : '')) : (idleSrc || talkSrc || (idx === 0 ? videoSrc : ''));
                 const avatarVidSrc = resolveUrl(rawSrc);
                 const isImg = isImageMedia(avatarVidSrc);
@@ -1571,8 +1576,8 @@ export default function WindowCapturePlayer() {
                 borderRadius: 16
               };
               const isSpeakingNow = isSpeakerActive && (activeSpeakerId === avatar.id || (!activeSpeakerId && avatar.id === 'idol'));
-              const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || '';
-              const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || '';
+              const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.resolvedVidSrc || avatar.mediaUrl || '';
+              const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.resolvedVidSrc || avatar.mediaUrl || '';
               const rawSrc = isSpeakingNow ? (talkSrc || idleSrc || (idx === 0 ? videoSrc : '')) : (idleSrc || talkSrc || (idx === 0 ? videoSrc : ''));
               const avatarVidSrc = resolveUrl(rawSrc);
               const isImg = isImageMedia(avatarVidSrc);
@@ -1799,7 +1804,7 @@ export default function WindowCapturePlayer() {
         <div
           style={{
             position: 'fixed',
-            top: '12px',
+            top: '6px',
             left: '50%',
             transform: 'translateX(-50%)',
             display: 'inline-flex',
@@ -1808,25 +1813,26 @@ export default function WindowCapturePlayer() {
             justifyContent: 'center',
             flexWrap: 'nowrap',
             whiteSpace: 'nowrap',
-            gap: '6px',
-            background: 'rgba(5, 7, 12, 0.95)',
+            gap: '5px',
+            background: 'rgba(5, 7, 12, 0.92)',
             backdropFilter: 'blur(20px)',
-            padding: '5px 10px',
-            borderRadius: '30px',
+            padding: '3px 8px',
+            borderRadius: '24px',
             border: '1px solid rgba(6, 182, 212, 0.7)',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.9), 0 0 15px rgba(6, 182, 212, 0.25)',
+            boxShadow: '0 6px 24px rgba(0, 0, 0, 0.9), 0 0 12px rgba(6, 182, 212, 0.3)',
             zIndex: 1000000,
             pointerEvents: 'auto',
+            touchAction: 'manipulation',
             transition: 'opacity 0.2s ease',
             opacity: 0.98,
-            maxWidth: 'calc(100vw - 20px)',
+            maxWidth: 'calc(100vw - 16px)',
             boxSizing: 'border-box'
           }}
           onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
           onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.98')}
         >
-          <span style={{ fontSize: '10px', color: '#10b981', fontWeight: 'bold', display: 'inline-flex', alignItems: 'center', gap: '4px', userSelect: 'none', letterSpacing: '0.5px', whiteSpace: 'nowrap', flexShrink: 0 }}>
-            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981', flexShrink: 0 }} />
+          <span style={{ fontSize: '9px', color: '#10b981', fontWeight: '900', display: 'inline-flex', alignItems: 'center', gap: '3px', userSelect: 'none', letterSpacing: '0.5px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 6px #10b981', flexShrink: 0 }} />
             LIVE
           </span>
 
@@ -1839,17 +1845,18 @@ export default function WindowCapturePlayer() {
               toggleStandalonePlay(e);
             }}
             style={{
-              background: isPlaybackActive ? 'rgba(239, 68, 68, 0.7)' : 'rgba(16, 185, 129, 0.7)',
+              background: isPlaybackActive ? 'rgba(239, 68, 68, 0.8)' : 'rgba(16, 185, 129, 0.8)',
               border: '1px solid rgba(255, 255, 255, 0.4)',
               color: '#fff',
-              fontSize: '11px',
-              fontWeight: 'bold',
-              padding: '5px 10px',
-              borderRadius: '14px',
+              fontSize: '10px',
+              fontWeight: '900',
+              padding: '3px 8px',
+              borderRadius: '12px',
               cursor: 'pointer',
               pointerEvents: 'auto',
+              touchAction: 'manipulation',
               userSelect: 'none',
-              transition: 'all 0.15s ease',
+              transition: 'all 0.12s ease',
               display: 'inline-flex',
               flexDirection: 'row',
               alignItems: 'center',
@@ -1873,17 +1880,18 @@ export default function WindowCapturePlayer() {
               toggleStandaloneMute(e);
             }}
             style={{
-              background: isUserMuted ? 'rgba(239, 68, 68, 0.7)' : 'rgba(6, 182, 212, 0.7)',
+              background: isUserMuted ? 'rgba(239, 68, 68, 0.8)' : 'rgba(6, 182, 212, 0.8)',
               border: '1px solid rgba(255, 255, 255, 0.4)',
               color: '#fff',
-              fontSize: '11px',
-              fontWeight: 'bold',
-              padding: '5px 10px',
-              borderRadius: '14px',
+              fontSize: '10px',
+              fontWeight: '900',
+              padding: '3px 8px',
+              borderRadius: '12px',
               cursor: 'pointer',
               pointerEvents: 'auto',
+              touchAction: 'manipulation',
               userSelect: 'none',
-              transition: 'all 0.15s ease',
+              transition: 'all 0.12s ease',
               display: 'inline-flex',
               flexDirection: 'row',
               alignItems: 'center',
@@ -1910,14 +1918,15 @@ export default function WindowCapturePlayer() {
               background: 'rgba(255, 255, 255, 0.25)',
               border: '1px solid rgba(255, 255, 255, 0.4)',
               color: '#fff',
-              fontSize: '11px',
-              fontWeight: 'bold',
-              padding: '5px 10px',
-              borderRadius: '14px',
+              fontSize: '10px',
+              fontWeight: '900',
+              padding: '3px 8px',
+              borderRadius: '12px',
               cursor: 'pointer',
               pointerEvents: 'auto',
+              touchAction: 'manipulation',
               userSelect: 'none',
-              transition: 'all 0.15s ease',
+              transition: 'all 0.12s ease',
               display: 'inline-flex',
               flexDirection: 'row',
               alignItems: 'center',
@@ -1941,22 +1950,23 @@ export default function WindowCapturePlayer() {
               toggleControlsHidden(true);
             }}
             style={{
-              background: 'rgba(239, 68, 68, 0.65)',
-              border: '1px solid rgba(239, 68, 68, 0.9)',
-              color: '#fecaca',
-              fontSize: '11px',
-              fontWeight: 'bold',
-              padding: '5px 10px',
-              borderRadius: '14px',
+              background: 'rgba(239, 68, 68, 0.75)',
+              border: '1px solid rgba(239, 68, 68, 0.95)',
+              color: '#fff',
+              fontSize: '10px',
+              fontWeight: '900',
+              padding: '3px 8px',
+              borderRadius: '12px',
               cursor: 'pointer',
               pointerEvents: 'auto',
+              touchAction: 'manipulation',
               display: 'inline-flex',
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '4px',
+              gap: '3px',
               userSelect: 'none',
-              transition: 'all 0.15s ease',
+              transition: 'all 0.12s ease',
               whiteSpace: 'nowrap',
               wordBreak: 'keep-all',
               flexShrink: 0,
@@ -1980,25 +1990,26 @@ export default function WindowCapturePlayer() {
           }}
           style={{
             position: 'fixed',
-            top: '12px',
-            right: '12px',
+            top: '6px',
+            right: '8px',
             zIndex: 1000000,
             pointerEvents: 'auto',
-            width: '36px',
-            height: '36px',
+            touchAction: 'manipulation',
+            width: '28px',
+            height: '28px',
             borderRadius: '50%',
-            background: 'rgba(5, 7, 12, 0.85)',
-            border: '1px solid rgba(6, 182, 212, 0.8)',
+            background: 'rgba(5, 7, 12, 0.88)',
+            border: '1px solid rgba(6, 182, 212, 0.85)',
             color: '#06b6d4',
-            fontSize: '16px',
+            fontSize: '13px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
             opacity: 0.9,
             backdropFilter: 'blur(8px)',
-            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.6)',
-            transition: 'all 0.25s ease'
+            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.7)',
+            transition: 'all 0.2s ease'
           }}
           onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'scale(1.15)'; }}
           onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'scale(1)'; }}

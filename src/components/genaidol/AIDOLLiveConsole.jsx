@@ -18,6 +18,7 @@ import { COUNTRY_FILTERS } from './game/GameVoiceConfigPanel';
 import { DEFAULT_BRAIN_PACKS } from '../../utils/defaultPresetsBootstrap';
 import { syncMasterLiveState, sendVideoControl } from '../../lib/masterLiveSync';
 import { fastStreamUpload } from '../../utils/fastStreamService';
+import { deleteServerMedia } from '../../utils/mediaUploadService';
 
 // ──────────────────────────────────────────────
 // AIDOL_DB (dùng lại kho AIDOL của tôi)
@@ -385,10 +386,35 @@ export default function AIDOLLiveConsole() {
 
   // ── Delete from kho ──
   const handleDeleteMedia = async (id) => {
-    if (!confirm('Xóa file này khỏi Kho Live?')) return;
+    if (!confirm('Xóa file này khỏi Kho Live? File sẽ bị xóa vĩnh viễn khỏi bộ nhớ máy chủ!')) return;
+    const targetItem = (liveMedia || []).find(m => m.id === id);
+    if (targetItem?.mediaUrl) {
+      deleteServerMedia(targetItem.mediaUrl).catch(() => {});
+    }
     await deleteLiveMedia(id);
     await loadLiveKho();
-    if (activeVideoItem?.id === id) setActiveVideoItem(null);
+    if (activeVideoItem?.id === id) {
+      setActiveVideoItem(null);
+      try {
+        fetch('/api/clear-media', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mediaUrl: targetItem?.mediaUrl, deletePhysical: true })
+        }).catch(() => {});
+      } catch (e) {}
+      syncMasterLiveState({
+        stage: 'idol',
+        mediaUrl: null,
+        clearMedia: true,
+        isVideo: false,
+        isPlaying: false
+      });
+      try {
+        const bc = new BroadcastChannel('avalive_master_live_stream');
+        bc.postMessage({ type: 'CLEAR_STAGE', timestamp: Date.now() });
+        setTimeout(() => bc.close(), 100);
+      } catch (e) {}
+    }
   };
 
   // ── Import từ AIDOL ──

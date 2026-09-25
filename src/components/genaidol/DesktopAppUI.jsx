@@ -49,7 +49,7 @@ import { setActiveMedia, removeActiveMedia, clearActiveMedia } from '../../utils
 import ShopeeLiveConnectModal from './ShopeeLiveConnectModal';
 import autoPinProductService from '../../utils/autoPinProductService';
 import { generateAiKnowledgeScript } from '../../utils/aiScriptGenerator';
-import { ensureServerMediaUrl, uploadMediaToServer } from '../../utils/mediaUploadService';
+import { ensureServerMediaUrl, uploadMediaToServer, deleteServerMedia } from '../../utils/mediaUploadService';
 
 const CHARACTERS = {};
 
@@ -1041,6 +1041,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   });
 
   const handleClearActiveVideo = async () => {
+    const oldMedia = userLockedMediaUrl || (typeof activeVideoSrc === 'string' ? activeVideoSrc : null);
+    if (oldMedia) {
+      deleteServerMedia(oldMedia).catch(() => {});
+    }
+
     setUserLockedMediaUrl(null);
     setSelectedCharacter('');
     setLipSyncVideoUrl(null);
@@ -1069,7 +1074,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     await clearActiveMedia();
 
     try {
-      fetch('/api/clear-media', { method: 'POST' }).catch(() => {});
+      fetch('/api/clear-media', { 
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ mediaUrl: oldMedia, deletePhysical: true })
+      }).catch(() => {});
     } catch (e) {}
 
     try {
@@ -4452,15 +4461,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     if (e && e.stopPropagation) e.stopPropagation();
     try {
       const charToDelete = (customCharacters || []).find(c => c.id === id);
-      const targetMediaUrl = charToDelete?.mediaUrl || charToDelete?.url;
-      if (targetMediaUrl && typeof targetMediaUrl === 'string' && targetMediaUrl.includes('/uploads/')) {
-        try {
-          fetch('/api/delete-upload', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ url: targetMediaUrl })
-          }).catch(() => {});
-        } catch (e) {}
+      const targetMediaUrl = charToDelete?.mediaUrl || charToDelete?.url || charToDelete?.videoUrl || charToDelete?.src;
+      if (targetMediaUrl) {
+        deleteServerMedia(targetMediaUrl).catch(() => {});
       }
 
       const remaining = (customCharacters || []).filter(c => c.id !== id);
