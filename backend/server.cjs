@@ -1718,8 +1718,18 @@ app.get([
         const pipVideo = document.getElementById('pipVideo');
         const pipImage = document.getElementById('pipImage');
 
+        // 2. Tìm nguồn media nền chính (Background / Main Media)
+        const bgUrlCandidate = (data.multiAvatarConfig && data.multiAvatarConfig.backgroundUrl) || data.mediaUrl || data.currentMedia || data.eventVideoUrl || data.videoUrl || '';
+        const resolvedMainBg = resolveUrl(bgUrlCandidate);
+
+        const hasValidAvatars = !!(data.multiAvatarConfig && data.multiAvatarConfig.enabled && Array.isArray(data.multiAvatarConfig.avatars) && data.multiAvatarConfig.avatars.some(function(a) {
+          const u = a.talkVideo || a.idleVideo || a.mediaUrl || a.resolvedVidSrc;
+          return u && typeof u === 'string' && !u.startsWith('blob:');
+        }));
+        const hasAnyContent = !!(resolvedMainBg || hasValidAvatars || data.secondaryMediaUrl || data.overlayImage);
+
         // 1. Kiểm tra trạng thái XÓA SẠCH SÂN KHẤU (CLEAR_STAGE / clearMedia)
-        if (data.clearMedia === true) {
+        if (data.clearMedia === true && !hasAnyContent) {
           if (emptyStage) emptyStage.style.display = 'flex';
           if (multiStage) multiStage.style.display = 'none';
           if (pipContainer) pipContainer.style.display = 'none';
@@ -1738,15 +1748,6 @@ app.get([
           updateDockUI();
           return;
         }
-
-        // 2. Tìm nguồn media nền chính (Background / Main Media)
-        const bgUrlCandidate = (data.multiAvatarConfig && data.multiAvatarConfig.backgroundUrl) || data.mediaUrl || data.currentMedia || data.eventVideoUrl || data.videoUrl || '';
-        const resolvedMainBg = resolveUrl(bgUrlCandidate);
-
-        const hasValidAvatars = !!(data.multiAvatarConfig && data.multiAvatarConfig.enabled && Array.isArray(data.multiAvatarConfig.avatars) && data.multiAvatarConfig.avatars.some(function(a) {
-          const u = a.talkVideo || a.idleVideo || a.mediaUrl || a.resolvedVidSrc;
-          return u && typeof u === 'string' && !u.startsWith('blob:');
-        }));
 
         if (!resolvedMainBg && !hasValidAvatars && !data.secondaryMediaUrl) {
           if (emptyStage) emptyStage.style.display = 'flex';
@@ -2772,8 +2773,18 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         const pipVideo = document.getElementById('pipVideo');
         const pipImage = document.getElementById('pipImage');
 
+        // 2. Tìm nguồn media nền chính (Background / Main Media)
+        const bgUrlCandidate = (data.multiAvatarConfig && data.multiAvatarConfig.backgroundUrl) || data.mediaUrl || data.currentMedia || data.eventVideoUrl || data.videoUrl || '';
+        const resolvedMainBg = resolveUrl(bgUrlCandidate);
+
+        const hasValidAvatars = !!(data.multiAvatarConfig && data.multiAvatarConfig.enabled && Array.isArray(data.multiAvatarConfig.avatars) && data.multiAvatarConfig.avatars.some(function(a) {
+          const u = a.talkVideo || a.idleVideo || a.mediaUrl || a.resolvedVidSrc;
+          return u && typeof u === 'string' && !u.startsWith('blob:');
+        }));
+        const hasAnyContent = !!(resolvedMainBg || hasValidAvatars || data.secondaryMediaUrl || data.overlayImage);
+
         // 1. Kiểm tra trạng thái XÓA TRẮNG SÂN KHẤU (CLEAR_STAGE / clearMedia)
-        if (data.clearMedia === true) {
+        if (data.clearMedia === true && !hasAnyContent) {
           if (emptyStage) emptyStage.style.display = 'flex';
           if (multiStage) multiStage.style.display = 'none';
           if (pipContainer) pipContainer.style.display = 'none';
@@ -2791,15 +2802,6 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           updateDockUI();
           return;
         }
-
-        // 2. Tìm nguồn media nền chính (Background / Main Media)
-        const bgUrlCandidate = (data.multiAvatarConfig && data.multiAvatarConfig.backgroundUrl) || data.mediaUrl || data.currentMedia || data.eventVideoUrl || data.videoUrl || '';
-        const resolvedMainBg = resolveUrl(bgUrlCandidate);
-
-        const hasValidAvatars = !!(data.multiAvatarConfig && data.multiAvatarConfig.enabled && Array.isArray(data.multiAvatarConfig.avatars) && data.multiAvatarConfig.avatars.some(function(a) {
-          const u = a.talkVideo || a.idleVideo || a.mediaUrl || a.resolvedVidSrc;
-          return u && typeof u === 'string' && !u.startsWith('blob:');
-        }));
 
         if (!resolvedMainBg && !hasValidAvatars && !data.secondaryMediaUrl) {
           if (emptyStage) emptyStage.style.display = 'flex';
@@ -4318,13 +4320,18 @@ app.post('/api/live-state', (req, res) => {
     delete payload.force; // Không lưu cờ force vào live state
 
     // 🗑️ NẾU YÊU CẦU XÓA MEDIA HOẶC ĐÃ XÓA VIDEO NỀN
-    if (payload.clearMedia || payload.isMainMediaDeleted || payload.mediaUrl === '') {
+    if (payload.clearMedia === true || payload.isMainMediaDeleted || payload.mediaUrl === '') {
       payload.mediaUrl = null;
+      payload.clearMedia = true;
       currentMasterLiveState.mediaUrl = null;
+      currentMasterLiveState.clearMedia = true;
       currentMasterLiveState.isVideo = false;
       currentMasterLiveState.isPlaying = false;
       currentMasterLiveState.videoPlaybackEvent = 'pause';
       currentMasterLiveState.videoCurrentTime = 0;
+    } else if (payload.mediaUrl || payload.secondaryMediaUrl || (Array.isArray(payload.syncedAvatars) && payload.syncedAvatars.length > 0)) {
+      payload.clearMedia = false;
+      currentMasterLiveState.clearMedia = false;
     }
     
     // Tự động chuyển đổi base64 data: thành file thật trong uploads/
