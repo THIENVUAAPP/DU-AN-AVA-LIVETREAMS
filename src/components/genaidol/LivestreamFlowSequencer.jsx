@@ -233,10 +233,21 @@ export default function LivestreamFlowSequencer() {
     }
   });
 
-  // Lưu trạng thái Master Voice
+  // Lưu trạng thái Master Voice & Đồng Bộ Voice Của Tất Cả Video trong Live Idol Avatar
   useEffect(() => {
     try {
       localStorage.setItem('avalive_master_voice_enabled', isMasterVoiceEnabled ? 'true' : 'false');
+      localStorage.setItem('avalive_audio_muted', isMasterVoiceEnabled ? 'false' : 'true');
+      localStorage.setItem('avalive_local_speaker_muted', isMasterVoiceEnabled ? 'false' : 'true');
+      const allVids = document.querySelectorAll('video, audio');
+      allVids.forEach(v => {
+        try {
+          v.muted = !isMasterVoiceEnabled;
+          if (isMasterVoiceEnabled) {
+            v.volume = 1.0;
+          }
+        } catch(e) {}
+      });
     } catch (e) {}
   }, [isMasterVoiceEnabled]);
 
@@ -2608,19 +2619,42 @@ export default function LivestreamFlowSequencer() {
         {/* Nhóm Phải: Công Tắc Master Voice AI, Đồng Bộ Sân Khấu Chính, Chạy Test & Điều Hướng Bước */}
         <div className="flex items-center gap-2 shrink-0">
           
-          {/* NÚT QUYỀN LỰC: BẬT / TẮT TẤT CẢ GIỌNG ĐỌC VOICE AI */}
+          {/* NÚT QUYỀN LỰC: BẬT / TẮT TẤT CẢ VOICE CỦA VIDEO TRONG LIVE IDOL AVATAR (ẢNH 2) */}
           <button
             type="button"
             onClick={() => {
               const nextVoice = !isMasterVoiceEnabled;
               setIsMasterVoiceEnabled(nextVoice);
+              try {
+                const allMedia = document.querySelectorAll('video, audio');
+                allMedia.forEach(m => {
+                  try {
+                    m.muted = !nextVoice;
+                    if (nextVoice) m.volume = 1.0;
+                  } catch(e) {}
+                });
+                localStorage.setItem('avalive_master_voice_enabled', String(nextVoice));
+                localStorage.setItem('avalive_audio_muted', String(!nextVoice));
+                localStorage.setItem('avalive_local_speaker_muted', String(!nextVoice));
+              } catch(e) {}
+
+              if (typeof window !== 'undefined') {
+                window.dispatchEvent(new CustomEvent('avalive:master_voice_toggled', { detail: { isVoiceEnabled: nextVoice } }));
+              }
+              if (typeof BroadcastChannel !== 'undefined') {
+                try {
+                  const bc = new BroadcastChannel('avalive_master_live_stream');
+                  bc.postMessage({ type: 'VIDEO_PLAYBACK_CONTROL', isMuted: !nextVoice, timestamp: Date.now() });
+                } catch(e) {}
+              }
+
               if (!nextVoice) {
                 stopVoiceAudio();
                 setIsSpeakingPreview(false);
                 setSpeakingStepId(null);
-                toast.info('🔇 Đã TẮT TẤT CẢ Voice & Giọng Đọc AI');
+                toast.info('🔇 Đã TẮT Tiếng Tất Cả Video & Voice AI trong Live Idol');
               } else {
-                toast.success('🔊 Đã BẬT Voice AI & Giọng Đọc AI');
+                toast.success('🔊 Đã BẬT Tiếng Tất Cả Video & Voice AI trong Live Idol');
               }
             }}
             className={`px-2.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md cursor-pointer border ${
@@ -2628,7 +2662,7 @@ export default function LivestreamFlowSequencer() {
                 ? 'bg-emerald-950/90 hover:bg-emerald-900 text-emerald-300 border-emerald-500/50' 
                 : 'bg-rose-950/90 hover:bg-rose-900 text-rose-300 border-rose-500/50'
             }`}
-            title={isMasterVoiceEnabled ? 'Bấm để TẮT TẤT CẢ âm thanh / giọng đọc AI' : 'Bấm để BẬT âm thanh / giọng đọc AI'}
+            title={isMasterVoiceEnabled ? 'Bấm để TẮT TIẾNG TẤT CẢ VIDEO & giọng đọc trong Live Idol Avatar' : 'Bấm để BẬT TIẾNG TẤT CẢ VIDEO & giọng đọc trong Live Idol Avatar'}
           >
             {isMasterVoiceEnabled ? <Volume2 size={13} className="text-emerald-400" /> : <Volume2 size={13} className="text-rose-400 opacity-60" />}
             <span className="hidden sm:inline">{isMasterVoiceEnabled ? 'VOICE AI: BẬT' : 'VOICE AI: TẮT'}</span>
@@ -2960,6 +2994,8 @@ export default function LivestreamFlowSequencer() {
                             key={activeMediaUrl || 'default_bg'}
                             ref={el => {
                               if (el) {
+                                el.muted = !isMasterVoiceEnabled;
+                                if (isMasterVoiceEnabled) el.volume = 1.0;
                                 if (isStageMediaPaused) el.pause();
                                 else el.play().catch(() => {});
                               }
@@ -2967,9 +3003,12 @@ export default function LivestreamFlowSequencer() {
                             src={activeMediaUrl} 
                             autoPlay={!isStageMediaPaused} 
                             loop 
-                            muted 
+                            muted={!isMasterVoiceEnabled} 
                             playsInline 
-                            onCanPlay={(e) => { if (!isStageMediaPaused) e.target.play().catch(() => {}); }}
+                            onCanPlay={(e) => { 
+                              e.target.muted = !isMasterVoiceEnabled;
+                              if (!isStageMediaPaused) e.target.play().catch(() => {}); 
+                            }}
                             className="w-full h-full object-cover pointer-events-none"
                             style={chromaStyle}
                           />
@@ -3054,6 +3093,8 @@ export default function LivestreamFlowSequencer() {
                           <video 
                             ref={el => {
                               if (el) {
+                                el.muted = !isMasterVoiceEnabled;
+                                if (isMasterVoiceEnabled) el.volume = 1.0;
                                 if (isStageMediaPaused) el.pause();
                                 else el.play().catch(() => {});
                               }
@@ -3061,9 +3102,12 @@ export default function LivestreamFlowSequencer() {
                             src={activeSecondaryMediaUrl} 
                             autoPlay={!isStageMediaPaused} 
                             loop 
-                            muted 
+                            muted={!isMasterVoiceEnabled} 
                             playsInline 
-                            onCanPlay={(e) => { if (!isStageMediaPaused) e.target.play().catch(() => {}); }}
+                            onCanPlay={(e) => { 
+                              e.target.muted = !isMasterVoiceEnabled;
+                              if (!isStageMediaPaused) e.target.play().catch(() => {}); 
+                            }}
                             className="w-full h-full object-cover pointer-events-none"
                             style={chromaStyle}
                           />
@@ -3151,6 +3195,8 @@ export default function LivestreamFlowSequencer() {
                           <video 
                             ref={el => {
                               if (el) {
+                                el.muted = !isMasterVoiceEnabled;
+                                if (isMasterVoiceEnabled) el.volume = 1.0;
                                 if (isStageMediaPaused) el.pause();
                                 else el.play().catch(() => {});
                               }
@@ -3158,9 +3204,12 @@ export default function LivestreamFlowSequencer() {
                             src={vidSrc} 
                             autoPlay={!isStageMediaPaused} 
                             loop 
-                            muted 
+                            muted={!isMasterVoiceEnabled} 
                             playsInline 
-                            onCanPlay={(e) => { if (!isStageMediaPaused) e.target.play().catch(() => {}); }}
+                            onCanPlay={(e) => { 
+                              e.target.muted = !isMasterVoiceEnabled;
+                              if (!isStageMediaPaused) e.target.play().catch(() => {}); 
+                            }}
                             className="w-full h-full object-cover pointer-events-none"
                             style={chromaStyle}
                           />

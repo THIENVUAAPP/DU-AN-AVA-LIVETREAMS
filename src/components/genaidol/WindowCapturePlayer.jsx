@@ -1737,6 +1737,16 @@ export default function WindowCapturePlayer() {
             preload="auto"
             disablePictureInPicture
             controlsList="nodownload nofullscreen noremoteplayback"
+            onClick={(e) => {
+              e.preventDefault();
+              // Bấm vào giữa màn hình video: BẬT VOICE (unmute) và phát video
+              if (isUserMuted) {
+                toggleStandaloneMute(e);
+              }
+              if (!isPlaybackActive) {
+                toggleStandalonePlay(e);
+              }
+            }}
             onLoadedData={() => setIsVideoLoading(false)}
             onCanPlay={() => setIsVideoLoading(false)}
             onWaiting={() => {
@@ -1910,6 +1920,15 @@ export default function WindowCapturePlayer() {
         >
           <button
             type="button"
+            onClick={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              recheckLiveState(true);
+              if (videoRef.current && isPlaybackActive) {
+                videoRef.current.play().catch(() => {});
+              }
+              toast.success('🟢 Luồng Live 4K 60 FPS đã sẵn sàng');
+            }}
             style={{
               fontSize: '9px',
               color: '#10b981',
@@ -1925,9 +1944,9 @@ export default function WindowCapturePlayer() {
               border: '1px solid rgba(16, 185, 129, 0.5)',
               borderRadius: '10px',
               padding: '2px 6px',
-              cursor: 'default'
+              cursor: 'pointer'
             }}
-            title="Luồng Phát Live 4K 60 FPS Đang Hoạt Động"
+            title="Luồng Phát Live 4K 60 FPS (Bấm để làm mới luồng)"
           >
             <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 6px #10b981', flexShrink: 0 }} />
             • LIVE

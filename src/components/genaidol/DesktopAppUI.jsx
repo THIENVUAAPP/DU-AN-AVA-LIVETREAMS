@@ -2477,12 +2477,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       } else {
         if (vid && vid.src) {
           vid.dataset.userPaused = 'false';
-          if (isLocalSpeakerMuted) {
-            vid.muted = true;
-          } else {
-            vid.muted = false;
-            vid.volume = liveVolume;
-          }
+          // Bấm vào giữa màn hình video: BẬT VOICE (unmute) và phát video
+          setIsLocalSpeakerMuted(false);
+          setLiveAudioMuted(false);
+          isLocalSpeakerMutedRef.current = false;
+          vid.muted = false;
+          vid.volume = liveVolume || 1.0;
           const playPromise = vid.play();
           if (playPromise !== undefined) {
             playPromise.catch((err) => {
@@ -2498,6 +2498,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         sendVideoControl({
           action: 'play',
           isPlaying: true,
+          isMuted: false,
           currentTime: vid ? vid.currentTime : 0,
           mediaUrl: vid ? (vid.currentSrc || vid.src) : null,
           timestamp: Date.now()
@@ -2507,12 +2508,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           isPlaying: true,
           videoCurrentTime: vid ? vid.currentTime : 0
         }, socketRef.current);
-        showToast('▶️ Đang tiếp tục phát video (Đồng bộ 60 FPS)', 'success');
+        showToast('▶️ Đang tiếp tục phát video (Đã BẬT VOICE)', 'success');
       }
     } catch (err) {
       console.warn('[VideoPlayback] Error toggling video:', err);
     }
-  }, [isVideoPlaying, isLocalSpeakerMuted, liveVolume]);
+  }, [isVideoPlaying, liveVolume]);
 
   // Phím tắt thông minh [Phím Cách / Space] điều khiển Tạm dừng / Tiếp tục Video trên khung hình
   useEffect(() => {
@@ -2833,15 +2834,33 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }
     };
 
+    const handleMasterVoiceToggled = (ev) => {
+      const isVoice = ev?.detail?.isVoiceEnabled ?? true;
+      const isMuted = !isVoice;
+      setIsLocalSpeakerMuted(isMuted);
+      isLocalSpeakerMutedRef.current = isMuted;
+      setLiveAudioMuted(isMuted);
+      if (desktopVideoRef.current) {
+        desktopVideoRef.current.muted = isMuted;
+        if (!isMuted) desktopVideoRef.current.volume = liveVolume || 1;
+      }
+      if (flvVideoRef.current) {
+        flvVideoRef.current.muted = isMuted;
+        if (!isMuted) flvVideoRef.current.volume = liveVolume || 1;
+      }
+    };
+
     window.addEventListener('storage', handleStorage);
+    window.addEventListener('avalive:master_voice_toggled', handleMasterVoiceToggled);
 
     return () => {
       if (bc) {
         try { bc.close(); } catch (e) {}
       }
       window.removeEventListener('storage', handleStorage);
+      window.removeEventListener('avalive:master_voice_toggled', handleMasterVoiceToggled);
     };
-  }, []);
+  }, [liveVolume]);
 
   // Tự động mở khóa audio context khi tương tác
   useEffect(() => {

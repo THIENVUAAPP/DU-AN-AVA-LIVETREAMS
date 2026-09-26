@@ -945,9 +945,35 @@ app.get([
       }
     }
   }
+  // 🎬 FALLBACK SÂN KHẤU PHỤ & LIVE IDOL AVATAR: Lấy video từ secondaryMediaUrl hoặc syncedAvatars
   if (!existsOnDisk) {
-    // Sân khấu chính không có video thì để trống, tuyệt đối không tự ý lấy video cũ trong uploads
-    vParam = '';
+    let subUrl = (currentMasterLiveState && currentMasterLiveState.secondaryMediaUrl) || '';
+    if (!subUrl && currentMasterLiveState && Array.isArray(currentMasterLiveState.syncedAvatars) && currentMasterLiveState.syncedAvatars.length > 0) {
+      subUrl = currentMasterLiveState.syncedAvatars[0].resolvedVidSrc || currentMasterLiveState.syncedAvatars[0].talkVideo || currentMasterLiveState.syncedAvatars[0].idleVideo || '';
+    }
+    if (subUrl && typeof subUrl === 'string') {
+      if (subUrl.includes('/uploads/')) {
+        const sFilename = subUrl.substring(subUrl.indexOf('/uploads/') + 9).split('?')[0];
+        const foundPath = findFileInUploadDirs(sFilename);
+        if (foundPath) {
+          existsOnDisk = true;
+          vParam = `/uploads/${path.basename(foundPath)}`;
+        }
+      } else if (subUrl.startsWith('http') || subUrl.startsWith('/')) {
+        existsOnDisk = true;
+        vParam = subUrl;
+      }
+    }
+  }
+  // ⚡ FALLBACK TỰ ĐỘNG: Nếu chưa có video nào đang phát, lấy video tải lên mới nhất để TikTok Live Studio KHÔNG BAO GIỜ bị kẹt xoay vòng vòng
+  if (!existsOnDisk && (!vParam || !vParam.trim())) {
+    const latestUpload = getLatestUploadMediaUrl();
+    if (latestUpload) {
+      existsOnDisk = true;
+      vParam = latestUpload;
+    } else {
+      vParam = '';
+    }
   }
 
   const soundParam = req.query.sound !== '0';
@@ -966,7 +992,7 @@ app.get([
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.9.38</title>
+  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.9.39</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -1098,7 +1124,7 @@ app.get([
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.38</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.39</div>
   </div>
   <script>
     (function() {
@@ -1136,7 +1162,7 @@ app.get([
           loadingOverlay.style.opacity = '0';
           setTimeout(function() {
             if (loadingOverlay) loadingOverlay.style.display = 'none';
-          }, 400);
+          }, 300);
         }
       }
 
@@ -1146,6 +1172,11 @@ app.get([
           loadingOverlay.style.opacity = '1';
         }
       }
+
+      // ⚡ EMERGENCY LOADING DISMISSER: Đảm bảo TikTok Live Studio KHÔNG BAO GIỜ bị kẹt xoay vòng quá 1.5s
+      setTimeout(function() {
+        hideLoading();
+      }, 1500);
 
       setTimeout(function() { if (badge) badge.style.opacity = '0.2'; }, 6000);
 
@@ -1177,11 +1208,12 @@ app.get([
       }
 
       function safePlay() {
-        if (isStreamUserPaused || isPlayPending) return;
+        if (isStreamUserPaused) return;
         vid.muted = true;
         vid.defaultMuted = true;
         try {
           isPlayPending = true;
+          setTimeout(function() { isPlayPending = false; }, 400);
           const p = vid.play();
           if (p !== undefined && typeof p.then === 'function') {
             p.then(function() {
@@ -1189,7 +1221,7 @@ app.get([
               hideLoading();
               updateDockUI();
               if (targetSoundEnabled) {
-                setTimeout(tryEnableAudioSafe, 250);
+                setTimeout(tryEnableAudioSafe, 200);
               }
             }).catch(function(err) {
               isPlayPending = false;
@@ -1198,7 +1230,7 @@ app.get([
                 if (vid.paused && !isStreamUserPaused) {
                   try { vid.play().then(function() { hideLoading(); updateDockUI(); }).catch(function() {}); } catch(e) {}
                 }
-              }, 150);
+              }, 100);
             });
           } else {
             isPlayPending = false;
@@ -1504,15 +1536,21 @@ app.get([
         setTimeout(fetchLatestState, 400);
       }
 
-      window.addEventListener('click', function() {
-        if (targetSoundEnabled) {
+      function handleLiveUserInteraction(e) {
+        // Bấm vào giữa màn hình video: BẬT VOICE (unmute) và phát video tức thì
+        targetSoundEnabled = true;
+        try {
           vid.muted = false;
           vid.volume = targetVolume;
-        }
+        } catch(err) {}
         if (vid.paused && !isStreamUserPaused) {
           safePlay();
         }
-      });
+        updateDockUI();
+      }
+
+      window.addEventListener('click', handleLiveUserInteraction);
+      window.addEventListener('touchstart', handleLiveUserInteraction, { passive: true });
 
       window.addEventListener('keydown', function(e) {
         if (e.code === 'Space') {
@@ -1540,7 +1578,7 @@ app.get([
             }, 3000);
 
             socket.on('connect', function() {
-              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.38';
+              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.39';
               socket.emit('REQUEST_MASTER_LIVE_STATE');
             });
 
@@ -1661,15 +1699,51 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
   let existsOnDisk = false;
   if (vParam && typeof vParam === 'string' && vParam.includes('/uploads/')) {
     const filename = vParam.substring(vParam.indexOf('/uploads/') + 9).split('?')[0];
-    const checkFile = path.join(uploadsDir, filename);
-    if (fs.existsSync(checkFile)) {
+    const foundPath = findFileInUploadDirs(filename);
+    if (foundPath) {
       existsOnDisk = true;
-      vParam = `/uploads/${filename}`;
+      vParam = `/uploads/${path.basename(foundPath)}`;
     }
   }
-  if (!vParam || !existsOnDisk || vParam.startsWith('blob:') || vParam.includes('default_idol.mp4')) {
-    // Sân khấu chính không có video thì để trống, tuyệt đối không tự ý lấy video cũ trong uploads
-    vParam = '';
+  if (!existsOnDisk) {
+    if (currentMasterLiveState && currentMasterLiveState.mediaUrl && currentMasterLiveState.mediaUrl.includes('/uploads/')) {
+      const mFilename = currentMasterLiveState.mediaUrl.substring(currentMasterLiveState.mediaUrl.indexOf('/uploads/') + 9).split('?')[0];
+      const foundPath = findFileInUploadDirs(mFilename);
+      if (foundPath) {
+        existsOnDisk = true;
+        vParam = `/uploads/${path.basename(foundPath)}`;
+      }
+    }
+  }
+  // 🎬 FALLBACK SÂN KHẤU PHỤ & LIVE IDOL AVATAR CHO WINDOW CAPTURE
+  if (!existsOnDisk) {
+    let subUrl = (currentMasterLiveState && currentMasterLiveState.secondaryMediaUrl) || '';
+    if (!subUrl && currentMasterLiveState && Array.isArray(currentMasterLiveState.syncedAvatars) && currentMasterLiveState.syncedAvatars.length > 0) {
+      subUrl = currentMasterLiveState.syncedAvatars[0].resolvedVidSrc || currentMasterLiveState.syncedAvatars[0].talkVideo || currentMasterLiveState.syncedAvatars[0].idleVideo || '';
+    }
+    if (subUrl && typeof subUrl === 'string') {
+      if (subUrl.includes('/uploads/')) {
+        const sFilename = subUrl.substring(subUrl.indexOf('/uploads/') + 9).split('?')[0];
+        const foundPath = findFileInUploadDirs(sFilename);
+        if (foundPath) {
+          existsOnDisk = true;
+          vParam = `/uploads/${path.basename(foundPath)}`;
+        }
+      } else if (subUrl.startsWith('http') || subUrl.startsWith('/')) {
+        existsOnDisk = true;
+        vParam = subUrl;
+      }
+    }
+  }
+  // ⚡ FALLBACK TỰ ĐỘNG: Lấy video tải lên mới nhất
+  if (!existsOnDisk && (!vParam || !vParam.trim())) {
+    const latestUpload = getLatestUploadMediaUrl();
+    if (latestUpload) {
+      existsOnDisk = true;
+      vParam = latestUpload;
+    } else {
+      vParam = '';
+    }
   }
   const soundParam = req.query.sound !== '0';
   const fitParam = req.query.fit || 'cover';
@@ -1860,21 +1934,21 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     <div id="overlayTextBanner" style="position: absolute; left: 4%; top: 5%; width: 92%; z-index: 35; text-align: center; pointer-events: none; display: none;">
       <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);"></div>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.38</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.39</div>
   </div>
 
   <!-- BẢNG ĐIỀU KHIỂN NỔI DOCK TOÀN CỤC CẤP BODY — CHỐNG BỊ GPU VIDEO LAYER CHE KHUẤT -->
   <div id="controlsDock">
-    <button id="btnLiveStatus" class="dock-btn" style="background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.6); color: #10b981; font-weight: 900; font-size: 9px; padding: 2px 6px; cursor: default;" title="Luồng Phát Live 4K 60 FPS Đang Hoạt Động">
+    <button id="btnLiveStatus" class="dock-btn" style="background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.6); color: #10b981; font-weight: 900; font-size: 9px; padding: 2px 6px; cursor: pointer;" title="Luồng Phát Live 4K 60 FPS (Bấm để làm mới luồng)">
       <span style="width:5px; height:5px; border-radius:50%; background:#10b981; display:inline-block; box-shadow:0 0 6px #10b981; margin-right: 3px;"></span>• LIVE
     </button>
-    <button id="btnPlayPause" class="dock-btn" onclick="window.handlePlayPauseToggle && window.handlePlayPauseToggle(event)" onpointerdown="event.stopPropagation()" title="Tạm dừng / Tiếp tục độc lập (Space)">⏸️ Dừng</button>
-    <button id="btnMuteUnmute" class="dock-btn" onclick="window.handleMuteToggle && window.handleMuteToggle(event)" onpointerdown="event.stopPropagation()" title="Bật / Tắt âm thanh độc lập (M)">${soundParam ? '🔊 Bật Tiếng' : '🔇 Tắt Tiếng'}</button>
-    <button id="btnFitToggle" class="dock-btn" onclick="window.handleFitToggle && window.handleFitToggle(event)" onpointerdown="event.stopPropagation()" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa' : '📐 Tràn'}</button>
-    <button id="btnHideAll" class="dock-btn dock-btn-hide" onclick="window.handleHideDock && window.handleHideDock(event)" onpointerdown="event.stopPropagation()" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn (H)</button>
+    <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập (Space)">⏸️ Dừng</button>
+    <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập (M)">${soundParam ? '🔊 Bật Tiếng' : '🔇 Tắt Tiếng'}</button>
+    <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa' : '📐 Tràn'}</button>
+    <button id="btnHideAll" class="dock-btn dock-btn-hide" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn (H)</button>
   </div>
 
-  <button id="btnRestoreIcon" onclick="window.handleRestoreDock && window.handleRestoreDock(event)" onpointerdown="event.stopPropagation()" title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)">👁️</button>
+  <button id="btnRestoreIcon" title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)">👁️</button>
 
   <script>
     (function() {
@@ -2044,12 +2118,58 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         };
       }
 
+      // Nút • LIVE: Bấm để làm mới luồng phát tức thì 0ms
+      const btnLiveStatus = document.getElementById('btnLiveStatus');
+      if (btnLiveStatus) {
+        btnLiveStatus.addEventListener('click', throttleWindowAction(function(e) {
+          isStreamUserPaused = false;
+          if (typeof fetchLatestState === 'function') fetchLatestState();
+          if (vid && vid.src) {
+            try { vid.currentTime = vid.currentTime; } catch(err) {}
+            safePlay();
+          }
+          updateDockUI();
+        }));
+      }
+
       // Đăng ký duy nhất 1 sự kiện click được bọc qua throttle để triệt tiêu hoàn toàn lỗi double-click
       if (btnPlayPause) btnPlayPause.addEventListener('click', throttleWindowAction(window.handlePlayPauseToggle));
       if (btnMuteUnmute) btnMuteUnmute.addEventListener('click', throttleWindowAction(window.handleMuteToggle));
       if (btnFitToggle) btnFitToggle.addEventListener('click', throttleWindowAction(window.handleFitToggle));
       if (btnHideAll) btnHideAll.addEventListener('click', throttleWindowAction(window.handleHideDock));
       if (btnRestore) btnRestore.addEventListener('click', throttleWindowAction(window.handleRestoreDock));
+
+      // BẤM VÀO GIỮA MÀN HÌNH VIDEO: BẬT VOICE (UNMUTE) VÀ PHÁT VIDEO TỨC THÌ
+      function handleVideoScreenInteraction(e) {
+        // Tránh kích hoạt khi người dùng đang bấm vào dock hoặc restore icon
+        if (e && e.target && (e.target.closest('#controlsDock') || e.target.closest('#btnRestoreIcon'))) return;
+        targetMuted = false;
+        if (vid) {
+          vid.muted = false;
+          vid.volume = 1.0;
+        }
+        if (vid && vid.paused) {
+          isStreamUserPaused = false;
+          safePlay();
+        }
+        updateDockUI();
+        if (socket) {
+          socket.emit('VIDEO_PLAYBACK_CONTROL', { isMuted: false, isPlaying: true, timestamp: Date.now() });
+        }
+        if (bc) {
+          try {
+            bc.postMessage({ type: 'VIDEO_PLAYBACK_CONTROL', isMuted: false, isPlaying: true, timestamp: Date.now() });
+          } catch(err) {}
+        }
+      }
+
+      const stageEl = document.getElementById('stage');
+      if (stageEl) {
+        stageEl.addEventListener('click', handleVideoScreenInteraction);
+      }
+      if (vid) {
+        vid.addEventListener('click', handleVideoScreenInteraction);
+      }
 
       window.addEventListener('keydown', function(e) {
         if (['input', 'textarea', 'select'].includes(document.activeElement?.tagName?.toLowerCase())) return;
@@ -2173,7 +2293,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         });
 
         socket.on('connect', function() {
-          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.38';
+          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.39';
           socket.emit('REQUEST_MASTER_LIVE_STATE');
         });
 
@@ -2381,7 +2501,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.38';
+  let ver = '4.9.39';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -2419,7 +2539,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.38';
+  let ver = '4.9.39';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));

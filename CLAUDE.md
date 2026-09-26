@@ -101,14 +101,27 @@ flowchart LR
 3. **Bước 3 — Nạp Video Sản Phẩm & Video Feedback:** Trong mục *Chốt đơn / Từ khóa*, chọn video cho từng sản phẩm và nhập thời gian phát (số giây/phút mong muốn).
 4. **Bước 4 — Bật Kết Nối TikTok Live Studio:** Lấy link Online HTTPS (`/live-stream`) dán vào TikTok Live Studio. Hệ thống sẽ tự động điều phối toàn bộ chuỗi sự kiện và phản hồi mượt mà 60 FPS 4K.
 
----
-
 ## 5. 🔔 QUY CHUẨN THÔNG BÁO BẢN CẬP NHẬT (UPDATE NOTIFICATION MODAL) - DUY NHẤT PHIÊN BẢN MỚI NHẤT (BẮT BUỘC)
 1. **Chỉ Giữ Lại 1 Mục Duy Nhất Trong `UPDATE_NOTES`:**
    - Trong `src/components/genaidol/UpdateNotificationModal.jsx`, mảng `UPDATE_NOTES` BẮT BUỘC chỉ chứa DUY NHẤT 1 mục (object) của phiên bản cập nhật mới nhất.
    - Tuyệt đối **KHÔNG lưu trữ hoặc hiển thị danh sách các phiên bản cập nhật cũ** trong modal thông báo, nhằm tránh gây rối mắt, nhiễu loạn thông tin và làm chậm giao diện.
 2. **Luôn Tự Động Kích Hoạt Modal Cập Nhật Cho Người Dùng:**
    - Mỗi lần hoàn thành cập nhật một task, bắt buộc bump phiên bản (`package.json`, `UpdateNotificationModal.jsx`, `backend/server.cjs`, `api/download.js`), để `currentVersion !== lastDismissedVersion` luôn kích hoạt hiển thị modal ghi chú bản mới nhất.
+
+---
+
+## 6. ⚡ QUY CHUẨN TIKTOK LIVE STUDIO, NÚT DOCK & ĐIỀU KHIỂN VOICE TOÀN BỘ VIDEO (v4.9.39+)
+1. **Phát Ngay Lập Tức 0ms Cho Link TikTok Live Studio (`/live-stream`):**
+   - Khi dán link vào TikTok Live Studio, video BẮT BUỘC hiển thị ngay lập tức (0ms), không bao giờ bị kẹt quay vòng vô tận ("Đang kết nối luồng live...").
+   - Hệ thống tự động phân giải phát video từ Sân Khấu Chính, nếu chưa có thì lấy từ Sân Khấu Phụ (Live Idol Avatar / Sequencer / Avatar 1-4) hoặc video mới nhất vừa tải lên.
+   - Trình duyệt tích hợp cơ chế tự động ẩn loading overlay trong 1.5s và khởi động video 60 FPS tức thì.
+2. **Kích Hoạt 100% Nút Bấm Thanh Dock (Ảnh 1):**
+   - Các nút dock `[• LIVE]`, `[⏸️ Dừng]`, `[🔊 Bật Tiếng]`, `[📐 Tràn]`, `[✕ Ẩn (H)]` và `[👁️]` phải luôn hoạt động 100%, thao tác cực nhạy, triệt tiêu hoàn toàn lỗi duplicate trigger.
+   - Nút `• LIVE` bấm được để làm mới luồng phát tức thì 0ms.
+3. **Bấm Vào Giữa Màn Hình Video Bật Voice (Unmute) & Phát Video:**
+   - Khi bấm vào giữa màn hình video ở bất kỳ giao diện nào (Sân Khấu Chính, Live Idol Avatar, Window Capture, TikTok Live Studio), hệ thống BẮT BUỘC BẬT VOICE (unmute) và phát video đồng bộ 4K 60 FPS.
+4. **Nút `[🔊 VOICE AI: BẬT / TẮT]` (Ảnh 2) Điều Khiển Voice Của Tất Cả Video Trong Live Idol Avatar:**
+   - Nút này điều khiển trực tiếp bật/tắt âm thanh (voice) của TẤT CẢ VIDEO trong Live Idol Avatar (nền chính, PiP, Avatar 1-4) đồng thời đồng bộ toàn cục qua localStorage và BroadcastChannel.
 
 ---
 
