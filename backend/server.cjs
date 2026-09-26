@@ -1803,13 +1803,14 @@ app.get([
           if (vid) { vid.style.display = 'none'; }
         }
 
-        // 4. Hiển thị Lớp Multi-Avatar (Nếu có nhân vật hợp lệ)
-        if (hasValidAvatars) {
+        // 4. Hiển thị Lớp Multi-Avatar & Extra Layers (Đồng bộ 100% Sân Khấu Chính)
+        if (hasValidAvatars || (data.multiAvatarConfig && Array.isArray(data.multiAvatarConfig.extraImageLayers) && data.multiAvatarConfig.extraImageLayers.length > 0)) {
           if (multiStage) {
             multiStage.style.display = 'block';
-            multiStage.style.background = 'transparent';
+            multiStage.style.background = data.multiAvatarConfig?.backgroundColor || 'transparent';
           }
           renderMultiAvatarCharacters(data.multiAvatarConfig, data.activeSpeakerId);
+          renderMultiAvatarExtraLayers(data.multiAvatarConfig);
         } else {
           if (multiStage) multiStage.style.display = 'none';
         }
@@ -1819,10 +1820,11 @@ app.get([
           const pipUrl = resolveUrl(data.secondaryMediaUrl);
           if (pipUrl) {
             const trans = data.secondaryMediaTransform || { x: 52, y: 28, width: 40, height: 48, zIndex: 25 };
-            pipContainer.style.left = trans.x + '%';
-            pipContainer.style.top = trans.y + '%';
-            pipContainer.style.width = trans.width + '%';
-            pipContainer.style.height = (trans.height || 25) + '%';
+            pipContainer.style.left = (trans.x ?? 52) + '%';
+            pipContainer.style.top = (trans.y ?? 28) + '%';
+            pipContainer.style.width = (trans.width ?? 40) + '%';
+            pipContainer.style.height = (trans.height ?? 48) + '%';
+            pipContainer.style.zIndex = trans.zIndex || 25;
             pipContainer.style.display = 'block';
 
             if (isImage(pipUrl)) {
@@ -1843,10 +1845,15 @@ app.get([
           }
         }
 
-        // 5. Banner Hình Ảnh Overlay
+        // 5. Banner Hình Ảnh Overlay (Đúng Tọa Độ Transform)
         if (overlayImgEl && overlayImgContent) {
           const imgUrl = resolveUrl(data.overlayImage || data.bannerUrl || data.posterUrl);
           if (imgUrl) {
+            const trans = data.overlayImageTransform || { x: 10, y: 12, width: 80, height: 20, zIndex: 30 };
+            overlayImgEl.style.left = (trans.x ?? 10) + '%';
+            overlayImgEl.style.top = (trans.y ?? 12) + '%';
+            overlayImgEl.style.width = (trans.width ?? 80) + '%';
+            overlayImgEl.style.zIndex = trans.zIndex || 30;
             overlayImgContent.src = imgUrl;
             overlayImgEl.style.display = 'block';
           } else {
@@ -1854,10 +1861,15 @@ app.get([
           }
         }
 
-        // 6. Tiêu Đề Chữ Overlay
+        // 6. Tiêu Đề Chữ Overlay (Đúng Tọa Độ Transform)
         if (banner && content) {
           const txt = data.overlayText || data.title || data.stepTitle;
           if (txt && typeof txt === 'string' && txt.trim()) {
+            const trans = data.overlayTextTransform || { x: 4, y: 5, width: 92, zIndex: 35 };
+            banner.style.left = (trans.x ?? 4) + '%';
+            banner.style.top = (trans.y ?? 5) + '%';
+            banner.style.width = (trans.width ?? 92) + '%';
+            banner.style.zIndex = trans.zIndex || 35;
             content.innerText = txt.trim();
             banner.style.display = 'block';
           } else {
@@ -2861,13 +2873,14 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           if (vid) { vid.style.display = 'none'; }
         }
 
-        // 4. Hiển thị Lớp Multi-Avatar (Nếu có nhân vật hợp lệ)
-        if (hasValidAvatars) {
+        // 4. Hiển thị Lớp Multi-Avatar & Extra Layers (Đồng bộ 100% Sân Khấu Chính)
+        if (hasValidAvatars || (data.multiAvatarConfig && Array.isArray(data.multiAvatarConfig.extraImageLayers) && data.multiAvatarConfig.extraImageLayers.length > 0)) {
           if (multiStage) {
             multiStage.style.display = 'block';
-            multiStage.style.background = 'transparent';
+            multiStage.style.background = data.multiAvatarConfig?.backgroundColor || 'transparent';
           }
           renderMultiAvatarCharacters(data.multiAvatarConfig, data.activeSpeakerId);
+          renderMultiAvatarExtraLayers(data.multiAvatarConfig);
         } else {
           if (multiStage) multiStage.style.display = 'none';
         }
@@ -2877,10 +2890,11 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           const pipUrl = resolveUrl(data.secondaryMediaUrl);
           if (pipUrl) {
             const trans = data.secondaryMediaTransform || { x: 52, y: 28, width: 40, height: 48, zIndex: 25 };
-            pipContainer.style.left = trans.x + '%';
-            pipContainer.style.top = trans.y + '%';
-            pipContainer.style.width = trans.width + '%';
-            pipContainer.style.height = (trans.height || 25) + '%';
+            pipContainer.style.left = (trans.x ?? 52) + '%';
+            pipContainer.style.top = (trans.y ?? 28) + '%';
+            pipContainer.style.width = (trans.width ?? 40) + '%';
+            pipContainer.style.height = (trans.height ?? 48) + '%';
+            pipContainer.style.zIndex = trans.zIndex || 25;
             pipContainer.style.display = 'block';
 
             if (isImage(pipUrl)) {
@@ -2901,10 +2915,15 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           }
         }
 
-        // 5. Banner Hình Ảnh Overlay
+        // 5. Banner Hình Ảnh Overlay (Đúng Tọa Độ Transform)
         if (overlayImgEl && overlayImgContent) {
           const imgUrl = resolveUrl(data.overlayImage || data.bannerUrl || data.posterUrl);
           if (imgUrl) {
+            const trans = data.overlayImageTransform || { x: 10, y: 12, width: 80, height: 20, zIndex: 30 };
+            overlayImgEl.style.left = (trans.x ?? 10) + '%';
+            overlayImgEl.style.top = (trans.y ?? 12) + '%';
+            overlayImgEl.style.width = (trans.width ?? 80) + '%';
+            overlayImgEl.style.zIndex = trans.zIndex || 30;
             overlayImgContent.src = imgUrl;
             overlayImgEl.style.display = 'block';
           } else {
@@ -2912,10 +2931,15 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           }
         }
 
-        // 6. Tiêu Đề Chữ Overlay
+        // 6. Tiêu Đề Chữ Overlay (Đúng Tọa Độ Transform)
         if (banner && content) {
           const txt = data.overlayText || data.title || data.stepTitle;
           if (txt && typeof txt === 'string' && txt.trim()) {
+            const trans = data.overlayTextTransform || { x: 4, y: 5, width: 92, zIndex: 35 };
+            banner.style.left = (trans.x ?? 4) + '%';
+            banner.style.top = (trans.y ?? 5) + '%';
+            banner.style.width = (trans.width ?? 92) + '%';
+            banner.style.zIndex = trans.zIndex || 35;
             content.innerText = txt.trim();
             banner.style.display = 'block';
           } else {
