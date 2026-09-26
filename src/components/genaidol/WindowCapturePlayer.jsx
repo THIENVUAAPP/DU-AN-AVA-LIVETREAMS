@@ -1422,9 +1422,9 @@ export default function WindowCapturePlayer() {
               objectFit: fitMode,
               display: 'block',
               backgroundColor: '#000',
-              transform: 'translate3d(0, 0, 0)',
-              WebkitTransform: 'translate3d(0, 0, 0)',
-              imageRendering: '-webkit-optimize-contrast'
+              imageRendering: '-webkit-optimize-contrast',
+              WebkitFontSmoothing: 'antialiased',
+              MozOsxFontSmoothing: 'grayscale'
             }}
           />
         )
@@ -1473,9 +1473,9 @@ export default function WindowCapturePlayer() {
               objectFit: fitMode,
               display: 'block',
               backgroundColor: '#000',
-              transform: 'translate3d(0, 0, 0)',
-              WebkitTransform: 'translate3d(0, 0, 0)',
-              imageRendering: '-webkit-optimize-contrast'
+              imageRendering: '-webkit-optimize-contrast',
+              WebkitFontSmoothing: 'antialiased',
+              MozOsxFontSmoothing: 'grayscale'
             }}
           />
         )
@@ -1497,9 +1497,9 @@ export default function WindowCapturePlayer() {
             objectFit: fitMode,
             display: 'block',
             backgroundColor: '#000',
-            transform: 'translate3d(0, 0, 0)',
-            WebkitTransform: 'translate3d(0, 0, 0)',
-            imageRendering: '-webkit-optimize-contrast'
+            imageRendering: '-webkit-optimize-contrast',
+            WebkitFontSmoothing: 'antialiased',
+            MozOsxFontSmoothing: 'grayscale'
           }}
         />
       ) : (currentStage === 'bando' || currentStage === 'vietnam_map' || currentStage === 'map') ? (
@@ -1566,7 +1566,7 @@ export default function WindowCapturePlayer() {
                           loop
                           muted={isUserMutedRef.current}
                           playsInline
-                          style={{ width: '100%', height: '100%', objectFit: 'cover', backgroundColor: '#000' }}
+                          style={{ width: '100%', height: '100%', objectFit: 'cover', backgroundColor: '#000', imageRendering: '-webkit-optimize-contrast', WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale' }}
                         />
                       )
                     ) : (
@@ -1651,7 +1651,7 @@ export default function WindowCapturePlayer() {
                   {isImg ? (
                     <img src={layerUrl} alt={layer.name || 'Extra Layer'} style={{ width: '100%', height: '100%', objectFit: layer.objectFit || 'contain', ...chromaStyle }} />
                   ) : (
-                    <video src={layerUrl} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: layer.objectFit || 'contain', ...chromaStyle }} />
+                    <video src={layerUrl} autoPlay loop muted playsInline style={{ width: '100%', height: '100%', objectFit: layer.objectFit || 'contain', imageRendering: '-webkit-optimize-contrast', WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale', ...chromaStyle }} />
                   )}
                 </div>
               );
@@ -1705,7 +1705,7 @@ export default function WindowCapturePlayer() {
                           loop
                           muted={isUserMutedRef.current}
                           playsInline
-                          style={{ width: '100%', height: '100%', objectFit: transform.objectFit || 'cover', backgroundColor: 'transparent', ...chromaStyle }}
+                          style={{ width: '100%', height: '100%', objectFit: transform.objectFit || 'cover', backgroundColor: 'transparent', imageRendering: '-webkit-optimize-contrast', WebkitFontSmoothing: 'antialiased', MozOsxFontSmoothing: 'grayscale', ...chromaStyle }}
                         />
                       )
                     ) : (
@@ -1817,12 +1817,9 @@ export default function WindowCapturePlayer() {
               objectFit: fitMode,
               display: 'block',
               backgroundColor: '#000',
-              transform: 'translate3d(0, 0, 0)',
-              WebkitTransform: 'translate3d(0, 0, 0)',
-              backfaceVisibility: 'hidden',
-              WebkitBackfaceVisibility: 'hidden',
               imageRendering: '-webkit-optimize-contrast',
-              willChange: 'transform'
+              WebkitFontSmoothing: 'antialiased',
+              MozOsxFontSmoothing: 'grayscale'
             }}
           />
         )

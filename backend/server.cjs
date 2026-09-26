@@ -1022,11 +1022,9 @@ app.get([
       display: ${isInitialImg ? 'none' : 'block'};
       outline: none; border: none;
       image-rendering: -webkit-optimize-contrast;
-      image-rendering: high-quality;
-      transform: translateZ(0);
-      -webkit-transform: translateZ(0);
-      backface-visibility: hidden;
-      -webkit-backface-visibility: hidden;
+      image-rendering: crisp-edges;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
     #imagePlayer {
       position: absolute;
@@ -1037,6 +1035,9 @@ app.get([
       background: #000;
       display: ${isInitialImg ? 'block' : 'none'};
       image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
     #loadingOverlay {
       position: absolute;
@@ -2140,16 +2141,20 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       object-fit: ${fitParam === 'contain' ? 'contain' : 'cover'};
       background-color: #000;
       display: ${isInitialImg ? 'none' : 'block'};
-      transform: translateZ(0);
-      -webkit-transform: translateZ(0);
-      backface-visibility: hidden;
-      perspective: 1000px;
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
     #imagePlayer {
       width: 100%; height: 100%;
       object-fit: ${fitParam === 'contain' ? 'contain' : 'cover'};
       background-color: #000;
       display: ${isInitialImg ? 'block' : 'none'};
+      image-rendering: -webkit-optimize-contrast;
+      image-rendering: crisp-edges;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
     }
     #controlsDock {
       position: fixed !important;

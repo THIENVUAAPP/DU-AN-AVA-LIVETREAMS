@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.45';
+export const APP_VERSION = '4.9.46';
 export const RELEASE_DATE = '26/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.46 - Nâng Cấp Chất Lượng Video Siêu Sắc Nét (Window Capture & Live Stage)',
+    description: 'Nâng cấp toàn bộ chất lượng hiển thị video trên các cửa sổ Window Capture và Live Stream Stage, bổ sung các cờ tối ưu hóa render phần cứng (image-rendering, font-smoothing) để loại bỏ hoàn toàn hiện tượng mờ (blur), mang lại hình ảnh sắc nét tuyệt đối 4K 60FPS cho TikTok Live Studio và OBS.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.45 - Đồng Bộ Toàn Bộ Sân Khấu TikTok Live, Làm Mới Bộ Nút Dock & Mute Ô Nhân Vật Đầu Trang',
     description: '1. Đồng Bộ Toàn Bộ Thành Phần Sân Khấu: Khắc phục triệt để lỗi TikTok Live Studio và Window Capture không hiển thị video nền; hệ thống đa tầng tự động hiển thị mượt mà cả Video/Ảnh nền chính, Video phụ PiP, Avatar AI, Banner quảng cáo và Câu tiêu đề chữ, đồng bộ 100% không bỏ sót bất kỳ thành phần nào. 2. Làm Mới Hoàn Toàn Bộ Nút Bấm Thanh Dock (Ảnh 2): Thiết kế Cyberpunk viên thuốc mới siêu nhạy (LIVE 60FPS, Tạm Dừng/Tiếp Tục, Bật/Tắt Tiếng, Tràn Màn/Vừa Khung, Ẩn Nút H và icon phục hồi 👁️), điều khiển đồng bộ tất cả các video trên trang 0ms, chống nuốt click tuyệt đối. 3. Tắt Tiếng Triệt Để Các Ô Nhân Vật Đầu Trang: Các ô video/nhân vật tải lên ở thanh trên đầu được mute hoàn toàn (volume = 0), chỉ duy nhất Sân Khấu Chính mới phát âm thanh. 4. Khóa Chặt 100% Toàn Bộ 14 Tab & Module Hệ Thống.'
