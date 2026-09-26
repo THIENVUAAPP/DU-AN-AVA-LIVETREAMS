@@ -2116,6 +2116,10 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     return /\.(png|jpe?g|webp|gif|svg|avif|bmp)($|\?|#)/i.test(u) || u.startsWith('data:image/');
   };
   const isInitialImg = isImageMediaHelper(vParam);
+  const secMedia = (currentMasterLiveState && currentMasterLiveState.secondaryMediaUrl) || '';
+  const secTrans = (currentMasterLiveState && currentMasterLiveState.secondaryMediaTransform) || { x: 2, y: 32, width: 47, height: 48, zIndex: 15 };
+  const overlayImg = (currentMasterLiveState && currentMasterLiveState.overlayImage) || '';
+  const overlayTxt = (currentMasterLiveState && currentMasterLiveState.overlayText) || '';
 
   const html = `<!DOCTYPE html>
 <html lang="vi">

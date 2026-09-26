@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.50';
+export const APP_VERSION = '4.9.51';
 export const RELEASE_DATE = '26/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.51 - Sửa Lỗi ReferenceError secTrans & Đồng Bộ Tuyệt Đối 100%',
+    description: '1. Khắc Phục Triệt Để Lỗi ReferenceError secTrans: Sửa dứt điểm lỗi báo đỏ server khi mở Window Capture, đảm bảo cửa sổ live 9:16 mở lên mượt mà 100% không còn bất kỳ lỗi nào. 2. Đồng Bộ Tuyệt Đối Mọi Khung Hình, Video & Âm Thanh: Mọi video phụ PiP, ảnh nền, avatar AI, banner và tiêu đề đều được nạp tức thì 0ms trên cả Window Capture và Link TikTok Live Studio. 3. Nút Bấm Siêu Nhạy: Toàn bộ nút điều khiển nhận lệnh ngay lập tức.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.50 - Đồng Bộ Đa Lớp 0ms & Nút Bấm Siêu Nhạy',
     description: '1. Đồng Bộ 100% Các Lớp Video, Avatar, Banner: Sân Khấu Chính có video phụ PiP, Avatar AI hay banner chữ nào thì Window Capture và Link TikTok Live Studio đều lập tức hiển thị đầy đủ 0ms ngay khi mở link. 2. Nâng Cấp Nút Bấm Dock: Xử lý triệt để logic Tạm Dừng, Bật/Tắt Tiếng, Tràn Màn và Ẩn Dock bằng cơ chế direct pointer/click handler, bấm là ăn ngay không trễ nhịp nào.'
