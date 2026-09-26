@@ -976,6 +976,10 @@ app.get([
     }
   }
 
+  const secMedia = (currentMasterLiveState && currentMasterLiveState.secondaryMediaUrl) || '';
+  const secTrans = (currentMasterLiveState && currentMasterLiveState.secondaryMediaTransform) || { x: 2, y: 32, width: 47, height: 48, zIndex: 15 };
+  const overlayImg = (currentMasterLiveState && currentMasterLiveState.overlayImage) || '';
+  const overlayTxt = (currentMasterLiveState && currentMasterLiveState.overlayText) || '';
   const soundParam = req.query.sound !== '0';
   const fitParam = req.query.fit || 'cover';
   const isImageMediaHelper = (u) => {
@@ -1242,19 +1246,19 @@ app.get([
     />
 
     <!-- Lớp Video Phụ PiP (Picture-in-Picture) Xếp Chồng Từ Sequencer -->
-    <div id="pipContainer" style="position: absolute; z-index: 25; pointer-events: none; display: none;">
-      <video id="pipVideo" autoplay loop muted playsinline style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; border: 2px solid rgba(255,255,255,0.5); box-shadow: 0 10px 25px rgba(0,0,0,0.85);"></video>
-      <img id="pipImage" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; display: none;" />
+    <div id="pipContainer" style="position: absolute; left: ${secTrans.x}%; top: ${secTrans.y}%; width: ${secTrans.width}%; height: ${secTrans.height}%; z-index: ${secTrans.zIndex || 25}; pointer-events: none; display: ${secMedia ? 'block' : 'none'};">
+      <video id="pipVideo" src="${secMedia && !isImageMediaHelper(secMedia) ? (secMedia.startsWith('http') || secMedia.startsWith('/') ? secMedia : '/' + secMedia) : ''}" autoplay loop muted playsinline style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; border: 2px solid rgba(255,255,255,0.5); box-shadow: 0 10px 25px rgba(0,0,0,0.85); display: ${secMedia && !isImageMediaHelper(secMedia) ? 'block' : 'none'};"></video>
+      <img id="pipImage" src="${secMedia && isImageMediaHelper(secMedia) ? (secMedia.startsWith('http') || secMedia.startsWith('/') ? secMedia : '/' + secMedia) : ''}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; display: ${secMedia && isImageMediaHelper(secMedia) ? 'block' : 'none'};" />
     </div>
 
     <!-- Lớp Banner Hình Ảnh Overlay -->
-    <div id="overlayImageBanner" style="position: absolute; left: 10%; top: 12%; width: 80%; z-index: 30; text-align: center; pointer-events: none; display: none;">
-      <img id="overlayImageContent" src="" alt="Banner Overlay" style="max-width: 100%; max-height: 25vh; object-fit: contain; border-radius: 12px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));" />
+    <div id="overlayImageBanner" style="position: absolute; left: 10%; top: 12%; width: 80%; z-index: 30; text-align: center; pointer-events: none; display: ${overlayImg ? 'block' : 'none'};">
+      <img id="overlayImageContent" src="${overlayImg ? (overlayImg.startsWith('http') || overlayImg.startsWith('/') ? overlayImg : '/' + overlayImg) : ''}" alt="Banner Overlay" style="max-width: 100%; max-height: 25vh; object-fit: contain; border-radius: 12px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));" />
     </div>
 
     <!-- Lớp Tiêu Đề Chữ Overlay -->
-    <div id="overlayTextBanner" style="position: absolute; left: 4%; top: 5%; width: 92%; z-index: 35; text-align: center; pointer-events: none; display: none;">
-      <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);"></div>
+    <div id="overlayTextBanner" style="position: absolute; left: 4%; top: 5%; width: 92%; z-index: 35; text-align: center; pointer-events: none; display: ${overlayTxt ? 'block' : 'none'};">
+      <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);">${overlayTxt}</div>
     </div>
     
     <div id="badge">🔴 4K 60 FPS REALTIME v4.9.45</div>
@@ -1423,13 +1427,13 @@ app.get([
             try { e.preventDefault(); e.stopPropagation(); } catch(err) {}
           }
           const now = Date.now();
-          if (now - lastAction < 100) return;
+          if (now - lastAction < 80) return;
           lastAction = now;
           actionFn(e);
         }
-        el.addEventListener('pointerdown', execute, { passive: false });
-        el.addEventListener('click', execute, { passive: false });
-        el.addEventListener('touchend', execute, { passive: false });
+        el.onpointerdown = execute;
+        el.onclick = execute;
+        el.ontouchend = execute;
       }
 
       bindDockBtn(btnLiveStatus, function() {
@@ -2331,16 +2335,19 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     />
 
     <!-- Lớp Video Phụ PiP (Picture-in-Picture) Xếp Chồng Từ Sequencer -->
-    <div id="pipContainer" style="position: absolute; z-index: 25; pointer-events: none; display: none;">
-      <video id="pipVideo" autoplay loop muted playsinline style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; border: 2px solid rgba(255,255,255,0.5); box-shadow: 0 10px 25px rgba(0,0,0,0.85);"></video>
-      <img id="pipImage" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; display: none;" />
+    <div id="pipContainer" style="position: absolute; left: ${secTrans.x}%; top: ${secTrans.y}%; width: ${secTrans.width}%; height: ${secTrans.height}%; z-index: ${secTrans.zIndex || 25}; pointer-events: none; display: ${secMedia ? 'block' : 'none'};">
+      <video id="pipVideo" src="${secMedia && !isImageMediaHelper(secMedia) ? (secMedia.startsWith('http') || secMedia.startsWith('/') ? secMedia : '/' + secMedia) : ''}" autoplay loop muted playsinline style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; border: 2px solid rgba(255,255,255,0.5); box-shadow: 0 10px 25px rgba(0,0,0,0.85); display: ${secMedia && !isImageMediaHelper(secMedia) ? 'block' : 'none'};"></video>
+      <img id="pipImage" src="${secMedia && isImageMediaHelper(secMedia) ? (secMedia.startsWith('http') || secMedia.startsWith('/') ? secMedia : '/' + secMedia) : ''}" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; display: ${secMedia && isImageMediaHelper(secMedia) ? 'block' : 'none'};" />
     </div>
 
-    <div id="overlayImageBanner" style="position: absolute; left: 10%; top: 12%; width: 80%; z-index: 30; text-align: center; pointer-events: none; display: none;">
-      <img id="overlayImageContent" src="" alt="Banner Overlay" style="max-width: 100%; max-height: 25vh; object-fit: contain; border-radius: 12px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));" />
+    <!-- Lớp Banner Hình Ảnh Overlay -->
+    <div id="overlayImageBanner" style="position: absolute; left: 10%; top: 12%; width: 80%; z-index: 30; text-align: center; pointer-events: none; display: ${overlayImg ? 'block' : 'none'};">
+      <img id="overlayImageContent" src="${overlayImg ? (overlayImg.startsWith('http') || overlayImg.startsWith('/') ? overlayImg : '/' + overlayImg) : ''}" alt="Banner Overlay" style="max-width: 100%; max-height: 25vh; object-fit: contain; border-radius: 12px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));" />
     </div>
-    <div id="overlayTextBanner" style="position: absolute; left: 4%; top: 5%; width: 92%; z-index: 35; text-align: center; pointer-events: none; display: none;">
-      <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);"></div>
+
+    <!-- Lớp Tiêu Đề Chữ Overlay -->
+    <div id="overlayTextBanner" style="position: absolute; left: 4%; top: 5%; width: 92%; z-index: 35; text-align: center; pointer-events: none; display: ${overlayTxt ? 'block' : 'none'};">
+      <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);">${overlayTxt}</div>
     </div>
     <div id="badge">🔴 4K 60 FPS REALTIME v4.9.45</div>
   </div>
@@ -2413,16 +2420,16 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       }
 
       function updateDockUI() {
-        const anyPaused = isStreamUserPaused || (vid && vid.paused);
+        const anyPaused = isStreamUserPaused;
         if (btnPlayPause) {
           btnPlayPause.innerHTML = anyPaused ? '▶️ Tiếp Tục' : '⏸️ Tạm Dừng';
           btnPlayPause.style.background = anyPaused ? 'rgba(16, 185, 129, 0.45)' : 'rgba(255, 255, 255, 0.15)';
           btnPlayPause.style.borderColor = anyPaused ? '#10b981' : 'rgba(255, 255, 255, 0.35)';
         }
         if (btnMuteUnmute) {
-          btnMuteUnmute.innerHTML = (!targetMuted && vid && !vid.muted) ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng';
-          btnMuteUnmute.style.background = (!targetMuted && vid && !vid.muted) ? 'rgba(6, 182, 212, 0.5)' : 'rgba(255, 255, 255, 0.15)';
-          btnMuteUnmute.style.borderColor = (!targetMuted && vid && !vid.muted) ? '#06b6d4' : 'rgba(255, 255, 255, 0.35)';
+          btnMuteUnmute.innerHTML = !targetMuted ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng';
+          btnMuteUnmute.style.background = !targetMuted ? 'rgba(6, 182, 212, 0.5)' : 'rgba(255, 255, 255, 0.15)';
+          btnMuteUnmute.style.borderColor = !targetMuted ? '#06b6d4' : 'rgba(255, 255, 255, 0.35)';
         }
         if (btnFitToggle) {
           btnFitToggle.innerHTML = currentFit === 'cover' ? '📐 Tràn Màn' : '📐 Vừa Khung';
@@ -2452,18 +2459,16 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       }
 
       function handlePlayPauseAction(e) {
-        if (!vid) return;
-        if (isStreamUserPaused || vid.paused) {
-          isStreamUserPaused = false;
-          getAllVideos().forEach(function(v) {
-            try { v.play().catch(function() {}); } catch(err) {}
-          });
-          safePlay();
-        } else {
-          isStreamUserPaused = true;
-          getAllVideos().forEach(function(v) {
+        isStreamUserPaused = !isStreamUserPaused;
+        getAllVideos().forEach(function(v) {
+          if (isStreamUserPaused) {
             try { v.pause(); } catch(err) {}
-          });
+          } else {
+            try { v.play().catch(function() {}); } catch(err) {}
+          }
+        });
+        if (!isStreamUserPaused) {
+          safePlay();
         }
         updateDockUI();
         if (socket) {
@@ -2540,13 +2545,13 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
             try { e.preventDefault(); e.stopPropagation(); } catch(err) {}
           }
           const now = Date.now();
-          if (now - lastAction < 100) return;
+          if (now - lastAction < 80) return;
           lastAction = now;
           actionFn(e);
         }
-        el.addEventListener('pointerdown', execute, { passive: false });
-        el.addEventListener('click', execute, { passive: false });
-        el.addEventListener('touchend', execute, { passive: false });
+        el.onpointerdown = execute;
+        el.onclick = execute;
+        el.ontouchend = execute;
       }
 
       const btnLiveStatus = document.getElementById('btnLiveStatus');

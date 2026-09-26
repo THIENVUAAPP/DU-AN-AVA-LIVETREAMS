@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.49';
+export const APP_VERSION = '4.9.50';
 export const RELEASE_DATE = '26/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.50 - Đồng Bộ Đa Lớp 0ms & Nút Bấm Siêu Nhạy',
+    description: '1. Đồng Bộ 100% Các Lớp Video, Avatar, Banner: Sân Khấu Chính có video phụ PiP, Avatar AI hay banner chữ nào thì Window Capture và Link TikTok Live Studio đều lập tức hiển thị đầy đủ 0ms ngay khi mở link. 2. Nâng Cấp Nút Bấm Dock: Xử lý triệt để logic Tạm Dừng, Bật/Tắt Tiếng, Tràn Màn và Ẩn Dock bằng cơ chế direct pointer/click handler, bấm là ăn ngay không trễ nhịp nào.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.49 - Triệt Tiêu Lỗi Xóa Màn Hình & Đồng Bộ Toàn Bộ Video Sân Khấu',
     description: '1. Sửa Lỗi Tự Động Xóa Màn Hình (clearMedia): Khắc phục triệt để lỗi làm cho video/đường link bị tắt đen hoặc ngắt kết nối sau 400ms do trạng thái clearMedia đè; giúp đường link online (/stage) và Window Capture mở lên là PHÁT NGAY LẬP TỨC 100%. 2. Đồng Bộ Đa Tầng Video & Avatar: Đảm bảo tất cả các lớp video chính, video phụ PiP, Avatar nhân vật và banner chữ hiển thị đồng nhất trên mọi màn hình. 3. Sửa Nút Bấm Dock: Nút bấm trên mọi phiên bản dock đều nhận PointerDown cực nhạy.'

@@ -3,18 +3,18 @@
   "aspectRatio": "9:16",
   "characterId": "",
   "characterName": "Video Người Dùng",
-  "mediaUrl": null,
-  "currentMedia": null,
+  "mediaUrl": "/uploads/media-1790434013735-893674935.mp4",
+  "currentMedia": "/uploads/media-1790433699785-797050230.mp4",
   "eventVideoUrl": null,
-  "isVideo": false,
-  "videoPlaybackEvent": "seek",
-  "isPlaying": false,
+  "isVideo": true,
+  "videoPlaybackEvent": "play",
+  "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1790432854772,
+  "updatedAt": 1790434015090,
   "isUserExplicitMediaLocked": false,
   "selectedCharacter": "",
-  "videoCurrentTime": 0.000328,
+  "videoCurrentTime": 1.593529,
   "type": "MASTER_LIVE_STATE_UPDATE",
   "flvUrl": null,
   "isConnected": false,
@@ -25,7 +25,7 @@
   "scriptText": "Dạ em xin chào tất cả mọi người đã vào xem phiên livestream hôm nay nha! Các bạn bấm thả tim và bình luận để nhận ưu đãi đặc biệt nhé!https://carrier-arguments-train-pirates.trycloudflare.com/live-stream",
   "voiceId": "brain_auto",
   "avatarSpeaker": "avatar_1",
-  "secondaryMediaUrl": null,
+  "secondaryMediaUrl": "/uploads/media-1790427690852-345991031.mp4",
   "secondaryMediaTransform": {
     "x": 2,
     "y": 32,
@@ -33,7 +33,7 @@
     "height": 48,
     "zIndex": 15
   },
-  "overlayImage": null,
+  "overlayImage": "/uploads/media-1790427712018-209768911.jpg",
   "overlayImageTransform": {
     "x": 31,
     "y": 43,
@@ -49,7 +49,7 @@
   "isMediaPinned": false,
   "fit": "cover",
   "sound": true,
-  "isVideoAudioMuted": true,
+  "isVideoAudioMuted": false,
   "isMuted": false,
   "videoVolume": 1,
   "clearMedia": false,
@@ -86,8 +86,8 @@
         "label": "Nhân Vật 4 (Khách Mời / Chuyên Gia)",
         "name": "Victoria",
         "voiceId": "el_uk_female",
-        "idleVideo": "/uploads/media-1790432238971-106978961.mp4",
-        "talkVideo": "/uploads/media-1790432238971-106978961.mp4",
+        "idleVideo": "/uploads/media-1790433699785-797050230.mp4",
+        "talkVideo": "/uploads/media-1790433699785-797050230.mp4",
         "volume": 1,
         "rate": 1,
         "enabled": false,
@@ -99,15 +99,40 @@
           "height": 100,
           "zIndex": 10
         },
-        "mediaUrl": "/uploads/media-1790432238971-106978961.mp4",
-        "resolvedVidSrc": "/uploads/media-1790432238971-106978961.mp4",
+        "mediaUrl": "/uploads/media-1790433699785-797050230.mp4",
+        "resolvedVidSrc": "/uploads/media-1790433699785-797050230.mp4",
         "isSpeakingNow": false
       }
     ],
     "activeSpeakerId": "avatar_1",
     "fromSequencer": true,
-    "syncedAt": 1790432249803
+    "syncedAt": 1790433704206
   },
-  "syncedAvatars": [],
+  "syncedAvatars": [
+    {
+      "id": "avatar_1",
+      "role": "guest",
+      "tag": "Khách Mời",
+      "label": "Nhân Vật 4 (Khách Mời / Chuyên Gia)",
+      "name": "Victoria",
+      "voiceId": "el_uk_female",
+      "idleVideo": "/uploads/media-1790433699785-797050230.mp4",
+      "talkVideo": "/uploads/media-1790433699785-797050230.mp4",
+      "volume": 1,
+      "rate": 1,
+      "enabled": false,
+      "chromaKey": null,
+      "transform": {
+        "x": 0,
+        "y": 0,
+        "width": 100,
+        "height": 100,
+        "zIndex": 10
+      },
+      "mediaUrl": "/uploads/media-1790433699785-797050230.mp4",
+      "resolvedVidSrc": "/uploads/media-1790433699785-797050230.mp4",
+      "isSpeakingNow": false
+    }
+  ],
   "tunnelUrl": "https://giants-single-assurance-glad.trycloudflare.com"
 }
