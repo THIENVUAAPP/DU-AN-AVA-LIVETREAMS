@@ -4,17 +4,17 @@
   "characterId": "",
   "characterName": "Video Người Dùng",
   "mediaUrl": "/uploads/media-1790434013735-893674935.mp4",
-  "currentMedia": "/uploads/media-1790437019985-145687189.mp4",
+  "currentMedia": "/uploads/media-1790439223902-572032347.mp4",
   "eventVideoUrl": null,
   "isVideo": true,
   "videoPlaybackEvent": "play",
   "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1790437302091,
+  "updatedAt": 1790439307126,
   "isUserExplicitMediaLocked": false,
   "selectedCharacter": "",
-  "videoCurrentTime": 0,
+  "videoCurrentTime": 6.945172,
   "type": "MASTER_LIVE_STATE_UPDATE",
   "flvUrl": null,
   "isConnected": false,
@@ -27,18 +27,18 @@
   "avatarSpeaker": "avatar_1",
   "secondaryMediaUrl": "/uploads/media-1790437279594-548110663.mp4",
   "secondaryMediaTransform": {
-    "x": 36,
-    "y": 32,
+    "x": 47,
+    "y": 21,
     "width": 53,
     "height": 36,
     "zIndex": 20
   },
   "overlayImage": "/uploads/media-1790437294645-816773232.jpg",
   "overlayImageTransform": {
-    "x": -17,
-    "y": 51,
-    "width": 80,
-    "height": 20,
+    "x": -24,
+    "y": 28,
+    "width": 100,
+    "height": 44,
     "zIndex": 25
   },
   "overlayText": null,
@@ -86,8 +86,8 @@
         "label": "Nhân Vật 2 (Trợ Lý / Quản Lý)",
         "name": "Nhân Vật 1",
         "voiceId": "vn_nam_quanly_uyquyen",
-        "idleVideo": "blob:http://localhost:3001/ccf791c2-460a-4b79-808d-bc98b6e902f6",
-        "talkVideo": "blob:http://localhost:3001/ccf791c2-460a-4b79-808d-bc98b6e902f6",
+        "idleVideo": "/uploads/media-1790439223902-572032347.mp4",
+        "talkVideo": "/uploads/media-1790439223902-572032347.mp4",
         "volume": 1,
         "rate": 1.05,
         "enabled": true,
@@ -99,14 +99,14 @@
           "height": 100,
           "zIndex": 10
         },
-        "resolvedVidSrc": "blob:http://localhost:3001/ccf791c2-460a-4b79-808d-bc98b6e902f6",
+        "resolvedVidSrc": "/uploads/media-1790439223902-572032347.mp4",
         "isSpeakingNow": false,
-        "mediaUrl": "blob:http://localhost:3001/ccf791c2-460a-4b79-808d-bc98b6e902f6"
+        "mediaUrl": "/uploads/media-1790439223902-572032347.mp4"
       }
     ],
     "activeSpeakerId": "avatar_1",
     "fromSequencer": true,
-    "syncedAt": 1790437300485
+    "syncedAt": 1790439238449
   },
   "syncedAvatars": [
     {
@@ -116,8 +116,8 @@
       "label": "Nhân Vật 2 (Trợ Lý / Quản Lý)",
       "name": "Nhân Vật 1",
       "voiceId": "vn_nam_quanly_uyquyen",
-      "idleVideo": "blob:http://localhost:3001/ccf791c2-460a-4b79-808d-bc98b6e902f6",
-      "talkVideo": "blob:http://localhost:3001/ccf791c2-460a-4b79-808d-bc98b6e902f6",
+      "idleVideo": "/uploads/media-1790439223902-572032347.mp4",
+      "talkVideo": "/uploads/media-1790439223902-572032347.mp4",
       "volume": 1,
       "rate": 1.05,
       "enabled": true,
@@ -129,10 +129,10 @@
         "height": 100,
         "zIndex": 10
       },
-      "resolvedVidSrc": "blob:http://localhost:3001/ccf791c2-460a-4b79-808d-bc98b6e902f6",
+      "resolvedVidSrc": "/uploads/media-1790439223902-572032347.mp4",
       "isSpeakingNow": false,
-      "mediaUrl": "blob:http://localhost:3001/ccf791c2-460a-4b79-808d-bc98b6e902f6"
+      "mediaUrl": "/uploads/media-1790439223902-572032347.mp4"
     }
   ],
-  "tunnelUrl": "https://craps-railroad-refresh-peripheral.trycloudflare.com"
+  "tunnelUrl": "https://scout-correct-promotes-cute.trycloudflare.com"
 }

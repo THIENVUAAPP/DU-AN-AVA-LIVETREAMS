@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.52';
+export const APP_VERSION = '4.9.53';
 export const RELEASE_DATE = '26/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.53 - Khôi Phục Hiển Thị Ô Nhân Vật & Phím Bấm Dock Siêu Nhạy',
+    description: '1. Khắc Phục Lỗi Hiển Thị Ô Nhân Vật Lên Sân Khấu Chính: Khi tải lên hoặc bấm chọn bất kỳ ô nhân vật nào, hệ thống lập tức hiển thị video/hình ảnh của nhân vật đó lên Sân Khấu Chính và đồng bộ 100% sang Window Capture OBS & TikTok Live Studio 0ms không bị khóa. 2. Nâng Cấp Nút Bấm Dock Siêu Phản Hồi: Tối ưu toàn bộ 6 nút điều khiển (LIVE 60FPS, Tạm Dừng/Tiếp Tục, Bật/Tắt Tiếng, Tràn Màn/Vừa Khung, Ẩn Nút H và Mắt Phục Hồi 👁️) với hiệu ứng phản hồi xúc giác tức thì và phím tắt Space, M, F, H. 3. Loại Bỏ Cảnh Báo Mạng Chập Chờn: Triệt tiêu màn hình loading/cảnh báo đè lên video phát, giúp luồng live phát siêu mượt 60 FPS.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.52 - Chuẩn Hóa Tọa Độ & Nhận Diện Đa Lớp Sân Khấu',
     description: '1. Chuẩn Hóa Bố Cục Đa Lớp: Tự động nhận diện chính xác từng lớp Video Nền, Video Phụ PiP, Lớp Ảnh Chèn (Extra Layers), Nhân Vật Avatar AI và Tiêu Đề theo đúng 100% tọa độ x, y, width, height mà người dùng sắp xếp trên Sân Khấu Chính. 2. Nhận Diện Lượt Nói Nhân Vật AI: Tự động chuyển đổi mượt mà giữa video nói (talkVideo) và video chờ (idleVideo) cho từng avatar. 3. Đồng Bộ Khung Hình Tuyệt Đối: Window Capture và Link TikTok Live Studio phản chiếu y hệt 1:1 như bản sao chép hoàn hảo.'

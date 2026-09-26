@@ -1261,7 +1261,7 @@ app.get([
       <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);">${overlayTxt}</div>
     </div>
     
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.45</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.53</div>
   </div>
 
   <!-- BẢNG ĐIỀU KHIỂN NỔI DOCK TOÀN CỤC CẤP BODY -->
@@ -1424,28 +1424,34 @@ app.get([
         let lastAction = 0;
         function execute(e) {
           if (e) {
-            try { e.preventDefault(); e.stopPropagation(); } catch(err) {}
+            try { e.stopPropagation(); } catch(err) {}
           }
           const now = Date.now();
-          if (now - lastAction < 80) return;
+          if (now - lastAction < 150) return;
           lastAction = now;
-          actionFn(e);
+          try {
+            el.style.transform = 'scale(0.92)';
+            setTimeout(function() { el.style.transform = ''; }, 120);
+            actionFn(e);
+          } catch(err) {
+            console.error('Dock action error:', err);
+          }
         }
-        el.onpointerdown = execute;
-        el.onclick = execute;
-        el.ontouchend = execute;
+        el.addEventListener('click', execute);
+        el.addEventListener('pointerdown', execute);
+        el.addEventListener('touchend', execute);
       }
 
-      bindDockBtn(btnLiveStatus, function() {
+      window.handleLiveRefreshToggle = function() {
         isStreamUserPaused = false;
         if (typeof fetchLatestState === 'function') fetchLatestState();
         getAllVideos().forEach(function(v) {
           try { v.play().catch(function() {}); } catch(err) {}
         });
         updateDockUI();
-      });
+      };
 
-      bindDockBtn(btnPlayPause, function() {
+      window.handlePlayPauseToggle = function() {
         if (isStreamUserPaused || (vid && vid.paused)) {
           isStreamUserPaused = false;
           getAllVideos().forEach(function(v) {
@@ -1459,9 +1465,9 @@ app.get([
           });
         }
         updateDockUI();
-      });
+      };
 
-      bindDockBtn(btnMuteUnmute, function() {
+      window.handleMuteToggle = function() {
         targetSoundEnabled = !targetSoundEnabled;
         getAllVideos().forEach(function(v) {
           try {
@@ -1473,18 +1479,39 @@ app.get([
           safePlay();
         }
         updateDockUI();
-      });
+      };
 
-      bindDockBtn(btnFitToggle, function() {
+      window.handleFitToggle = function() {
         currentFit = currentFit === 'cover' ? 'contain' : 'cover';
-        vid.style.objectFit = currentFit;
+        if (vid) vid.style.objectFit = currentFit;
         const imgEl = document.getElementById('imagePlayer');
         if (imgEl) imgEl.style.objectFit = currentFit;
         updateDockUI();
-      });
+      };
 
+      bindDockBtn(btnLiveStatus, window.handleLiveRefreshToggle);
+      bindDockBtn(btnPlayPause, window.handlePlayPauseToggle);
+      bindDockBtn(btnMuteUnmute, window.handleMuteToggle);
+      bindDockBtn(btnFitToggle, window.handleFitToggle);
       bindDockBtn(btnHideAll, function() { toggleHideAll(true); });
       bindDockBtn(btnRestore, function() { toggleHideAll(false); });
+
+      window.addEventListener('keydown', function(e) {
+        if (['input', 'textarea', 'select'].includes(document.activeElement?.tagName?.toLowerCase())) return;
+        if (e.code === 'Space') {
+          e.preventDefault();
+          window.handlePlayPauseToggle(e);
+        } else if (e.key === 'm' || e.key === 'M') {
+          e.preventDefault();
+          window.handleMuteToggle(e);
+        } else if (e.key === 'f' || e.key === 'F') {
+          e.preventDefault();
+          window.handleFitToggle(e);
+        } else if (e.key === 'h' || e.key === 'H') {
+          e.preventDefault();
+          toggleHideAll();
+        }
+      });
 
       function isSameMedia(srcA, srcB) {
         if (!srcA || !srcB) return false;
@@ -2365,7 +2392,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     <div id="overlayTextBanner" style="position: absolute; left: 4%; top: 5%; width: 92%; z-index: 35; text-align: center; pointer-events: none; display: ${overlayTxt ? 'block' : 'none'};">
       <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);">${overlayTxt}</div>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.45</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.53</div>
   </div>
 
   <!-- BẢNG ĐIỀU KHIỂN NỔI DOCK TOÀN CỤC CẤP BODY — CHỐNG BỊ GPU VIDEO LAYER CHE KHUẤT -->
@@ -2558,17 +2585,28 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         let lastAction = 0;
         function execute(e) {
           if (e) {
-            try { e.preventDefault(); e.stopPropagation(); } catch(err) {}
+            try { e.stopPropagation(); } catch(err) {}
           }
           const now = Date.now();
-          if (now - lastAction < 80) return;
+          if (now - lastAction < 150) return;
           lastAction = now;
-          actionFn(e);
+          try {
+            el.style.transform = 'scale(0.92)';
+            setTimeout(function() { el.style.transform = ''; }, 120);
+            actionFn(e);
+          } catch(err) {
+            console.error('Dock action error:', err);
+          }
         }
-        el.onpointerdown = execute;
-        el.onclick = execute;
-        el.ontouchend = execute;
+        el.addEventListener('click', execute);
+        el.addEventListener('pointerdown', execute);
+        el.addEventListener('touchend', execute);
       }
+
+      window.handleLiveRefreshToggle = handleLiveRefreshAction;
+      window.handlePlayPauseToggle = handlePlayPauseAction;
+      window.handleMuteToggle = handleMuteAction;
+      window.handleFitToggle = handleFitAction;
 
       const btnLiveStatus = document.getElementById('btnLiveStatus');
       bindDockBtn(btnLiveStatus, handleLiveRefreshAction);
@@ -2618,6 +2656,9 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         } else if (e.key === 'm' || e.key === 'M') {
           e.preventDefault();
           window.handleMuteToggle(e);
+        } else if (e.key === 'f' || e.key === 'F') {
+          e.preventDefault();
+          window.handleFitToggle(e);
         } else if (e.key === 'h' || e.key === 'H') {
           e.preventDefault();
           toggleHideAll();

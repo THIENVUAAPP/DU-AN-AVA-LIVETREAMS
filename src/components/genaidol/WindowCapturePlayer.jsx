@@ -4,9 +4,9 @@ const WindowCapturePlayer = () => {
   const [frameUrl, setFrameUrl] = useState('');
 
   useEffect(() => {
-    // Luôn luôn trỏ trực tiếp vào backend cục bộ (nơi chứa mọi logic sân khấu xịn nhất)
+    // Trỏ vào backend (hỗ trợ cả localhost và Cloudflare Tunnel HTTPS)
     const searchParams = window.location.search || '?mode=window_capture&sound=1&autoplay=1';
-    setFrameUrl(`http://localhost:3001/window-capture${searchParams}`);
+    setFrameUrl(`/window-capture${searchParams}`);
   }, []);
 
   if (!frameUrl) return <div style={{ background: '#000', width: '100vw', height: '100vh' }} />;

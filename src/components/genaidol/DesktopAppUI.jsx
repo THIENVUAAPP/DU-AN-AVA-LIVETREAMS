@@ -2299,7 +2299,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     if (!charItem) return;
     let charUrl = charItem.mediaUrl || charItem.url;
     setSelectedCharacter(charId);
-    try { localStorage.setItem('avalive_selected_char', charId); } catch (e) {}
+    setIsMasterStageSynced(false);
+    setFlowSequencerOverlay(null);
+    try { 
+      localStorage.setItem('avalive_selected_char', charId);
+      localStorage.removeItem('avalive_master_sync_active');
+      localStorage.removeItem('avalive_sequencer_overlay');
+    } catch (e) {}
     setIsGameBattleActive(false);
     setIsGameBanDoActive(false);
 
@@ -4834,8 +4840,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       );
     }
 
-    // 🎬 Luôn render visual canvas đầy đủ mọi lớp đồng bộ từ sequencer khi có dữ liệu
-    const hasSequencerData = !!flowSequencerOverlay && (
+    // 🎬 Luôn render visual canvas đầy đủ mọi lớp đồng bộ từ sequencer khi có dữ liệu và đang bật master sync
+    const hasSequencerData = isMasterStageSynced && !!flowSequencerOverlay && (
       !!flowSequencerOverlay.mainMediaUrl || 
       (Array.isArray(flowSequencerOverlay.syncedAvatars) && flowSequencerOverlay.syncedAvatars.length > 0) || 
       !!flowSequencerOverlay.secondaryMediaUrl || 
@@ -6623,7 +6629,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                         return;
                       }
                       setSelectedCharacter(charItem.id);
-                      try { localStorage.setItem('avalive_selected_char', charItem.id); } catch (e) {}
+                      setIsMasterStageSynced(false);
+                      setFlowSequencerOverlay(null);
+                      try { 
+                        localStorage.setItem('avalive_selected_char', charItem.id); 
+                        localStorage.removeItem('avalive_master_sync_active');
+                        localStorage.removeItem('avalive_sequencer_overlay');
+                      } catch (e) {}
                       setIsGameBattleActive(false);
                       setIsGameBanDoActive(false);
                       if (charUrl) {
