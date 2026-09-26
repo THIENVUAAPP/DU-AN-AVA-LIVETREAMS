@@ -1459,10 +1459,12 @@ app.get([
 
       bindDockBtn(btnMuteUnmute, function() {
         targetSoundEnabled = !targetSoundEnabled;
-        if (vid) {
-          vid.muted = !targetSoundEnabled;
-          if (targetSoundEnabled) vid.volume = targetVolume;
-        }
+        getAllVideos().forEach(function(v) {
+          try {
+            v.muted = !targetSoundEnabled;
+            if (targetSoundEnabled) v.volume = targetVolume;
+          } catch(e) {}
+        });
         if (targetSoundEnabled && vid && vid.paused && !isStreamUserPaused) {
           safePlay();
         }
@@ -2428,7 +2430,9 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
 
       function safePlay() {
         if (isStreamUserPaused) return;
-        vid.muted = targetMuted;
+        getAllVideos().forEach(function(v) {
+          try { v.muted = targetMuted; } catch(err) {}
+        });
         try {
           const p = vid.play();
           if (p !== undefined && typeof p.then === 'function') {
@@ -2485,7 +2489,9 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       function handleMuteAction(e) {
         if (!vid) return;
         targetMuted = !targetMuted;
-        vid.muted = targetMuted;
+        getAllVideos().forEach(function(v) {
+          try { v.muted = targetMuted; } catch(err) {}
+        });
         if (!targetMuted && vid.paused && !isStreamUserPaused) {
           safePlay();
         }

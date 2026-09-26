@@ -1936,7 +1936,7 @@ export default function WindowCapturePlayer() {
           {/* Nút 1: LIVE 60FPS */}
           <button
             type="button"
-            onClick={(e) => {
+            onPointerDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
               recheckLiveState(true);
@@ -1972,7 +1972,7 @@ export default function WindowCapturePlayer() {
           {/* Nút 2: Tạm Dừng / Tiếp Tục */}
           <button
             type="button"
-            onClick={(e) => {
+            onPointerDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
               toggleStandalonePlay(e);
@@ -2008,7 +2008,7 @@ export default function WindowCapturePlayer() {
           {/* Nút 3: Bật / Tắt Tiếng */}
           <button
             type="button"
-            onClick={(e) => {
+            onPointerDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
               toggleStandaloneMute(e);
@@ -2044,7 +2044,7 @@ export default function WindowCapturePlayer() {
           {/* Nút 4: Tràn Màn / Vừa Khung */}
           <button
             type="button"
-            onClick={(e) => {
+            onPointerDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
               toggleStandaloneFit(e);
@@ -2080,7 +2080,7 @@ export default function WindowCapturePlayer() {
           {/* Nút 5: Ẩn Nút (H) */}
           <button
             type="button"
-            onClick={(e) => {
+            onPointerDown={(e) => {
               e.preventDefault();
               e.stopPropagation();
               toggleControlsHidden(true);
@@ -2119,7 +2119,7 @@ export default function WindowCapturePlayer() {
       {isControlsHidden && (
         <button
           type="button"
-          onClick={(e) => {
+          onPointerDown={(e) => {
             e.preventDefault();
             e.stopPropagation();
             toggleControlsHidden(false);

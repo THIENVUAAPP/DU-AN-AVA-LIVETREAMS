@@ -2,19 +2,19 @@
   "stage": "idol",
   "aspectRatio": "9:16",
   "characterId": "",
-  "characterName": "Video Người Dùng",
-  "mediaUrl": null,
+  "characterName": "xoa-sach_video_tha…",
+  "mediaUrl": "/uploads/media-1790426021870-813906376.mp4",
   "currentMedia": "/uploads/media-1790399411264-30175482.mp4",
   "eventVideoUrl": null,
-  "isVideo": false,
-  "videoPlaybackEvent": "pause",
-  "isPlaying": false,
+  "isVideo": true,
+  "videoPlaybackEvent": "time_sync",
+  "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1790399898919,
+  "updatedAt": 1790426092466,
   "isUserExplicitMediaLocked": false,
-  "selectedCharacter": "",
-  "videoCurrentTime": 7.412313,
+  "selectedCharacter": "custom_1790426021855",
+  "videoCurrentTime": 0.486313,
   "type": "MASTER_LIVE_STATE_UPDATE",
   "flvUrl": null,
   "isConnected": false,
@@ -43,7 +43,7 @@
   "isMediaPinned": false,
   "fit": "cover",
   "sound": true,
-  "isVideoAudioMuted": false,
+  "isVideoAudioMuted": true,
   "isMuted": false,
   "videoVolume": 1,
   "clearMedia": false,
@@ -128,5 +128,5 @@
       "mediaUrl": "blob:http://localhost:3001/d02e24da-d290-4ac4-9494-1ad294636229"
     }
   ],
-  "tunnelUrl": "https://settings-leave-such-equation.trycloudflare.com"
+  "tunnelUrl": "https://sara-hopkins-powerseller-pricing.trycloudflare.com"
 }

@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.46';
+export const APP_VERSION = '4.9.47';
 export const RELEASE_DATE = '26/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.47 - Sửa Lỗi Điều Khiển Video Dock, Mute Toàn Cục & Cập Nhật Tên Link Phát Live',
+    description: '1. Sửa Lỗi Mất Tương Tác Thanh Dock: Thay thế cơ chế click bằng PointerDown để đảm bảo chạm/nhấn trên mọi nền tảng (Window Capture) đều ăn ngay lập tức, khắc phục triệt để lỗi bấm không tác dụng. 2. Tắt Tiếng Toàn Cục (Global Mute): Nút Bật/Tắt Tiếng hiện tại đã đồng bộ Mute cho TẤT CẢ các video trên sân khấu (Video chính, Video PiP phụ, Avatar AI...), giải quyết tình trạng âm thanh lọt từ các lớp video khác. 3. Đa Dạng Tên Miền Phát Sóng: Tối ưu các đường link phát trực tiếp để tương thích hoàn toàn trình duyệt Chromium của TikTok Live Studio, giúp nhận diện và phát video 100% không bị chặn (sử dụng /stage, /main, /tiktok-live, /live-stream đều đồng bộ mượt mà).'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.46 - Nâng Cấp Chất Lượng Video Siêu Sắc Nét (Window Capture & Live Stage)',
     description: 'Nâng cấp toàn bộ chất lượng hiển thị video trên các cửa sổ Window Capture và Live Stream Stage, bổ sung các cờ tối ưu hóa render phần cứng (image-rendering, font-smoothing) để loại bỏ hoàn toàn hiện tượng mờ (blur), mang lại hình ảnh sắc nét tuyệt đối 4K 60FPS cho TikTok Live Studio và OBS.'
