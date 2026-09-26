@@ -965,8 +965,8 @@ app.get([
       }
     }
   }
-  // ⚡ FALLBACK TỰ ĐỘNG: Nếu chưa có video nào đang phát, lấy video tải lên mới nhất để TikTok Live Studio KHÔNG BAO GIỜ bị kẹt xoay vòng vòng
-  if (!existsOnDisk && (!vParam || !vParam.trim())) {
+  // ⚡ FALLBACK TỰ ĐỘNG: Nếu chưa có video nào đang phát hoặc file không có trên đĩa, lấy video tải lên mới nhất để TikTok Live Studio KHÔNG BAO GIỜ bị kẹt xoay vòng vòng
+  if (!existsOnDisk) {
     const latestUpload = getLatestUploadMediaUrl();
     if (latestUpload) {
       existsOnDisk = true;
@@ -1736,7 +1736,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     }
   }
   // ⚡ FALLBACK TỰ ĐỘNG: Lấy video tải lên mới nhất
-  if (!existsOnDisk && (!vParam || !vParam.trim())) {
+  if (!existsOnDisk) {
     const latestUpload = getLatestUploadMediaUrl();
     if (latestUpload) {
       existsOnDisk = true;
