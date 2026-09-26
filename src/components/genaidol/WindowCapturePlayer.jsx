@@ -1908,14 +1908,35 @@ export default function WindowCapturePlayer() {
           onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
           onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.98')}
         >
-          <span style={{ fontSize: '9px', color: '#10b981', fontWeight: '900', display: 'inline-flex', alignItems: 'center', gap: '3px', userSelect: 'none', letterSpacing: '0.5px', whiteSpace: 'nowrap', flexShrink: 0 }}>
+          <button
+            type="button"
+            style={{
+              fontSize: '9px',
+              color: '#10b981',
+              fontWeight: '900',
+              display: 'inline-flex',
+              alignItems: 'center',
+              gap: '3px',
+              userSelect: 'none',
+              letterSpacing: '0.5px',
+              whiteSpace: 'nowrap',
+              flexShrink: 0,
+              background: 'rgba(16, 185, 129, 0.15)',
+              border: '1px solid rgba(16, 185, 129, 0.5)',
+              borderRadius: '10px',
+              padding: '2px 6px',
+              cursor: 'default'
+            }}
+            title="Luồng Phát Live 4K 60 FPS Đang Hoạt Động"
+          >
             <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 6px #10b981', flexShrink: 0 }} />
-            LIVE
-          </span>
+            • LIVE
+          </button>
 
           {/* Nút Play / Pause */}
           <button
             type="button"
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -1951,6 +1972,7 @@ export default function WindowCapturePlayer() {
           {/* Nút Bật / Tắt Tiếng */}
           <button
             type="button"
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -1986,6 +2008,7 @@ export default function WindowCapturePlayer() {
           {/* Nút Tràn / Vừa */}
           <button
             type="button"
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -2021,6 +2044,7 @@ export default function WindowCapturePlayer() {
           {/* ⭐ NÚT ẨN HẾT TẤT CẢ CÁC TAB / NÚT TRÊN GIAO DIỆN VIDEO */}
           <button
             type="button"
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();

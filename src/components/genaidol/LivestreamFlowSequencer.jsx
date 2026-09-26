@@ -192,13 +192,13 @@ export default function LivestreamFlowSequencer() {
   const [presetNameInput, setPresetNameInput] = useState('');
   const [isStageMediaPaused, setIsStageMediaPaused] = useState(false);
 
-  // 📡 State Đồng Bộ Ra Sân Khấu Chính (OBS / TikTok Live Studio) — Mặc định luôn bật để đồng bộ 100% giống các luồng live khác
+  // 📡 State Đồng Bộ Ra Sân Khấu Chính (OBS / TikTok Live Studio) — Mặc định luôn là TẮT (false), chỉ bật khi người dùng chủ động bấm click
   const [isMasterSynced, setIsMasterSynced] = useState(() => {
     try {
       const saved = localStorage.getItem('avalive_master_sync_active');
-      return saved !== 'false';
+      return saved === 'true'; // MẶC ĐỊNH TẮT (false)
     } catch (e) {
-      return true;
+      return false;
     }
   });
 
@@ -610,9 +610,11 @@ export default function LivestreamFlowSequencer() {
   // 📡 Đẩy video và dữ liệu phân đoạn của bước hiện tại lên Sân khấu chính (OBS / TikTok Live / Master)
   const syncStepToServer = (step, index = 0, isLivePlaying = true, forceSync = false) => {
     if (!step) return;
+    // 🛡️ CHỈ phát ra Sân Khấu Chính khi người dùng đã bấm BẬT ĐỒNG BỘ hoặc forceSync
+    if (!forceSync && !isMasterSynced) return;
     
     const resolved = resolveStepMedia(index);
-    let mediaToPlay = resolved.mediaUrl || step.mediaUrl || '';
+    let mediaToPlay = step.isMainMediaDeleted ? '' : (resolved.mediaUrl || step.mediaUrl || '');
     const secondaryToPlay = resolved.secondaryMediaUrl;
     const overlayImgToPlay = resolved.overlayImage;
     const overlayTxtToPlay = resolved.overlayText;
@@ -644,9 +646,12 @@ export default function LivestreamFlowSequencer() {
       };
     });
 
-    // ⚡ FALLBACK THẦN TỐC: Nếu bước này không chọn video nền riêng, tự động lấy video của Avatar 1 làm nền chính
-    if (!mediaToPlay && syncedAvatars.length > 0) {
+    // ⚡ FALLBACK: CHỈ fallback nếu bước này KHÔNG BỊ XÓA (isMainMediaDeleted !== true)
+    if (!step.isMainMediaDeleted && !mediaToPlay && syncedAvatars.length > 0) {
       mediaToPlay = syncedAvatars[0].resolvedVidSrc || syncedAvatars[0].talkVideo || syncedAvatars[0].idleVideo || '';
+    }
+    if (step.isMainMediaDeleted) {
+      mediaToPlay = '';
     }
 
     const payload = {
@@ -1238,20 +1243,46 @@ export default function LivestreamFlowSequencer() {
         deleteServerMedia(mediaToDelete);
       }
 
+      const updatedStep = { ...currentStep, mediaUrl: '', isMainMediaDeleted: true, mainMediaTransform: null };
+
       setPresets(prev => prev.map(p => {
         if (p.id !== activePresetId) return p;
         return {
           ...p,
           steps: p.steps.map(s => {
             if (s.id !== stepId) return s;
-            return { ...s, mediaUrl: '', isMainMediaDeleted: true, mainMediaTransform: null };
+            return updatedStep;
           })
         };
       }));
       setSelectedLayer(null);
       toast.success('🗑️ Đã xóa hoàn toàn Video/Ảnh Nền Chính!');
-      if (isMasterSynced && currentStep) {
-        setTimeout(() => syncStepToServer(currentStep, currentStepIndex, isPlayingFlow), 50);
+
+      try {
+        localStorage.removeItem('avalive_user_locked_media');
+        const bc = new BroadcastChannel('avalive_master_live_stream');
+        bc.postMessage({
+          type: 'CLEAR_STAGE',
+          clearMedia: true,
+          mediaUrl: '',
+          timestamp: Date.now()
+        });
+        setTimeout(() => bc.close(), 100);
+      } catch (e) {}
+
+      // Đồng bộ ngay lập tức trạng thái xóa lên Master Live State
+      syncMasterLiveState({
+        stage: 'idol',
+        mediaUrl: '',
+        clearMedia: true,
+        isMainMediaDeleted: true,
+        isVideo: false,
+        isPlaying: false,
+        updatedAt: Date.now()
+      });
+
+      if (isMasterSynced) {
+        syncStepToServer(updatedStep, currentStepIndex, isPlayingFlow, true);
       }
       return;
     }
@@ -2619,26 +2650,48 @@ export default function LivestreamFlowSequencer() {
             <span className="hidden sm:inline">OBS CAPTURE</span>
           </button>
 
-          {/* 📋 NÚT COPY LINK TIKTOK LIVE STUDIO (ONLINE HTTPS) */}
+          {/* 📋 NÚT COPY LINK TIKTOK LIVE STUDIO (ONLINE HTTPS CHUẨN CLOUDFLARE TUNNEL) */}
           <button
             type="button"
-            onClick={() => {
+            onClick={async () => {
               if (typeof window !== 'undefined') {
-                let liveUrl = `${window.location.origin}/live-stream`;
+                let tunnelUrl = '';
                 try {
                   const savedTunnel = localStorage.getItem('avalive_tunnel_url') || localStorage.getItem('aidol_online_stream_url');
-                  if (savedTunnel && savedTunnel.startsWith('http')) {
-                    liveUrl = `${savedTunnel.replace(/\/$/, '')}/live-stream`;
+                  if (savedTunnel && savedTunnel.startsWith('https://') && !savedTunnel.includes('localhost') && !savedTunnel.includes('127.0.0.1') && !savedTunnel.includes('avalivepro.vercel.app')) {
+                    tunnelUrl = savedTunnel;
                   }
                 } catch(e) {}
+
+                // Nếu chưa có hoặc là local, fetch từ backend để lấy Tunnel HTTPS thật
+                if (!tunnelUrl) {
+                  try {
+                    const res = await fetch('/api/live-state');
+                    if (res.ok) {
+                      const data = await res.json();
+                      const backendTunnel = data.tunnelUrl || (data.tunnels && data.tunnels[0]) || '';
+                      if (backendTunnel && backendTunnel.startsWith('https://') && !backendTunnel.includes('localhost') && !backendTunnel.includes('127.0.0.1') && !backendTunnel.includes('avalivepro.vercel.app')) {
+                        tunnelUrl = backendTunnel;
+                        try { localStorage.setItem('avalive_tunnel_url', backendTunnel); } catch(e) {}
+                      }
+                    }
+                  } catch(e) {}
+                }
+
+                if (!tunnelUrl) {
+                  toast.error('⚠️ TikTok Live Studio chặn localhost và website! Máy chủ đang tự động kích hoạt Cloudflare Tunnel HTTPS, vui lòng đợi 3-5 giây rồi bấm lại nút này!', { duration: 5000 });
+                  return;
+                }
+
+                const liveUrl = `${tunnelUrl.replace(/\/$/, '')}/live-stream`;
                 if (navigator.clipboard) {
                   navigator.clipboard.writeText(liveUrl);
-                  toast.success(`📋 Đã sao chép link TikTok Live Studio: ${liveUrl}`);
+                  toast.success(`📋 Đã sao chép link TikTok Live Studio (Online HTTPS): ${liveUrl}`);
                 }
               }
             }}
             className="px-2.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md cursor-pointer bg-fuchsia-950/90 hover:bg-fuchsia-900 text-fuchsia-300 border border-fuchsia-500/50"
-            title="Sao chép đường link Online HTTPS để dán vào TikTok Live Studio (Browser Source)"
+            title="Sao chép đường link Online HTTPS (Cloudflare Tunnel) để dán vào TikTok Live Studio (Browser Source)"
           >
             <Radio size={13} className="text-fuchsia-400 animate-pulse" />
             <span className="hidden sm:inline">LINK TIKTOK</span>

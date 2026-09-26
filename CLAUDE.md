@@ -103,4 +103,13 @@ flowchart LR
 
 ---
 
+## 5. 🔔 QUY CHUẨN THÔNG BÁO BẢN CẬP NHẬT (UPDATE NOTIFICATION MODAL) - DUY NHẤT PHIÊN BẢN MỚI NHẤT (BẮT BUỘC)
+1. **Chỉ Giữ Lại 1 Mục Duy Nhất Trong `UPDATE_NOTES`:**
+   - Trong `src/components/genaidol/UpdateNotificationModal.jsx`, mảng `UPDATE_NOTES` BẮT BUỘC chỉ chứa DUY NHẤT 1 mục (object) của phiên bản cập nhật mới nhất.
+   - Tuyệt đối **KHÔNG lưu trữ hoặc hiển thị danh sách các phiên bản cập nhật cũ** trong modal thông báo, nhằm tránh gây rối mắt, nhiễu loạn thông tin và làm chậm giao diện.
+2. **Luôn Tự Động Kích Hoạt Modal Cập Nhật Cho Người Dùng:**
+   - Mỗi lần hoàn thành cập nhật một task, bắt buộc bump phiên bản (`package.json`, `UpdateNotificationModal.jsx`, `backend/server.cjs`, `api/download.js`), để `currentVersion !== lastDismissedVersion` luôn kích hoạt hiển thị modal ghi chú bản mới nhất.
+
+---
+
 *Tài liệu này là quy chuẩn bắt buộc của hệ thống Ava Livestream, luôn được tự động duy trì trong mọi phiên bản cập nhật.*

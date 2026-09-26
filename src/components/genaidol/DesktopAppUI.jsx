@@ -521,12 +521,12 @@ export default function DesktopAppUI() {
   })();
   const currentActiveVoiceName = currentActiveVoiceObj?.name || 'Hoài My 👑 (Nữ Chuẩn - Bắc)';
 
-  // 👥 MULTI-AVATAR STUDIO (2–4 NHÂN VẬT) & MASTER STAGE SYNC
+  // 👥 MULTI-AVATAR STUDIO (2–4 NHÂN VẬT) & MASTER STAGE SYNC — MẶC ĐỊNH TẮT (false)
   const [isMasterStageSynced, setIsMasterStageSynced] = useState(() => {
     try {
-      return localStorage.getItem('avalive_master_sync_active') !== 'false';
+      return localStorage.getItem('avalive_master_sync_active') === 'true';
     } catch (e) {
-      return true;
+      return false;
     }
   });
 
@@ -581,11 +581,16 @@ export default function DesktopAppUI() {
         const customMatch = (customCharacters && Array.isArray(customCharacters)) 
           ? customCharacters.find(c => c.id === selectedCharacter && (c.url || c.mediaUrl)) 
           : null;
-        const charUrl = customMatch?.url || (selectedCharacter && CHARACTERS[selectedCharacter]?.url) || CHARACTERS.default_idol.url;
-        if (desktopVideoRef.current && charUrl && (!customMatch || customMatch.type === 'video')) {
-          desktopVideoRef.current.src = charUrl;
-          desktopVideoRef.current.currentTime = 0;
-          desktopVideoRef.current.play().catch(() => {});
+        const charUrl = customMatch?.url || (selectedCharacter && CHARACTERS[selectedCharacter]?.url) || '';
+        if (desktopVideoRef.current) {
+          if (charUrl && (!customMatch || customMatch.type === 'video')) {
+            desktopVideoRef.current.src = charUrl;
+            desktopVideoRef.current.currentTime = 0;
+            desktopVideoRef.current.play().catch(() => {});
+          } else {
+            desktopVideoRef.current.pause();
+            desktopVideoRef.current.src = '';
+          }
         }
       }
     };
@@ -2891,12 +2896,22 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         mainMediaTransform, mainMediaChromaKey, avatarTransforms,
         isMediaPinned 
       } = e.detail || {};
-      const effectiveMediaUrl = mediaUrl || userLockedMediaUrl || CHARACTERS.default_idol.url;
+      const isDeleted = !!e.detail?.isMainMediaDeleted || !!(e.detail || {}).step?.isMainMediaDeleted;
+      const isSyncActive = localStorage.getItem('avalive_master_sync_active') === 'true';
+      if (!isSyncActive && !e.detail?.forceSync) {
+        return; // Chưa bật đồng bộ thì không tự ý cập nhật Sân Khấu Chính!
+      }
       setIsMasterStageSynced(true);
-      try { localStorage.setItem('avalive_master_sync_active', 'true'); } catch (e) {}
 
-      setUserLockedMediaUrl(effectiveMediaUrl);
-      try { localStorage.setItem('avalive_user_locked_media', effectiveMediaUrl); } catch (err) {}
+      const effectiveMediaUrl = isDeleted ? '' : (mediaUrl || (!userLockedMediaUrl?.includes('default') ? userLockedMediaUrl : '') || '');
+
+      if (isDeleted) {
+        setUserLockedMediaUrl('');
+        try { localStorage.removeItem('avalive_user_locked_media'); } catch (err) {}
+      } else if (effectiveMediaUrl) {
+        setUserLockedMediaUrl(effectiveMediaUrl);
+        try { localStorage.setItem('avalive_user_locked_media', effectiveMediaUrl); } catch (err) {}
+      }
 
       // 1. Cập nhật trạng thái Overlays Đa Lớp (Ảnh, Chữ, Video Phụ PiP, Ghim)
       const overlayData = {
@@ -3125,11 +3140,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       const customMatch = (customCharacters && Array.isArray(customCharacters)) 
         ? customCharacters.find(c => c.id === selectedCharacter && (c.url || c.mediaUrl)) 
         : null;
-      const charUrl = customMatch?.url || (selectedCharacter && CHARACTERS[selectedCharacter]?.url) || CHARACTERS.default_idol.url;
-      if (desktopVideoRef.current && charUrl && (!customMatch || customMatch.type === 'video')) {
-        desktopVideoRef.current.src = charUrl;
-        desktopVideoRef.current.currentTime = 0;
-        desktopVideoRef.current.play().catch(() => {});
+      const charUrl = customMatch?.url || (selectedCharacter && CHARACTERS[selectedCharacter]?.url) || '';
+      if (desktopVideoRef.current) {
+        if (charUrl && (!customMatch || customMatch.type === 'video')) {
+          desktopVideoRef.current.src = charUrl;
+          desktopVideoRef.current.currentTime = 0;
+          desktopVideoRef.current.play().catch(() => {});
+        } else {
+          desktopVideoRef.current.pause();
+          desktopVideoRef.current.src = '';
+        }
       }
       setIsScriptLiveRunning(false);
       setIsMasterLiveRunning(false);
