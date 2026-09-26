@@ -885,6 +885,35 @@ app.post(['/api/delete-upload', '/api/delete-media'], (req, res) => {
       }
     }
 
+    // ⚡ Nếu file bị xóa trùng với media đang phát trong master live state, xóa triệt để khỏi state và phát tín hiệu CLEAR_STAGE
+    if (currentMasterLiveState) {
+      const activeUrls = [
+        currentMasterLiveState.mediaUrl,
+        currentMasterLiveState.currentMedia,
+        currentMasterLiveState.secondaryMediaUrl,
+        currentMasterLiveState.eventVideoUrl
+      ];
+      const isCurrentActive = activeUrls.some(u => typeof u === 'string' && u.includes(baseName));
+      if (isCurrentActive) {
+        currentMasterLiveState = {
+          ...currentMasterLiveState,
+          mediaUrl: null,
+          currentMedia: null,
+          secondaryMediaUrl: null,
+          eventVideoUrl: null,
+          syncedAvatars: [],
+          clearMedia: true,
+          isVideo: false,
+          isPlaying: false,
+          videoPlaybackEvent: 'pause',
+          updatedAt: Date.now()
+        };
+        io.emit('CLEAR_STAGE', { timestamp: Date.now() });
+        io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+        saveLiveStateToFile(true);
+      }
+    }
+
     return res.json({ success: true, deleted, file: baseName });
   } catch (e) {
     return res.status(500).json({ error: e.message });
@@ -965,19 +994,15 @@ app.get([
       }
     }
   }
-  // ⚡ FALLBACK TỰ ĐỘNG: Nếu chưa có video nào đang phát hoặc file không có trên đĩa, lấy video tải lên mới nhất để TikTok Live Studio KHÔNG BAO GIỜ bị kẹt xoay vòng vòng
-  if (!existsOnDisk) {
-    const latestUpload = getLatestUploadMediaUrl();
-    if (latestUpload) {
-      existsOnDisk = true;
-      vParam = latestUpload;
-    } else {
-      vParam = '';
-    }
+  // ⚡ TUYỆT ĐỐI KHÔNG TỰ Ý LẤY VIDEO CŨ/ĐÃ XÓA TRONG UPLOADS ĐỂ PHÁT
+  // Chỉ phát khi có media hợp lệ đang phát từ Sân khấu chính hoặc Sân khấu phụ
+  if (!existsOnDisk || (currentMasterLiveState && currentMasterLiveState.clearMedia)) {
+    vParam = '';
+    existsOnDisk = false;
   }
 
   const soundParam = req.query.sound !== '0';
-  const fitParam = req.query.fit || 'cover';
+  const fitParam = req.query.fit || 'contain';
   const isImageMediaHelper = (u) => {
     if (!u || typeof u !== 'string') return false;
     return /\.(png|jpe?g|webp|gif|svg|avif|bmp)($|\?|#)/i.test(u) || u.startsWith('data:image/');
@@ -992,7 +1017,7 @@ app.get([
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.9.39</title>
+  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.9.40</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -1095,6 +1120,17 @@ app.get([
       <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.5px;">⚡ ĐANG KẾT NỐI LUỒNG LIVE AVALIVE 4K 60FPS...</div>
       <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Đồng bộ trực tiếp với phần mềm AvaLive VIP PRO</div>
     </div>
+    <div id="standbyScreen" style="position: absolute; inset: 0; width: 100vw; height: 100vh; display: ${vParam ? 'none' : 'flex'}; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at center, #0a0f1d 0%, #020408 100%); color: #fff; text-align: center; padding: 24px; user-select: none; z-index: 10;">
+      <div style="width: 72px; height: 72px; border-radius: 22px; background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.5); display: flex; align-items: center; justify-content: center; font-size: 34px; margin-bottom: 16px; box-shadow: 0 0 30px rgba(6, 182, 212, 0.35);">
+        ⚡
+      </div>
+      <div style="font-size: 15px; font-weight: 900; color: #22d3ee; letter-spacing: 0.8px; text-transform: uppercase;">
+        LUỒNG LIVE TIKTOK STUDIO (9:16) ĐÃ SẴN SÀNG
+      </div>
+      <div style="font-size: 11px; color: #94a3b8; margin-top: 8px; max-width: 280px; line-height: 1.5;">
+        Đang chờ phát video từ Sân khấu chính hoặc Sân khấu phụ...
+      </div>
+    </div>
     <video 
       id="videoPlayer" 
       ${!isInitialImg && initialSrcAttr ? initialSrcAttr : ''}
@@ -1122,9 +1158,9 @@ app.get([
     <div id="controlsDock">
       <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập">⏸️ Dừng</button>
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
-      <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
+      <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Vừa / Tràn)">${fitParam === 'contain' ? '📐 Vừa' : '📐 Tràn'}</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.39</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.40</div>
   </div>
   <script>
     (function() {
@@ -1173,10 +1209,10 @@ app.get([
         }
       }
 
-      // ⚡ EMERGENCY LOADING DISMISSER: Đảm bảo TikTok Live Studio KHÔNG BAO GIỜ bị kẹt xoay vòng quá 1.5s
+      // ⚡ EMERGENCY LOADING DISMISSER: Đảm bảo TikTok Live Studio KHÔNG BAO GIỜ bị kẹt xoay vòng
       setTimeout(function() {
         hideLoading();
-      }, 1500);
+      }, ${vParam ? 1000 : 350});
 
       setTimeout(function() { if (badge) badge.style.opacity = '0.2'; }, 6000);
 
@@ -1338,6 +1374,9 @@ app.get([
         if (!fullUrl) return;
 
         const imgEl = document.getElementById('imagePlayer');
+        const standbyEl = document.getElementById('standbyScreen');
+        if (standbyEl) standbyEl.style.display = 'none';
+
         if (isImage(fullUrl)) {
           if (imgEl) {
             imgEl.src = fullUrl;
@@ -1499,6 +1538,9 @@ app.get([
             try { imgEl.removeAttribute('src'); imgEl.src = ''; } catch(e) {}
             imgEl.style.display = 'none';
           }
+          const standbyEl = document.getElementById('standbyScreen');
+          if (standbyEl) standbyEl.style.display = 'flex';
+          hideLoading();
         } else if (targetUrl && !isSameMedia(vid.src, targetUrl)) {
           loadAndPlay(targetUrl);
         }
@@ -1578,7 +1620,7 @@ app.get([
             }, 3000);
 
             socket.on('connect', function() {
-              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.39';
+              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.40';
               socket.emit('REQUEST_MASTER_LIVE_STATE');
             });
 
@@ -1735,18 +1777,14 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       }
     }
   }
-  // ⚡ FALLBACK TỰ ĐỘNG: Lấy video tải lên mới nhất
-  if (!existsOnDisk) {
-    const latestUpload = getLatestUploadMediaUrl();
-    if (latestUpload) {
-      existsOnDisk = true;
-      vParam = latestUpload;
-    } else {
-      vParam = '';
-    }
+  // ⚡ TUYỆT ĐỐI KHÔNG TỰ Ý LẤY VIDEO CŨ/ĐÃ XÓA TRONG UPLOADS ĐỂ PHÁT
+  // Chỉ phát khi có media hợp lệ đang phát từ Sân khấu chính hoặc Sân khấu phụ
+  if (!existsOnDisk || (currentMasterLiveState && currentMasterLiveState.clearMedia)) {
+    vParam = '';
+    existsOnDisk = false;
   }
   const soundParam = req.query.sound !== '0';
-  const fitParam = req.query.fit || 'cover';
+  const fitParam = req.query.fit || 'contain';
   const isImageMediaHelper = (u) => {
     if (!u || typeof u !== 'string') return false;
     return /\.(png|jpe?g|webp|gif|svg|avif|bmp)($|\?|#)/i.test(u) || u.startsWith('data:image/');
@@ -1910,6 +1948,17 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
 </head>
 <body>
   <div id="stage">
+    <div id="standbyScreen" style="position: absolute; inset: 0; width: 100%; height: 100%; display: ${vParam ? 'none' : 'flex'}; flex-direction: column; align-items: center; justify-content: center; background: radial-gradient(circle at center, #0a0f1d 0%, #020408 100%); color: #fff; text-align: center; padding: 24px; user-select: none; z-index: 10;">
+      <div style="width: 68px; height: 68px; border-radius: 20px; background: rgba(6, 182, 212, 0.15); border: 1px solid rgba(6, 182, 212, 0.5); display: flex; align-items: center; justify-content: center; font-size: 32px; margin-bottom: 14px; box-shadow: 0 0 25px rgba(6, 182, 212, 0.35);">
+        ⚡
+      </div>
+      <div style="font-size: 14px; font-weight: 900; color: #22d3ee; letter-spacing: 0.8px; text-transform: uppercase;">
+        CỬA SỔ LIVE 9:16 SẴN SÀNG
+      </div>
+      <div style="font-size: 11px; color: #94a3b8; margin-top: 6px; max-width: 260px; line-height: 1.5;">
+        Đang chờ phát video từ phần mềm AvaLive...
+      </div>
+    </div>
     <video 
       id="videoPlayer" 
       src="${!isInitialImg && vParam ? (vParam.startsWith('http') || vParam.startsWith('/') ? vParam : '/' + vParam) : ''}"
@@ -1934,7 +1983,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     <div id="overlayTextBanner" style="position: absolute; left: 4%; top: 5%; width: 92%; z-index: 35; text-align: center; pointer-events: none; display: none;">
       <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);"></div>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.39</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.40</div>
   </div>
 
   <!-- BẢNG ĐIỀU KHIỂN NỔI DOCK TOÀN CỤC CẤP BODY — CHỐNG BỊ GPU VIDEO LAYER CHE KHUẤT -->
@@ -2239,6 +2288,9 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         if (!fullUrl) return;
 
         const imgEl = document.getElementById('imagePlayer');
+        const standbyEl = document.getElementById('standbyScreen');
+        if (standbyEl) standbyEl.style.display = 'none';
+
         if (isImage(fullUrl)) {
           if (imgEl) {
             imgEl.src = fullUrl;
@@ -2293,7 +2345,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         });
 
         socket.on('connect', function() {
-          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.39';
+          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.40';
           socket.emit('REQUEST_MASTER_LIVE_STATE');
         });
 
@@ -2350,6 +2402,8 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
               try { imgEl.removeAttribute('src'); imgEl.src = ''; } catch(e) {}
               imgEl.style.display = 'none';
             }
+            const standbyEl = document.getElementById('standbyScreen');
+            if (standbyEl) standbyEl.style.display = 'flex';
           } else if (targetUrl && !isSameMedia(vid.src, targetUrl)) {
             loadAndPlay(targetUrl, data.videoCurrentTime || data.currentTime);
           }
@@ -2501,7 +2555,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.39';
+  let ver = '4.9.40';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -2539,7 +2593,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.39';
+  let ver = '4.9.40';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -3827,27 +3881,39 @@ app.post('/api/video-control', (req, res) => {
 // Endpoint cho phép xóa/dừng video rõ ràng khi người dùng bấm nút xóa & xóa file vật lý
 app.post('/api/clear-media', (req, res) => {
   const targetMedia = req.body?.mediaUrl || req.body?.target || req.body?.url;
-  if (targetMedia && typeof targetMedia === 'string') {
-    try {
-      const baseName = path.basename(targetMedia.replace(/\?.*$/, ''));
-      if (baseName && baseName !== '.' && baseName !== '..') {
-        const allUploadDirs = [
-          uploadsDir,
-          path.join(process.cwd(), 'system', 'uploads'),
-          path.join(process.cwd(), 'uploads'),
-          path.join(__dirname, '..', 'uploads'),
-          path.join(__dirname, '..', 'system', 'uploads')
-        ];
-        for (const dir of allUploadDirs) {
-          if (fs.existsSync(dir)) {
-            const fp = path.join(dir, baseName);
-            if (fs.existsSync(fp)) {
-              try { fs.unlinkSync(fp); console.log(`[Clear-Media] 🗑️ Đã xóa file vật lý: ${baseName} tại ${dir}`); } catch (e) {}
+  
+  const stateMedias = [
+    currentMasterLiveState?.mediaUrl,
+    currentMasterLiveState?.secondaryMediaUrl,
+    currentMasterLiveState?.currentMedia,
+    currentMasterLiveState?.eventVideoUrl
+  ].filter(Boolean);
+  if (targetMedia && typeof targetMedia === 'string') stateMedias.push(targetMedia);
+
+  const allUploadDirs = [
+    uploadsDir,
+    path.join(process.cwd(), 'system', 'uploads'),
+    path.join(process.cwd(), 'uploads'),
+    path.join(__dirname, '..', 'uploads'),
+    path.join(__dirname, '..', 'system', 'uploads')
+  ];
+
+  for (const m of stateMedias) {
+    if (typeof m === 'string' && (m.includes('/uploads/') || !m.startsWith('http'))) {
+      try {
+        const baseName = path.basename(m.replace(/\?.*$/, ''));
+        if (baseName && baseName !== '.' && baseName !== '..') {
+          for (const dir of allUploadDirs) {
+            if (fs.existsSync(dir)) {
+              const fp = path.join(dir, baseName);
+              if (fs.existsSync(fp)) {
+                try { fs.unlinkSync(fp); console.log(`[Clear-Media] 🗑️ Đã xóa file vật lý: ${baseName} tại ${dir}`); } catch (e) {}
+              }
             }
           }
         }
-      }
-    } catch (err) {}
+      } catch (err) {}
+    }
   }
 
   // Tự động quét dọn toàn bộ file 0-byte, hỏng hoặc tạm
@@ -3857,7 +3923,9 @@ app.post('/api/clear-media', (req, res) => {
     ...currentMasterLiveState,
     mediaUrl: null,
     currentMedia: null,
+    secondaryMediaUrl: null,
     eventVideoUrl: null,
+    syncedAvatars: [],
     clearMedia: true,
     isVideo: false,
     isPlaying: false,
@@ -3865,6 +3933,7 @@ app.post('/api/clear-media', (req, res) => {
     isUserExplicitMediaLocked: false,
     updatedAt: Date.now()
   };
+  io.emit('CLEAR_STAGE', { timestamp: Date.now() });
   io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
   saveLiveStateToFile(true);
   res.json({ success: true, message: 'Đã xóa triệt để video phát trực tiếp và dọn sạch bộ nhớ theo yêu cầu người dùng' });

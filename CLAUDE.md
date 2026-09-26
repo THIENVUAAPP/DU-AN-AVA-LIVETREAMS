@@ -125,4 +125,20 @@ flowchart LR
 
 ---
 
+## 7. 🗑️ QUY CHUẨN XÓA TRIỆT ĐỂ VIDEO, KHÓA CHẶT FALLBACK & KHUNG HÌNH 9:16 (v4.9.40+)
+1. **Xóa Video Triệt Để Khỏi Sân Khấu Chính & Phụ:**
+   - Khi người dùng xóa video trên Sân khấu phụ (Sequencer) hoặc Sân khấu chính, video biến mất NGAY LẬP TỨC trên toàn bộ Sân Khấu Chính, Window Capture và TikTok Live Studio.
+   - Tuyệt đối không để lại dữ liệu ẩn, không để video cũ "nằm lì" trên sân khấu chính.
+   - Xóa sạch file vật lý trong thư mục `uploads/` trên máy tính để nhẹ máy và giải phóng bộ nhớ.
+2. **Loại Bỏ Hoàn Toàn Tự Ý Fallback Video Cũ:**
+   - Tuyệt đối không tự ý phát lại video đã xóa hoặc video cũ trong uploads.
+   - Chỉ cập nhật video mới nhất đang phát từ Sân khấu chính hoặc Sân khấu phụ.
+3. **Kích Hoạt 100% Nút Dock Window Capture (Ảnh 1):**
+   - Loại bỏ `onPointerDown` nuốt sự kiện và bổ sung `WebkitAppRegion: 'no-drag'` giúp toàn bộ các nút `[• LIVE]`, `[⏸️ Dừng]`, `[🔊 Bật Tiếng]`, `[📐 Tràn / Vừa]`, `[✕ Ẩn (H)]` bấm ăn ngay 100%, phản hồi tức thì.
+4. **TikTok Live Studio Vừa Khít 9:16 Không Cắt Xén:**
+   - Mặc định khung hình vừa khít không bị cắt xén (`fit=contain`), có nút chuyển đổi tức thì `[📐 Tràn / Vừa]`.
+   - Hiển thị màn hình chờ Standby 9:16 sẵn sàng, loại bỏ hoàn toàn tình trạng kẹt vòng xoay loading.
+
+---
+
 *Tài liệu này là quy chuẩn bắt buộc của hệ thống Ava Livestream, luôn được tự động duy trì trong mọi phiên bản cập nhật.*

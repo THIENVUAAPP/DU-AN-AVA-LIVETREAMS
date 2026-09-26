@@ -1223,8 +1223,15 @@ export default function LivestreamFlowSequencer() {
       const mediaToDelete = targetAv?.talkVideo || targetAv?.idleVideo || targetAv?.mediaUrl;
 
       // Xóa file vật lý trên server nếu có
-      if (mediaToDelete && mediaToDelete.includes('/uploads/')) {
+      if (mediaToDelete) {
         deleteServerMedia(mediaToDelete);
+        try {
+          fetch('/api/clear-media', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mediaUrl: mediaToDelete, deletePhysical: true })
+          }).catch(() => {});
+        } catch (e) {}
       }
 
       handleDeleteAvatarLayer(targetId, true);
@@ -1250,8 +1257,15 @@ export default function LivestreamFlowSequencer() {
 
     if (layerType === 'main_media') {
       const mediaToDelete = currentStep?.mediaUrl;
-      if (mediaToDelete && mediaToDelete.includes('/uploads/')) {
+      if (mediaToDelete) {
         deleteServerMedia(mediaToDelete);
+        try {
+          fetch('/api/clear-media', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mediaUrl: mediaToDelete, deletePhysical: true })
+          }).catch(() => {});
+        } catch (e) {}
       }
 
       const updatedStep = { ...currentStep, mediaUrl: '', isMainMediaDeleted: true, mainMediaTransform: null };
@@ -1300,8 +1314,15 @@ export default function LivestreamFlowSequencer() {
 
     if (layerType === 'pip') {
       const mediaToDelete = currentStep?.secondaryMediaUrl;
-      if (mediaToDelete && mediaToDelete.includes('/uploads/')) {
+      if (mediaToDelete) {
         deleteServerMedia(mediaToDelete);
+        try {
+          fetch('/api/clear-media', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mediaUrl: mediaToDelete, deletePhysical: true })
+          }).catch(() => {});
+        } catch (e) {}
       }
 
       setPresets(prev => prev.map(p => {
@@ -1324,8 +1345,15 @@ export default function LivestreamFlowSequencer() {
 
     if (layerType === 'banner') {
       const mediaToDelete = currentStep?.overlayImage;
-      if (mediaToDelete && mediaToDelete.includes('/uploads/')) {
+      if (mediaToDelete) {
         deleteServerMedia(mediaToDelete);
+        try {
+          fetch('/api/clear-media', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mediaUrl: mediaToDelete, deletePhysical: true })
+          }).catch(() => {});
+        } catch (e) {}
       }
 
       setPresets(prev => prev.map(p => {

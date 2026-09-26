@@ -1227,6 +1227,17 @@ export default function WindowCapturePlayer() {
     });
 
     if (videoRef.current) {
+      if (videoRef.current.srcObject) {
+        try {
+          const stream = videoRef.current.srcObject;
+          if (stream && typeof stream.getVideoTracks === 'function') {
+            stream.getVideoTracks().forEach(t => t.enabled = targetPlay);
+          }
+          if (stream && typeof stream.getAudioTracks === 'function') {
+            stream.getAudioTracks().forEach(t => t.enabled = targetPlay);
+          }
+        } catch (e) {}
+      }
       try {
         if (targetPlay) {
           const p = videoRef.current.play();
@@ -1910,6 +1921,7 @@ export default function WindowCapturePlayer() {
             zIndex: 1000000,
             pointerEvents: 'auto',
             touchAction: 'manipulation',
+            WebkitAppRegion: 'no-drag',
             transition: 'opacity 0.2s ease',
             opacity: 0.98,
             maxWidth: 'calc(100vw - 16px)',
@@ -1924,7 +1936,9 @@ export default function WindowCapturePlayer() {
               e.preventDefault();
               e.stopPropagation();
               recheckLiveState(true);
-              if (videoRef.current && isPlaybackActive) {
+              if (videoRef.current) {
+                setIsPlaybackActive(true);
+                isExplicitlyPausedRef.current = false;
                 videoRef.current.play().catch(() => {});
               }
               toast.success('🟢 Luồng Live 4K 60 FPS đã sẵn sàng');
@@ -1944,7 +1958,9 @@ export default function WindowCapturePlayer() {
               border: '1px solid rgba(16, 185, 129, 0.5)',
               borderRadius: '10px',
               padding: '2px 6px',
-              cursor: 'pointer'
+              cursor: 'pointer',
+              pointerEvents: 'auto',
+              WebkitAppRegion: 'no-drag'
             }}
             title="Luồng Phát Live 4K 60 FPS (Bấm để làm mới luồng)"
           >
@@ -1955,7 +1971,6 @@ export default function WindowCapturePlayer() {
           {/* Nút Play / Pause */}
           <button
             type="button"
-            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -1971,6 +1986,7 @@ export default function WindowCapturePlayer() {
               borderRadius: '12px',
               cursor: 'pointer',
               pointerEvents: 'auto',
+              WebkitAppRegion: 'no-drag',
               touchAction: 'manipulation',
               userSelect: 'none',
               transition: 'all 0.12s ease',
@@ -1991,7 +2007,6 @@ export default function WindowCapturePlayer() {
           {/* Nút Bật / Tắt Tiếng */}
           <button
             type="button"
-            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -2007,6 +2022,7 @@ export default function WindowCapturePlayer() {
               borderRadius: '12px',
               cursor: 'pointer',
               pointerEvents: 'auto',
+              WebkitAppRegion: 'no-drag',
               touchAction: 'manipulation',
               userSelect: 'none',
               transition: 'all 0.12s ease',
@@ -2027,7 +2043,6 @@ export default function WindowCapturePlayer() {
           {/* Nút Tràn / Vừa */}
           <button
             type="button"
-            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -2043,6 +2058,7 @@ export default function WindowCapturePlayer() {
               borderRadius: '12px',
               cursor: 'pointer',
               pointerEvents: 'auto',
+              WebkitAppRegion: 'no-drag',
               touchAction: 'manipulation',
               userSelect: 'none',
               transition: 'all 0.12s ease',
@@ -2055,15 +2071,14 @@ export default function WindowCapturePlayer() {
               flexShrink: 0,
               lineHeight: 1
             }}
-            title="Chuyển chế độ Khung hình (Tràn / Vừa)"
+            title="Chuyển chế độ Khung hình (Vừa / Tràn)"
           >
-            {fitMode === 'cover' ? '📐 Tràn' : '📐 Vừa'}
+            {fitMode === 'contain' ? '📐 Vừa' : '📐 Tràn'}
           </button>
 
           {/* ⭐ NÚT ẨN HẾT TẤT CẢ CÁC TAB / NÚT TRÊN GIAO DIỆN VIDEO */}
           <button
             type="button"
-            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -2079,6 +2094,7 @@ export default function WindowCapturePlayer() {
               borderRadius: '12px',
               cursor: 'pointer',
               pointerEvents: 'auto',
+              WebkitAppRegion: 'no-drag',
               touchAction: 'manipulation',
               display: 'inline-flex',
               flexDirection: 'row',

@@ -2709,6 +2709,39 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             setTimeout(() => { isInternalPlaybackChangeRef.current = false; }, 300);
           }
 
+          // 1.2. 🛑 LẮNG NGHE LỆNH XÓA SÂN KHẤU / CLEAR_STAGE TỪ SÂN KHẤU PHỤ HOẶC HỆ THỐNG
+          if (event.data.type === 'CLEAR_STAGE' || event.data.clearMedia || (event.data.type === 'GLOBAL_MEDIA_CHANGE' && !event.data.mediaUrl)) {
+            if (event.data.source === 'desktop') return;
+            console.log('[DesktopAppUI] 🛑 Nhận tín hiệu CLEAR_STAGE: Xóa sạch toàn bộ video khỏi Sân Khấu Chính tức thì!');
+            setUserLockedMediaUrl(null);
+            setSelectedCharacter('');
+            setLipSyncVideoUrl(null);
+            setQuickResponseActiveVideo(null);
+            try {
+              localStorage.removeItem('avalive_selected_char');
+              localStorage.removeItem('avalive_user_locked_media');
+              localStorage.removeItem('avalive_active_video_src');
+              localStorage.removeItem('aidol_idle_media_url');
+            } catch (err) {}
+
+            if (currentBlobUrlRef.current) {
+              try { URL.revokeObjectURL(currentBlobUrlRef.current); } catch (e) {}
+              currentBlobUrlRef.current = null;
+            }
+
+            if (desktopVideoRef.current) {
+              try {
+                desktopVideoRef.current.pause();
+                desktopVideoRef.current.removeAttribute('src');
+                desktopVideoRef.current.src = '';
+                desktopVideoRef.current.srcObject = null;
+                desktopVideoRef.current.load();
+              } catch (e) {}
+            }
+            setIsVideoPlaying(false);
+            return;
+          }
+
           // 1.5. Đồng bộ đổi Video Nhân Vật tức thì từ Window Capture sang Phần Mềm
           if (event.data.type === 'GLOBAL_MEDIA_CHANGE') {
             if (event.data.source === 'desktop') return;
@@ -3672,6 +3705,36 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         setIsConnected(true);
         if (data.flvUrl) setFlvUrl(data.flvUrl);
       }
+    });
+
+    socket.on('CLEAR_STAGE', () => {
+      console.log('[DesktopAppUI] 🛑 Socket CLEAR_STAGE received: Xóa video khỏi sân khấu chính!');
+      setUserLockedMediaUrl(null);
+      setSelectedCharacter('');
+      setLipSyncVideoUrl(null);
+      setQuickResponseActiveVideo(null);
+      try {
+        localStorage.removeItem('avalive_selected_char');
+        localStorage.removeItem('avalive_user_locked_media');
+        localStorage.removeItem('avalive_active_video_src');
+        localStorage.removeItem('aidol_idle_media_url');
+      } catch (err) {}
+
+      if (currentBlobUrlRef.current) {
+        try { URL.revokeObjectURL(currentBlobUrlRef.current); } catch (e) {}
+        currentBlobUrlRef.current = null;
+      }
+
+      if (desktopVideoRef.current) {
+        try {
+          desktopVideoRef.current.pause();
+          desktopVideoRef.current.removeAttribute('src');
+          desktopVideoRef.current.src = '';
+          desktopVideoRef.current.srcObject = null;
+          desktopVideoRef.current.load();
+        } catch (e) {}
+      }
+      setIsVideoPlaying(false);
     });
 
     return () => {

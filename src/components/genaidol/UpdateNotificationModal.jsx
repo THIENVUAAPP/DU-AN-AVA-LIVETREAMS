@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.39';
+export const APP_VERSION = '4.9.40';
 export const RELEASE_DATE = '26/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.40 - Xóa Triệt Để Video Khỏi Sân Khấu & Thư Mục Uploads, Kích Hoạt 100% Nút Dock & Vừa Khít 9:16 TikTok Live Studio Không Cắt Xén',
+    description: '1. Xóa Video Triệt Để Khỏi Sân Khấu Chính & Phụ: Khi bấm nút xóa video trên Sân khấu phụ (Sequencer) hoặc Sân khấu chính, video biến mất NGAY LẬP TỨC trên toàn bộ Sân Khấu Chính, Window Capture và TikTok Live Studio; không lưu dữ liệu ẩn và xóa sạch file vật lý trong thư mục uploads trên máy tính để nhẹ máy và giải phóng bộ nhớ. 2. Loại Bỏ Hoàn Toàn Tự Ý Fallback Video Cũ: Tuyệt đối không tự ý phát lại video đã xóa hoặc video cũ trong uploads; chỉ phát video mới nhất đang phát từ Sân khấu chính hoặc Sân khấu phụ. 3. Kích Hoạt 100% Các Nút Dock (Ảnh 1): Bỏ onPointerDown nuốt sự kiện, thêm WebkitAppRegion no-drag giúp toàn bộ nút [• LIVE], [⏸️ Dừng], [🔊 Bật Tiếng], [📐 Tràn / Vừa], [✕ Ẩn (H)] bấm ăn ngay 100%, phản hồi tức thì. 4. TikTok Live Studio Vừa Khít Khung Hình 9:16: Không bị cắt xén hình ảnh, hỗ trợ màn hình chờ Standby 9:16 sẵn sàng không bao giờ bị kẹt vòng xoay loading. 5. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng: Bảo toàn độ ổn định của mọi module.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.39 - Video TikTok Live Studio Phát Ngay Lập Tức 0ms, Kích Hoạt 100% Nút Dock & Bấm Giữa Video Bật Voice Toàn Bộ Luồng',
     description: '1. Khắc Phục Triệt Để Link TikTok Live Studio Kẹt Xoay Vòng: Video hiển thị ngay lập tức 0ms khi dán link vào TikTok Live Studio; tự động phân giải phát video từ Sân Khấu Chính hoặc Sân Khấu Phụ (Live Idol Avatar, Sequencer, video mới nhất), loại bỏ hoàn toàn tình trạng kẹt spinner "Đang kết nối luồng live". 2. Kích Hoạt 100% Toàn Bộ Nút Thanh Dock (Ảnh 1): Các nút [• LIVE], [⏸️ Dừng], [🔊 Bật Tiếng], [📐 Tràn], [✕ Ẩn (H)] và [👁️] hoạt động cực nhạy 100%, triệt tiêu hoàn toàn hiện tượng duplicate event, nút • LIVE hỗ trợ bấm làm mới luồng tức thì. 3. Bấm Vào Giữa Màn Hình Video Bật Voice & Phát Video: Khi bấm vào giữa màn hình video trên bất kỳ giao diện nào (Sân Khấu Chính, Live Idol Avatar, Window Capture), hệ thống tự động BẬT VOICE (unmute) và phát video đồng bộ 4K 60 FPS. 4. Nút [🔊 VOICE AI: BẬT / TẮT] (Ảnh 2) Điều Khiển Voice Của Tất Cả Video Trong Live Idol Avatar: Bật/tắt trực tiếp âm thanh của toàn bộ video (nền chính, PiP, Avatar 1-4) và đồng bộ âm thanh toàn cục. 5. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng: Bảo toàn nguyên vẹn 100% cấu trúc và độ ổn định của mọi module.'
