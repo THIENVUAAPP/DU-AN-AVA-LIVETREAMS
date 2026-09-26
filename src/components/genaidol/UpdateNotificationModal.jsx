@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.47';
+export const APP_VERSION = '4.9.48';
 export const RELEASE_DATE = '26/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.48 - Đồng Bộ 100% Window Capture & Sửa Nút Điều Khiển Dock Mới',
+    description: '1. Đồng Bộ Hoàn Toàn Window Capture & Sân Khấu Chính: Cửa sổ Window Capture bây giờ được nhúng trực tiếp nhân (core) của Sân Khấu Chính, đảm bảo 100% mọi Video Phụ (PiP), Avatar AI Nhân Vật, Hình Ảnh Lớp Phủ, và Banner Chữ đều được xếp chồng hiển thị y hệt như những gì anh thấy trên Sân Khấu. 2. Xử Lý Triệt Để Nút Bấm Không Phản Hồi: Nâng cấp toàn bộ cơ chế nhấn nút sang onPointerDown cực nhạy cho TẤT CẢ các phiên bản thanh Dock. Từ nay bất kể anh dùng chuột hay cảm ứng, bấm là ăn ngay lập tức.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.47 - Sửa Lỗi Điều Khiển Video Dock, Mute Toàn Cục & Cập Nhật Tên Link Phát Live',
     description: '1. Sửa Lỗi Mất Tương Tác Thanh Dock: Thay thế cơ chế click bằng PointerDown để đảm bảo chạm/nhấn trên mọi nền tảng (Window Capture) đều ăn ngay lập tức, khắc phục triệt để lỗi bấm không tác dụng. 2. Tắt Tiếng Toàn Cục (Global Mute): Nút Bật/Tắt Tiếng hiện tại đã đồng bộ Mute cho TẤT CẢ các video trên sân khấu (Video chính, Video PiP phụ, Avatar AI...), giải quyết tình trạng âm thanh lọt từ các lớp video khác. 3. Đa Dạng Tên Miền Phát Sóng: Tối ưu các đường link phát trực tiếp để tương thích hoàn toàn trình duyệt Chromium của TikTok Live Studio, giúp nhận diện và phát video 100% không bị chặn (sử dụng /stage, /main, /tiktok-live, /live-stream đều đồng bộ mượt mà).'
