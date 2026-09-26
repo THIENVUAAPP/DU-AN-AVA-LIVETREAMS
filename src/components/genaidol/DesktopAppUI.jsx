@@ -6743,8 +6743,31 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                           src={charItem.url} 
                           className="w-full h-full object-cover absolute inset-0 pointer-events-none" 
                           muted 
+                          autoPlay={false}
                           playsInline 
                           preload="metadata" 
+                          controls={false}
+                          ref={(el) => {
+                            if (el) {
+                              try {
+                                el.muted = true;
+                                el.defaultMuted = true;
+                                el.volume = 0;
+                              } catch(e) {}
+                            }
+                          }}
+                          onPlay={(e) => {
+                            try {
+                              e.currentTarget.muted = true;
+                              e.currentTarget.volume = 0;
+                            } catch(err) {}
+                          }}
+                          onVolumeChange={(e) => {
+                            try {
+                              e.currentTarget.muted = true;
+                              e.currentTarget.volume = 0;
+                            } catch(err) {}
+                          }}
                         />
                         <div className="absolute bottom-0 inset-x-0 bg-black/70 text-[8px] font-medium text-white truncate px-0.5 text-center leading-tight py-0.5 z-10 pointer-events-none max-w-[42px]">
                           {charItem.name || 'Video'}

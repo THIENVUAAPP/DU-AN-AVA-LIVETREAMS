@@ -1903,11 +1903,12 @@ export default function WindowCapturePlayer() {
       )}
 
       {/* 👑 DOCK ĐIỀU KHIỂN NỔI CỦA CỬA SỔ WINDOW CAPTURE (100% PHẢN HỒI TỨC THÌ) */}
+      {/* 👑 DOCK ĐIỀU KHIỂN NỔI CỦA CỬA SỔ WINDOW CAPTURE (100% PHẢN HỒI TỨC THÌ) */}
       {!isControlsHidden && (
         <div
           style={{
             position: 'fixed',
-            top: '6px',
+            top: '12px',
             left: '50%',
             transform: 'translateX(-50%)',
             display: 'inline-flex',
@@ -1916,59 +1917,62 @@ export default function WindowCapturePlayer() {
             justifyContent: 'center',
             flexWrap: 'nowrap',
             whiteSpace: 'nowrap',
-            gap: '5px',
-            background: 'rgba(5, 7, 12, 0.92)',
-            backdropFilter: 'blur(20px)',
-            padding: '3px 8px',
-            borderRadius: '24px',
-            border: '1px solid rgba(6, 182, 212, 0.7)',
-            boxShadow: '0 6px 24px rgba(0, 0, 0, 0.9), 0 0 12px rgba(6, 182, 212, 0.3)',
+            gap: '6px',
+            background: 'rgba(8, 12, 22, 0.95)',
+            backdropFilter: 'blur(24px)',
+            WebkitBackdropFilter: 'blur(24px)',
+            padding: '5px 10px',
+            borderRadius: '28px',
+            border: '1.5px solid rgba(6, 182, 212, 0.75)',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.9), 0 0 16px rgba(6, 182, 212, 0.35)',
             zIndex: 1000000,
             pointerEvents: 'auto',
             touchAction: 'manipulation',
-            transition: 'opacity 0.2s ease',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)',
             opacity: 0.98,
             maxWidth: 'calc(100vw - 16px)',
             boxSizing: 'border-box'
           }}
-          onMouseEnter={(e) => (e.currentTarget.style.opacity = '1')}
-          onMouseLeave={(e) => (e.currentTarget.style.opacity = '0.98')}
+          onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'translateX(-50%) scale(1.02)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.98'; e.currentTarget.style.transform = 'translateX(-50%) scale(1)'; }}
         >
+          {/* Nút 1: LIVE 60FPS */}
           <button
             type="button"
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
               recheckLiveState(true);
-              if (videoRef.current && isPlaybackActive) {
-                videoRef.current.play().catch(() => {});
-              }
-              toast.success('🟢 Luồng Live 4K 60 FPS đã sẵn sàng');
+              const allVideos = document.querySelectorAll('video');
+              allVideos.forEach((v) => { try { v.play().catch(() => {}); } catch(err) {} });
+              toast.success('🟢 Luồng Live 4K 60 FPS đã được làm mới');
             }}
             style={{
-              fontSize: '9px',
+              fontSize: '11px',
               color: '#10b981',
               fontWeight: '900',
               display: 'inline-flex',
               alignItems: 'center',
-              gap: '3px',
+              gap: '4px',
               userSelect: 'none',
               letterSpacing: '0.5px',
               whiteSpace: 'nowrap',
               flexShrink: 0,
-              background: 'rgba(16, 185, 129, 0.15)',
-              border: '1px solid rgba(16, 185, 129, 0.5)',
-              borderRadius: '10px',
-              padding: '2px 6px',
-              cursor: 'pointer'
+              background: 'rgba(16, 185, 129, 0.18)',
+              border: '1px solid rgba(16, 185, 129, 0.6)',
+              borderRadius: '14px',
+              padding: '5px 10px',
+              cursor: 'pointer',
+              lineHeight: 1,
+              transition: 'all 0.15s ease'
             }}
-            title="Luồng Phát Live 4K 60 FPS (Bấm để làm mới luồng)"
+            title="Luồng Phát Live 4K 60 FPS (Bấm để ép làm mới luồng)"
           >
-            <span style={{ width: '5px', height: '5px', borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 6px #10b981', flexShrink: 0 }} />
-            • LIVE
+            <span style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981', display: 'inline-block', boxShadow: '0 0 8px #10b981', flexShrink: 0 }} />
+            • LIVE 60FPS
           </button>
 
-          {/* Nút Play / Pause */}
+          {/* Nút 2: Tạm Dừng / Tiếp Tục */}
           <button
             type="button"
             onClick={(e) => {
@@ -1977,22 +1981,23 @@ export default function WindowCapturePlayer() {
               toggleStandalonePlay(e);
             }}
             style={{
-              background: isPlaybackActive ? 'rgba(239, 68, 68, 0.85)' : 'rgba(16, 185, 129, 0.85)',
-              border: '1px solid rgba(255, 255, 255, 0.4)',
+              background: isPlaybackActive ? 'rgba(255, 255, 255, 0.15)' : 'rgba(16, 185, 129, 0.45)',
+              border: `1px solid ${isPlaybackActive ? 'rgba(255, 255, 255, 0.35)' : '#10b981'}`,
               color: '#fff',
-              fontSize: '10px',
-              fontWeight: '900',
-              padding: '3px 8px',
-              borderRadius: '12px',
+              fontSize: '11px',
+              fontWeight: '800',
+              padding: '5px 10px',
+              borderRadius: '14px',
               cursor: 'pointer',
               pointerEvents: 'auto',
               touchAction: 'manipulation',
               userSelect: 'none',
-              transition: 'all 0.12s ease',
+              transition: 'all 0.15s ease',
               display: 'inline-flex',
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'center',
+              gap: '4px',
               whiteSpace: 'nowrap',
               wordBreak: 'keep-all',
               flexShrink: 0,
@@ -2000,10 +2005,10 @@ export default function WindowCapturePlayer() {
             }}
             title="Tạm dừng / Tiếp tục độc lập (Phím tắt: Space)"
           >
-            {isPlaybackActive ? '⏸️ Dừng' : '▶️ Phát'}
+            {isPlaybackActive ? '⏸️ Tạm Dừng' : '▶️ Tiếp Tục'}
           </button>
 
-          {/* Nút Bật / Tắt Tiếng */}
+          {/* Nút 3: Bật / Tắt Tiếng */}
           <button
             type="button"
             onClick={(e) => {
@@ -2012,22 +2017,23 @@ export default function WindowCapturePlayer() {
               toggleStandaloneMute(e);
             }}
             style={{
-              background: isUserMuted ? 'rgba(255, 255, 255, 0.25)' : 'rgba(6, 182, 212, 0.85)',
-              border: '1px solid rgba(255, 255, 255, 0.4)',
+              background: !isUserMuted ? 'rgba(6, 182, 212, 0.5)' : 'rgba(255, 255, 255, 0.15)',
+              border: `1px solid ${!isUserMuted ? '#06b6d4' : 'rgba(255, 255, 255, 0.35)'}`,
               color: '#fff',
-              fontSize: '10px',
-              fontWeight: '900',
-              padding: '3px 8px',
-              borderRadius: '12px',
+              fontSize: '11px',
+              fontWeight: '800',
+              padding: '5px 10px',
+              borderRadius: '14px',
               cursor: 'pointer',
               pointerEvents: 'auto',
               touchAction: 'manipulation',
               userSelect: 'none',
-              transition: 'all 0.12s ease',
+              transition: 'all 0.15s ease',
               display: 'inline-flex',
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'center',
+              gap: '4px',
               whiteSpace: 'nowrap',
               wordBreak: 'keep-all',
               flexShrink: 0,
@@ -2035,10 +2041,10 @@ export default function WindowCapturePlayer() {
             }}
             title="Bật / Tắt âm thanh độc lập (Phím tắt: M)"
           >
-            {isUserMuted ? '🔊 Bật Tiếng' : '🔇 Tắt Tiếng'}
+            {!isUserMuted ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}
           </button>
 
-          {/* Nút Tràn / Vừa */}
+          {/* Nút 4: Tràn Màn / Vừa Khung */}
           <button
             type="button"
             onClick={(e) => {
@@ -2047,22 +2053,23 @@ export default function WindowCapturePlayer() {
               toggleStandaloneFit(e);
             }}
             style={{
-              background: 'rgba(255, 255, 255, 0.25)',
-              border: '1px solid rgba(255, 255, 255, 0.4)',
+              background: 'rgba(255, 255, 255, 0.15)',
+              border: '1px solid rgba(255, 255, 255, 0.35)',
               color: '#fff',
-              fontSize: '10px',
-              fontWeight: '900',
-              padding: '3px 8px',
-              borderRadius: '12px',
+              fontSize: '11px',
+              fontWeight: '800',
+              padding: '5px 10px',
+              borderRadius: '14px',
               cursor: 'pointer',
               pointerEvents: 'auto',
               touchAction: 'manipulation',
               userSelect: 'none',
-              transition: 'all 0.12s ease',
+              transition: 'all 0.15s ease',
               display: 'inline-flex',
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'center',
+              gap: '4px',
               whiteSpace: 'nowrap',
               wordBreak: 'keep-all',
               flexShrink: 0,
@@ -2070,10 +2077,10 @@ export default function WindowCapturePlayer() {
             }}
             title="Chuyển chế độ Khung hình (Tràn / Vừa)"
           >
-            {fitMode === 'cover' ? '📐 Tràn' : '📐 Vừa'}
+            {fitMode === 'cover' ? '📐 Tràn Màn' : '📐 Vừa Khung'}
           </button>
 
-          {/* ⭐ NÚT ẨN HẾT TẤT CẢ CÁC TAB / NÚT TRÊN GIAO DIỆN VIDEO */}
+          {/* Nút 5: Ẩn Nút (H) */}
           <button
             type="button"
             onClick={(e) => {
@@ -2082,13 +2089,13 @@ export default function WindowCapturePlayer() {
               toggleControlsHidden(true);
             }}
             style={{
-              background: 'rgba(239, 68, 68, 0.75)',
-              border: '1px solid rgba(239, 68, 68, 0.95)',
-              color: '#fff',
-              fontSize: '10px',
-              fontWeight: '900',
-              padding: '3px 8px',
-              borderRadius: '12px',
+              background: 'rgba(239, 68, 68, 0.22)',
+              border: '1px solid rgba(239, 68, 68, 0.65)',
+              color: '#fca5a5',
+              fontSize: '11px',
+              fontWeight: '800',
+              padding: '5px 10px',
+              borderRadius: '14px',
               cursor: 'pointer',
               pointerEvents: 'auto',
               touchAction: 'manipulation',
@@ -2096,9 +2103,9 @@ export default function WindowCapturePlayer() {
               flexDirection: 'row',
               alignItems: 'center',
               justifyContent: 'center',
-              gap: '3px',
+              gap: '4px',
               userSelect: 'none',
-              transition: 'all 0.12s ease',
+              transition: 'all 0.15s ease',
               whiteSpace: 'nowrap',
               wordBreak: 'keep-all',
               flexShrink: 0,
@@ -2106,7 +2113,7 @@ export default function WindowCapturePlayer() {
             }}
             title="Ẩn sạch toàn bộ các nút trên video để TikTok Studio / OBS quay khung hình tinh khiết (Phím tắt: H)"
           >
-            ✕ Ẩn (H)
+            ✕ Ẩn Nút (H)
           </button>
         </div>
       )}
@@ -2122,29 +2129,30 @@ export default function WindowCapturePlayer() {
           }}
           style={{
             position: 'fixed',
-            top: '6px',
-            right: '8px',
+            top: '10px',
+            right: '12px',
             zIndex: 1000000,
             pointerEvents: 'auto',
             touchAction: 'manipulation',
-            width: '28px',
-            height: '28px',
+            width: '34px',
+            height: '34px',
             borderRadius: '50%',
-            background: 'rgba(5, 7, 12, 0.88)',
-            border: '1px solid rgba(6, 182, 212, 0.85)',
-            color: '#06b6d4',
-            fontSize: '13px',
+            background: 'rgba(8, 12, 22, 0.95)',
+            border: '1.5px solid rgba(6, 182, 212, 0.85)',
+            color: '#22d3ee',
+            fontSize: '15px',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
-            opacity: 0.9,
-            backdropFilter: 'blur(8px)',
-            boxShadow: '0 4px 15px rgba(0, 0, 0, 0.7)',
-            transition: 'all 0.2s ease'
+            opacity: 0.95,
+            backdropFilter: 'blur(14px)',
+            WebkitBackdropFilter: 'blur(14px)',
+            boxShadow: '0 6px 20px rgba(0, 0, 0, 0.85), 0 0 12px rgba(6, 182, 212, 0.4)',
+            transition: 'all 0.2s cubic-bezier(0.4, 0, 0.2, 1)'
           }}
-          onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'scale(1.15)'; }}
-          onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.9'; e.currentTarget.style.transform = 'scale(1)'; }}
+          onMouseEnter={(e) => { e.currentTarget.style.opacity = '1'; e.currentTarget.style.transform = 'scale(1.15)'; e.currentTarget.style.boxShadow = '0 0 18px rgba(34, 211, 238, 0.7)'; }}
+          onMouseLeave={(e) => { e.currentTarget.style.opacity = '0.95'; e.currentTarget.style.transform = 'scale(1)'; e.currentTarget.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.85), 0 0 12px rgba(6, 182, 212, 0.4)'; }}
           title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)"
         >
           👁️
@@ -2237,7 +2245,7 @@ export default function WindowCapturePlayer() {
         return (
           <div style={style}>
             <video
-              src={flowSequencerOverlay.secondaryMediaUrl}
+              src={resolveUrl(flowSequencerOverlay.secondaryMediaUrl)}
               autoPlay
               loop
               muted
@@ -2286,7 +2294,7 @@ export default function WindowCapturePlayer() {
         return (
           <div style={style}>
             <img 
-              src={flowSequencerOverlay.overlayImage} 
+              src={resolveUrl(flowSequencerOverlay.overlayImage)} 
               alt="Sequencer Overlay" 
               style={{
                 width: '100%',

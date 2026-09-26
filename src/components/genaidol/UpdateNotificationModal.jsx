@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.44';
+export const APP_VERSION = '4.9.45';
 export const RELEASE_DATE = '26/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v4.9.44 - Xóa Triệt Để Video Chạy Ẩn, Đồng Bộ Toàn Bộ Sân Khấu TikTok Live & Sửa Nút Window Capture',
-    description: '1. Xóa Sạch Triệt Để Video Chạy Ẩn & Dư Âm Nền: Khi xóa video trên sân khấu chính và sân khấu phụ, toàn bộ video/audio ngầm trong DOM và state hệ thống bị dừng và xóa sạch tức thì 0ms, không còn bất kỳ dư âm nào. Đã xóa vĩnh viễn các file màn hình đen. 2. Bóc Tách & Tối Ưu Link TikTok Live Studio (/live-stream): Đồng bộ toàn bộ dữ liệu sân khấu chính (background, đa avatar AI cử chỉ chromaKey, video phụ PiP, banner ảnh & tiêu đề chữ). Khắc phục hoàn toàn lỗi kẹt không mở được video trên TikTok Live Studio. 3. Sửa Toàn Bộ Nút Thanh Dock Window Capture: Các nút Live, Dừng/Phát, Bật/Tắt Tiếng, Tràn/Vừa, Ẩn/Hiện phản hồi ngay lập tức 100%; bấm vào giữa màn hình video bật tiếng và phát tức thì. 4. Khóa Chặt 100% Toàn Bộ 14 Tab & Module Hệ Thống.'
+    title: '🚀 Bản Cập Nhật v4.9.45 - Đồng Bộ Toàn Bộ Sân Khấu TikTok Live, Làm Mới Bộ Nút Dock & Mute Ô Nhân Vật Đầu Trang',
+    description: '1. Đồng Bộ Toàn Bộ Thành Phần Sân Khấu: Khắc phục triệt để lỗi TikTok Live Studio và Window Capture không hiển thị video nền; hệ thống đa tầng tự động hiển thị mượt mà cả Video/Ảnh nền chính, Video phụ PiP, Avatar AI, Banner quảng cáo và Câu tiêu đề chữ, đồng bộ 100% không bỏ sót bất kỳ thành phần nào. 2. Làm Mới Hoàn Toàn Bộ Nút Bấm Thanh Dock (Ảnh 2): Thiết kế Cyberpunk viên thuốc mới siêu nhạy (LIVE 60FPS, Tạm Dừng/Tiếp Tục, Bật/Tắt Tiếng, Tràn Màn/Vừa Khung, Ẩn Nút H và icon phục hồi 👁️), điều khiển đồng bộ tất cả các video trên trang 0ms, chống nuốt click tuyệt đối. 3. Tắt Tiếng Triệt Để Các Ô Nhân Vật Đầu Trang: Các ô video/nhân vật tải lên ở thanh trên đầu được mute hoàn toàn (volume = 0), chỉ duy nhất Sân Khấu Chính mới phát âm thanh. 4. Khóa Chặt 100% Toàn Bộ 14 Tab & Module Hệ Thống.'
   }
 ];
 

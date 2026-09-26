@@ -992,7 +992,7 @@ app.get([
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.9.44</title>
+  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.9.45</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -1068,7 +1068,7 @@ app.get([
     .chroma-blue-filter { filter: url(#chroma-blue); }
     #controlsDock {
       position: fixed !important;
-      top: 6px !important;
+      top: 12px !important;
       left: 50% !important;
       transform: translateX(-50%) !important;
       display: inline-flex !important;
@@ -1077,68 +1077,96 @@ app.get([
       justify-content: center !important;
       flex-wrap: nowrap !important;
       white-space: nowrap !important;
-      gap: 5px !important;
-      background: rgba(5, 7, 12, 0.94) !important;
-      backdrop-filter: blur(20px) !important;
-      -webkit-backdrop-filter: blur(20px) !important;
-      padding: 4px 10px !important;
-      border-radius: 24px !important;
-      border: 1px solid rgba(6, 182, 212, 0.8) !important;
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.9), 0 0 14px rgba(6, 182, 212, 0.4) !important;
+      gap: 6px !important;
+      background: rgba(8, 12, 22, 0.95) !important;
+      backdrop-filter: blur(24px) !important;
+      -webkit-backdrop-filter: blur(24px) !important;
+      padding: 5px 10px !important;
+      border-radius: 28px !important;
+      border: 1.5px solid rgba(6, 182, 212, 0.75) !important;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 16px rgba(6, 182, 212, 0.35) !important;
       z-index: 2147483647 !important;
       opacity: 0.98 !important;
       pointer-events: auto !important;
       -webkit-app-region: no-drag !important;
       touch-action: manipulation !important;
-      max-width: calc(100vw - 12px) !important;
+      max-width: calc(100vw - 16px) !important;
       box-sizing: border-box !important;
       user-select: none !important;
       -webkit-user-select: none !important;
-      transition: opacity 0.2s ease !important;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     #controlsDock.is-hidden { display: none !important; }
-    #controlsDock:hover { opacity: 1 !important; }
+    #controlsDock:hover { opacity: 1 !important; transform: translateX(-50%) scale(1.02) !important; }
     .dock-btn {
-      background: rgba(255, 255, 255, 0.22) !important;
-      border: 1px solid rgba(255, 255, 255, 0.45) !important;
-      color: #fff !important;
+      background: rgba(255, 255, 255, 0.15) !important;
+      border: 1px solid rgba(255, 255, 255, 0.35) !important;
+      color: #ffffff !important;
       font-size: 11px !important;
-      font-weight: 900 !important;
-      padding: 4px 9px !important;
-      border-radius: 12px !important;
+      font-weight: 800 !important;
+      padding: 5px 10px !important;
+      border-radius: 14px !important;
       cursor: pointer !important;
       outline: none !important;
       display: inline-flex !important;
       align-items: center !important;
       justify-content: center !important;
+      gap: 4px !important;
       white-space: nowrap !important;
       flex-shrink: 0 !important;
       line-height: 1 !important;
       pointer-events: auto !important;
       -webkit-app-region: no-drag !important;
       touch-action: manipulation !important;
-      transition: all 0.12s ease !important;
+      transition: all 0.15s ease !important;
     }
-    .dock-btn:hover { background: rgba(6, 182, 212, 0.7) !important; border-color: #06b6d4 !important; }
-    .dock-btn:active { transform: scale(0.95) !important; }
+    .dock-btn:hover { background: rgba(6, 182, 212, 0.5) !important; border-color: #06b6d4 !important; transform: translateY(-1px) !important; }
+    .dock-btn:active { transform: scale(0.92) !important; }
+    .dock-btn-live {
+      background: rgba(16, 185, 129, 0.18) !important;
+      border: 1px solid rgba(16, 185, 129, 0.6) !important;
+      color: #10b981 !important;
+      font-weight: 900 !important;
+    }
+    .dock-btn-live:hover {
+      background: rgba(16, 185, 129, 0.35) !important;
+      border-color: #10b981 !important;
+    }
+    .dock-pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+      display: inline-block;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulse-dot 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
+    }
     .dock-btn-hide {
-      background: rgba(239, 68, 68, 0.8) !important;
-      border-color: rgba(239, 68, 68, 0.95) !important;
-      color: #fff !important;
+      background: rgba(239, 68, 68, 0.22) !important;
+      border: 1px solid rgba(239, 68, 68, 0.65) !important;
+      color: #fca5a5 !important;
     }
-    .dock-btn-hide:hover { background: rgba(239, 68, 68, 1) !important; }
+    .dock-btn-hide:hover {
+      background: rgba(239, 68, 68, 0.85) !important;
+      border-color: #ef4444 !important;
+      color: #ffffff !important;
+    }
     #btnRestoreIcon {
       position: fixed !important;
-      top: 6px !important;
-      right: 8px !important;
+      top: 10px !important;
+      right: 12px !important;
       z-index: 2147483647 !important;
-      width: 28px !important;
-      height: 28px !important;
+      width: 34px !important;
+      height: 34px !important;
       border-radius: 50% !important;
-      background: rgba(5, 7, 12, 0.9) !important;
-      border: 1px solid rgba(6, 182, 212, 0.9) !important;
-      color: #06b6d4 !important;
-      font-size: 13px !important;
+      background: rgba(8, 12, 22, 0.95) !important;
+      border: 1.5px solid rgba(6, 182, 212, 0.85) !important;
+      color: #22d3ee !important;
+      font-size: 15px !important;
       display: none;
       align-items: center !important;
       justify-content: center !important;
@@ -1146,12 +1174,18 @@ app.get([
       pointer-events: auto !important;
       -webkit-app-region: no-drag !important;
       touch-action: manipulation !important;
-      backdrop-filter: blur(10px) !important;
-      -webkit-backdrop-filter: blur(10px) !important;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8) !important;
-      transition: all 0.2s ease !important;
+      backdrop-filter: blur(14px) !important;
+      -webkit-backdrop-filter: blur(14px) !important;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.85), 0 0 12px rgba(6, 182, 212, 0.4) !important;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     #btnRestoreIcon.is-visible { display: flex !important; }
+    #btnRestoreIcon:hover {
+      transform: scale(1.15) !important;
+      border-color: #22d3ee !important;
+      box-shadow: 0 0 18px rgba(34, 211, 238, 0.7) !important;
+      color: #ffffff !important;
+    }
     #badge {
       display: none;
     }
@@ -1222,18 +1256,18 @@ app.get([
       <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);"></div>
     </div>
     
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.44</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.45</div>
   </div>
 
   <!-- BẢNG ĐIỀU KHIỂN NỔI DOCK TOÀN CỤC CẤP BODY -->
   <div id="controlsDock">
-    <button id="btnLiveStatus" class="dock-btn" style="background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.6); color: #10b981; font-weight: 900; font-size: 9px; padding: 2px 6px; cursor: pointer;" title="Luồng Phát Live 4K 60 FPS (Bấm để làm mới luồng)">
-      <span style="width:5px; height:5px; border-radius:50%; background:#10b981; display:inline-block; box-shadow:0 0 6px #10b981; margin-right: 3px;"></span>• LIVE
+    <button id="btnLiveStatus" class="dock-btn dock-btn-live" title="Luồng Trực Tiếp 60 FPS (Bấm để ép làm mới & đồng bộ luồng)">
+      <span class="dock-pulse-dot"></span>• LIVE 60FPS
     </button>
-    <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập">⏸️ Dừng</button>
-    <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">${soundParam ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}</button>
-    <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa' : '📐 Tràn'}</button>
-    <button id="btnHideAll" class="dock-btn dock-btn-hide" title="Ẩn toàn bộ nút trên giao diện video (Phím tắt: H)">✕ Ẩn (H)</button>
+    <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập (Phím tắt: Space)">⏸️ Tạm Dừng</button>
+    <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập (Phím tắt: M)">${soundParam ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}</button>
+    <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa Khung' : '📐 Tràn Màn'}</button>
+    <button id="btnHideAll" class="dock-btn dock-btn-hide" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn Nút (H)</button>
   </div>
 
   <button id="btnRestoreIcon" title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)">👁️</button>
@@ -1258,6 +1292,10 @@ app.get([
       let currentFit = ${JSON.stringify(fitParam)};
       let isPlayPending = false;
       let isDockHidden = false;
+
+      function getAllVideos() {
+        return Array.from(document.querySelectorAll('video'));
+      }
 
       try {
         isDockHidden = localStorage.getItem('avalive_livestream_dock_hidden') === 'true';
@@ -1310,16 +1348,19 @@ app.get([
       setTimeout(function() { if (badge) badge.style.opacity = '0.2'; }, 6000);
 
       function updateDockUI() {
-        if (btnPlayPause && vid) {
-          btnPlayPause.innerHTML = vid.paused ? '▶️ Phát' : '⏸️ Dừng';
-          btnPlayPause.style.background = vid.paused ? 'rgba(16, 185, 129, 0.5)' : 'rgba(255, 255, 255, 0.22)';
+        const anyPaused = isStreamUserPaused || (vid && vid.paused);
+        if (btnPlayPause) {
+          btnPlayPause.innerHTML = anyPaused ? '▶️ Tiếp Tục' : '⏸️ Tạm Dừng';
+          btnPlayPause.style.background = anyPaused ? 'rgba(16, 185, 129, 0.45)' : 'rgba(255, 255, 255, 0.15)';
+          btnPlayPause.style.borderColor = anyPaused ? '#10b981' : 'rgba(255, 255, 255, 0.35)';
         }
-        if (btnMuteUnmute && vid) {
-          btnMuteUnmute.innerHTML = vid.muted ? '🔊 Bật Tiếng' : '🔇 Tắt Tiếng';
-          btnMuteUnmute.style.background = vid.muted ? 'rgba(255, 255, 255, 0.22)' : 'rgba(6, 182, 212, 0.6)';
+        if (btnMuteUnmute) {
+          btnMuteUnmute.innerHTML = targetSoundEnabled ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng';
+          btnMuteUnmute.style.background = targetSoundEnabled ? 'rgba(6, 182, 212, 0.5)' : 'rgba(255, 255, 255, 0.15)';
+          btnMuteUnmute.style.borderColor = targetSoundEnabled ? '#06b6d4' : 'rgba(255, 255, 255, 0.35)';
         }
         if (btnFitToggle) {
-          btnFitToggle.innerHTML = currentFit === 'cover' ? '📐 Tràn' : '📐 Vừa';
+          btnFitToggle.innerHTML = currentFit === 'cover' ? '📐 Tràn Màn' : '📐 Vừa Khung';
         }
       }
 
@@ -1340,8 +1381,8 @@ app.get([
 
       function safePlay() {
         if (isStreamUserPaused) return;
-        vid.muted = true;
-        vid.defaultMuted = true;
+        vid.muted = !targetSoundEnabled;
+        vid.defaultMuted = !targetSoundEnabled;
         try {
           isPlayPending = true;
           setTimeout(function() { isPlayPending = false; }, 400);
@@ -1385,41 +1426,44 @@ app.get([
           lastAction = now;
           actionFn(e);
         }
-        el.addEventListener('click', execute);
-        el.addEventListener('touchend', execute);
+        el.addEventListener('pointerdown', execute, { passive: false });
+        el.addEventListener('click', execute, { passive: false });
+        el.addEventListener('touchend', execute, { passive: false });
       }
 
       bindDockBtn(btnLiveStatus, function() {
         isStreamUserPaused = false;
         if (typeof fetchLatestState === 'function') fetchLatestState();
-        if (vid && vid.src) {
-          try { vid.currentTime = vid.currentTime; } catch(err) {}
-          safePlay();
-        }
+        getAllVideos().forEach(function(v) {
+          try { v.play().catch(function() {}); } catch(err) {}
+        });
         updateDockUI();
       });
 
       bindDockBtn(btnPlayPause, function() {
-        if (vid.paused) {
+        if (isStreamUserPaused || (vid && vid.paused)) {
           isStreamUserPaused = false;
+          getAllVideos().forEach(function(v) {
+            try { v.play().catch(function() {}); } catch(err) {}
+          });
           safePlay();
         } else {
           isStreamUserPaused = true;
-          vid.pause();
-          updateDockUI();
+          getAllVideos().forEach(function(v) {
+            try { v.pause(); } catch(e) {}
+          });
         }
+        updateDockUI();
       });
 
       bindDockBtn(btnMuteUnmute, function() {
         targetSoundEnabled = !targetSoundEnabled;
-        if (targetSoundEnabled) {
-          vid.muted = false;
-          vid.volume = targetVolume;
-          if (vid.paused && !isStreamUserPaused) {
-            safePlay();
-          }
-        } else {
-          vid.muted = true;
+        if (vid) {
+          vid.muted = !targetSoundEnabled;
+          if (targetSoundEnabled) vid.volume = targetVolume;
+        }
+        if (targetSoundEnabled && vid && vid.paused && !isStreamUserPaused) {
+          safePlay();
         }
         updateDockUI();
       });
@@ -1672,10 +1716,36 @@ app.get([
         const pipImage = document.getElementById('pipImage');
 
         // 1. Kiểm tra trạng thái XÓA SẠCH SÂN KHẤU (CLEAR_STAGE / clearMedia)
-        let targetUrl = data.mediaUrl || data.eventVideoUrl || data.videoUrl || data.currentMedia;
-        const hasMultiAvatar = !!(data.multiAvatarConfig && data.multiAvatarConfig.enabled && data.multiAvatarConfig.avatars && data.multiAvatarConfig.avatars.length > 0);
+        if (data.clearMedia === true) {
+          if (emptyStage) emptyStage.style.display = 'flex';
+          if (multiStage) multiStage.style.display = 'none';
+          if (pipContainer) pipContainer.style.display = 'none';
+          if (overlayImgEl) overlayImgEl.style.display = 'none';
+          if (banner) banner.style.display = 'none';
+          if (vid) {
+            try { vid.pause(); vid.removeAttribute('src'); vid.src = ''; vid.load(); } catch(e) {}
+            vid.style.display = 'none';
+          }
+          const imgEl = document.getElementById('imagePlayer');
+          if (imgEl) {
+            try { imgEl.removeAttribute('src'); imgEl.src = ''; } catch(e) {}
+            imgEl.style.display = 'none';
+          }
+          hideLoading();
+          updateDockUI();
+          return;
+        }
 
-        if (data.clearMedia || (!targetUrl && !hasMultiAvatar && !data.isPlaying)) {
+        // 2. Tìm nguồn media nền chính (Background / Main Media)
+        const bgUrlCandidate = (data.multiAvatarConfig && data.multiAvatarConfig.backgroundUrl) || data.mediaUrl || data.currentMedia || data.eventVideoUrl || data.videoUrl || '';
+        const resolvedMainBg = resolveUrl(bgUrlCandidate);
+
+        const hasValidAvatars = !!(data.multiAvatarConfig && data.multiAvatarConfig.enabled && Array.isArray(data.multiAvatarConfig.avatars) && data.multiAvatarConfig.avatars.some(function(a) {
+          const u = a.talkVideo || a.idleVideo || a.mediaUrl || a.resolvedVidSrc;
+          return u && typeof u === 'string' && !u.startsWith('blob:');
+        }));
+
+        if (!resolvedMainBg && !hasValidAvatars && !data.secondaryMediaUrl) {
           if (emptyStage) emptyStage.style.display = 'flex';
           if (multiStage) multiStage.style.display = 'none';
           if (pipContainer) pipContainer.style.display = 'none';
@@ -1697,41 +1767,50 @@ app.get([
 
         if (emptyStage) emptyStage.style.display = 'none';
 
-        // 2. Chế độ Sân Khấu Đa Nhân Vật (Multi-Avatar Stage)
-        if (hasMultiAvatar) {
-          if (vid) { try { vid.pause(); } catch(e) {} vid.style.display = 'none'; }
-          const imgEl = document.getElementById('imagePlayer');
-          if (imgEl) imgEl.style.display = 'none';
-
-          if (multiStage) multiStage.style.display = 'block';
-          if (multiBg) {
-            const bgUrl = resolveUrl(data.multiAvatarConfig.backgroundUrl);
-            if (bgUrl) {
-              multiBg.style.backgroundImage = 'url("' + bgUrl + '")';
-              multiBg.style.backgroundColor = 'transparent';
-            } else {
-              multiBg.style.backgroundImage = 'none';
-              multiBg.style.backgroundColor = data.multiAvatarConfig.backgroundColor || '#0a0c14';
+        // 3. Hiển thị Lớp Nền Sân Khấu Chính (Background Layer)
+        const imgEl = document.getElementById('imagePlayer');
+        if (resolvedMainBg) {
+          if (isImage(resolvedMainBg)) {
+            if (imgEl) {
+              if (imgEl.src !== resolvedMainBg) imgEl.src = resolvedMainBg;
+              imgEl.style.display = 'block';
+            }
+            if (vid) {
+              vid.style.display = 'none';
+              try { vid.pause(); } catch(e) {}
+            }
+          } else {
+            if (imgEl) imgEl.style.display = 'none';
+            if (vid) {
+              vid.style.display = 'block';
+              if (!isSameMedia(vid.src, resolvedMainBg)) {
+                currentSrc = resolvedMainBg;
+                vid.src = resolvedMainBg;
+              }
+              if (!isStreamUserPaused) safePlay();
             }
           }
-          renderMultiAvatarCharacters(data.multiAvatarConfig, data.activeSpeakerId);
-          hideLoading();
         } else {
-          // 3. Chế độ Video/Ảnh Sân Khấu Đơn
+          if (imgEl) imgEl.style.display = 'none';
+          if (vid) { vid.style.display = 'none'; }
+        }
+
+        // 4. Hiển thị Lớp Multi-Avatar (Nếu có nhân vật hợp lệ)
+        if (hasValidAvatars) {
+          if (multiStage) {
+            multiStage.style.display = 'block';
+            multiStage.style.background = 'transparent';
+          }
+          renderMultiAvatarCharacters(data.multiAvatarConfig, data.activeSpeakerId);
+        } else {
           if (multiStage) multiStage.style.display = 'none';
-          if (!targetUrl && Array.isArray(data.syncedAvatars) && data.syncedAvatars.length > 0) {
-            targetUrl = data.syncedAvatars[0].resolvedVidSrc || data.syncedAvatars[0].talkVideo || data.syncedAvatars[0].idleVideo || '';
-          }
-          if (targetUrl) {
-            loadAndPlay(targetUrl);
-          }
         }
 
         // 4. Lớp Video Phụ PiP (Picture-in-Picture)
         if (pipContainer && pipVideo && pipImage) {
           const pipUrl = resolveUrl(data.secondaryMediaUrl);
           if (pipUrl) {
-            const trans = data.secondaryMediaTransform || { x: 55, y: 70, width: 40, height: 25 };
+            const trans = data.secondaryMediaTransform || { x: 52, y: 28, width: 40, height: 48, zIndex: 25 };
             pipContainer.style.left = trans.x + '%';
             pipContainer.style.top = trans.y + '%';
             pipContainer.style.width = trans.width + '%';
@@ -1855,7 +1934,7 @@ app.get([
             }, 3000);
 
             socket.on('connect', function() {
-              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.44';
+              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.45';
               socket.emit('REQUEST_MASTER_LIVE_STATE');
             });
 
@@ -2074,7 +2153,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     }
     #controlsDock {
       position: fixed !important;
-      top: 6px !important;
+      top: 12px !important;
       left: 50% !important;
       transform: translateX(-50%) !important;
       display: inline-flex !important;
@@ -2083,85 +2162,99 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       justify-content: center !important;
       flex-wrap: nowrap !important;
       white-space: nowrap !important;
-      gap: 5px !important;
-      background: rgba(5, 7, 12, 0.94) !important;
-      backdrop-filter: blur(20px) !important;
-      -webkit-backdrop-filter: blur(20px) !important;
-      padding: 4px 10px !important;
-      border-radius: 24px !important;
-      border: 1px solid rgba(6, 182, 212, 0.8) !important;
-      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.9), 0 0 14px rgba(6, 182, 212, 0.4) !important;
+      gap: 6px !important;
+      background: rgba(8, 12, 22, 0.95) !important;
+      backdrop-filter: blur(24px) !important;
+      -webkit-backdrop-filter: blur(24px) !important;
+      padding: 5px 10px !important;
+      border-radius: 28px !important;
+      border: 1.5px solid rgba(6, 182, 212, 0.75) !important;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 16px rgba(6, 182, 212, 0.35) !important;
       z-index: 2147483647 !important;
       opacity: 0.98 !important;
       pointer-events: auto !important;
       -webkit-app-region: no-drag !important;
       touch-action: manipulation !important;
-      max-width: calc(100vw - 12px) !important;
+      max-width: calc(100vw - 16px) !important;
       box-sizing: border-box !important;
       user-select: none !important;
       -webkit-user-select: none !important;
-      transition: opacity 0.2s ease !important;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
-    #controlsDock.is-hidden {
-      display: none !important;
-    }
-    #controlsDock:hover { opacity: 1 !important; }
+    #controlsDock.is-hidden { display: none !important; }
+    #controlsDock:hover { opacity: 1 !important; transform: translateX(-50%) scale(1.02) !important; }
     .dock-btn {
-      background: rgba(255, 255, 255, 0.22) !important;
-      border: 1px solid rgba(255, 255, 255, 0.45) !important;
-      color: #fff !important;
+      background: rgba(255, 255, 255, 0.15) !important;
+      border: 1px solid rgba(255, 255, 255, 0.35) !important;
+      color: #ffffff !important;
       font-size: 11px !important;
-      font-weight: 900 !important;
-      padding: 4px 9px !important;
-      border-radius: 12px !important;
+      font-weight: 800 !important;
+      padding: 5px 10px !important;
+      border-radius: 14px !important;
       cursor: pointer !important;
       outline: none !important;
       display: inline-flex !important;
       align-items: center !important;
       justify-content: center !important;
+      gap: 4px !important;
       white-space: nowrap !important;
       flex-shrink: 0 !important;
       line-height: 1 !important;
       pointer-events: auto !important;
       -webkit-app-region: no-drag !important;
       touch-action: manipulation !important;
-      user-select: none !important;
-      -webkit-user-select: none !important;
-      transition: all 0.12s ease !important;
+      transition: all 0.15s ease !important;
     }
-    .dock-btn:hover { background: rgba(6, 182, 212, 0.7) !important; border-color: #06b6d4 !important; }
-    .dock-btn:active { transform: scale(0.95) !important; }
+    .dock-btn:hover { background: rgba(6, 182, 212, 0.5) !important; border-color: #06b6d4 !important; transform: translateY(-1px) !important; }
+    .dock-btn:active { transform: scale(0.92) !important; }
+    .dock-btn-live {
+      background: rgba(16, 185, 129, 0.18) !important;
+      border: 1px solid rgba(16, 185, 129, 0.6) !important;
+      color: #10b981 !important;
+      font-weight: 900 !important;
+    }
+    .dock-btn-live:hover {
+      background: rgba(16, 185, 129, 0.35) !important;
+      border-color: #10b981 !important;
+    }
+    .dock-pulse-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: #10b981;
+      display: inline-block;
+      box-shadow: 0 0 8px #10b981;
+      animation: pulse-dot 1.4s ease-in-out infinite;
+    }
+    @keyframes pulse-dot {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.7); }
+    }
     .dock-btn-hide {
-      background: rgba(239, 68, 68, 0.8) !important;
-      border-color: rgba(239, 68, 68, 0.95) !important;
-      color: #fff !important;
+      background: rgba(239, 68, 68, 0.22) !important;
+      border: 1px solid rgba(239, 68, 68, 0.65) !important;
+      color: #fca5a5 !important;
     }
     .dock-btn-hide:hover {
-      background: rgba(239, 68, 68, 1) !important;
+      background: rgba(239, 68, 68, 0.85) !important;
+      border-color: #ef4444 !important;
+      color: #ffffff !important;
     }
     #badge {
-      position: absolute; bottom: 8px; right: 8px;
-      background: rgba(0,0,0,0.6); color: #06b6d4;
-      font-family: monospace; font-size: 10px; font-weight: bold;
-      padding: 2px 6px; border-radius: 4px; pointer-events: none;
-      opacity: 0.7; z-index: 10;
-      transition: opacity 0.25s ease;
-    }
-    #badge.is-hidden {
       display: none !important;
     }
     #btnRestoreIcon {
       position: fixed !important;
-      top: 6px !important;
-      right: 8px !important;
+      top: 10px !important;
+      right: 12px !important;
       z-index: 2147483647 !important;
-      width: 28px !important;
-      height: 28px !important;
+      width: 34px !important;
+      height: 34px !important;
       border-radius: 50% !important;
-      background: rgba(5, 7, 12, 0.9) !important;
-      border: 1px solid rgba(6, 182, 212, 0.9) !important;
-      color: #06b6d4 !important;
-      font-size: 13px !important;
+      background: rgba(8, 12, 22, 0.95) !important;
+      border: 1.5px solid rgba(6, 182, 212, 0.85) !important;
+      color: #22d3ee !important;
+      font-size: 15px !important;
       display: none;
       align-items: center !important;
       justify-content: center !important;
@@ -2169,10 +2262,10 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       pointer-events: auto !important;
       -webkit-app-region: no-drag !important;
       touch-action: manipulation !important;
-      backdrop-filter: blur(10px) !important;
-      -webkit-backdrop-filter: blur(10px) !important;
-      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8) !important;
-      transition: all 0.2s ease !important;
+      backdrop-filter: blur(14px) !important;
+      -webkit-backdrop-filter: blur(14px) !important;
+      box-shadow: 0 6px 20px rgba(0, 0, 0, 0.85), 0 0 12px rgba(6, 182, 212, 0.4) !important;
+      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     #btnRestoreIcon.is-visible {
       display: flex !important;
@@ -2180,7 +2273,8 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     #btnRestoreIcon:hover {
       transform: scale(1.15) !important;
       border-color: #22d3ee !important;
-      color: #fff !important;
+      box-shadow: 0 0 18px rgba(34, 211, 238, 0.7) !important;
+      color: #ffffff !important;
     }
     .chroma-green-filter { filter: url(#chroma-green); }
     .chroma-blue-filter { filter: url(#chroma-blue); }
@@ -2240,18 +2334,18 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     <div id="overlayTextBanner" style="position: absolute; left: 4%; top: 5%; width: 92%; z-index: 35; text-align: center; pointer-events: none; display: none;">
       <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);"></div>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.44</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.45</div>
   </div>
 
   <!-- BẢNG ĐIỀU KHIỂN NỔI DOCK TOÀN CỤC CẤP BODY — CHỐNG BỊ GPU VIDEO LAYER CHE KHUẤT -->
   <div id="controlsDock">
-    <button id="btnLiveStatus" class="dock-btn" style="background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.6); color: #10b981; font-weight: 900; font-size: 9px; padding: 2px 6px; cursor: pointer;" title="Luồng Phát Live 4K 60 FPS (Bấm để làm mới luồng)">
-      <span style="width:5px; height:5px; border-radius:50%; background:#10b981; display:inline-block; box-shadow:0 0 6px #10b981; margin-right: 3px;"></span>• LIVE
+    <button id="btnLiveStatus" class="dock-btn dock-btn-live" title="Luồng Trực Tiếp 60 FPS (Bấm để ép làm mới & đồng bộ luồng)">
+      <span class="dock-pulse-dot"></span>• LIVE 60FPS
     </button>
-    <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập (Space)">⏸️ Dừng</button>
-    <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập (M)">${soundParam ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}</button>
-    <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa' : '📐 Tràn'}</button>
-    <button id="btnHideAll" class="dock-btn dock-btn-hide" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn (H)</button>
+    <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập (Phím tắt: Space)">⏸️ Tạm Dừng</button>
+    <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập (Phím tắt: M)">${soundParam ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}</button>
+    <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa Khung' : '📐 Tràn Màn'}</button>
+    <button id="btnHideAll" class="dock-btn dock-btn-hide" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn Nút (H)</button>
   </div>
 
   <button id="btnRestoreIcon" title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)">👁️</button>
@@ -2274,6 +2368,10 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       let isDockHidden = false;
       let socket = null;
       let bc = null;
+
+      function getAllVideos() {
+        return Array.from(document.querySelectorAll('video'));
+      }
 
       try {
         if (typeof BroadcastChannel !== 'undefined') {
@@ -2307,16 +2405,19 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       }
 
       function updateDockUI() {
-        if (btnPlayPause && vid) {
-          btnPlayPause.innerHTML = vid.paused ? '▶️ Phát' : '⏸️ Dừng';
-          btnPlayPause.style.background = vid.paused ? 'rgba(16, 185, 129, 0.5)' : 'rgba(255, 255, 255, 0.22)';
+        const anyPaused = isStreamUserPaused || (vid && vid.paused);
+        if (btnPlayPause) {
+          btnPlayPause.innerHTML = anyPaused ? '▶️ Tiếp Tục' : '⏸️ Tạm Dừng';
+          btnPlayPause.style.background = anyPaused ? 'rgba(16, 185, 129, 0.45)' : 'rgba(255, 255, 255, 0.15)';
+          btnPlayPause.style.borderColor = anyPaused ? '#10b981' : 'rgba(255, 255, 255, 0.35)';
         }
-        if (btnMuteUnmute && vid) {
-          btnMuteUnmute.innerHTML = vid.muted ? '🔊 Bật Tiếng' : '🔇 Tắt Tiếng';
-          btnMuteUnmute.style.background = vid.muted ? 'rgba(255, 255, 255, 0.22)' : 'rgba(6, 182, 212, 0.6)';
+        if (btnMuteUnmute) {
+          btnMuteUnmute.innerHTML = (!targetMuted && vid && !vid.muted) ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng';
+          btnMuteUnmute.style.background = (!targetMuted && vid && !vid.muted) ? 'rgba(6, 182, 212, 0.5)' : 'rgba(255, 255, 255, 0.15)';
+          btnMuteUnmute.style.borderColor = (!targetMuted && vid && !vid.muted) ? '#06b6d4' : 'rgba(255, 255, 255, 0.35)';
         }
         if (btnFitToggle) {
-          btnFitToggle.innerHTML = currentFit === 'cover' ? '📐 Tràn' : '📐 Vừa';
+          btnFitToggle.innerHTML = currentFit === 'cover' ? '📐 Tràn Màn' : '📐 Vừa Khung';
         }
       }
 
@@ -2342,18 +2443,23 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
 
       function handlePlayPauseAction(e) {
         if (!vid) return;
-        if (vid.paused) {
+        if (isStreamUserPaused || vid.paused) {
           isStreamUserPaused = false;
+          getAllVideos().forEach(function(v) {
+            try { v.play().catch(function() {}); } catch(err) {}
+          });
           safePlay();
         } else {
           isStreamUserPaused = true;
-          vid.pause();
-          updateDockUI();
+          getAllVideos().forEach(function(v) {
+            try { v.pause(); } catch(err) {}
+          });
         }
+        updateDockUI();
         if (socket) {
           socket.emit('VIDEO_PLAYBACK_CONTROL', {
-            action: vid.paused ? 'pause' : 'play',
-            isPlaying: !vid.paused,
+            action: isStreamUserPaused ? 'pause' : 'play',
+            isPlaying: !isStreamUserPaused,
             currentTime: vid.currentTime || 0,
             timestamp: Date.now()
           });
@@ -2362,8 +2468,8 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           try {
             bc.postMessage({
               type: 'VIDEO_PLAYBACK_CONTROL',
-              action: vid.paused ? 'pause' : 'play',
-              isPlaying: !vid.paused,
+              action: isStreamUserPaused ? 'pause' : 'play',
+              isPlaying: !isStreamUserPaused,
               currentTime: vid.currentTime || 0,
               timestamp: Date.now()
             });
@@ -2373,7 +2479,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
 
       function handleMuteAction(e) {
         if (!vid) return;
-        targetMuted = !vid.muted;
+        targetMuted = !targetMuted;
         vid.muted = targetMuted;
         if (!targetMuted && vid.paused && !isStreamUserPaused) {
           safePlay();
@@ -2404,6 +2510,9 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       function handleLiveRefreshAction(e) {
         isStreamUserPaused = false;
         if (typeof fetchLatestState === 'function') fetchLatestState();
+        getAllVideos().forEach(function(v) {
+          try { v.play().catch(function() {}); } catch(err) {}
+        });
         if (vid && vid.src) {
           try { vid.currentTime = vid.currentTime; } catch(err) {}
           safePlay();
@@ -2423,8 +2532,9 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           lastAction = now;
           actionFn(e);
         }
-        el.addEventListener('click', execute);
-        el.addEventListener('touchend', execute);
+        el.addEventListener('pointerdown', execute, { passive: false });
+        el.addEventListener('click', execute, { passive: false });
+        el.addEventListener('touchend', execute, { passive: false });
       }
 
       const btnLiveStatus = document.getElementById('btnLiveStatus');
@@ -2651,11 +2761,36 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         const pipVideo = document.getElementById('pipVideo');
         const pipImage = document.getElementById('pipImage');
 
-        // 1. Kiểm tra trạng thái XÓA SẠCH SÂN KHẤU (CLEAR_STAGE / clearMedia)
-        let targetUrl = data.mediaUrl || data.eventVideoUrl || data.videoUrl || data.currentMedia;
-        const hasMultiAvatar = !!(data.multiAvatarConfig && data.multiAvatarConfig.enabled && data.multiAvatarConfig.avatars && data.multiAvatarConfig.avatars.length > 0);
+        // 1. Kiểm tra trạng thái XÓA TRẮNG SÂN KHẤU (CLEAR_STAGE / clearMedia)
+        if (data.clearMedia === true) {
+          if (emptyStage) emptyStage.style.display = 'flex';
+          if (multiStage) multiStage.style.display = 'none';
+          if (pipContainer) pipContainer.style.display = 'none';
+          if (overlayImgEl) overlayImgEl.style.display = 'none';
+          if (banner) banner.style.display = 'none';
+          if (vid) {
+            try { vid.pause(); vid.removeAttribute('src'); vid.src = ''; vid.load(); } catch(e) {}
+            vid.style.display = 'none';
+          }
+          const imgEl = document.getElementById('imagePlayer');
+          if (imgEl) {
+            try { imgEl.removeAttribute('src'); imgEl.src = ''; } catch(e) {}
+            imgEl.style.display = 'none';
+          }
+          updateDockUI();
+          return;
+        }
 
-        if (data.clearMedia || (!targetUrl && !hasMultiAvatar && !data.isPlaying)) {
+        // 2. Tìm nguồn media nền chính (Background / Main Media)
+        const bgUrlCandidate = (data.multiAvatarConfig && data.multiAvatarConfig.backgroundUrl) || data.mediaUrl || data.currentMedia || data.eventVideoUrl || data.videoUrl || '';
+        const resolvedMainBg = resolveUrl(bgUrlCandidate);
+
+        const hasValidAvatars = !!(data.multiAvatarConfig && data.multiAvatarConfig.enabled && Array.isArray(data.multiAvatarConfig.avatars) && data.multiAvatarConfig.avatars.some(function(a) {
+          const u = a.talkVideo || a.idleVideo || a.mediaUrl || a.resolvedVidSrc;
+          return u && typeof u === 'string' && !u.startsWith('blob:');
+        }));
+
+        if (!resolvedMainBg && !hasValidAvatars && !data.secondaryMediaUrl) {
           if (emptyStage) emptyStage.style.display = 'flex';
           if (multiStage) multiStage.style.display = 'none';
           if (pipContainer) pipContainer.style.display = 'none';
@@ -2676,40 +2811,50 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
 
         if (emptyStage) emptyStage.style.display = 'none';
 
-        // 2. Chế độ Sân Khấu Đa Nhân Vật (Multi-Avatar Stage)
-        if (hasMultiAvatar) {
-          if (vid) { try { vid.pause(); } catch(e) {} vid.style.display = 'none'; }
-          const imgEl = document.getElementById('imagePlayer');
-          if (imgEl) imgEl.style.display = 'none';
-
-          if (multiStage) multiStage.style.display = 'block';
-          if (multiBg) {
-            const bgUrl = resolveUrl(data.multiAvatarConfig.backgroundUrl);
-            if (bgUrl) {
-              multiBg.style.backgroundImage = 'url("' + bgUrl + '")';
-              multiBg.style.backgroundColor = 'transparent';
-            } else {
-              multiBg.style.backgroundImage = 'none';
-              multiBg.style.backgroundColor = data.multiAvatarConfig.backgroundColor || '#0a0c14';
+        // 3. Hiển thị Lớp Nền Sân Khấu Chính (Background Layer)
+        const imgEl = document.getElementById('imagePlayer');
+        if (resolvedMainBg) {
+          if (isImage(resolvedMainBg)) {
+            if (imgEl) {
+              if (imgEl.src !== resolvedMainBg) imgEl.src = resolvedMainBg;
+              imgEl.style.display = 'block';
             }
+            if (vid) {
+              vid.style.display = 'none';
+              try { vid.pause(); } catch(e) {}
+            }
+          } else {
+            if (imgEl) imgEl.style.display = 'none';
+            if (vid) {
+              vid.style.display = 'block';
+              if (!isSameMedia(vid.src, resolvedMainBg)) {
+                currentSrc = resolvedMainBg;
+                vid.src = resolvedMainBg;
+              }
+              if (!isStreamUserPaused) safePlay();
+            }
+          }
+        } else {
+          if (imgEl) imgEl.style.display = 'none';
+          if (vid) { vid.style.display = 'none'; }
+        }
+
+        // 4. Hiển thị Lớp Multi-Avatar (Nếu có nhân vật hợp lệ)
+        if (hasValidAvatars) {
+          if (multiStage) {
+            multiStage.style.display = 'block';
+            multiStage.style.background = 'transparent';
           }
           renderMultiAvatarCharacters(data.multiAvatarConfig, data.activeSpeakerId);
         } else {
-          // 3. Chế độ Video/Ảnh Sân Khấu Đơn
           if (multiStage) multiStage.style.display = 'none';
-          if (!targetUrl && Array.isArray(data.syncedAvatars) && data.syncedAvatars.length > 0) {
-            targetUrl = data.syncedAvatars[0].resolvedVidSrc || data.syncedAvatars[0].talkVideo || data.syncedAvatars[0].idleVideo || '';
-          }
-          if (targetUrl) {
-            loadAndPlay(targetUrl, data.videoCurrentTime || data.currentTime);
-          }
         }
 
         // 4. Lớp Video Phụ PiP (Picture-in-Picture)
         if (pipContainer && pipVideo && pipImage) {
           const pipUrl = resolveUrl(data.secondaryMediaUrl);
           if (pipUrl) {
-            const trans = data.secondaryMediaTransform || { x: 55, y: 70, width: 40, height: 25 };
+            const trans = data.secondaryMediaTransform || { x: 52, y: 28, width: 40, height: 48, zIndex: 25 };
             pipContainer.style.left = trans.x + '%';
             pipContainer.style.top = trans.y + '%';
             pipContainer.style.width = trans.width + '%';
@@ -2798,7 +2943,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         });
 
         socket.on('connect', function() {
-          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.44';
+          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.45';
           socket.emit('REQUEST_MASTER_LIVE_STATE');
         });
 
@@ -2967,7 +3112,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.44';
+  let ver = '4.9.45';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -3005,7 +3150,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.44';
+  let ver = '4.9.45';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
