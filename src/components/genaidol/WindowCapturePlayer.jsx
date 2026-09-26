@@ -706,14 +706,22 @@ export default function WindowCapturePlayer() {
             setActiveEventVideo(null);
             setLipSyncVideoUrl(null);
             setQuickResponseVideo(null);
+            setMultiAvatarConfig(null);
+            setFlowSequencerOverlay(null);
             setVideoSrc('');
             if (videoRef.current) {
               try {
                 videoRef.current.pause();
                 videoRef.current.srcObject = null;
                 videoRef.current.src = '';
+                videoRef.current.load();
               } catch (e) {}
             }
+            try {
+              document.querySelectorAll('video, audio').forEach(el => {
+                try { el.pause(); el.removeAttribute('src'); el.src = ''; el.srcObject = null; el.load(); } catch(err) {}
+              });
+            } catch(err) {}
           }
         }
 
@@ -829,9 +837,17 @@ export default function WindowCapturePlayer() {
               videoRef.current.load();
             } catch (e) {}
           }
+          try {
+            document.querySelectorAll('video, audio').forEach(el => {
+              try { el.pause(); el.removeAttribute('src'); el.src = ''; el.srcObject = null; el.load(); } catch(err) {}
+            });
+          } catch(err) {}
           setVideoSrc('');
           setActiveEventVideo(null);
           setCaptions('');
+          setMultiAvatarConfig(null);
+          setQuickResponseVideo(null);
+          setLipSyncVideoUrl(null);
           setFlowSequencerOverlay(null);
           setIsDirectStreamActive(false);
           isDirectStreamActiveRef.current = false;
@@ -1955,14 +1971,13 @@ export default function WindowCapturePlayer() {
           {/* Nút Play / Pause */}
           <button
             type="button"
-            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
               toggleStandalonePlay(e);
             }}
             style={{
-              background: isPlaybackActive ? 'rgba(239, 68, 68, 0.8)' : 'rgba(16, 185, 129, 0.8)',
+              background: isPlaybackActive ? 'rgba(239, 68, 68, 0.85)' : 'rgba(16, 185, 129, 0.85)',
               border: '1px solid rgba(255, 255, 255, 0.4)',
               color: '#fff',
               fontSize: '10px',
@@ -1991,14 +2006,13 @@ export default function WindowCapturePlayer() {
           {/* Nút Bật / Tắt Tiếng */}
           <button
             type="button"
-            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
               toggleStandaloneMute(e);
             }}
             style={{
-              background: isUserMuted ? 'rgba(239, 68, 68, 0.8)' : 'rgba(6, 182, 212, 0.8)',
+              background: isUserMuted ? 'rgba(255, 255, 255, 0.25)' : 'rgba(6, 182, 212, 0.85)',
               border: '1px solid rgba(255, 255, 255, 0.4)',
               color: '#fff',
               fontSize: '10px',
@@ -2021,13 +2035,12 @@ export default function WindowCapturePlayer() {
             }}
             title="Bật / Tắt âm thanh độc lập (Phím tắt: M)"
           >
-            {isUserMuted ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}
+            {isUserMuted ? '🔊 Bật Tiếng' : '🔇 Tắt Tiếng'}
           </button>
 
           {/* Nút Tràn / Vừa */}
           <button
             type="button"
-            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -2063,7 +2076,6 @@ export default function WindowCapturePlayer() {
           {/* ⭐ NÚT ẨN HẾT TẤT CẢ CÁC TAB / NÚT TRÊN GIAO DIỆN VIDEO */}
           <button
             type="button"
-            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();

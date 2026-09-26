@@ -992,7 +992,7 @@ app.get([
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.9.43</title>
+  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.9.44</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -1064,24 +1064,94 @@ app.get([
     @keyframes spin {
       to { transform: rotate(360deg); }
     }
+    .chroma-green-filter { filter: url(#chroma-green); }
+    .chroma-blue-filter { filter: url(#chroma-blue); }
     #controlsDock {
-      position: absolute; top: 8px; right: 8px; z-index: 50;
-      display: flex; align-items: center; gap: 6px;
-      background: rgba(0, 0, 0, 0.7);
-      backdrop-filter: blur(8px);
-      padding: 4px 8px; border-radius: 20px;
-      border: 1px solid rgba(6, 182, 212, 0.3);
-      opacity: 0; transition: opacity 0.3s ease;
+      position: fixed !important;
+      top: 6px !important;
+      left: 50% !important;
+      transform: translateX(-50%) !important;
+      display: inline-flex !important;
+      flex-direction: row !important;
+      align-items: center !important;
+      justify-content: center !important;
+      flex-wrap: nowrap !important;
+      white-space: nowrap !important;
+      gap: 5px !important;
+      background: rgba(5, 7, 12, 0.94) !important;
+      backdrop-filter: blur(20px) !important;
+      -webkit-backdrop-filter: blur(20px) !important;
+      padding: 4px 10px !important;
+      border-radius: 24px !important;
+      border: 1px solid rgba(6, 182, 212, 0.8) !important;
+      box-shadow: 0 6px 24px rgba(0, 0, 0, 0.9), 0 0 14px rgba(6, 182, 212, 0.4) !important;
+      z-index: 2147483647 !important;
+      opacity: 0.98 !important;
+      pointer-events: auto !important;
+      -webkit-app-region: no-drag !important;
+      touch-action: manipulation !important;
+      max-width: calc(100vw - 12px) !important;
+      box-sizing: border-box !important;
+      user-select: none !important;
+      -webkit-user-select: none !important;
+      transition: opacity 0.2s ease !important;
     }
-    body:hover #controlsDock { opacity: 0.9; }
+    #controlsDock.is-hidden { display: none !important; }
+    #controlsDock:hover { opacity: 1 !important; }
     .dock-btn {
-      background: rgba(255, 255, 255, 0.12);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: #fff; font-size: 10px; font-weight: bold;
-      padding: 3px 7px; border-radius: 10px;
-      cursor: pointer; display: flex; align-items: center; gap: 4px;
+      background: rgba(255, 255, 255, 0.22) !important;
+      border: 1px solid rgba(255, 255, 255, 0.45) !important;
+      color: #fff !important;
+      font-size: 11px !important;
+      font-weight: 900 !important;
+      padding: 4px 9px !important;
+      border-radius: 12px !important;
+      cursor: pointer !important;
+      outline: none !important;
+      display: inline-flex !important;
+      align-items: center !important;
+      justify-content: center !important;
+      white-space: nowrap !important;
+      flex-shrink: 0 !important;
+      line-height: 1 !important;
+      pointer-events: auto !important;
+      -webkit-app-region: no-drag !important;
+      touch-action: manipulation !important;
+      transition: all 0.12s ease !important;
     }
-    .dock-btn:hover { background: rgba(6, 182, 212, 0.5); }
+    .dock-btn:hover { background: rgba(6, 182, 212, 0.7) !important; border-color: #06b6d4 !important; }
+    .dock-btn:active { transform: scale(0.95) !important; }
+    .dock-btn-hide {
+      background: rgba(239, 68, 68, 0.8) !important;
+      border-color: rgba(239, 68, 68, 0.95) !important;
+      color: #fff !important;
+    }
+    .dock-btn-hide:hover { background: rgba(239, 68, 68, 1) !important; }
+    #btnRestoreIcon {
+      position: fixed !important;
+      top: 6px !important;
+      right: 8px !important;
+      z-index: 2147483647 !important;
+      width: 28px !important;
+      height: 28px !important;
+      border-radius: 50% !important;
+      background: rgba(5, 7, 12, 0.9) !important;
+      border: 1px solid rgba(6, 182, 212, 0.9) !important;
+      color: #06b6d4 !important;
+      font-size: 13px !important;
+      display: none;
+      align-items: center !important;
+      justify-content: center !important;
+      cursor: pointer !important;
+      pointer-events: auto !important;
+      -webkit-app-region: no-drag !important;
+      touch-action: manipulation !important;
+      backdrop-filter: blur(10px) !important;
+      -webkit-backdrop-filter: blur(10px) !important;
+      box-shadow: 0 4px 15px rgba(0, 0, 0, 0.8) !important;
+      transition: all 0.2s ease !important;
+    }
+    #btnRestoreIcon.is-visible { display: flex !important; }
     #badge {
       display: none;
     }
@@ -1090,11 +1160,33 @@ app.get([
 </head>
 <body>
   <div id="stage">
+    <!-- SVG Chroma Filters cho xoá phông xanh nhân vật -->
+    <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
+      <filter id="chroma-green"><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1 -1.5 1 0 0" /></filter>
+      <filter id="chroma-blue"><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1 1 -1.5 0 0" /></filter>
+    </svg>
+
     <div id="loadingOverlay">
       <div class="spinner"></div>
       <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.5px;">⚡ ĐANG KẾT NỐI LUỒNG LIVE AVALIVE 4K 60FPS...</div>
       <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Đồng bộ trực tiếp với phần mềm AvaLive VIP PRO</div>
     </div>
+
+    <!-- Sân Khấu Trống (Khi người dùng xóa hết video) -->
+    <div id="emptyStageView" style="position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: #07080d; color: #fff; z-index: 15; text-align: center; padding: 20px;">
+      <div style="width: 64px; height: 64px; border-radius: 20px; background: rgba(8, 51, 68, 0.7); border: 1px solid rgba(6, 182, 212, 0.4); display: flex; align-items: center; justify-content: center; font-size: 30px; margin-bottom: 12px; box-shadow: 0 0 25px rgba(6, 182, 212, 0.3);">🎬</div>
+      <div style="font-size: 14px; font-weight: 900; letter-spacing: 0.5px; color: #38bdf8; text-transform: uppercase;">SÂN KHẤU TRỐNG (SẴN SÀNG)</div>
+      <div style="font-size: 11px; color: #94a3b8; margin-top: 6px; max-width: 280px; line-height: 1.5;">Vui lòng tải lên hoặc chọn video trên phần mềm AvaLive VIP PRO để phát trực tiếp</div>
+    </div>
+
+    <!-- Sân Khấu Đa Nhân Vật Multi-Avatar (Background, Extra Layers & Avatars) -->
+    <div id="multiAvatarStage" style="position: absolute; inset: 0; display: none; overflow: hidden; background: #0a0c14; z-index: 5;">
+      <div id="multiAvatarBg" style="position: absolute; inset: 0; background-size: cover; background-position: center; z-index: 1;"></div>
+      <div id="multiAvatarExtraLayers" style="position: absolute; inset: 0; pointer-events: none; z-index: 2;"></div>
+      <div id="multiAvatarCharacters" style="position: absolute; inset: 0; pointer-events: none; z-index: 3;"></div>
+    </div>
+
+    <!-- Sân Khấu Video Nền Đơn Lẻ -->
     <video 
       id="videoPlayer" 
       ${!isInitialImg && initialSrcAttr ? initialSrcAttr : ''}
@@ -1113,38 +1205,51 @@ app.get([
       ${isInitialImg && initialSrcAttr ? initialSrcAttr : ''}
       alt="Live Media"
     />
+
+    <!-- Lớp Video Phụ PiP (Picture-in-Picture) Xếp Chồng Từ Sequencer -->
+    <div id="pipContainer" style="position: absolute; z-index: 25; pointer-events: none; display: none;">
+      <video id="pipVideo" autoplay loop muted playsinline style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; border: 2px solid rgba(255,255,255,0.5); box-shadow: 0 10px 25px rgba(0,0,0,0.85);"></video>
+      <img id="pipImage" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; display: none;" />
+    </div>
+
+    <!-- Lớp Banner Hình Ảnh Overlay -->
     <div id="overlayImageBanner" style="position: absolute; left: 10%; top: 12%; width: 80%; z-index: 30; text-align: center; pointer-events: none; display: none;">
       <img id="overlayImageContent" src="" alt="Banner Overlay" style="max-width: 100%; max-height: 25vh; object-fit: contain; border-radius: 12px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));" />
     </div>
+
+    <!-- Lớp Tiêu Đề Chữ Overlay -->
     <div id="overlayTextBanner" style="position: absolute; left: 4%; top: 5%; width: 92%; z-index: 35; text-align: center; pointer-events: none; display: none;">
       <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);"></div>
     </div>
-    <div id="controlsDock">
-      <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập">⏸️ Dừng</button>
-      <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
-      <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
-    </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.43</div>
+    
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.44</div>
   </div>
+
+  <!-- BẢNG ĐIỀU KHIỂN NỔI DOCK TOÀN CỤC CẤP BODY -->
+  <div id="controlsDock">
+    <button id="btnLiveStatus" class="dock-btn" style="background: rgba(16, 185, 129, 0.2); border-color: rgba(16, 185, 129, 0.6); color: #10b981; font-weight: 900; font-size: 9px; padding: 2px 6px; cursor: pointer;" title="Luồng Phát Live 4K 60 FPS (Bấm để làm mới luồng)">
+      <span style="width:5px; height:5px; border-radius:50%; background:#10b981; display:inline-block; box-shadow:0 0 6px #10b981; margin-right: 3px;"></span>• LIVE
+    </button>
+    <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập">⏸️ Dừng</button>
+    <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">${soundParam ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}</button>
+    <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa' : '📐 Tràn'}</button>
+    <button id="btnHideAll" class="dock-btn dock-btn-hide" title="Ẩn toàn bộ nút trên giao diện video (Phím tắt: H)">✕ Ẩn (H)</button>
+  </div>
+
+  <button id="btnRestoreIcon" title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)">👁️</button>
+
   <script>
     (function() {
       const vid = document.getElementById('videoPlayer');
       const badge = document.getElementById('badge');
+      const dock = document.getElementById('controlsDock');
+      const btnRestore = document.getElementById('btnRestoreIcon');
       const loadingOverlay = document.getElementById('loadingOverlay');
+      const btnLiveStatus = document.getElementById('btnLiveStatus');
       const btnPlayPause = document.getElementById('btnPlayPause');
       const btnMuteUnmute = document.getElementById('btnMuteUnmute');
       const btnFitToggle = document.getElementById('btnFitToggle');
-
-      let lastLiveDockTime = 0;
-      function throttleLiveAction(fn) {
-        return function(e) {
-          if (e) { try { e.preventDefault(); e.stopPropagation(); } catch(err) {} }
-          const now = Date.now();
-          if (now - lastLiveDockTime < 250) return;
-          lastLiveDockTime = now;
-          fn(e);
-        };
-      }
+      const btnHideAll = document.getElementById('btnHideAll');
 
       let currentSrc = ${JSON.stringify(vParam)};
       let isStreamUserPaused = false;
@@ -1152,6 +1257,30 @@ app.get([
       let targetVolume = 1.0;
       let currentFit = ${JSON.stringify(fitParam)};
       let isPlayPending = false;
+      let isDockHidden = false;
+
+      try {
+        isDockHidden = localStorage.getItem('avalive_livestream_dock_hidden') === 'true';
+      } catch (e) {}
+
+      function applyDockVisibility() {
+        if (isDockHidden) {
+          if (dock) dock.classList.add('is-hidden');
+          if (btnRestore) btnRestore.classList.add('is-visible');
+        } else {
+          if (dock) dock.classList.remove('is-hidden');
+          if (btnRestore) btnRestore.classList.remove('is-visible');
+        }
+      }
+      applyDockVisibility();
+
+      function toggleHideAll(forceVal) {
+        isDockHidden = typeof forceVal === 'boolean' ? forceVal : !isDockHidden;
+        try {
+          localStorage.setItem('avalive_livestream_dock_hidden', String(isDockHidden));
+        } catch(e) {}
+        applyDockVisibility();
+      }
 
       // Khởi tạo video luôn bắt đầu với muted để 100% CEF TikTok Live Studio / OBS cho phép phát ngay 0ms
       vid.muted = true;
@@ -1181,11 +1310,13 @@ app.get([
       setTimeout(function() { if (badge) badge.style.opacity = '0.2'; }, 6000);
 
       function updateDockUI() {
-        if (btnPlayPause) {
+        if (btnPlayPause && vid) {
           btnPlayPause.innerHTML = vid.paused ? '▶️ Phát' : '⏸️ Dừng';
+          btnPlayPause.style.background = vid.paused ? 'rgba(16, 185, 129, 0.5)' : 'rgba(255, 255, 255, 0.22)';
         }
-        if (btnMuteUnmute) {
-          btnMuteUnmute.innerHTML = vid.muted ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng';
+        if (btnMuteUnmute && vid) {
+          btnMuteUnmute.innerHTML = vid.muted ? '🔊 Bật Tiếng' : '🔇 Tắt Tiếng';
+          btnMuteUnmute.style.background = vid.muted ? 'rgba(255, 255, 255, 0.22)' : 'rgba(6, 182, 212, 0.6)';
         }
         if (btnFitToggle) {
           btnFitToggle.innerHTML = currentFit === 'cover' ? '📐 Tràn' : '📐 Vừa';
@@ -1198,13 +1329,13 @@ app.get([
           vid.muted = false;
           vid.volume = targetVolume;
           if (vid.paused && !isStreamUserPaused) {
-            // CEF chặn unmuted -> quay lại muted ngay để video tiếp tục phát 60 FPS
             vid.muted = true;
             safePlay();
           }
         } catch (e) {
           vid.muted = true;
         }
+        updateDockUI();
       }
 
       function safePlay() {
@@ -1242,44 +1373,67 @@ app.get([
         }
       }
 
-      if (btnPlayPause) {
-        btnPlayPause.addEventListener('click', throttleLiveAction(function(e) {
-          if (vid.paused) {
-            isStreamUserPaused = false;
+      function bindDockBtn(el, actionFn) {
+        if (!el) return;
+        let lastAction = 0;
+        function execute(e) {
+          if (e) {
+            try { e.preventDefault(); e.stopPropagation(); } catch(err) {}
+          }
+          const now = Date.now();
+          if (now - lastAction < 100) return;
+          lastAction = now;
+          actionFn(e);
+        }
+        el.addEventListener('click', execute);
+        el.addEventListener('touchend', execute);
+      }
+
+      bindDockBtn(btnLiveStatus, function() {
+        isStreamUserPaused = false;
+        if (typeof fetchLatestState === 'function') fetchLatestState();
+        if (vid && vid.src) {
+          try { vid.currentTime = vid.currentTime; } catch(err) {}
+          safePlay();
+        }
+        updateDockUI();
+      });
+
+      bindDockBtn(btnPlayPause, function() {
+        if (vid.paused) {
+          isStreamUserPaused = false;
+          safePlay();
+        } else {
+          isStreamUserPaused = true;
+          vid.pause();
+          updateDockUI();
+        }
+      });
+
+      bindDockBtn(btnMuteUnmute, function() {
+        targetSoundEnabled = !targetSoundEnabled;
+        if (targetSoundEnabled) {
+          vid.muted = false;
+          vid.volume = targetVolume;
+          if (vid.paused && !isStreamUserPaused) {
             safePlay();
-          } else {
-            isStreamUserPaused = true;
-            vid.pause();
-            updateDockUI();
           }
-        }));
-      }
+        } else {
+          vid.muted = true;
+        }
+        updateDockUI();
+      });
 
-      if (btnMuteUnmute) {
-        btnMuteUnmute.addEventListener('click', throttleLiveAction(function(e) {
-          targetSoundEnabled = !targetSoundEnabled;
-          if (targetSoundEnabled) {
-            vid.muted = false;
-            vid.volume = targetVolume;
-            if (vid.paused && !isStreamUserPaused) {
-              safePlay();
-            }
-          } else {
-            vid.muted = true;
-          }
-          updateDockUI();
-        }));
-      }
+      bindDockBtn(btnFitToggle, function() {
+        currentFit = currentFit === 'cover' ? 'contain' : 'cover';
+        vid.style.objectFit = currentFit;
+        const imgEl = document.getElementById('imagePlayer');
+        if (imgEl) imgEl.style.objectFit = currentFit;
+        updateDockUI();
+      });
 
-      if (btnFitToggle) {
-        btnFitToggle.addEventListener('click', throttleLiveAction(function(e) {
-          currentFit = currentFit === 'cover' ? 'contain' : 'cover';
-          vid.style.objectFit = currentFit;
-          const imgEl = document.getElementById('imagePlayer');
-          if (imgEl) imgEl.style.objectFit = currentFit;
-          updateDockUI();
-        }));
-      }
+      bindDockBtn(btnHideAll, function() { toggleHideAll(true); });
+      bindDockBtn(btnRestore, function() { toggleHideAll(false); });
 
       function isSameMedia(srcA, srcB) {
         if (!srcA || !srcB) return false;
@@ -1450,46 +1604,83 @@ app.get([
         }
       }, 500);
 
+      function renderMultiAvatarCharacters(config, activeSpeakerId) {
+        const container = document.getElementById('multiAvatarCharacters');
+        if (!container) return;
+        if (!config || !config.avatars || config.avatars.length === 0) {
+          container.innerHTML = '';
+          return;
+        }
+        const avatars = config.avatars;
+        avatars.forEach(function(avatar, idx) {
+          let charEl = container.querySelector('[data-char-id="' + avatar.id + '"]');
+          const isSpeaking = avatar.isSpeakingNow || activeSpeakerId === avatar.id;
+          const targetVid = isSpeaking ? (avatar.talkVideo || avatar.idleVideo) : (avatar.idleVideo || avatar.talkVideo);
+          const resolvedMedia = resolveUrl(targetVid || avatar.mediaUrl || avatar.resolvedVidSrc);
+          const trans = avatar.transform || {
+            x: idx === 0 ? 10 : 55,
+            y: 15,
+            width: 40,
+            height: 70
+          };
+          const chromaClass = avatar.chromaKey && avatar.chromaKey.enabled ? (avatar.chromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter') : '';
+
+          if (!charEl) {
+            charEl = document.createElement('div');
+            charEl.setAttribute('data-char-id', avatar.id);
+            charEl.style.position = 'absolute';
+            charEl.style.transition = 'all 0.3s ease';
+            charEl.innerHTML = '<video autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;background:transparent;"></video>';
+            container.appendChild(charEl);
+          }
+
+          charEl.style.left = trans.x + '%';
+          charEl.style.top = trans.y + '%';
+          charEl.style.width = trans.width + '%';
+          charEl.style.height = (trans.height || 70) + '%';
+          charEl.style.zIndex = trans.zIndex || 10;
+          charEl.className = chromaClass;
+
+          const v = charEl.querySelector('video');
+          if (v && resolvedMedia && !isSameMedia(v.src, resolvedMedia)) {
+            v.src = resolvedMedia;
+            v.play().catch(function() {});
+          }
+        });
+
+        Array.from(container.children).forEach(function(child) {
+          const cid = child.getAttribute('data-char-id');
+          if (!avatars.some(function(a) { return a.id === cid; })) {
+            const v = child.querySelector('video');
+            if (v) { try { v.pause(); v.removeAttribute('src'); v.load(); } catch(e) {} }
+            child.remove();
+          }
+        });
+      }
+
       function applyLiveState(data) {
         if (!data) return;
-        // 🖼️ 1. Cập nhật banner hình ảnh (từ Sequencer, Live Idol Avatar, v.v.)
+        const emptyStage = document.getElementById('emptyStageView');
+        const multiStage = document.getElementById('multiAvatarStage');
+        const multiBg = document.getElementById('multiAvatarBg');
         const overlayImgEl = document.getElementById('overlayImageBanner');
         const overlayImgContent = document.getElementById('overlayImageContent');
-        if (overlayImgEl && overlayImgContent) {
-          const imgUrl = data.overlayImage || data.bannerUrl || data.posterUrl;
-          if (imgUrl && typeof imgUrl === 'string' && imgUrl.trim()) {
-            const resolvedImg = resolveUrl(imgUrl.trim());
-            if (resolvedImg) {
-              overlayImgContent.src = resolvedImg;
-              overlayImgEl.style.display = 'block';
-            } else {
-              overlayImgEl.style.display = 'none';
-            }
-          } else {
-            overlayImgEl.style.display = 'none';
-          }
-        }
-
-        // 📝 2. Cập nhật tiêu đề chữ
         const banner = document.getElementById('overlayTextBanner');
         const content = document.getElementById('overlayTextContent');
-        const txt = data.overlayText || data.title || data.stepTitle;
-        if (banner && content) {
-          if (txt && typeof txt === 'string' && txt.trim()) {
-            content.innerText = txt.trim();
-            banner.style.display = 'block';
-          } else {
-            banner.style.display = 'none';
-          }
-        }
+        const pipContainer = document.getElementById('pipContainer');
+        const pipVideo = document.getElementById('pipVideo');
+        const pipImage = document.getElementById('pipImage');
 
-        // 🎬 3. Tìm kiếm video/ảnh hiệu lực cao nhất từ tất cả nguồn (kể cả syncedAvatars từ Live Idol)
+        // 1. Kiểm tra trạng thái XÓA SẠCH SÂN KHẤU (CLEAR_STAGE / clearMedia)
         let targetUrl = data.mediaUrl || data.eventVideoUrl || data.videoUrl || data.currentMedia;
-        if (!targetUrl && Array.isArray(data.syncedAvatars) && data.syncedAvatars.length > 0) {
-          targetUrl = data.syncedAvatars[0].resolvedVidSrc || data.syncedAvatars[0].talkVideo || data.syncedAvatars[0].idleVideo || '';
-        }
+        const hasMultiAvatar = !!(data.multiAvatarConfig && data.multiAvatarConfig.enabled && data.multiAvatarConfig.avatars && data.multiAvatarConfig.avatars.length > 0);
 
-        if (data.clearMedia || (targetUrl === null && data.isPlaying === false)) {
+        if (data.clearMedia || (!targetUrl && !hasMultiAvatar && !data.isPlaying)) {
+          if (emptyStage) emptyStage.style.display = 'flex';
+          if (multiStage) multiStage.style.display = 'none';
+          if (pipContainer) pipContainer.style.display = 'none';
+          if (overlayImgEl) overlayImgEl.style.display = 'none';
+          if (banner) banner.style.display = 'none';
           if (vid) {
             try { vid.pause(); vid.removeAttribute('src'); vid.src = ''; vid.load(); } catch(e) {}
             vid.style.display = 'none';
@@ -1499,12 +1690,98 @@ app.get([
             try { imgEl.removeAttribute('src'); imgEl.src = ''; } catch(e) {}
             imgEl.style.display = 'none';
           }
-        } else if (targetUrl && !isSameMedia(vid.src, targetUrl)) {
-          loadAndPlay(targetUrl);
+          hideLoading();
+          updateDockUI();
+          return;
         }
-        if (!isStreamUserPaused && vid.paused && vid.src) {
+
+        if (emptyStage) emptyStage.style.display = 'none';
+
+        // 2. Chế độ Sân Khấu Đa Nhân Vật (Multi-Avatar Stage)
+        if (hasMultiAvatar) {
+          if (vid) { try { vid.pause(); } catch(e) {} vid.style.display = 'none'; }
+          const imgEl = document.getElementById('imagePlayer');
+          if (imgEl) imgEl.style.display = 'none';
+
+          if (multiStage) multiStage.style.display = 'block';
+          if (multiBg) {
+            const bgUrl = resolveUrl(data.multiAvatarConfig.backgroundUrl);
+            if (bgUrl) {
+              multiBg.style.backgroundImage = 'url("' + bgUrl + '")';
+              multiBg.style.backgroundColor = 'transparent';
+            } else {
+              multiBg.style.backgroundImage = 'none';
+              multiBg.style.backgroundColor = data.multiAvatarConfig.backgroundColor || '#0a0c14';
+            }
+          }
+          renderMultiAvatarCharacters(data.multiAvatarConfig, data.activeSpeakerId);
+          hideLoading();
+        } else {
+          // 3. Chế độ Video/Ảnh Sân Khấu Đơn
+          if (multiStage) multiStage.style.display = 'none';
+          if (!targetUrl && Array.isArray(data.syncedAvatars) && data.syncedAvatars.length > 0) {
+            targetUrl = data.syncedAvatars[0].resolvedVidSrc || data.syncedAvatars[0].talkVideo || data.syncedAvatars[0].idleVideo || '';
+          }
+          if (targetUrl) {
+            loadAndPlay(targetUrl);
+          }
+        }
+
+        // 4. Lớp Video Phụ PiP (Picture-in-Picture)
+        if (pipContainer && pipVideo && pipImage) {
+          const pipUrl = resolveUrl(data.secondaryMediaUrl);
+          if (pipUrl) {
+            const trans = data.secondaryMediaTransform || { x: 55, y: 70, width: 40, height: 25 };
+            pipContainer.style.left = trans.x + '%';
+            pipContainer.style.top = trans.y + '%';
+            pipContainer.style.width = trans.width + '%';
+            pipContainer.style.height = (trans.height || 25) + '%';
+            pipContainer.style.display = 'block';
+
+            if (isImage(pipUrl)) {
+              pipImage.src = pipUrl;
+              pipImage.style.display = 'block';
+              pipVideo.style.display = 'none';
+            } else {
+              pipImage.style.display = 'none';
+              pipVideo.style.display = 'block';
+              if (!isSameMedia(pipVideo.src, pipUrl)) {
+                pipVideo.src = pipUrl;
+                pipVideo.play().catch(function() {});
+              }
+            }
+          } else {
+            pipContainer.style.display = 'none';
+            try { pipVideo.pause(); pipVideo.src = ''; } catch(e) {}
+          }
+        }
+
+        // 5. Banner Hình Ảnh Overlay
+        if (overlayImgEl && overlayImgContent) {
+          const imgUrl = resolveUrl(data.overlayImage || data.bannerUrl || data.posterUrl);
+          if (imgUrl) {
+            overlayImgContent.src = imgUrl;
+            overlayImgEl.style.display = 'block';
+          } else {
+            overlayImgEl.style.display = 'none';
+          }
+        }
+
+        // 6. Tiêu Đề Chữ Overlay
+        if (banner && content) {
+          const txt = data.overlayText || data.title || data.stepTitle;
+          if (txt && typeof txt === 'string' && txt.trim()) {
+            content.innerText = txt.trim();
+            banner.style.display = 'block';
+          } else {
+            banner.style.display = 'none';
+          }
+        }
+
+        if (!isStreamUserPaused && vid && vid.paused && vid.src) {
           safePlay();
         }
+        updateDockUI();
       }
 
       function fetchLatestState() {
@@ -1578,7 +1855,7 @@ app.get([
             }, 3000);
 
             socket.on('connect', function() {
-              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.43';
+              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.44';
               socket.emit('REQUEST_MASTER_LIVE_STATE');
             });
 
@@ -1905,11 +2182,33 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       border-color: #22d3ee !important;
       color: #fff !important;
     }
+    .chroma-green-filter { filter: url(#chroma-green); }
+    .chroma-blue-filter { filter: url(#chroma-blue); }
   </style>
   <script src="/socket.io/socket.io.js"></script>
 </head>
 <body>
   <div id="stage">
+    <!-- SVG Chroma Filters -->
+    <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
+      <filter id="chroma-green"><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1 -1.5 1 0 0" /></filter>
+      <filter id="chroma-blue"><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1 1 -1.5 0 0" /></filter>
+    </svg>
+
+    <!-- Sân Khấu Trống (Khi người dùng xóa hết video) -->
+    <div id="emptyStageView" style="position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: #07080d; color: #fff; z-index: 15; text-align: center; padding: 20px;">
+      <div style="width: 64px; height: 64px; border-radius: 20px; background: rgba(8, 51, 68, 0.7); border: 1px solid rgba(6, 182, 212, 0.4); display: flex; align-items: center; justify-content: center; font-size: 30px; margin-bottom: 12px; box-shadow: 0 0 25px rgba(6, 182, 212, 0.3);">🎬</div>
+      <div style="font-size: 14px; font-weight: 900; letter-spacing: 0.5px; color: #38bdf8; text-transform: uppercase;">SÂN KHẤU TRỐNG (SẴN SÀNG)</div>
+      <div style="font-size: 11px; color: #94a3b8; margin-top: 6px; max-width: 280px; line-height: 1.5;">Vui lòng tải lên hoặc chọn video trên phần mềm AvaLive VIP PRO để bắt đầu phát sóng</div>
+    </div>
+
+    <!-- Sân Khấu Đa Nhân Vật Multi-Avatar (Background, Extra Layers & Avatars) -->
+    <div id="multiAvatarStage" style="position: absolute; inset: 0; display: none; overflow: hidden; background: #0a0c14; z-index: 5;">
+      <div id="multiAvatarBg" style="position: absolute; inset: 0; background-size: cover; background-position: center; z-index: 1;"></div>
+      <div id="multiAvatarExtraLayers" style="position: absolute; inset: 0; pointer-events: none; z-index: 2;"></div>
+      <div id="multiAvatarCharacters" style="position: absolute; inset: 0; pointer-events: none; z-index: 3;"></div>
+    </div>
+
     <video 
       id="videoPlayer" 
       src="${!isInitialImg && vParam ? (vParam.startsWith('http') || vParam.startsWith('/') ? vParam : '/' + vParam) : ''}"
@@ -1928,13 +2227,20 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       src="${isInitialImg && vParam ? (vParam.startsWith('http') || vParam.startsWith('/') ? vParam : '/' + vParam) : ''}"
       alt="Live Stage Media"
     />
+
+    <!-- Lớp Video Phụ PiP (Picture-in-Picture) Xếp Chồng Từ Sequencer -->
+    <div id="pipContainer" style="position: absolute; z-index: 25; pointer-events: none; display: none;">
+      <video id="pipVideo" autoplay loop muted playsinline style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; border: 2px solid rgba(255,255,255,0.5); box-shadow: 0 10px 25px rgba(0,0,0,0.85);"></video>
+      <img id="pipImage" style="width: 100%; height: 100%; object-fit: cover; border-radius: 12px; display: none;" />
+    </div>
+
     <div id="overlayImageBanner" style="position: absolute; left: 10%; top: 12%; width: 80%; z-index: 30; text-align: center; pointer-events: none; display: none;">
       <img id="overlayImageContent" src="" alt="Banner Overlay" style="max-width: 100%; max-height: 25vh; object-fit: contain; border-radius: 12px; filter: drop-shadow(0 10px 20px rgba(0,0,0,0.8));" />
     </div>
     <div id="overlayTextBanner" style="position: absolute; left: 4%; top: 5%; width: 92%; z-index: 35; text-align: center; pointer-events: none; display: none;">
       <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);"></div>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.43</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.44</div>
   </div>
 
   <!-- BẢNG ĐIỀU KHIỂN NỔI DOCK TOÀN CỤC CẤP BODY — CHỐNG BỊ GPU VIDEO LAYER CHE KHUẤT -->
@@ -1943,7 +2249,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       <span style="width:5px; height:5px; border-radius:50%; background:#10b981; display:inline-block; box-shadow:0 0 6px #10b981; margin-right: 3px;"></span>• LIVE
     </button>
     <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập (Space)">⏸️ Dừng</button>
-    <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập (M)">${soundParam ? '🔊 Bật Tiếng' : '🔇 Tắt Tiếng'}</button>
+    <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập (M)">${soundParam ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}</button>
     <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa' : '📐 Tràn'}</button>
     <button id="btnHideAll" class="dock-btn dock-btn-hide" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn (H)</button>
   </div>
@@ -2000,22 +2306,14 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         applyDockVisibility();
       }
 
-      window.handleHideDock = function(e) {
-        if (e) { e.preventDefault(); e.stopPropagation(); }
-        toggleHideAll(true);
-      };
-
-      window.handleRestoreDock = function(e) {
-        if (e) { e.preventDefault(); e.stopPropagation(); }
-        toggleHideAll(false);
-      };
-
       function updateDockUI() {
-        if (btnPlayPause) {
+        if (btnPlayPause && vid) {
           btnPlayPause.innerHTML = vid.paused ? '▶️ Phát' : '⏸️ Dừng';
+          btnPlayPause.style.background = vid.paused ? 'rgba(16, 185, 129, 0.5)' : 'rgba(255, 255, 255, 0.22)';
         }
-        if (btnMuteUnmute) {
-          btnMuteUnmute.innerHTML = vid.muted ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng';
+        if (btnMuteUnmute && vid) {
+          btnMuteUnmute.innerHTML = vid.muted ? '🔊 Bật Tiếng' : '🔇 Tắt Tiếng';
+          btnMuteUnmute.style.background = vid.muted ? 'rgba(255, 255, 255, 0.22)' : 'rgba(6, 182, 212, 0.6)';
         }
         if (btnFitToggle) {
           btnFitToggle.innerHTML = currentFit === 'cover' ? '📐 Tràn' : '📐 Vừa';
@@ -2042,8 +2340,8 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         } catch(e) {}
       }
 
-      window.handlePlayPauseToggle = function(e) {
-        if (e) { e.preventDefault(); e.stopPropagation(); }
+      function handlePlayPauseAction(e) {
+        if (!vid) return;
         if (vid.paused) {
           isStreamUserPaused = false;
           safePlay();
@@ -2071,11 +2369,11 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
             });
           } catch(e) {}
         }
-      };
+      }
 
-      window.handleMuteToggle = function(e) {
-        if (e) { e.preventDefault(); e.stopPropagation(); }
-        targetMuted = !targetMuted;
+      function handleMuteAction(e) {
+        if (!vid) return;
+        targetMuted = !vid.muted;
         vid.muted = targetMuted;
         if (!targetMuted && vid.paused && !isStreamUserPaused) {
           safePlay();
@@ -2093,51 +2391,49 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
             });
           } catch(e) {}
         }
-      };
+      }
 
-      window.handleFitToggle = function(e) {
-        if (e) { e.preventDefault(); e.stopPropagation(); }
+      function handleFitAction(e) {
         currentFit = currentFit === 'cover' ? 'contain' : 'cover';
         if (vid) vid.style.objectFit = currentFit;
         const imgEl = document.getElementById('imagePlayer');
         if (imgEl) imgEl.style.objectFit = currentFit;
         updateDockUI();
-      };
+      }
 
-      let lastWindowDockTime = 0;
-      function throttleWindowAction(fn) {
-        return function(e) {
+      function handleLiveRefreshAction(e) {
+        isStreamUserPaused = false;
+        if (typeof fetchLatestState === 'function') fetchLatestState();
+        if (vid && vid.src) {
+          try { vid.currentTime = vid.currentTime; } catch(err) {}
+          safePlay();
+        }
+        updateDockUI();
+      }
+
+      function bindDockBtn(el, actionFn) {
+        if (!el) return;
+        let lastAction = 0;
+        function execute(e) {
           if (e) {
             try { e.preventDefault(); e.stopPropagation(); } catch(err) {}
           }
           const now = Date.now();
-          if (now - lastWindowDockTime < 250) return false;
-          lastWindowDockTime = now;
-          fn(e);
-          return false;
-        };
+          if (now - lastAction < 100) return;
+          lastAction = now;
+          actionFn(e);
+        }
+        el.addEventListener('click', execute);
+        el.addEventListener('touchend', execute);
       }
 
-      // Nút • LIVE: Bấm để làm mới luồng phát tức thì 0ms
       const btnLiveStatus = document.getElementById('btnLiveStatus');
-      if (btnLiveStatus) {
-        btnLiveStatus.addEventListener('click', throttleWindowAction(function(e) {
-          isStreamUserPaused = false;
-          if (typeof fetchLatestState === 'function') fetchLatestState();
-          if (vid && vid.src) {
-            try { vid.currentTime = vid.currentTime; } catch(err) {}
-            safePlay();
-          }
-          updateDockUI();
-        }));
-      }
-
-      // Đăng ký duy nhất 1 sự kiện click được bọc qua throttle để triệt tiêu hoàn toàn lỗi double-click
-      if (btnPlayPause) btnPlayPause.addEventListener('click', throttleWindowAction(window.handlePlayPauseToggle));
-      if (btnMuteUnmute) btnMuteUnmute.addEventListener('click', throttleWindowAction(window.handleMuteToggle));
-      if (btnFitToggle) btnFitToggle.addEventListener('click', throttleWindowAction(window.handleFitToggle));
-      if (btnHideAll) btnHideAll.addEventListener('click', throttleWindowAction(window.handleHideDock));
-      if (btnRestore) btnRestore.addEventListener('click', throttleWindowAction(window.handleRestoreDock));
+      bindDockBtn(btnLiveStatus, handleLiveRefreshAction);
+      bindDockBtn(btnPlayPause, handlePlayPauseAction);
+      bindDockBtn(btnMuteUnmute, handleMuteAction);
+      bindDockBtn(btnFitToggle, handleFitAction);
+      bindDockBtn(btnHideAll, function() { toggleHideAll(true); });
+      bindDockBtn(btnRestore, function() { toggleHideAll(false); });
 
       // BẤM VÀO GIỮA MÀN HÌNH VIDEO: BẬT VOICE (UNMUTE) VÀ PHÁT VIDEO TỨC THÌ
       function handleVideoScreenInteraction(e) {
@@ -2286,6 +2582,215 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         }
       });
 
+      function renderMultiAvatarCharacters(config, activeSpeakerId) {
+        const container = document.getElementById('multiAvatarCharacters');
+        if (!container) return;
+        if (!config || !Array.isArray(config.avatars)) {
+          container.innerHTML = '';
+          return;
+        }
+
+        const avatars = config.avatars.filter(function(a) { return a.visible !== false; });
+        avatars.forEach(function(avatar, idx) {
+          let charEl = container.querySelector('[data-char-id="' + avatar.id + '"]');
+          const isSpeaking = activeSpeakerId ? activeSpeakerId === avatar.id : avatar.isSpeaking;
+          const mediaToPlay = isSpeaking && avatar.talkVideo ? avatar.talkVideo : (avatar.idleVideo || avatar.mediaUrl || avatar.videoUrl);
+          const resolvedMedia = resolveUrl(mediaToPlay);
+
+          const trans = avatar.transform || {
+            x: idx === 0 ? 10 : 55,
+            y: 15,
+            width: 40,
+            height: 70
+          };
+          const chromaClass = avatar.chromaKey && avatar.chromaKey.enabled ? (avatar.chromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter') : '';
+
+          if (!charEl) {
+            charEl = document.createElement('div');
+            charEl.setAttribute('data-char-id', avatar.id);
+            charEl.style.position = 'absolute';
+            charEl.style.transition = 'all 0.3s ease';
+            charEl.innerHTML = '<video autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;background:transparent;"></video>';
+            container.appendChild(charEl);
+          }
+
+          charEl.style.left = trans.x + '%';
+          charEl.style.top = trans.y + '%';
+          charEl.style.width = trans.width + '%';
+          charEl.style.height = (trans.height || 70) + '%';
+          charEl.style.zIndex = trans.zIndex || 10;
+          charEl.className = chromaClass;
+
+          const v = charEl.querySelector('video');
+          if (v && resolvedMedia && !isSameMedia(v.src, resolvedMedia)) {
+            v.src = resolvedMedia;
+            v.play().catch(function() {});
+          }
+        });
+
+        Array.from(container.children).forEach(function(child) {
+          const cid = child.getAttribute('data-char-id');
+          if (!avatars.some(function(a) { return a.id === cid; })) {
+            const v = child.querySelector('video');
+            if (v) { try { v.pause(); v.removeAttribute('src'); v.load(); } catch(e) {} }
+            child.remove();
+          }
+        });
+      }
+
+      function applyLiveState(data) {
+        if (!data) return;
+        const emptyStage = document.getElementById('emptyStageView');
+        const multiStage = document.getElementById('multiAvatarStage');
+        const multiBg = document.getElementById('multiAvatarBg');
+        const overlayImgEl = document.getElementById('overlayImageBanner');
+        const overlayImgContent = document.getElementById('overlayImageContent');
+        const banner = document.getElementById('overlayTextBanner');
+        const content = document.getElementById('overlayTextContent');
+        const pipContainer = document.getElementById('pipContainer');
+        const pipVideo = document.getElementById('pipVideo');
+        const pipImage = document.getElementById('pipImage');
+
+        // 1. Kiểm tra trạng thái XÓA SẠCH SÂN KHẤU (CLEAR_STAGE / clearMedia)
+        let targetUrl = data.mediaUrl || data.eventVideoUrl || data.videoUrl || data.currentMedia;
+        const hasMultiAvatar = !!(data.multiAvatarConfig && data.multiAvatarConfig.enabled && data.multiAvatarConfig.avatars && data.multiAvatarConfig.avatars.length > 0);
+
+        if (data.clearMedia || (!targetUrl && !hasMultiAvatar && !data.isPlaying)) {
+          if (emptyStage) emptyStage.style.display = 'flex';
+          if (multiStage) multiStage.style.display = 'none';
+          if (pipContainer) pipContainer.style.display = 'none';
+          if (overlayImgEl) overlayImgEl.style.display = 'none';
+          if (banner) banner.style.display = 'none';
+          if (vid) {
+            try { vid.pause(); vid.removeAttribute('src'); vid.src = ''; vid.load(); } catch(e) {}
+            vid.style.display = 'none';
+          }
+          const imgEl = document.getElementById('imagePlayer');
+          if (imgEl) {
+            try { imgEl.removeAttribute('src'); imgEl.src = ''; } catch(e) {}
+            imgEl.style.display = 'none';
+          }
+          updateDockUI();
+          return;
+        }
+
+        if (emptyStage) emptyStage.style.display = 'none';
+
+        // 2. Chế độ Sân Khấu Đa Nhân Vật (Multi-Avatar Stage)
+        if (hasMultiAvatar) {
+          if (vid) { try { vid.pause(); } catch(e) {} vid.style.display = 'none'; }
+          const imgEl = document.getElementById('imagePlayer');
+          if (imgEl) imgEl.style.display = 'none';
+
+          if (multiStage) multiStage.style.display = 'block';
+          if (multiBg) {
+            const bgUrl = resolveUrl(data.multiAvatarConfig.backgroundUrl);
+            if (bgUrl) {
+              multiBg.style.backgroundImage = 'url("' + bgUrl + '")';
+              multiBg.style.backgroundColor = 'transparent';
+            } else {
+              multiBg.style.backgroundImage = 'none';
+              multiBg.style.backgroundColor = data.multiAvatarConfig.backgroundColor || '#0a0c14';
+            }
+          }
+          renderMultiAvatarCharacters(data.multiAvatarConfig, data.activeSpeakerId);
+        } else {
+          // 3. Chế độ Video/Ảnh Sân Khấu Đơn
+          if (multiStage) multiStage.style.display = 'none';
+          if (!targetUrl && Array.isArray(data.syncedAvatars) && data.syncedAvatars.length > 0) {
+            targetUrl = data.syncedAvatars[0].resolvedVidSrc || data.syncedAvatars[0].talkVideo || data.syncedAvatars[0].idleVideo || '';
+          }
+          if (targetUrl) {
+            loadAndPlay(targetUrl, data.videoCurrentTime || data.currentTime);
+          }
+        }
+
+        // 4. Lớp Video Phụ PiP (Picture-in-Picture)
+        if (pipContainer && pipVideo && pipImage) {
+          const pipUrl = resolveUrl(data.secondaryMediaUrl);
+          if (pipUrl) {
+            const trans = data.secondaryMediaTransform || { x: 55, y: 70, width: 40, height: 25 };
+            pipContainer.style.left = trans.x + '%';
+            pipContainer.style.top = trans.y + '%';
+            pipContainer.style.width = trans.width + '%';
+            pipContainer.style.height = (trans.height || 25) + '%';
+            pipContainer.style.display = 'block';
+
+            if (isImage(pipUrl)) {
+              pipImage.src = pipUrl;
+              pipImage.style.display = 'block';
+              pipVideo.style.display = 'none';
+            } else {
+              pipImage.style.display = 'none';
+              pipVideo.style.display = 'block';
+              if (!isSameMedia(pipVideo.src, pipUrl)) {
+                pipVideo.src = pipUrl;
+                pipVideo.play().catch(function() {});
+              }
+            }
+          } else {
+            pipContainer.style.display = 'none';
+            try { pipVideo.pause(); pipVideo.src = ''; } catch(e) {}
+          }
+        }
+
+        // 5. Banner Hình Ảnh Overlay
+        if (overlayImgEl && overlayImgContent) {
+          const imgUrl = resolveUrl(data.overlayImage || data.bannerUrl || data.posterUrl);
+          if (imgUrl) {
+            overlayImgContent.src = imgUrl;
+            overlayImgEl.style.display = 'block';
+          } else {
+            overlayImgEl.style.display = 'none';
+          }
+        }
+
+        // 6. Tiêu Đề Chữ Overlay
+        if (banner && content) {
+          const txt = data.overlayText || data.title || data.stepTitle;
+          if (txt && typeof txt === 'string' && txt.trim()) {
+            content.innerText = txt.trim();
+            banner.style.display = 'block';
+          } else {
+            banner.style.display = 'none';
+          }
+        }
+
+        if (data.videoPlaybackEvent === 'pause' || data.isPlaying === false) {
+          isStreamUserPaused = true;
+          vid.pause();
+        } else if ((data.videoPlaybackEvent === 'play' || data.isPlaying === true) && vid.paused && vid.src) {
+          isStreamUserPaused = false;
+          safePlay();
+        }
+        if (typeof data.videoCurrentTime === 'number' && Math.abs(vid.currentTime - data.videoCurrentTime) > 0.6) {
+          try { vid.currentTime = data.videoCurrentTime; } catch(e) {}
+        }
+        updateDockUI();
+      }
+
+      function fetchLatestState() {
+        fetch(window.location.origin + '/api/live-state', { cache: 'no-store' })
+          .then(function(res) { return res.json(); })
+          .then(function(data) {
+            applyLiveState(data);
+          })
+          .catch(function() {});
+      }
+
+      setInterval(function() {
+        if (!vid.src || vid.paused || vid.readyState < 2) {
+          fetchLatestState();
+        }
+      }, 1500);
+
+      fetchLatestState();
+      if (currentSrc) {
+        loadAndPlay(currentSrc);
+      } else {
+        setTimeout(fetchLatestState, 400);
+      }
+
       try {
         socket = io(window.location.origin, {
           transports: ['websocket', 'polling'],
@@ -2293,7 +2798,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         });
 
         socket.on('connect', function() {
-          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.43';
+          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.44';
           socket.emit('REQUEST_MASTER_LIVE_STATE');
         });
 
@@ -2301,73 +2806,34 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           if (badge) badge.innerText = '🟡 RECONNECTING...';
         });
 
-        function applyLiveState(data) {
-          if (!data) return;
-          // 🖼️ 1. Cập nhật banner hình ảnh (từ Sequencer, Live Idol Avatar, v.v.)
-          const overlayImgEl = document.getElementById('overlayImageBanner');
-          const overlayImgContent = document.getElementById('overlayImageContent');
-          if (overlayImgEl && overlayImgContent) {
-            const imgUrl = data.overlayImage || data.bannerUrl || data.posterUrl;
-            if (imgUrl && typeof imgUrl === 'string' && imgUrl.trim()) {
-              const resolvedImg = resolveUrl(imgUrl.trim());
-              if (resolvedImg) {
-                overlayImgContent.src = resolvedImg;
-                overlayImgEl.style.display = 'block';
-              } else {
-                overlayImgEl.style.display = 'none';
-              }
-            } else {
-              overlayImgEl.style.display = 'none';
-            }
-          }
-
-          // 📝 2. Cập nhật tiêu đề chữ
-          const banner = document.getElementById('overlayTextBanner');
-          const content = document.getElementById('overlayTextContent');
-          const txt = data.overlayText || data.title || data.stepTitle;
-          if (banner && content) {
-            if (txt && typeof txt === 'string' && txt.trim()) {
-              content.innerText = txt.trim();
-              banner.style.display = 'block';
-            } else {
-              banner.style.display = 'none';
-            }
-          }
-
-          // 🎬 3. Tìm kiếm video/ảnh hiệu lực cao nhất từ tất cả nguồn (kể cả syncedAvatars từ Live Idol)
-          let targetUrl = data.mediaUrl || data.eventVideoUrl || data.videoUrl || data.currentMedia;
-          if (!targetUrl && Array.isArray(data.syncedAvatars) && data.syncedAvatars.length > 0) {
-            targetUrl = data.syncedAvatars[0].resolvedVidSrc || data.syncedAvatars[0].talkVideo || data.syncedAvatars[0].idleVideo || '';
-          }
-
-          if (data.clearMedia || (targetUrl === null && data.isPlaying === false)) {
-            if (vid) {
-              try { vid.pause(); vid.removeAttribute('src'); vid.src = ''; vid.load(); } catch(e) {}
-              vid.style.display = 'none';
-            }
-            const imgEl = document.getElementById('imagePlayer');
-            if (imgEl) {
-              try { imgEl.removeAttribute('src'); imgEl.src = ''; } catch(e) {}
-              imgEl.style.display = 'none';
-            }
-          } else if (targetUrl && !isSameMedia(vid.src, targetUrl)) {
-            loadAndPlay(targetUrl, data.videoCurrentTime || data.currentTime);
-          }
-          if (data.videoPlaybackEvent === 'pause' || data.isPlaying === false) {
-            isStreamUserPaused = true;
-            vid.pause();
-          } else if ((data.videoPlaybackEvent === 'play' || data.isPlaying === true) && vid.paused && vid.src) {
-            isStreamUserPaused = false;
-            safePlay();
-          }
-          if (typeof data.videoCurrentTime === 'number' && Math.abs(vid.currentTime - data.videoCurrentTime) > 0.6) {
-            try { vid.currentTime = data.videoCurrentTime; } catch(e) {}
-          }
-          updateDockUI();
-        }
-
         socket.on('MASTER_LIVE_STATE_UPDATE', function(data) {
           applyLiveState(data);
+        });
+
+        socket.on('EVENT_VIDEO_PLAY', function(data) {
+          if (data && (data.eventVideoUrl || data.videoUrl || data.mediaUrl)) {
+            loadAndPlay(data.eventVideoUrl || data.videoUrl || data.mediaUrl);
+          }
+        });
+
+        socket.on('EVENT_VIDEO_TRIGGER', function(data) {
+          if (data && (data.eventVideoUrl || data.videoUrl || data.mediaUrl)) {
+            loadAndPlay(data.eventVideoUrl || data.videoUrl || data.mediaUrl);
+          }
+        });
+
+        socket.on('GLOBAL_MEDIA_CHANGE', function(data) {
+          if (data && (data.mediaUrl || data.blobUrl)) {
+            loadAndPlay(data.mediaUrl || data.blobUrl, data.currentTime);
+          }
+        });
+
+        socket.on('CLEAR_EVENT_VIDEO', function() {
+          applyLiveState({ clearMedia: true, isPlaying: false });
+        });
+
+        socket.on('CLEAR_STAGE', function() {
+          applyLiveState({ clearMedia: true, isPlaying: false });
         });
 
         socket.on('VIDEO_PLAYBACK_CONTROL', function(control) {
@@ -2501,7 +2967,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.43';
+  let ver = '4.9.44';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -2539,7 +3005,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.43';
+  let ver = '4.9.44';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -3853,19 +4319,28 @@ app.post('/api/clear-media', (req, res) => {
   // Tự động quét dọn toàn bộ file 0-byte, hỏng hoặc tạm
   cleanupBlackAndCorruptUploads();
 
+  const isClearAll = req.body?.clearAll === true || !currentMasterLiveState.mediaUrl || currentMasterLiveState.mediaUrl === targetMedia;
+
   currentMasterLiveState = {
     ...currentMasterLiveState,
-    mediaUrl: null,
-    currentMedia: null,
-    eventVideoUrl: null,
-    clearMedia: true,
-    isVideo: false,
-    isPlaying: false,
+    mediaUrl: isClearAll ? null : currentMasterLiveState.mediaUrl,
+    currentMedia: isClearAll ? null : currentMasterLiveState.currentMedia,
+    eventVideoUrl: isClearAll ? null : currentMasterLiveState.eventVideoUrl,
+    clearMedia: isClearAll,
+    isVideo: isClearAll ? false : currentMasterLiveState.isVideo,
+    isPlaying: isClearAll ? false : currentMasterLiveState.isPlaying,
     videoPlaybackEvent: 'pause',
     isUserExplicitMediaLocked: false,
+    selectedCharacter: isClearAll ? '' : currentMasterLiveState.selectedCharacter,
+    characterName: isClearAll ? '' : currentMasterLiveState.characterName,
+    syncedAvatars: isClearAll ? [] : (currentMasterLiveState.syncedAvatars || []),
+    secondaryMediaUrl: isClearAll ? null : currentMasterLiveState.secondaryMediaUrl,
+    overlayImage: isClearAll ? null : currentMasterLiveState.overlayImage,
+    overlayText: isClearAll ? null : currentMasterLiveState.overlayText,
     updatedAt: Date.now()
   };
   io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+  io.emit('CLEAR_STAGE', { deletedMediaUrl: targetMedia, clearAll: isClearAll });
   saveLiveStateToFile(true);
   res.json({ success: true, message: 'Đã xóa triệt để video phát trực tiếp và dọn sạch bộ nhớ theo yêu cầu người dùng' });
 });

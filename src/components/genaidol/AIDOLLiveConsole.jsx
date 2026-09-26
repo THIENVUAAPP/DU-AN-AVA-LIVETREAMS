@@ -393,7 +393,26 @@ export default function AIDOLLiveConsole() {
     }
     await deleteLiveMedia(id);
     await loadLiveKho();
-    if (activeVideoItem?.id === id) {
+    // Dừng ngay lập tức các thẻ video/audio đang phát file này
+    if (typeof document !== 'undefined') {
+      try {
+        const allMedia = Array.from(document.querySelectorAll('video, audio'));
+        allMedia.forEach(m => {
+          try {
+            const mSrc = m.currentSrc || m.src || '';
+            if (targetItem?.mediaUrl && (mSrc === targetItem.mediaUrl || mSrc.includes(targetItem.mediaUrl))) {
+              m.pause();
+              m.removeAttribute('src');
+              m.src = '';
+              m.srcObject = null;
+              m.load();
+            }
+          } catch (e) {}
+        });
+      } catch (e) {}
+    }
+
+    if (activeVideoItem?.id === id || (activeVideoItem?.mediaUrl && targetItem?.mediaUrl && activeVideoItem.mediaUrl === targetItem.mediaUrl)) {
       setActiveVideoItem(null);
       try {
         fetch('/api/clear-media', {
@@ -411,7 +430,7 @@ export default function AIDOLLiveConsole() {
       });
       try {
         const bc = new BroadcastChannel('avalive_master_live_stream');
-        bc.postMessage({ type: 'CLEAR_STAGE', timestamp: Date.now() });
+        bc.postMessage({ type: 'CLEAR_STAGE', deletedMediaUrl: targetItem?.mediaUrl, timestamp: Date.now() });
         setTimeout(() => bc.close(), 100);
       } catch (e) {}
     }

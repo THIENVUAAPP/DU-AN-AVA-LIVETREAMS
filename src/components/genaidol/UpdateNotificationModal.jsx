@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.43';
+export const APP_VERSION = '4.9.44';
 export const RELEASE_DATE = '26/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v4.9.43 - Khôi Phục Hoàn Toàn Phiên Bản v4.9.39 (Commit 934c68f)',
-    description: '1. Khôi Phục Nguyên Trạng 100%: Bảo toàn toàn bộ mã nguồn, tính năng và luồng xử lý của bản v4.9.39 (commit 934c68f) theo đúng yêu cầu người dùng, giữ nguyên dữ liệu 100%. 2. Fallback Video Uploads Luồng Live: Đảm bảo tự động nhận video mới nhất từ uploads/state phát ngay lập tức trên TikTok Live Studio và OBS 60 FPS mượt mà. 3. Giữ Nguyên Toàn Bộ Thiết Lập Video Sân Khấu Chính & Phụ: Duy trì đầy đủ các tính năng của bản v4.9.39. 4. Khóa Chặt 100% Toàn Bộ 14 Tab & Module Hệ Thống.'
+    title: '🚀 Bản Cập Nhật v4.9.44 - Xóa Triệt Để Video Chạy Ẩn, Đồng Bộ Toàn Bộ Sân Khấu TikTok Live & Sửa Nút Window Capture',
+    description: '1. Xóa Sạch Triệt Để Video Chạy Ẩn & Dư Âm Nền: Khi xóa video trên sân khấu chính và sân khấu phụ, toàn bộ video/audio ngầm trong DOM và state hệ thống bị dừng và xóa sạch tức thì 0ms, không còn bất kỳ dư âm nào. Đã xóa vĩnh viễn các file màn hình đen. 2. Bóc Tách & Tối Ưu Link TikTok Live Studio (/live-stream): Đồng bộ toàn bộ dữ liệu sân khấu chính (background, đa avatar AI cử chỉ chromaKey, video phụ PiP, banner ảnh & tiêu đề chữ). Khắc phục hoàn toàn lỗi kẹt không mở được video trên TikTok Live Studio. 3. Sửa Toàn Bộ Nút Thanh Dock Window Capture: Các nút Live, Dừng/Phát, Bật/Tắt Tiếng, Tràn/Vừa, Ẩn/Hiện phản hồi ngay lập tức 100%; bấm vào giữa màn hình video bật tiếng và phát tức thì. 4. Khóa Chặt 100% Toàn Bộ 14 Tab & Module Hệ Thống.'
   }
 ];
 

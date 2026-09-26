@@ -4554,13 +4554,51 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       try {
         if (typeof window !== 'undefined') {
           window.__activeMediaBlobMap?.delete(id);
+          if (targetMediaUrl) {
+            window.__activeMediaBlobMap?.delete(targetMediaUrl);
+          }
           if (window.opener && window.opener.__activeMediaBlobMap) {
             window.opener.__activeMediaBlobMap.delete(id);
+            if (targetMediaUrl) window.opener.__activeMediaBlobMap.delete(targetMediaUrl);
           }
         }
       } catch (err) {}
 
-      // ⚡ 2. Xử lý khi video bị xóa đang là video đang chọn / phát trên sân khấu
+      // ⚡ 1.1 Dừng và triệt tiêu ngay lập tức tất cả video/audio chạy nền có nguồn là file bị xóa
+      if (typeof document !== 'undefined') {
+        try {
+          const allMedia = Array.from(document.querySelectorAll('video, audio'));
+          allMedia.forEach(m => {
+            try {
+              const mSrc = m.currentSrc || m.src || '';
+              if (targetMediaUrl && (mSrc === targetMediaUrl || mSrc.includes(targetMediaUrl) || (targetMediaUrl.includes('/uploads/') && mSrc.includes(targetMediaUrl.split('/uploads/')[1])))) {
+                m.pause();
+                m.removeAttribute('src');
+                m.src = '';
+                m.srcObject = null;
+                m.load();
+              }
+            } catch (err) {}
+          });
+        } catch (err) {}
+      }
+
+      // Xóa các biến trạng thái nếu đang trùng với video bị xóa
+      if (userLockedMediaUrl && targetMediaUrl && (userLockedMediaUrl === targetMediaUrl || userLockedMediaUrl.includes(targetMediaUrl))) {
+        setUserLockedMediaUrl(null);
+        try { localStorage.removeItem('avalive_user_locked_media'); } catch(e) {}
+      }
+      if (lipSyncVideoUrl && targetMediaUrl && (lipSyncVideoUrl === targetMediaUrl || lipSyncVideoUrl.includes(targetMediaUrl))) {
+        setLipSyncVideoUrl(null);
+      }
+      if (quickResponseActiveVideo && targetMediaUrl && (quickResponseActiveVideo.url === targetMediaUrl || quickResponseActiveVideo.url.includes(targetMediaUrl))) {
+        setQuickResponseActiveVideo(null);
+      }
+      if (activeVideoItem && targetMediaUrl && (activeVideoItem.mediaUrl === targetMediaUrl || activeVideoItem.mediaUrl.includes(targetMediaUrl))) {
+        setActiveVideoItem(null);
+      }
+
+      // ⚡ 2. Xử lý khi video bị xóa đang là video đang chọn / phát trên sân khấu hoặc đã xóa hết video
       if (selectedCharacter === id || remaining.length === 0) {
         if (remaining.length === 0) {
           // Xóa sạch 100% sân khấu - không để lại bất kỳ dư âm nào
@@ -4568,6 +4606,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           setUserLockedMediaUrl(null);
           setLipSyncVideoUrl(null);
           setQuickResponseActiveVideo(null);
+          setActiveVideoItem(null);
           try {
             localStorage.removeItem('avalive_selected_char');
             localStorage.removeItem('avalive_user_locked_media');
@@ -4578,6 +4617,21 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           if (currentBlobUrlRef.current) {
             try { URL.revokeObjectURL(currentBlobUrlRef.current); } catch (e) {}
             currentBlobUrlRef.current = null;
+          }
+
+          // Dừng tuyệt đối mọi thẻ video trên giao diện
+          if (typeof document !== 'undefined') {
+            try {
+              document.querySelectorAll('video, audio').forEach(el => {
+                try {
+                  el.pause();
+                  el.removeAttribute('src');
+                  el.src = '';
+                  el.srcObject = null;
+                  el.load();
+                } catch(e) {}
+              });
+            } catch(e) {}
           }
 
           if (desktopVideoRef.current) {
@@ -4592,12 +4646,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           await clearActiveMedia();
 
           try {
-            fetch('/api/clear-media', { method: 'POST' }).catch(() => {});
+            fetch('/api/clear-media', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({ mediaUrl: targetMediaUrl, clearAll: true })
+            }).catch(() => {});
           } catch (e) {}
 
           try {
             const bc = new BroadcastChannel('avalive_master_live_stream');
-            bc.postMessage({ type: 'CLEAR_STAGE', timestamp: Date.now() });
+            bc.postMessage({ type: 'CLEAR_STAGE', deletedMediaUrl: targetMediaUrl, clearMedia: true, timestamp: Date.now() });
             bc.postMessage({
               type: 'GLOBAL_MEDIA_CHANGE',
               mediaUrl: null,
@@ -4626,7 +4684,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             isPlaying: false,
             clearMedia: true
           }, socketRef.current);
-          showToast('🗑️ Đã xóa sạch video nhân vật khỏi hệ thống!', 'info');
+          showToast('🗑️ Đã xóa sạch video, không còn dư âm chạy ẩn!', 'info');
         } else {
           // Chuyển mượt mà sang video còn lại đầu tiên
           const nextChar = remaining[0];
@@ -4659,6 +4717,29 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               }
             } catch (e) {}
           }
+
+          // Xóa vật lý file bị xóa trên server
+          if (targetMediaUrl) {
+            try {
+              fetch('/api/clear-media', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ mediaUrl: targetMediaUrl, clearAll: false })
+              }).catch(() => {});
+            } catch (e) {}
+          }
+
+          try {
+            const bc = new BroadcastChannel('avalive_master_live_stream');
+            bc.postMessage({
+              type: 'GLOBAL_MEDIA_CHANGE',
+              mediaUrl: nextUrl,
+              deletedMediaUrl: targetMediaUrl,
+              clearMedia: false,
+              timestamp: Date.now()
+            });
+            setTimeout(() => bc.close(), 100);
+          } catch (e) {}
 
           syncMasterLiveState({
             stage: 'idol',
