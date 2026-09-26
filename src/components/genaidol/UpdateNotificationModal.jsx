@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.41';
+export const APP_VERSION = '4.9.42';
 export const RELEASE_DATE = '26/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v4.9.41 - Khôi Phục Hoàn Toàn Phiên Bản v4.9.39 (Commit 934c68f)',
-    description: '1. Khôi Phục Nguyên Trạng 100%: Bảo toàn toàn bộ mã nguồn, tính năng và luồng xử lý của bản v4.9.39 (commit 934c68f) theo yêu cầu người dùng, không làm mất bất kỳ dữ liệu nào. 2. Fallback Video Uploads Luồng Live: Đảm bảo tự động nhận video mới nhất từ uploads/state phát ngay lập tức trên TikTok Live Studio và OBS 60 FPS mượt mà. 3. Giữ Nguyên Toàn Bộ Thiết Lập Video Sân Khấu Chính & Phụ: Duy trì đầy đủ các tính năng của bản v4.9.39. 4. Khóa Chặt 100% Toàn Bộ 14 Tab & Module Hệ Thống.'
+    title: '🚀 Bản Cập Nhật v4.9.42 - Xóa Triệt Để Video Khỏi Sân Khấu & System, Kích Hoạt 100% Nút Dock & Chuẩn Hóa TikTok Studio 9:16 Không Cắt Xén',
+    description: '1. Xóa Triệt Để Video Khỏi Sân Khấu Chính & Phụ (Kể Cả Chạy Nền): Khi bấm xóa layer trên Sequencer hoặc xóa video trên phần mềm, video biến mất NGAY LẬP TỨC (0ms) khỏi Sân Khấu Chính, Window Capture và luồng TikTok Studio; xóa vĩnh viễn file vật lý trong thư mục uploads để nhẹ máy; tuyệt đối không để lại dữ liệu chạy ẩn và không bao giờ tự ý lôi video cũ ra phát lại. 2. Kích Hoạt 100% Các Nút Trên Thanh Dock (Ảnh 1): Toàn bộ các nút [• LIVE], [⏸️ Dừng], [🔊 Bật Tiếng], [📐 Tràn / Vừa], [✕ Ẩn (H)] và [👁️] hoạt động cực nhạy 100%, bổ sung no-drag loại bỏ triệt để lỗi nuốt click trên macOS/Windows. 3. Luồng TikTok Live Studio 9:16 Vừa Khít Không Cắt Xén: Tự động loại bỏ hoàn toàn hiện tượng kẹt spinner xoay vòng, trang bị màn hình chờ Standby 9:16 sẵn sàng; hiển thị sắc nét 4K 60 FPS, không cắt xén viền. 4. Giữ Nguyên Cơ Chế Tải Video Lên Sân Khấu Phát Tức Thì & Khóa Chặt 100% Toàn Bộ Các Tab Khác.'
   }
 ];
 

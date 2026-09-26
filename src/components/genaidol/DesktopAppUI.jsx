@@ -750,6 +750,62 @@ export default function DesktopAppUI() {
       } catch (e) {}
     };
 
+    // 🗑️ LẮNG NGHE VÀ XỬ LÝ CLEAR_STAGE TỪ SÂN KHẤU PHỤ / SEQUENCER / HỆ THỐNG
+    const handleClearStage = (detail) => {
+      console.log('[DesktopAppUI] 🗑️ CLEAR_STAGE: Xóa sạch 100% video khỏi Sân Khấu Chính theo yêu cầu!');
+      const targetUrl = detail?.mediaUrl || null;
+      setSelectedCharacter('');
+      setUserLockedMediaUrl(null);
+      setLipSyncVideoUrl(null);
+      setActiveVideoItem(null);
+      setQuickResponseActiveVideo(null);
+      setIsVideoPlaying(false);
+
+      try {
+        localStorage.removeItem('avalive_selected_char');
+        localStorage.removeItem('avalive_user_locked_media');
+        localStorage.removeItem('avalive_active_video_src');
+        localStorage.removeItem('aidol_idle_media_url');
+        localStorage.removeItem('avalive_master_sync_active');
+        localStorage.removeItem('avalive_sequencer_overlay');
+      } catch (err) {}
+
+      if (currentBlobUrlRef.current) {
+        try { URL.revokeObjectURL(currentBlobUrlRef.current); } catch (e) {}
+        currentBlobUrlRef.current = null;
+      }
+      if (desktopVideoRef.current) {
+        try {
+          desktopVideoRef.current.pause();
+          desktopVideoRef.current.removeAttribute('src');
+          desktopVideoRef.current.srcObject = null;
+          desktopVideoRef.current.load();
+        } catch (err) {}
+      }
+
+      if (targetUrl) {
+        deleteServerMedia(targetUrl).catch(() => {});
+      }
+      try {
+        fetch('/api/clear-media', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ mediaUrl: targetUrl })
+        }).catch(() => {});
+      } catch (e) {}
+
+      syncMasterLiveState({
+        stage: 'idol',
+        selectedCharacter: '',
+        mediaUrl: null,
+        clearMedia: true,
+        isVideo: false,
+        isPlaying: false,
+        videoPlaybackEvent: 'pause',
+        updatedAt: Date.now()
+      }, socketRef.current);
+    };
+
     // ↩️ KHI UNDO/REDO TỪ SÂN KHẤU PHỤ → CẬP NHẬT VIDEO Ở SÂN KHẤU CHÍNH
     const handleSequencerUndoRedo = (e) => {
       const { step, multiAvatarConfig: snapMac } = e.detail || {};
@@ -772,21 +828,37 @@ export default function DesktopAppUI() {
       }
     };
 
+    let masterBcListener = null;
+    try {
+      masterBcListener = new BroadcastChannel('avalive_master_live_stream');
+      masterBcListener.onmessage = (ev) => {
+        if (!ev || !ev.data) return;
+        if (ev.data.type === 'CLEAR_STAGE' || ev.data.clearMedia) {
+          handleClearStage(ev.data);
+        }
+      };
+    } catch (e) {}
+
     window.addEventListener('avalive_multi_avatar_changed', handleMultiAvatarChange);
     window.addEventListener('avalive_active_speaker_changed', handleSpeakerChange);
     window.addEventListener('avalive_speaker_change', handleSpeakerChange);
     window.addEventListener('avalive:master_sync_state_changed', handleMasterSyncChange);
     window.addEventListener('avalive:idle_video_updated', handleIdleVideoUpdate);
     window.addEventListener('avalive:clear_event_video', handleClearEventVideo);
+    window.addEventListener('avalive:clear_stage', (e) => handleClearStage(e?.detail));
     window.addEventListener('avalive:sequencer_sync_disconnected', handleSequencerSyncDisconnected);
     window.addEventListener('avalive:sequencer_undo_redo', handleSequencerUndoRedo);
     return () => {
+      if (masterBcListener) {
+        try { masterBcListener.close(); } catch (e) {}
+      }
       window.removeEventListener('avalive_multi_avatar_changed', handleMultiAvatarChange);
       window.removeEventListener('avalive_active_speaker_changed', handleSpeakerChange);
       window.removeEventListener('avalive_speaker_change', handleSpeakerChange);
       window.removeEventListener('avalive:master_sync_state_changed', handleMasterSyncChange);
       window.removeEventListener('avalive:idle_video_updated', handleIdleVideoUpdate);
       window.removeEventListener('avalive:clear_event_video', handleClearEventVideo);
+      window.removeEventListener('avalive:clear_stage', (e) => handleClearStage(e?.detail));
       window.removeEventListener('avalive:sequencer_sync_disconnected', handleSequencerSyncDisconnected);
       window.removeEventListener('avalive:sequencer_undo_redo', handleSequencerUndoRedo);
     };
@@ -4561,122 +4633,80 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       } catch (err) {}
 
       // ⚡ 2. Xử lý khi video bị xóa đang là video đang chọn / phát trên sân khấu
+      // ⚡ 2. Xử lý khi video bị xóa đang là video đang chọn / phát trên sân khấu
       if (selectedCharacter === id || remaining.length === 0) {
-        if (remaining.length === 0) {
-          // Xóa sạch 100% sân khấu - không để lại bất kỳ dư âm nào
-          setSelectedCharacter('');
-          setUserLockedMediaUrl(null);
-          setLipSyncVideoUrl(null);
-          setQuickResponseActiveVideo(null);
-          try {
-            localStorage.removeItem('avalive_selected_char');
-            localStorage.removeItem('avalive_user_locked_media');
-            localStorage.removeItem('avalive_active_video_src');
-            localStorage.removeItem('aidol_idle_media_url');
-          } catch (err) {}
+        // Xóa sạch 100% sân khấu - không để lại bất kỳ dư âm nào
+        setSelectedCharacter('');
+        setUserLockedMediaUrl(null);
+        setLipSyncVideoUrl(null);
+        setActiveVideoItem(null);
+        setQuickResponseActiveVideo(null);
+        setIsVideoPlaying(false);
+        try {
+          localStorage.removeItem('avalive_selected_char');
+          localStorage.removeItem('avalive_user_locked_media');
+          localStorage.removeItem('avalive_active_video_src');
+          localStorage.removeItem('aidol_idle_media_url');
+        } catch (err) {}
 
-          if (currentBlobUrlRef.current) {
-            try { URL.revokeObjectURL(currentBlobUrlRef.current); } catch (e) {}
-            currentBlobUrlRef.current = null;
-          }
-
-          if (desktopVideoRef.current) {
-            try {
-              desktopVideoRef.current.pause();
-              desktopVideoRef.current.removeAttribute('src');
-              desktopVideoRef.current.srcObject = null;
-              desktopVideoRef.current.load();
-            } catch (e) {}
-          }
-
-          await clearActiveMedia();
-
-          try {
-            fetch('/api/clear-media', { method: 'POST' }).catch(() => {});
-          } catch (e) {}
-
-          try {
-            const bc = new BroadcastChannel('avalive_master_live_stream');
-            bc.postMessage({ type: 'CLEAR_STAGE', timestamp: Date.now() });
-            bc.postMessage({
-              type: 'GLOBAL_MEDIA_CHANGE',
-              mediaUrl: null,
-              fileBlob: null,
-              characterId: null,
-              clearMedia: true,
-              timestamp: Date.now()
-            });
-            setTimeout(() => bc.close(), 100);
-          } catch (e) {}
-
-          syncMasterLiveState({
-            stage: 'idol',
-            selectedCharacter: '',
-            mediaUrl: null,
-            clearMedia: true,
-            isVideo: false,
-            isPlaying: false
-          }, socketRef.current);
-
-          sendVideoControl({
-            action: 'pause',
-            mediaUrl: null,
-            currentTime: 0,
-            force: true,
-            isPlaying: false,
-            clearMedia: true
-          }, socketRef.current);
-          showToast('🗑️ Đã xóa sạch video nhân vật khỏi hệ thống!', 'info');
-        } else {
-          // Chuyển mượt mà sang video còn lại đầu tiên
-          const nextChar = remaining[0];
-          const nextId = nextChar?.id || '';
-          let nextUrl = nextChar?.url || nextChar?.mediaUrl || '';
-          if (!nextUrl && nextChar?.fileData) {
-            try {
-              nextUrl = URL.createObjectURL(nextChar.fileData);
-              nextChar.url = nextUrl;
-            } catch (e) {}
-          }
-          setSelectedCharacter(nextId);
-          setUserLockedMediaUrl(nextUrl || null);
-          try {
-            if (nextId) localStorage.setItem('avalive_selected_char', nextId);
-            else localStorage.removeItem('avalive_selected_char');
-            if (nextUrl) localStorage.setItem('avalive_user_locked_media', nextUrl);
-            else localStorage.removeItem('avalive_user_locked_media');
-          } catch (err) {}
-
-          if (desktopVideoRef.current) {
-            try {
-              if (nextUrl) {
-                desktopVideoRef.current.src = nextUrl;
-                desktopVideoRef.current.currentTime = 0;
-                desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
-              } else {
-                desktopVideoRef.current.pause();
-                desktopVideoRef.current.removeAttribute('src');
-              }
-            } catch (e) {}
-          }
-
-          syncMasterLiveState({
-            stage: 'idol',
-            selectedCharacter: nextId,
-            mediaUrl: nextUrl || null,
-            isVideo: !!nextUrl,
-            isPlaying: !!nextUrl
-          }, socketRef.current);
-
-          sendVideoControl({
-            action: nextUrl ? 'play' : 'pause',
-            mediaUrl: nextUrl || null,
-            currentTime: 0,
-            force: true,
-            isPlaying: !!nextUrl
-          }, socketRef.current);
-          showToast('🗑️ Đã xóa video và chuyển sang nhân vật kế tiếp!', 'info');
+        if (currentBlobUrlRef.current) {
+          try { URL.revokeObjectURL(currentBlobUrlRef.current); } catch (e) {}
+          currentBlobUrlRef.current = null;
         }
+
+        if (desktopVideoRef.current) {
+          try {
+            desktopVideoRef.current.pause();
+            desktopVideoRef.current.removeAttribute('src');
+            desktopVideoRef.current.srcObject = null;
+            desktopVideoRef.current.load();
+          } catch (e) {}
+        }
+
+        await clearActiveMedia();
+
+        try {
+          fetch('/api/clear-media', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ mediaUrl: targetMediaUrl || null })
+          }).catch(() => {});
+        } catch (e) {}
+
+        try {
+          const bc = new BroadcastChannel('avalive_master_live_stream');
+          bc.postMessage({ type: 'CLEAR_STAGE', clearMedia: true, mediaUrl: null, timestamp: Date.now() });
+          bc.postMessage({
+            type: 'GLOBAL_MEDIA_CHANGE',
+            mediaUrl: null,
+            fileBlob: null,
+            characterId: null,
+            clearMedia: true,
+            timestamp: Date.now()
+          });
+          setTimeout(() => bc.close(), 100);
+        } catch (e) {}
+
+        syncMasterLiveState({
+          stage: 'idol',
+          selectedCharacter: '',
+          mediaUrl: null,
+          clearMedia: true,
+          isVideo: false,
+          isPlaying: false,
+          videoPlaybackEvent: 'pause',
+          updatedAt: Date.now()
+        }, socketRef.current);
+
+        sendVideoControl({
+          action: 'pause',
+          mediaUrl: null,
+          currentTime: 0,
+          force: true,
+          isPlaying: false,
+          clearMedia: true
+        }, socketRef.current);
+        showToast('🗑️ Đã xóa sạch video khỏi sân khấu & hệ thống!', 'info');
       } else {
         showToast('🗑️ Đã xóa video nhân vật!', 'info');
       }
@@ -5062,8 +5092,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       let selected = customMatch || 
         (selectedCharacter && CHARACTERS[selectedCharacter]?.url ? { id: selectedCharacter, ...CHARACTERS[selectedCharacter] } : null) || 
         sequencerLockedMedia ||
-        (userLockedMediaUrl ? { id: 'locked_video', name: 'Video Đang Phát', url: userLockedMediaUrl, mediaUrl: userLockedMediaUrl, type: 'video' } : null) ||
-        (customCharacters && customCharacters.length > 0 ? customCharacters.find(c => c.url || c.mediaUrl) : null);
+        (userLockedMediaUrl ? { id: 'locked_video', name: 'Video Đang Phát', url: userLockedMediaUrl, mediaUrl: userLockedMediaUrl, type: 'video' } : null);
 
       if (selected) {
         let resolvedUrl = selected.url || selected.mediaUrl;

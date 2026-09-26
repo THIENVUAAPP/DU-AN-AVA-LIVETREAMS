@@ -245,7 +245,10 @@ function cleanupBlackAndCorruptUploads() {
         try {
           const stat = fs.statSync(fullPath);
           if (stat.isFile()) {
-            if (stat.size === 0 || file.endsWith('.tmp') || file.endsWith('.part') || file.endsWith('.crdownload') || file.endsWith('.faststart.tmp')) {
+            const isCorruptVideo = stat.size < 2048 && /\.(mp4|webm|mov|mkv|avi|m4v)$/i.test(file);
+            const isBlackDummy = /black_screen|black-screen|dummy_video|blackvideo/i.test(file);
+            const isTempFile = file.endsWith('.tmp') || file.endsWith('.part') || file.endsWith('.crdownload') || file.endsWith('.faststart.tmp');
+            if (stat.size === 0 || isCorruptVideo || isBlackDummy || isTempFile) {
               fs.unlinkSync(fullPath);
               cleanedCount++;
             }
@@ -965,8 +968,8 @@ app.get([
       }
     }
   }
-  // ⚡ FALLBACK TỰ ĐỘNG: Nếu chưa có video nào đang phát hoặc file không có trên đĩa, lấy video tải lên mới nhất để TikTok Live Studio KHÔNG BAO GIỜ bị kẹt xoay vòng vòng
-  if (!existsOnDisk) {
+  // ⚡ FALLBACK TỰ ĐỘNG: Chỉ lấy video mới nhất nếu KHÔNG ở trạng thái xóa (clearMedia !== true)
+  if (!existsOnDisk && !currentMasterLiveState?.clearMedia) {
     const latestUpload = getLatestUploadMediaUrl();
     if (latestUpload) {
       existsOnDisk = true;
@@ -974,10 +977,12 @@ app.get([
     } else {
       vParam = '';
     }
+  } else if (!existsOnDisk) {
+    vParam = '';
   }
 
   const soundParam = req.query.sound !== '0';
-  const fitParam = req.query.fit || 'cover';
+  const fitParam = req.query.fit || 'contain';
   const isImageMediaHelper = (u) => {
     if (!u || typeof u !== 'string') return false;
     return /\.(png|jpe?g|webp|gif|svg|avif|bmp)($|\?|#)/i.test(u) || u.startsWith('data:image/');
@@ -992,7 +997,7 @@ app.get([
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
-  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.9.41</title>
+  <title>AvaLive 4K 60FPS Ultra-HD Live Streamer v4.9.42</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     html, body {
@@ -1090,6 +1095,11 @@ app.get([
 </head>
 <body>
   <div id="stage">
+    <div id="standbyScreen" style="position: absolute; inset: 0; display: ${!vParam ? 'flex' : 'none'}; flex-direction: column; align-items: center; justify-content: center; background: #000; z-index: 10; pointer-events: none; text-align: center; padding: 20px;">
+      <div style="font-size: 36px; margin-bottom: 12px; filter: drop-shadow(0 0 16px #06b6d4);">⚡</div>
+      <div style="font-size: 15px; font-weight: 900; color: #22d3ee; letter-spacing: 0.5px; text-transform: uppercase;">LUỒNG LIVE TIKTOK STUDIO (9:16) ĐÃ SẴN SÀNG</div>
+      <div style="font-size: 12px; color: #94a3b8; margin-top: 6px;">Đang đợi video phát từ Sân Khấu Chính / Phụ AvaLive VIP PRO...</div>
+    </div>
     <div id="loadingOverlay">
       <div class="spinner"></div>
       <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.5px;">⚡ ĐANG KẾT NỐI LUỒNG LIVE AVALIVE 4K 60FPS...</div>
@@ -1124,7 +1134,7 @@ app.get([
       <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập">🔊 Bật Tiếng</button>
       <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">📐 Tràn</button>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.41</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.42</div>
   </div>
   <script>
     (function() {
@@ -1173,10 +1183,10 @@ app.get([
         }
       }
 
-      // ⚡ EMERGENCY LOADING DISMISSER: Đảm bảo TikTok Live Studio KHÔNG BAO GIỜ bị kẹt xoay vòng quá 1.5s
+      // ⚡ EMERGENCY LOADING DISMISSER: Đảm bảo TikTok Live Studio KHÔNG BAO GIỜ bị kẹt xoay vòng quá 350ms
       setTimeout(function() {
         hideLoading();
-      }, 1500);
+      }, 350);
 
       setTimeout(function() { if (badge) badge.style.opacity = '0.2'; }, 6000);
 
@@ -1499,7 +1509,12 @@ app.get([
             try { imgEl.removeAttribute('src'); imgEl.src = ''; } catch(e) {}
             imgEl.style.display = 'none';
           }
+          const standby = document.getElementById('standbyScreen');
+          if (standby) standby.style.display = 'flex';
+          hideLoading();
         } else if (targetUrl && !isSameMedia(vid.src, targetUrl)) {
+          const standby = document.getElementById('standbyScreen');
+          if (standby) standby.style.display = 'none';
           loadAndPlay(targetUrl);
         }
         if (!isStreamUserPaused && vid.paused && vid.src) {
@@ -1578,7 +1593,7 @@ app.get([
             }, 3000);
 
             socket.on('connect', function() {
-              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.41';
+              if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.42';
               socket.emit('REQUEST_MASTER_LIVE_STATE');
             });
 
@@ -1735,8 +1750,8 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       }
     }
   }
-  // ⚡ FALLBACK TỰ ĐỘNG: Lấy video tải lên mới nhất
-  if (!existsOnDisk) {
+  // ⚡ FALLBACK TỰ ĐỘNG: Chỉ lấy video tải lên mới nhất nếu KHÔNG ở trạng thái xóa (clearMedia !== true)
+  if (!existsOnDisk && !currentMasterLiveState?.clearMedia) {
     const latestUpload = getLatestUploadMediaUrl();
     if (latestUpload) {
       existsOnDisk = true;
@@ -1744,9 +1759,11 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     } else {
       vParam = '';
     }
+  } else if (!existsOnDisk) {
+    vParam = '';
   }
   const soundParam = req.query.sound !== '0';
-  const fitParam = req.query.fit || 'cover';
+  const fitParam = req.query.fit || 'contain';
   const isImageMediaHelper = (u) => {
     if (!u || typeof u !== 'string') return false;
     return /\.(png|jpe?g|webp|gif|svg|avif|bmp)($|\?|#)/i.test(u) || u.startsWith('data:image/');
@@ -1934,7 +1951,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     <div id="overlayTextBanner" style="position: absolute; left: 4%; top: 5%; width: 92%; z-index: 35; text-align: center; pointer-events: none; display: none;">
       <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);"></div>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.41</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.42</div>
   </div>
 
   <!-- BẢNG ĐIỀU KHIỂN NỔI DOCK TOÀN CỤC CẤP BODY — CHỐNG BỊ GPU VIDEO LAYER CHE KHUẤT -->
@@ -2293,7 +2310,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         });
 
         socket.on('connect', function() {
-          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.41';
+          if (badge) badge.innerText = '🟢 4K 60 FPS REALTIME v4.9.42';
           socket.emit('REQUEST_MASTER_LIVE_STATE');
         });
 
@@ -2501,7 +2518,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.41';
+  let ver = '4.9.42';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -2539,7 +2556,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.41';
+  let ver = '4.9.42';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
