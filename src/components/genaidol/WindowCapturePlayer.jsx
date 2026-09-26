@@ -1901,7 +1901,7 @@ export default function WindowCapturePlayer() {
             flexWrap: 'nowrap',
             whiteSpace: 'nowrap',
             gap: '5px',
-            background: 'rgba(5, 7, 12, 0.94)',
+            background: 'rgba(5, 7, 12, 0.92)',
             backdropFilter: 'blur(20px)',
             padding: '3px 8px',
             borderRadius: '24px',
@@ -1909,7 +1909,6 @@ export default function WindowCapturePlayer() {
             boxShadow: '0 6px 24px rgba(0, 0, 0, 0.9), 0 0 12px rgba(6, 182, 212, 0.3)',
             zIndex: 1000000,
             pointerEvents: 'auto',
-            WebkitAppRegion: 'no-drag',
             touchAction: 'manipulation',
             transition: 'opacity 0.2s ease',
             opacity: 0.98,
@@ -1945,9 +1944,7 @@ export default function WindowCapturePlayer() {
               border: '1px solid rgba(16, 185, 129, 0.5)',
               borderRadius: '10px',
               padding: '2px 6px',
-              cursor: 'pointer',
-              WebkitAppRegion: 'no-drag',
-              pointerEvents: 'auto'
+              cursor: 'pointer'
             }}
             title="Luồng Phát Live 4K 60 FPS (Bấm để làm mới luồng)"
           >
@@ -1958,6 +1955,7 @@ export default function WindowCapturePlayer() {
           {/* Nút Play / Pause */}
           <button
             type="button"
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -1973,7 +1971,6 @@ export default function WindowCapturePlayer() {
               borderRadius: '12px',
               cursor: 'pointer',
               pointerEvents: 'auto',
-              WebkitAppRegion: 'no-drag',
               touchAction: 'manipulation',
               userSelect: 'none',
               transition: 'all 0.12s ease',
@@ -1994,6 +1991,7 @@ export default function WindowCapturePlayer() {
           {/* Nút Bật / Tắt Tiếng */}
           <button
             type="button"
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -2009,7 +2007,6 @@ export default function WindowCapturePlayer() {
               borderRadius: '12px',
               cursor: 'pointer',
               pointerEvents: 'auto',
-              WebkitAppRegion: 'no-drag',
               touchAction: 'manipulation',
               userSelect: 'none',
               transition: 'all 0.12s ease',
@@ -2030,6 +2027,7 @@ export default function WindowCapturePlayer() {
           {/* Nút Tràn / Vừa */}
           <button
             type="button"
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -2045,7 +2043,6 @@ export default function WindowCapturePlayer() {
               borderRadius: '12px',
               cursor: 'pointer',
               pointerEvents: 'auto',
-              WebkitAppRegion: 'no-drag',
               touchAction: 'manipulation',
               userSelect: 'none',
               transition: 'all 0.12s ease',
@@ -2066,6 +2063,7 @@ export default function WindowCapturePlayer() {
           {/* ⭐ NÚT ẨN HẾT TẤT CẢ CÁC TAB / NÚT TRÊN GIAO DIỆN VIDEO */}
           <button
             type="button"
+            onPointerDown={(e) => e.stopPropagation()}
             onClick={(e) => {
               e.preventDefault();
               e.stopPropagation();
@@ -2081,7 +2079,6 @@ export default function WindowCapturePlayer() {
               borderRadius: '12px',
               cursor: 'pointer',
               pointerEvents: 'auto',
-              WebkitAppRegion: 'no-drag',
               touchAction: 'manipulation',
               display: 'inline-flex',
               flexDirection: 'row',
@@ -2117,7 +2114,6 @@ export default function WindowCapturePlayer() {
             right: '8px',
             zIndex: 1000000,
             pointerEvents: 'auto',
-            WebkitAppRegion: 'no-drag',
             touchAction: 'manipulation',
             width: '28px',
             height: '28px',
