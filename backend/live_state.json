@@ -3,16 +3,16 @@
   "aspectRatio": "9:16",
   "characterId": "",
   "characterName": "Video Người Dùng",
-  "mediaUrl": null,
+  "mediaUrl": "/uploads/media-1790480285999-991836740.png",
   "currentMedia": "/uploads/media-1790480285999-991836740.png",
   "eventVideoUrl": null,
-  "isVideo": false,
-  "videoPlaybackEvent": "pause",
-  "isPlaying": false,
+  "isVideo": true,
+  "videoPlaybackEvent": "play",
+  "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
   "clearMedia": false,
-  "updatedAt": 1790520144701,
+  "updatedAt": 1790521344697,
   "isUserExplicitMediaLocked": false,
   "selectedCharacter": "",
   "videoCurrentTime": 0,
@@ -89,7 +89,7 @@
       "isSpeakingNow": false
     }
   ],
-  "tunnelUrl": "https://connectors-paris-purple-against.trycloudflare.com",
+  "tunnelUrl": "https://massage-member-triple-yorkshire.trycloudflare.com",
   "multiAvatarConfig": {
     "enabled": true,
     "activeCount": 2,
@@ -177,7 +177,7 @@
     ],
     "activeSpeakerId": "avatar_1",
     "fromSequencer": true,
-    "syncedAt": 1790520144649
+    "syncedAt": 1790521344639
   },
   "mainMediaUrl": "/uploads/media-1790480285999-991836740.png",
   "mainMediaTransform": {

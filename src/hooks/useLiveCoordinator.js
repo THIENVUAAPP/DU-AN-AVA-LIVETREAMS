@@ -55,6 +55,36 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack 
     };
   }, []);
 
+  // 🛡️ LẮNG NGHE TÍN HIỆU TẮT/DỪNG KỊCH BẢN ĐỂ HỦY NGAY BỘ ĐẾM IDLE TIMER
+  useEffect(() => {
+    const handleStopSignals = () => {
+      if (idleTimerRef.current) {
+        clearTimeout(idleTimerRef.current);
+        idleTimerRef.current = null;
+      }
+    };
+    const handleStorageChange = (e) => {
+      if (e.key === 'aidol_user_paused_script' || e.key === 'avalive_user_paused' || e.key === 'aidol_is_script_live_running') {
+        if (idleTimerRef.current) {
+          clearTimeout(idleTimerRef.current);
+          idleTimerRef.current = null;
+        }
+      }
+    };
+    window.addEventListener('aidol_script_updated', handleStopSignals);
+    window.addEventListener('avalive_emergency_stop_all', handleStopSignals);
+    window.addEventListener('avalive:stop_all_audio_and_voice', handleStopSignals);
+    window.addEventListener('global-stop-demo', handleStopSignals);
+    window.addEventListener('storage', handleStorageChange);
+    return () => {
+      window.removeEventListener('aidol_script_updated', handleStopSignals);
+      window.removeEventListener('avalive_emergency_stop_all', handleStopSignals);
+      window.removeEventListener('avalive:stop_all_audio_and_voice', handleStopSignals);
+      window.removeEventListener('global-stop-demo', handleStopSignals);
+      window.removeEventListener('storage', handleStorageChange);
+    };
+  }, []);
+
   // Xử lý khi bắt đầu kết nối Live
   useEffect(() => {
     if (isConnected) {
@@ -364,9 +394,16 @@ function fillTemplate(template, vars = {}) {
     const isTestMode = payload?.isTest === true;
     const isScriptStoppedByUser = typeof localStorage !== 'undefined' && (
       localStorage.getItem('aidol_user_paused_script') === 'true' ||
-      localStorage.getItem('aidol_is_script_live_running') === 'false'
+      localStorage.getItem('aidol_is_script_live_running') === 'false' ||
+      localStorage.getItem('avalive_user_paused') === 'true' ||
+      localStorage.getItem('avalive_master_live_running') === 'false' ||
+      (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
     );
-    if (!isTestMode && isScriptStoppedByUser && (type === 'IDLE' || type === 'TALKING' || type === 'AI_TALK' || type === 'APOLOGY')) {
+    if (!isTestMode && isScriptStoppedByUser && (type === 'IDLE' || type === 'TALKING' || type === 'AI_TALK' || type === 'APOLOGY' || type === 'WELCOME' || type === 'CALL_TO_ACTION')) {
+      if (idleTimerRef.current) {
+        clearTimeout(idleTimerRef.current);
+        idleTimerRef.current = null;
+      }
       return;
     }
 

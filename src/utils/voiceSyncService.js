@@ -7833,11 +7833,18 @@ export function unlockAudioContext() {
   }
 }
 
+const activeVoiceWatchdogTimers = new Set();
+
 /**
  * ⏹️ DỪNG ÂM THANH HIỆN TẠI (KHÔNG XÓA HÀNG ĐỢI KỊCH BẢN)
  */
 export function stopCurrentActiveAudioNode() {
   currentSpeechGenerationId++;
+  for (const timerId of activeVoiceWatchdogTimers) {
+    try { clearTimeout(timerId); } catch(e) {}
+  }
+  activeVoiceWatchdogTimers.clear();
+
   if (activeSourceNode) {
     try {
       activeSourceNode.onended = null;
@@ -8403,6 +8410,7 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
       if (hasEnded) return;
       hasEnded = true;
       if (safetyTimer) {
+        activeVoiceWatchdogTimers.delete(safetyTimer);
         clearTimeout(safetyTimer);
         safetyTimer = null;
       }
@@ -8420,7 +8428,8 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
         localStorage.getItem('avalive_window_capture_paused') === 'true' ||
         localStorage.getItem('avalive_master_live_running') === 'false' ||
         localStorage.getItem('aidol_user_paused_script') === 'true' ||
-        localStorage.getItem('aidol_is_script_live_running') === 'false'
+        localStorage.getItem('aidol_is_script_live_running') === 'false' ||
+        (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
       );
       if (!isTestingMode && isPausedNow) {
         return resolve(false);
@@ -8439,16 +8448,23 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
     // Safety watchdog: Tự động kết thúc nếu Web Audio API bỏ lỡ sự kiện onended do GC
     const durMs = Math.max(300, Math.ceil(((audioBuffer.duration || 1) / (requestedRate || 1)) * 1000) + 350);
     safetyTimer = setTimeout(finish, durMs);
+    activeVoiceWatchdogTimers.add(safetyTimer);
 
     const isPausedBeforeStart = typeof localStorage !== 'undefined' && (
       localStorage.getItem('avalive_user_paused') === 'true' || 
       localStorage.getItem('avalive_window_capture_paused') === 'true' ||
       localStorage.getItem('avalive_master_live_running') === 'false' ||
-      localStorage.getItem('aidol_is_script_live_running') === 'false'
+      localStorage.getItem('aidol_user_paused_script') === 'true' ||
+      localStorage.getItem('aidol_is_script_live_running') === 'false' ||
+      (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
     );
     if (!isTestingMode && isPausedBeforeStart) {
-      finish();
-      return;
+      if (safetyTimer) {
+        activeVoiceWatchdogTimers.delete(safetyTimer);
+        clearTimeout(safetyTimer);
+        safetyTimer = null;
+      }
+      return resolve(false);
     }
 
     try {
@@ -9172,6 +9188,15 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
                     }));
                   }
                   if (thisSpeechId !== currentSpeechGenerationId) return resolve(false);
+                  const isPausedNow = typeof localStorage !== 'undefined' && (
+                    localStorage.getItem('avalive_user_paused') === 'true' || 
+                    localStorage.getItem('avalive_window_capture_paused') === 'true' ||
+                    localStorage.getItem('avalive_master_live_running') === 'false' ||
+                    localStorage.getItem('aidol_user_paused_script') === 'true' ||
+                    localStorage.getItem('aidol_is_script_live_running') === 'false' ||
+                    (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
+                  );
+                  if (!isTestingMode && isPausedNow) return resolve(false);
                   if (onEnd) onEnd();
                   resolve(true);
                 };
@@ -9230,6 +9255,15 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
           }));
         }
         if (thisSpeechId !== currentSpeechGenerationId) return resolve(false);
+        const isPausedNow = typeof localStorage !== 'undefined' && (
+          localStorage.getItem('avalive_user_paused') === 'true' || 
+          localStorage.getItem('avalive_window_capture_paused') === 'true' ||
+          localStorage.getItem('avalive_master_live_running') === 'false' ||
+          localStorage.getItem('aidol_user_paused_script') === 'true' ||
+          localStorage.getItem('aidol_is_script_live_running') === 'false' ||
+          (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
+        );
+        if (!isTestingMode && isPausedNow) return resolve(false);
         if (onEnd) onEnd();
         resolve(true);
       };

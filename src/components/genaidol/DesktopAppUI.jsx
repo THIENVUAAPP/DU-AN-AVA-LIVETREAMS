@@ -2067,10 +2067,22 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       extraImageLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers || flowSequencerOverlay.extraImageLayers)) || (multiAvatarConfig?.extraImageLayers) || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.extraImageLayers : null) || [],
       multiAvatarExtraLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers || flowSequencerOverlay.extraImageLayers)) || (multiAvatarConfig?.extraImageLayers) || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.extraImageLayers : null) || [],
       syncedAvatars: (flowSequencerOverlay?.syncedAvatars) || (multiAvatarConfig?.avatars) || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.avatars : null) || [],
+      avatarTransforms: flowSequencerOverlay?.avatarTransforms || multiAvatarConfig?.avatarTransforms || null,
       multiAvatarConfig: multiAvatarConfig || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig() : null) || null,
+      backgroundColor: flowSequencerOverlay?.backgroundColor || multiAvatarConfig?.backgroundColor || null,
+      backgroundUrl: flowSequencerOverlay?.backgroundUrl || multiAvatarConfig?.backgroundUrl || null,
+      backgroundTransform: flowSequencerOverlay?.backgroundTransform || multiAvatarConfig?.backgroundTransform || null,
+      backgroundChromaKey: flowSequencerOverlay?.backgroundChromaKey || multiAvatarConfig?.backgroundChromaKey || null,
+      livePinnedProduct: livePinnedProduct || null,
+      pinnedProduct: livePinnedProduct || null,
+      activeSpeakerId: flowSequencerOverlay?.activeSpeakerId || null,
+      stepTitle: flowSequencerOverlay?.stepTitle || null,
+      badgeText: flowSequencerOverlay?.badgeText || null,
+      volume: liveVolume !== undefined ? liveVolume : 1.0,
+      isMuted: isLiveAudioMuted !== undefined ? isLiveAudioMuted : false,
       updatedAt: Date.now()
     };
-  }, [selectedCharacter, customCharacters, userLockedMediaUrl, isVideoPlaying, globalAspectRatio, flowSequencerOverlay, multiAvatarConfig]);
+  }, [selectedCharacter, customCharacters, userLockedMediaUrl, isVideoPlaying, globalAspectRatio, flowSequencerOverlay, multiAvatarConfig, livePinnedProduct, liveVolume, isLiveAudioMuted]);
 
   const handleOpenWindowCapture = () => {
     // 🎯 ĐỘ PHÂN GIẢI CHUẨN CAO 1080P SẮC NÉT (CHO OBS / TIKTOK LIVE STUDIO CHỤP KHÔNG BỊ VỠ NÉT)
@@ -2534,6 +2546,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         }
         setIsVideoPlaying(false);
         try {
+          sessionStorage.setItem('aidol_user_paused_script', 'true');
+          sessionStorage.setItem('aidol_is_script_live_running', 'false');
+          localStorage.setItem('aidol_user_paused_script', 'true');
+          localStorage.setItem('aidol_is_script_live_running', 'false');
+          window.__aidolUserPausedScript = true;
+        } catch (e) {}
+        try {
+          audioPlayerRef.current?.stopScript?.();
+          audioPlayerRef.current?.pause?.();
           stopVoiceAudio();
           clearGlobalSpeechQueue();
         } catch (e) {}
@@ -2564,6 +2585,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         }, socketRef.current);
         showToast('⏸️ Đã tạm dừng phát video và voice', 'info');
       } else {
+        try {
+          sessionStorage.removeItem('aidol_user_paused_script');
+          localStorage.removeItem('aidol_user_paused_script');
+          window.__aidolUserPausedScript = false;
+        } catch (e) {}
         if (vid && vid.src) {
           vid.dataset.userPaused = 'false';
           // Bấm vào giữa màn hình video: BẬT VOICE (unmute) và phát video

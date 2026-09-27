@@ -1230,6 +1230,24 @@ app.get([
       <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);">${overlayTxt}</div>
     </div>
     
+    <!-- LỚP 6: SẢN PHẨM GHIM LIVESTREAM (TIKTOK SHOP / LIVE COMMERCE PINNED PRODUCT) -->
+    <div id="pinnedProductContainer" style="position: absolute; bottom: 20px; left: 14px; right: 14px; z-index: 40; pointer-events: none; display: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
+      <div id="pinnedProductCard" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 16px; background: rgba(15, 23, 42, 0.92); border: 1.5px solid rgba(244, 63, 94, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(244, 63, 94, 0.35);">
+        <img id="pinnedProductImg" src="" alt="Product" style="width: 54px; height: 54px; border-radius: 10px; object-fit: cover; flex-shrink: 0; border: 1px solid rgba(255, 255, 255, 0.2);" />
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span id="pinnedProductBadge" style="padding: 2px 6px; border-radius: 6px; background: linear-gradient(135deg, #e11d48, #f43f5e); color: #fff; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">🔥 DEAL HOT</span>
+            <span id="pinnedProductCode" style="font-size: 10px; color: #94a3b8; font-weight: 700; white-space: nowrap;"></span>
+          </div>
+          <div id="pinnedProductTitle" style="font-size: 13px; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">Tên sản phẩm</div>
+          <div style="display: flex; align-items: baseline; gap: 8px;">
+            <span id="pinnedProductPrice" style="font-size: 15px; font-weight: 900; color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);">0 đ</span>
+            <span id="pinnedProductOldPrice" style="font-size: 11px; color: #94a3b8; text-decoration: line-through; display: none;"></span>
+          </div>
+        </div>
+      </div>
+    </div>
+
     <!-- Live badge is hidden on clean stream feed -->
   </div>
 
@@ -1651,7 +1669,7 @@ app.get([
         }
       }, 500);
 
-      function renderMultiAvatarCharacters(configOrAvatars, activeSpeakerId, isPlayingState) {
+      function renderMultiAvatarCharacters(configOrAvatars, activeSpeakerId, isPlayingState, avatarTransformsMap) {
         const container = document.getElementById('multiAvatarCharacters');
         if (!container) return;
         
@@ -1675,13 +1693,15 @@ app.get([
           const targetVid = isSpeaking && avatar.talkVideo ? avatar.talkVideo : (avatar.idleVideo || avatar.talkVideo || avatar.resolvedVidSrc || avatar.mediaUrl || avatar.videoUrl || avatar.url || avatar.src);
           const resolvedMedia = resolveUrl(targetVid);
 
-          const trans = avatar.transform || {
+          const customTrans = (avatarTransformsMap && (avatarTransformsMap[charId] || avatarTransformsMap[avatar.id] || avatarTransformsMap[avatar.role])) || {};
+          const baseTrans = avatar.transform || {
             x: idx === 0 ? 10 : (idx === 1 ? 55 : (idx === 2 ? 30 : 50)),
             y: 15,
             width: 40,
             height: 70,
             zIndex: 10 + idx
           };
+          const trans = Object.assign({}, baseTrans, customTrans);
           const chromaClass = avatar.chromaKey && avatar.chromaKey.enabled ? (avatar.chromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter') : '';
 
           if (!charEl) {
@@ -1840,6 +1860,7 @@ app.get([
 
       function applyLiveState(data) {
         if (!data) return;
+        const stageEl = document.getElementById('stage');
         const emptyStage = document.getElementById('emptyStageView');
         const multiStage = document.getElementById('multiAvatarStage');
         const multiBg = document.getElementById('multiAvatarBg');
@@ -1850,6 +1871,10 @@ app.get([
         const pipContainer = document.getElementById('pipContainer');
         const pipVideo = document.getElementById('pipVideo');
         const pipImage = document.getElementById('pipImage');
+
+        if (stageEl && data.backgroundColor) {
+          stageEl.style.backgroundColor = data.backgroundColor;
+        }
 
         // 2. Tìm nguồn media nền chính (Background / Main Media)
         const bgUrlCandidate = data.mainMediaUrl || (data.multiAvatarConfig && data.multiAvatarConfig.backgroundUrl) || data.mediaUrl || data.currentMedia || data.eventVideoUrl || data.videoUrl || '';
@@ -1874,7 +1899,8 @@ app.get([
 
         const hasExtraLayers = extraLayersList.length > 0;
         const hasTitle = !!((data.overlayText && data.overlayText.trim()) || (data.title && data.title.trim()) || (data.stepTitle && data.stepTitle.trim()));
-        const hasAnyContent = !!(resolvedMainBg || hasValidAvatars || data.secondaryMediaUrl || data.overlayImage || hasExtraLayers || hasTitle);
+        const hasPinnedProduct = !!(data.livePinnedProduct || data.pinnedProduct);
+        const hasAnyContent = !!(resolvedMainBg || hasValidAvatars || data.secondaryMediaUrl || data.overlayImage || hasExtraLayers || hasTitle || hasPinnedProduct);
 
         // 1. Kiểm tra trạng thái XÓA SẠCH SÂN KHẤU (CLEAR_STAGE / clearMedia)
         if (data.clearMedia === true && !hasAnyContent) {
@@ -1883,6 +1909,8 @@ app.get([
           if (pipContainer) pipContainer.style.display = 'none';
           if (overlayImgEl) overlayImgEl.style.display = 'none';
           if (banner) banner.style.display = 'none';
+          const prodContainer = document.getElementById('pinnedProductContainer');
+          if (prodContainer) prodContainer.style.display = 'none';
           if (vid) {
             try { vid.pause(); vid.removeAttribute('src'); vid.src = ''; vid.load(); } catch(e) {}
             vid.style.display = 'none';
@@ -1896,12 +1924,14 @@ app.get([
           return;
         }
 
-        if (!resolvedMainBg && !hasValidAvatars && !data.secondaryMediaUrl && !data.overlayImage && !hasExtraLayers && !hasTitle) {
+        if (!resolvedMainBg && !hasValidAvatars && !data.secondaryMediaUrl && !data.overlayImage && !hasExtraLayers && !hasTitle && !hasPinnedProduct) {
           if (emptyStage) emptyStage.style.display = 'flex';
           if (multiStage) multiStage.style.display = 'none';
           if (pipContainer) pipContainer.style.display = 'none';
           if (overlayImgEl) overlayImgEl.style.display = 'none';
           if (banner) banner.style.display = 'none';
+          const prodContainer = document.getElementById('pinnedProductContainer');
+          if (prodContainer) prodContainer.style.display = 'none';
           if (vid) {
             try { vid.pause(); vid.removeAttribute('src'); vid.src = ''; vid.load(); } catch(e) {}
             vid.style.display = 'none';
@@ -1969,12 +1999,13 @@ app.get([
         }
 
         // 4. Hiển thị Lớp Multi-Avatar & Extra Layers (Đồng bộ 100% Sân Khấu Chính)
+        const avatarTransformsMap = data.avatarTransforms || (data.multiAvatarConfig && data.multiAvatarConfig.avatarTransforms) || null;
         if (hasValidAvatars || hasExtraLayers) {
           if (multiStage) {
             multiStage.style.display = 'block';
             multiStage.style.background = data.multiAvatarConfig?.backgroundColor || 'transparent';
           }
-          renderMultiAvatarCharacters(avatarsList, data.activeSpeakerId || data.avatarSpeaker, data.isPlaying !== false);
+          renderMultiAvatarCharacters(avatarsList, data.activeSpeakerId || data.avatarSpeaker, data.isPlaying !== false, avatarTransformsMap);
           renderMultiAvatarExtraLayers(extraLayersList);
         } else {
           if (multiStage) multiStage.style.display = 'none';
@@ -2093,7 +2124,66 @@ app.get([
           }
         }
 
-        // 7. Đồng bộ trạng thái Dừng / Phát video chính xác 100%
+        // 7. Đồng bộ Sản Phẩm Ghim TikTok Shop / Live Commerce
+        const prodContainer = document.getElementById('pinnedProductContainer');
+        const prod = data.livePinnedProduct || data.pinnedProduct;
+        if (prodContainer) {
+          if (prod && (prod.title || prod.name || prod.productName)) {
+            const prodImg = document.getElementById('pinnedProductImg');
+            const prodTitle = document.getElementById('pinnedProductTitle');
+            const prodPrice = document.getElementById('pinnedProductPrice');
+            const prodOldPrice = document.getElementById('pinnedProductOldPrice');
+            const prodBadge = document.getElementById('pinnedProductBadge');
+            const prodCode = document.getElementById('pinnedProductCode');
+
+            const imgSrc = prod.image || prod.imageUrl || prod.thumbnail || prod.img || '';
+            if (prodImg) {
+              if (imgSrc) {
+                prodImg.src = resolveUrl(imgSrc);
+                prodImg.style.display = 'block';
+              } else {
+                prodImg.style.display = 'none';
+              }
+            }
+
+            if (prodTitle) {
+              prodTitle.innerText = prod.title || prod.name || prod.productName || 'Sản phẩm đang ghim';
+            }
+
+            if (prodPrice) {
+              const rawPrice = prod.salePrice || prod.price || prod.formattedPrice || prod.currentPrice;
+              prodPrice.innerText = typeof rawPrice === 'number' ? rawPrice.toLocaleString('vi-VN') + ' đ' : (rawPrice || '');
+            }
+
+            if (prodOldPrice) {
+              const rawOld = prod.originalPrice || prod.marketPrice || prod.oldPrice || prod.regularPrice;
+              if (rawOld) {
+                prodOldPrice.innerText = typeof rawOld === 'number' ? rawOld.toLocaleString('vi-VN') + ' đ' : String(rawOld);
+                prodOldPrice.style.display = 'inline';
+              } else {
+                prodOldPrice.style.display = 'none';
+              }
+            }
+
+            if (prodBadge) {
+              const badgeText = prod.dealBadge || prod.discountBadge || prod.badge || prod.tag || (prod.discountPercent ? ('-' + prod.discountPercent + '%') : '🔥 DEAL HOT');
+              prodBadge.innerText = badgeText;
+              prodBadge.style.display = badgeText ? 'inline-block' : 'none';
+            }
+
+            if (prodCode) {
+              const codeText = prod.code || prod.sku || (prod.id ? ('#' + prod.id) : '');
+              prodCode.innerText = codeText;
+              prodCode.style.display = codeText ? 'inline' : 'none';
+            }
+
+            prodContainer.style.display = 'block';
+          } else {
+            prodContainer.style.display = 'none';
+          }
+        }
+
+        // 8. Đồng bộ trạng thái Dừng / Phát video chính xác 100%
         if (data.isPlaying === false || data.videoPlaybackEvent === 'pause') {
           if (vid && !vid.paused) {
             try { vid.pause(); } catch(e) {}
@@ -2550,6 +2640,24 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     <div id="overlayTextBanner" style="position: absolute; left: 4%; top: 5%; width: 92%; z-index: 30; text-align: center; pointer-events: none; display: ${overlayTxt ? 'block' : 'none'};">
       <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);">${overlayTxt}</div>
     </div>
+
+    <!-- LỚP 6: SẢN PHẨM GHIM LIVESTREAM (TIKTOK SHOP / LIVE COMMERCE PINNED PRODUCT) -->
+    <div id="pinnedProductContainer" style="position: absolute; bottom: 20px; left: 14px; right: 14px; z-index: 40; pointer-events: none; display: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
+      <div id="pinnedProductCard" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 16px; background: rgba(15, 23, 42, 0.92); border: 1.5px solid rgba(244, 63, 94, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(244, 63, 94, 0.35);">
+        <img id="pinnedProductImg" src="" alt="Product" style="width: 54px; height: 54px; border-radius: 10px; object-fit: cover; flex-shrink: 0; border: 1px solid rgba(255, 255, 255, 0.2);" />
+        <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
+          <div style="display: flex; align-items: center; gap: 6px;">
+            <span id="pinnedProductBadge" style="padding: 2px 6px; border-radius: 6px; background: linear-gradient(135deg, #e11d48, #f43f5e); color: #fff; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">🔥 DEAL HOT</span>
+            <span id="pinnedProductCode" style="font-size: 10px; color: #94a3b8; font-weight: 700; white-space: nowrap;"></span>
+          </div>
+          <div id="pinnedProductTitle" style="font-size: 13px; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">Tên sản phẩm</div>
+          <div style="display: flex; align-items: baseline; gap: 8px;">
+            <span id="pinnedProductPrice" style="font-size: 15px; font-weight: 900; color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);">0 đ</span>
+            <span id="pinnedProductOldPrice" style="font-size: 11px; color: #94a3b8; text-decoration: line-through; display: none;"></span>
+          </div>
+        </div>
+      </div>
+    </div>
     <div id="badge">🔴 4K 60 FPS TRỰC TIẾP v4.9.58</div>
   </div>
 
@@ -2971,7 +3079,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         }
       });
 
-      function renderMultiAvatarCharacters(configOrAvatars, activeSpeakerId, isPlayingState) {
+      function renderMultiAvatarCharacters(configOrAvatars, activeSpeakerId, isPlayingState, avatarTransformsMap) {
         const container = document.getElementById('multiAvatarCharacters');
         if (!container) return;
         
@@ -2995,13 +3103,15 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           const targetVid = isSpeaking && avatar.talkVideo ? avatar.talkVideo : (avatar.idleVideo || avatar.talkVideo || avatar.resolvedVidSrc || avatar.mediaUrl || avatar.videoUrl || avatar.url || avatar.src);
           const resolvedMedia = resolveUrl(targetVid);
 
-          const trans = avatar.transform || {
+          const customTrans = (avatarTransformsMap && (avatarTransformsMap[charId] || avatarTransformsMap[avatar.id] || avatarTransformsMap[avatar.role])) || {};
+          const baseTrans = avatar.transform || {
             x: idx === 0 ? 10 : (idx === 1 ? 55 : (idx === 2 ? 30 : 50)),
             y: 15,
             width: 40,
             height: 70,
             zIndex: 10 + idx
           };
+          const trans = Object.assign({}, baseTrans, customTrans);
           const chromaClass = avatar.chromaKey && avatar.chromaKey.enabled ? (avatar.chromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter') : '';
 
           if (!charEl) {
@@ -3160,6 +3270,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
 
       function applyLiveState(data) {
         if (!data) return;
+        const stageEl = document.getElementById('stage');
         const emptyStage = document.getElementById('emptyStageView');
         const multiStage = document.getElementById('multiAvatarStage');
         const multiBg = document.getElementById('multiAvatarBg');
@@ -3170,6 +3281,10 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         const pipContainer = document.getElementById('pipContainer');
         const pipVideo = document.getElementById('pipVideo');
         const pipImage = document.getElementById('pipImage');
+
+        if (stageEl && data.backgroundColor) {
+          stageEl.style.backgroundColor = data.backgroundColor;
+        }
 
         // 2. Tìm nguồn media nền chính (Background / Main Media)
         const bgUrlCandidate = data.mainMediaUrl || (data.multiAvatarConfig && data.multiAvatarConfig.backgroundUrl) || data.mediaUrl || data.currentMedia || data.eventVideoUrl || data.videoUrl || '';
@@ -3194,7 +3309,8 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
 
         const hasExtraLayers = extraLayersList.length > 0;
         const hasTitle = !!((data.overlayText && data.overlayText.trim()) || (data.title && data.title.trim()) || (data.stepTitle && data.stepTitle.trim()));
-        const hasAnyContent = !!(resolvedMainBg || hasValidAvatars || data.secondaryMediaUrl || data.overlayImage || hasExtraLayers || hasTitle);
+        const hasPinnedProduct = !!(data.livePinnedProduct || data.pinnedProduct);
+        const hasAnyContent = !!(resolvedMainBg || hasValidAvatars || data.secondaryMediaUrl || data.overlayImage || hasExtraLayers || hasTitle || hasPinnedProduct);
 
         // 1. Kiểm tra trạng thái XÓA TRẮNG SÂN KHẤU (CLEAR_STAGE / clearMedia)
         if (data.clearMedia === true && !hasAnyContent) {
@@ -3203,6 +3319,8 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           if (pipContainer) pipContainer.style.display = 'none';
           if (overlayImgEl) overlayImgEl.style.display = 'none';
           if (banner) banner.style.display = 'none';
+          const prodContainer = document.getElementById('pinnedProductContainer');
+          if (prodContainer) prodContainer.style.display = 'none';
           if (vid) {
             try { vid.pause(); vid.removeAttribute('src'); vid.src = ''; vid.load(); } catch(e) {}
             vid.style.display = 'none';
@@ -3216,12 +3334,14 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           return;
         }
 
-        if (!resolvedMainBg && !hasValidAvatars && !data.secondaryMediaUrl && !data.overlayImage && !hasExtraLayers && !hasTitle) {
+        if (!resolvedMainBg && !hasValidAvatars && !data.secondaryMediaUrl && !data.overlayImage && !hasExtraLayers && !hasTitle && !hasPinnedProduct) {
           if (emptyStage) emptyStage.style.display = 'flex';
           if (multiStage) multiStage.style.display = 'none';
           if (pipContainer) pipContainer.style.display = 'none';
           if (overlayImgEl) overlayImgEl.style.display = 'none';
           if (banner) banner.style.display = 'none';
+          const prodContainer = document.getElementById('pinnedProductContainer');
+          if (prodContainer) prodContainer.style.display = 'none';
           if (vid) {
             try { vid.pause(); vid.removeAttribute('src'); vid.src = ''; vid.load(); } catch(e) {}
             vid.style.display = 'none';
@@ -3288,12 +3408,13 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         }
 
         // 4. Hiển thị Lớp Multi-Avatar & Extra Layers (Đồng bộ 100% Sân Khấu Chính)
+        const avatarTransformsMap = data.avatarTransforms || (data.multiAvatarConfig && data.multiAvatarConfig.avatarTransforms) || null;
         if (hasValidAvatars || hasExtraLayers) {
           if (multiStage) {
             multiStage.style.display = 'block';
             multiStage.style.background = data.multiAvatarConfig?.backgroundColor || 'transparent';
           }
-          renderMultiAvatarCharacters(avatarsList, data.activeSpeakerId || data.avatarSpeaker, data.isPlaying !== false);
+          renderMultiAvatarCharacters(avatarsList, data.activeSpeakerId || data.avatarSpeaker, data.isPlaying !== false, avatarTransformsMap);
           renderMultiAvatarExtraLayers(extraLayersList);
         } else {
           if (multiStage) multiStage.style.display = 'none';
@@ -3412,7 +3533,66 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           }
         }
 
-        // 7. Đồng bộ trạng thái Dừng / Phát video chính xác 100%
+        // 7. Đồng bộ Sản Phẩm Ghim TikTok Shop / Live Commerce
+        const prodContainer = document.getElementById('pinnedProductContainer');
+        const prod = data.livePinnedProduct || data.pinnedProduct;
+        if (prodContainer) {
+          if (prod && (prod.title || prod.name || prod.productName)) {
+            const prodImg = document.getElementById('pinnedProductImg');
+            const prodTitle = document.getElementById('pinnedProductTitle');
+            const prodPrice = document.getElementById('pinnedProductPrice');
+            const prodOldPrice = document.getElementById('pinnedProductOldPrice');
+            const prodBadge = document.getElementById('pinnedProductBadge');
+            const prodCode = document.getElementById('pinnedProductCode');
+
+            const imgSrc = prod.image || prod.imageUrl || prod.thumbnail || prod.img || '';
+            if (prodImg) {
+              if (imgSrc) {
+                prodImg.src = resolveUrl(imgSrc);
+                prodImg.style.display = 'block';
+              } else {
+                prodImg.style.display = 'none';
+              }
+            }
+
+            if (prodTitle) {
+              prodTitle.innerText = prod.title || prod.name || prod.productName || 'Sản phẩm đang ghim';
+            }
+
+            if (prodPrice) {
+              const rawPrice = prod.salePrice || prod.price || prod.formattedPrice || prod.currentPrice;
+              prodPrice.innerText = typeof rawPrice === 'number' ? rawPrice.toLocaleString('vi-VN') + ' đ' : (rawPrice || '');
+            }
+
+            if (prodOldPrice) {
+              const rawOld = prod.originalPrice || prod.marketPrice || prod.oldPrice || prod.regularPrice;
+              if (rawOld) {
+                prodOldPrice.innerText = typeof rawOld === 'number' ? rawOld.toLocaleString('vi-VN') + ' đ' : String(rawOld);
+                prodOldPrice.style.display = 'inline';
+              } else {
+                prodOldPrice.style.display = 'none';
+              }
+            }
+
+            if (prodBadge) {
+              const badgeText = prod.dealBadge || prod.discountBadge || prod.badge || prod.tag || (prod.discountPercent ? ('-' + prod.discountPercent + '%') : '🔥 DEAL HOT');
+              prodBadge.innerText = badgeText;
+              prodBadge.style.display = badgeText ? 'inline-block' : 'none';
+            }
+
+            if (prodCode) {
+              const codeText = prod.code || prod.sku || (prod.id ? ('#' + prod.id) : '');
+              prodCode.innerText = codeText;
+              prodCode.style.display = codeText ? 'inline' : 'none';
+            }
+
+            prodContainer.style.display = 'block';
+          } else {
+            prodContainer.style.display = 'none';
+          }
+        }
+
+        // 8. Đồng bộ trạng thái Dừng / Phát video chính xác 100%
         if (data.videoPlaybackEvent === 'pause' || data.isPlaying === false) {
           isStreamUserPaused = true;
           vid.pause();
@@ -3612,9 +3792,9 @@ let _cachedReleaseUrls = {};
 let _lastReleaseFetchTime = 0;
 async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
   const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
-  const defaultUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${fallbackVer}/${osPrefix}_v${fallbackVer}.zip`;
+  const safeFallbackUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v4.9.54/${osPrefix}_v4.9.54.zip`;
   
-  const cacheKey = `${osPrefix}_${fallbackVer}`;
+  const cacheKey = `${osPrefix}_latest`;
   if (_cachedReleaseUrls[cacheKey] && (Date.now() - _lastReleaseFetchTime < 60000)) {
     return _cachedReleaseUrls[cacheKey];
   }
@@ -3624,20 +3804,39 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
     const headers = { 'User-Agent': 'AvaLive-Download-Agent/1.0', 'Accept': 'application/vnd.github.v3+json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
-    const tagRes = await fetch(`https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/tags/v${fallbackVer}`, { headers });
-    if (tagRes.ok) {
-      const rel = await tagRes.json();
-      const asset = (rel.assets || []).find(a => a.name.startsWith(osPrefix) && a.name.endsWith('.zip'));
-      if (asset && asset.browser_download_url) {
-        _cachedReleaseUrls[cacheKey] = asset.browser_download_url;
-        _lastReleaseFetchTime = Date.now();
-        return asset.browser_download_url;
+    // 1. Thử lấy danh sách Releases mới nhất từ GitHub
+    const relsRes = await fetch('https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases?per_page=10', { headers });
+    if (relsRes.ok) {
+      const releases = await relsRes.json();
+      if (Array.isArray(releases)) {
+        for (const rel of releases) {
+          const asset = (rel.assets || []).find(a => a.name && a.name.startsWith(osPrefix) && a.name.endsWith('.zip'));
+          if (asset && asset.browser_download_url) {
+            _cachedReleaseUrls[cacheKey] = asset.browser_download_url;
+            _lastReleaseFetchTime = Date.now();
+            return asset.browser_download_url;
+          }
+        }
+      }
+    }
+
+    // 2. Thử lấy theo tag fallbackVer cụ thể
+    if (fallbackVer) {
+      const tagRes = await fetch(`https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/tags/v${fallbackVer}`, { headers });
+      if (tagRes.ok) {
+        const rel = await tagRes.json();
+        const asset = (rel.assets || []).find(a => a.name && a.name.startsWith(osPrefix) && a.name.endsWith('.zip'));
+        if (asset && asset.browser_download_url) {
+          _cachedReleaseUrls[cacheKey] = asset.browser_download_url;
+          _lastReleaseFetchTime = Date.now();
+          return asset.browser_download_url;
+        }
       }
     }
   } catch (e) {
     console.warn('[Download] Error resolving GitHub asset URL:', e.message);
   }
-  return defaultUrl;
+  return safeFallbackUrl;
 }
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB

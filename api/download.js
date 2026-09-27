@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     }
 
     // Đọc phiên bản mới nhất từ package.json hoặc fallback version hiện tại
-    let currentVersion = '4.9.76';
+    let currentVersion = '4.9.77';
     try {
       const fs = await import('fs');
       const path = await import('path');
@@ -34,8 +34,29 @@ export default async function handler(req, res) {
     const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
     const targetFileName = `${osPrefix}_v${currentVersion}.zip`;
 
-    // ⚡ LINK TẢI TRỰC TIẾP SIÊU TỐC TỪ GITHUB RELEASES (0ms LATENCY, KHÔNG GẶP RATE LIMIT API)
-    const downloadUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${currentVersion}/${targetFileName}`;
+    let downloadUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v4.9.54/${osPrefix}_v4.9.54.zip`;
+
+    try {
+      const token = process.env.GITHUB_TOKEN || '';
+      const headers = { 'User-Agent': 'AvaLive-Download-Agent/1.0', 'Accept': 'application/vnd.github.v3+json' };
+      if (token) headers['Authorization'] = `Bearer ${token}`;
+
+      const relsRes = await fetch('https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases?per_page=10', { headers });
+      if (relsRes.ok) {
+        const releases = await relsRes.json();
+        if (Array.isArray(releases)) {
+          for (const rel of releases) {
+            const asset = (rel.assets || []).find(a => a.name && a.name.startsWith(osPrefix) && a.name.endsWith('.zip'));
+            if (asset && asset.browser_download_url) {
+              downloadUrl = asset.browser_download_url;
+              break;
+            }
+          }
+        }
+      }
+    } catch (e) {
+      console.warn('API releases fetch warning:', e.message);
+    }
 
     // Redirect trực tiếp tới asset stream với Header ép tải file
     res.setHeader('Location', downloadUrl);
