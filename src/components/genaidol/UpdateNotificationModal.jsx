@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.56';
+export const APP_VERSION = '4.9.57';
 export const RELEASE_DATE = '27/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.57 - Nâng Cấp Chạy Tự Động Kịch Bản Demo & Khóa Giữ Nhân Vật Sân Khấu Chính',
+    description: '1. Nâng Cấp Bộ Điều Phối Chạy Demo Kịch Bản (Livestream Flow Sequencer): Tối ưu toàn diện nút ▶️ CHẠY DEMO / ⏹️ DỪNG DEMO, đảm bảo tự động đọc giọng AI theo từng câu thoại, đồng bộ từng lớp Video/Ảnh/Tiêu Đề và tự động chuyển bước mượt mà (Bước 1 -> Bước 2 -> Bước 3...) có watchdog an toàn 100% không bao giờ bị dừng hay treo giữa chừng. 2. Khóa Giữ & Phát Nhân Vật Đang Chọn Trên Sân Khấu Chính: Khi người dùng tải lên hoặc bấm chọn ô nhân vật bất kỳ, video/hình ảnh lập tức chiếm giữ Sân Khấu Chính và phát lặp liền mạch 24/24 cho đến khi người dùng chủ động đổi sang nhân vật khác hoặc bấm nút xóa (X), không tự ý nhảy đổi ô nhân vật khi hết video. 3. Đồng Bộ Đa Tầng 100% Cho Window Capture OBS & TikTok Live Studio: Toàn bộ lớp video, video phụ PiP, avatar nhân vật, banner ảnh và tiêu đề luôn được truyền tải sắc nét 60 FPS theo đúng tọa độ.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.56 - Trích Xuất Sản Phẩm Thật TikTok Shop & Triệt Tiêu 100% Video Chạy Nền Ẩn',
     description: '1. Đồng Bộ & Ghim Sản Phẩm Thật TikTok Shop (shop.tiktok.com): Tự động trích xuất trực tiếp sản phẩm thật từ link shop người dùng cung cấp (Title, Giá, Hình ảnh, Tồn kho thật từ Open Graph & Metadata), tuyệt đối không dùng sản phẩm ảo/demo. 2. Triệt Tiêu Hoàn Toàn Video Chạy Nền Ẩn (Ghost Background Video): Loại bỏ triệt để mọi logic tự động phục hồi video nền cũ trong backend và frontend. Khi người dùng xóa hết video trên Sân Khấu Chính, toàn bộ Window Capture và Link TikTok Live Studio lập tức xóa sạch 100% và biến mất ngay lập tức không để lại bất kỳ dư âm nào. 3. Bảo Toàn Ô Nhân Vật & Tự Động Phát Khi Chọn: Các video tải lên ô nhân vật được lưu giữ nguyên vẹn và phát chuẩn xác trên Sân Khấu Chính khi chọn, chỉ biến mất khi người dùng chủ động bấm nút xóa (X).'

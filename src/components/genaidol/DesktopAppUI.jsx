@@ -4322,8 +4322,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         try {
           await saveCharacterToIDB(tempChar);
           localStorage.setItem('avalive_selected_char', newCharId);
+          localStorage.removeItem('avalive_master_sync_active');
+          localStorage.removeItem('avalive_sequencer_overlay');
         } catch (e) {}
 
+        setIsMasterStageSynced(false);
+        setFlowSequencerOverlay(null);
         setCustomCharacters(prev => {
           const next = [...prev, tempChar];
           try { localStorage.setItem('avalive_custom_characters', JSON.stringify(next)); } catch (e) {}
@@ -5553,19 +5557,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   return;
                 }
 
-                // Tự động chuyển bài kế tiếp trong playlist nếu có nhiều video, hoặc lặp 0ms liền mạch (24/24)
-                const validVideos = Array.isArray(customCharacters) 
-                  ? customCharacters.filter(c => Boolean(c.url || c.mediaUrl)) 
-                  : [];
-                if (validVideos.length > 1) {
-                  const currentIndex = validVideos.findIndex(c => c.id === selectedCharacter);
-                  const nextIndex = (currentIndex >= 0 && currentIndex < validVideos.length - 1) ? currentIndex + 1 : 0;
-                  const nextChar = validVideos[nextIndex];
-                  if (nextChar) {
-                    handleSelectCharacter(nextChar.id);
-                    return;
-                  }
-                }
+                // 🔄 Lặp video nhân vật đang chọn liền mạch 0ms (24/24), giữ nguyên nhân vật cho đến khi người dùng chủ động đổi hoặc xóa
                 try {
                   e.currentTarget.currentTime = 0;
                   e.currentTarget.play().catch(() => {});

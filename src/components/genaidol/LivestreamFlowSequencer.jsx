@@ -270,7 +270,7 @@ export default function LivestreamFlowSequencer() {
       try {
         bc = new BroadcastChannel('avalive_master_live_stream');
         bc.onmessage = (e) => {
-          if (e.data?.type === 'EMERGENCY_STOP_ALL' || (e.data?.type === 'GLOBAL_PLAYBACK_CHANGE' && !e.data.isPlaying)) {
+          if (e.data?.type === 'EMERGENCY_STOP_ALL') {
             handleEmergencyStop();
           }
         };
@@ -314,6 +314,7 @@ export default function LivestreamFlowSequencer() {
   const activePresetRef = useRef(activePreset);
   activePresetRef.current = activePreset;
   const startStepRef = useRef(null);
+  const stepWatchdogRef = useRef(null);
   // Refs cho undo/redo stack để tránh stale closure trong useCallback
   const undoStackRef = useRef([]);
   const redoStackRef = useRef([]);
@@ -903,6 +904,10 @@ export default function LivestreamFlowSequencer() {
 
   // Khởi động hoặc chuyển bước trong chuỗi kịch bản (chỉ đọc kịch bản khi được yêu cầu, Master Voice BẬT và Bước BẬT Voice)
   const startStep = (index, shouldPlay = false) => {
+    if (stepWatchdogRef.current) {
+      clearTimeout(stepWatchdogRef.current);
+      stepWatchdogRef.current = null;
+    }
     startStepRef.current = startStep;
     const preset = activePresetRef.current || activePreset;
     if (!preset || !preset.steps || preset.steps.length === 0) {
@@ -918,14 +923,35 @@ export default function LivestreamFlowSequencer() {
     const wordsCount = (step.scriptText || '').trim().split(/\s+/).filter(Boolean).length;
     const estimatedSeconds = isAutoScript 
       ? Math.max(5, Math.ceil(wordsCount / 2.6)) 
-      : (step.durationSeconds || 60);
+      : (step.durationSeconds || 10);
 
     setSecondsRemaining(estimatedSeconds);
     syncStepToServer(step, safeIndex, shouldPlay);
 
-    // 🎙️ CHỈ PHÁT GIỌNG ĐỌC KHI ĐƯỢC PHÉP, MASTER VOICE BẬT VÀ BƯỚC ĐÓ BẬT VOICE
+    const advanceNext = () => {
+      if (stepWatchdogRef.current) {
+        clearTimeout(stepWatchdogRef.current);
+        stepWatchdogRef.current = null;
+      }
+      const currentPres = activePresetRef.current || preset;
+      const nextIndex = safeIndex + 1;
+      const runStep = startStepRef.current || startStep;
+      if (nextIndex < currentPres.steps.length) {
+        runStep(nextIndex, true);
+      } else if (currentPres.loop !== false) {
+        runStep(0, true);
+      } else {
+        isPlayingFlowRef.current = false;
+        setIsPlayingFlow(false);
+        toast.success('🎉 Đã hoàn thành kịch bản!');
+      }
+    };
+
+    // 🎙️ PHÁT GIỌNG ĐỌC KHI ĐƯỢC PHÉP, MASTER VOICE BẬT VÀ BƯỚC ĐÓ BẬT VOICE
     const isStepVoiceOn = step.voiceEnabled !== false;
-    if (shouldPlay && isMasterVoiceEnabled && isStepVoiceOn && step.scriptText && step.scriptText.trim()) {
+    const hasScriptText = !!(step.scriptText && step.scriptText.trim());
+
+    if (shouldPlay && isMasterVoiceEnabled && isStepVoiceOn && hasScriptText) {
       const effectiveVoiceId = (!step.voiceId || step.voiceId === 'brain_auto')
         ? getBrainVoiceForSpeaker(step.avatarSpeaker)
         : step.voiceId;
@@ -935,36 +961,36 @@ export default function LivestreamFlowSequencer() {
       setSpeakingStepId(step.id);
       setIsSpeakingPreview(true);
 
-      previewVoiceAudio(effectiveVoiceId, step.scriptText.trim(), () => {
+      let hasAdvanced = false;
+      const onSpeechFinished = () => {
+        if (hasAdvanced) return;
+        hasAdvanced = true;
         setSpeakingStepId(null);
         setIsSpeakingPreview(false);
 
-        // 🎙️ ĐỌC KỊCH BẢN LIÊN TỤC XUYÊN SUỐT: Tự động chuyển ngay sang bước tiếp theo khi đọc xong (0ms delay)
-        // Chỉ dừng nghỉ khi người dùng cài đặt dừng nghỉ (step.pauseSeconds > 0), bình thường đọc liên tục 100%!
         const pauseDelay = (typeof step.pauseSeconds === 'number' && step.pauseSeconds > 0)
           ? step.pauseSeconds * 1000
           : 0;
 
-        const advanceNext = () => {
-          const currentPres = activePresetRef.current || preset;
-          const nextIndex = safeIndex + 1;
-          const runStep = startStepRef.current || startStep;
-          if (nextIndex < currentPres.steps.length) {
-            runStep(nextIndex, true);
-          } else if (currentPres.loop !== false) {
-            runStep(0, true);
-          } else {
-            setIsPlayingFlow(false);
-            toast.success('🎉 Đã đọc xong toàn bộ kịch bản!');
-          }
-        };
-
         if (pauseDelay > 0) {
-          setTimeout(advanceNext, pauseDelay);
+          setTimeout(() => {
+            if (isPlayingFlowRef.current) advanceNext();
+          }, pauseDelay);
         } else {
           advanceNext();
         }
-      }, { 
+      };
+
+      // Watchdog timeout an toàn chống treo: nếu TTS không báo kết thúc, tự chuyển bước sau estimatedSeconds + 4s
+      const watchdogMs = Math.max(5000, (estimatedSeconds + 4) * 1000);
+      stepWatchdogRef.current = setTimeout(() => {
+        if (!hasAdvanced && isPlayingFlowRef.current) {
+          console.warn('[Sequencer] Speech watchdog triggered -> auto advancing next step');
+          onSpeechFinished();
+        }
+      }, watchdogMs);
+
+      previewVoiceAudio(effectiveVoiceId, step.scriptText.trim(), onSpeechFinished, { 
         priority: true, 
         isTest: true, 
         volume: 1.0, 
@@ -975,10 +1001,20 @@ export default function LivestreamFlowSequencer() {
       stopVoiceAudio();
       setSpeakingStepId(null);
       setIsSpeakingPreview(false);
+
+      if (shouldPlay) {
+        // Chế độ không lời thoại hoặc Master Voice tắt: chạy hết thời lượng bước rồi tự động chuyển bước
+        const stepTimeMs = Math.max(3000, estimatedSeconds * 1000);
+        stepWatchdogRef.current = setTimeout(() => {
+          if (isPlayingFlowRef.current) {
+            advanceNext();
+          }
+        }, stepTimeMs);
+      }
     }
   };
 
-  // Timer điều phối chuỗi phân đoạn tự động
+  // Timer điều phối chuỗi phân đoạn tự động hiển thị trực quan
   useEffect(() => {
     if (!isPlayingFlow) {
       if (timerRef.current) clearInterval(timerRef.current);
@@ -986,45 +1022,22 @@ export default function LivestreamFlowSequencer() {
     }
 
     timerRef.current = setInterval(() => {
-      setSecondsRemaining(prev => {
-        const curStep = activePreset?.steps?.[currentStepIndex];
-        const isVoiceDriven = isSpeakingPreview || (curStep?.voiceEnabled !== false && curStep?.scriptText && curStep?.scriptText.trim());
-
-        // Nếu bước hiện tại đang có giọng đọc AI điều phối:
-        // Đếm ngược trực quan hiển thị thời gian, nhưng GIỮ Ở 1s và TUYỆT ĐỐI KHÔNG TỰ TIỆN GỌI startStep!
-        // Duy nhất previewVoiceAudio.onEnd sẽ điều phối chuyển bước khi đọc xong để không bao giờ bị ngắt quãng!
-        if (isVoiceDriven) {
-          return prev > 1 ? prev - 1 : 1;
-        }
-
-        if (prev <= 1) {
-          const nextIndex = currentStepIndex + 1;
-          const currentPres = activePresetRef.current || activePreset;
-          const runStep = startStepRef.current || startStep;
-          if (nextIndex < currentPres.steps.length) {
-            runStep(nextIndex, true);
-          } else {
-            if (currentPres.loop !== false) {
-              runStep(0, true);
-            } else {
-              setIsPlayingFlow(false);
-              toast.success('🎉 Đã hoàn thành kịch bản!');
-            }
-          }
-          return 0;
-        }
-        return prev - 1;
-      });
+      setSecondsRemaining(prev => (prev > 0 ? prev - 1 : 0));
     }, 1000);
 
     return () => {
       if (timerRef.current) clearInterval(timerRef.current);
     };
-  }, [isPlayingFlow, currentStepIndex, activePreset, isSpeakingPreview]);
+  }, [isPlayingFlow, currentStepIndex]);
 
-  // 🛑 TẠM DỪNG CHẠY LIVE
+  // 🛑 TẠM DỪNG CHẠY LIVE / DEMO
   const handleStopFlow = () => {
+    isPlayingFlowRef.current = false;
     setIsPlayingFlow(false);
+    if (stepWatchdogRef.current) {
+      clearTimeout(stepWatchdogRef.current);
+      stepWatchdogRef.current = null;
+    }
     stopVoiceAudio();
     setIsSpeakingPreview(false);
     setSpeakingStepId(null);
@@ -1032,7 +1045,7 @@ export default function LivestreamFlowSequencer() {
     toast.info('⏹️ Đã tạm dừng kịch bản & tắt toàn bộ âm thanh');
   };
 
-  // ▶️ BẮT ĐẦU CHẠY LIVE
+  // ▶️ BẮT ĐẦU CHẠY LIVE / DEMO
   const handleStartFlow = () => {
     try {
       let preset = activePresetRef.current || activePreset;
@@ -1045,6 +1058,7 @@ export default function LivestreamFlowSequencer() {
           return;
         }
       }
+      isPlayingFlowRef.current = true;
       setIsPlayingFlow(true);
       startStep(currentStepIndex, true);
       toast.success(`🎬 Bắt đầu chạy kịch bản: ${preset.name || 'Mặc định'}`);
@@ -2755,14 +2769,15 @@ export default function LivestreamFlowSequencer() {
                 handleStartFlow();
               }
             }}
-            className={`px-3 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md cursor-pointer ${
+            className={`px-3.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md cursor-pointer border ${
               isPlayingFlow 
-                ? 'bg-rose-600 hover:bg-rose-500 text-white animate-pulse' 
-                : 'bg-gradient-to-r from-emerald-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white'
+                ? 'bg-rose-600 hover:bg-rose-500 text-white border-rose-400 animate-pulse shadow-[0_0_15px_rgba(225,29,72,0.6)]' 
+                : 'bg-gradient-to-r from-emerald-600 via-teal-600 to-green-600 hover:from-emerald-500 hover:to-green-500 text-white border-emerald-400/80 shadow-[0_0_12px_rgba(16,185,129,0.4)]'
             }`}
+            title={isPlayingFlow ? 'Bấm để dừng kịch bản demo' : 'Bấm để tự động chạy demo chuyển bước, lời thoại và kịch bản'}
           >
             {isPlayingFlow ? <Square size={13} className="fill-white" /> : <Play size={13} className="fill-white" />}
-            <span>{isPlayingFlow ? 'DỪNG' : 'CHẠY TEST'}</span>
+            <span>{isPlayingFlow ? '⏹️ DỪNG DEMO' : '▶️ CHẠY DEMO'}</span>
           </button>
 
           <div className="hidden sm:flex items-center gap-1 bg-slate-800/90 px-1.5 py-0.5 rounded-lg border border-slate-700">
