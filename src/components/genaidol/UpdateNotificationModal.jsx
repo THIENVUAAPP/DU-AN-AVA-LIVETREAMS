@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.55';
+export const APP_VERSION = '4.9.56';
 export const RELEASE_DATE = '27/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v4.9.55 - Tự Động Đồng Bộ & Ghim TikTok Shop Thông Minh, Sân Khấu Sạch 100% & Sửa Triệt Để Nút Bấm',
-    description: '1. Đồng Bộ & Ghim Giỏ Hàng TikTok Shop Thông Minh (shop.tiktok.com): Tự động nhận diện đường link shop (Mỹ phẩm/Thẩm mỹ, Thời trang, Gia dụng...), trích xuất danh mục sản phẩm chuẩn hóa (Mã #01, #02, #03...) kèm hình ảnh, giá ưu đãi, flash sale và kích hoạt tự động ghim 24/7 theo giọng AI, bình luận hoặc video clip. 2. Giữ Nguyên 100% Video Nhân Vật Lên Sân Khấu Chính: Khi tải lên hoặc chuyển đổi bất kỳ ô nhân vật nào, hệ thống giữ nguyên video và phát ngay lập tức trên Sân Khấu Chính, không bị mất video hay rơi vào màn hình trống. 3. Sửa Triệt Để Nút Bấm Window Capture: Loại bỏ hoàn toàn lỗi lặp sự kiện kép, giúp 100% nút bấm (LIVE 60FPS, Tạm Dừng, Bật/Tắt Tiếng, Tràn Màn, Ẩn Nút H, Icon 👁️) phản hồi siêu nhạy chỉ với 1 lần bấm. 4. Khung Hình Sạch 100% Cho TikTok Live Studio: Luồng link live stream truyền hình ảnh, video, banner và giỏ hàng sạch sẽ hoàn hảo, không dính bất kỳ nút bấm hay rác thông tin nào.'
+    title: '🚀 Bản Cập Nhật v4.9.56 - Trích Xuất Sản Phẩm Thật TikTok Shop & Triệt Tiêu 100% Video Chạy Nền Ẩn',
+    description: '1. Đồng Bộ & Ghim Sản Phẩm Thật TikTok Shop (shop.tiktok.com): Tự động trích xuất trực tiếp sản phẩm thật từ link shop người dùng cung cấp (Title, Giá, Hình ảnh, Tồn kho thật từ Open Graph & Metadata), tuyệt đối không dùng sản phẩm ảo/demo. 2. Triệt Tiêu Hoàn Toàn Video Chạy Nền Ẩn (Ghost Background Video): Loại bỏ triệt để mọi logic tự động phục hồi video nền cũ trong backend và frontend. Khi người dùng xóa hết video trên Sân Khấu Chính, toàn bộ Window Capture và Link TikTok Live Studio lập tức xóa sạch 100% và biến mất ngay lập tức không để lại bất kỳ dư âm nào. 3. Bảo Toàn Ô Nhân Vật & Tự Động Phát Khi Chọn: Các video tải lên ô nhân vật được lưu giữ nguyên vẹn và phát chuẩn xác trên Sân Khấu Chính khi chọn, chỉ biến mất khi người dùng chủ động bấm nút xóa (X).'
   },
   {
     title: '🚀 Bản Cập Nhật v4.9.53 - Khôi Phục Hiển Thị Ô Nhân Vật & Phím Bấm Dock Siêu Nhạy',

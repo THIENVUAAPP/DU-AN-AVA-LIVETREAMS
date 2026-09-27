@@ -2077,10 +2077,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       } catch (e) {}
     }
 
-    // 6.5. Tự động fallback sang video upload gần nhất trên server nếu chưa có URL
-    if (!candidateUrl) {
-      candidateUrl = '/uploads/media-1789044811424-233037063.mp4';
-    }
+    // Không fallback video chạy nền nếu người dùng chưa chọn hoặc đã xóa sạch video
 
     // 7. Chuẩn hoá tuyệt đối URL cho HTTPS Overlay (TikTok Live Studio / OBS Browser Source)
     if (typeof candidateUrl === 'string') {

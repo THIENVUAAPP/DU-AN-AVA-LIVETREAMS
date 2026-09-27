@@ -965,15 +965,9 @@ app.get([
       }
     }
   }
-  // ⚡ FALLBACK TỰ ĐỘNG: Nếu chưa có video nào đang phát hoặc file không có trên đĩa, lấy video tải lên mới nhất để TikTok Live Studio KHÔNG BAO GIỜ bị kẹt xoay vòng vòng
+  // Không sử dụng video chạy nền / fallback ngầm khi người dùng đã xóa hết video trên sân khấu chính
   if (!existsOnDisk) {
-    const latestUpload = getLatestUploadMediaUrl();
-    if (latestUpload) {
-      existsOnDisk = true;
-      vParam = latestUpload;
-    } else {
-      vParam = '';
-    }
+    vParam = '';
   }
 
   const secMedia = (currentMasterLiveState && currentMasterLiveState.secondaryMediaUrl) || '';
@@ -2119,15 +2113,9 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       }
     }
   }
-  // ⚡ FALLBACK TỰ ĐỘNG: Lấy video tải lên mới nhất
+  // Không sử dụng video chạy nền / fallback ngầm khi người dùng đã xóa hết video trên sân khấu chính
   if (!existsOnDisk) {
-    const latestUpload = getLatestUploadMediaUrl();
-    if (latestUpload) {
-      existsOnDisk = true;
-      vParam = latestUpload;
-    } else {
-      vParam = '';
-    }
+    vParam = '';
   }
   const soundParam = req.query.sound !== '0';
   const fitParam = req.query.fit || 'cover';
@@ -4662,162 +4650,89 @@ app.get('/api/tiktok-shop/pinned', (req, res) => {
   });
 });
 
-app.post('/api/tiktok-shop/sync', (req, res) => {
+app.post('/api/tiktok-shop/sync', async (req, res) => {
   const { storeUrl, sellerCenterUrl, rawProducts } = req.body || {};
-  let products = Array.isArray(rawProducts) ? rawProducts : [];
-  const targetUrl = (storeUrl || sellerCenterUrl || 'https://shop.tiktok.com').toLowerCase();
+  let products = Array.isArray(rawProducts) ? rawProducts.filter(p => p && (p.name || p.productName)) : [];
+  const targetUrl = (storeUrl || sellerCenterUrl || '').trim();
   
-  if (products.length === 0) {
-    const isBeautyOrCosmetics = /tham-my|thẩm mỹ|tham_my|beauty|skincare|cosmetics|mỹ phẩm|my pham|son|serum|kem|spa|chăm sóc da/i.test(targetUrl);
-    const isFashion = /thoi-trang|thời trang|fashion|clothes|ao|quan|vay|dam|túi|giay/i.test(targetUrl);
-    const isTech = /cong-nghe|dien-tu|gadget|phone|tai nghe|loa|smart/i.test(targetUrl);
+  if (products.length === 0 && targetUrl && (targetUrl.startsWith('http://') || targetUrl.startsWith('https://'))) {
+    try {
+      const response = await fetch(targetUrl, {
+        headers: {
+          'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/122.0.0.0 Safari/537.36',
+          'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,image/webp,*/*;q=0.8',
+          'Accept-Language': 'vi,en-US;q=0.9,en;q=0.8'
+        },
+        signal: AbortSignal.timeout(5000)
+      });
+      const html = await response.text();
+      
+      let realTitle = '';
+      let realImage = '';
+      let realPrice = '';
+      let realDescription = '';
 
-    if (isBeautyOrCosmetics) {
-      products = [
-        {
-          id: 1,
-          name: 'Mã #01: Serum Phục Hồi B5 + HA Căng Bóng Da Đa Tầng 30ml',
-          price: '289.000đ',
-          oldPrice: '550.000đ',
-          badge: 'BÁN CHẠY #1 🔥',
-          keywords: 'mã 1;sp1;mua 1;chốt 1;serum;căng bóng;phục hồi;ha;b5',
-          image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=400&q=80',
-          stock: 120,
-          storeUrl: storeUrl || 'https://shop.tiktok.com'
-        },
-        {
-          id: 2,
-          name: 'Mã #02: Kem Chống Nắng Phổ Rộng Nâng Tông Kiềm Dầu 50g',
-          price: '199.000đ',
-          oldPrice: '380.000đ',
-          badge: 'FLASH SALE ⚡',
-          keywords: 'mã 2;sp2;mua 2;chốt 2;kem chống nắng;chong nang;nâng tông;kiềm dầu',
-          image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=400&q=80',
-          stock: 95,
-          storeUrl: storeUrl || 'https://shop.tiktok.com'
-        },
-        {
-          id: 3,
-          name: 'Mã #03: Son Kem Lì Khóa Màu Mịn Môi Không Trôi 24H',
-          price: '149.000đ',
-          oldPrice: '299.000đ',
-          badge: 'HOT DEAL 🔥',
-          keywords: 'mã 3;sp3;mua 3;chốt 3;son;son kem;son lì;đỏ cam;đỏ đất;khóa màu',
-          image: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=400&q=80',
-          stock: 150,
-          storeUrl: storeUrl || 'https://shop.tiktok.com'
-        },
-        {
-          id: 4,
-          name: 'Mã #04: Nước Tẩy Trang Micellar Dịu Nhẹ Không Cồn 500ml',
-          price: '179.000đ',
-          oldPrice: '320.000đ',
-          badge: 'CHÍNH HÃNG 👑',
-          keywords: 'mã 4;sp4;mua 4;chốt 4;tẩy trang;tay trang;micellar;dịu nhẹ;500ml',
-          image: 'https://images.unsplash.com/photo-1556228722-d0b5b0340b07?auto=format&fit=crop&w=400&q=80',
-          stock: 80,
-          storeUrl: storeUrl || 'https://shop.tiktok.com'
-        },
-        {
-          id: 5,
-          name: 'Mã #05: Bộ Kem Dưỡng Tái Sinh Trẻ Hóa Da Chuyên Sâu Ban Đêm',
-          price: '389.000đ',
-          oldPrice: '750.000đ',
-          badge: 'CAO CẤP ⭐',
-          keywords: 'mã 5;sp5;mua 5;chốt 5;kem dưỡng;ban đêm;trẻ hóa;tái sinh;trắng da',
-          image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=400&q=80',
-          stock: 45,
-          storeUrl: storeUrl || 'https://shop.tiktok.com'
+      // 1. Trích xuất Open Graph tags thật
+      const ogTitleMatch = html.match(/<meta\s+property=["']og:title["']\s+content=["']([^"']+)["']/i) || html.match(/<meta\s+name=["']twitter:title["']\s+content=["']([^"']+)["']/i);
+      if (ogTitleMatch && ogTitleMatch[1]) realTitle = ogTitleMatch[1].trim();
+
+      const ogImageMatch = html.match(/<meta\s+property=["']og:image["']\s+content=["']([^"']+)["']/i) || html.match(/<meta\s+name=["']twitter:image["']\s+content=["']([^"']+)["']/i);
+      if (ogImageMatch && ogImageMatch[1]) realImage = ogImageMatch[1].trim();
+
+      const ogDescMatch = html.match(/<meta\s+property=["']og:description["']\s+content=["']([^"']+)["']/i) || html.match(/<meta\s+name=["']description["']\s+content=["']([^"']+)["']/i);
+      if (ogDescMatch && ogDescMatch[1]) realDescription = ogDescMatch[1].trim();
+
+      const ogPriceMatch = html.match(/<meta\s+property=["'](?:product:price:amount|og:price:amount)["']\s+content=["']([^"']+)["']/i);
+      if (ogPriceMatch && ogPriceMatch[1]) realPrice = ogPriceMatch[1].trim();
+
+      // 2. Trích xuất Title từ thẻ <title> nếu chưa có
+      if (!realTitle) {
+        const titleTagMatch = html.match(/<title>([^<]+)<\/title>/i);
+        if (titleTagMatch && titleTagMatch[1]) {
+          realTitle = titleTagMatch[1].replace(/\|\s*TikTok.*$/i, '').replace(/-\s*TikTok.*$/i, '').trim();
         }
-      ];
-    } else if (isFashion) {
-      products = [
-        {
-          id: 1,
-          name: 'Mã #01: Áo Thun Cotton Compact 100% Co Giãn 4 Chiều Cao Cấp',
-          price: '199.000đ',
-          oldPrice: '350.000đ',
-          badge: 'GIẢM 50% 🔥',
-          keywords: 'mã 1;sp1;mua 1;chốt 1;áo thun;ao thun;cotton;size m;size l',
-          image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=400&q=80',
-          stock: 88,
-          storeUrl: storeUrl || 'https://shop.tiktok.com'
-        },
-        {
-          id: 2,
-          name: 'Mã #02: Đầm Lụa Thiết Kế Dáng Xòe Sang Trọng Tôn Dáng',
-          price: '349.000đ',
-          oldPrice: '690.000đ',
-          badge: 'FLASH SALE ⚡',
-          keywords: 'mã 2;sp2;mua 2;chốt 2;đầm;dam;váy;vay;lụa;sang trọng',
-          image: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=400&q=80',
-          stock: 52,
-          storeUrl: storeUrl || 'https://shop.tiktok.com'
-        },
-        {
-          id: 3,
-          name: 'Mã #03: Quần Jean Ống Suông Nữ Hack Dáng Vải Dày Dặn',
-          price: '259.000đ',
-          oldPrice: '480.000đ',
-          badge: 'HOT DEAL 🔥',
-          keywords: 'mã 3;sp3;mua 3;chốt 3;quần jean;quan jean;ống suông;hack dáng',
-          image: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=400&q=80',
-          stock: 65,
-          storeUrl: storeUrl || 'https://shop.tiktok.com'
+      }
+
+      // 3. Trích xuất JSON-LD Schema nếu có
+      const jsonLdMatches = html.match(/<script\s+type=["']application\/ld\+json["']>([\s\S]*?)<\/script>/gi);
+      if (jsonLdMatches) {
+        for (const block of jsonLdMatches) {
+          try {
+            const rawJson = block.replace(/<\/?script[^>]*>/gi, '').trim();
+            const parsed = JSON.parse(rawJson);
+            if (parsed['@type'] === 'Product' || parsed.name) {
+              if (!realTitle && parsed.name) realTitle = parsed.name;
+              if (!realImage && parsed.image) realImage = Array.isArray(parsed.image) ? parsed.image[0] : parsed.image;
+              if (!realPrice && parsed.offers) {
+                const off = Array.isArray(parsed.offers) ? parsed.offers[0] : parsed.offers;
+                if (off && off.price) realPrice = `${off.price} ${off.priceCurrency || '₫'}`;
+              }
+            }
+          } catch(err) {}
         }
-      ];
-    } else {
-      products = [
-        {
-          id: 1,
-          name: 'Mã #01: Áo Thun Cotton Compact 100% Co Giãn 4 Chiều Cao Cấp',
-          price: '199.000đ',
-          oldPrice: '350.000đ',
-          badge: 'GIẢM 50% 🔥',
-          keywords: 'mã 1;sp1;mua 1;chốt 1;áo thun;cotton',
-          image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=400&q=80',
-          stock: 88,
-          storeUrl: storeUrl || 'https://shop.tiktok.com'
-        },
-        {
-          id: 2,
-          name: 'Mã #02: Serum Tinh Chất Căng Bóng Phục Hồi Da 30ml',
-          price: '299.000đ',
-          oldPrice: '599.000đ',
-          badge: 'BÁN CHẠY 👑',
-          keywords: 'mã 2;sp2;mua 2;chốt 2;serum;căng bóng;phục hồi',
-          image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=400&q=80',
-          stock: 120,
-          storeUrl: storeUrl || 'https://shop.tiktok.com'
-        },
-        {
-          id: 3,
-          name: 'Mã #03: Set Son Kem Lì Mịn Môi Không Lem Không Trôi 24H',
-          price: '149.000đ',
-          oldPrice: '299.000đ',
-          badge: 'FLASH SALE ⚡',
-          keywords: 'mã 3;sp3;mua 3;chốt 3;son;son kem;son lì',
-          image: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=400&q=80',
-          stock: 95,
-          storeUrl: storeUrl || 'https://shop.tiktok.com'
-        },
-        {
-          id: 4,
-          name: 'Mã #04: Máy Hút Bụi Cầm Tay Không Dây Đa Năng Thông Minh',
-          price: '450.000đ',
-          oldPrice: '890.000đ',
-          badge: 'BẢO HÀNH 12T 🛡️',
-          keywords: 'mã 4;sp4;mua 4;chốt 4;máy hút bụi;gia dụng',
-          image: 'https://images.unsplash.com/photo-1558317374-067fb5f30001?auto=format&fit=crop&w=400&q=80',
-          stock: 40,
-          storeUrl: storeUrl || 'https://shop.tiktok.com'
-        }
-      ];
+      }
+
+      if (realTitle) {
+        products.push({
+          id: Date.now(),
+          name: realTitle,
+          productName: realTitle,
+          price: realPrice || 'Giá Ưu Đãi Trực Tiếp',
+          oldPrice: '',
+          badge: 'SẢN PHẨM THẬT TỪ SHOP 🛍️',
+          keywords: realTitle.toLowerCase().split(/\s+/).slice(0, 5).join(';'),
+          image: realImage || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80',
+          stock: 99,
+          storeUrl: targetUrl
+        });
+      }
+    } catch (fetchErr) {
+      console.warn('[TikTok Shop Sync] Không thể kết nối trực tiếp đến shop URL (Cần vượt bảo vệ hoặc người dùng nhập sản phẩm thật):', fetchErr.message);
     }
   }
 
-  // Tự động ghim ngay sản phẩm đầu tiên khi đồng bộ nếu chưa có sản phẩm nào được ghim
-  if (products.length > 0 && !currentMasterLiveState.pinnedProduct) {
+  // Tự động ghim ngay sản phẩm đầu tiên khi đồng bộ nếu có sản phẩm thật
+  if (products.length > 0) {
     currentMasterLiveState.pinnedProduct = products[0];
     currentMasterLiveState.updatedAt = Date.now();
     io.emit('pin_product_live', products[0]);
@@ -4828,7 +4743,7 @@ app.post('/api/tiktok-shop/sync', (req, res) => {
 
   return res.json({
     success: true,
-    storeUrl: storeUrl || sellerCenterUrl || 'https://shop.tiktok.com',
+    storeUrl: targetUrl || 'https://shop.tiktok.com',
     totalProducts: products.length,
     products,
     captchaStatus: 'BYPASSED_0MS'

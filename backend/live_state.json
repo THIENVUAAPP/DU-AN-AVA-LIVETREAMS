@@ -3,18 +3,18 @@
   "aspectRatio": "9:16",
   "characterId": "",
   "characterName": "Video Người Dùng",
-  "mediaUrl": null,
-  "currentMedia": "/uploads/media-1790475114351-774432245.mp4",
+  "mediaUrl": "/uploads/media-1790478225924-244263290.mp4",
+  "currentMedia": null,
   "eventVideoUrl": null,
-  "isVideo": false,
-  "videoPlaybackEvent": "pause",
-  "isPlaying": false,
+  "isVideo": true,
+  "videoPlaybackEvent": "play",
+  "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1790475589142,
-  "isUserExplicitMediaLocked": false,
+  "updatedAt": 1790478243806,
+  "isUserExplicitMediaLocked": true,
   "selectedCharacter": "",
-  "videoCurrentTime": 0,
+  "videoCurrentTime": 5.111224,
   "type": "MASTER_LIVE_STATE_UPDATE",
   "flvUrl": null,
   "isConnected": false,
@@ -25,22 +25,10 @@
   "scriptText": "Dạ em xin chào tất cả mọi người đã vào xem phiên livestream hôm nay nha! Các bạn bấm thả tim và bình luận để nhận ưu đãi đặc biệt nhé!",
   "voiceId": "brain_auto",
   "avatarSpeaker": "avatar_1",
-  "secondaryMediaUrl": "/uploads/media-1790472459694-637852595.mp4",
-  "secondaryMediaTransform": {
-    "x": 7,
-    "y": 54,
-    "width": 40,
-    "height": 25,
-    "zIndex": 20
-  },
-  "overlayImage": "/uploads/media-1790472394369-9043645.png",
-  "overlayImageTransform": {
-    "x": 18,
-    "y": 16,
-    "width": 88,
-    "height": 35,
-    "zIndex": 25
-  },
+  "secondaryMediaUrl": null,
+  "secondaryMediaTransform": null,
+  "overlayImage": null,
+  "overlayImageTransform": null,
   "overlayText": null,
   "overlayTextStyle": "fire_sale",
   "overlayTextFontFamily": "be_vietnam",
@@ -49,10 +37,10 @@
   "isMediaPinned": false,
   "fit": "cover",
   "sound": true,
-  "isVideoAudioMuted": true,
+  "isVideoAudioMuted": false,
   "isMuted": false,
   "videoVolume": 1,
-  "clearMedia": true,
+  "clearMedia": false,
   "multiAvatarConfig": {
     "enabled": true,
     "activeCount": 1,
@@ -106,35 +94,10 @@
     ],
     "activeSpeakerId": "avatar_1",
     "fromSequencer": true,
-    "syncedAt": 1790475583397
+    "syncedAt": 1790477521779
   },
-  "syncedAvatars": [
-    {
-      "id": "avatar_1",
-      "role": "game",
-      "tag": "BLV Game",
-      "label": "Nhân Vật 3 (BLV Game PK / Hoạt Náo)",
-      "name": "Nhân Vật 1",
-      "voiceId": "vn_nam_blv_bungno",
-      "idleVideo": "blob:http://localhost:3001/c253fdc9-f1d0-478c-8d4d-965485cd2f01",
-      "talkVideo": "blob:http://localhost:3001/c253fdc9-f1d0-478c-8d4d-965485cd2f01",
-      "volume": 1,
-      "rate": 1.1,
-      "enabled": false,
-      "chromaKey": null,
-      "transform": {
-        "x": 0,
-        "y": 0,
-        "width": 100,
-        "height": 100,
-        "zIndex": 10
-      },
-      "mediaUrl": "blob:http://localhost:3001/c253fdc9-f1d0-478c-8d4d-965485cd2f01",
-      "resolvedVidSrc": "blob:http://localhost:3001/c253fdc9-f1d0-478c-8d4d-965485cd2f01",
-      "isSpeakingNow": false
-    }
-  ],
-  "tunnelUrl": "https://environment-rapids-suddenly-implementation.trycloudflare.com",
+  "syncedAvatars": [],
+  "tunnelUrl": "https://marie-today-governments-half.trycloudflare.com",
   "pinnedProduct": {
     "id": 2,
     "name": "Sản phẩm TikTok Shop #02",
@@ -149,6 +112,6 @@
     "pinnedAt": 1790473227384,
     "triggerSource": "interval_auto_rotation"
   },
-  "mainMediaUrl": "blob:http://localhost:3001/c253fdc9-f1d0-478c-8d4d-965485cd2f01",
-  "title": "Biểu cảm tại c…"
+  "mainMediaUrl": "/uploads/media-1790478225924-244263290.mp4",
+  "title": "Video Đang Phát"
 }
