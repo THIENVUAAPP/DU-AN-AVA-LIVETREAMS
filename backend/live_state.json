@@ -3,18 +3,18 @@
   "aspectRatio": "9:16",
   "characterId": "",
   "characterName": "Video Người Dùng",
-  "mediaUrl": "/uploads/media-1790434013735-893674935.mp4",
-  "currentMedia": "/uploads/media-1790439223902-572032347.mp4",
+  "mediaUrl": "/uploads/media-1790472983500-430871844.mp4",
+  "currentMedia": "/uploads/media-1790472355165-246920014.mp4",
   "eventVideoUrl": null,
   "isVideo": true,
   "videoPlaybackEvent": "play",
   "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1790439307126,
+  "updatedAt": 1790473227384,
   "isUserExplicitMediaLocked": false,
   "selectedCharacter": "",
-  "videoCurrentTime": 6.945172,
+  "videoCurrentTime": 19.434617,
   "type": "MASTER_LIVE_STATE_UPDATE",
   "flvUrl": null,
   "isConnected": false,
@@ -25,20 +25,20 @@
   "scriptText": "Dạ em xin chào tất cả mọi người đã vào xem phiên livestream hôm nay nha! Các bạn bấm thả tim và bình luận để nhận ưu đãi đặc biệt nhé!",
   "voiceId": "brain_auto",
   "avatarSpeaker": "avatar_1",
-  "secondaryMediaUrl": "/uploads/media-1790437279594-548110663.mp4",
+  "secondaryMediaUrl": "/uploads/media-1790472459694-637852595.mp4",
   "secondaryMediaTransform": {
-    "x": 47,
-    "y": 21,
-    "width": 53,
-    "height": 36,
+    "x": 12,
+    "y": 65,
+    "width": 40,
+    "height": 25,
     "zIndex": 20
   },
-  "overlayImage": "/uploads/media-1790437294645-816773232.jpg",
+  "overlayImage": "/uploads/media-1790472394369-9043645.png",
   "overlayImageTransform": {
-    "x": -24,
-    "y": 28,
-    "width": 100,
-    "height": 44,
+    "x": 18,
+    "y": 16,
+    "width": 88,
+    "height": 35,
     "zIndex": 25
   },
   "overlayText": null,
@@ -81,16 +81,16 @@
     "avatars": [
       {
         "id": "avatar_1",
-        "role": "assistant",
-        "tag": "Trợ Lý",
-        "label": "Nhân Vật 2 (Trợ Lý / Quản Lý)",
+        "role": "game",
+        "tag": "BLV Game",
+        "label": "Nhân Vật 3 (BLV Game PK / Hoạt Náo)",
         "name": "Nhân Vật 1",
-        "voiceId": "vn_nam_quanly_uyquyen",
-        "idleVideo": "/uploads/media-1790439223902-572032347.mp4",
-        "talkVideo": "/uploads/media-1790439223902-572032347.mp4",
+        "voiceId": "vn_nam_blv_bungno",
+        "idleVideo": "/uploads/media-1790472355165-246920014.mp4",
+        "talkVideo": "/uploads/media-1790472355165-246920014.mp4",
         "volume": 1,
-        "rate": 1.05,
-        "enabled": true,
+        "rate": 1.1,
+        "enabled": false,
         "chromaKey": null,
         "transform": {
           "x": 0,
@@ -99,28 +99,28 @@
           "height": 100,
           "zIndex": 10
         },
-        "resolvedVidSrc": "/uploads/media-1790439223902-572032347.mp4",
-        "isSpeakingNow": false,
-        "mediaUrl": "/uploads/media-1790439223902-572032347.mp4"
+        "mediaUrl": "/uploads/media-1790472355165-246920014.mp4",
+        "resolvedVidSrc": "/uploads/media-1790472355165-246920014.mp4",
+        "isSpeakingNow": false
       }
     ],
     "activeSpeakerId": "avatar_1",
     "fromSequencer": true,
-    "syncedAt": 1790439238449
+    "syncedAt": 1790472495423
   },
   "syncedAvatars": [
     {
       "id": "avatar_1",
-      "role": "assistant",
-      "tag": "Trợ Lý",
-      "label": "Nhân Vật 2 (Trợ Lý / Quản Lý)",
+      "role": "game",
+      "tag": "BLV Game",
+      "label": "Nhân Vật 3 (BLV Game PK / Hoạt Náo)",
       "name": "Nhân Vật 1",
-      "voiceId": "vn_nam_quanly_uyquyen",
-      "idleVideo": "/uploads/media-1790439223902-572032347.mp4",
-      "talkVideo": "/uploads/media-1790439223902-572032347.mp4",
+      "voiceId": "vn_nam_blv_bungno",
+      "idleVideo": "/uploads/media-1790472355165-246920014.mp4",
+      "talkVideo": "/uploads/media-1790472355165-246920014.mp4",
       "volume": 1,
-      "rate": 1.05,
-      "enabled": true,
+      "rate": 1.1,
+      "enabled": false,
       "chromaKey": null,
       "transform": {
         "x": 0,
@@ -129,10 +129,24 @@
         "height": 100,
         "zIndex": 10
       },
-      "resolvedVidSrc": "/uploads/media-1790439223902-572032347.mp4",
-      "isSpeakingNow": false,
-      "mediaUrl": "/uploads/media-1790439223902-572032347.mp4"
+      "mediaUrl": "/uploads/media-1790472355165-246920014.mp4",
+      "resolvedVidSrc": "/uploads/media-1790472355165-246920014.mp4",
+      "isSpeakingNow": false
     }
   ],
-  "tunnelUrl": "https://scout-correct-promotes-cute.trycloudflare.com"
+  "tunnelUrl": "https://air-key-deutschland-later.trycloudflare.com",
+  "pinnedProduct": {
+    "id": 2,
+    "name": "Sản phẩm TikTok Shop #02",
+    "productName": "Sản phẩm TikTok Shop #02",
+    "price": "249.000đ",
+    "oldPrice": "450.000đ",
+    "image": "https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=400&q=80",
+    "badge": "FLASH SALE ⚡",
+    "stock": 99,
+    "keywords": "mã 2;sp2;mua 2;chốt 2",
+    "storeUrl": "https://shop.tiktok.com/streamer/live/product/dashboard",
+    "pinnedAt": 1790473227384,
+    "triggerSource": "interval_auto_rotation"
+  }
 }

@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.53';
-export const RELEASE_DATE = '26/09/2026';
+export const APP_VERSION = '4.9.54';
+export const RELEASE_DATE = '27/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.54 - Đồng Bộ Đầy Đủ 100% Mọi Lớp Video & Nút Bấm Xúc Giác Trực Tiếp',
+    description: '1. Đồng Bộ Toàn Bộ Các Khung Hình & Lớp Sân Khấu (Ảnh 3 -> Ảnh 1, 2): Sân khấu chính có bao nhiêu lớp video nền, video phụ PiP, hình ảnh chèn thêm (ở trên, ở dưới), avatar AI hay tiêu đề chữ thì link TikTok Live Studio và Window Capture đều hiển thị đầy đủ 100% không sót bất kỳ lớp nào. 2. Xóa Bỏ Hoàn Toàn Chữ Kết Nối / Loading Đè Màn Hình: Triệt tiêu hoàn toàn lớp loadingOverlay che đen video, giúp video nền và mọi lớp phụ phát mượt mà 60 FPS ngay lập tức. 3. Nút Bấm Dock Xúc Giác Trực Tiếp (Direct Click): Tích hợp onclick trực tiếp cấp thẻ HTML và global dispatcher cho toàn bộ 6 nút bấm (LIVE 60FPS, Tạm Dừng/Tiếp Tục, Bật/Tắt Tiếng, Tràn Màn/Vừa Khung, Ẩn Nút H và Mắt Phục Hồi 👁️).'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.53 - Khôi Phục Hiển Thị Ô Nhân Vật & Phím Bấm Dock Siêu Nhạy',
     description: '1. Khắc Phục Lỗi Hiển Thị Ô Nhân Vật Lên Sân Khấu Chính: Khi tải lên hoặc bấm chọn bất kỳ ô nhân vật nào, hệ thống lập tức hiển thị video/hình ảnh của nhân vật đó lên Sân Khấu Chính và đồng bộ 100% sang Window Capture OBS & TikTok Live Studio 0ms không bị khóa. 2. Nâng Cấp Nút Bấm Dock Siêu Phản Hồi: Tối ưu toàn bộ 6 nút điều khiển (LIVE 60FPS, Tạm Dừng/Tiếp Tục, Bật/Tắt Tiếng, Tràn Màn/Vừa Khung, Ẩn Nút H và Mắt Phục Hồi 👁️) với hiệu ứng phản hồi xúc giác tức thì và phím tắt Space, M, F, H. 3. Loại Bỏ Cảnh Báo Mạng Chập Chờn: Triệt tiêu màn hình loading/cảnh báo đè lên video phát, giúp luồng live phát siêu mượt 60 FPS.'

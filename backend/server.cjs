@@ -1205,12 +1205,6 @@ app.get([
       <filter id="chroma-blue"><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1 1 -1.5 0 0" /></filter>
     </svg>
 
-    <div id="loadingOverlay">
-      <div class="spinner"></div>
-      <div style="font-size: 13px; font-weight: 700; letter-spacing: 0.5px;">⚡ ĐANG KẾT NỐI LUỒNG LIVE AVALIVE 4K 60FPS...</div>
-      <div style="font-size: 11px; color: #94a3b8; margin-top: 4px;">Đồng bộ trực tiếp với phần mềm AvaLive VIP PRO</div>
-    </div>
-
     <!-- Sân Khấu Trống (Khi người dùng xóa hết video) -->
     <div id="emptyStageView" style="position: absolute; inset: 0; display: none; flex-direction: column; align-items: center; justify-content: center; background: #07080d; color: #fff; z-index: 15; text-align: center; padding: 20px;">
       <div style="width: 64px; height: 64px; border-radius: 20px; background: rgba(8, 51, 68, 0.7); border: 1px solid rgba(6, 182, 212, 0.4); display: flex; align-items: center; justify-content: center; font-size: 30px; margin-bottom: 12px; box-shadow: 0 0 25px rgba(6, 182, 212, 0.3);">🎬</div>
@@ -1261,21 +1255,21 @@ app.get([
       <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);">${overlayTxt}</div>
     </div>
     
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.53</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.54</div>
   </div>
 
   <!-- BẢNG ĐIỀU KHIỂN NỔI DOCK TOÀN CỤC CẤP BODY -->
   <div id="controlsDock">
-    <button id="btnLiveStatus" class="dock-btn dock-btn-live" title="Luồng Trực Tiếp 60 FPS (Bấm để ép làm mới & đồng bộ luồng)">
+    <button id="btnLiveStatus" class="dock-btn dock-btn-live" onclick="window.handleLiveRefreshToggle(event)" title="Luồng Trực Tiếp 60 FPS (Bấm để ép làm mới & đồng bộ luồng)">
       <span class="dock-pulse-dot"></span>• LIVE 60FPS
     </button>
-    <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập (Phím tắt: Space)">⏸️ Tạm Dừng</button>
-    <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập (Phím tắt: M)">${soundParam ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}</button>
-    <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa Khung' : '📐 Tràn Màn'}</button>
-    <button id="btnHideAll" class="dock-btn dock-btn-hide" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn Nút (H)</button>
+    <button id="btnPlayPause" class="dock-btn" onclick="window.handlePlayPauseToggle(event)" title="Tạm dừng / Tiếp tục độc lập (Phím tắt: Space)">⏸️ Tạm Dừng</button>
+    <button id="btnMuteUnmute" class="dock-btn" onclick="window.handleMuteToggle(event)" title="Bật / Tắt âm thanh độc lập (Phím tắt: M)">${soundParam ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}</button>
+    <button id="btnFitToggle" class="dock-btn" onclick="window.handleFitToggle(event)" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa Khung' : '📐 Tràn Màn'}</button>
+    <button id="btnHideAll" class="dock-btn dock-btn-hide" onclick="window.toggleHideAll(true)" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn Nút (H)</button>
   </div>
 
-  <button id="btnRestoreIcon" title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)">👁️</button>
+  <button id="btnRestoreIcon" onclick="window.toggleHideAll(false)" title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)">👁️</button>
 
   <script>
     (function() {
@@ -1750,14 +1744,15 @@ app.get([
         const pipImage = document.getElementById('pipImage');
 
         // 2. Tìm nguồn media nền chính (Background / Main Media)
-        const bgUrlCandidate = (data.multiAvatarConfig && data.multiAvatarConfig.backgroundUrl) || data.mediaUrl || data.currentMedia || data.eventVideoUrl || data.videoUrl || '';
+        const bgUrlCandidate = data.mainMediaUrl || (data.multiAvatarConfig && data.multiAvatarConfig.backgroundUrl) || data.mediaUrl || data.currentMedia || data.eventVideoUrl || data.videoUrl || '';
         const resolvedMainBg = resolveUrl(bgUrlCandidate);
 
         const hasValidAvatars = !!(data.multiAvatarConfig && data.multiAvatarConfig.enabled && Array.isArray(data.multiAvatarConfig.avatars) && data.multiAvatarConfig.avatars.some(function(a) {
           const u = a.talkVideo || a.idleVideo || a.mediaUrl || a.resolvedVidSrc;
           return u && typeof u === 'string' && !u.startsWith('blob:');
         }));
-        const hasAnyContent = !!(resolvedMainBg || hasValidAvatars || data.secondaryMediaUrl || data.overlayImage);
+        const hasExtraLayers = !!(data.multiAvatarConfig && Array.isArray(data.multiAvatarConfig.extraImageLayers) && data.multiAvatarConfig.extraImageLayers.length > 0) || !!(Array.isArray(data.multiAvatarExtraLayers) && data.multiAvatarExtraLayers.length > 0);
+        const hasAnyContent = !!(resolvedMainBg || hasValidAvatars || data.secondaryMediaUrl || data.overlayImage || hasExtraLayers);
 
         // 1. Kiểm tra trạng thái XÓA SẠCH SÂN KHẤU (CLEAR_STAGE / clearMedia)
         if (data.clearMedia === true && !hasAnyContent) {
@@ -1775,12 +1770,11 @@ app.get([
             try { imgEl.removeAttribute('src'); imgEl.src = ''; } catch(e) {}
             imgEl.style.display = 'none';
           }
-          hideLoading();
           updateDockUI();
           return;
         }
 
-        if (!resolvedMainBg && !hasValidAvatars && !data.secondaryMediaUrl) {
+        if (!resolvedMainBg && !hasValidAvatars && !data.secondaryMediaUrl && !data.overlayImage && !hasExtraLayers) {
           if (emptyStage) emptyStage.style.display = 'flex';
           if (multiStage) multiStage.style.display = 'none';
           if (pipContainer) pipContainer.style.display = 'none';
@@ -2392,21 +2386,21 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     <div id="overlayTextBanner" style="position: absolute; left: 4%; top: 5%; width: 92%; z-index: 35; text-align: center; pointer-events: none; display: ${overlayTxt ? 'block' : 'none'};">
       <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);">${overlayTxt}</div>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.53</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.54</div>
   </div>
 
   <!-- BẢNG ĐIỀU KHIỂN NỔI DOCK TOÀN CỤC CẤP BODY — CHỐNG BỊ GPU VIDEO LAYER CHE KHUẤT -->
   <div id="controlsDock">
-    <button id="btnLiveStatus" class="dock-btn dock-btn-live" title="Luồng Trực Tiếp 60 FPS (Bấm để ép làm mới & đồng bộ luồng)">
+    <button id="btnLiveStatus" class="dock-btn dock-btn-live" onclick="window.handleLiveRefreshToggle(event)" title="Luồng Trực Tiếp 60 FPS (Bấm để ép làm mới & đồng bộ luồng)">
       <span class="dock-pulse-dot"></span>• LIVE 60FPS
     </button>
-    <button id="btnPlayPause" class="dock-btn" title="Tạm dừng / Tiếp tục độc lập (Phím tắt: Space)">⏸️ Tạm Dừng</button>
-    <button id="btnMuteUnmute" class="dock-btn" title="Bật / Tắt âm thanh độc lập (Phím tắt: M)">${soundParam ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}</button>
-    <button id="btnFitToggle" class="dock-btn" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa Khung' : '📐 Tràn Màn'}</button>
-    <button id="btnHideAll" class="dock-btn dock-btn-hide" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn Nút (H)</button>
+    <button id="btnPlayPause" class="dock-btn" onclick="window.handlePlayPauseToggle(event)" title="Tạm dừng / Tiếp tục độc lập (Phím tắt: Space)">⏸️ Tạm Dừng</button>
+    <button id="btnMuteUnmute" class="dock-btn" onclick="window.handleMuteToggle(event)" title="Bật / Tắt âm thanh độc lập (Phím tắt: M)">${soundParam ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}</button>
+    <button id="btnFitToggle" class="dock-btn" onclick="window.handleFitToggle(event)" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa Khung' : '📐 Tràn Màn'}</button>
+    <button id="btnHideAll" class="dock-btn dock-btn-hide" onclick="window.toggleHideAll(true)" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn Nút (H)</button>
   </div>
 
-  <button id="btnRestoreIcon" title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)">👁️</button>
+  <button id="btnRestoreIcon" onclick="window.toggleHideAll(false)" title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)">👁️</button>
 
   <script>
     (function() {
@@ -2836,14 +2830,15 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         const pipImage = document.getElementById('pipImage');
 
         // 2. Tìm nguồn media nền chính (Background / Main Media)
-        const bgUrlCandidate = (data.multiAvatarConfig && data.multiAvatarConfig.backgroundUrl) || data.mediaUrl || data.currentMedia || data.eventVideoUrl || data.videoUrl || '';
+        const bgUrlCandidate = data.mainMediaUrl || (data.multiAvatarConfig && data.multiAvatarConfig.backgroundUrl) || data.mediaUrl || data.currentMedia || data.eventVideoUrl || data.videoUrl || '';
         const resolvedMainBg = resolveUrl(bgUrlCandidate);
 
         const hasValidAvatars = !!(data.multiAvatarConfig && data.multiAvatarConfig.enabled && Array.isArray(data.multiAvatarConfig.avatars) && data.multiAvatarConfig.avatars.some(function(a) {
           const u = a.talkVideo || a.idleVideo || a.mediaUrl || a.resolvedVidSrc;
           return u && typeof u === 'string' && !u.startsWith('blob:');
         }));
-        const hasAnyContent = !!(resolvedMainBg || hasValidAvatars || data.secondaryMediaUrl || data.overlayImage);
+        const hasExtraLayers = !!(data.multiAvatarConfig && Array.isArray(data.multiAvatarConfig.extraImageLayers) && data.multiAvatarConfig.extraImageLayers.length > 0) || !!(Array.isArray(data.multiAvatarExtraLayers) && data.multiAvatarExtraLayers.length > 0);
+        const hasAnyContent = !!(resolvedMainBg || hasValidAvatars || data.secondaryMediaUrl || data.overlayImage || hasExtraLayers);
 
         // 1. Kiểm tra trạng thái XÓA TRẮNG SÂN KHẤU (CLEAR_STAGE / clearMedia)
         if (data.clearMedia === true && !hasAnyContent) {
@@ -2865,7 +2860,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           return;
         }
 
-        if (!resolvedMainBg && !hasValidAvatars && !data.secondaryMediaUrl) {
+        if (!resolvedMainBg && !hasValidAvatars && !data.secondaryMediaUrl && !data.overlayImage && !hasExtraLayers) {
           if (emptyStage) emptyStage.style.display = 'flex';
           if (multiStage) multiStage.style.display = 'none';
           if (pipContainer) pipContainer.style.display = 'none';
