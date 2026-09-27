@@ -2,7 +2,7 @@
   "stage": "idol",
   "aspectRatio": "9:16",
   "characterId": "",
-  "characterName": "Video Người Dùng",
+  "characterName": "1789890823835_3369…",
   "mediaUrl": null,
   "currentMedia": "/uploads/media-1790480285999-991836740.png",
   "eventVideoUrl": null,
@@ -11,17 +11,17 @@
   "isPlaying": false,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1790485224008,
+  "updatedAt": 1790485879034,
   "isUserExplicitMediaLocked": false,
-  "selectedCharacter": "",
+  "selectedCharacter": "custom_1790485878875",
   "videoCurrentTime": 0,
   "type": "MASTER_LIVE_STATE_UPDATE",
   "flvUrl": null,
   "isConnected": false,
   "currentLang": "vi",
   "activeTab": "flow_sequencer",
-  "stepTitle": "Bước 1: Avatar AI Chào Khán Giả & Mở Đầu Live",
-  "actionType": "avatar_talk",
+  "stepTitle": "",
+  "actionType": "",
   "scriptText": "Dạ em xin chào tất cả mọi người đã vào xem phiên livestream hôm nay nha! Các bạn bấm thả tim và bình luận để nhận ưu đãi đặc biệt nhé!",
   "voiceId": "brain_auto",
   "avatarSpeaker": "avatar_1",
@@ -40,9 +40,9 @@
   "isVideoAudioMuted": false,
   "isMuted": false,
   "videoVolume": 1,
-  "clearMedia": true,
+  "clearMedia": false,
   "multiAvatarConfig": {
-    "enabled": true,
+    "enabled": false,
     "activeCount": 2,
     "layoutMode": "custom_canvas",
     "backgroundUrl": "",
@@ -79,17 +79,10 @@
         "volume": 1,
         "rate": 1.1,
         "enabled": false,
-        "chromaKey": {
-          "enabled": false,
-          "color": "#00ff00",
-          "similarity": 0.45,
-          "smoothness": 0.15,
-          "spill": 0.15,
-          "mode": "green"
-        },
+        "chromaKey": null,
         "transform": {
-          "x": 53,
-          "y": 18,
+          "x": 8,
+          "y": 41,
           "width": 45,
           "height": 48,
           "zIndex": 8,
@@ -100,8 +93,8 @@
           "rotate": 0
         },
         "mediaUrl": "/uploads/media-1790481649878-646775102.mp4",
-        "resolvedVidSrc": "/uploads/media-1790480591844-384698498.mp4",
-        "isSpeakingNow": false
+        "resolvedVidSrc": "/uploads/media-1790481649878-646775102.mp4",
+        "isSpeakingNow": true
       },
       {
         "id": "avatar_2",
@@ -115,16 +108,9 @@
         "volume": 1,
         "rate": 1.1,
         "enabled": false,
-        "chromaKey": {
-          "enabled": false,
-          "color": "#00ff00",
-          "similarity": 0.45,
-          "smoothness": 0.15,
-          "spill": 0.15,
-          "mode": "green"
-        },
+        "chromaKey": null,
         "transform": {
-          "x": 8,
+          "x": 55,
           "y": 17,
           "width": 45,
           "height": 48,
@@ -136,13 +122,14 @@
           "rotate": 0
         },
         "mediaUrl": "/uploads/media-1790481649878-646775102.mp4",
-        "resolvedVidSrc": "/uploads/media-1790480591844-384698498.mp4",
-        "isSpeakingNow": true
+        "resolvedVidSrc": "/uploads/media-1790481649878-646775102.mp4",
+        "isSpeakingNow": false
       }
     ],
     "activeSpeakerId": "avatar_1",
-    "fromSequencer": true,
-    "syncedAt": 1790482961236
+    "fromSequencer": false,
+    "syncedAt": 1790485872284,
+    "_syncedFromSequencer": false
   },
   "syncedAvatars": [
     {
@@ -157,17 +144,10 @@
       "volume": 1,
       "rate": 1.1,
       "enabled": false,
-      "chromaKey": {
-        "enabled": false,
-        "color": "#00ff00",
-        "similarity": 0.45,
-        "smoothness": 0.15,
-        "spill": 0.15,
-        "mode": "green"
-      },
+      "chromaKey": null,
       "transform": {
-        "x": 53,
-        "y": 18,
+        "x": 8,
+        "y": 41,
         "width": 45,
         "height": 48,
         "zIndex": 8,
@@ -178,8 +158,8 @@
         "rotate": 0
       },
       "mediaUrl": "/uploads/media-1790481649878-646775102.mp4",
-      "resolvedVidSrc": "/uploads/media-1790480591844-384698498.mp4",
-      "isSpeakingNow": false
+      "resolvedVidSrc": "/uploads/media-1790481649878-646775102.mp4",
+      "isSpeakingNow": true
     },
     {
       "id": "avatar_2",
@@ -193,16 +173,9 @@
       "volume": 1,
       "rate": 1.1,
       "enabled": false,
-      "chromaKey": {
-        "enabled": false,
-        "color": "#00ff00",
-        "similarity": 0.45,
-        "smoothness": 0.15,
-        "spill": 0.15,
-        "mode": "green"
-      },
+      "chromaKey": null,
       "transform": {
-        "x": 8,
+        "x": 55,
         "y": 17,
         "width": 45,
         "height": 48,
@@ -214,11 +187,11 @@
         "rotate": 0
       },
       "mediaUrl": "/uploads/media-1790481649878-646775102.mp4",
-      "resolvedVidSrc": "/uploads/media-1790480591844-384698498.mp4",
-      "isSpeakingNow": true
+      "resolvedVidSrc": "/uploads/media-1790481649878-646775102.mp4",
+      "isSpeakingNow": false
     }
   ],
-  "tunnelUrl": "https://socks-immediate-stick-developmental.trycloudflare.com",
+  "tunnelUrl": "https://hood-joseph-latinas-processing.trycloudflare.com",
   "pinnedProduct": {
     "id": 2,
     "name": "Sản phẩm TikTok Shop #02",

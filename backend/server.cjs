@@ -1522,7 +1522,7 @@ app.get([
 
       function resolveUrl(url) {
         if (!url || typeof url !== 'string' || url === 'null' || url === 'undefined' || url.trim() === '') return '';
-        if (url.startsWith('blob:')) return '';
+        if (url.startsWith('blob:') || url.startsWith('data:')) return url;
         try { url = decodeURIComponent(url); } catch(e) {}
         if (url.startsWith('http://') || url.startsWith('https://')) {
           if (url.includes('localhost:') || url.includes('127.0.0.1:') || url.includes('vercel.app')) {
@@ -1774,7 +1774,7 @@ app.get([
 
         const hasValidAvatars = avatarsList.length > 0 && avatarsList.some(function(a) {
           const u = a.talkVideo || a.idleVideo || a.mediaUrl || a.resolvedVidSrc || a.url || a.src || a.videoUrl;
-          return u && typeof u === 'string' && !u.startsWith('blob:');
+          return u && typeof u === 'string';
         });
         const hasExtraLayers = !!(data.multiAvatarConfig && Array.isArray(data.multiAvatarConfig.extraImageLayers) && data.multiAvatarConfig.extraImageLayers.length > 0) || !!(Array.isArray(data.multiAvatarExtraLayers) && data.multiAvatarExtraLayers.length > 0);
         const hasAnyContent = !!(resolvedMainBg || hasValidAvatars || data.secondaryMediaUrl || data.overlayImage || hasExtraLayers);
@@ -2793,7 +2793,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
 
       function resolveUrl(url) {
         if (!url || typeof url !== 'string' || url === 'null' || url === 'undefined' || url.trim() === '') return '';
-        if (url.startsWith('blob:')) return '';
+        if (url.startsWith('blob:') || url.startsWith('data:')) return url;
         try { url = decodeURIComponent(url); } catch(e) {}
         if (url.startsWith('http://') || url.startsWith('https://')) {
           if (url.includes('localhost:') || url.includes('127.0.0.1:') || url.includes('vercel.app')) {
@@ -2977,7 +2977,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
 
         const hasValidAvatars = avatarsList.length > 0 && avatarsList.some(function(a) {
           const u = a.talkVideo || a.idleVideo || a.mediaUrl || a.resolvedVidSrc || a.url || a.src || a.videoUrl;
-          return u && typeof u === 'string' && !u.startsWith('blob:');
+          return u && typeof u === 'string';
         });
         const hasExtraLayers = !!(data.multiAvatarConfig && Array.isArray(data.multiAvatarConfig.extraImageLayers) && data.multiAvatarConfig.extraImageLayers.length > 0) || !!(Array.isArray(data.multiAvatarExtraLayers) && data.multiAvatarExtraLayers.length > 0);
         const hasAnyContent = !!(resolvedMainBg || hasValidAvatars || data.secondaryMediaUrl || data.overlayImage || hasExtraLayers);

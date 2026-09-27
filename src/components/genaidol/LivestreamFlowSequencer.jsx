@@ -636,7 +636,7 @@ export default function LivestreamFlowSequencer() {
   const syncStepToServer = (step, index = 0, isLivePlaying = true, forceSync = false) => {
     if (!step) return;
     // 🛡️ CHỈ phát ra Sân Khấu Chính khi người dùng đã bấm BẬT ĐỒNG BỘ hoặc forceSync
-    if (!forceSync && !isMasterSynced) return;
+    if (!forceSync && !isMasterSyncedRef.current && !isMasterSynced) return;
     
     const resolved = resolveStepMedia(index);
     let mediaToPlay = step.isMainMediaDeleted ? '' : (resolved.mediaUrl || step.mediaUrl || '');
@@ -837,6 +837,7 @@ export default function LivestreamFlowSequencer() {
       syncedAvatars: syncedAvatars,
       videoPlaybackEvent: isLivePlaying ? 'play' : 'pause',
       videoCurrentTime: 0,
+      clearMedia: false,
       updatedAt: Date.now()
     });
 
@@ -856,6 +857,7 @@ export default function LivestreamFlowSequencer() {
       body: JSON.stringify({
         mediaUrl: mediaToPlay,
         currentMedia: mediaToPlay,
+        clearMedia: false,
         activeTab: 'flow_sequencer',
         stepTitle: step.title,
         actionType: step.actionType,
@@ -941,7 +943,7 @@ export default function LivestreamFlowSequencer() {
       : (step.durationSeconds || 10);
 
     setSecondsRemaining(estimatedSeconds);
-    syncStepToServer(step, safeIndex, shouldPlay);
+    syncStepToServer(step, safeIndex, shouldPlay, isMasterSyncedRef.current || isMasterSynced);
 
     const advanceNext = () => {
       if (!isPlayingFlowRef.current) return;
