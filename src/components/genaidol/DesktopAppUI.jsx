@@ -1130,214 +1130,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     showToast('Đã dừng và xóa sạch video trên sân khấu!', 'info');
   };
 
-  // 📦 ĐÓNG GÓI 100% DỮ LIỆU SÂN KHẤU CHÍNH ĐẨY SANG WINDOW CAPTURE & TIKTOK LIVE STUDIO
-  const getMasterStagePayload = useCallback(() => {
-    let activeUrl = (desktopVideoRef.current && (desktopVideoRef.current.currentSrc || desktopVideoRef.current.src)) || currentBlobUrlRef.current || userLockedMediaUrl || '';
-    if (!activeUrl && selectedCharacter && Array.isArray(customCharacters)) {
-      const match = customCharacters.find(c => c.id === selectedCharacter);
-      if (match) activeUrl = match.url || match.mediaUrl || '';
-    }
-    if (!activeUrl && Array.isArray(customCharacters) && customCharacters.length > 0) {
-      const match = customCharacters[0];
-      if (match) activeUrl = match.url || match.mediaUrl || '';
-    }
-
-    let curTime = 0;
-    if (desktopVideoRef.current && typeof desktopVideoRef.current.currentTime === 'number' && !isNaN(desktopVideoRef.current.currentTime)) {
-      curTime = desktopVideoRef.current.currentTime;
-    } else if (lastPlaybackTimeRef.current > 0) {
-      curTime = lastPlaybackTimeRef.current;
-    }
-
-    let serverActiveUrl = userLockedMediaUrl || '';
-    if (!serverActiveUrl || serverActiveUrl.startsWith('blob:')) {
-      const matchChar = (customCharacters && Array.isArray(customCharacters)) ? customCharacters.find(c => c.id === selectedCharacter) : null;
-      if (matchChar && matchChar.mediaUrl && !matchChar.mediaUrl.startsWith('blob:')) {
-        serverActiveUrl = matchChar.mediaUrl;
-      } else {
-        try {
-          const locked = localStorage.getItem('avalive_user_locked_media');
-          if (locked && !locked.startsWith('blob:')) serverActiveUrl = locked;
-        } catch (e) {}
-      }
-    }
-    if (typeof serverActiveUrl === 'string' && serverActiveUrl.includes('/uploads/')) {
-      serverActiveUrl = serverActiveUrl.substring(serverActiveUrl.indexOf('/uploads/'));
-    }
-
-    const broadcastUrl = serverActiveUrl || activeUrl || userLockedMediaUrl || '';
-    const isVid = isVideoPlaying !== false;
-
-    // Lớp Video Phụ PiP từ Sequencer
-    const secMedia = flowSequencerOverlay?.secondaryMediaUrl || null;
-    const secTrans = flowSequencerOverlay?.secondaryMediaTransform || (flowSequencerOverlay?.secondaryMediaUrl ? {
-      x: flowSequencerOverlay.secondaryMediaPos === 'top-left' ? 4 : flowSequencerOverlay.secondaryMediaPos === 'bottom-left' ? 4 : flowSequencerOverlay.secondaryMediaPos === 'bottom-right' ? 55 : 55,
-      y: flowSequencerOverlay.secondaryMediaPos === 'bottom-left' || flowSequencerOverlay.secondaryMediaPos === 'bottom-right' ? 70 : 8,
-      width: flowSequencerOverlay.secondaryMediaScale || 40,
-      height: 25,
-      zIndex: 20
-    } : null);
-    const secChroma = flowSequencerOverlay?.secondaryMediaChromaKey || null;
-
-    // Lớp Banner / Poster Ảnh từ Sequencer
-    const bannerImg = flowSequencerOverlay?.overlayImage || null;
-    const bannerTrans = flowSequencerOverlay?.overlayImageTransform || (flowSequencerOverlay?.overlayImage ? {
-      x: flowSequencerOverlay.overlayImagePos === 'top-right' ? 65 : flowSequencerOverlay.overlayImagePos === 'bottom-left' ? 4 : flowSequencerOverlay.overlayImagePos === 'bottom-right' ? 65 : 10,
-      y: flowSequencerOverlay.overlayImagePos === 'bottom-left' || flowSequencerOverlay.overlayImagePos === 'bottom-right' ? 70 : 12,
-      width: 80,
-      height: 20,
-      zIndex: 25
-    } : null);
-    const bannerChroma = flowSequencerOverlay?.overlayImageChromaKey || null;
-
-    // Lớp Tiêu Đề / Chữ Nổi Bật từ Sequencer
-    const titleTxt = flowSequencerOverlay?.overlayText || null;
-    const textTrans = flowSequencerOverlay?.overlayTextTransform || (flowSequencerOverlay?.overlayText ? {
-      x: 4,
-      y: 5,
-      width: 92,
-      zIndex: 35
-    } : null);
-
-    return {
-      stage: 'idol',
-      selectedCharacter: selectedCharacter,
-      characterName: customCharacters?.find(c => c.id === selectedCharacter)?.name || 'AI Idol',
-      mediaUrl: broadcastUrl || null,
-      clearMedia: !broadcastUrl,
-      isVideo: isVid,
-      videoPlaybackEvent: isVideoPlaying ? 'play' : 'pause',
-      videoCurrentTime: curTime,
-      isPlaying: isVideoPlaying,
-      aspectRatio: globalAspectRatio || '9:16',
-      secondaryMediaUrl: secMedia,
-      secondaryMediaTransform: secTrans,
-      secondaryMediaChromaKey: secChroma,
-      overlayImage: bannerImg,
-      overlayImageTransform: bannerTrans,
-      overlayImageChromaKey: bannerChroma,
-      overlayText: titleTxt,
-      overlayTextTransform: textTrans,
-      overlayTextColor: flowSequencerOverlay?.overlayTextColor || null,
-      overlayTextFontSize: flowSequencerOverlay?.overlayTextFontSize || null,
-      syncedAvatars: (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.characters : null) || [],
-      multiAvatarConfig: (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig() : null) || null,
-      updatedAt: Date.now()
-    };
-  }, [selectedCharacter, customCharacters, userLockedMediaUrl, isVideoPlaying, globalAspectRatio, flowSequencerOverlay]);
-
-  const handleOpenWindowCapture = () => {
-    // 🎯 ĐỘ PHÂN GIẢI CHUẨN CAO 1080P SẮC NÉT (CHO OBS / TIKTOK LIVE STUDIO CHỤP KHÔNG BỊ VỠ NÉT)
-    const screenW = window.screen.availWidth || window.screen.width || 1920;
-    const screenH = window.screen.availHeight || window.screen.height || 1080;
-    const height = Math.min(1080, Math.max(720, screenH - 40));
-    const width = Math.min(screenW, Math.round((height * 9) / 16));
-    const left = Math.max(0, Math.round((screenW - width) / 2));
-    const top = Math.max(0, Math.round((screenH - height) / 2));
-
-    const payload = getMasterStagePayload();
-    const broadcastUrl = payload.mediaUrl || '';
-    const curTime = payload.videoCurrentTime || 0;
-
-    try {
-      localStorage.removeItem('avalive_user_paused');
-      localStorage.removeItem('avalive_window_capture_paused');
-      if (broadcastUrl) {
-        localStorage.setItem('avalive_active_video_src', broadcastUrl);
-        localStorage.setItem('avalive_user_locked_media', broadcastUrl);
-      }
-      localStorage.setItem('avalive_master_live_state', JSON.stringify(payload));
-    } catch (e) {}
-
-    // Đồng bộ toàn bộ gói dữ liệu đa tầng lên server Backend
-    syncMasterLiveState(payload, socketRef.current);
-
-    const activeBlob = currentFileBlobRef.current || window.__activeMediaBlob || (selectedCharacter && window.__activeMediaBlobMap && window.__activeMediaBlobMap.get(selectedCharacter)) || null;
-
-    try {
-      const bc = new BroadcastChannel('avalive_master_live_stream');
-      bc.postMessage({
-        type: 'GLOBAL_MEDIA_CHANGE',
-        mediaUrl: broadcastUrl,
-        blobUrl: broadcastUrl,
-        fileBlob: activeBlob,
-        characterId: selectedCharacter,
-        isVideo: true,
-        isPlaying: true,
-        currentTime: curTime,
-        force: true,
-        source: 'desktop',
-        timestamp: Date.now()
-      });
-      setTimeout(() => bc.close(), 100);
-    } catch (err) {}
-
-    const effectiveV = broadcastUrl || '';
-
-    // ⚡ LƯU TRỰC TIẾP BLOB VÀ BLOB URL TRÊN WINDOW CHO CỬA SỔ WINDOW CAPTURE MỞ 0MS KHÔNG GIẬT LAG
-    if (activeBlob) {
-      setActiveMedia(activeBlob, 'current_active', { id: selectedCharacter, mediaUrl: broadcastUrl }).catch(() => {});
-      if (selectedCharacter) setActiveMedia(activeBlob, selectedCharacter, { id: selectedCharacter, mediaUrl: broadcastUrl }).catch(() => {});
-    }
-
-    if (typeof window !== 'undefined') {
-      if (activeBlob) {
-        window.__activeMediaBlob = activeBlob;
-        window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
-        if (selectedCharacter) window.__activeMediaBlobMap.set(selectedCharacter, activeBlob);
-        if (effectiveV) window.__activeMediaBlobMap.set(effectiveV, activeBlob);
-        if (broadcastUrl) window.__activeMediaBlobMap.set(broadcastUrl, activeBlob);
-      }
-      const activeBlobUrl = currentBlobUrlRef.current || window.__activeMediaBlobUrl || (desktopVideoRef.current && (desktopVideoRef.current.currentSrc || desktopVideoRef.current.src)) || null;
-      if (activeBlobUrl) {
-        window.__activeMediaBlobUrl = activeBlobUrl;
-        window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
-        window.__activeMediaBlobMap.set(activeBlobUrl, activeBlob || activeBlobUrl);
-        try { localStorage.setItem('avalive_active_video_src', activeBlobUrl); } catch (e) {}
-      }
-    }
-
-    const charQuery = selectedCharacter ? `&char=${encodeURIComponent(selectedCharacter)}` : '';
-    const timeQuery = curTime > 0 ? `&t=${Math.round(curTime * 100) / 100}` : '';
-    const vQuery = effectiveV ? `&v=${encodeURIComponent(effectiveV)}` : '';
-    const query = `${vQuery}${charQuery}${timeQuery}`;
-    const origin = typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')
-      ? window.location.origin
-      : 'http://localhost:3001';
-    const captureUrl = `${origin}/window-capture?mode=window_capture&sound=1&autoplay=1&fit=cover${query}`;
-    
-    let newWin = null;
-    try {
-      newWin = window.open(
-        captureUrl,
-        'avalive_window_capture_target',
-        `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes`
-      );
-    } catch (err) {
-      console.warn('[WindowCapture] Popup error, trying fallback:', err);
-    }
-
-    if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
-      try {
-        newWin = window.open(captureUrl, '_blank');
-      } catch (e) {
-        console.warn('[WindowCapture] Fallback _blank failed:', e);
-      }
-    }
-
-    // ⚡ TRUYỀN THẲNG FILE BLOB GỐC (1GB - 20GB) VÀO CỬA SỔ CON CHO PHÉP PHÁT 0MS KHÔNG GIẬT LAG
-    if (newWin) {
-      try {
-        newWin.__activeMediaBlob = currentFileBlobRef.current || window.__activeMediaBlob;
-        newWin.__activeMediaBlobUrl = currentBlobUrlRef.current || window.__activeMediaBlobUrl;
-        newWin.__activeMediaBlobMap = window.__activeMediaBlobMap;
-        newWin.focus();
-      } catch (e) {}
-    }
-
-    showToast('🖥️ Đã mở Cửa Sổ Live 9:16! Khung hình đồng bộ chính xác 100% với phần mềm.', 'success');
-  };
-
   const [overlayLinkBase, setOverlayLinkBase] = useState(() => {
     return 'https://avalivepro.vercel.app';
   });
@@ -2160,6 +1952,214 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   }, []);
 
 
+
+  // 📦 ĐÓNG GÓI 100% DỮ LIỆU SÂN KHẤU CHÍNH ĐẨY SANG WINDOW CAPTURE & TIKTOK LIVE STUDIO
+  const getMasterStagePayload = useCallback(() => {
+    let activeUrl = (desktopVideoRef.current && (desktopVideoRef.current.currentSrc || desktopVideoRef.current.src)) || currentBlobUrlRef.current || userLockedMediaUrl || '';
+    if (!activeUrl && selectedCharacter && Array.isArray(customCharacters)) {
+      const match = customCharacters.find(c => c.id === selectedCharacter);
+      if (match) activeUrl = match.url || match.mediaUrl || '';
+    }
+    if (!activeUrl && Array.isArray(customCharacters) && customCharacters.length > 0) {
+      const match = customCharacters[0];
+      if (match) activeUrl = match.url || match.mediaUrl || '';
+    }
+
+    let curTime = 0;
+    if (desktopVideoRef.current && typeof desktopVideoRef.current.currentTime === 'number' && !isNaN(desktopVideoRef.current.currentTime)) {
+      curTime = desktopVideoRef.current.currentTime;
+    } else if (lastPlaybackTimeRef.current > 0) {
+      curTime = lastPlaybackTimeRef.current;
+    }
+
+    let serverActiveUrl = userLockedMediaUrl || '';
+    if (!serverActiveUrl || serverActiveUrl.startsWith('blob:')) {
+      const matchChar = (customCharacters && Array.isArray(customCharacters)) ? customCharacters.find(c => c.id === selectedCharacter) : null;
+      if (matchChar && matchChar.mediaUrl && !matchChar.mediaUrl.startsWith('blob:')) {
+        serverActiveUrl = matchChar.mediaUrl;
+      } else {
+        try {
+          const locked = localStorage.getItem('avalive_user_locked_media');
+          if (locked && !locked.startsWith('blob:')) serverActiveUrl = locked;
+        } catch (e) {}
+      }
+    }
+    if (typeof serverActiveUrl === 'string' && serverActiveUrl.includes('/uploads/')) {
+      serverActiveUrl = serverActiveUrl.substring(serverActiveUrl.indexOf('/uploads/'));
+    }
+
+    const broadcastUrl = serverActiveUrl || activeUrl || userLockedMediaUrl || '';
+    const isVid = isVideoPlaying !== false;
+
+    // Lớp Video Phụ PiP từ Sequencer
+    const secMedia = flowSequencerOverlay?.secondaryMediaUrl || null;
+    const secTrans = flowSequencerOverlay?.secondaryMediaTransform || (flowSequencerOverlay?.secondaryMediaUrl ? {
+      x: flowSequencerOverlay.secondaryMediaPos === 'top-left' ? 4 : flowSequencerOverlay.secondaryMediaPos === 'bottom-left' ? 4 : flowSequencerOverlay.secondaryMediaPos === 'bottom-right' ? 55 : 55,
+      y: flowSequencerOverlay.secondaryMediaPos === 'bottom-left' || flowSequencerOverlay.secondaryMediaPos === 'bottom-right' ? 70 : 8,
+      width: flowSequencerOverlay.secondaryMediaScale || 40,
+      height: 25,
+      zIndex: 20
+    } : null);
+    const secChroma = flowSequencerOverlay?.secondaryMediaChromaKey || null;
+
+    // Lớp Banner / Poster Ảnh từ Sequencer
+    const bannerImg = flowSequencerOverlay?.overlayImage || null;
+    const bannerTrans = flowSequencerOverlay?.overlayImageTransform || (flowSequencerOverlay?.overlayImage ? {
+      x: flowSequencerOverlay.overlayImagePos === 'top-right' ? 65 : flowSequencerOverlay.overlayImagePos === 'bottom-left' ? 4 : flowSequencerOverlay.overlayImagePos === 'bottom-right' ? 65 : 10,
+      y: flowSequencerOverlay.overlayImagePos === 'bottom-left' || flowSequencerOverlay.overlayImagePos === 'bottom-right' ? 70 : 12,
+      width: 80,
+      height: 20,
+      zIndex: 25
+    } : null);
+    const bannerChroma = flowSequencerOverlay?.overlayImageChromaKey || null;
+
+    // Lớp Tiêu Đề / Chữ Nổi Bật từ Sequencer
+    const titleTxt = flowSequencerOverlay?.overlayText || null;
+    const textTrans = flowSequencerOverlay?.overlayTextTransform || (flowSequencerOverlay?.overlayText ? {
+      x: 4,
+      y: 5,
+      width: 92,
+      zIndex: 35
+    } : null);
+
+    return {
+      stage: 'idol',
+      selectedCharacter: selectedCharacter,
+      characterName: customCharacters?.find(c => c.id === selectedCharacter)?.name || 'AI Idol',
+      mediaUrl: broadcastUrl || null,
+      clearMedia: !broadcastUrl,
+      isVideo: isVid,
+      videoPlaybackEvent: isVideoPlaying ? 'play' : 'pause',
+      videoCurrentTime: curTime,
+      isPlaying: isVideoPlaying,
+      aspectRatio: globalAspectRatio || '9:16',
+      secondaryMediaUrl: secMedia,
+      secondaryMediaTransform: secTrans,
+      secondaryMediaChromaKey: secChroma,
+      overlayImage: bannerImg,
+      overlayImageTransform: bannerTrans,
+      overlayImageChromaKey: bannerChroma,
+      overlayText: titleTxt,
+      overlayTextTransform: textTrans,
+      overlayTextColor: flowSequencerOverlay?.overlayTextColor || null,
+      overlayTextFontSize: flowSequencerOverlay?.overlayTextFontSize || null,
+      syncedAvatars: (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.characters : null) || [],
+      multiAvatarConfig: (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig() : null) || null,
+      updatedAt: Date.now()
+    };
+  }, [selectedCharacter, customCharacters, userLockedMediaUrl, isVideoPlaying, globalAspectRatio, flowSequencerOverlay]);
+
+  const handleOpenWindowCapture = () => {
+    // 🎯 ĐỘ PHÂN GIẢI CHUẨN CAO 1080P SẮC NÉT (CHO OBS / TIKTOK LIVE STUDIO CHỤP KHÔNG BỊ VỠ NÉT)
+    const screenW = window.screen.availWidth || window.screen.width || 1920;
+    const screenH = window.screen.availHeight || window.screen.height || 1080;
+    const height = Math.min(1080, Math.max(720, screenH - 40));
+    const width = Math.min(screenW, Math.round((height * 9) / 16));
+    const left = Math.max(0, Math.round((screenW - width) / 2));
+    const top = Math.max(0, Math.round((screenH - height) / 2));
+
+    const payload = getMasterStagePayload();
+    const broadcastUrl = payload.mediaUrl || '';
+    const curTime = payload.videoCurrentTime || 0;
+
+    try {
+      localStorage.removeItem('avalive_user_paused');
+      localStorage.removeItem('avalive_window_capture_paused');
+      if (broadcastUrl) {
+        localStorage.setItem('avalive_active_video_src', broadcastUrl);
+        localStorage.setItem('avalive_user_locked_media', broadcastUrl);
+      }
+      localStorage.setItem('avalive_master_live_state', JSON.stringify(payload));
+    } catch (e) {}
+
+    // Đồng bộ toàn bộ gói dữ liệu đa tầng lên server Backend
+    syncMasterLiveState(payload, socketRef.current);
+
+    const activeBlob = currentFileBlobRef.current || window.__activeMediaBlob || (selectedCharacter && window.__activeMediaBlobMap && window.__activeMediaBlobMap.get(selectedCharacter)) || null;
+
+    try {
+      const bc = new BroadcastChannel('avalive_master_live_stream');
+      bc.postMessage({
+        type: 'GLOBAL_MEDIA_CHANGE',
+        mediaUrl: broadcastUrl,
+        blobUrl: broadcastUrl,
+        fileBlob: activeBlob,
+        characterId: selectedCharacter,
+        isVideo: true,
+        isPlaying: true,
+        currentTime: curTime,
+        force: true,
+        source: 'desktop',
+        timestamp: Date.now()
+      });
+      setTimeout(() => bc.close(), 100);
+    } catch (err) {}
+
+    const effectiveV = broadcastUrl || '';
+
+    // ⚡ LƯU TRỰC TIẾP BLOB VÀ BLOB URL TRÊN WINDOW CHO CỬA SỔ WINDOW CAPTURE MỞ 0MS KHÔNG GIẬT LAG
+    if (activeBlob) {
+      setActiveMedia(activeBlob, 'current_active', { id: selectedCharacter, mediaUrl: broadcastUrl }).catch(() => {});
+      if (selectedCharacter) setActiveMedia(activeBlob, selectedCharacter, { id: selectedCharacter, mediaUrl: broadcastUrl }).catch(() => {});
+    }
+
+    if (typeof window !== 'undefined') {
+      if (activeBlob) {
+        window.__activeMediaBlob = activeBlob;
+        window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+        if (selectedCharacter) window.__activeMediaBlobMap.set(selectedCharacter, activeBlob);
+        if (effectiveV) window.__activeMediaBlobMap.set(effectiveV, activeBlob);
+        if (broadcastUrl) window.__activeMediaBlobMap.set(broadcastUrl, activeBlob);
+      }
+      const activeBlobUrl = currentBlobUrlRef.current || window.__activeMediaBlobUrl || (desktopVideoRef.current && (desktopVideoRef.current.currentSrc || desktopVideoRef.current.src)) || null;
+      if (activeBlobUrl) {
+        window.__activeMediaBlobUrl = activeBlobUrl;
+        window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+        window.__activeMediaBlobMap.set(activeBlobUrl, activeBlob || activeBlobUrl);
+        try { localStorage.setItem('avalive_active_video_src', activeBlobUrl); } catch (e) {}
+      }
+    }
+
+    const charQuery = selectedCharacter ? `&char=${encodeURIComponent(selectedCharacter)}` : '';
+    const timeQuery = curTime > 0 ? `&t=${Math.round(curTime * 100) / 100}` : '';
+    const vQuery = effectiveV ? `&v=${encodeURIComponent(effectiveV)}` : '';
+    const query = `${vQuery}${charQuery}${timeQuery}`;
+    const origin = typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')
+      ? window.location.origin
+      : 'http://localhost:3001';
+    const captureUrl = `${origin}/window-capture?mode=window_capture&sound=1&autoplay=1&fit=cover${query}`;
+    
+    let newWin = null;
+    try {
+      newWin = window.open(
+        captureUrl,
+        'avalive_window_capture_target',
+        `width=${width},height=${height},left=${left},top=${top},menubar=no,toolbar=no,location=no,status=no,resizable=yes`
+      );
+    } catch (err) {
+      console.warn('[WindowCapture] Popup error, trying fallback:', err);
+    }
+
+    if (!newWin || newWin.closed || typeof newWin.closed === 'undefined') {
+      try {
+        newWin = window.open(captureUrl, '_blank');
+      } catch (e) {
+        console.warn('[WindowCapture] Fallback _blank failed:', e);
+      }
+    }
+
+    // ⚡ TRUYỀN THẲNG FILE BLOB GỐC (1GB - 20GB) VÀO CỬA SỔ CON CHO PHÉP PHÁT 0MS KHÔNG GIẬT LAG
+    if (newWin) {
+      try {
+        newWin.__activeMediaBlob = currentFileBlobRef.current || window.__activeMediaBlob;
+        newWin.__activeMediaBlobUrl = currentBlobUrlRef.current || window.__activeMediaBlobUrl;
+        newWin.__activeMediaBlobMap = window.__activeMediaBlobMap;
+        newWin.focus();
+      } catch (e) {}
+    }
+
+    showToast('🖥️ Đã mở Cửa Sổ Live 9:16! Khung hình đồng bộ chính xác 100% với phần mềm.', 'success');
+  };
 
   const handleGlobalRunDemo = useCallback(() => {
     if (isGlobalDemoRunning) {
