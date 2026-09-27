@@ -85,6 +85,36 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack 
     return () => clearTimeout(idleTimerRef.current);
   }, [isConnected, liveMedia]);
 
+  // 🛡️ LẮNG NGHE LỆNH TẮT / TẠM DỪNG TOÀN DIỆN ĐỂ HỦY NGAY TIMER TỰ PHÁT (IDLE TIMERS)
+  useEffect(() => {
+    const handleCancelAllTimers = () => {
+      clearTimeout(idleTimerRef.current);
+    };
+    window.addEventListener('aidol_script_updated', handleCancelAllTimers);
+    window.addEventListener('avalive_emergency_stop_all', handleCancelAllTimers);
+    window.addEventListener('avalive:stop_all_audio_and_voice', handleCancelAllTimers);
+    window.addEventListener('global-stop-demo', handleCancelAllTimers);
+    const handleStorageUpdate = (e) => {
+      if (e.key === 'aidol_user_paused_script' && e.newValue === 'true') {
+        clearTimeout(idleTimerRef.current);
+      }
+      if (e.key === 'avalive_user_paused' && e.newValue === 'true') {
+        clearTimeout(idleTimerRef.current);
+      }
+      if (e.key === 'aidol_is_script_live_running' && e.newValue === 'false') {
+        clearTimeout(idleTimerRef.current);
+      }
+    };
+    window.addEventListener('storage', handleStorageUpdate);
+    return () => {
+      window.removeEventListener('aidol_script_updated', handleCancelAllTimers);
+      window.removeEventListener('avalive_emergency_stop_all', handleCancelAllTimers);
+      window.removeEventListener('avalive:stop_all_audio_and_voice', handleCancelAllTimers);
+      window.removeEventListener('global-stop-demo', handleCancelAllTimers);
+      window.removeEventListener('storage', handleStorageUpdate);
+    };
+  }, []);
+
   // Vòng lặp Idle (tự động tương tác)
   const resetIdleTimer = useCallback(() => {
     clearTimeout(idleTimerRef.current);
@@ -95,7 +125,9 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack 
     const isUserPaused = typeof localStorage !== 'undefined' && (
       localStorage.getItem('avalive_user_paused') === 'true' || 
       localStorage.getItem('avalive_window_capture_paused') === 'true' ||
-      localStorage.getItem('avalive_master_live_running') === 'false'
+      localStorage.getItem('avalive_master_live_running') === 'false' ||
+      localStorage.getItem('aidol_user_paused_script') === 'true' ||
+      (typeof window !== 'undefined' && window.__aidolUserPausedScript === true)
     );
     if (isUserPaused) {
       return;
@@ -108,7 +140,8 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack 
     }
     const isScriptStoppedByUser = typeof localStorage !== 'undefined' && (
       localStorage.getItem('aidol_user_paused_script') === 'true' ||
-      localStorage.getItem('aidol_is_script_live_running') === 'false'
+      localStorage.getItem('aidol_is_script_live_running') === 'false' ||
+      (typeof window !== 'undefined' && window.__aidolUserPausedScript === true)
     );
     if (isScriptStoppedByUser) {
       return;
@@ -121,13 +154,16 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack 
       const stillUserPaused = typeof localStorage !== 'undefined' && (
         localStorage.getItem('avalive_user_paused') === 'true' || 
         localStorage.getItem('avalive_window_capture_paused') === 'true' ||
-        localStorage.getItem('avalive_master_live_running') === 'false'
+        localStorage.getItem('avalive_master_live_running') === 'false' ||
+        localStorage.getItem('aidol_user_paused_script') === 'true' ||
+        (typeof window !== 'undefined' && window.__aidolUserPausedScript === true)
       );
       if (stillUserPaused) return;
 
       const stillScriptStopped = typeof localStorage !== 'undefined' && (
         localStorage.getItem('aidol_user_paused_script') === 'true' ||
-        localStorage.getItem('aidol_is_script_live_running') === 'false'
+        localStorage.getItem('aidol_is_script_live_running') === 'false' ||
+        (typeof window !== 'undefined' && window.__aidolUserPausedScript === true)
       );
       if (stillScriptStopped) return;
 
@@ -364,9 +400,10 @@ function fillTemplate(template, vars = {}) {
     const isTestMode = payload?.isTest === true;
     const isScriptStoppedByUser = typeof localStorage !== 'undefined' && (
       localStorage.getItem('aidol_user_paused_script') === 'true' ||
-      localStorage.getItem('aidol_is_script_live_running') === 'false'
+      localStorage.getItem('aidol_is_script_live_running') === 'false' ||
+      (typeof window !== 'undefined' && window.__aidolUserPausedScript === true)
     );
-    if (!isTestMode && isScriptStoppedByUser && (type === 'IDLE' || type === 'TALKING' || type === 'AI_TALK' || type === 'APOLOGY')) {
+    if (!isTestMode && isScriptStoppedByUser && (type === 'IDLE' || type === 'TALKING' || type === 'AI_TALK' || type === 'APOLOGY' || type === 'WELCOME' || type === 'CALL_TO_ACTION')) {
       return;
     }
 
@@ -400,7 +437,9 @@ function fillTemplate(template, vars = {}) {
     const isUserPaused = typeof localStorage !== 'undefined' && (
       localStorage.getItem('avalive_user_paused') === 'true' || 
       localStorage.getItem('avalive_window_capture_paused') === 'true' ||
-      localStorage.getItem('avalive_master_live_running') === 'false'
+      localStorage.getItem('avalive_master_live_running') === 'false' ||
+      localStorage.getItem('aidol_user_paused_script') === 'true' ||
+      (typeof window !== 'undefined' && window.__aidolUserPausedScript === true)
     );
     if (isUserPaused && !isTestMode) {
       return;

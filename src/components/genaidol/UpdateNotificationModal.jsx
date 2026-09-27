@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.73';
+export const APP_VERSION = '4.9.74';
 export const RELEASE_DATE = '27/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.74 - Triệt Tiêu 100% Lỗi Tự Ý Phát Voice Kịch Bản Sau Vài Chục Giây, Khóa Chặt Trạng Thái Tắt & Đồng Bộ Đầy Đủ Sản Phẩm Ghim TikTok Shop Sang Window Capture và TikTok Live Studio',
+    description: '1. Triệt Tiêu 100% Lỗi Voice Tự Phát Lại Sau Vài Chục Giây: Sửa dứt điểm nguyên nhân safetyTimer trong playAudioBufferWithDSP và timer IDLE 30s trong useLiveCoordinator kích hoạt onEnd() ngầm. Khai báo Set activeVoiceWatchdogTimers để hủy sạch toàn bộ timer bảo vệ khi người dùng bấm tắt/dừng kịch bản; ngăn chặn 100% callback onEnd() tự gọi tiếp bước sau khi kịch bản đã bị tạm dừng. Đồng thời chặn toàn bộ các sự kiện IDLE, TALKING, AI_TALK khi streamer đã tắt voice, đảm bảo tắt là tắt vĩnh viễn, chỉ khi người dùng bấm mở thì mới phát. 2. Đồng Bộ Đầy Đủ Thẻ Sản Phẩm Ghim TikTok Shop & Tất Cả Lớp Sân Khấu Sang Window Capture & Link Livestream: Bổ sung container hiển thị sản phẩm ghim TikTok Shop cao cấp (#pinnedProductContainer) với đầy đủ hình ảnh, tên sản phẩm, giá sale, giá gạch ngang, deal badge và mã ID; đồng thời đồng bộ hoàn hảo màu nền backgroundColor, avatarTransforms, video phụ PiP, banner ảnh và tiêu đề chữ sang Window Capture OBS và link TikTok Live Studio 60 FPS.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.73 - Khóa Chặt 100% Voice AI Khi Bấm Tắt & Đổi Avatar, Giữ Nguyên Trạng Thái Tắt & Đồng Bộ Đầy Đủ Tất Cả Các Lớp Nằm Trên Nền Sang Window Capture & Link TikTok Live Studio',
     description: '1. Khóa Chặt Triệt Để Nút Tắt & Triệt Tiêu Voice AI Khi Đổi Avatar: Khi người dùng bấm Tắt ("TẮT TẤT CẢ" hoặc dừng kịch bản), toàn bộ voice AI và hàng đợi phát bị tắt sạch dứt điểm 100%. Khi streamer click chọn đổi avatar khác, luồng AI tuyệt đối không tự ý phát voice kịch bản hay voice chào ngầm; sân khấu chính giữ nguyên trạng thái Tắt/Tạm Dừng, không tự động phát hay mở liên kết lại, chỉ khi streamer chủ động bấm Bật lại thì mới mở. 2. Đồng Bộ Đầy Đủ 100% Tất Cả Các Lớp Nằm Trên Nền Sang Window Capture & TikTok Live Studio: Tách biệt cấu trúc z-index chuẩn 6 tầng độc lập (Lớp 0: Nền video/ảnh 60 FPS, Lớp 1: Extra layers/sticker/vòng tròn sàn, Lớp 2: Các khung hình avatar với bo góc và bóng đổ, Lớp 3: Video phụ PiP, Lớp 4: Banner ảnh, Lớp 5: Tiêu đề chữ typography), khắc phục dứt điểm lỗi chỉ hiển thị nền đen che khuất; đồng thời nạp đầy đủ thuộc tính DOM muted và playsinline chống WebKit chặn autoplay trên TikTok Live Studio và OBS CEF.'

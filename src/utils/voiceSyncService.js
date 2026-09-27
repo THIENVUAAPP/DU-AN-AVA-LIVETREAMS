@@ -7721,6 +7721,7 @@ let activeAudioContext = null;
 let activeSourceNode = null;
 let activeMasterGainNode = null;
 const audioBufferMemoryCache = new Map();
+const activeVoiceWatchdogTimers = new Set();
 
 /**
  * ⚡ ĐIỀU CHỈNH ÂM LƯỢNG & TỐC ĐỘ REAL-TIME KHI ĐANG PHÁT AUDIO
@@ -7838,6 +7839,10 @@ export function unlockAudioContext() {
  */
 export function stopCurrentActiveAudioNode() {
   currentSpeechGenerationId++;
+  if (activeVoiceWatchdogTimers.size > 0) {
+    activeVoiceWatchdogTimers.forEach(t => clearTimeout(t));
+    activeVoiceWatchdogTimers.clear();
+  }
   if (activeSourceNode) {
     try {
       activeSourceNode.onended = null;
@@ -7875,6 +7880,10 @@ export function stopCurrentActiveAudioNode() {
  */
 export function stopVoiceAudio() {
   currentSpeechGenerationId++;
+  if (activeVoiceWatchdogTimers.size > 0) {
+    activeVoiceWatchdogTimers.forEach(t => clearTimeout(t));
+    activeVoiceWatchdogTimers.clear();
+  }
   clearGlobalSpeechQueue();
   stopCurrentActiveAudioNode();
   isGlobalSpeaking = false;
@@ -8404,6 +8413,7 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
       hasEnded = true;
       if (safetyTimer) {
         clearTimeout(safetyTimer);
+        activeVoiceWatchdogTimers.delete(safetyTimer);
         safetyTimer = null;
       }
       activeSourceNode = null;
@@ -8420,9 +8430,10 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
         localStorage.getItem('avalive_window_capture_paused') === 'true' ||
         localStorage.getItem('avalive_master_live_running') === 'false' ||
         localStorage.getItem('aidol_user_paused_script') === 'true' ||
-        localStorage.getItem('aidol_is_script_live_running') === 'false'
+        localStorage.getItem('aidol_is_script_live_running') === 'false' ||
+        (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
       );
-      if (!isTestingMode && isPausedNow) {
+      if (isPausedNow) {
         return resolve(false);
       }
       if (speechId !== null && speechId !== currentSpeechGenerationId) {
@@ -8439,16 +8450,23 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
     // Safety watchdog: Tự động kết thúc nếu Web Audio API bỏ lỡ sự kiện onended do GC
     const durMs = Math.max(300, Math.ceil(((audioBuffer.duration || 1) / (requestedRate || 1)) * 1000) + 350);
     safetyTimer = setTimeout(finish, durMs);
+    activeVoiceWatchdogTimers.add(safetyTimer);
 
     const isPausedBeforeStart = typeof localStorage !== 'undefined' && (
       localStorage.getItem('avalive_user_paused') === 'true' || 
       localStorage.getItem('avalive_window_capture_paused') === 'true' ||
       localStorage.getItem('avalive_master_live_running') === 'false' ||
-      localStorage.getItem('aidol_is_script_live_running') === 'false'
+      localStorage.getItem('aidol_user_paused_script') === 'true' ||
+      localStorage.getItem('aidol_is_script_live_running') === 'false' ||
+      (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
     );
-    if (!isTestingMode && isPausedBeforeStart) {
-      finish();
-      return;
+    if (isPausedBeforeStart) {
+      if (safetyTimer) {
+        clearTimeout(safetyTimer);
+        activeVoiceWatchdogTimers.delete(safetyTimer);
+        safetyTimer = null;
+      }
+      return resolve(false);
     }
 
     try {
@@ -8974,7 +8992,12 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     localStorage.getItem('aidol_is_script_live_running') === 'false' ||
     (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
   );
-  if (!isTestingMode && isUserPaused) {
+  const isScriptExplicitlyPaused = typeof localStorage !== 'undefined' && (
+    localStorage.getItem('aidol_user_paused_script') === 'true' ||
+    localStorage.getItem('aidol_is_script_live_running') === 'false' ||
+    (typeof window !== 'undefined' && window.__aidolUserPausedScript === true)
+  );
+  if (isScriptExplicitlyPaused || (!isTestingMode && isUserPaused)) {
     // 🛡️ KHÓA CHẶT: Khi người dùng đã tắt / dừng kịch bản, TUYỆT ĐỐI KHÔNG gọi onEnd() tránh tự nhảy câu tiếp theo
     return false;
   }
@@ -9069,7 +9092,15 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
             finished = true;
             activePreviewAudio = null;
             try { URL.revokeObjectURL(audioUrl); } catch {}
-            if (thisSpeechId !== currentSpeechGenerationId) return resolve(false);
+            const isPausedNow = typeof localStorage !== 'undefined' && (
+              localStorage.getItem('avalive_user_paused') === 'true' || 
+              localStorage.getItem('avalive_window_capture_paused') === 'true' ||
+              localStorage.getItem('avalive_master_live_running') === 'false' ||
+              localStorage.getItem('aidol_user_paused_script') === 'true' ||
+              localStorage.getItem('aidol_is_script_live_running') === 'false' ||
+              (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
+            );
+            if (isPausedNow || thisSpeechId !== currentSpeechGenerationId) return resolve(false);
             if (onEnd) onEnd();
             resolve(true);
           };
@@ -9171,7 +9202,15 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
                       detail: { isSpeaking: false, avatarId: null }
                     }));
                   }
-                  if (thisSpeechId !== currentSpeechGenerationId) return resolve(false);
+                  const isPausedNow = typeof localStorage !== 'undefined' && (
+                    localStorage.getItem('avalive_user_paused') === 'true' || 
+                    localStorage.getItem('avalive_window_capture_paused') === 'true' ||
+                    localStorage.getItem('avalive_master_live_running') === 'false' ||
+                    localStorage.getItem('aidol_user_paused_script') === 'true' ||
+                    localStorage.getItem('aidol_is_script_live_running') === 'false' ||
+                    (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
+                  );
+                  if (isPausedNow || thisSpeechId !== currentSpeechGenerationId) return resolve(false);
                   if (onEnd) onEnd();
                   resolve(true);
                 };
@@ -9229,7 +9268,15 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
             detail: { isSpeaking: false, avatarId: null }
           }));
         }
-        if (thisSpeechId !== currentSpeechGenerationId) return resolve(false);
+        const isPausedNow = typeof localStorage !== 'undefined' && (
+          localStorage.getItem('avalive_user_paused') === 'true' || 
+          localStorage.getItem('avalive_window_capture_paused') === 'true' ||
+          localStorage.getItem('avalive_master_live_running') === 'false' ||
+          localStorage.getItem('aidol_user_paused_script') === 'true' ||
+          localStorage.getItem('aidol_is_script_live_running') === 'false' ||
+          (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
+        );
+        if (isPausedNow || thisSpeechId !== currentSpeechGenerationId) return resolve(false);
         if (onEnd) onEnd();
         resolve(true);
       };
