@@ -3745,9 +3745,11 @@ let _cachedReleaseUrls = {};
 let _lastReleaseFetchTime = 0;
 async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
   const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
-  const defaultUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${fallbackVer}/${osPrefix}_v${fallbackVer}.zip`;
+  const defaultFallbackUrl = isMac
+    ? 'https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v4.9.54/AvaLive_VIP_PRO_Mac_v4.9.54.zip'
+    : 'https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v4.9.54/AvaLive_VIP_PRO_Windows_v4.9.54.zip';
   
-  const cacheKey = `${osPrefix}_${fallbackVer}`;
+  const cacheKey = `${osPrefix}_latest`;
   if (_cachedReleaseUrls[cacheKey] && (Date.now() - _lastReleaseFetchTime < 60000)) {
     return _cachedReleaseUrls[cacheKey];
   }
@@ -3757,20 +3759,24 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
     const headers = { 'User-Agent': 'AvaLive-Download-Agent/1.0', 'Accept': 'application/vnd.github.v3+json' };
     if (token) headers['Authorization'] = `Bearer ${token}`;
 
-    const tagRes = await fetch(`https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/tags/v${fallbackVer}`, { headers });
-    if (tagRes.ok) {
-      const rel = await tagRes.json();
-      const asset = (rel.assets || []).find(a => a.name.startsWith(osPrefix) && a.name.endsWith('.zip'));
-      if (asset && asset.browser_download_url) {
-        _cachedReleaseUrls[cacheKey] = asset.browser_download_url;
-        _lastReleaseFetchTime = Date.now();
-        return asset.browser_download_url;
+    const relRes = await fetch('https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases', { headers });
+    if (relRes.ok) {
+      const releases = await relRes.json();
+      if (Array.isArray(releases)) {
+        for (const rel of releases) {
+          const asset = (rel.assets || []).find(a => a.name && a.name.startsWith(osPrefix) && a.name.endsWith('.zip'));
+          if (asset && asset.browser_download_url) {
+            _cachedReleaseUrls[cacheKey] = asset.browser_download_url;
+            _lastReleaseFetchTime = Date.now();
+            return asset.browser_download_url;
+          }
+        }
       }
     }
   } catch (e) {
     console.warn('[Download] Error resolving GitHub asset URL:', e.message);
   }
-  return defaultUrl;
+  return defaultFallbackUrl;
 }
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB

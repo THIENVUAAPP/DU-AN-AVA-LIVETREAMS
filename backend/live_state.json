@@ -3,16 +3,16 @@
   "aspectRatio": "9:16",
   "characterId": "",
   "characterName": "Video Người Dùng",
-  "mediaUrl": null,
+  "mediaUrl": "/uploads/media-1790480285999-991836740.png",
   "currentMedia": "/uploads/media-1790480285999-991836740.png",
   "eventVideoUrl": null,
-  "isVideo": false,
-  "videoPlaybackEvent": "pause",
-  "isPlaying": false,
+  "isVideo": true,
+  "videoPlaybackEvent": "play",
+  "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
   "clearMedia": false,
-  "updatedAt": 1790517048377,
+  "updatedAt": 1790519844721,
   "isUserExplicitMediaLocked": false,
   "selectedCharacter": "",
   "videoCurrentTime": 0,
@@ -89,7 +89,7 @@
       "isSpeakingNow": false
     }
   ],
-  "tunnelUrl": "https://postposted-choice-revenue-health.trycloudflare.com",
+  "tunnelUrl": "https://classified-ambien-mission-showers.trycloudflare.com",
   "multiAvatarConfig": {
     "enabled": true,
     "activeCount": 2,
@@ -177,7 +177,7 @@
     ],
     "activeSpeakerId": "avatar_1",
     "fromSequencer": true,
-    "syncedAt": 1790482961236
+    "syncedAt": 1790519844652
   },
   "mainMediaUrl": "/uploads/media-1790480285999-991836740.png",
   "mainMediaTransform": {
@@ -185,7 +185,10 @@
     "y": 0,
     "width": 100,
     "height": 100,
-    "zIndex": 1
+    "scale": 100,
+    "objectFit": "cover",
+    "blur": 0,
+    "brightness": 100
   },
   "multiAvatarExtraLayers": [],
   "videoVolume": 1,
@@ -217,5 +220,52 @@
   "overlayTextColor": "#ffffff",
   "title": "Video Đang Phát",
   "extraImageLayers": [],
-  "isVideoPlaying": false
+  "isVideoPlaying": false,
+  "avatarTransforms": {
+    "avatar_1": {
+      "x": 8,
+      "y": 41,
+      "width": 45,
+      "height": 48,
+      "zIndex": 8,
+      "pose": "stand",
+      "objectFit": "cover",
+      "borderRadius": 16,
+      "scale": 0.8,
+      "rotate": 0
+    },
+    "avatar_2": {
+      "x": 55,
+      "y": 17,
+      "width": 45,
+      "height": 48,
+      "zIndex": 8,
+      "pose": "stand",
+      "objectFit": "cover",
+      "borderRadius": 16,
+      "scale": 0.8,
+      "rotate": 0
+    }
+  },
+  "backgroundColor": "#0a0c14",
+  "backgroundUrl": null,
+  "backgroundTransform": {
+    "x": 0,
+    "y": 0,
+    "width": 100,
+    "height": 100,
+    "scale": 100,
+    "objectFit": "cover",
+    "blur": 0,
+    "brightness": 100
+  },
+  "backgroundChromaKey": null,
+  "livePinnedProduct": null,
+  "pinnedProduct": null,
+  "activeSpeakerId": "avatar_1",
+  "isSpeaking": true,
+  "badgeText": null,
+  "productBanner": null,
+  "volume": 1,
+  "isMuted": false
 }
