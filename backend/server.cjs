@@ -1823,10 +1823,27 @@ app.get([
 
         // 3. Hiển thị Lớp Nền Sân Khấu Chính (Background Layer)
         const imgEl = document.getElementById('imagePlayer');
+        const mainTrans = data.mainMediaTransform || { x: 0, y: 0, width: 100, height: 100 };
+        const mainChromaClass = data.mainMediaChromaKey && data.mainMediaChromaKey.enabled 
+          ? (data.mainMediaChromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter')
+          : '';
+
+        if (multiBg && resolvedMainBg) {
+          multiBg.style.backgroundImage = 'url(' + resolvedMainBg + ')';
+          multiBg.style.display = 'block';
+        } else if (multiBg) {
+          multiBg.style.display = 'none';
+        }
+
         if (resolvedMainBg) {
           if (isImage(resolvedMainBg)) {
             if (imgEl) {
               if (imgEl.src !== resolvedMainBg) imgEl.src = resolvedMainBg;
+              imgEl.style.left = (mainTrans.x ?? 0) + '%';
+              imgEl.style.top = (mainTrans.y ?? 0) + '%';
+              imgEl.style.width = (mainTrans.width ?? 100) + '%';
+              imgEl.style.height = (mainTrans.height ?? 100) + '%';
+              imgEl.className = mainChromaClass;
               imgEl.style.display = 'block';
             }
             if (vid) {
@@ -1836,12 +1853,17 @@ app.get([
           } else {
             if (imgEl) imgEl.style.display = 'none';
             if (vid) {
+              vid.style.left = (mainTrans.x ?? 0) + '%';
+              vid.style.top = (mainTrans.y ?? 0) + '%';
+              vid.style.width = (mainTrans.width ?? 100) + '%';
+              vid.style.height = (mainTrans.height ?? 100) + '%';
+              vid.className = mainChromaClass;
               vid.style.display = 'block';
               if (!isSameMedia(vid.src, resolvedMainBg)) {
                 currentSrc = resolvedMainBg;
                 vid.src = resolvedMainBg;
               }
-              if (!isStreamUserPaused) safePlay();
+              if (data.isPlaying !== false && !isStreamUserPaused) safePlay();
             }
           }
         } else {
@@ -1866,11 +1888,15 @@ app.get([
           const pipUrl = resolveUrl(data.secondaryMediaUrl);
           if (pipUrl) {
             const trans = data.secondaryMediaTransform || { x: 52, y: 28, width: 40, height: 48, zIndex: 25 };
+            const secChromaClass = data.secondaryMediaChromaKey && data.secondaryMediaChromaKey.enabled
+              ? (data.secondaryMediaChromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter')
+              : '';
             pipContainer.style.left = (trans.x ?? 52) + '%';
             pipContainer.style.top = (trans.y ?? 28) + '%';
             pipContainer.style.width = (trans.width ?? 40) + '%';
             pipContainer.style.height = (trans.height ?? 48) + '%';
             pipContainer.style.zIndex = trans.zIndex || 25;
+            pipContainer.className = secChromaClass;
             pipContainer.style.display = 'block';
 
             if (isImage(pipUrl)) {
@@ -1882,7 +1908,9 @@ app.get([
               pipVideo.style.display = 'block';
               if (!isSameMedia(pipVideo.src, pipUrl)) {
                 pipVideo.src = pipUrl;
-                pipVideo.play().catch(function() {});
+                if (data.isPlaying !== false) {
+                  pipVideo.play().catch(function() {});
+                }
               }
             }
           } else {
@@ -1896,10 +1924,14 @@ app.get([
           const imgUrl = resolveUrl(data.overlayImage || data.bannerUrl || data.posterUrl);
           if (imgUrl) {
             const trans = data.overlayImageTransform || { x: 10, y: 12, width: 80, height: 20, zIndex: 30 };
+            const imgChromaClass = data.overlayImageChromaKey && data.overlayImageChromaKey.enabled
+              ? (data.overlayImageChromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter')
+              : '';
             overlayImgEl.style.left = (trans.x ?? 10) + '%';
             overlayImgEl.style.top = (trans.y ?? 12) + '%';
             overlayImgEl.style.width = (trans.width ?? 80) + '%';
             overlayImgEl.style.zIndex = trans.zIndex || 30;
+            overlayImgEl.className = imgChromaClass;
             overlayImgContent.src = imgUrl;
             overlayImgEl.style.display = 'block';
           } else {
@@ -1907,7 +1939,7 @@ app.get([
           }
         }
 
-        // 6. Tiêu Đề Chữ Overlay (Đúng Tọa Độ Transform)
+        // 6. Tiêu Đề Chữ Overlay (Đúng Tọa Độ Transform & Typography)
         if (banner && content) {
           const txt = data.overlayText || data.title || data.stepTitle;
           if (txt && typeof txt === 'string' && txt.trim()) {
@@ -1917,14 +1949,29 @@ app.get([
             banner.style.width = (trans.width ?? 92) + '%';
             banner.style.zIndex = trans.zIndex || 35;
             content.innerText = txt.trim();
+            if (data.overlayTextColor) content.style.color = data.overlayTextColor;
+            if (data.overlayTextFontSize) content.style.fontSize = data.overlayTextFontSize + 'px';
             banner.style.display = 'block';
           } else {
             banner.style.display = 'none';
           }
         }
 
-        if (!isStreamUserPaused && vid && vid.paused && vid.src) {
-          safePlay();
+        // 7. Đồng bộ trạng thái Dừng / Phát video chính xác 100%
+        if (data.isPlaying === false || data.videoPlaybackEvent === 'pause') {
+          if (vid && !vid.paused) {
+            try { vid.pause(); } catch(e) {}
+          }
+          if (pipVideo && !pipVideo.paused) {
+            try { pipVideo.pause(); } catch(e) {}
+          }
+        } else if (data.isPlaying === true || data.videoPlaybackEvent === 'play') {
+          if (!isStreamUserPaused && vid && vid.paused && vid.src) {
+            safePlay();
+          }
+          if (pipVideo && pipVideo.paused && pipVideo.src) {
+            try { pipVideo.play().catch(function() {}); } catch(e) {}
+          }
         }
         updateDockUI();
       }
@@ -2082,7 +2129,7 @@ app.get([
           const bc = new BroadcastChannel('avalive_master_live_stream');
           bc.onmessage = function(ev) {
             if (!ev.data) return;
-            if (ev.data.type === 'GLOBAL_MEDIA_CHANGE' || ev.data.type === 'MASTER_MEDIA_CHANGE' || ev.data.type === 'EVENT_VIDEO_PLAY') {
+            if (ev.data.type === 'GLOBAL_MEDIA_CHANGE' || ev.data.type === 'MASTER_MEDIA_CHANGE' || ev.data.type === 'EVENT_VIDEO_PLAY' || ev.data.type === 'MASTER_LIVE_STATE_UPDATE') {
               applyLiveState(ev.data);
             } else if (ev.data.type === 'CLEAR_STAGE' || ev.data.type === 'CLEAR_EVENT_VIDEO') {
               applyLiveState({ clearMedia: true, isPlaying: false });
@@ -2978,10 +3025,27 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
 
         // 3. Hiển thị Lớp Nền Sân Khấu Chính (Background Layer)
         const imgEl = document.getElementById('imagePlayer');
+        const mainTrans = data.mainMediaTransform || { x: 0, y: 0, width: 100, height: 100 };
+        const mainChromaClass = data.mainMediaChromaKey && data.mainMediaChromaKey.enabled 
+          ? (data.mainMediaChromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter')
+          : '';
+
+        if (multiBg && resolvedMainBg) {
+          multiBg.style.backgroundImage = 'url(' + resolvedMainBg + ')';
+          multiBg.style.display = 'block';
+        } else if (multiBg) {
+          multiBg.style.display = 'none';
+        }
+
         if (resolvedMainBg) {
           if (isImage(resolvedMainBg)) {
             if (imgEl) {
               if (imgEl.src !== resolvedMainBg) imgEl.src = resolvedMainBg;
+              imgEl.style.left = (mainTrans.x ?? 0) + '%';
+              imgEl.style.top = (mainTrans.y ?? 0) + '%';
+              imgEl.style.width = (mainTrans.width ?? 100) + '%';
+              imgEl.style.height = (mainTrans.height ?? 100) + '%';
+              imgEl.className = mainChromaClass;
               imgEl.style.display = 'block';
             }
             if (vid) {
@@ -2991,12 +3055,17 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           } else {
             if (imgEl) imgEl.style.display = 'none';
             if (vid) {
+              vid.style.left = (mainTrans.x ?? 0) + '%';
+              vid.style.top = (mainTrans.y ?? 0) + '%';
+              vid.style.width = (mainTrans.width ?? 100) + '%';
+              vid.style.height = (mainTrans.height ?? 100) + '%';
+              vid.className = mainChromaClass;
               vid.style.display = 'block';
               if (!isSameMedia(vid.src, resolvedMainBg)) {
                 currentSrc = resolvedMainBg;
                 vid.src = resolvedMainBg;
               }
-              if (!isStreamUserPaused) safePlay();
+              if (data.isPlaying !== false && !isStreamUserPaused) safePlay();
             }
           }
         } else {
@@ -3021,11 +3090,15 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           const pipUrl = resolveUrl(data.secondaryMediaUrl);
           if (pipUrl) {
             const trans = data.secondaryMediaTransform || { x: 52, y: 28, width: 40, height: 48, zIndex: 25 };
+            const secChromaClass = data.secondaryMediaChromaKey && data.secondaryMediaChromaKey.enabled
+              ? (data.secondaryMediaChromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter')
+              : '';
             pipContainer.style.left = (trans.x ?? 52) + '%';
             pipContainer.style.top = (trans.y ?? 28) + '%';
             pipContainer.style.width = (trans.width ?? 40) + '%';
             pipContainer.style.height = (trans.height ?? 48) + '%';
             pipContainer.style.zIndex = trans.zIndex || 25;
+            pipContainer.className = secChromaClass;
             pipContainer.style.display = 'block';
 
             if (isImage(pipUrl)) {
@@ -3037,7 +3110,9 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
               pipVideo.style.display = 'block';
               if (!isSameMedia(pipVideo.src, pipUrl)) {
                 pipVideo.src = pipUrl;
-                pipVideo.play().catch(function() {});
+                if (data.isPlaying !== false) {
+                  pipVideo.play().catch(function() {});
+                }
               }
             }
           } else {
@@ -3051,10 +3126,14 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           const imgUrl = resolveUrl(data.overlayImage || data.bannerUrl || data.posterUrl);
           if (imgUrl) {
             const trans = data.overlayImageTransform || { x: 10, y: 12, width: 80, height: 20, zIndex: 30 };
+            const imgChromaClass = data.overlayImageChromaKey && data.overlayImageChromaKey.enabled
+              ? (data.overlayImageChromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter')
+              : '';
             overlayImgEl.style.left = (trans.x ?? 10) + '%';
             overlayImgEl.style.top = (trans.y ?? 12) + '%';
             overlayImgEl.style.width = (trans.width ?? 80) + '%';
             overlayImgEl.style.zIndex = trans.zIndex || 30;
+            overlayImgEl.className = imgChromaClass;
             overlayImgContent.src = imgUrl;
             overlayImgEl.style.display = 'block';
           } else {
@@ -3062,7 +3141,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           }
         }
 
-        // 6. Tiêu Đề Chữ Overlay (Đúng Tọa Độ Transform)
+        // 6. Tiêu Đề Chữ Overlay (Đúng Tọa Độ Transform & Typography)
         if (banner && content) {
           const txt = data.overlayText || data.title || data.stepTitle;
           if (txt && typeof txt === 'string' && txt.trim()) {
@@ -3072,18 +3151,27 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
             banner.style.width = (trans.width ?? 92) + '%';
             banner.style.zIndex = trans.zIndex || 35;
             content.innerText = txt.trim();
+            if (data.overlayTextColor) content.style.color = data.overlayTextColor;
+            if (data.overlayTextFontSize) content.style.fontSize = data.overlayTextFontSize + 'px';
             banner.style.display = 'block';
           } else {
             banner.style.display = 'none';
           }
         }
 
+        // 7. Đồng bộ trạng thái Dừng / Phát video chính xác 100%
         if (data.videoPlaybackEvent === 'pause' || data.isPlaying === false) {
           isStreamUserPaused = true;
           vid.pause();
+          if (pipVideo && !pipVideo.paused) {
+            try { pipVideo.pause(); } catch(e) {}
+          }
         } else if ((data.videoPlaybackEvent === 'play' || data.isPlaying === true) && vid.paused && vid.src) {
           isStreamUserPaused = false;
           safePlay();
+          if (pipVideo && pipVideo.paused && pipVideo.src) {
+            try { pipVideo.play().catch(function() {}); } catch(e) {}
+          }
         }
         if (typeof data.videoCurrentTime === 'number' && Math.abs(vid.currentTime - data.videoCurrentTime) > 0.6) {
           try { vid.currentTime = data.videoCurrentTime; } catch(e) {}
@@ -3192,7 +3280,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         if (bc) {
           bc.onmessage = function(ev) {
             if (!ev.data) return;
-            if (ev.data.type === 'GLOBAL_MEDIA_CHANGE' || ev.data.type === 'MASTER_MEDIA_CHANGE' || ev.data.type === 'EVENT_VIDEO_PLAY') {
+            if (ev.data.type === 'GLOBAL_MEDIA_CHANGE' || ev.data.type === 'MASTER_MEDIA_CHANGE' || ev.data.type === 'EVENT_VIDEO_PLAY' || ev.data.type === 'MASTER_LIVE_STATE_UPDATE') {
               applyLiveState(ev.data);
             } else if (ev.data.type === 'CLEAR_STAGE' || ev.data.type === 'CLEAR_EVENT_VIDEO') {
               applyLiveState({ clearMedia: true, isPlaying: false });

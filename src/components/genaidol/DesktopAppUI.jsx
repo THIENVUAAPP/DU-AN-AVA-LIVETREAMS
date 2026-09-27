@@ -3738,6 +3738,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       currentMedia = null;
     }
 
+    const safeAvatarsList = (multiAvatarConfig?.avatars && multiAvatarConfig.avatars.length > 0)
+      ? multiAvatarConfig.avatars
+      : [];
+    const activeCount = typeof multiAvatarConfig?.activeCount === 'number' ? multiAvatarConfig.activeCount : (safeAvatarsList.length || 1);
+    const resolvedAvatars = (flowSequencerOverlay && flowSequencerOverlay.syncedAvatars) 
+      || (safeAvatarsList.length > 0 ? safeAvatarsList.slice(0, activeCount) : undefined);
+
     const masterPayload = {
       type: 'MASTER_LIVE_STATE_UPDATE',
       stage, // 'idol' | 'battle' | 'bando' | 'dancefloor' | 'broadcast'
@@ -3746,14 +3753,25 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       characterName: quickResponseActiveVideo?.name || char.name || 'AI Idol',
       mediaUrl: (flowSequencerOverlay && flowSequencerOverlay.mainMediaUrl) || currentMedia,
       mainMediaUrl: (flowSequencerOverlay && flowSequencerOverlay.mainMediaUrl) || currentMedia,
+      mainMediaTransform: (flowSequencerOverlay && flowSequencerOverlay.mainMediaTransform) || multiAvatarConfig?.backgroundTransform || undefined,
+      mainMediaChromaKey: (flowSequencerOverlay && flowSequencerOverlay.mainMediaChromaKey) || multiAvatarConfig?.backgroundChromaKey || undefined,
       secondaryMediaUrl: (flowSequencerOverlay && flowSequencerOverlay.secondaryMediaUrl) || undefined,
       secondaryMediaTransform: (flowSequencerOverlay && flowSequencerOverlay.secondaryMediaTransform) || undefined,
+      secondaryMediaChromaKey: (flowSequencerOverlay && flowSequencerOverlay.secondaryMediaChromaKey) || undefined,
       overlayImage: (flowSequencerOverlay && flowSequencerOverlay.overlayImage) || undefined,
       overlayImageTransform: (flowSequencerOverlay && flowSequencerOverlay.overlayImageTransform) || undefined,
+      overlayImageChromaKey: (flowSequencerOverlay && flowSequencerOverlay.overlayImageChromaKey) || undefined,
       overlayText: (flowSequencerOverlay && flowSequencerOverlay.overlayText) || undefined,
       overlayTextTransform: (flowSequencerOverlay && flowSequencerOverlay.overlayTextTransform) || undefined,
-      syncedAvatars: (flowSequencerOverlay && flowSequencerOverlay.syncedAvatars) || undefined,
-      multiAvatarExtraLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers)) || undefined,
+      overlayTextStyle: (flowSequencerOverlay && flowSequencerOverlay.overlayTextStyle) || undefined,
+      overlayTextColor: (flowSequencerOverlay && flowSequencerOverlay.overlayTextColor) || undefined,
+      overlayTextFontSize: (flowSequencerOverlay && flowSequencerOverlay.overlayTextFontSize) || undefined,
+      syncedAvatars: resolvedAvatars,
+      multiAvatarConfig: {
+        ...(multiAvatarConfig || {}),
+        avatars: resolvedAvatars || multiAvatarConfig?.avatars
+      },
+      multiAvatarExtraLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers)) || multiAvatarConfig?.extraImageLayers || undefined,
       flvUrl: streamFlvUrl,
       isVideo: !!isVid,
       isConnected: !!(isConnected || showSimulator),

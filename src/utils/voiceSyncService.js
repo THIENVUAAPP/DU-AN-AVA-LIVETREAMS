@@ -7837,6 +7837,7 @@ export function unlockAudioContext() {
  * ⏹️ DỪNG ÂM THANH HIỆN TẠI (KHÔNG XÓA HÀNG ĐỢI KỊCH BẢN)
  */
 export function stopCurrentActiveAudioNode() {
+  currentSpeechGenerationId++;
   if (activeSourceNode) {
     try {
       activeSourceNode.onended = null;
@@ -7870,6 +7871,7 @@ export function stopCurrentActiveAudioNode() {
  * ⏹️ DỪNG TOÀN BỘ ÂM THANH & XÓA SẠCH HÀNG ĐỢI
  */
 export function stopVoiceAudio() {
+  currentSpeechGenerationId++;
   clearGlobalSpeechQueue();
   stopCurrentActiveAudioNode();
   isGlobalSpeaking = false;

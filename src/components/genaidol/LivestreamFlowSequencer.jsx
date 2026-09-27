@@ -1044,6 +1044,15 @@ export default function LivestreamFlowSequencer() {
     setIsSpeakingPreview(false);
     setSpeakingStepId(null);
     if (timerRef.current) clearInterval(timerRef.current);
+    syncMasterLiveState({
+      isPlaying: false,
+      videoPlaybackEvent: 'pause'
+    });
+    sendVideoControl({
+      action: 'pause',
+      isPlaying: false,
+      timestamp: Date.now()
+    });
     toast.info('⏹️ Đã tạm dừng kịch bản & tắt toàn bộ âm thanh');
   };
 
@@ -1105,6 +1114,28 @@ export default function LivestreamFlowSequencer() {
         }, 60);
       }
     } else {
+      isPlayingFlowRef.current = false;
+      setIsPlayingFlow(false);
+      if (stepWatchdogRef.current) {
+        clearTimeout(stepWatchdogRef.current);
+        stepWatchdogRef.current = null;
+      }
+      stopVoiceAudio();
+      setIsSpeakingPreview(false);
+      setSpeakingStepId(null);
+      if (timerRef.current) clearInterval(timerRef.current);
+
+      syncMasterLiveState({
+        isPlaying: false,
+        videoPlaybackEvent: 'pause',
+        clearMedia: true
+      });
+      sendVideoControl({
+        action: 'pause',
+        isPlaying: false,
+        timestamp: Date.now()
+      });
+
       // 🔌 Ngắt kết nối đồng bộ — fire event và broadcast CLEAR_STAGE để Sân Khấu Chính xóa sạch lớp phủ
       window.dispatchEvent(new CustomEvent('avalive:sequencer_sync_disconnected', {
         detail: { isSynced: false, source: 'user_toggle' }
@@ -1118,7 +1149,7 @@ export default function LivestreamFlowSequencer() {
         });
         setTimeout(() => bc.close(), 100);
       } catch (err) {}
-      toast.info('📴 Đã ngắt đồng bộ — Sân Khấu Chính đã ngắt toàn bộ kết nối với Sân Khấu Phụ');
+      toast.info('📴 Đã ngắt đồng bộ & dừng phát — Đã tắt toàn bộ voice và video');
     }
   };
 
