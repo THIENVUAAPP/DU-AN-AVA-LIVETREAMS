@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.54';
+export const APP_VERSION = '4.9.55';
 export const RELEASE_DATE = '27/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v4.9.54 - Đồng Bộ Đầy Đủ 100% Mọi Lớp Video & Nút Bấm Xúc Giác Trực Tiếp',
-    description: '1. Đồng Bộ Toàn Bộ Các Khung Hình & Lớp Sân Khấu (Ảnh 3 -> Ảnh 1, 2): Sân khấu chính có bao nhiêu lớp video nền, video phụ PiP, hình ảnh chèn thêm (ở trên, ở dưới), avatar AI hay tiêu đề chữ thì link TikTok Live Studio và Window Capture đều hiển thị đầy đủ 100% không sót bất kỳ lớp nào. 2. Xóa Bỏ Hoàn Toàn Chữ Kết Nối / Loading Đè Màn Hình: Triệt tiêu hoàn toàn lớp loadingOverlay che đen video, giúp video nền và mọi lớp phụ phát mượt mà 60 FPS ngay lập tức. 3. Nút Bấm Dock Xúc Giác Trực Tiếp (Direct Click): Tích hợp onclick trực tiếp cấp thẻ HTML và global dispatcher cho toàn bộ 6 nút bấm (LIVE 60FPS, Tạm Dừng/Tiếp Tục, Bật/Tắt Tiếng, Tràn Màn/Vừa Khung, Ẩn Nút H và Mắt Phục Hồi 👁️).'
+    title: '🚀 Bản Cập Nhật v4.9.55 - Tự Động Đồng Bộ & Ghim TikTok Shop Thông Minh, Sân Khấu Sạch 100% & Sửa Triệt Để Nút Bấm',
+    description: '1. Đồng Bộ & Ghim Giỏ Hàng TikTok Shop Thông Minh (shop.tiktok.com): Tự động nhận diện đường link shop (Mỹ phẩm/Thẩm mỹ, Thời trang, Gia dụng...), trích xuất danh mục sản phẩm chuẩn hóa (Mã #01, #02, #03...) kèm hình ảnh, giá ưu đãi, flash sale và kích hoạt tự động ghim 24/7 theo giọng AI, bình luận hoặc video clip. 2. Giữ Nguyên 100% Video Nhân Vật Lên Sân Khấu Chính: Khi tải lên hoặc chuyển đổi bất kỳ ô nhân vật nào, hệ thống giữ nguyên video và phát ngay lập tức trên Sân Khấu Chính, không bị mất video hay rơi vào màn hình trống. 3. Sửa Triệt Để Nút Bấm Window Capture: Loại bỏ hoàn toàn lỗi lặp sự kiện kép, giúp 100% nút bấm (LIVE 60FPS, Tạm Dừng, Bật/Tắt Tiếng, Tràn Màn, Ẩn Nút H, Icon 👁️) phản hồi siêu nhạy chỉ với 1 lần bấm. 4. Khung Hình Sạch 100% Cho TikTok Live Studio: Luồng link live stream truyền hình ảnh, video, banner và giỏ hàng sạch sẽ hoàn hảo, không dính bất kỳ nút bấm hay rác thông tin nào.'
   },
   {
     title: '🚀 Bản Cập Nhật v4.9.53 - Khôi Phục Hiển Thị Ô Nhân Vật & Phím Bấm Dock Siêu Nhạy',

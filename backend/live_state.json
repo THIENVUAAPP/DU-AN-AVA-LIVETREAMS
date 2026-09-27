@@ -3,18 +3,18 @@
   "aspectRatio": "9:16",
   "characterId": "",
   "characterName": "Video Người Dùng",
-  "mediaUrl": "/uploads/media-1790472983500-430871844.mp4",
-  "currentMedia": "/uploads/media-1790472355165-246920014.mp4",
+  "mediaUrl": null,
+  "currentMedia": "/uploads/media-1790475114351-774432245.mp4",
   "eventVideoUrl": null,
-  "isVideo": true,
-  "videoPlaybackEvent": "play",
-  "isPlaying": true,
+  "isVideo": false,
+  "videoPlaybackEvent": "pause",
+  "isPlaying": false,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1790473227384,
+  "updatedAt": 1790475589142,
   "isUserExplicitMediaLocked": false,
   "selectedCharacter": "",
-  "videoCurrentTime": 19.434617,
+  "videoCurrentTime": 0,
   "type": "MASTER_LIVE_STATE_UPDATE",
   "flvUrl": null,
   "isConnected": false,
@@ -27,8 +27,8 @@
   "avatarSpeaker": "avatar_1",
   "secondaryMediaUrl": "/uploads/media-1790472459694-637852595.mp4",
   "secondaryMediaTransform": {
-    "x": 12,
-    "y": 65,
+    "x": 7,
+    "y": 54,
     "width": 40,
     "height": 25,
     "zIndex": 20
@@ -49,10 +49,10 @@
   "isMediaPinned": false,
   "fit": "cover",
   "sound": true,
-  "isVideoAudioMuted": false,
+  "isVideoAudioMuted": true,
   "isMuted": false,
   "videoVolume": 1,
-  "clearMedia": false,
+  "clearMedia": true,
   "multiAvatarConfig": {
     "enabled": true,
     "activeCount": 1,
@@ -86,8 +86,8 @@
         "label": "Nhân Vật 3 (BLV Game PK / Hoạt Náo)",
         "name": "Nhân Vật 1",
         "voiceId": "vn_nam_blv_bungno",
-        "idleVideo": "/uploads/media-1790472355165-246920014.mp4",
-        "talkVideo": "/uploads/media-1790472355165-246920014.mp4",
+        "idleVideo": "blob:http://localhost:3001/c253fdc9-f1d0-478c-8d4d-965485cd2f01",
+        "talkVideo": "blob:http://localhost:3001/c253fdc9-f1d0-478c-8d4d-965485cd2f01",
         "volume": 1,
         "rate": 1.1,
         "enabled": false,
@@ -99,14 +99,14 @@
           "height": 100,
           "zIndex": 10
         },
-        "mediaUrl": "/uploads/media-1790472355165-246920014.mp4",
-        "resolvedVidSrc": "/uploads/media-1790472355165-246920014.mp4",
+        "mediaUrl": "blob:http://localhost:3001/c253fdc9-f1d0-478c-8d4d-965485cd2f01",
+        "resolvedVidSrc": "blob:http://localhost:3001/c253fdc9-f1d0-478c-8d4d-965485cd2f01",
         "isSpeakingNow": false
       }
     ],
     "activeSpeakerId": "avatar_1",
     "fromSequencer": true,
-    "syncedAt": 1790472495423
+    "syncedAt": 1790475583397
   },
   "syncedAvatars": [
     {
@@ -116,8 +116,8 @@
       "label": "Nhân Vật 3 (BLV Game PK / Hoạt Náo)",
       "name": "Nhân Vật 1",
       "voiceId": "vn_nam_blv_bungno",
-      "idleVideo": "/uploads/media-1790472355165-246920014.mp4",
-      "talkVideo": "/uploads/media-1790472355165-246920014.mp4",
+      "idleVideo": "blob:http://localhost:3001/c253fdc9-f1d0-478c-8d4d-965485cd2f01",
+      "talkVideo": "blob:http://localhost:3001/c253fdc9-f1d0-478c-8d4d-965485cd2f01",
       "volume": 1,
       "rate": 1.1,
       "enabled": false,
@@ -129,12 +129,12 @@
         "height": 100,
         "zIndex": 10
       },
-      "mediaUrl": "/uploads/media-1790472355165-246920014.mp4",
-      "resolvedVidSrc": "/uploads/media-1790472355165-246920014.mp4",
+      "mediaUrl": "blob:http://localhost:3001/c253fdc9-f1d0-478c-8d4d-965485cd2f01",
+      "resolvedVidSrc": "blob:http://localhost:3001/c253fdc9-f1d0-478c-8d4d-965485cd2f01",
       "isSpeakingNow": false
     }
   ],
-  "tunnelUrl": "https://air-key-deutschland-later.trycloudflare.com",
+  "tunnelUrl": "https://environment-rapids-suddenly-implementation.trycloudflare.com",
   "pinnedProduct": {
     "id": 2,
     "name": "Sản phẩm TikTok Shop #02",
@@ -148,5 +148,7 @@
     "storeUrl": "https://shop.tiktok.com/streamer/live/product/dashboard",
     "pinnedAt": 1790473227384,
     "triggerSource": "interval_auto_rotation"
-  }
+  },
+  "mainMediaUrl": "blob:http://localhost:3001/c253fdc9-f1d0-478c-8d4d-965485cd2f01",
+  "title": "Biểu cảm tại c…"
 }

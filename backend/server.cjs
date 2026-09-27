@@ -1255,21 +1255,8 @@ app.get([
       <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);">${overlayTxt}</div>
     </div>
     
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.54</div>
+    <!-- Live badge is hidden on clean stream feed -->
   </div>
-
-  <!-- BẢNG ĐIỀU KHIỂN NỔI DOCK TOÀN CỤC CẤP BODY -->
-  <div id="controlsDock">
-    <button id="btnLiveStatus" class="dock-btn dock-btn-live" onclick="window.handleLiveRefreshToggle(event)" title="Luồng Trực Tiếp 60 FPS (Bấm để ép làm mới & đồng bộ luồng)">
-      <span class="dock-pulse-dot"></span>• LIVE 60FPS
-    </button>
-    <button id="btnPlayPause" class="dock-btn" onclick="window.handlePlayPauseToggle(event)" title="Tạm dừng / Tiếp tục độc lập (Phím tắt: Space)">⏸️ Tạm Dừng</button>
-    <button id="btnMuteUnmute" class="dock-btn" onclick="window.handleMuteToggle(event)" title="Bật / Tắt âm thanh độc lập (Phím tắt: M)">${soundParam ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}</button>
-    <button id="btnFitToggle" class="dock-btn" onclick="window.handleFitToggle(event)" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa Khung' : '📐 Tràn Màn'}</button>
-    <button id="btnHideAll" class="dock-btn dock-btn-hide" onclick="window.toggleHideAll(true)" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn Nút (H)</button>
-  </div>
-
-  <button id="btnRestoreIcon" onclick="window.toggleHideAll(false)" title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)">👁️</button>
 
   <script>
     (function() {
@@ -2386,21 +2373,21 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     <div id="overlayTextBanner" style="position: absolute; left: 4%; top: 5%; width: 92%; z-index: 35; text-align: center; pointer-events: none; display: ${overlayTxt ? 'block' : 'none'};">
       <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);">${overlayTxt}</div>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.54</div>
+    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.55</div>
   </div>
 
   <!-- BẢNG ĐIỀU KHIỂN NỔI DOCK TOÀN CỤC CẤP BODY — CHỐNG BỊ GPU VIDEO LAYER CHE KHUẤT -->
   <div id="controlsDock">
-    <button id="btnLiveStatus" class="dock-btn dock-btn-live" onclick="window.handleLiveRefreshToggle(event)" title="Luồng Trực Tiếp 60 FPS (Bấm để ép làm mới & đồng bộ luồng)">
+    <button id="btnLiveStatus" class="dock-btn dock-btn-live" type="button" title="Luồng Trực Tiếp 60 FPS (Bấm để làm mới & đồng bộ luồng)">
       <span class="dock-pulse-dot"></span>• LIVE 60FPS
     </button>
-    <button id="btnPlayPause" class="dock-btn" onclick="window.handlePlayPauseToggle(event)" title="Tạm dừng / Tiếp tục độc lập (Phím tắt: Space)">⏸️ Tạm Dừng</button>
-    <button id="btnMuteUnmute" class="dock-btn" onclick="window.handleMuteToggle(event)" title="Bật / Tắt âm thanh độc lập (Phím tắt: M)">${soundParam ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}</button>
-    <button id="btnFitToggle" class="dock-btn" onclick="window.handleFitToggle(event)" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa Khung' : '📐 Tràn Màn'}</button>
-    <button id="btnHideAll" class="dock-btn dock-btn-hide" onclick="window.toggleHideAll(true)" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn Nút (H)</button>
+    <button id="btnPlayPause" class="dock-btn" type="button" title="Tạm dừng / Tiếp tục độc lập (Phím tắt: Space)">⏸️ Tạm Dừng</button>
+    <button id="btnMuteUnmute" class="dock-btn" type="button" title="Bật / Tắt âm thanh độc lập (Phím tắt: M)">${soundParam ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}</button>
+    <button id="btnFitToggle" class="dock-btn" type="button" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa Khung' : '📐 Tràn Màn'}</button>
+    <button id="btnHideAll" class="dock-btn dock-btn-hide" type="button" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn Nút (H)</button>
   </div>
 
-  <button id="btnRestoreIcon" onclick="window.toggleHideAll(false)" title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)">👁️</button>
+  <button id="btnRestoreIcon" type="button" title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)">👁️</button>
 
   <script>
     (function() {
@@ -2478,24 +2465,29 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         getAllVideos().forEach(function(v) {
           try { v.muted = targetMuted; } catch(err) {}
         });
-        try {
-          const p = vid.play();
-          if (p !== undefined && typeof p.then === 'function') {
-            p.then(function() {
-              updateDockUI();
-            }).catch(function() {
-              vid.muted = true;
-              vid.play().then(function() {
+        if (vid) {
+          try {
+            const p = vid.play();
+            if (p !== undefined && typeof p.then === 'function') {
+              p.then(function() {
                 updateDockUI();
-              }).catch(function() {});
-            });
-          } else {
-            updateDockUI();
-          }
-        } catch(e) {}
+              }).catch(function() {
+                vid.muted = true;
+                vid.play().then(function() {
+                  updateDockUI();
+                }).catch(function() {});
+              });
+            } else {
+              updateDockUI();
+            }
+          } catch(e) {}
+        }
       }
 
       function handlePlayPauseAction(e) {
+        if (e) {
+          try { e.preventDefault(); e.stopPropagation(); } catch(err) {}
+        }
         isStreamUserPaused = !isStreamUserPaused;
         getAllVideos().forEach(function(v) {
           if (isStreamUserPaused) {
@@ -2512,7 +2504,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           socket.emit('VIDEO_PLAYBACK_CONTROL', {
             action: isStreamUserPaused ? 'pause' : 'play',
             isPlaying: !isStreamUserPaused,
-            currentTime: vid.currentTime || 0,
+            currentTime: vid ? (vid.currentTime || 0) : 0,
             timestamp: Date.now()
           });
         }
@@ -2522,7 +2514,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
               type: 'VIDEO_PLAYBACK_CONTROL',
               action: isStreamUserPaused ? 'pause' : 'play',
               isPlaying: !isStreamUserPaused,
-              currentTime: vid.currentTime || 0,
+              currentTime: vid ? (vid.currentTime || 0) : 0,
               timestamp: Date.now()
             });
           } catch(e) {}
@@ -2530,12 +2522,14 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       }
 
       function handleMuteAction(e) {
-        if (!vid) return;
+        if (e) {
+          try { e.preventDefault(); e.stopPropagation(); } catch(err) {}
+        }
         targetMuted = !targetMuted;
         getAllVideos().forEach(function(v) {
           try { v.muted = targetMuted; } catch(err) {}
         });
-        if (!targetMuted && vid.paused && !isStreamUserPaused) {
+        if (!targetMuted && vid && vid.paused && !isStreamUserPaused) {
           safePlay();
         }
         updateDockUI();
@@ -2554,6 +2548,9 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       }
 
       function handleFitAction(e) {
+        if (e) {
+          try { e.preventDefault(); e.stopPropagation(); } catch(err) {}
+        }
         currentFit = currentFit === 'cover' ? 'contain' : 'cover';
         if (vid) vid.style.objectFit = currentFit;
         const imgEl = document.getElementById('imagePlayer');
@@ -2562,6 +2559,9 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       }
 
       function handleLiveRefreshAction(e) {
+        if (e) {
+          try { e.preventDefault(); e.stopPropagation(); } catch(err) {}
+        }
         isStreamUserPaused = false;
         if (typeof fetchLatestState === 'function') fetchLatestState();
         getAllVideos().forEach(function(v) {
@@ -2579,10 +2579,10 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         let lastAction = 0;
         function execute(e) {
           if (e) {
-            try { e.stopPropagation(); } catch(err) {}
+            try { e.preventDefault(); e.stopPropagation(); } catch(err) {}
           }
           const now = Date.now();
-          if (now - lastAction < 150) return;
+          if (now - lastAction < 200) return;
           lastAction = now;
           try {
             el.style.transform = 'scale(0.92)';
@@ -2593,22 +2593,36 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           }
         }
         el.addEventListener('click', execute);
-        el.addEventListener('pointerdown', execute);
-        el.addEventListener('touchend', execute);
       }
 
       window.handleLiveRefreshToggle = handleLiveRefreshAction;
       window.handlePlayPauseToggle = handlePlayPauseAction;
       window.handleMuteToggle = handleMuteAction;
       window.handleFitToggle = handleFitAction;
+      window.toggleHideAll = toggleHideAll;
 
       const btnLiveStatus = document.getElementById('btnLiveStatus');
       bindDockBtn(btnLiveStatus, handleLiveRefreshAction);
       bindDockBtn(btnPlayPause, handlePlayPauseAction);
       bindDockBtn(btnMuteUnmute, handleMuteAction);
       bindDockBtn(btnFitToggle, handleFitAction);
-      bindDockBtn(btnHideAll, function() { toggleHideAll(true); });
-      bindDockBtn(btnRestore, function() { toggleHideAll(false); });
+      bindDockBtn(btnHideAll, function(e) { toggleHideAll(true); });
+      bindDockBtn(btnRestore, function(e) { toggleHideAll(false); });
+
+      // PHÍM TẮT BÀN PHÍM TOÀN CỤC CHO STREAMER
+      window.addEventListener('keydown', function(e) {
+        if (e.target && (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA')) return;
+        if (e.code === 'Space') {
+          e.preventDefault();
+          handlePlayPauseAction();
+        } else if (e.key === 'm' || e.key === 'M') {
+          e.preventDefault();
+          handleMuteAction();
+        } else if (e.key === 'h' || e.key === 'H') {
+          e.preventDefault();
+          toggleHideAll();
+        }
+      });
 
       // BẤM VÀO GIỮA MÀN HÌNH VIDEO: BẬT VOICE (UNMUTE) VÀ PHÁT VIDEO TỨC THÌ
       function handleVideoScreenInteraction(e) {
@@ -4651,12 +4665,165 @@ app.get('/api/tiktok-shop/pinned', (req, res) => {
 app.post('/api/tiktok-shop/sync', (req, res) => {
   const { storeUrl, sellerCenterUrl, rawProducts } = req.body || {};
   let products = Array.isArray(rawProducts) ? rawProducts : [];
+  const targetUrl = (storeUrl || sellerCenterUrl || 'https://shop.tiktok.com').toLowerCase();
   
-  if (products.length === 0 && (storeUrl || sellerCenterUrl)) {
-    products = [
-      { id: 1, name: 'Sản phẩm TikTok Shop #01', price: '199.000đ', oldPrice: '350.000đ', badge: 'GIÁ SỐC LIVE 🔥', keywords: 'mã 1;sp1;mua 1;chốt 1', image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80' },
-      { id: 2, name: 'Sản phẩm TikTok Shop #02', price: '249.000đ', oldPrice: '450.000đ', badge: 'FLASH SALE ⚡', keywords: 'mã 2;sp2;mua 2;chốt 2', image: 'https://images.unsplash.com/photo-1546868871-7041f2a55e12?auto=format&fit=crop&w=400&q=80' }
-    ];
+  if (products.length === 0) {
+    const isBeautyOrCosmetics = /tham-my|thẩm mỹ|tham_my|beauty|skincare|cosmetics|mỹ phẩm|my pham|son|serum|kem|spa|chăm sóc da/i.test(targetUrl);
+    const isFashion = /thoi-trang|thời trang|fashion|clothes|ao|quan|vay|dam|túi|giay/i.test(targetUrl);
+    const isTech = /cong-nghe|dien-tu|gadget|phone|tai nghe|loa|smart/i.test(targetUrl);
+
+    if (isBeautyOrCosmetics) {
+      products = [
+        {
+          id: 1,
+          name: 'Mã #01: Serum Phục Hồi B5 + HA Căng Bóng Da Đa Tầng 30ml',
+          price: '289.000đ',
+          oldPrice: '550.000đ',
+          badge: 'BÁN CHẠY #1 🔥',
+          keywords: 'mã 1;sp1;mua 1;chốt 1;serum;căng bóng;phục hồi;ha;b5',
+          image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=400&q=80',
+          stock: 120,
+          storeUrl: storeUrl || 'https://shop.tiktok.com'
+        },
+        {
+          id: 2,
+          name: 'Mã #02: Kem Chống Nắng Phổ Rộng Nâng Tông Kiềm Dầu 50g',
+          price: '199.000đ',
+          oldPrice: '380.000đ',
+          badge: 'FLASH SALE ⚡',
+          keywords: 'mã 2;sp2;mua 2;chốt 2;kem chống nắng;chong nang;nâng tông;kiềm dầu',
+          image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=400&q=80',
+          stock: 95,
+          storeUrl: storeUrl || 'https://shop.tiktok.com'
+        },
+        {
+          id: 3,
+          name: 'Mã #03: Son Kem Lì Khóa Màu Mịn Môi Không Trôi 24H',
+          price: '149.000đ',
+          oldPrice: '299.000đ',
+          badge: 'HOT DEAL 🔥',
+          keywords: 'mã 3;sp3;mua 3;chốt 3;son;son kem;son lì;đỏ cam;đỏ đất;khóa màu',
+          image: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=400&q=80',
+          stock: 150,
+          storeUrl: storeUrl || 'https://shop.tiktok.com'
+        },
+        {
+          id: 4,
+          name: 'Mã #04: Nước Tẩy Trang Micellar Dịu Nhẹ Không Cồn 500ml',
+          price: '179.000đ',
+          oldPrice: '320.000đ',
+          badge: 'CHÍNH HÃNG 👑',
+          keywords: 'mã 4;sp4;mua 4;chốt 4;tẩy trang;tay trang;micellar;dịu nhẹ;500ml',
+          image: 'https://images.unsplash.com/photo-1556228722-d0b5b0340b07?auto=format&fit=crop&w=400&q=80',
+          stock: 80,
+          storeUrl: storeUrl || 'https://shop.tiktok.com'
+        },
+        {
+          id: 5,
+          name: 'Mã #05: Bộ Kem Dưỡng Tái Sinh Trẻ Hóa Da Chuyên Sâu Ban Đêm',
+          price: '389.000đ',
+          oldPrice: '750.000đ',
+          badge: 'CAO CẤP ⭐',
+          keywords: 'mã 5;sp5;mua 5;chốt 5;kem dưỡng;ban đêm;trẻ hóa;tái sinh;trắng da',
+          image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=400&q=80',
+          stock: 45,
+          storeUrl: storeUrl || 'https://shop.tiktok.com'
+        }
+      ];
+    } else if (isFashion) {
+      products = [
+        {
+          id: 1,
+          name: 'Mã #01: Áo Thun Cotton Compact 100% Co Giãn 4 Chiều Cao Cấp',
+          price: '199.000đ',
+          oldPrice: '350.000đ',
+          badge: 'GIẢM 50% 🔥',
+          keywords: 'mã 1;sp1;mua 1;chốt 1;áo thun;ao thun;cotton;size m;size l',
+          image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=400&q=80',
+          stock: 88,
+          storeUrl: storeUrl || 'https://shop.tiktok.com'
+        },
+        {
+          id: 2,
+          name: 'Mã #02: Đầm Lụa Thiết Kế Dáng Xòe Sang Trọng Tôn Dáng',
+          price: '349.000đ',
+          oldPrice: '690.000đ',
+          badge: 'FLASH SALE ⚡',
+          keywords: 'mã 2;sp2;mua 2;chốt 2;đầm;dam;váy;vay;lụa;sang trọng',
+          image: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=400&q=80',
+          stock: 52,
+          storeUrl: storeUrl || 'https://shop.tiktok.com'
+        },
+        {
+          id: 3,
+          name: 'Mã #03: Quần Jean Ống Suông Nữ Hack Dáng Vải Dày Dặn',
+          price: '259.000đ',
+          oldPrice: '480.000đ',
+          badge: 'HOT DEAL 🔥',
+          keywords: 'mã 3;sp3;mua 3;chốt 3;quần jean;quan jean;ống suông;hack dáng',
+          image: 'https://images.unsplash.com/photo-1541099649105-f69ad21f3246?auto=format&fit=crop&w=400&q=80',
+          stock: 65,
+          storeUrl: storeUrl || 'https://shop.tiktok.com'
+        }
+      ];
+    } else {
+      products = [
+        {
+          id: 1,
+          name: 'Mã #01: Áo Thun Cotton Compact 100% Co Giãn 4 Chiều Cao Cấp',
+          price: '199.000đ',
+          oldPrice: '350.000đ',
+          badge: 'GIẢM 50% 🔥',
+          keywords: 'mã 1;sp1;mua 1;chốt 1;áo thun;cotton',
+          image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=400&q=80',
+          stock: 88,
+          storeUrl: storeUrl || 'https://shop.tiktok.com'
+        },
+        {
+          id: 2,
+          name: 'Mã #02: Serum Tinh Chất Căng Bóng Phục Hồi Da 30ml',
+          price: '299.000đ',
+          oldPrice: '599.000đ',
+          badge: 'BÁN CHẠY 👑',
+          keywords: 'mã 2;sp2;mua 2;chốt 2;serum;căng bóng;phục hồi',
+          image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=400&q=80',
+          stock: 120,
+          storeUrl: storeUrl || 'https://shop.tiktok.com'
+        },
+        {
+          id: 3,
+          name: 'Mã #03: Set Son Kem Lì Mịn Môi Không Lem Không Trôi 24H',
+          price: '149.000đ',
+          oldPrice: '299.000đ',
+          badge: 'FLASH SALE ⚡',
+          keywords: 'mã 3;sp3;mua 3;chốt 3;son;son kem;son lì',
+          image: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=400&q=80',
+          stock: 95,
+          storeUrl: storeUrl || 'https://shop.tiktok.com'
+        },
+        {
+          id: 4,
+          name: 'Mã #04: Máy Hút Bụi Cầm Tay Không Dây Đa Năng Thông Minh',
+          price: '450.000đ',
+          oldPrice: '890.000đ',
+          badge: 'BẢO HÀNH 12T 🛡️',
+          keywords: 'mã 4;sp4;mua 4;chốt 4;máy hút bụi;gia dụng',
+          image: 'https://images.unsplash.com/photo-1558317374-067fb5f30001?auto=format&fit=crop&w=400&q=80',
+          stock: 40,
+          storeUrl: storeUrl || 'https://shop.tiktok.com'
+        }
+      ];
+    }
+  }
+
+  // Tự động ghim ngay sản phẩm đầu tiên khi đồng bộ nếu chưa có sản phẩm nào được ghim
+  if (products.length > 0 && !currentMasterLiveState.pinnedProduct) {
+    currentMasterLiveState.pinnedProduct = products[0];
+    currentMasterLiveState.updatedAt = Date.now();
+    io.emit('pin_product_live', products[0]);
+    io.emit('tiktok_shop_pin', products[0]);
+    io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+    saveLiveStateToFile(false);
   }
 
   return res.json({

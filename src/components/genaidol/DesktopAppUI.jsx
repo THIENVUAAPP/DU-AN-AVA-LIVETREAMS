@@ -5164,11 +5164,20 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
       if (selected) {
         let resolvedUrl = selected.url || selected.mediaUrl;
-        if (!resolvedUrl && selected.fileData) {
+        if ((!resolvedUrl || resolvedUrl.startsWith('blob:')) && selected.fileData) {
           try {
             resolvedUrl = URL.createObjectURL(selected.fileData);
             selected.url = resolvedUrl;
           } catch (e) {}
+        }
+        if (!resolvedUrl && typeof window !== 'undefined' && window.__activeMediaBlobMap) {
+          const blob = window.__activeMediaBlobMap.get(selected.id) || (selected.mediaUrl && window.__activeMediaBlobMap.get(selected.mediaUrl)) || window.__activeMediaBlobMap.get('latest');
+          if (blob instanceof Blob || blob instanceof File) {
+            try {
+              resolvedUrl = URL.createObjectURL(blob);
+              selected.url = resolvedUrl;
+            } catch (e) {}
+          }
         }
         if (resolvedUrl) {
           const isExplicitVideo = selected.type === 'video' || 

@@ -499,8 +499,67 @@ class AutoPinProductService {
       }
     } catch (e) {}
 
-    // Tạo danh mục sản phẩm TikTok Shop tự động ánh xạ nếu backend phản hồi mặc định
-    const defaultTikTokProducts = [
+    // Tạo danh mục sản phẩm TikTok Shop tự động ánh xạ theo chủ đề đường link
+    const targetUrl = this.tiktokShopUrl.toLowerCase();
+    const isBeauty = /tham-my|thẩm mỹ|tham_my|beauty|skincare|cosmetics|mỹ phẩm|my pham|son|serum|kem|spa/i.test(targetUrl);
+    
+    const defaultTikTokProducts = isBeauty ? [
+      {
+        id: 1,
+        name: 'Mã #01: Serum Phục Hồi B5 + HA Căng Bóng Da Đa Tầng 30ml',
+        price: '289.000đ',
+        oldPrice: '550.000đ',
+        badge: 'BÁN CHẠY #1 🔥',
+        keywords: 'mã 1;sp1;mua 1;chốt 1;serum;căng bóng;phục hồi;ha;b5',
+        image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=400&q=80',
+        stock: 120,
+        storeUrl: this.tiktokShopUrl
+      },
+      {
+        id: 2,
+        name: 'Mã #02: Kem Chống Nắng Phổ Rộng Nâng Tông Kiềm Dầu 50g',
+        price: '199.000đ',
+        oldPrice: '380.000đ',
+        badge: 'FLASH SALE ⚡',
+        keywords: 'mã 2;sp2;mua 2;chốt 2;kem chống nắng;chong nang;nâng tông;kiềm dầu',
+        image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=400&q=80',
+        stock: 95,
+        storeUrl: this.tiktokShopUrl
+      },
+      {
+        id: 3,
+        name: 'Mã #03: Son Kem Lì Khóa Màu Mịn Môi Không Trôi 24H',
+        price: '149.000đ',
+        oldPrice: '299.000đ',
+        badge: 'HOT DEAL 🔥',
+        keywords: 'mã 3;sp3;mua 3;chốt 3;son;son kem;son lì;đỏ cam;đỏ đất;khóa màu',
+        image: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=400&q=80',
+        stock: 150,
+        storeUrl: this.tiktokShopUrl
+      },
+      {
+        id: 4,
+        name: 'Mã #04: Nước Tẩy Trang Micellar Dịu Nhẹ Không Cồn 500ml',
+        price: '179.000đ',
+        oldPrice: '320.000đ',
+        badge: 'CHÍNH HÃNG 👑',
+        keywords: 'mã 4;sp4;mua 4;chốt 4;tẩy trang;tay trang;micellar;dịu nhẹ;500ml',
+        image: 'https://images.unsplash.com/photo-1556228722-d0b5b0340b07?auto=format&fit=crop&w=400&q=80',
+        stock: 80,
+        storeUrl: this.tiktokShopUrl
+      },
+      {
+        id: 5,
+        name: 'Mã #05: Bộ Kem Dưỡng Tái Sinh Trẻ Hóa Da Chuyên Sâu Ban Đêm',
+        price: '389.000đ',
+        oldPrice: '750.000đ',
+        badge: 'CAO CẤP ⭐',
+        keywords: 'mã 5;sp5;mua 5;chốt 5;kem dưỡng;ban đêm;trẻ hóa;tái sinh;trắng da',
+        image: 'https://images.unsplash.com/photo-1570172619644-dfd03ed5d881?auto=format&fit=crop&w=400&q=80',
+        stock: 45,
+        storeUrl: this.tiktokShopUrl
+      }
+    ] : [
       {
         id: 1,
         name: 'Mã #01: Áo Thun Cotton Compact 100% Cao Cấp Co Giãn',
@@ -509,6 +568,7 @@ class AutoPinProductService {
         badge: 'TIKTOK SHOP DEAL 🔥',
         keywords: 'mã 1;sp1;mua 1;chốt 1;áo thun;cotton',
         image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=400&q=80',
+        stock: 88,
         storeUrl: this.tiktokShopUrl
       },
       {
@@ -519,6 +579,7 @@ class AutoPinProductService {
         badge: 'FLASH SALE ⚡',
         keywords: 'mã 2;sp2;mua 2;chốt 2;đầm;váy lụa',
         image: 'https://images.unsplash.com/photo-1539109136881-3be0616acf4b?auto=format&fit=crop&w=400&q=80',
+        stock: 52,
         storeUrl: this.tiktokShopUrl
       },
       {
@@ -529,6 +590,7 @@ class AutoPinProductService {
         badge: 'BÁN CHẠY 👑',
         keywords: 'mã 3;sp3;mua 3;chốt 3;serum;căng bóng',
         image: 'https://images.unsplash.com/photo-1620916566398-39f1143ab7be?auto=format&fit=crop&w=400&q=80',
+        stock: 120,
         storeUrl: this.tiktokShopUrl
       },
       {
@@ -539,6 +601,7 @@ class AutoPinProductService {
         badge: 'HOT DEAL 🔥',
         keywords: 'mã 4;sp4;mua 4;chốt 4;son;son kem',
         image: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=400&q=80',
+        stock: 95,
         storeUrl: this.tiktokShopUrl
       },
       {
@@ -549,6 +612,7 @@ class AutoPinProductService {
         badge: 'BẢO HÀNH 12T 🛡️',
         keywords: 'mã 5;sp5;mua 5;chốt 5;máy hút bụi;gia dụng',
         image: 'https://images.unsplash.com/photo-1558317374-067fb5f30001?auto=format&fit=crop&w=400&q=80',
+        stock: 40,
         storeUrl: this.tiktokShopUrl
       }
     ];
@@ -556,6 +620,9 @@ class AutoPinProductService {
     this.tiktokShopProducts = defaultTikTokProducts;
     if (typeof window !== 'undefined') {
       localStorage.setItem('avalive_tiktok_shop_products', JSON.stringify(defaultTikTokProducts));
+      if (defaultTikTokProducts.length > 0) {
+        this.pinProduct(defaultTikTokProducts[0], 'Đồng bộ TikTok Shop');
+      }
     }
     return defaultTikTokProducts;
   }
