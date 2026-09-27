@@ -2068,23 +2068,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       multiAvatarExtraLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers || flowSequencerOverlay.extraImageLayers)) || (multiAvatarConfig?.extraImageLayers) || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.extraImageLayers : null) || [],
       syncedAvatars: (flowSequencerOverlay?.syncedAvatars) || (multiAvatarConfig?.avatars) || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.avatars : null) || [],
       multiAvatarConfig: multiAvatarConfig || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig() : null) || null,
-      avatarTransforms: (flowSequencerOverlay?.avatarTransforms) || (multiAvatarConfig?.avatarTransforms) || null,
-      backgroundColor: (flowSequencerOverlay?.backgroundColor) || (multiAvatarConfig?.backgroundColor) || '#000000',
-      backgroundUrl: (multiAvatarConfig?.backgroundUrl) || null,
-      backgroundTransform: (multiAvatarConfig?.backgroundTransform) || null,
-      backgroundChromaKey: (multiAvatarConfig?.backgroundChromaKey) || null,
-      livePinnedProduct: livePinnedProduct || null,
-      pinnedProduct: livePinnedProduct || null,
-      activeSpeakerId: activeSpeakerId || null,
-      isSpeaking: !!isSpeakerActive,
-      stepTitle: flowSequencerOverlay?.title || flowSequencerOverlay?.stepTitle || titleTxt || null,
-      badgeText: flowSequencerOverlay?.badgeText || null,
-      productBanner: flowSequencerOverlay?.productBanner || null,
-      volume: liveVolume !== undefined ? liveVolume : 1.0,
-      isMuted: !!(isLocalSpeakerMuted || liveAudioMuted),
       updatedAt: Date.now()
     };
-  }, [selectedCharacter, customCharacters, userLockedMediaUrl, isVideoPlaying, globalAspectRatio, flowSequencerOverlay, multiAvatarConfig, livePinnedProduct, activeSpeakerId, isSpeakerActive, liveVolume, isLocalSpeakerMuted, liveAudioMuted]);
+  }, [selectedCharacter, customCharacters, userLockedMediaUrl, isVideoPlaying, globalAspectRatio, flowSequencerOverlay, multiAvatarConfig]);
 
   const handleOpenWindowCapture = () => {
     // 🎯 ĐỘ PHÂN GIẢI CHUẨN CAO 1080P SẮC NÉT (CHO OBS / TIKTOK LIVE STUDIO CHỤP KHÔNG BỊ VỠ NÉT)
@@ -2548,24 +2534,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         }
         setIsVideoPlaying(false);
         try {
-          localStorage.setItem('avalive_user_paused', 'true');
-          localStorage.setItem('avalive_window_capture_paused', 'true');
-          localStorage.setItem('aidol_user_paused_script', 'true');
-          localStorage.setItem('aidol_is_script_live_running', 'false');
-        } catch (e) {}
-        if (typeof window !== 'undefined') {
-          window.__aidolUserPausedScript = true;
-          window.__isScriptLiveRunning = false;
-        }
-        try {
           stopVoiceAudio();
           clearGlobalSpeechQueue();
         } catch (e) {}
-        if (audioPlayerRef.current) {
-          try { audioPlayerRef.current.stopScript(); } catch(e) {}
-          try { audioPlayerRef.current.pause(); } catch(e) {}
-          try { audioPlayerRef.current.clearQueue(); } catch(e) {}
-        }
         try {
           window.dispatchEvent(new CustomEvent('avalive_emergency_stop_all'));
           window.dispatchEvent(new CustomEvent('avalive:stop_all_audio_and_voice'));
@@ -2593,14 +2564,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         }, socketRef.current);
         showToast('⏸️ Đã tạm dừng phát video và voice', 'info');
       } else {
-        try {
-          localStorage.removeItem('avalive_user_paused');
-          localStorage.removeItem('avalive_window_capture_paused');
-          localStorage.removeItem('aidol_user_paused_script');
-        } catch (e) {}
-        if (typeof window !== 'undefined') {
-          window.__aidolUserPausedScript = false;
-        }
         if (vid && vid.src) {
           vid.dataset.userPaused = 'false';
           // Bấm vào giữa màn hình video: BẬT VOICE (unmute) và phát video
@@ -2826,22 +2789,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               try { 
                 localStorage.setItem('avalive_user_paused', 'true');
                 localStorage.setItem('avalive_window_capture_paused', 'true');
-                localStorage.setItem('aidol_user_paused_script', 'true');
-                localStorage.setItem('aidol_is_script_live_running', 'false');
               } catch (e) {}
-              if (typeof window !== 'undefined') {
-                window.__aidolUserPausedScript = true;
-                window.__isScriptLiveRunning = false;
-              }
-              try {
-                stopVoiceAudio();
-                clearGlobalSpeechQueue();
-              } catch (e) {}
-              if (audioPlayerRef.current) {
-                try { audioPlayerRef.current.stopScript(); } catch(e) {}
-                try { audioPlayerRef.current.pause(); } catch(e) {}
-                try { audioPlayerRef.current.clearQueue(); } catch(e) {}
-              }
               if (desktopVideoRef.current) {
                 desktopVideoRef.current.dataset.userPaused = 'true';
                 try { desktopVideoRef.current.pause(); } catch (e) {}
@@ -2850,11 +2798,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               try { 
                 localStorage.removeItem('avalive_user_paused');
                 localStorage.removeItem('avalive_window_capture_paused');
-                localStorage.removeItem('aidol_user_paused_script');
               } catch (e) {}
-              if (typeof window !== 'undefined') {
-                window.__aidolUserPausedScript = false;
-              }
               if (desktopVideoRef.current) {
                 desktopVideoRef.current.dataset.userPaused = 'false';
                 try { desktopVideoRef.current.play().catch(() => {}); } catch (e) {}
@@ -2927,23 +2871,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         isInternalPlaybackChangeRef.current = true;
         if (isPaused) {
           setIsVideoPlaying(false);
-          try {
-            localStorage.setItem('aidol_user_paused_script', 'true');
-            localStorage.setItem('aidol_is_script_live_running', 'false');
-          } catch (e) {}
-          if (typeof window !== 'undefined') {
-            window.__aidolUserPausedScript = true;
-            window.__isScriptLiveRunning = false;
-          }
-          try {
-            stopVoiceAudio();
-            clearGlobalSpeechQueue();
-          } catch (e) {}
-          if (audioPlayerRef.current) {
-            try { audioPlayerRef.current.stopScript(); } catch(e) {}
-            try { audioPlayerRef.current.pause(); } catch(e) {}
-            try { audioPlayerRef.current.clearQueue(); } catch(e) {}
-          }
           if (desktopVideoRef.current) {
             desktopVideoRef.current.dataset.userPaused = 'true';
             try { desktopVideoRef.current.pause(); } catch (e) {}
@@ -2957,12 +2884,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           if (typeof bandoAudio.pauseAll === 'function') bandoAudio.pauseAll();
           if (typeof window !== 'undefined' && window.speechSynthesis) window.speechSynthesis.cancel();
         } else {
-          try {
-            localStorage.removeItem('aidol_user_paused_script');
-          } catch (e) {}
-          if (typeof window !== 'undefined') {
-            window.__aidolUserPausedScript = false;
-          }
           setIsVideoPlaying(true);
           if (desktopVideoRef.current) {
             desktopVideoRef.current.dataset.userPaused = 'false';
