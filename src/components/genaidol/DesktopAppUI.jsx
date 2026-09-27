@@ -3838,6 +3838,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       overlayTextStyle: (flowSequencerOverlay && flowSequencerOverlay.overlayTextStyle) || undefined,
       overlayTextColor: (flowSequencerOverlay && flowSequencerOverlay.overlayTextColor) || undefined,
       overlayTextFontSize: (flowSequencerOverlay && flowSequencerOverlay.overlayTextFontSize) || undefined,
+      overlayTextFontFamily: (flowSequencerOverlay && flowSequencerOverlay.overlayTextFontFamily) || undefined,
       syncedAvatars: resolvedAvatars,
       multiAvatarConfig: {
         ...(multiAvatarConfig || {}),
@@ -3869,6 +3870,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     activeVideoItem, 
     userLockedMediaUrl,
     flowSequencerOverlay,
+    multiAvatarConfig,
+    isMasterStageSynced,
+    isVideoPlaying,
     isConnected, 
     showSimulator, 
     globalAspectRatio, 

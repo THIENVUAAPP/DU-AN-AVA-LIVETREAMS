@@ -87,18 +87,36 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack 
 
   // Vòng lặp Idle (tự động tương tác)
   const resetIdleTimer = useCallback(() => {
-    if (!isConnected) return;
     clearTimeout(idleTimerRef.current);
-    // 🛡️ BẢO VỆ TUYỆT ĐỐI: Nếu đang phát kịch bản bán hàng (Script Live) hoặc test kịch bản,
-    // HỦY BỎ 100% IDLE TIMER để kịch bản đọc liên tục không bao giờ bị dừng 30-40 giây
+    if (!isConnected) return;
+    
+    // 🛡️ BẢO VỆ TUYỆT ĐỐI: Nếu người dùng đã Tắt / Tạm dừng hoặc đang phát kịch bản,
+    // HỦY BỎ 100% IDLE TIMER để không bao giờ tự ý nói hoặc xen ngang
+    const isUserPaused = typeof localStorage !== 'undefined' && (
+      localStorage.getItem('avalive_user_paused') === 'true' || 
+      localStorage.getItem('avalive_window_capture_paused') === 'true' ||
+      localStorage.getItem('avalive_master_live_running') === 'false'
+    );
+    if (isUserPaused) {
+      return;
+    }
+
     const isScriptActive = (typeof localStorage !== 'undefined' && localStorage.getItem('aidol_is_script_live_running') === 'true') ||
                            (typeof window !== 'undefined' && (window.__isScriptTestingRunning || window.__isScriptLiveRunning));
     if (isScriptActive) {
       return;
     }
     const configs = getSavedEventConfigs();
+    if (configs.idle?.active === false) return;
     const idleSeconds = Number(configs.idle?.speakAfterIdleSeconds) || 30;
     idleTimerRef.current = setTimeout(() => {
+      const stillUserPaused = typeof localStorage !== 'undefined' && (
+        localStorage.getItem('avalive_user_paused') === 'true' || 
+        localStorage.getItem('avalive_window_capture_paused') === 'true' ||
+        localStorage.getItem('avalive_master_live_running') === 'false'
+      );
+      if (stillUserPaused) return;
+
       const stillScriptActive = (typeof localStorage !== 'undefined' && localStorage.getItem('aidol_is_script_live_running') === 'true') ||
                                 (typeof window !== 'undefined' && (window.__isScriptTestingRunning || window.__isScriptLiveRunning));
       if (stillScriptActive) return;
@@ -356,7 +374,16 @@ function fillTemplate(template, vars = {}) {
                   type === 'CALL_TO_ACTION' ? 'call_to_action' : '';
 
     // 🛡️ BẢO VỆ TUYỆT ĐỐI: CHỈ THỰC THI SỰ KIỆN & ĐỌC BÌNH LUẬN KHI PHIÊN LIVE ĐANG PHÁT HOẶC TEST THỦ CÔNG
-    // Tuyệt đối không tự ý đọc bình luận, chào hỏi hay chốt đơn khi chưa mở Live
+    // Tuyệt đối không tự ý đọc bình luận, chào hỏi hay chốt đơn khi chưa mở Live hoặc khi đã Tắt/Tạm dừng
+    const isUserPaused = typeof localStorage !== 'undefined' && (
+      localStorage.getItem('avalive_user_paused') === 'true' || 
+      localStorage.getItem('avalive_window_capture_paused') === 'true' ||
+      localStorage.getItem('avalive_master_live_running') === 'false'
+    );
+    if (isUserPaused && !isTestMode) {
+      return;
+    }
+
     const isLiveBroadcasting = isConnected === true || 
       (typeof window !== 'undefined' && (
         window.__isLiveBroadcasting === true ||

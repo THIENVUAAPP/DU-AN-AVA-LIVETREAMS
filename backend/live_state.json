@@ -12,7 +12,7 @@
   "isAudioMuted": false,
   "isDarkMode": true,
   "clearMedia": false,
-  "updatedAt": 1790493239993,
+  "updatedAt": 1790510811260,
   "isUserExplicitMediaLocked": false,
   "selectedCharacter": "",
   "videoCurrentTime": 0,
@@ -89,7 +89,7 @@
       "isSpeakingNow": false
     }
   ],
-  "tunnelUrl": "https://using-win-holiday-jerusalem.trycloudflare.com",
+  "tunnelUrl": "https://possibly-idle-comments-bodies.trycloudflare.com",
   "multiAvatarConfig": {
     "enabled": true,
     "activeCount": 2,

@@ -1060,13 +1060,22 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         try { localStorage.setItem('avalive_tunnel_url', data.tunnelUrl); } catch (e) {}
       }
 
+      if (data.multiAvatarConfig) {
+        setMultiAvatarConfig(data.multiAvatarConfig);
+      } else if (data.extraImageLayers || data.multiAvatarExtraLayers) {
+        setMultiAvatarConfig(prev => ({
+          ...prev,
+          extraImageLayers: data.extraImageLayers || data.multiAvatarExtraLayers || prev?.extraImageLayers
+        }));
+      }
+
       setMasterState(prev => {
         // Kiểm tra xem có trường dữ liệu quan trọng nào thực sự thay đổi không
         let hasDiff = false;
         const keys = [
-          'stage', 'aspectRatio', 'mediaUrl', 'flvUrl', 'isVideo', 'selectedCharacter', 'characterName', 'isPlaying', 'isDarkMode', 'tunnelUrl',
+          'stage', 'aspectRatio', 'mediaUrl', 'mainMediaUrl', 'mainMediaTransform', 'mainMediaChromaKey', 'flvUrl', 'isVideo', 'selectedCharacter', 'characterName', 'isPlaying', 'isDarkMode', 'tunnelUrl',
           'secondaryMediaUrl', 'secondaryMediaTransform', 'secondaryMediaChromaKey', 'overlayImage', 'overlayImageTransform', 'overlayImageChromaKey',
-          'overlayText', 'overlayTextTransform', 'overlayTextColor', 'overlayTextFontSize', 'multiAvatarConfig', 'syncedAvatars', 'extraImageLayers'
+          'overlayText', 'overlayTextTransform', 'overlayTextStyle', 'overlayTextFontFamily', 'overlayTextColor', 'overlayTextFontSize', 'multiAvatarConfig', 'syncedAvatars', 'extraImageLayers', 'multiAvatarExtraLayers'
         ];
         for (const k of keys) {
           if (data[k] !== undefined && JSON.stringify(data[k]) !== JSON.stringify(prev[k])) {
@@ -3235,12 +3244,22 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                       masterState.overlayTextStyle === 'gold_luxury' 
                         ? 'bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500 text-slate-950 shadow-[0_0_25px_rgba(251,191,36,0.9)] border border-yellow-200' :
                       masterState.overlayTextStyle === 'gradient_rose' 
-                        ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white shadow-[0_0_25px_rgba(225,29,72,0.8)] border border-rose-300' :
-                        'bg-slate-900/90 border border-white/20 text-white shadow-xl'
+                        ? 'bg-gradient-to-r from-rose-600 via-pink-500 to-rose-600 text-white shadow-[0_0_25px_rgba(244,63,94,0.8)] border border-pink-300/40' :
+                      masterState.overlayTextStyle === 'minimal_dark' 
+                        ? 'bg-black/85 border border-white/20 text-white backdrop-blur-md shadow-2xl' :
+                        'bg-gradient-to-r from-red-600 via-amber-500 to-red-600 text-white shadow-[0_0_25px_rgba(239,68,68,0.85)] border border-amber-300/50'
                     }`}
                     style={{
-                      color: masterState.overlayTextColor || undefined,
-                      fontSize: masterState.overlayTextFontSize ? `${masterState.overlayTextFontSize}px` : '15px'
+                      fontFamily: masterState.overlayTextFontFamily === 'montserrat' ? "'Montserrat', sans-serif" :
+                                  masterState.overlayTextFontFamily === 'be_vietnam' ? "'Be Vietnam Pro', sans-serif" :
+                                  masterState.overlayTextFontFamily === 'lexend' ? "'Lexend', sans-serif" :
+                                  masterState.overlayTextFontFamily === 'impact' ? "Impact, sans-serif" :
+                                  masterState.overlayTextFontFamily === 'inter' ? "'Inter', sans-serif" :
+                                  masterState.overlayTextFontFamily === 'roboto' ? "'Roboto', sans-serif" :
+                                  masterState.overlayTextFontFamily === 'playfair' ? "'Playfair Display', serif" :
+                                  masterState.overlayTextFontFamily === 'anton' ? "'Anton', sans-serif" : undefined,
+                      fontSize: masterState.overlayTextFontSize ? `${masterState.overlayTextFontSize}px` : '15px',
+                      color: masterState.overlayTextColor || undefined
                     }}
                   >
                     {masterState.overlayText}

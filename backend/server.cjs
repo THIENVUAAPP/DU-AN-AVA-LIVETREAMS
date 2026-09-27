@@ -1918,6 +1918,45 @@ app.get([
             content.innerText = txt.trim();
             if (data.overlayTextColor) content.style.color = data.overlayTextColor;
             if (data.overlayTextFontSize) content.style.fontSize = data.overlayTextFontSize + 'px';
+            if (data.overlayTextFontFamily) {
+              const fontMap = {
+                montserrat: "'Montserrat', sans-serif",
+                be_vietnam: "'Be Vietnam Pro', sans-serif",
+                lexend: "'Lexend', sans-serif",
+                impact: "Impact, sans-serif",
+                inter: "'Inter', sans-serif",
+                roboto: "'Roboto', sans-serif",
+                playfair: "'Playfair Display', serif",
+                anton: "'Anton', sans-serif"
+              };
+              if (fontMap[data.overlayTextFontFamily]) content.style.fontFamily = fontMap[data.overlayTextFontFamily];
+            }
+            if (data.overlayTextStyle === 'neon_cyber') {
+              content.style.background = 'rgba(2, 6, 23, 0.95)';
+              content.style.border = '1.5px solid #22d3ee';
+              content.style.color = data.overlayTextColor || '#22d3ee';
+              content.style.boxShadow = '0 0 25px rgba(6, 182, 212, 0.8)';
+            } else if (data.overlayTextStyle === 'gold_luxury') {
+              content.style.background = 'linear-gradient(to right, #f59e0b, #fde047, #f59e0b)';
+              content.style.border = '1.5px solid #fef08a';
+              content.style.color = data.overlayTextColor || '#020617';
+              content.style.boxShadow = '0 0 25px rgba(251, 191, 36, 0.9)';
+            } else if (data.overlayTextStyle === 'gradient_rose') {
+              content.style.background = 'linear-gradient(to right, #e11d48, #ec4899, #e11d48)';
+              content.style.border = '1.5px solid rgba(244, 114, 182, 0.6)';
+              content.style.color = data.overlayTextColor || '#ffffff';
+              content.style.boxShadow = '0 0 25px rgba(244, 63, 94, 0.8)';
+            } else if (data.overlayTextStyle === 'minimal_dark') {
+              content.style.background = 'rgba(0, 0, 0, 0.85)';
+              content.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+              content.style.color = data.overlayTextColor || '#ffffff';
+              content.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.9)';
+            } else {
+              content.style.background = 'linear-gradient(to right, #dc2626, #f59e0b, #dc2626)';
+              content.style.border = '1.5px solid rgba(252, 211, 77, 0.6)';
+              content.style.color = data.overlayTextColor || '#ffffff';
+              content.style.boxShadow = '0 0 25px rgba(239, 68, 68, 0.85)';
+            }
             banner.style.display = 'block';
           } else {
             banner.style.display = 'none';
@@ -3066,6 +3105,45 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
             content.innerText = txt.trim();
             if (data.overlayTextColor) content.style.color = data.overlayTextColor;
             if (data.overlayTextFontSize) content.style.fontSize = data.overlayTextFontSize + 'px';
+            if (data.overlayTextFontFamily) {
+              const fontMap = {
+                montserrat: "'Montserrat', sans-serif",
+                be_vietnam: "'Be Vietnam Pro', sans-serif",
+                lexend: "'Lexend', sans-serif",
+                impact: "Impact, sans-serif",
+                inter: "'Inter', sans-serif",
+                roboto: "'Roboto', sans-serif",
+                playfair: "'Playfair Display', serif",
+                anton: "'Anton', sans-serif"
+              };
+              if (fontMap[data.overlayTextFontFamily]) content.style.fontFamily = fontMap[data.overlayTextFontFamily];
+            }
+            if (data.overlayTextStyle === 'neon_cyber') {
+              content.style.background = 'rgba(2, 6, 23, 0.95)';
+              content.style.border = '1.5px solid #22d3ee';
+              content.style.color = data.overlayTextColor || '#22d3ee';
+              content.style.boxShadow = '0 0 25px rgba(6, 182, 212, 0.8)';
+            } else if (data.overlayTextStyle === 'gold_luxury') {
+              content.style.background = 'linear-gradient(to right, #f59e0b, #fde047, #f59e0b)';
+              content.style.border = '1.5px solid #fef08a';
+              content.style.color = data.overlayTextColor || '#020617';
+              content.style.boxShadow = '0 0 25px rgba(251, 191, 36, 0.9)';
+            } else if (data.overlayTextStyle === 'gradient_rose') {
+              content.style.background = 'linear-gradient(to right, #e11d48, #ec4899, #e11d48)';
+              content.style.border = '1.5px solid rgba(244, 114, 182, 0.6)';
+              content.style.color = data.overlayTextColor || '#ffffff';
+              content.style.boxShadow = '0 0 25px rgba(244, 63, 94, 0.8)';
+            } else if (data.overlayTextStyle === 'minimal_dark') {
+              content.style.background = 'rgba(0, 0, 0, 0.85)';
+              content.style.border = '1px solid rgba(255, 255, 255, 0.2)';
+              content.style.color = data.overlayTextColor || '#ffffff';
+              content.style.boxShadow = '0 10px 30px rgba(0, 0, 0, 0.9)';
+            } else {
+              content.style.background = 'linear-gradient(to right, #dc2626, #f59e0b, #dc2626)';
+              content.style.border = '1.5px solid rgba(252, 211, 77, 0.6)';
+              content.style.color = data.overlayTextColor || '#ffffff';
+              content.style.boxShadow = '0 0 25px rgba(239, 68, 68, 0.85)';
+            }
             banner.style.display = 'block';
           } else {
             banner.style.display = 'none';

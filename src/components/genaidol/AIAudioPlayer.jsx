@@ -37,6 +37,21 @@ const AIAudioPlayer = forwardRef(({ isLive, isScriptRunning = false, onAudioPlay
   const queueRef = useRef([]);
   const currentIndexRef = useRef(0);
   const priorityQueueRef = useRef([]);
+  const activeTimersRef = useRef(new Set());
+
+  const safeSetTimeout = (fn, delay) => {
+    const id = setTimeout(() => {
+      activeTimersRef.current.delete(id);
+      fn();
+    }, delay);
+    activeTimersRef.current.add(id);
+    return id;
+  };
+
+  const clearAllActiveTimers = () => {
+    activeTimersRef.current.forEach(id => clearTimeout(id));
+    activeTimersRef.current.clear();
+  };
 
   useEffect(() => {
     isPlayingRef.current = isPlaying;
@@ -100,6 +115,7 @@ const AIAudioPlayer = forwardRef(({ isLive, isScriptRunning = false, onAudioPlay
   // Lắng nghe lệnh Dừng Tất Cả & Dừng Khẩn Cấp toàn phần mềm
   useEffect(() => {
     const handleEmergencyStopAll = () => {
+      clearAllActiveTimers();
       stopVoiceAudio();
       const aud = getAudio();
       if (aud) {
@@ -339,12 +355,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         console.warn("AIAudioPlayer failed to parse script:", err);
       }
     } else {
+      clearAllActiveTimers();
       setIsPlaying(false);
       isPlayingRef.current = false;
       isBusyRef.current = false;
       stopVoiceAudio();
       const aud = getAudio();
-      if (aud) aud.pause();
+      if (aud) {
+        try { aud.pause(); aud.src = ''; } catch (e) {}
+      }
     }
   }, [isScriptRunning]);
 
@@ -565,7 +584,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         // 1. Nếu có bình luận ưu tiên đang chờ (chỉ khi đang Live thật sự)
         if (priorityQueueRef.current.length > 0 && (isLive || item.isTest)) {
           const nextPriority = priorityQueueRef.current.shift();
-          setTimeout(() => {
+          safeSetTimeout(() => {
             playItem(nextPriority, false);
           }, 60);
           return;
@@ -599,7 +618,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 if (loopDelayMs <= 0) {
                   if (isPlayingRef.current) playItem(firstItem, true);
                 } else {
-                  setTimeout(() => {
+                  safeSetTimeout(() => {
                     if (isPlayingRef.current) playItem(firstItem, true);
                   }, loopDelayMs);
                 }
@@ -620,7 +639,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               if (delayMs <= 0) {
                 if (isPlayingRef.current) playItem(nextItem, true);
               } else {
-                setTimeout(() => {
+                safeSetTimeout(() => {
                   if (isPlayingRef.current) playItem(nextItem, true);
                 }, delayMs);
               }
@@ -631,13 +650,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           // Nhắc lại ngữ cảnh / dẫn nối thông minh để tiếp tục phát kịch bản tại vị trí hiện tại
           if (priorityQueueRef.current.length > 0) {
             const nextPri = priorityQueueRef.current.shift();
-            setTimeout(() => {
+            safeSetTimeout(() => {
               playItem(nextPri, false);
             }, 100);
             return;
           }
 
-          if (isPlayingRef.current && queueRef.current.length > 0) {
+          if (isPlayingRef.current && isScriptRunning && queueRef.current.length > 0) {
             const curIdx = currentIndexRef.current;
             const targetItem = queueRef.current[curIdx] || queueRef.current[0];
             if (targetItem) {
@@ -655,15 +674,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 text: `${randomBridge} ${targetItem.text}`
               };
               
-              setTimeout(() => {
-                if (isPlayingRef.current) playItem(bridgedItem, true);
+              safeSetTimeout(() => {
+                if (isPlayingRef.current && isScriptRunning) playItem(bridgedItem, true);
               }, 250);
             }
           }
         }
       };
 
-      watchdogTimer = setTimeout(() => {
+      watchdogTimer = safeSetTimeout(() => {
         if (isBusyRef.current && !hasHandledItem) {
           console.warn('[AIAudioPlayer] Watchdog safety reset busy state after timeout (length:', cleanLen, ')');
           stopVoiceAudio();
@@ -701,7 +720,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           currentIndexRef.current = nextIdx;
           setCurrentIndex(nextIdx);
           const nextItem = queueRef.current[nextIdx];
-          if (nextItem) setTimeout(() => { if (isPlayingRef.current) playItem(nextItem, true); }, 200);
+          if (nextItem) safeSetTimeout(() => { if (isPlayingRef.current) playItem(nextItem, true); }, 200);
         }
       }
     }
@@ -711,6 +730,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   useImperativeHandle(ref, () => ({
     startScript: (customScriptText = null) => {
       try {
+        clearAllActiveTimers();
         stopVoiceAudio();
         const scriptItems = loadScriptFromStorage(customScriptText);
         setQueue(scriptItems);
@@ -730,9 +750,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }
     },
     stopScript: () => {
+      clearAllActiveTimers();
       stopVoiceAudio();
       const aud = getAudio();
-      if (aud) aud.pause();
+      if (aud) {
+        try { aud.pause(); aud.src = ''; } catch(e) {}
+      }
       isBusyRef.current = false;
       priorityQueueRef.current = [];
       setIsPlaying(false);
@@ -747,6 +770,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       prefetchAllScriptItems(scriptItems);
     },
     enqueueItem: (text, action, isImmediate = false, options = {}) => {
+      // 🛡️ CHẶN 100% KHI NGƯỜI DÙNG ĐÃ TẮT / TẠM DỪNG LIVE HOẶC SCRIPT
+      const isUserPaused = typeof localStorage !== 'undefined' && (
+        localStorage.getItem('avalive_user_paused') === 'true' || 
+        localStorage.getItem('avalive_window_capture_paused') === 'true' ||
+        localStorage.getItem('avalive_master_live_running') === 'false'
+      );
+      if (isUserPaused && !options?.isTest) {
+        return;
+      }
+
       // 🛡️ CHẶN 100% BÌNH LUẬN XEN VÀO KHI ĐANG PHÁT CHẠY THỬ KỊCH BẢN (TESTER MODE)
       const isScriptTestingActive = typeof window !== 'undefined' && (
         window.__isScriptTestingRunning === true || 
@@ -795,6 +828,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     },
     playDirectAudio: (audioSrc, onEndedCallback) => {
       try {
+        clearAllActiveTimers();
         stopVoiceAudio();
         const aud = getAudio();
         if (aud) aud.pause();
@@ -814,6 +848,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }
     },
     stopCurrent: () => {
+      clearAllActiveTimers();
       stopVoiceAudio();
       const aud = getAudio();
       if (aud) {
@@ -827,6 +862,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       if (onActionTriggered) onActionTriggered({ type: 'LIPSYNC_ENDED' });
     },
     pause: () => {
+      clearAllActiveTimers();
       stopVoiceAudio();
       const aud = getAudio();
       if (aud) {
@@ -840,6 +876,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       if (onActionTriggered) onActionTriggered({ type: 'LIPSYNC_ENDED' });
     },
     stopAll: () => {
+      clearAllActiveTimers();
       stopVoiceAudio();
       const aud = getAudio();
       if (aud) {
@@ -853,6 +890,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       if (onActionTriggered) onActionTriggered({ type: 'LIPSYNC_ENDED' });
     },
     clearQueue: () => {
+      clearAllActiveTimers();
       priorityQueueRef.current = [];
       isBusyRef.current = false;
     }
