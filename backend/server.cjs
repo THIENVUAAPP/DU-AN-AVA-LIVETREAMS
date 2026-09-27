@@ -926,6 +926,8 @@ app.get([
     }
   }
 
+  const showDock = req.query.dock === '1' || req.query.controls === '1';
+
   let existsOnDisk = false;
   if (vParam && typeof vParam === 'string' && vParam.includes('/uploads/')) {
     const filename = vParam.substring(vParam.indexOf('/uploads/') + 9).split('?')[0];
@@ -1070,7 +1072,7 @@ app.get([
       top: 12px !important;
       left: 50% !important;
       transform: translateX(-50%) !important;
-      display: inline-flex !important;
+      display: ${showDock ? 'inline-flex' : 'none'} !important;
       flex-direction: row !important;
       align-items: center !important;
       justify-content: center !important;
@@ -3598,9 +3600,9 @@ let currentMasterLiveState = savedState || {
   characterId: 'linhanh_4k',
   characterName: 'AvaLive VIP PRO',
   mediaUrl: null,
-  isVideo: true,
-  videoPlaybackEvent: 'play',
-  isPlaying: true,
+  isVideo: false,
+  videoPlaybackEvent: 'pause',
+  isPlaying: false,
   isAudioMuted: false,
   isDarkMode: true,
   updatedAt: Date.now()
@@ -3613,21 +3615,15 @@ if (currentMasterLiveState.mediaUrl) {
     currentMasterLiveState.mediaUrl = null;
   }
 }
-if (currentMasterLiveState.mediaUrl) {
-  currentMasterLiveState.isVideo = true;
-  currentMasterLiveState.isPlaying = true;
-  currentMasterLiveState.videoPlaybackEvent = 'play';
-  currentMasterLiveState.isUserExplicitMediaLocked = true;
-  console.log(`[AutoRestore] 🎬 Đã khôi phục video gần nhất của người dùng: ${currentMasterLiveState.mediaUrl}`);
-  saveLiveStateToFile();
-} else {
-  currentMasterLiveState.mediaUrl = null;
+
+// Khởi động luôn ở trạng thái DỪNG (isPlaying = false, pause) tránh tự ý phát video ngầm
+currentMasterLiveState.isPlaying = false;
+currentMasterLiveState.videoPlaybackEvent = 'pause';
+if (!currentMasterLiveState.mediaUrl) {
   currentMasterLiveState.isVideo = false;
-  currentMasterLiveState.isPlaying = false;
-  currentMasterLiveState.videoPlaybackEvent = 'pause';
   currentMasterLiveState.isUserExplicitMediaLocked = false;
-  saveLiveStateToFile();
 }
+saveLiveStateToFile(true);
 let currentBandoGameState = null;
 let currentBattleGameState = null;
 let globalLatestStudioCamFrame = null;
@@ -3839,6 +3835,21 @@ io.on('connection', (socket) => {
         saveLiveStateToFile(false);
       }
     }
+  });
+
+  // 🛑 LỆNH DỪNG TOÀN CỤC KHẨN CẤP: Dừng voice, dừng video, dừng mọi âm thanh trên toàn hệ thống
+  socket.on('EMERGENCY_STOP_ALL', (data) => {
+    currentMasterLiveState.isPlaying = false;
+    currentMasterLiveState.videoPlaybackEvent = 'pause';
+    currentMasterLiveState.updatedAt = Date.now();
+    io.emit('EMERGENCY_STOP_ALL', data || { timestamp: Date.now() });
+    io.emit('VIDEO_PLAYBACK_CONTROL', {
+      action: 'pause',
+      isPlaying: false,
+      timestamp: Date.now()
+    });
+    io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+    saveLiveStateToFile(true);
   });
 
   socket.on('bando_sync', (state) => {
@@ -4555,16 +4566,13 @@ app.get(['/api/live-state', '/api/master-live-state'], (req, res) => {
   // 🛡️ TUYỆT ĐỐI KHÔNG TỰ Ý GÁN VIDEO NỀN NẾU RỖNG HOẶC ĐÃ XÓA
   if (currentMasterLiveState.mediaUrl) {
     currentMasterLiveState.isVideo = true;
-    currentMasterLiveState.isPlaying = true;
-    currentMasterLiveState.videoPlaybackEvent = 'play';
-    currentMasterLiveState.isVideoAudioMuted = false;
-    currentMasterLiveState.isMuted = false;
     if (typeof currentMasterLiveState.videoVolume !== 'number' || currentMasterLiveState.videoVolume <= 0) {
       currentMasterLiveState.videoVolume = 1.0;
     }
   } else {
     currentMasterLiveState.isVideo = false;
     currentMasterLiveState.isPlaying = false;
+    currentMasterLiveState.videoPlaybackEvent = 'pause';
   }
   res.json(currentMasterLiveState);
 });

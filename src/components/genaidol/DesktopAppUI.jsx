@@ -2470,6 +2470,23 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           } catch (e) {}
         }
         setIsVideoPlaying(false);
+        try {
+          stopVoiceAudio();
+          clearGlobalSpeechQueue();
+        } catch (e) {}
+        try {
+          window.dispatchEvent(new CustomEvent('avalive_emergency_stop_all'));
+          window.dispatchEvent(new CustomEvent('avalive:stop_all_audio_and_voice'));
+        } catch (e) {}
+        if (socketRef.current && socketRef.current.readyState === WebSocket.OPEN) {
+          try {
+            socketRef.current.send(JSON.stringify({
+              type: 'EMERGENCY_STOP_ALL',
+              source: 'desktop_pause',
+              timestamp: Date.now()
+            }));
+          } catch (e) {}
+        }
         sendVideoControl({
           action: 'pause',
           isPlaying: false,
@@ -2482,7 +2499,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           isPlaying: false,
           videoCurrentTime: vid ? vid.currentTime : 0
         }, socketRef.current);
-        showToast('⏸️ Đã tạm dừng phát video', 'info');
+        showToast('⏸️ Đã tạm dừng phát video và voice', 'info');
       } else {
         if (vid && vid.src) {
           vid.dataset.userPaused = 'false';
@@ -2513,6 +2530,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           timestamp: Date.now()
         }, socketRef.current);
         syncMasterLiveState({
+          clearMedia: false,
           videoPlaybackEvent: 'play',
           isPlaying: true,
           videoCurrentTime: vid ? vid.currentTime : 0

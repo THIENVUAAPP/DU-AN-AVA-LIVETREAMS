@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.63';
+export const APP_VERSION = '4.9.64';
 export const RELEASE_DATE = '27/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.64 - Khắc Phục Triệt Để Video Tự Ý Chạy Nền & Tối Ưu Nguồn Phát Sạch 100% TikTok Live Studio',
+    description: '1. Triệt Tiêu 100% Hiện Tượng Tự Ý Phát Video Nền Ẩn: Sửa lỗi tự động khôi phục video cũ khi khởi động hoặc truy vấn trạng thái nền. Sân khấu chỉ phát chính xác video do người dùng chủ động tải lên/chọn trong phiên làm việc hiện tại, tuyệt đối không tự ý lấy dữ liệu cũ phát ngầm. 2. Nguồn Phát Sạch 100% Không Vướng Nút Cho TikTok Live Studio: Tự động ẩn hoàn toàn thanh điều khiển và nút nổi trên link livestream để TikTok Live Studio và OBS Browser Source chỉ nhận khung hình video/avatar/banner sạch tuyệt đối 60 FPS. 3. Đồng Bộ Dừng Toàn Cục (Bấm Dừng Là Dừng Hết): Bấm Dừng / Tạm dừng trên giao diện chính lập tức ngắt toàn bộ Voice AI, bộ đọc kịch bản, âm thanh và luồng video trên toàn hệ thống 0ms.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.63 - Khôi Phục Hoàn Toàn Window Capture & Đồng Bộ Sân Khấu Chính / Link Livestream 60 FPS',
     description: '1. Khôi Phục Hoàn Toàn Window Capture & Link Livestream: Sửa triệt để lỗi màn hình đen thui trên Window Capture và Link TikTok Live Studio. Cho phép phân giải và phát tức thì 100% các định dạng video, avatar, ảnh blob/server, video phụ PiP, banner ảnh và tiêu đề chữ từ Sân Khấu Chính. 2. Dừng Tuyệt Đối / Chạy Toàn Bộ Khi Thao Tác: Khi bấm Dừng Demo / ngắt đồng bộ, toàn bộ dữ liệu, Voice AI và video dừng dứt điểm 100% không chạy ngầm; khi bấm Chạy Demo hoặc Bật Đồng Bộ thì toàn bộ luồng kịch bản, video và giọng đọc được mở và chạy đồng bộ tất cả. 3. Xóa Là Xóa Dứt Điểm, Mở Lại Là Mở Đầy Đủ: Khi người dùng xóa video thì xóa sạch mọi dữ liệu và âm thanh; khi nạp lại hoặc chọn nhân vật thì lập tức mở lại tất cả.'

@@ -97,6 +97,29 @@ const AIAudioPlayer = forwardRef(({ isLive, isScriptRunning = false, onAudioPlay
     return () => window.removeEventListener('aidol_voice_sync_updated', handleVoiceUpdate);
   }, []);
 
+  // Lắng nghe lệnh Dừng Tất Cả & Dừng Khẩn Cấp toàn phần mềm
+  useEffect(() => {
+    const handleEmergencyStopAll = () => {
+      stopVoiceAudio();
+      const aud = getAudio();
+      if (aud) {
+        try { aud.pause(); aud.src = ''; } catch(e) {}
+      }
+      isBusyRef.current = false;
+      priorityQueueRef.current = [];
+      setIsPlaying(false);
+      isPlayingRef.current = false;
+    };
+    window.addEventListener('avalive_emergency_stop_all', handleEmergencyStopAll);
+    window.addEventListener('avalive:stop_all_audio_and_voice', handleEmergencyStopAll);
+    window.addEventListener('global-stop-demo', handleEmergencyStopAll);
+    return () => {
+      window.removeEventListener('avalive_emergency_stop_all', handleEmergencyStopAll);
+      window.removeEventListener('avalive:stop_all_audio_and_voice', handleEmergencyStopAll);
+      window.removeEventListener('global-stop-demo', handleEmergencyStopAll);
+    };
+  }, []);
+
   const getAudio = () => {
     if (!audioRef.current && typeof window !== 'undefined' && typeof Audio !== 'undefined') {
       audioRef.current = new Audio();
