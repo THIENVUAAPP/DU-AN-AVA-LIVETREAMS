@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.57';
+export const APP_VERSION = '4.9.58';
 export const RELEASE_DATE = '27/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.58 - Việt Hóa Toàn Bộ & Nâng Cấp Tương Tác Siêu Nhạy Thanh Dock Window Capture',
+    description: '1. Việt Hóa Toàn Bộ Nút Điều Khiển: Chuyển đổi toàn bộ nút tiếng Anh (• LIVE 60FPS) sang tiếng Việt (• TRỰC TIẾP 60FPS / ⚡ LÀM MỚI 60FPS) kèm hiệu ứng phát sáng phản hồi trực quan ngay khi bấm. 2. Khắc Phục Lỗi Nút Bấm Không Tác Dụng: Nâng cấp cơ chế bắt sự kiện đa điểm (pointerdown, touchstart, click) với độ trễ 0ms trên thanh Dock của Window Capture OBS và TikTok Live Studio; sửa lỗi nuốt click khi co giãn nút. 3. Đồng Bộ Trạng Thái Tức Thì: Bấm làm mới / trực tiếp sẽ tự động nạp lại dữ liệu Sân Khấu Chính, kích hoạt phát tất cả video và đồng bộ âm thanh chuẩn xác 100%.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.57 - Nâng Cấp Chạy Tự Động Kịch Bản Demo & Khóa Giữ Nhân Vật Sân Khấu Chính',
     description: '1. Nâng Cấp Bộ Điều Phối Chạy Demo Kịch Bản (Livestream Flow Sequencer): Tối ưu toàn diện nút ▶️ CHẠY DEMO / ⏹️ DỪNG DEMO, đảm bảo tự động đọc giọng AI theo từng câu thoại, đồng bộ từng lớp Video/Ảnh/Tiêu Đề và tự động chuyển bước mượt mà (Bước 1 -> Bước 2 -> Bước 3...) có watchdog an toàn 100% không bao giờ bị dừng hay treo giữa chừng. 2. Khóa Giữ & Phát Nhân Vật Đang Chọn Trên Sân Khấu Chính: Khi người dùng tải lên hoặc bấm chọn ô nhân vật bất kỳ, video/hình ảnh lập tức chiếm giữ Sân Khấu Chính và phát lặp liền mạch 24/24 cho đến khi người dùng chủ động đổi sang nhân vật khác hoặc bấm nút xóa (X), không tự ý nhảy đổi ô nhân vật khi hết video. 3. Đồng Bộ Đa Tầng 100% Cho Window Capture OBS & TikTok Live Studio: Toàn bộ lớp video, video phụ PiP, avatar nhân vật, banner ảnh và tiêu đề luôn được truyền tải sắc nét 60 FPS theo đúng tọa độ.'

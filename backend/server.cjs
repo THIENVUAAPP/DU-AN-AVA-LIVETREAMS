@@ -1252,6 +1252,19 @@ app.get([
     <!-- Live badge is hidden on clean stream feed -->
   </div>
 
+  <!-- BẢNG ĐIỀU KHIỂN NỔI DOCK TOÀN CỤC CẤP BODY -->
+  <div id="controlsDock">
+    <button id="btnLiveStatus" class="dock-btn dock-btn-live" type="button" title="Luồng Trực Tiếp 60 FPS (Bấm để làm mới & đồng bộ luồng)">
+      <span class="dock-pulse-dot"></span>• TRỰC TIẾP 60FPS
+    </button>
+    <button id="btnPlayPause" class="dock-btn" type="button" title="Tạm dừng / Tiếp tục độc lập (Phím tắt: Space)">⏸️ Tạm Dừng</button>
+    <button id="btnMuteUnmute" class="dock-btn" type="button" title="Bật / Tắt âm thanh độc lập (Phím tắt: M)">${soundParam ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}</button>
+    <button id="btnFitToggle" class="dock-btn" type="button" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa Khung' : '📐 Tràn Màn'}</button>
+    <button id="btnHideAll" class="dock-btn dock-btn-hide" type="button" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn Nút (H)</button>
+  </div>
+
+  <button id="btnRestoreIcon" type="button" title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)">👁️</button>
+
   <script>
     (function() {
       const vid = document.getElementById('videoPlayer');
@@ -2361,13 +2374,13 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     <div id="overlayTextBanner" style="position: absolute; left: 4%; top: 5%; width: 92%; z-index: 35; text-align: center; pointer-events: none; display: ${overlayTxt ? 'block' : 'none'};">
       <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);">${overlayTxt}</div>
     </div>
-    <div id="badge">🔴 4K 60 FPS REALTIME v4.9.55</div>
+    <div id="badge">🔴 4K 60 FPS TRỰC TIẾP v4.9.58</div>
   </div>
 
   <!-- BẢNG ĐIỀU KHIỂN NỔI DOCK TOÀN CỤC CẤP BODY — CHỐNG BỊ GPU VIDEO LAYER CHE KHUẤT -->
   <div id="controlsDock">
     <button id="btnLiveStatus" class="dock-btn dock-btn-live" type="button" title="Luồng Trực Tiếp 60 FPS (Bấm để làm mới & đồng bộ luồng)">
-      <span class="dock-pulse-dot"></span>• LIVE 60FPS
+      <span class="dock-pulse-dot"></span>• TRỰC TIẾP 60FPS
     </button>
     <button id="btnPlayPause" class="dock-btn" type="button" title="Tạm dừng / Tiếp tục độc lập (Phím tắt: Space)">⏸️ Tạm Dừng</button>
     <button id="btnMuteUnmute" class="dock-btn" type="button" title="Bật / Tắt âm thanh độc lập (Phím tắt: M)">${soundParam ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}</button>
@@ -2551,9 +2564,27 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           try { e.preventDefault(); e.stopPropagation(); } catch(err) {}
         }
         isStreamUserPaused = false;
+
+        // Phản hồi tức thì trên nút bấm
+        if (btnLiveStatus) {
+          btnLiveStatus.innerHTML = '<span class="dock-pulse-dot"></span>⚡ ĐÃ LÀM MỚI 60FPS';
+          btnLiveStatus.style.borderColor = '#22c55e';
+          btnLiveStatus.style.background = 'rgba(34, 197, 94, 0.45)';
+          setTimeout(function() {
+            if (btnLiveStatus) {
+              btnLiveStatus.innerHTML = '<span class="dock-pulse-dot"></span>• TRỰC TIẾP 60FPS';
+              btnLiveStatus.style.borderColor = '';
+              btnLiveStatus.style.background = '';
+            }
+          }, 1500);
+        }
+
         if (typeof fetchLatestState === 'function') fetchLatestState();
         getAllVideos().forEach(function(v) {
-          try { v.play().catch(function() {}); } catch(err) {}
+          try { 
+            v.muted = targetMuted;
+            v.play().catch(function() {}); 
+          } catch(err) {}
         });
         if (vid && vid.src) {
           try { vid.currentTime = vid.currentTime; } catch(err) {}
@@ -2570,7 +2601,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
             try { e.preventDefault(); e.stopPropagation(); } catch(err) {}
           }
           const now = Date.now();
-          if (now - lastAction < 200) return;
+          if (now - lastAction < 150) return;
           lastAction = now;
           try {
             el.style.transform = 'scale(0.92)';
@@ -2580,6 +2611,8 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
             console.error('Dock action error:', err);
           }
         }
+        el.addEventListener('pointerdown', execute, { passive: false });
+        el.addEventListener('touchstart', execute, { passive: false });
         el.addEventListener('click', execute);
       }
 
