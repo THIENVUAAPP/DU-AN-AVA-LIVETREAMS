@@ -2628,8 +2628,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 {/* MULTI-AVATAR STUDIO CANVAS (2-4 CHARACTERS) */}
                 {multiAvatarConfig?.enabled && multiAvatarConfig?.activeCount >= 2 && Array.isArray(multiAvatarConfig?.avatars) && multiAvatarConfig.avatars.some(a => a.talkVideo || a.idleVideo || a.videoUrl) ? (() => {
               const activeList = (multiAvatarConfig.avatars || [])
-                .filter(a => a.enabled)
-                .slice(0, multiAvatarConfig.activeCount);
+                .filter(a => (masterState?.isMasterStageSynced || multiAvatarConfig?._syncedFromSequencer) ? (a && a.visible !== false) : (a && a.enabled))
+                .slice(0, multiAvatarConfig.activeCount || 4);
               const count = activeList.length;
               const isGridOnly = multiAvatarConfig.layoutMode === 'grid';
 

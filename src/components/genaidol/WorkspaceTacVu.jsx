@@ -769,6 +769,30 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
       return updated;
     });
 
+    // 🛡️ ĐỒNG BỘ TRẠNG THÁI KÍCH HOẠT KỊCH BẢN BÁN HÀNG IDOL
+    if (id === 'script_broadcast' && 'active' in partial) {
+      if (partial.active === false) {
+        try {
+          localStorage.setItem('aidol_is_script_live_running', 'false');
+          localStorage.setItem('aidol_user_paused_script', 'true');
+        } catch (e) {}
+        if (typeof window !== 'undefined') {
+          window.__isScriptLiveRunning = false;
+          window.__aidolUserPausedScript = true;
+          window.dispatchEvent(new CustomEvent('aidol_script_updated', { detail: { isPlaying: false } }));
+          window.dispatchEvent(new CustomEvent('avalive_speaker_change', { detail: { avatarId: null, role: null, isSpeaking: false } }));
+          window.dispatchEvent(new CustomEvent('avalive:stop_all_audio_and_voice'));
+        }
+      } else if (partial.active === true) {
+        try {
+          localStorage.removeItem('aidol_user_paused_script');
+        } catch (e) {}
+        if (typeof window !== 'undefined') {
+          window.__aidolUserPausedScript = false;
+        }
+      }
+    }
+
     // 🎬 ĐỘC LẬP TỪNG SỰ KIỆN: CHỈ DUY NHẤT SỰ KIỆN IDLE (CHỜ/MẶC ĐỊNH) MỚI LÀM VIDEO NỀN SÂN KHẤU CHÍNH
     const vidUrl = partial.videoFile || partial.videoUrl || partial.supportVideoFile;
     if (vidUrl && typeof window !== 'undefined') {

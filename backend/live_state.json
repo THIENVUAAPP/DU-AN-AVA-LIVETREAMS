@@ -7,12 +7,12 @@
   "currentMedia": "/uploads/media-1790480285999-991836740.png",
   "eventVideoUrl": null,
   "isVideo": true,
-  "videoPlaybackEvent": "time_sync",
-  "isPlaying": false,
+  "videoPlaybackEvent": "play",
+  "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
   "clearMedia": false,
-  "updatedAt": 1790513256224,
+  "updatedAt": 1790516681983,
   "isUserExplicitMediaLocked": false,
   "selectedCharacter": "",
   "videoCurrentTime": 0,
@@ -21,7 +21,7 @@
   "isConnected": false,
   "currentLang": "vi",
   "activeTab": "flow_sequencer",
-  "stepTitle": "Bước 1: Avatar AI Chào Khán Giả & Mở Đầu Live (Bản sao)",
+  "stepTitle": "Bước 1: Avatar AI Chào Khán Giả & Mở Đầu Live",
   "actionType": "avatar_talk",
   "scriptText": "Dạ em xin chào tất cả mọi người đã vào xem phiên livestream hôm nay nha! Các bạn bấm thả tim và bình luận để nhận ưu đãi đặc biệt nhé!",
   "secondaryMediaUrl": null,
@@ -45,7 +45,7 @@
       "chromaKey": null,
       "transform": {
         "x": 8,
-        "y": 38,
+        "y": 41,
         "width": 45,
         "height": 48,
         "zIndex": 8,
@@ -74,7 +74,7 @@
       "chromaKey": null,
       "transform": {
         "x": 55,
-        "y": 43,
+        "y": 17,
         "width": 45,
         "height": 48,
         "zIndex": 8,
@@ -89,7 +89,7 @@
       "isSpeakingNow": false
     }
   ],
-  "tunnelUrl": "https://retailers-threats-taxi-amended.trycloudflare.com",
+  "tunnelUrl": "https://formal-learners-grip-wichita.trycloudflare.com",
   "multiAvatarConfig": {
     "enabled": true,
     "activeCount": 2,
@@ -131,7 +131,7 @@
         "chromaKey": null,
         "transform": {
           "x": 8,
-          "y": 38,
+          "y": 41,
           "width": 45,
           "height": 48,
           "zIndex": 8,
@@ -160,7 +160,7 @@
         "chromaKey": null,
         "transform": {
           "x": 55,
-          "y": 43,
+          "y": 17,
           "width": 45,
           "height": 48,
           "zIndex": 8,
@@ -177,7 +177,7 @@
     ],
     "activeSpeakerId": "avatar_1",
     "fromSequencer": true,
-    "syncedAt": 1790513256190
+    "syncedAt": 1790516681970
   },
   "mainMediaUrl": "/uploads/media-1790480285999-991836740.png",
   "mainMediaTransform": {
@@ -185,15 +185,12 @@
     "y": 0,
     "width": 100,
     "height": 100,
-    "scale": 100,
-    "objectFit": "cover",
-    "blur": 0,
-    "brightness": 100
+    "zIndex": 1
   },
   "multiAvatarExtraLayers": [],
   "videoVolume": 1,
   "isVideoAudioMuted": false,
-  "voiceId": "vn_m_genz_gamer_caster_04",
+  "voiceId": "brain_auto",
   "avatarSpeaker": "avatar_1",
   "overlayTextStyle": "fire_sale",
   "overlayTextFontFamily": "be_vietnam",

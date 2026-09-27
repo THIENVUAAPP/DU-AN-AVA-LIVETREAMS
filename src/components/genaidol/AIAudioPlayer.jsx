@@ -125,6 +125,14 @@ const AIAudioPlayer = forwardRef(({ isLive, isScriptRunning = false, onAudioPlay
       priorityQueueRef.current = [];
       setIsPlaying(false);
       isPlayingRef.current = false;
+      try {
+        localStorage.setItem('aidol_is_script_live_running', 'false');
+        localStorage.setItem('aidol_user_paused_script', 'true');
+      } catch (e) {}
+      if (typeof window !== 'undefined') {
+        window.__isScriptLiveRunning = false;
+        window.__aidolUserPausedScript = true;
+      }
     };
     window.addEventListener('avalive_emergency_stop_all', handleEmergencyStopAll);
     window.addEventListener('avalive:stop_all_audio_and_voice', handleEmergencyStopAll);
@@ -451,7 +459,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       localStorage.getItem('avalive_user_paused') === 'true' || 
       localStorage.getItem('avalive_window_capture_paused') === 'true' ||
       localStorage.getItem('avalive_master_live_running') === 'false' ||
-      localStorage.getItem('aidol_is_script_live_running') === 'false'
+      localStorage.getItem('aidol_is_script_live_running') === 'false' ||
+      localStorage.getItem('aidol_user_paused_script') === 'true' ||
+      (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
     );
     if (!item.isTest && (isUserPaused || !isPlayingRef.current)) {
       isBusyRef.current = false;
@@ -574,10 +584,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           localStorage.getItem('avalive_user_paused') === 'true' || 
           localStorage.getItem('avalive_window_capture_paused') === 'true' ||
           localStorage.getItem('avalive_master_live_running') === 'false' ||
-          localStorage.getItem('aidol_is_script_live_running') === 'false'
+          localStorage.getItem('aidol_is_script_live_running') === 'false' ||
+          localStorage.getItem('aidol_user_paused_script') === 'true' ||
+          (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
         );
         if (isPausedNow && !item.isTest) {
           priorityQueueRef.current = [];
+          isBusyRef.current = false;
+          setIsPlaying(false);
+          isPlayingRef.current = false;
           return;
         }
 
@@ -697,6 +712,20 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         rate: item.rate !== undefined ? item.rate : activeVoice?.rate,
         pitch: item.pitch !== undefined ? item.pitch : activeVoice?.pitch,
         onEnd: () => {
+          const isCancelled = typeof localStorage !== 'undefined' && (
+            localStorage.getItem('avalive_user_paused') === 'true' || 
+            localStorage.getItem('avalive_window_capture_paused') === 'true' ||
+            localStorage.getItem('avalive_master_live_running') === 'false' ||
+            localStorage.getItem('aidol_is_script_live_running') === 'false' ||
+            localStorage.getItem('aidol_user_paused_script') === 'true' ||
+            (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
+          );
+          if (isCancelled && !item.isTest) {
+            isBusyRef.current = false;
+            setIsPlaying(false);
+            isPlayingRef.current = false;
+            return;
+          }
           handleItemComplete();
         }
       });
@@ -712,7 +741,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         localStorage.getItem('avalive_user_paused') === 'true' || 
         localStorage.getItem('avalive_window_capture_paused') === 'true' ||
         localStorage.getItem('avalive_master_live_running') === 'false' ||
-        localStorage.getItem('aidol_is_script_live_running') === 'false'
+        localStorage.getItem('aidol_is_script_live_running') === 'false' ||
+        localStorage.getItem('aidol_user_paused_script') === 'true' ||
+        (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
       );
       if (!isPausedNow && isPlayingRef.current && isScriptItem) {
         const nextIdx = currentIndexRef.current + 1;

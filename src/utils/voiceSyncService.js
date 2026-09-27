@@ -7896,6 +7896,9 @@ export function stopVoiceAudio() {
       });
     } catch(e) {}
   }
+  if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+    try { window.speechSynthesis.cancel(); } catch (e) {}
+  }
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', {
       detail: { isSpeaking: false, avatarId: null }
@@ -8862,10 +8865,10 @@ export async function previewVoiceAudio(voiceOrId, sampleText = null, onEndOrPri
   }
   voiceObj = voiceObj || ALL_SYSTEM_VOICES[0];
 
-  // Chuẩn hóa callback onEnd và options - Mặc định chế độ Nghe Thử (preview) luôn là PRIORITY & TEST
+  // Chuẩn hóa callback onEnd và options
   let onEnd = null;
   let priority = true;
-  let isTest = true;
+  let isTest = false;
   let customOptions = {};
 
   if (typeof optionsOrOnEnd === 'function') {
@@ -8876,7 +8879,7 @@ export async function previewVoiceAudio(voiceOrId, sampleText = null, onEndOrPri
     } else if (typeof onEndOrPriority === 'object' && onEndOrPriority !== null) {
       customOptions = onEndOrPriority;
       priority = onEndOrPriority.priority !== undefined ? !!onEndOrPriority.priority : true;
-      isTest = onEndOrPriority.isTest !== undefined ? !!onEndOrPriority.isTest : true;
+      isTest = onEndOrPriority.isTest !== undefined ? !!onEndOrPriority.isTest : false;
     }
   } else if (typeof optionsOrOnEnd === 'boolean') {
     priority = optionsOrOnEnd;
@@ -8886,30 +8889,36 @@ export async function previewVoiceAudio(voiceOrId, sampleText = null, onEndOrPri
     } else if (typeof onEndOrPriority === 'object' && onEndOrPriority !== null) {
       customOptions = onEndOrPriority;
       onEnd = onEndOrPriority.onEnd || null;
+      isTest = onEndOrPriority.isTest !== undefined ? !!onEndOrPriority.isTest : false;
     }
   } else if (typeof optionsOrOnEnd === 'object' && optionsOrOnEnd !== null) {
     customOptions = optionsOrOnEnd;
     onEnd = typeof onEndOrPriority === 'function' ? onEndOrPriority : (optionsOrOnEnd.onEnd || null);
     priority = optionsOrOnEnd.priority !== undefined ? !!optionsOrOnEnd.priority : true;
-    isTest = optionsOrOnEnd.isTest !== undefined ? !!optionsOrOnEnd.isTest : true;
+    isTest = optionsOrOnEnd.isTest !== undefined ? !!optionsOrOnEnd.isTest : false;
   } else if (typeof onEndOrPriority === 'function') {
     onEnd = onEndOrPriority;
     priority = true;
-    isTest = true;
+    isTest = false;
   } else if (typeof onEndOrPriority === 'object' && onEndOrPriority !== null) {
     customOptions = onEndOrPriority;
     onEnd = typeof onEndOrPriority.onEnd === 'function' ? onEndOrPriority.onEnd : null;
     priority = onEndOrPriority.priority !== undefined ? !!onEndOrPriority.priority : true;
-    isTest = onEndOrPriority.isTest !== undefined ? !!onEndOrPriority.isTest : true;
+    isTest = onEndOrPriority.isTest !== undefined ? !!onEndOrPriority.isTest : false;
   } else if (typeof onEndOrPriority === 'boolean') {
     priority = onEndOrPriority;
     isTest = onEndOrPriority;
   }
 
+  // Nếu gọi nghe thử độc lập không truyền options (ví dụ nút test thử 1 câu trong modal chọn giọng)
+  if (optionsOrOnEnd === null && onEndOrPriority === null) {
+    isTest = true;
+  }
+
   const mergedVoice = {
     ...voiceObj,
-    isTest: isTest || priority || voiceObj.isTest,
-    priority: priority || voiceObj.priority,
+    isTest: isTest || customOptions.isTest || false,
+    priority: priority || customOptions.priority || false,
     volume: customOptions.volume !== undefined ? customOptions.volume : (voiceObj.volume !== undefined ? voiceObj.volume : 1.0),
     rate: customOptions.rate !== undefined ? customOptions.rate : (voiceObj.rate !== undefined ? voiceObj.rate : 1.0),
     pitch: customOptions.pitch !== undefined ? customOptions.pitch : (voiceObj.pitch !== undefined ? voiceObj.pitch : 1.0),
@@ -8920,7 +8929,7 @@ export async function previewVoiceAudio(voiceOrId, sampleText = null, onEndOrPri
   // Kiểm tra nếu kênh giọng này bị tắt hoặc âm lượng về 0 (trừ khi đang nghe thử isTest)
   // Luôn dọn dẹp hàng đợi và thực thi phát ngay lập tức
   clearGlobalSpeechQueue();
-  return executeSingleSpeech(mergedVoice, sampleText, onEnd, true);
+  return executeSingleSpeech(mergedVoice, sampleText, onEnd, isTest);
 }
 
 async function processGlobalSpeechQueue() {
@@ -8962,7 +8971,8 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     localStorage.getItem('avalive_window_capture_paused') === 'true' ||
     localStorage.getItem('avalive_master_live_running') === 'false' ||
     localStorage.getItem('aidol_user_paused_script') === 'true' ||
-    localStorage.getItem('aidol_is_script_live_running') === 'false'
+    localStorage.getItem('aidol_is_script_live_running') === 'false' ||
+    (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
   );
   if (!isTestingMode && isUserPaused) {
     // 🛡️ KHÓA CHẶT: Khi người dùng đã tắt / dừng kịch bản, TUYỆT ĐỐI KHÔNG gọi onEnd() tránh tự nhảy câu tiếp theo

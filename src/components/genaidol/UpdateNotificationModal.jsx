@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.72';
+export const APP_VERSION = '4.9.73';
 export const RELEASE_DATE = '27/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.73 - Khóa Chặt 100% Voice AI Khi Bấm Tắt & Đổi Avatar, Giữ Nguyên Trạng Thái Tắt & Đồng Bộ Đầy Đủ Tất Cả Các Lớp Nằm Trên Nền Sang Window Capture & Link TikTok Live Studio',
+    description: '1. Khóa Chặt Triệt Để Nút Tắt & Triệt Tiêu Voice AI Khi Đổi Avatar: Khi người dùng bấm Tắt ("TẮT TẤT CẢ" hoặc dừng kịch bản), toàn bộ voice AI và hàng đợi phát bị tắt sạch dứt điểm 100%. Khi streamer click chọn đổi avatar khác, luồng AI tuyệt đối không tự ý phát voice kịch bản hay voice chào ngầm; sân khấu chính giữ nguyên trạng thái Tắt/Tạm Dừng, không tự động phát hay mở liên kết lại, chỉ khi streamer chủ động bấm Bật lại thì mới mở. 2. Đồng Bộ Đầy Đủ 100% Tất Cả Các Lớp Nằm Trên Nền Sang Window Capture & TikTok Live Studio: Tách biệt cấu trúc z-index chuẩn 6 tầng độc lập (Lớp 0: Nền video/ảnh 60 FPS, Lớp 1: Extra layers/sticker/vòng tròn sàn, Lớp 2: Các khung hình avatar với bo góc và bóng đổ, Lớp 3: Video phụ PiP, Lớp 4: Banner ảnh, Lớp 5: Tiêu đề chữ typography), khắc phục dứt điểm lỗi chỉ hiển thị nền đen che khuất; đồng thời nạp đầy đủ thuộc tính DOM muted và playsinline chống WebKit chặn autoplay trên TikTok Live Studio và OBS CEF.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.72 - Khóa Chặt Nút Tắt Đọc Kịch Bản Không Tự Mở Lại, Định Nghĩa renderMultiAvatarExtraLayers & Đồng Bộ Trọn Vẹn 100% Sân Khấu Chính/Phụ Sang Window Capture & TikTok Live Studio',
     description: '1. Khóa Chặt Triệt Để Nút Tắt Đọc Kịch Bản Avatar Live: Khắc phục dứt điểm hiện tượng bấm tắt/dừng kịch bản rồi sau một khoảng thời gian hệ thống tự phát lại do timer IDLE ngầm hoặc callback onEnd(). Tích hợp cờ chặn aidol_user_paused_script xuyên suốt useLiveCoordinator, AIAudioPlayer và voiceSyncService; khi người dùng bấm tắt/dừng kịch bản thì toàn bộ timer, hàng đợi voice TTS và các sự kiện tự phát bị hủy hoàn toàn, đảm bảo tắt dứt điểm và không bao giờ tự ý nói lại. 2. Sửa Lỗi ReferenceError renderMultiAvatarExtraLayers & Đồng Bộ 100% Sân Khấu Sang Window Capture / TikTok Live Studio: Định nghĩa đầy đủ hàm renderMultiAvatarExtraLayers và tối ưu điều kiện kiểm tra hasAnyContent trên cả hai luồng /live-stream và /window-capture, giúp toàn bộ video chính/phụ (PiP), banner hình ảnh, tiêu đề chữ với typography và font family, multi-avatar và extra layers hiển thị đồng bộ mượt mà 60 FPS theo thời gian thực 0ms.'

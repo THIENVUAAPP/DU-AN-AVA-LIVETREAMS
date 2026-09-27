@@ -2064,13 +2064,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       overlayTextColor: flowSequencerOverlay?.overlayTextColor || null,
       overlayTextFontSize: flowSequencerOverlay?.overlayTextFontSize || null,
       overlayTextFontFamily: flowSequencerOverlay?.overlayTextFontFamily || null,
-      extraImageLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers || flowSequencerOverlay.extraImageLayers)) || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.extraImageLayers : null) || [],
-      multiAvatarExtraLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers || flowSequencerOverlay.extraImageLayers)) || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.extraImageLayers : null) || [],
-      syncedAvatars: (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.characters : null) || [],
-      multiAvatarConfig: (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig() : null) || null,
+      extraImageLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers || flowSequencerOverlay.extraImageLayers)) || (multiAvatarConfig?.extraImageLayers) || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.extraImageLayers : null) || [],
+      multiAvatarExtraLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers || flowSequencerOverlay.extraImageLayers)) || (multiAvatarConfig?.extraImageLayers) || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.extraImageLayers : null) || [],
+      syncedAvatars: (flowSequencerOverlay?.syncedAvatars) || (multiAvatarConfig?.avatars) || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.avatars : null) || [],
+      multiAvatarConfig: multiAvatarConfig || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig() : null) || null,
       updatedAt: Date.now()
     };
-  }, [selectedCharacter, customCharacters, userLockedMediaUrl, isVideoPlaying, globalAspectRatio, flowSequencerOverlay]);
+  }, [selectedCharacter, customCharacters, userLockedMediaUrl, isVideoPlaying, globalAspectRatio, flowSequencerOverlay, multiAvatarConfig]);
 
   const handleOpenWindowCapture = () => {
     // 🎯 ĐỘ PHÂN GIẢI CHUẨN CAO 1080P SẮC NÉT (CHO OBS / TIKTOK LIVE STUDIO CHỤP KHÔNG BỊ VỠ NÉT)
@@ -4027,8 +4027,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       if (typeof window !== 'undefined') {
         window.__isScriptLiveRunning = false;
         window.__isScriptTestingRunning = false;
+        window.__aidolUserPausedScript = true;
       }
-      try { localStorage.setItem('aidol_is_script_live_running', 'false'); } catch (e) {}
+      try { 
+        localStorage.setItem('aidol_is_script_live_running', 'false'); 
+        localStorage.setItem('aidol_user_paused_script', 'true');
+      } catch (e) {}
 
       if (audioPlayerRef.current) {
         try { audioPlayerRef.current.stopScript(); } catch (e) {}
@@ -4148,7 +4152,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       try {
         localStorage.removeItem('avalive_user_paused');
         localStorage.removeItem('avalive_window_capture_paused');
+        localStorage.removeItem('aidol_user_paused_script');
         localStorage.setItem('avalive_master_live_running', 'true');
+        if (typeof window !== 'undefined') window.__aidolUserPausedScript = false;
       } catch (e) {}
 
       if (desktopVideoRef.current) {
@@ -6935,76 +6941,158 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                           } catch(e) {}
                         }
 
-                        // ⚡ 1. CẬP NHẬT TRÌNH CHIẾU GIAO DIỆN PHẦN MỀM NGAY LẬP TỨC
-                        if (desktopVideoRef.current) {
-                          desktopVideoRef.current.src = cleanUrl;
-                          desktopVideoRef.current.currentTime = 0;
-                          desktopVideoRef.current.dataset.userPaused = 'false';
-                          desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+                        // ⚡ TRIỆT TIÊU TOÀN BỘ VOICE AI NGAY LẬP TỨC KHI ĐỔI AVATAR
+                        stopVoiceAudio();
+                        clearGlobalSpeechQueue();
+                        if (typeof window !== 'undefined' && window.speechSynthesis) {
+                          try { window.speechSynthesis.cancel(); } catch (e) {}
                         }
-                        setIsVideoPlaying(true);
-                        // Giữ nguyên trạng thái phiên Live hiện tại, không tự động kích hoạt BẬT TẤT CẢ khi streamer chỉ chọn xem trước nhân vật
 
-                        // ⚡ 2. PHÁT SÓNG REALTIME BROADCAST CHANNEL ĐỒNG BỘ 100% CỬA SỔ LIVE / TIKTOK STUDIO
-                        try {
-                          const bc = new BroadcastChannel('avalive_master_live_stream');
-                          bc.postMessage({
-                            type: 'GLOBAL_MEDIA_CHANGE',
-                            mediaUrl: broadcastUrl || cleanUrl,
-                            characterId: charItem.id,
+                        const isMasterLiveCurrentlyRunning = isMasterLiveRunningRef.current || isMasterLiveRunning || (typeof localStorage !== 'undefined' && localStorage.getItem('avalive_master_live_running') === 'true');
+
+                        if (!isMasterLiveCurrentlyRunning) {
+                          // 🛑 TRẠNG THÁI TẮT: Sân khấu chính giữ nguyên trạng thái Tắt, KHÔNG tự động phát video hay kích hoạt lại
+                          if (desktopVideoRef.current) {
+                            desktopVideoRef.current.src = cleanUrl;
+                            desktopVideoRef.current.currentTime = 0;
+                            desktopVideoRef.current.dataset.userPaused = 'true';
+                            try { desktopVideoRef.current.pause(); } catch(e) {}
+                          }
+                          setIsVideoPlaying(false);
+
+                          try {
+                            const bc = new BroadcastChannel('avalive_master_live_stream');
+                            bc.postMessage({
+                              type: 'GLOBAL_MEDIA_CHANGE',
+                              mediaUrl: broadcastUrl || cleanUrl,
+                              characterId: charItem.id,
+                              characterName: charItem.name || 'AI Idol',
+                              isVideo: isVid,
+                              isPlaying: false,
+                              currentTime: 0,
+                              force: true,
+                              source: 'desktop',
+                              timestamp: Date.now()
+                            });
+                            bc.postMessage({
+                              type: 'GLOBAL_PLAYBACK_CHANGE',
+                              isPlaying: false,
+                              currentTime: 0,
+                              force: true,
+                              source: 'desktop',
+                              timestamp: Date.now()
+                            });
+                            setTimeout(() => bc.close(), 100);
+                          } catch (e) {}
+
+                          sendVideoControl({
+                            action: 'pause',
+                            currentTime: 0,
+                            force: true,
+                            isPlaying: false,
+                            mediaUrl: broadcastUrl,
+                            timestamp: Date.now()
+                          }, socketRef.current);
+
+                          syncMasterLiveState({
+                            stage: 'idol',
+                            selectedCharacter: charItem.id,
                             characterName: charItem.name || 'AI Idol',
+                            mediaUrl: broadcastUrl || cleanUrl || undefined,
+                            clearMedia: false,
                             isVideo: isVid,
-                            isPlaying: true,
-                            currentTime: 0,
-                            force: true,
-                            source: 'desktop',
-                            timestamp: Date.now()
-                          });
-                          bc.postMessage({
-                            type: 'GLOBAL_PLAYBACK_CHANGE',
-                            isPlaying: true,
-                            currentTime: 0,
-                            force: true,
-                            source: 'desktop',
-                            timestamp: Date.now()
-                          });
-                          setTimeout(() => bc.close(), 100);
-                        } catch (e) {}
+                            videoPlaybackEvent: 'pause',
+                            videoCurrentTime: 0,
+                            isPlaying: false,
+                            aspectRatio: globalAspectRatio || '9:16',
+                            secondaryMediaUrl: flowSequencerOverlay?.secondaryMediaUrl || null,
+                            secondaryMediaTransform: flowSequencerOverlay?.secondaryMediaTransform || null,
+                            secondaryMediaChromaKey: flowSequencerOverlay?.secondaryMediaChromaKey || null,
+                            overlayImage: flowSequencerOverlay?.overlayImage || null,
+                            overlayImageTransform: flowSequencerOverlay?.overlayImageTransform || null,
+                            overlayImageChromaKey: flowSequencerOverlay?.overlayImageChromaKey || null,
+                            overlayText: flowSequencerOverlay?.overlayText || null,
+                            overlayTextTransform: flowSequencerOverlay?.overlayTextTransform || null,
+                            overlayTextColor: flowSequencerOverlay?.overlayTextColor || null,
+                            overlayTextFontSize: flowSequencerOverlay?.overlayTextFontSize || null,
+                            extraImageLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers || flowSequencerOverlay.extraImageLayers)) || (multiAvatarConfig?.extraImageLayers) || [],
+                            multiAvatarExtraLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers || flowSequencerOverlay.extraImageLayers)) || (multiAvatarConfig?.extraImageLayers) || [],
+                            multiAvatarConfig: multiAvatarConfig || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig() : null) || null,
+                            syncedAvatars: (flowSequencerOverlay?.syncedAvatars) || (multiAvatarConfig?.avatars) || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.avatars : null) || []
+                          }, socketRef.current);
+                          showToast(`👤 Đã chọn nhân vật "${charItem.name || 'Nhân Vật'}" (Đang giữ trạng thái Tắt Sân Khấu)`, 'info');
+                        } else {
+                          // ▶️ TRẠNG THÁI BẬT: Sân khấu chính đang live, cho phép phát mượt mà
+                          if (desktopVideoRef.current) {
+                            desktopVideoRef.current.src = cleanUrl;
+                            desktopVideoRef.current.currentTime = 0;
+                            desktopVideoRef.current.dataset.userPaused = 'false';
+                            desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+                          }
+                          setIsVideoPlaying(true);
 
-                        // ⚡ 3. GỬI TÍN HIỆU WEBSOCKET & SUPABASE MASTER LIVE STATE
-                        sendVideoControl({
-                          action: 'play',
-                          currentTime: 0,
-                          force: true,
-                          isPlaying: true,
-                          mediaUrl: broadcastUrl,
-                          timestamp: Date.now()
-                        }, socketRef.current);
-                        syncMasterLiveState({
-                          stage: 'idol',
-                          selectedCharacter: charItem.id,
-                          characterName: charItem.name || 'AI Idol',
-                          mediaUrl: broadcastUrl || cleanUrl || undefined,
-                          clearMedia: false,
-                          isVideo: isVid,
-                          videoPlaybackEvent: 'play',
-                          videoCurrentTime: 0,
-                          isPlaying: true,
-                          aspectRatio: globalAspectRatio || '9:16',
-                          secondaryMediaUrl: flowSequencerOverlay?.secondaryMediaUrl || null,
-                          secondaryMediaTransform: flowSequencerOverlay?.secondaryMediaTransform || null,
-                          secondaryMediaChromaKey: flowSequencerOverlay?.secondaryMediaChromaKey || null,
-                          overlayImage: flowSequencerOverlay?.overlayImage || null,
-                          overlayImageTransform: flowSequencerOverlay?.overlayImageTransform || null,
-                          overlayImageChromaKey: flowSequencerOverlay?.overlayImageChromaKey || null,
-                          overlayText: flowSequencerOverlay?.overlayText || null,
-                          overlayTextTransform: flowSequencerOverlay?.overlayTextTransform || null,
-                          overlayTextColor: flowSequencerOverlay?.overlayTextColor || null,
-                          overlayTextFontSize: flowSequencerOverlay?.overlayTextFontSize || null,
-                          multiAvatarConfig: (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig() : null) || null,
-                          syncedAvatars: (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.characters : null) || []
-                        }, socketRef.current);
-                        showToast(`🎬 Đã phát video "${charItem.name || 'Nhân Vật'}" đồng bộ lên TikTok Live Studio!`, 'success');
+                          try {
+                            const bc = new BroadcastChannel('avalive_master_live_stream');
+                            bc.postMessage({
+                              type: 'GLOBAL_MEDIA_CHANGE',
+                              mediaUrl: broadcastUrl || cleanUrl,
+                              characterId: charItem.id,
+                              characterName: charItem.name || 'AI Idol',
+                              isVideo: isVid,
+                              isPlaying: true,
+                              currentTime: 0,
+                              force: true,
+                              source: 'desktop',
+                              timestamp: Date.now()
+                            });
+                            bc.postMessage({
+                              type: 'GLOBAL_PLAYBACK_CHANGE',
+                              isPlaying: true,
+                              currentTime: 0,
+                              force: true,
+                              source: 'desktop',
+                              timestamp: Date.now()
+                            });
+                            setTimeout(() => bc.close(), 100);
+                          } catch (e) {}
+
+                          sendVideoControl({
+                            action: 'play',
+                            currentTime: 0,
+                            force: true,
+                            isPlaying: true,
+                            mediaUrl: broadcastUrl,
+                            timestamp: Date.now()
+                          }, socketRef.current);
+
+                          syncMasterLiveState({
+                            stage: 'idol',
+                            selectedCharacter: charItem.id,
+                            characterName: charItem.name || 'AI Idol',
+                            mediaUrl: broadcastUrl || cleanUrl || undefined,
+                            clearMedia: false,
+                            isVideo: isVid,
+                            videoPlaybackEvent: 'play',
+                            videoCurrentTime: 0,
+                            isPlaying: true,
+                            aspectRatio: globalAspectRatio || '9:16',
+                            secondaryMediaUrl: flowSequencerOverlay?.secondaryMediaUrl || null,
+                            secondaryMediaTransform: flowSequencerOverlay?.secondaryMediaTransform || null,
+                            secondaryMediaChromaKey: flowSequencerOverlay?.secondaryMediaChromaKey || null,
+                            overlayImage: flowSequencerOverlay?.overlayImage || null,
+                            overlayImageTransform: flowSequencerOverlay?.overlayImageTransform || null,
+                            overlayImageChromaKey: flowSequencerOverlay?.overlayImageChromaKey || null,
+                            overlayText: flowSequencerOverlay?.overlayText || null,
+                            overlayTextTransform: flowSequencerOverlay?.overlayTextTransform || null,
+                            overlayTextColor: flowSequencerOverlay?.overlayTextColor || null,
+                            overlayTextFontSize: flowSequencerOverlay?.overlayTextFontSize || null,
+                            extraImageLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers || flowSequencerOverlay.extraImageLayers)) || (multiAvatarConfig?.extraImageLayers) || [],
+                            multiAvatarExtraLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers || flowSequencerOverlay.extraImageLayers)) || (multiAvatarConfig?.extraImageLayers) || [],
+                            multiAvatarConfig: multiAvatarConfig || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig() : null) || null,
+                            syncedAvatars: (flowSequencerOverlay?.syncedAvatars) || (multiAvatarConfig?.avatars) || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.avatars : null) || []
+                          }, socketRef.current);
+                          showToast(`🎬 Đã phát video "${charItem.name || 'Nhân Vật'}" đồng bộ lên TikTok Live Studio!`, 'success');
+                        }
                       }
                     }}
                     className={`w-10 h-10 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group transition-all ${
