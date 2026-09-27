@@ -2549,6 +2549,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       if (e.target.isContentEditable) return;
       if (isGameBattleActive || isGameBanDoActive) return;
 
+      // Tuyệt đối không tự ý kích hoạt hoặc phát lại khi người dùng đã chủ động tắt phiên Live
+      if (!isMasterLiveRunningRef.current && !isVideoPlaying) return;
+
       if (e.key === ' ' || e.code === 'Space') {
         e.preventDefault();
         toggleDesktopVideoPlayback();
@@ -2556,7 +2559,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     };
     window.addEventListener('keydown', handleKeyDown);
     return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [toggleDesktopVideoPlayback, isGameBattleActive, isGameBanDoActive]);
+  }, [toggleDesktopVideoPlayback, isGameBattleActive, isGameBanDoActive, isVideoPlaying]);
 
   const toggleLiveAudioMute = useCallback(() => {
     handleToggleLocalSpeakerMute();
@@ -2703,7 +2706,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             if (event.data.source === 'desktop') return;
             const shouldPlay = !!event.data.isPlaying;
             isInternalPlaybackChangeRef.current = true;
-            setIsMasterLiveRunning(shouldPlay);
             setIsVideoPlaying(shouldPlay);
 
             if (typeof event.data.currentTime === 'number' && desktopVideoRef.current) {
@@ -2755,7 +2757,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
               }
               setIsVideoPlaying(true);
-              setIsMasterLiveRunning(true);
             }
           }
 
@@ -2799,7 +2800,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       if (e.key === 'avalive_user_paused') {
         const isPaused = e.newValue === 'true';
         isInternalPlaybackChangeRef.current = true;
-        setIsMasterLiveRunning(!isPaused);
         if (isPaused) {
           setIsVideoPlaying(false);
           if (desktopVideoRef.current) {
@@ -3035,7 +3035,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
       }
       setIsVideoPlaying(true);
-      setIsMasterLiveRunning(true);
 
       // 3. Đồng bộ 0ms sang Cửa sổ Window Capture OBS qua BroadcastChannel
       postMasterBroadcast({

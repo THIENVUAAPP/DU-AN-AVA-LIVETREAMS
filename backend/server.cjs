@@ -895,6 +895,32 @@ app.post(['/api/delete-upload', '/api/delete-media'], (req, res) => {
 // 🎬 ROUTE PHÁT SÓNG ĐỘC LẬP /live-stream CHO TIKTOK LIVE STUDIO & OBS
 // Tối ưu hóa GPU Hardware Acceleration 100%, 4K 60 FPS siêu sắc nét, không bao giờ đen màn hình hay lỗi link
 // ============================================================
+function resolveMediaForStage(rawUrl, masterState) {
+  if (masterState && (masterState.clearMedia === true || masterState.isMainMediaDeleted)) {
+    return '';
+  }
+  let target = rawUrl || (masterState && masterState.mediaUrl) || '';
+  if (!target && masterState && masterState.secondaryMediaUrl) {
+    target = masterState.secondaryMediaUrl;
+  }
+  if (!target && masterState && Array.isArray(masterState.syncedAvatars) && masterState.syncedAvatars.length > 0) {
+    target = masterState.syncedAvatars[0].resolvedVidSrc || masterState.syncedAvatars[0].talkVideo || masterState.syncedAvatars[0].idleVideo || '';
+  }
+  if (!target || typeof target !== 'string') return '';
+  target = target.trim();
+  if (target.includes('/uploads/')) {
+    const filename = target.substring(target.indexOf('/uploads/') + 9).split('?')[0];
+    const foundPath = findFileInUploadDirs(filename);
+    if (foundPath) {
+      return `/uploads/${path.basename(foundPath)}`;
+    }
+  }
+  if (target.startsWith('http://') || target.startsWith('https://') || target.startsWith('/') || target.startsWith('data:') || target.startsWith('blob:')) {
+    return target;
+  }
+  return '/' + target;
+}
+
 app.get([
   '/live-stream', '/live-player', '/stream-player', '/idol-stream', 
   '/idol', '/live', '/stage', '/stream', '/overlay-live', '/tiktok-live',
@@ -908,69 +934,8 @@ app.get([
   res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
 
-  let vParam = req.query.v || currentMasterLiveState.mediaUrl || '';
-  if (vParam && typeof vParam === 'string') {
-    try {
-      vParam = decodeURIComponent(vParam);
-    } catch(e) {}
-    if (vParam.startsWith('http://') || vParam.startsWith('https://')) {
-      try {
-        const u = new URL(vParam);
-        if (u.pathname.includes('/uploads/')) {
-          vParam = u.pathname.substring(u.pathname.indexOf('/uploads/')) + u.search;
-        }
-      } catch(e) {}
-    }
-    if (!vParam.startsWith('/') && !vParam.startsWith('http')) {
-      vParam = '/' + vParam;
-    }
-  }
-
+  let vParam = resolveMediaForStage(req.query.v, currentMasterLiveState);
   const showDock = req.query.dock === '1' || req.query.controls === '1';
-
-  let existsOnDisk = false;
-  if (vParam && typeof vParam === 'string' && vParam.includes('/uploads/')) {
-    const filename = vParam.substring(vParam.indexOf('/uploads/') + 9).split('?')[0];
-    const foundPath = findFileInUploadDirs(filename);
-    if (foundPath) {
-      existsOnDisk = true;
-      vParam = `/uploads/${path.basename(foundPath)}`;
-    }
-  }
-  if (!existsOnDisk) {
-    if (currentMasterLiveState && currentMasterLiveState.mediaUrl && currentMasterLiveState.mediaUrl.includes('/uploads/')) {
-      const mFilename = currentMasterLiveState.mediaUrl.substring(currentMasterLiveState.mediaUrl.indexOf('/uploads/') + 9).split('?')[0];
-      const foundPath = findFileInUploadDirs(mFilename);
-      if (foundPath) {
-        existsOnDisk = true;
-        vParam = `/uploads/${path.basename(foundPath)}`;
-      }
-    }
-  }
-  // 🎬 FALLBACK SÂN KHẤU PHỤ & LIVE IDOL AVATAR: Lấy video từ secondaryMediaUrl hoặc syncedAvatars
-  if (!existsOnDisk) {
-    let subUrl = (currentMasterLiveState && currentMasterLiveState.secondaryMediaUrl) || '';
-    if (!subUrl && currentMasterLiveState && Array.isArray(currentMasterLiveState.syncedAvatars) && currentMasterLiveState.syncedAvatars.length > 0) {
-      subUrl = currentMasterLiveState.syncedAvatars[0].resolvedVidSrc || currentMasterLiveState.syncedAvatars[0].talkVideo || currentMasterLiveState.syncedAvatars[0].idleVideo || '';
-    }
-    if (subUrl && typeof subUrl === 'string') {
-      if (subUrl.includes('/uploads/')) {
-        const sFilename = subUrl.substring(subUrl.indexOf('/uploads/') + 9).split('?')[0];
-        const foundPath = findFileInUploadDirs(sFilename);
-        if (foundPath) {
-          existsOnDisk = true;
-          vParam = `/uploads/${path.basename(foundPath)}`;
-        }
-      } else if (subUrl.startsWith('http') || subUrl.startsWith('/')) {
-        existsOnDisk = true;
-        vParam = subUrl;
-      }
-    }
-  }
-  // Không sử dụng video chạy nền / fallback ngầm khi người dùng đã xóa hết video trên sân khấu chính
-  if (!existsOnDisk) {
-    vParam = '';
-  }
 
   const secMedia = (currentMasterLiveState && currentMasterLiveState.secondaryMediaUrl) || '';
   const secTrans = (currentMasterLiveState && currentMasterLiveState.secondaryMediaTransform) || { x: 2, y: 32, width: 47, height: 48, zIndex: 15 };
@@ -2155,61 +2120,7 @@ app.get([
 // - Nút icon [👁️] hoặc phím tắt [H] khôi phục lại bảng điều khiển tức thì
 // ============================================================
 app.get(['/window-capture', '/window_capture'], (req, res) => {
-  let vParam = req.query.v || currentMasterLiveState.mediaUrl || '';
-  if (vParam && typeof vParam === 'string') {
-    if (vParam.startsWith('http://') || vParam.startsWith('https://')) {
-      try {
-        const u = new URL(vParam);
-        vParam = u.pathname + u.search;
-      } catch(e) {}
-    }
-    if (!vParam.startsWith('/') && !vParam.startsWith('http')) {
-      vParam = '/' + vParam;
-    }
-  }
-  let existsOnDisk = false;
-  if (vParam && typeof vParam === 'string' && vParam.includes('/uploads/')) {
-    const filename = vParam.substring(vParam.indexOf('/uploads/') + 9).split('?')[0];
-    const foundPath = findFileInUploadDirs(filename);
-    if (foundPath) {
-      existsOnDisk = true;
-      vParam = `/uploads/${path.basename(foundPath)}`;
-    }
-  }
-  if (!existsOnDisk) {
-    if (currentMasterLiveState && currentMasterLiveState.mediaUrl && currentMasterLiveState.mediaUrl.includes('/uploads/')) {
-      const mFilename = currentMasterLiveState.mediaUrl.substring(currentMasterLiveState.mediaUrl.indexOf('/uploads/') + 9).split('?')[0];
-      const foundPath = findFileInUploadDirs(mFilename);
-      if (foundPath) {
-        existsOnDisk = true;
-        vParam = `/uploads/${path.basename(foundPath)}`;
-      }
-    }
-  }
-  // 🎬 FALLBACK SÂN KHẤU PHỤ & LIVE IDOL AVATAR CHO WINDOW CAPTURE
-  if (!existsOnDisk) {
-    let subUrl = (currentMasterLiveState && currentMasterLiveState.secondaryMediaUrl) || '';
-    if (!subUrl && currentMasterLiveState && Array.isArray(currentMasterLiveState.syncedAvatars) && currentMasterLiveState.syncedAvatars.length > 0) {
-      subUrl = currentMasterLiveState.syncedAvatars[0].resolvedVidSrc || currentMasterLiveState.syncedAvatars[0].talkVideo || currentMasterLiveState.syncedAvatars[0].idleVideo || '';
-    }
-    if (subUrl && typeof subUrl === 'string') {
-      if (subUrl.includes('/uploads/')) {
-        const sFilename = subUrl.substring(subUrl.indexOf('/uploads/') + 9).split('?')[0];
-        const foundPath = findFileInUploadDirs(sFilename);
-        if (foundPath) {
-          existsOnDisk = true;
-          vParam = `/uploads/${path.basename(foundPath)}`;
-        }
-      } else if (subUrl.startsWith('http') || subUrl.startsWith('/')) {
-        existsOnDisk = true;
-        vParam = subUrl;
-      }
-    }
-  }
-  // Không sử dụng video chạy nền / fallback ngầm khi người dùng đã xóa hết video trên sân khấu chính
-  if (!existsOnDisk) {
-    vParam = '';
-  }
+  let vParam = resolveMediaForStage(req.query.v, currentMasterLiveState);
   const soundParam = req.query.sound !== '0';
   const fitParam = req.query.fit || 'cover';
   const isImageMediaHelper = (u) => {
