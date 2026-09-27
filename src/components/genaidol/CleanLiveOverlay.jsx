@@ -1063,9 +1063,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       setMasterState(prev => {
         // Kiểm tra xem có trường dữ liệu quan trọng nào thực sự thay đổi không
         let hasDiff = false;
-        const keys = ['stage', 'aspectRatio', 'mediaUrl', 'flvUrl', 'isVideo', 'selectedCharacter', 'characterName', 'isPlaying', 'isDarkMode', 'tunnelUrl'];
+        const keys = [
+          'stage', 'aspectRatio', 'mediaUrl', 'flvUrl', 'isVideo', 'selectedCharacter', 'characterName', 'isPlaying', 'isDarkMode', 'tunnelUrl',
+          'secondaryMediaUrl', 'secondaryMediaTransform', 'secondaryMediaChromaKey', 'overlayImage', 'overlayImageTransform', 'overlayImageChromaKey',
+          'overlayText', 'overlayTextTransform', 'overlayTextColor', 'overlayTextFontSize', 'multiAvatarConfig', 'syncedAvatars', 'extraImageLayers'
+        ];
         for (const k of keys) {
-          if (data[k] !== undefined && data[k] !== prev[k]) {
+          if (data[k] !== undefined && JSON.stringify(data[k]) !== JSON.stringify(prev[k])) {
             hasDiff = true;
             break;
           }
@@ -1416,7 +1420,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               }
             } else if (event.data.type === 'GLOBAL_PLAYBACK_CHANGE') {
               if (event.data.source === 'overlay') return;
-              if (isWindowCapture) return; // Window Capture OBS duy trì nút Tắt/Mở phát độc lập!
               const shouldPlay = !!event.data.isPlaying;
               isInternalPlaybackChangeRef.current = true;
               setIsPlayingState(shouldPlay);
@@ -1652,7 +1655,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     // 5. LOCAL STORAGE SYNC
     const handleStorage = (e) => {
       if (e.key === 'avalive_user_paused') {
-        if (isWindowCapture) return; // Window Capture OBS có nút tắt mở độc lập với loa/màn hình phần mềm chính
         const isPaused = e.newValue === 'true';
         setIsPlayingState(!isPaused);
         const allMedia = document.querySelectorAll('video, audio');
@@ -3125,6 +3127,127 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 </div>
               </div>
             )}
+
+            {/* 🖼️ LỚP 1.5: VIDEO PHỤ PIP (PICTURE-IN-PICTURE) ĐỒNG BỘ TỪ SÂN KHẤU CHÍNH */}
+            {masterState.secondaryMediaUrl && (() => {
+              const pipTrans = masterState.secondaryMediaTransform || {
+                x: masterState.secondaryMediaPos === 'top-left' ? 4 : masterState.secondaryMediaPos === 'bottom-left' ? 4 : masterState.secondaryMediaPos === 'bottom-right' ? 55 : 55,
+                y: masterState.secondaryMediaPos === 'bottom-left' || masterState.secondaryMediaPos === 'bottom-right' ? 70 : 8,
+                width: masterState.secondaryMediaScale || 40,
+                height: 25,
+                zIndex: 20
+              };
+              const pipChroma = getChromaStyle(masterState.secondaryMediaChromaKey);
+              const isPipImg = isImageMedia(masterState.secondaryMediaUrl);
+
+              return (
+                <div 
+                  className="absolute transition-all duration-300 pointer-events-none"
+                  style={{
+                    left: `${pipTrans.x}%`,
+                    top: `${pipTrans.y}%`,
+                    width: `${pipTrans.width}%`,
+                    height: pipTrans.height ? `${pipTrans.height}%` : 'auto',
+                    zIndex: pipTrans.zIndex || 20,
+                    backgroundColor: 'transparent',
+                    ...pipChroma
+                  }}
+                >
+                  {isPipImg ? (
+                    <img
+                      src={masterState.secondaryMediaUrl}
+                      alt="PiP Media"
+                      className="w-full h-full object-cover rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.85)] bg-transparent"
+                      style={pipChroma}
+                    />
+                  ) : (
+                    <video
+                      src={masterState.secondaryMediaUrl}
+                      autoPlay
+                      loop
+                      muted={isVideoAudioMuted}
+                      playsInline
+                      className="w-full h-full object-cover rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.85)] bg-transparent"
+                      style={pipChroma}
+                    />
+                  )}
+                </div>
+              );
+            })()}
+
+            {/* 🏷️ LỚP 2: OVERLAY HÌNH ẢNH / BANNER / POSTER ĐỒNG BỘ TỪ SÂN KHẤU CHÍNH */}
+            {masterState.overlayImage && (() => {
+              const bannerTrans = masterState.overlayImageTransform || {
+                x: masterState.overlayImagePos === 'top-right' ? 65 : masterState.overlayImagePos === 'bottom-left' ? 4 : masterState.overlayImagePos === 'bottom-right' ? 65 : 10,
+                y: masterState.overlayImagePos === 'bottom-left' || masterState.overlayImagePos === 'bottom-right' ? 70 : 12,
+                width: 80,
+                height: 20,
+                zIndex: 25
+              };
+              const bannerChroma = getChromaStyle(masterState.overlayImageChromaKey);
+
+              return (
+                <div 
+                  className="absolute pointer-events-none transition-all duration-300 animate-fadeIn"
+                  style={{
+                    left: `${bannerTrans.x}%`,
+                    top: `${bannerTrans.y}%`,
+                    width: `${bannerTrans.width}%`,
+                    height: bannerTrans.height ? `${bannerTrans.height}%` : 'auto',
+                    zIndex: bannerTrans.zIndex || 30,
+                    backgroundColor: 'transparent',
+                    ...bannerChroma
+                  }}
+                >
+                  <img 
+                    src={masterState.overlayImage} 
+                    alt="Sequencer Overlay" 
+                    className="w-full h-full object-contain rounded-xl drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] bg-transparent"
+                    style={bannerChroma}
+                  />
+                </div>
+              );
+            })()}
+
+            {/* 💬 LỚP 3: OVERLAY TIÊU ĐỀ / CHỮ NỔI BẬT ĐỒNG BỘ TỪ SÂN KHẤU CHÍNH */}
+            {masterState.overlayText && (() => {
+              const textTrans = masterState.overlayTextTransform || {
+                x: 4,
+                y: 5,
+                width: 92,
+                zIndex: 35
+              };
+
+              return (
+                <div 
+                  className="absolute pointer-events-none transition-all duration-300 animate-fadeIn"
+                  style={{
+                    left: `${textTrans.x}%`,
+                    top: `${textTrans.y}%`,
+                    width: `${textTrans.width}%`,
+                    zIndex: textTrans.zIndex || 35
+                  }}
+                >
+                  <div 
+                    className={`w-full py-1.5 px-3 rounded-2xl text-center font-black tracking-wide uppercase transition-all ${
+                      masterState.overlayTextStyle === 'neon_cyber' 
+                        ? 'bg-slate-950/90 border border-cyan-400 text-cyan-300 shadow-[0_0_25px_rgba(6,182,212,0.8)]' :
+                      masterState.overlayTextStyle === 'gold_luxury' 
+                        ? 'bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500 text-slate-950 shadow-[0_0_25px_rgba(251,191,36,0.9)] border border-yellow-200' :
+                      masterState.overlayTextStyle === 'gradient_rose' 
+                        ? 'bg-gradient-to-r from-rose-600 to-pink-600 text-white shadow-[0_0_25px_rgba(225,29,72,0.8)] border border-rose-300' :
+                        'bg-slate-900/90 border border-white/20 text-white shadow-xl'
+                    }`}
+                    style={{
+                      color: masterState.overlayTextColor || undefined,
+                      fontSize: masterState.overlayTextFontSize ? `${masterState.overlayTextFontSize}px` : '15px'
+                    }}
+                  >
+                    {masterState.overlayText}
+                  </div>
+                </div>
+              );
+            })()}
           </div>
         )}
 

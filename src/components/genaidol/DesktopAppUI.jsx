@@ -2745,6 +2745,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           if (event.data.type === 'GLOBAL_PLAYBACK_CHANGE') {
             if (event.data.source === 'desktop') return;
             const shouldPlay = !!event.data.isPlaying;
+            if (shouldPlay) {
+              const isPausedByUser = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
+              if (isPausedByUser) {
+                return; // KHÓA CHẶT: Tuyệt đối không tự động bật lại khi streamer đã bấm TẮT TẤT CẢ
+              }
+            }
             isInternalPlaybackChangeRef.current = true;
             setIsVideoPlaying(shouldPlay);
 
@@ -5436,6 +5442,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               disableRemotePlayback
               playsInline 
               onLoadedData={(e) => {
+                const isPausedByUser = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
+                if (isPausedByUser || e.currentTarget.dataset.userPaused === 'true') {
+                  try { e.currentTarget.pause(); } catch (err) {}
+                  return;
+                }
                 try {
                   e.currentTarget.play().then(() => setIsVideoPlaying(true)).catch(() => {});
                 } catch (err) {}
@@ -5450,7 +5461,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   try {
                     const freshUrl = URL.createObjectURL(charMatch.fileData);
                     e.currentTarget.src = freshUrl;
-                    e.currentTarget.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+                    const isPausedByUser = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
+                    if (!isPausedByUser) {
+                      e.currentTarget.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+                    }
                     setUserLockedMediaUrl(freshUrl);
                     setCustomCharacters(prev => prev.map(c => c.id === charMatch.id ? { ...c, url: freshUrl } : c));
                   } catch (err) {}
@@ -5462,7 +5476,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                         const freshUrl = URL.createObjectURL(found.fileData);
                         if (desktopVideoRef.current) {
                           desktopVideoRef.current.src = freshUrl;
-                          desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+                          const isPausedByUser = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
+                          if (!isPausedByUser) {
+                            desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+                          }
                         }
                         setUserLockedMediaUrl(freshUrl);
                         setCustomCharacters(prev => prev.map(c => c.id === found.id ? { ...c, url: freshUrl } : c));
@@ -5532,32 +5549,40 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                     v.currentTime = lastPlaybackTimeRef.current;
                   } catch (err) {}
                 }
-                const isManualPaused = v.dataset.userPaused === 'true';
+                const isPausedByUser = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
+                const isManualPaused = isPausedByUser || v.dataset.userPaused === 'true';
                 if (!isManualPaused) {
                   v.dataset.userPaused = 'false';
                   v.play().then(() => setIsVideoPlaying(true)).catch(() => {
                     v.muted = true;
                     v.play().then(() => setIsVideoPlaying(true)).catch(() => {});
                   });
+                } else {
+                  v.dataset.userPaused = 'true';
+                  try { v.pause(); } catch (err) {}
                 }
               }} 
               onCanPlay={(e) => {
                 const v = e.currentTarget;
-                if (v.paused && v.dataset.userPaused !== 'true') {
+                const isPausedByUser = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
+                if (v.paused && !isPausedByUser && v.dataset.userPaused !== 'true') {
                   v.play().then(() => setIsVideoPlaying(true)).catch(() => {});
                 }
               }}
               onCanPlayThrough={(e) => {
                 const v = e.currentTarget;
-                if (v.paused && v.dataset.userPaused !== 'true') {
+                const isPausedByUser = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
+                if (v.paused && !isPausedByUser && v.dataset.userPaused !== 'true') {
                   v.play().then(() => setIsVideoPlaying(true)).catch(() => {});
                 }
               }}
               onWaiting={(e) => {
                 const v = e.currentTarget;
-                if (v && v.dataset.userPaused !== 'true') {
+                const isPausedByUser = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
+                if (v && !isPausedByUser && v.dataset.userPaused !== 'true') {
                   const resumePlay = () => {
-                    if (v.dataset.userPaused !== 'true' && v.readyState >= 3) {
+                    const isStillPaused = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
+                    if (!isStillPaused && v.dataset.userPaused !== 'true' && v.readyState >= 3) {
                       v.play().then(() => setIsVideoPlaying(true)).catch(() => {});
                     }
                   };
@@ -5566,9 +5591,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               }}
               onStalled={(e) => {
                 const v = e.currentTarget;
-                if (v && v.dataset.userPaused !== 'true') {
+                const isPausedByUser = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
+                if (v && !isPausedByUser && v.dataset.userPaused !== 'true') {
                   setTimeout(() => {
-                    if (v.dataset.userPaused !== 'true' && v.readyState >= 2) {
+                    const isStillPaused = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
+                    if (!isStillPaused && v.dataset.userPaused !== 'true' && v.readyState >= 2) {
                       v.play().then(() => setIsVideoPlaying(true)).catch(() => {});
                     }
                   }, 500);

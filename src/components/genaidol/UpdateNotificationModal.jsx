@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.67';
+export const APP_VERSION = '4.9.68';
 export const RELEASE_DATE = '27/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.68 - Khóa Chặt Nút Tắt/Bật Không Tự Mở Lại & Đồng Bộ 100% Tất Cả Khung Hình/Lớp Sân Khấu Sang Window Capture / TikTok Live Studio',
+    description: '1. Khóa Chặt Tuyệt Đối Nút Tắt/Bật: Khi streamer bấm "TẮT TẤT CẢ", toàn bộ hệ thống (video, audio, voice AI, kịch bản, game) lập tức dừng dứt điểm 100% và KHÓA CHẶT vĩnh viễn, không bao giờ tự ý bật lại sau vài giây hoặc do sự kiện ngầm kích hoạt. Chỉ khi streamer chủ động bấm lại "BẬT TẤT CẢ", hệ thống mới được phép vận hành. 2. Đồng Bộ Trọn Vẹn 100% Tất Cả Các Lớp Sân Khấu: Tất cả các lớp trên Sân Khấu Chính (Video nền chính, Video phụ PiP, Avatar nhân vật đa tầng, Poster banner ảnh, Tiêu đề chữ với đầy đủ tọa độ, kích thước, hiệu ứng xóa phông Chroma Key) đều được truyền tải và hiển thị sắc nét 60 FPS theo thời gian thực 0ms sang Window Capture OBS và đường link TikTok Live Studio.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.67 - Khắc Phục Triệt Để Lỗi Khởi Động ReferenceError & Hiển Thị Trọn Vẹn 100% Giao Diện Phần Mềm',
     description: '1. Khắc Phục Triệt Để Lỗi Khởi Động: Đã xử lý dứt điểm lỗi ReferenceError khiến phần mềm hiển thị màn hình nâng cấp khi khởi chạy. Toàn bộ giao diện chính, Sân Khấu Live, 14 Tab chức năng và các module điều khiển đều hiển thị đầy đủ 100% ngay lập tức. 2. Tối Ưu Hóa Tải 0ms: Cấu trúc biến và hook được sắp xếp chuẩn xác, giúp phần mềm khởi động mượt mà, không gặp bất kỳ xung đột dữ liệu hay lỗi render nào.'
