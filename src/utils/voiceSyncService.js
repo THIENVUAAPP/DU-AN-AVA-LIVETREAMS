@@ -7853,6 +7853,9 @@ export function stopCurrentActiveAudioNode() {
       activePreviewAudio.onerror = null;
       activePreviewAudio.pause();
       activePreviewAudio.currentTime = 0;
+      activePreviewAudio.removeAttribute('src');
+      activePreviewAudio.src = '';
+      activePreviewAudio.load();
     } catch (e) {}
     activePreviewAudio = null;
   }
@@ -7868,13 +7871,31 @@ export function stopCurrentActiveAudioNode() {
 }
 
 /**
- * ⏹️ DỪNG TOÀN BỘ ÂM THANH & XÓA SẠCH HÀNG ĐỢI
+ * ⏹️ DỪNG TOÀN BỘ ÂM THANH & XÓA SẠCH HÀNG ĐỢI (ZERO GHOST AUDIO LEAKAGE)
  */
 export function stopVoiceAudio() {
   currentSpeechGenerationId++;
   clearGlobalSpeechQueue();
   stopCurrentActiveAudioNode();
   isGlobalSpeaking = false;
+  if (typeof document !== 'undefined') {
+    try {
+      const audios = document.querySelectorAll('audio[data-voice-tts="true"], audio');
+      audios.forEach(a => {
+        if (a && a.id !== 'bgmAudio') {
+          if (a.hasAttribute('data-voice-tts') || (a.src && (a.src.includes('/api/tts') || a.src.includes('blob:')))) {
+            try {
+              a.pause();
+              a.currentTime = 0;
+              a.removeAttribute('src');
+              a.src = '';
+              a.load();
+            } catch(e) {}
+          }
+        }
+      });
+    } catch(e) {}
+  }
   if (typeof window !== 'undefined') {
     window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', {
       detail: { isSpeaking: false, avatarId: null }

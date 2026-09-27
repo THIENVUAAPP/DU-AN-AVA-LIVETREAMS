@@ -3767,10 +3767,13 @@ io.on('connection', (socket) => {
       const nextState = { ...currentMasterLiveState, ...cleanState, updatedAt: Date.now() };
       delete nextState.force;
       // BẢO VỆ VIDEO ĐANG PHÁT: Không bao giờ tự ý bốc video cũ ngẫu nhiên trong uploads
-      if (cleanState.clearMedia || cleanState.mediaUrl === null) {
+      if (cleanState.clearMedia === true || cleanState.mediaUrl === null) {
         nextState.mediaUrl = null;
+        nextState.clearMedia = true;
         nextState.isVideo = false;
         nextState.isPlaying = false;
+      } else if (cleanState.mediaUrl || cleanState.secondaryMediaUrl || (Array.isArray(cleanState.syncedAvatars) && cleanState.syncedAvatars.length > 0)) {
+        nextState.clearMedia = false;
       } else if (!nextState.mediaUrl || nextState.mediaUrl.startsWith('blob:')) {
         nextState.mediaUrl = currentMasterLiveState.mediaUrl || null;
       }

@@ -4,14 +4,14 @@
   "characterId": "",
   "characterName": "Video Người Dùng",
   "mediaUrl": null,
-  "currentMedia": null,
+  "currentMedia": "/uploads/media-1790480285999-991836740.png",
   "eventVideoUrl": null,
   "isVideo": false,
   "videoPlaybackEvent": "pause",
   "isPlaying": false,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1790484027417,
+  "updatedAt": 1790485224008,
   "isUserExplicitMediaLocked": false,
   "selectedCharacter": "",
   "videoCurrentTime": 0,
@@ -20,10 +20,10 @@
   "isConnected": false,
   "currentLang": "vi",
   "activeTab": "flow_sequencer",
-  "stepTitle": "Bước 1: Avatar AI Chào Khán Giả & Mở Đầu Live (Bản sao)",
+  "stepTitle": "Bước 1: Avatar AI Chào Khán Giả & Mở Đầu Live",
   "actionType": "avatar_talk",
   "scriptText": "Dạ em xin chào tất cả mọi người đã vào xem phiên livestream hôm nay nha! Các bạn bấm thả tim và bình luận để nhận ưu đãi đặc biệt nhé!",
-  "voiceId": "vn_m_genz_gamer_caster_04",
+  "voiceId": "brain_auto",
   "avatarSpeaker": "avatar_1",
   "secondaryMediaUrl": null,
   "secondaryMediaTransform": null,
@@ -218,7 +218,7 @@
       "isSpeakingNow": true
     }
   ],
-  "tunnelUrl": "https://restricted-tue-shepherd-acute.trycloudflare.com",
+  "tunnelUrl": "https://socks-immediate-stick-developmental.trycloudflare.com",
   "pinnedProduct": {
     "id": 2,
     "name": "Sản phẩm TikTok Shop #02",
@@ -233,7 +233,7 @@
     "pinnedAt": 1790473227384,
     "triggerSource": "interval_auto_rotation"
   },
-  "mainMediaUrl": "",
+  "mainMediaUrl": "/uploads/media-1790480285999-991836740.png",
   "title": "Video Đang Phát",
   "mainMediaTransform": {
     "x": 0,

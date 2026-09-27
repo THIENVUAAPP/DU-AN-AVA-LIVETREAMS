@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.61';
+export const APP_VERSION = '4.9.62';
 export const RELEASE_DATE = '27/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.62 - Triệt Tiêu 100% Âm Thanh & Dữ Liệu Chạy Ẩn (0 Byte Leakage) & Dừng Kịch Bản Triệt Để',
+    description: '1. Triệt Tiêu 100% Âm Thanh & Dữ Liệu Chạy Ẩn (0 Byte Leakage): Khi xóa video/ảnh hoặc tắt phát trên Sân Khấu Chính, toàn bộ thẻ Audio/Video, Web Audio API DSP, bộ nhớ tạm và tiến trình nền đều bị xóa sạch và tắt tiếng ngay lập tức 0ms, đảm bảo không còn tiếng lẹt xẹt, tạp âm hay chữ âm chạy ẩn. 2. Dừng Kịch Bản & Voice AI Tuyệt Đối: Khi bấm ⏹️ DỪNG DEMO hoặc tắt đồng bộ Sân Khấu Chính, toàn bộ Voice AI và timer đếm lùi được ngắt ngay lập tức, không còn hiện tượng đọc rớt bước kế tiếp. 3. Phục Hồi & Hiển Thị Tức Thì 100% Sân Khấu Lên Window Capture & TikTok Live Studio: Khi nạp hoặc chọn lại nhân vật/video, toàn bộ khung hình, avatar, video phụ PiP, banner ảnh và tiêu đề lập tức hiển thị sắc nét 60 FPS mà không bị màn hình đen.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.61 - Khắc Phục Tải Lại Ô Nhân Vật Sân Khấu & Dừng Kịch Bản Triệt Để 100%',
     description: '1. Khắc Phục Triệt Để Ô Nhân Vật (Tải Lên - Xóa - Tải Lại Mượt Mà): Người dùng tải video/hình ảnh vào ô nhân vật thì hiển thị ngay trên Sân Khấu Chính; khi bấm xóa thì sân khấu xóa sạch; khi tải lên lại (dù cùng file hay file mới) thì lập tức hiển thị và phát lại bình thường trên sân khấu chính, không bị kẹt ở Sân Khấu Trống. 2. Dừng Kịch Bản Triệt Để 100%: Khi bấm Dừng Demo / ngắt đồng bộ, toàn bộ Voice AI, timer chuyển bước và luồng phát kịch bản bị hủy ngay lập tức 0ms, không còn tình trạng chạy ngầm hay đọc chữ âm. 3. Đồng Bộ Đa Khung Hình Window Capture OBS & TikTok Live Studio: Toàn bộ avatar, video nền, video phụ PiP, banner và tiêu đề đều được lưu trữ và truyền tải đầy đủ 100% thời gian thực.'

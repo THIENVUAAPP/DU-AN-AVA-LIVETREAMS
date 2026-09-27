@@ -254,11 +254,23 @@ export default function LivestreamFlowSequencer() {
   // 🛑 LẮNG NGHE LỆNH DỪNG KHẨN CẤP / TẮT TẤT CẢ TỪ BÊN NGOÀI PHẦN MỀM
   useEffect(() => {
     const handleEmergencyStop = () => {
+      isPlayingFlowRef.current = false;
       setIsPlayingFlow(false);
+      if (stepWatchdogRef.current) {
+        clearTimeout(stepWatchdogRef.current);
+        stepWatchdogRef.current = null;
+      }
+      if (stepPauseTimeoutRef.current) {
+        clearTimeout(stepPauseTimeoutRef.current);
+        stepPauseTimeoutRef.current = null;
+      }
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
       stopVoiceAudio();
       setIsSpeakingPreview(false);
       setSpeakingStepId(null);
-      if (timerRef.current) clearInterval(timerRef.current);
     };
 
     window.addEventListener('avalive_emergency_stop_all', handleEmergencyStop);
@@ -315,6 +327,7 @@ export default function LivestreamFlowSequencer() {
   activePresetRef.current = activePreset;
   const startStepRef = useRef(null);
   const stepWatchdogRef = useRef(null);
+  const stepPauseTimeoutRef = useRef(null);
   // Refs cho undo/redo stack để tránh stale closure trong useCallback
   const undoStackRef = useRef([]);
   const redoStackRef = useRef([]);
@@ -936,6 +949,10 @@ export default function LivestreamFlowSequencer() {
         clearTimeout(stepWatchdogRef.current);
         stepWatchdogRef.current = null;
       }
+      if (stepPauseTimeoutRef.current) {
+        clearTimeout(stepPauseTimeoutRef.current);
+        stepPauseTimeoutRef.current = null;
+      }
       const currentPres = activePresetRef.current || preset;
       const nextIndex = safeIndex + 1;
       const runStep = startStepRef.current || startStep;
@@ -977,7 +994,9 @@ export default function LivestreamFlowSequencer() {
           : 0;
 
         if (pauseDelay > 0) {
-          setTimeout(() => {
+          if (stepPauseTimeoutRef.current) clearTimeout(stepPauseTimeoutRef.current);
+          stepPauseTimeoutRef.current = setTimeout(() => {
+            stepPauseTimeoutRef.current = null;
             if (isPlayingFlowRef.current) advanceNext();
           }, pauseDelay);
         } else {
@@ -1042,10 +1061,17 @@ export default function LivestreamFlowSequencer() {
       clearTimeout(stepWatchdogRef.current);
       stepWatchdogRef.current = null;
     }
+    if (stepPauseTimeoutRef.current) {
+      clearTimeout(stepPauseTimeoutRef.current);
+      stepPauseTimeoutRef.current = null;
+    }
+    if (timerRef.current) {
+      clearInterval(timerRef.current);
+      timerRef.current = null;
+    }
     stopVoiceAudio();
     setIsSpeakingPreview(false);
     setSpeakingStepId(null);
-    if (timerRef.current) clearInterval(timerRef.current);
     syncMasterLiveState({
       isPlaying: false,
       videoPlaybackEvent: 'pause'
@@ -1122,15 +1148,27 @@ export default function LivestreamFlowSequencer() {
         clearTimeout(stepWatchdogRef.current);
         stepWatchdogRef.current = null;
       }
+      if (stepPauseTimeoutRef.current) {
+        clearTimeout(stepPauseTimeoutRef.current);
+        stepPauseTimeoutRef.current = null;
+      }
+      if (timerRef.current) {
+        clearInterval(timerRef.current);
+        timerRef.current = null;
+      }
       stopVoiceAudio();
       setIsSpeakingPreview(false);
       setSpeakingStepId(null);
-      if (timerRef.current) clearInterval(timerRef.current);
 
       syncMasterLiveState({
         isPlaying: false,
         videoPlaybackEvent: 'pause',
-        clearMedia: true
+        clearMedia: false,
+        stepTitle: '',
+        actionType: '',
+        secondaryMediaUrl: null,
+        overlayImage: null,
+        overlayText: null
       });
       sendVideoControl({
         action: 'pause',
@@ -1138,19 +1176,10 @@ export default function LivestreamFlowSequencer() {
         timestamp: Date.now()
       });
 
-      // 🔌 Ngắt kết nối đồng bộ — fire event và broadcast CLEAR_STAGE để Sân Khấu Chính xóa sạch lớp phủ
+      // 🔌 Ngắt kết nối đồng bộ — fire event để Sân Khấu Chính xóa sạch lớp phủ sequencer
       window.dispatchEvent(new CustomEvent('avalive:sequencer_sync_disconnected', {
         detail: { isSynced: false, source: 'user_toggle' }
       }));
-      try {
-        const bc = new BroadcastChannel('avalive_master_live_stream');
-        bc.postMessage({
-          type: 'CLEAR_STAGE',
-          source: 'sequencer_disconnect',
-          timestamp: Date.now()
-        });
-        setTimeout(() => bc.close(), 100);
-      } catch (err) {}
       toast.info('📴 Đã ngắt đồng bộ & dừng phát — Đã tắt toàn bộ voice và video');
     }
   };

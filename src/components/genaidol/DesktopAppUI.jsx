@@ -2366,6 +2366,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         isPlaying: true,
         currentTime: 0,
         force: true,
+        clearMedia: false,
         source: 'desktop',
         timestamp: Date.now()
       });
@@ -2394,6 +2395,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       isVideo: isVid,
       videoPlaybackEvent: 'play',
       isPlaying: true,
+      clearMedia: false,
       aspectRatio: globalAspectRatio || '9:16'
     }, socketRef.current);
 
@@ -2416,6 +2418,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             isVideo: !isImageMedia(srvUrl),
             videoPlaybackEvent: 'play',
             isPlaying: true,
+            clearMedia: false,
             aspectRatio: globalAspectRatio || '9:16'
           }, socketRef.current);
           sendVideoControl({
@@ -4399,6 +4402,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             isPlaying: true,
             currentTime: 0,
             force: true,
+            clearMedia: false,
             source: 'desktop',
             timestamp: Date.now()
           });
@@ -4448,6 +4452,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               isPlaying: true,
               currentTime: 0,
               force: true,
+              clearMedia: false,
               source: 'desktop',
               timestamp: Date.now()
             });
@@ -4463,6 +4468,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 characterName: charName,
                 isVideo: true,
                 isPlaying: true,
+                clearMedia: false,
                 videoCurrentTime: 0,
                 updatedAt: Date.now()
               }, socketRef.current);
@@ -4528,11 +4534,28 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             isPlaying: true,
             currentTime: 0,
             force: true,
+            clearMedia: false,
             source: 'desktop',
             timestamp: Date.now()
           });
           setTimeout(() => bc.close(), 100);
         } catch (err) {}
+
+        try {
+          if (socketRef && socketRef.current) {
+            syncMasterLiveState({
+              stage: 'idol',
+              mediaUrl: localUrl,
+              selectedCharacter: newCharId,
+              characterName: charName,
+              isVideo: false,
+              isPlaying: true,
+              clearMedia: false,
+              aspectRatio: globalAspectRatio || '9:16',
+              updatedAt: Date.now()
+            }, socketRef.current);
+          }
+        } catch (e) {}
 
         fastStreamUpload(file, {
           onInit: ({ fileUrl }) => {
@@ -4542,6 +4565,19 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               try { localStorage.setItem('avalive_custom_characters', JSON.stringify(updatedList)); } catch (e) {}
               return updatedList;
             });
+            if (socketRef && socketRef.current) {
+              syncMasterLiveState({
+                stage: 'idol',
+                mediaUrl: fileUrl,
+                selectedCharacter: newCharId,
+                characterName: charName,
+                isVideo: false,
+                isPlaying: true,
+                clearMedia: false,
+                aspectRatio: globalAspectRatio || '9:16',
+                updatedAt: Date.now()
+              }, socketRef.current);
+            }
           }
         }).catch(() => {});
       }
@@ -4665,6 +4701,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           setLipSyncVideoUrl(null);
           setQuickResponseActiveVideo(null);
           setActiveVideoItem(null);
+          stopVoiceAudio();
           try {
             localStorage.removeItem('avalive_selected_char');
             localStorage.removeItem('avalive_user_locked_media');
