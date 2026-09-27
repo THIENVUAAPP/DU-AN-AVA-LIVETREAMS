@@ -858,6 +858,8 @@ export default function LivestreamFlowSequencer() {
         overlayTextFontFamily: resolved.overlayTextFontFamily || step.overlayTextFontFamily || 'be_vietnam',
         overlayTextFontSize: resolved.overlayTextFontSize || step.overlayTextFontSize || 20,
         overlayTextTransform: resolved.overlayTextTransform || null,
+        multiAvatarConfig: syncedConfig,
+        syncedAvatars: syncedAvatars,
         isMediaPinned: !!step.isMediaPinned,
         isPlaying: isLivePlaying,
         fit: 'cover',
@@ -1058,6 +1060,9 @@ export default function LivestreamFlowSequencer() {
           return;
         }
       }
+      if (!isMasterVoiceEnabled) {
+        setIsMasterVoiceEnabled(true);
+      }
       isPlayingFlowRef.current = true;
       setIsPlayingFlow(true);
       startStep(currentStepIndex, true);
@@ -1067,7 +1072,7 @@ export default function LivestreamFlowSequencer() {
     }
   };
 
-  // 📡 BẬT / TẮT ĐỒNG BỘ RA SÂN KHẤU CHÍNH (ẢNH 3 & ẢNH 4)
+  // 📡 BẬT / TẮT ĐỒNG BỘ RA SÂN KHẤU CHÍNH & CHẠY THẬT
   const handleToggleMasterSync = () => {
     const nextSync = !isMasterSynced;
     setIsMasterSynced(nextSync);
@@ -1086,11 +1091,17 @@ export default function LivestreamFlowSequencer() {
     }));
 
     if (nextSync) {
-      toast.success('📡 ĐÃ BẬT ĐỒNG BỘ: Toàn bộ Sân Khấu Phụ (Ảnh 4) đang phát ra Sân Khấu Chính!');
+      if (!isMasterVoiceEnabled) {
+        setIsMasterVoiceEnabled(true);
+      }
+      isPlayingFlowRef.current = true;
+      setIsPlayingFlow(true);
+      startStep(currentStepIndex, true);
+      toast.success('📡 ĐÃ BẬT ĐỒNG BỘ & BẮT ĐẦU PHÁT THẬT: Toàn bộ phân đoạn kịch bản đang phát ra Sân Khấu Chính!');
       if (activePreset?.steps?.[currentStepIndex]) {
-        syncStepToServer(activePreset.steps[currentStepIndex], currentStepIndex, isPlayingFlow, true);
+        syncStepToServer(activePreset.steps[currentStepIndex], currentStepIndex, true, true);
         setTimeout(() => {
-          syncStepToServer(activePreset.steps[currentStepIndex], currentStepIndex, isPlayingFlow, true);
+          syncStepToServer(activePreset.steps[currentStepIndex], currentStepIndex, true, true);
         }, 60);
       }
     } else {

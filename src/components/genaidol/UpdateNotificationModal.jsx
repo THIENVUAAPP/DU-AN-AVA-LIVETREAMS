@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.58';
+export const APP_VERSION = '4.9.59';
 export const RELEASE_DATE = '27/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.59 - Đọc Voice Kịch Bản Liên Tục Từng Bước & Đồng Bộ Toàn Diện 100% Sân Khấu',
+    description: '1. Đọc Voice Kịch Bản Mượt Mà Từng Bước (Sequencer Flow): Khi bấm ▶️ CHẠY DEMO hoặc 📡 ĐỒNG BỘ RA SÂN KHẤU CHÍNH, hệ thống tự động kích hoạt Voice AI đọc liền mạch từng câu thoại từ Bước 1 -> Bước 2 -> Bước 3 -> Bước 4... không bị dừng ngắt giữa chừng. 2. Đồng Bộ & Phát Thật Khi Bấm Sân Khấu Chính: Khi bật nút 📡 ĐỒNG BỘ RA SÂN KHẤU CHÍNH, toàn bộ phân đoạn kịch bản lập tức phát thật ra Sân Khấu Chính, Window Capture OBS và TikTok Live Studio. 3. Đồng Bộ Đa Tầng 100% Mọi Khung Hình & Avatar: Window Capture và đường link livestream nay tự động render đầy đủ tất cả các avatar (Avatar 1, Avatar 2, Avatar 3...), video phụ PiP, banner ảnh và tiêu đề chữ theo đúng tọa độ.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.58 - Việt Hóa Toàn Bộ & Nâng Cấp Tương Tác Siêu Nhạy Thanh Dock Window Capture',
     description: '1. Việt Hóa Toàn Bộ Nút Điều Khiển: Chuyển đổi toàn bộ nút tiếng Anh (• LIVE 60FPS) sang tiếng Việt (• TRỰC TIẾP 60FPS / ⚡ LÀM MỚI 60FPS) kèm hiệu ứng phát sáng phản hồi trực quan ngay khi bấm. 2. Khắc Phục Lỗi Nút Bấm Không Tác Dụng: Nâng cấp cơ chế bắt sự kiện đa điểm (pointerdown, touchstart, click) với độ trễ 0ms trên thanh Dock của Window Capture OBS và TikTok Live Studio; sửa lỗi nuốt click khi co giãn nút. 3. Đồng Bộ Trạng Thái Tức Thì: Bấm làm mới / trực tiếp sẽ tự động nạp lại dữ liệu Sân Khấu Chính, kích hoạt phát tất cả video và đồng bộ âm thanh chuẩn xác 100%.'

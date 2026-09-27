@@ -1670,53 +1670,78 @@ app.get([
         }
       }, 500);
 
-      function renderMultiAvatarCharacters(config, activeSpeakerId) {
+      function renderMultiAvatarCharacters(configOrAvatars, activeSpeakerId) {
         const container = document.getElementById('multiAvatarCharacters');
         if (!container) return;
-        if (!config || !config.avatars || config.avatars.length === 0) {
+        
+        let avatars = [];
+        if (Array.isArray(configOrAvatars)) {
+          avatars = configOrAvatars;
+        } else if (configOrAvatars && Array.isArray(configOrAvatars.avatars)) {
+          avatars = configOrAvatars.avatars;
+        }
+        
+        avatars = avatars.filter(function(a) { return a && a.visible !== false; });
+        if (avatars.length === 0) {
           container.innerHTML = '';
           return;
         }
-        const avatars = config.avatars;
+
         avatars.forEach(function(avatar, idx) {
-          let charEl = container.querySelector('[data-char-id="' + avatar.id + '"]');
-          const isSpeaking = avatar.isSpeakingNow || activeSpeakerId === avatar.id;
-          const targetVid = isSpeaking ? (avatar.talkVideo || avatar.idleVideo) : (avatar.idleVideo || avatar.talkVideo);
-          const resolvedMedia = resolveUrl(targetVid || avatar.mediaUrl || avatar.resolvedVidSrc);
+          const charId = avatar.id || ('avatar_' + (idx + 1));
+          let charEl = container.querySelector('[data-char-id="' + charId + '"]');
+          const isSpeaking = activeSpeakerId ? (activeSpeakerId === avatar.id || activeSpeakerId === avatar.role) : (avatar.isSpeaking || avatar.isSpeakingNow);
+          const targetVid = isSpeaking && avatar.talkVideo ? avatar.talkVideo : (avatar.idleVideo || avatar.talkVideo || avatar.resolvedVidSrc || avatar.mediaUrl || avatar.videoUrl || avatar.url || avatar.src);
+          const resolvedMedia = resolveUrl(targetVid);
+
           const trans = avatar.transform || {
-            x: idx === 0 ? 10 : 55,
+            x: idx === 0 ? 10 : (idx === 1 ? 55 : (idx === 2 ? 30 : 50)),
             y: 15,
             width: 40,
-            height: 70
+            height: 70,
+            zIndex: 10 + idx
           };
           const chromaClass = avatar.chromaKey && avatar.chromaKey.enabled ? (avatar.chromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter') : '';
 
           if (!charEl) {
             charEl = document.createElement('div');
-            charEl.setAttribute('data-char-id', avatar.id);
+            charEl.setAttribute('data-char-id', charId);
             charEl.style.position = 'absolute';
             charEl.style.transition = 'all 0.3s ease';
-            charEl.innerHTML = '<video autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;background:transparent;"></video>';
+            charEl.innerHTML = '<video autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;background:transparent;display:none;"></video><img style="width:100%;height:100%;object-fit:cover;background:transparent;display:none;" />';
             container.appendChild(charEl);
           }
 
-          charEl.style.left = trans.x + '%';
-          charEl.style.top = trans.y + '%';
-          charEl.style.width = trans.width + '%';
+          charEl.style.left = (trans.x ?? 10) + '%';
+          charEl.style.top = (trans.y ?? 15) + '%';
+          charEl.style.width = (trans.width ?? 40) + '%';
           charEl.style.height = (trans.height || 70) + '%';
-          charEl.style.zIndex = trans.zIndex || 10;
+          charEl.style.zIndex = trans.zIndex || (10 + idx);
           charEl.className = chromaClass;
 
           const v = charEl.querySelector('video');
-          if (v && resolvedMedia && !isSameMedia(v.src, resolvedMedia)) {
-            v.src = resolvedMedia;
-            v.play().catch(function() {});
+          const img = charEl.querySelector('img');
+
+          if (resolvedMedia) {
+            if (isImage(resolvedMedia)) {
+              if (v) { try { v.pause(); } catch(e) {} v.style.display = 'none'; }
+              if (img) { img.src = resolvedMedia; img.style.display = 'block'; }
+            } else {
+              if (img) img.style.display = 'none';
+              if (v) {
+                v.style.display = 'block';
+                if (!isSameMedia(v.src, resolvedMedia)) {
+                  v.src = resolvedMedia;
+                  v.play().catch(function() {});
+                }
+              }
+            }
           }
         });
 
         Array.from(container.children).forEach(function(child) {
           const cid = child.getAttribute('data-char-id');
-          if (!avatars.some(function(a) { return a.id === cid; })) {
+          if (!avatars.some(function(a, i) { return (a.id || ('avatar_' + (i + 1))) === cid; })) {
             const v = child.querySelector('video');
             if (v) { try { v.pause(); v.removeAttribute('src'); v.load(); } catch(e) {} }
             child.remove();
@@ -1741,10 +1766,16 @@ app.get([
         const bgUrlCandidate = data.mainMediaUrl || (data.multiAvatarConfig && data.multiAvatarConfig.backgroundUrl) || data.mediaUrl || data.currentMedia || data.eventVideoUrl || data.videoUrl || '';
         const resolvedMainBg = resolveUrl(bgUrlCandidate);
 
-        const hasValidAvatars = !!(data.multiAvatarConfig && data.multiAvatarConfig.enabled && Array.isArray(data.multiAvatarConfig.avatars) && data.multiAvatarConfig.avatars.some(function(a) {
-          const u = a.talkVideo || a.idleVideo || a.mediaUrl || a.resolvedVidSrc;
+        const avatarsList = (Array.isArray(data.syncedAvatars) && data.syncedAvatars.length > 0)
+          ? data.syncedAvatars
+          : ((data.multiAvatarConfig && Array.isArray(data.multiAvatarConfig.avatars) && data.multiAvatarConfig.avatars.length > 0)
+            ? data.multiAvatarConfig.avatars
+            : []);
+
+        const hasValidAvatars = avatarsList.length > 0 && avatarsList.some(function(a) {
+          const u = a.talkVideo || a.idleVideo || a.mediaUrl || a.resolvedVidSrc || a.url || a.src || a.videoUrl;
           return u && typeof u === 'string' && !u.startsWith('blob:');
-        }));
+        });
         const hasExtraLayers = !!(data.multiAvatarConfig && Array.isArray(data.multiAvatarConfig.extraImageLayers) && data.multiAvatarConfig.extraImageLayers.length > 0) || !!(Array.isArray(data.multiAvatarExtraLayers) && data.multiAvatarExtraLayers.length > 0);
         const hasAnyContent = !!(resolvedMainBg || hasValidAvatars || data.secondaryMediaUrl || data.overlayImage || hasExtraLayers);
 
@@ -1819,13 +1850,13 @@ app.get([
         }
 
         // 4. Hiển thị Lớp Multi-Avatar & Extra Layers (Đồng bộ 100% Sân Khấu Chính)
-        if (hasValidAvatars || (data.multiAvatarConfig && Array.isArray(data.multiAvatarConfig.extraImageLayers) && data.multiAvatarConfig.extraImageLayers.length > 0)) {
+        if (hasValidAvatars || (data.multiAvatarConfig && Array.isArray(data.multiAvatarConfig.extraImageLayers) && data.multiAvatarConfig.extraImageLayers.length > 0) || (Array.isArray(data.multiAvatarExtraLayers) && data.multiAvatarExtraLayers.length > 0)) {
           if (multiStage) {
             multiStage.style.display = 'block';
             multiStage.style.background = data.multiAvatarConfig?.backgroundColor || 'transparent';
           }
-          renderMultiAvatarCharacters(data.multiAvatarConfig, data.activeSpeakerId);
-          renderMultiAvatarExtraLayers(data.multiAvatarConfig);
+          renderMultiAvatarCharacters(avatarsList, data.activeSpeakerId || data.avatarSpeaker);
+          renderMultiAvatarExtraLayers(data.multiAvatarConfig || { extraImageLayers: data.multiAvatarExtraLayers });
         } else {
           if (multiStage) multiStage.style.display = 'none';
         }
@@ -2795,55 +2826,78 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         }
       });
 
-      function renderMultiAvatarCharacters(config, activeSpeakerId) {
+      function renderMultiAvatarCharacters(configOrAvatars, activeSpeakerId) {
         const container = document.getElementById('multiAvatarCharacters');
         if (!container) return;
-        if (!config || !Array.isArray(config.avatars)) {
+        
+        let avatars = [];
+        if (Array.isArray(configOrAvatars)) {
+          avatars = configOrAvatars;
+        } else if (configOrAvatars && Array.isArray(configOrAvatars.avatars)) {
+          avatars = configOrAvatars.avatars;
+        }
+        
+        avatars = avatars.filter(function(a) { return a && a.visible !== false; });
+        if (avatars.length === 0) {
           container.innerHTML = '';
           return;
         }
 
-        const avatars = config.avatars.filter(function(a) { return a.visible !== false; });
         avatars.forEach(function(avatar, idx) {
-          let charEl = container.querySelector('[data-char-id="' + avatar.id + '"]');
-          const isSpeaking = activeSpeakerId ? activeSpeakerId === avatar.id : avatar.isSpeaking;
-          const mediaToPlay = isSpeaking && avatar.talkVideo ? avatar.talkVideo : (avatar.idleVideo || avatar.mediaUrl || avatar.videoUrl);
-          const resolvedMedia = resolveUrl(mediaToPlay);
+          const charId = avatar.id || ('avatar_' + (idx + 1));
+          let charEl = container.querySelector('[data-char-id="' + charId + '"]');
+          const isSpeaking = activeSpeakerId ? (activeSpeakerId === avatar.id || activeSpeakerId === avatar.role) : (avatar.isSpeaking || avatar.isSpeakingNow);
+          const targetVid = isSpeaking && avatar.talkVideo ? avatar.talkVideo : (avatar.idleVideo || avatar.talkVideo || avatar.resolvedVidSrc || avatar.mediaUrl || avatar.videoUrl || avatar.url || avatar.src);
+          const resolvedMedia = resolveUrl(targetVid);
 
           const trans = avatar.transform || {
-            x: idx === 0 ? 10 : 55,
+            x: idx === 0 ? 10 : (idx === 1 ? 55 : (idx === 2 ? 30 : 50)),
             y: 15,
             width: 40,
-            height: 70
+            height: 70,
+            zIndex: 10 + idx
           };
           const chromaClass = avatar.chromaKey && avatar.chromaKey.enabled ? (avatar.chromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter') : '';
 
           if (!charEl) {
             charEl = document.createElement('div');
-            charEl.setAttribute('data-char-id', avatar.id);
+            charEl.setAttribute('data-char-id', charId);
             charEl.style.position = 'absolute';
             charEl.style.transition = 'all 0.3s ease';
-            charEl.innerHTML = '<video autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;background:transparent;"></video>';
+            charEl.innerHTML = '<video autoplay loop muted playsinline style="width:100%;height:100%;object-fit:cover;background:transparent;display:none;"></video><img style="width:100%;height:100%;object-fit:cover;background:transparent;display:none;" />';
             container.appendChild(charEl);
           }
 
-          charEl.style.left = trans.x + '%';
-          charEl.style.top = trans.y + '%';
-          charEl.style.width = trans.width + '%';
+          charEl.style.left = (trans.x ?? 10) + '%';
+          charEl.style.top = (trans.y ?? 15) + '%';
+          charEl.style.width = (trans.width ?? 40) + '%';
           charEl.style.height = (trans.height || 70) + '%';
-          charEl.style.zIndex = trans.zIndex || 10;
+          charEl.style.zIndex = trans.zIndex || (10 + idx);
           charEl.className = chromaClass;
 
           const v = charEl.querySelector('video');
-          if (v && resolvedMedia && !isSameMedia(v.src, resolvedMedia)) {
-            v.src = resolvedMedia;
-            v.play().catch(function() {});
+          const img = charEl.querySelector('img');
+
+          if (resolvedMedia) {
+            if (isImage(resolvedMedia)) {
+              if (v) { try { v.pause(); } catch(e) {} v.style.display = 'none'; }
+              if (img) { img.src = resolvedMedia; img.style.display = 'block'; }
+            } else {
+              if (img) img.style.display = 'none';
+              if (v) {
+                v.style.display = 'block';
+                if (!isSameMedia(v.src, resolvedMedia)) {
+                  v.src = resolvedMedia;
+                  v.play().catch(function() {});
+                }
+              }
+            }
           }
         });
 
         Array.from(container.children).forEach(function(child) {
           const cid = child.getAttribute('data-char-id');
-          if (!avatars.some(function(a) { return a.id === cid; })) {
+          if (!avatars.some(function(a, i) { return (a.id || ('avatar_' + (i + 1))) === cid; })) {
             const v = child.querySelector('video');
             if (v) { try { v.pause(); v.removeAttribute('src'); v.load(); } catch(e) {} }
             child.remove();
@@ -2868,10 +2922,16 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         const bgUrlCandidate = data.mainMediaUrl || (data.multiAvatarConfig && data.multiAvatarConfig.backgroundUrl) || data.mediaUrl || data.currentMedia || data.eventVideoUrl || data.videoUrl || '';
         const resolvedMainBg = resolveUrl(bgUrlCandidate);
 
-        const hasValidAvatars = !!(data.multiAvatarConfig && data.multiAvatarConfig.enabled && Array.isArray(data.multiAvatarConfig.avatars) && data.multiAvatarConfig.avatars.some(function(a) {
-          const u = a.talkVideo || a.idleVideo || a.mediaUrl || a.resolvedVidSrc;
+        const avatarsList = (Array.isArray(data.syncedAvatars) && data.syncedAvatars.length > 0)
+          ? data.syncedAvatars
+          : ((data.multiAvatarConfig && Array.isArray(data.multiAvatarConfig.avatars) && data.multiAvatarConfig.avatars.length > 0)
+            ? data.multiAvatarConfig.avatars
+            : []);
+
+        const hasValidAvatars = avatarsList.length > 0 && avatarsList.some(function(a) {
+          const u = a.talkVideo || a.idleVideo || a.mediaUrl || a.resolvedVidSrc || a.url || a.src || a.videoUrl;
           return u && typeof u === 'string' && !u.startsWith('blob:');
-        }));
+        });
         const hasExtraLayers = !!(data.multiAvatarConfig && Array.isArray(data.multiAvatarConfig.extraImageLayers) && data.multiAvatarConfig.extraImageLayers.length > 0) || !!(Array.isArray(data.multiAvatarExtraLayers) && data.multiAvatarExtraLayers.length > 0);
         const hasAnyContent = !!(resolvedMainBg || hasValidAvatars || data.secondaryMediaUrl || data.overlayImage || hasExtraLayers);
 
@@ -2945,13 +3005,13 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         }
 
         // 4. Hiển thị Lớp Multi-Avatar & Extra Layers (Đồng bộ 100% Sân Khấu Chính)
-        if (hasValidAvatars || (data.multiAvatarConfig && Array.isArray(data.multiAvatarConfig.extraImageLayers) && data.multiAvatarConfig.extraImageLayers.length > 0)) {
+        if (hasValidAvatars || (data.multiAvatarConfig && Array.isArray(data.multiAvatarConfig.extraImageLayers) && data.multiAvatarConfig.extraImageLayers.length > 0) || (Array.isArray(data.multiAvatarExtraLayers) && data.multiAvatarExtraLayers.length > 0)) {
           if (multiStage) {
             multiStage.style.display = 'block';
             multiStage.style.background = data.multiAvatarConfig?.backgroundColor || 'transparent';
           }
-          renderMultiAvatarCharacters(data.multiAvatarConfig, data.activeSpeakerId);
-          renderMultiAvatarExtraLayers(data.multiAvatarConfig);
+          renderMultiAvatarCharacters(avatarsList, data.activeSpeakerId || data.avatarSpeaker);
+          renderMultiAvatarExtraLayers(data.multiAvatarConfig || { extraImageLayers: data.multiAvatarExtraLayers });
         } else {
           if (multiStage) multiStage.style.display = 'none';
         }

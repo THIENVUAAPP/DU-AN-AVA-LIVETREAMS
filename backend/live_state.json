@@ -11,7 +11,7 @@
   "isPlaying": true,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1790481830496,
+  "updatedAt": 1790482213765,
   "isUserExplicitMediaLocked": true,
   "selectedCharacter": "custom_1790481664049",
   "videoCurrentTime": 0,
@@ -94,7 +94,7 @@
         },
         "mediaUrl": "/uploads/media-1790480591844-384698498.mp4",
         "resolvedVidSrc": "/uploads/media-1790480591844-384698498.mp4",
-        "isSpeakingNow": false
+        "isSpeakingNow": true
       },
       {
         "id": "avatar_2",
@@ -128,7 +128,7 @@
     ],
     "activeSpeakerId": "avatar_1",
     "fromSequencer": true,
-    "syncedAt": 1790481821732
+    "syncedAt": 1790482213754
   },
   "syncedAvatars": [
     {
@@ -158,7 +158,7 @@
       },
       "mediaUrl": "/uploads/media-1790480591844-384698498.mp4",
       "resolvedVidSrc": "/uploads/media-1790480591844-384698498.mp4",
-      "isSpeakingNow": false
+      "isSpeakingNow": true
     },
     {
       "id": "avatar_2",
