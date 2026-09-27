@@ -427,6 +427,17 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   }, [currentIndex, isPlaying, queue]);
 
   const playItem = async (item, isScriptItem = true) => {
+    if (!item || !item.text) return;
+    const isUserPaused = typeof localStorage !== 'undefined' && (
+      localStorage.getItem('avalive_user_paused') === 'true' || 
+      localStorage.getItem('avalive_window_capture_paused') === 'true' ||
+      localStorage.getItem('avalive_master_live_running') === 'false' ||
+      localStorage.getItem('aidol_is_script_live_running') === 'false'
+    );
+    if (!item.isTest && (isUserPaused || !isPlayingRef.current)) {
+      isBusyRef.current = false;
+      return;
+    }
     if (isBusyRef.current) return;
     isBusyRef.current = true;
 
@@ -540,6 +551,17 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         if (onActionTriggered) onActionTriggered({ type: 'LIPSYNC_ENDED' });
         isBusyRef.current = false;
 
+        const isPausedNow = typeof localStorage !== 'undefined' && (
+          localStorage.getItem('avalive_user_paused') === 'true' || 
+          localStorage.getItem('avalive_window_capture_paused') === 'true' ||
+          localStorage.getItem('avalive_master_live_running') === 'false' ||
+          localStorage.getItem('aidol_is_script_live_running') === 'false'
+        );
+        if (isPausedNow && !item.isTest) {
+          priorityQueueRef.current = [];
+          return;
+        }
+
         // 1. Nếu có bình luận ưu tiên đang chờ (chỉ khi đang Live thật sự)
         if (priorityQueueRef.current.length > 0 && (isLive || item.isTest)) {
           const nextPriority = priorityQueueRef.current.shift();
@@ -549,7 +571,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           return;
         }
 
-        if (!isPlayingRef.current) return;
+        if (!isPlayingRef.current || isPausedNow) return;
 
         // 2. Chuyển sang câu kịch bản tiếp theo tuần tự từ đầu đến đuôi
         if (isScriptItem) {
@@ -650,7 +672,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }, dynamicTimeoutMs);
 
       await previewVoiceAudio(activeVoice, item.text, {
-        priority: true,
+        priority: !!item.isTest,
         isTest: !!item.isTest,
         volume: item.volume !== undefined ? item.volume : activeVoice?.volume,
         rate: item.rate !== undefined ? item.rate : activeVoice?.rate,
@@ -667,7 +689,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         }));
       }
       isBusyRef.current = false;
-      if (isPlayingRef.current && isScriptItem) {
+      const isPausedNow = typeof localStorage !== 'undefined' && (
+        localStorage.getItem('avalive_user_paused') === 'true' || 
+        localStorage.getItem('avalive_window_capture_paused') === 'true' ||
+        localStorage.getItem('avalive_master_live_running') === 'false' ||
+        localStorage.getItem('aidol_is_script_live_running') === 'false'
+      );
+      if (!isPausedNow && isPlayingRef.current && isScriptItem) {
         const nextIdx = currentIndexRef.current + 1;
         if (nextIdx < queueRef.current.length) {
           currentIndexRef.current = nextIdx;

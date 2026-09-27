@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.69';
+export const APP_VERSION = '4.9.70';
 export const RELEASE_DATE = '27/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.70 - Triệt Tiêu 100% Voice/Kịch Bản Chạy Ngầm, Dừng/Mở Đồng Bộ Tất Cả Các Nút & Đóng Gói Trọn Vẹn Sân Khấu Sang TikTok Live Studio',
+    description: '1. Triệt Tiêu 100% Dữ Liệu Voice Chạy Ngầm Khi Tắt: Khi người dùng bấm Tắt Tất Cả hoặc dừng kịch bản, toàn bộ hàng đợi voice TTS, các tiến trình synthesis ngầm, Web Audio API DSP và các file âm thanh trên máy đều bị hủy sạch và giải phóng bộ nhớ 0ms, đảm bảo không còn bất kỳ tiếng đọc ngầm hay chữ âm nào sót lại. 2. Đồng Bộ Hóa 100% Thao Tác Mở/Dừng Của Mọi Nút Bấm: Khi bấm Dừng là dừng tất cả các tab và luồng phát; khi bấm Mở là mở lại đồng bộ video, kịch bản đã cài đặt, kết nối TikTok Live, Game và Auto 24/7. 3. Đóng Gói Toàn Diện Sân Khấu Chính Sang Window Capture & TikTok Live Studio: Tất cả các lớp (Video/ảnh nền 60 FPS, Video phụ PiP với Transform/Chroma Key, Banner ảnh với Chroma Key, Tiêu đề chữ Headline với hiệu ứng và tọa độ, Multi-Avatar và Extra Layers) được đồng bộ tức thì thời gian thực 0ms.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.69 - Dừng Dứt Điểm 100% Âm Thanh, Voice & File Trên Máy Khi Tắt Tất Cả, Mở Lại Đầy Đủ Các Tính Năng Đã Cài Đặt & Đồng Bộ Toàn Diện Sân Khấu',
     description: '1. Dừng Dứt Điểm 100% Âm Thanh, Voice AI & File Trên Máy Khi "TẮT TẤT CẢ": Khi bấm nút tắt, toàn bộ luồng phát trên máy (Voice AI TTS, Speech Synthesis, audio player kịch bản, các file âm thanh/video trên DOM, Web Audio DSP Context, game engines) dừng ngay lập tức 0ms, không còn bất kỳ âm thanh hay file nào chạy ngầm trên máy. 2. Khôi Phục Toàn Diện Các Tính Năng Đã Cài Đặt Khi "BẬT TẤT CẢ": Mở lại đồng bộ video, kịch bản bán hàng đã chọn, kết nối TikTok Live, Game Bản Đồ / Battle và chế độ Auto 24/7. 3. Đóng Gói & Đồng Bộ Trọn Vẹn 100% Sân Khấu Sang Window Capture / Link TikTok Live Studio: Tất cả các lớp (Video/ảnh nền 60 FPS, Video phụ PiP có Transform/Chroma Key, Banner ảnh có Chroma Key, Tiêu đề chữ Headline với phong cách & tọa độ, Multi-Avatar và Extra Layers) được đồng bộ tức thì thời gian thực 0ms.'

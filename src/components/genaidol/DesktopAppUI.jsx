@@ -992,9 +992,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       if (typeof window !== 'undefined') window.__isScriptLiveRunning = false;
       try { localStorage.setItem('aidol_is_script_live_running', 'false'); } catch (e) {}
       if (audioPlayerRef.current) {
-        audioPlayerRef.current.stopScript();
+        try { audioPlayerRef.current.stopScript(); } catch(e) {}
+        try { audioPlayerRef.current.stopAll(); } catch(e) {}
+        try { audioPlayerRef.current.clearQueue(); } catch(e) {}
       }
       stopVoiceAudio();
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('aidol_script_updated', { detail: { isPlaying: false } }));
+        window.dispatchEvent(new CustomEvent('avalive_speaker_change', { detail: { avatarId: null, role: null, isSpeaking: false } }));
+      }
       showToast('⏹️ Đã tạm dừng phát kịch bản bán hàng.', 'info');
     }
   };

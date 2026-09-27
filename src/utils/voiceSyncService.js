@@ -8412,6 +8412,15 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
           detail: { isSpeaking: false, avatarId: null }
         }));
       }
+      const isPausedNow = typeof localStorage !== 'undefined' && (
+        localStorage.getItem('avalive_user_paused') === 'true' || 
+        localStorage.getItem('avalive_window_capture_paused') === 'true' ||
+        localStorage.getItem('avalive_master_live_running') === 'false' ||
+        localStorage.getItem('aidol_is_script_live_running') === 'false'
+      );
+      if (!isTestingMode && isPausedNow) {
+        return resolve(false);
+      }
       if (speechId !== null && speechId !== currentSpeechGenerationId) {
         return resolve(false);
       }
@@ -8426,6 +8435,17 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
     // Safety watchdog: Tự động kết thúc nếu Web Audio API bỏ lỡ sự kiện onended do GC
     const durMs = Math.max(300, Math.ceil(((audioBuffer.duration || 1) / (requestedRate || 1)) * 1000) + 350);
     safetyTimer = setTimeout(finish, durMs);
+
+    const isPausedBeforeStart = typeof localStorage !== 'undefined' && (
+      localStorage.getItem('avalive_user_paused') === 'true' || 
+      localStorage.getItem('avalive_window_capture_paused') === 'true' ||
+      localStorage.getItem('avalive_master_live_running') === 'false' ||
+      localStorage.getItem('aidol_is_script_live_running') === 'false'
+    );
+    if (!isTestingMode && isPausedBeforeStart) {
+      finish();
+      return;
+    }
 
     try {
       source.start(0);
@@ -8934,11 +8954,13 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
   stopCurrentActiveAudioNode();
   const thisSpeechId = ++currentSpeechGenerationId;
 
-  const isTestingMode = isTest === true || voice?.isTest === true || voice?.priority === true;
+  const isTestingMode = isTest === true || voice?.isTest === true;
 
   const isUserPaused = typeof localStorage !== 'undefined' && (
     localStorage.getItem('avalive_user_paused') === 'true' || 
-    localStorage.getItem('avalive_window_capture_paused') === 'true'
+    localStorage.getItem('avalive_window_capture_paused') === 'true' ||
+    localStorage.getItem('avalive_master_live_running') === 'false' ||
+    localStorage.getItem('aidol_is_script_live_running') === 'false'
   );
   if (!isTestingMode && isUserPaused) {
     if (onEnd) onEnd();
