@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.68';
+export const APP_VERSION = '4.9.69';
 export const RELEASE_DATE = '27/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.69 - Dừng Dứt Điểm 100% Âm Thanh, Voice & File Trên Máy Khi Tắt Tất Cả, Mở Lại Đầy Đủ Các Tính Năng Đã Cài Đặt & Đồng Bộ Toàn Diện Sân Khấu',
+    description: '1. Dừng Dứt Điểm 100% Âm Thanh, Voice AI & File Trên Máy Khi "TẮT TẤT CẢ": Khi bấm nút tắt, toàn bộ luồng phát trên máy (Voice AI TTS, Speech Synthesis, audio player kịch bản, các file âm thanh/video trên DOM, Web Audio DSP Context, game engines) dừng ngay lập tức 0ms, không còn bất kỳ âm thanh hay file nào chạy ngầm trên máy. 2. Khôi Phục Toàn Diện Các Tính Năng Đã Cài Đặt Khi "BẬT TẤT CẢ": Mở lại đồng bộ video, kịch bản bán hàng đã chọn, kết nối TikTok Live, Game Bản Đồ / Battle và chế độ Auto 24/7. 3. Đóng Gói & Đồng Bộ Trọn Vẹn 100% Sân Khấu Sang Window Capture / Link TikTok Live Studio: Tất cả các lớp (Video/ảnh nền 60 FPS, Video phụ PiP có Transform/Chroma Key, Banner ảnh có Chroma Key, Tiêu đề chữ Headline với phong cách & tọa độ, Multi-Avatar và Extra Layers) được đồng bộ tức thì thời gian thực 0ms.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.68 - Khóa Chặt Nút Tắt/Bật Không Tự Mở Lại & Đồng Bộ 100% Tất Cả Khung Hình/Lớp Sân Khấu Sang Window Capture / TikTok Live Studio',
     description: '1. Khóa Chặt Tuyệt Đối Nút Tắt/Bật: Khi streamer bấm "TẮT TẤT CẢ", toàn bộ hệ thống (video, audio, voice AI, kịch bản, game) lập tức dừng dứt điểm 100% và KHÓA CHẶT vĩnh viễn, không bao giờ tự ý bật lại sau vài giây hoặc do sự kiện ngầm kích hoạt. Chỉ khi streamer chủ động bấm lại "BẬT TẤT CẢ", hệ thống mới được phép vận hành. 2. Đồng Bộ Trọn Vẹn 100% Tất Cả Các Lớp Sân Khấu: Tất cả các lớp trên Sân Khấu Chính (Video nền chính, Video phụ PiP, Avatar nhân vật đa tầng, Poster banner ảnh, Tiêu đề chữ với đầy đủ tọa độ, kích thước, hiệu ứng xóa phông Chroma Key) đều được truyền tải và hiển thị sắc nét 60 FPS theo thời gian thực 0ms sang Window Capture OBS và đường link TikTok Live Studio.'

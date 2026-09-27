@@ -3838,6 +3838,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         avatars: resolvedAvatars || multiAvatarConfig?.avatars
       },
       multiAvatarExtraLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers)) || multiAvatarConfig?.extraImageLayers || undefined,
+      extraImageLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers)) || multiAvatarConfig?.extraImageLayers || undefined,
       flvUrl: streamFlvUrl,
       isVideo: !!isVid,
       isConnected: !!(isConnected || showSimulator),
@@ -3849,6 +3850,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
     // Đồng bộ tức thì đa kênh: Supabase Cloud Realtime + Socket.io + BroadcastChannel + LocalStorage + REST API
     syncMasterLiveState(masterPayload, socketRef.current);
+    postMasterBroadcast(masterPayload);
+    try {
+      localStorage.setItem('avalive_master_live_state', JSON.stringify(masterPayload));
+    } catch (e) {}
   }, [
     isGameBanDoActive, 
     isGameBattleActive, 
@@ -3955,7 +3960,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   // 🛑/▶️ NÚT ĐỒNG BỘ: TẮT TẤT CẢ / BẬT TẤT CẢ PHIÊN LIVE & CÁC TÍNH NĂNG
   const handleToggleMasterLive = () => {
     if (isMasterLiveRunning) {
-      // --- TẮT TẤT CẢ ---
+      // --- TẮT TẤT CẢ: DỪNG TOÀN BỘ 100% (AUDIO, VOICE, KỊCH BẢN, VIDEO, TIẾN TRÌNH TRÊN MÁY) ---
       setIsMasterLiveRunning(false);
 
       // 1. Tắt kết nối Live TikTok
@@ -3975,46 +3980,73 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         auto247TimerRef.current = null;
       }
 
-      // 3. Tạm dừng toàn bộ âm thanh / BGM / SFX / Voice
+      // 3. Tạm dừng và ngắt toàn bộ âm thanh / BGM / SFX / Voice
       if (typeof bandoAudio.pauseAll === 'function') {
         bandoAudio.pauseAll();
-      } else {
+      }
+      if (typeof bandoAudio.stopAll === 'function') {
         bandoAudio.stopAll();
       }
       
-      // 4. Dừng ngay lập tức toàn bộ Voice Commentary AI (Bản đồ + Trận đấu + Trợ lý)
+      // 4. Dừng ngay lập tức toàn bộ Voice Commentary AI (Bản đồ + Trận đấu + Trợ lý + TTS)
+      stopVoiceAudio();
+      clearGlobalSpeechQueue();
       mapVoiceEngine.stopAll();
       battleVoiceEngine.stopAll();
       battleCommentary.stopAll();
-      clearGlobalSpeechQueue();
+
+      // 5. Tắt toàn bộ kịch bản bán hàng & audio player AIDOL triệt để 100%
+      setIsScriptLiveRunning(false);
+      if (typeof window !== 'undefined') {
+        window.__isScriptLiveRunning = false;
+        window.__isScriptTestingRunning = false;
+      }
+      try { localStorage.setItem('aidol_is_script_live_running', 'false'); } catch (e) {}
+
+      if (audioPlayerRef.current) {
+        try { audioPlayerRef.current.stopScript(); } catch (e) {}
+        try { audioPlayerRef.current.stopAll(); } catch (e) {}
+        try { audioPlayerRef.current.stopCurrent(); } catch (e) {}
+        try { audioPlayerRef.current.pause(); } catch (e) {}
+        try { audioPlayerRef.current.clearQueue(); } catch (e) {}
+      }
       
-      // 5. Dừng toàn bộ vòng lặp game, auto 24/7, demo, battle
+      // 6. Dừng toàn bộ vòng lặp game, auto 24/7, demo, battle
       bandoEngine.stopAuto247Loop();
       bandoEngine.stopAutoTestLoop();
       
-      // 6. Tắt player video / audio AIDOL
-      if (audioPlayerRef.current) {
+      // 7. Tắt toàn bộ Speech Synthesis của trình duyệt ngay lập tức
+      if (typeof window !== 'undefined' && window.speechSynthesis) {
         try {
-          audioPlayerRef.current.pause();
-          // KHÔNG reset currentTime để phát tiếp
+          window.speechSynthesis.cancel();
+          window.speechSynthesis.pause();
         } catch (e) {}
       }
       
-      // 7. Tắt toàn bộ Speech Synthesis của trình duyệt ngay lập tức
-      if (typeof window !== 'undefined' && window.speechSynthesis) {
-        window.speechSynthesis.cancel();
-      }
-      
-      // 8. Tắt tất cả các audio / video elements đang phát trong DOM
+      // 8. Tắt tất cả các audio / video elements đang phát trên máy (DOM)
       if (typeof document !== 'undefined') {
         const mediaElements = document.querySelectorAll('audio, video');
         mediaElements.forEach(el => {
           try {
             el.dataset.userPaused = 'true';
             el.pause();
-            // KHÔNG reset currentTime để có thể phát tiếp từ chỗ đang dừng
+            if (el.tagName.toLowerCase() === 'audio') {
+              el.currentTime = 0;
+              try { el.src = ''; } catch(e) {}
+              try { el.removeAttribute('src'); } catch(e) {}
+              try { el.load(); } catch(e) {}
+            }
           } catch (e) {}
         });
+      }
+
+      // 8.5. Tạm dừng Web Audio API AudioContext nếu đang chạy
+      if (typeof window !== 'undefined') {
+        try {
+          if (window.__avaLiveAudioContext && window.__avaLiveAudioContext.state === 'running') {
+            window.__avaLiveAudioContext.suspend().catch(() => {});
+          }
+        } catch (e) {}
       }
 
       if (desktopVideoRef.current) {
@@ -4026,7 +4058,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       // 9. Phát tín hiệu dừng toàn cục (BroadcastChannel, CustomEvent, LocalStorage) cho OBS/TikTok Live Studio Overlay
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('avalive_emergency_stop_all'));
+        window.dispatchEvent(new CustomEvent('avalive:stop_all_audio_and_voice'));
         window.dispatchEvent(new CustomEvent('global-stop-demo'));
+        window.dispatchEvent(new CustomEvent('aidol_script_updated', { detail: { isPlaying: false } }));
+        window.dispatchEvent(new CustomEvent('avalive_speaker_change', { detail: { avatarId: null, role: null, isSpeaking: false } }));
+        window.dispatchEvent(new CustomEvent('avalive_active_speaker_changed', { detail: { avatarId: null, isSpeaking: false } }));
         try {
           localStorage.setItem('avalive_user_paused', 'true');
           localStorage.setItem('avalive_window_capture_paused', 'true');
@@ -4062,7 +4098,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
       syncMasterLiveState({
         videoPlaybackEvent: 'pause',
-        isPlaying: false
+        isPlaying: false,
+        isVideoPlaying: false
       }, socketRef.current);
 
       // Toast thông báo
@@ -4078,7 +4115,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         ...prev.slice(0, 48)
       ]);
     } else {
-      // --- BẬT TẤT CẢ ---
+      // --- BẬT TẤT CẢ: KHÔI PHỤC TOÀN BỘ CÁC TÍNH NĂNG ĐÃ CÀI ĐẶT ---
       setIsMasterLiveRunning(true);
       setIsVideoPlaying(true);
       try {
@@ -4106,6 +4143,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       // 3. Mở lại Web Audio Engine, Nhạc Nền BGM & Bình Luận Viên AI
       try {
         bandoAudio.unlock();
+        if (typeof window !== 'undefined' && window.__avaLiveAudioContext && window.__avaLiveAudioContext.state === 'suspended') {
+          window.__avaLiveAudioContext.resume().catch(() => {});
+        }
         if (isGameBanDoActive) {
           bandoAudio.playBgmOnLive();
           mapVoiceEngine.startPeriodicCommentary(true);
@@ -4115,18 +4155,38 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         }
       } catch (e) {}
 
-      // 4. Phát tín hiệu bật lại toàn cục
+      // 4. Mở lại kịch bản bán hàng đã cài đặt (Fixed Script hoặc AI Brain)
+      const chosenScript = scriptTabsList.find(t => t.active) || scriptTabsList[0];
+      const scriptText = chosenScript?.fixedScriptText || '';
+      if (scriptText && audioPlayerRef.current) {
+        setIsScriptLiveRunning(true);
+        if (typeof window !== 'undefined') window.__isScriptLiveRunning = true;
+        try { localStorage.setItem('aidol_is_script_live_running', 'true'); } catch (e) {}
+        audioPlayerRef.current.startScript(scriptText);
+        window.dispatchEvent(new CustomEvent('aidol_script_updated', {
+          detail: { activeScriptTabId: chosenScript?.id, scriptTabs: scriptTabsList, fixedScriptText: scriptText, isPlaying: true, forceRestart: false }
+        }));
+      }
+
+      // 5. Phát tín hiệu bật lại toàn cục
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('avalive_resume_all'));
       }
 
-      // 5. Tự động kích hoạt Vận hành Auto 24/7 liên tục
+      // 6. Tự động kích hoạt Vận hành Auto 24/7 liên tục
       setIsAuto247Running(true);
       try {
         localStorage.setItem('avalive_auto247', 'true');
         bandoEngine.stopAutoTestLoop();
         bandoEngine.startAuto247Loop();
       } catch (e) {}
+
+      // 7. Đồng bộ gói toàn diện 100% sân khấu sang Window Capture OBS và TikTok Live Studio Link
+      const payload = getMasterStagePayload();
+      payload.isPlaying = true;
+      payload.videoPlaybackEvent = 'play';
+      syncMasterLiveState(payload, socketRef.current);
+      postMasterBroadcast(payload);
 
       if (typeof BroadcastChannel !== 'undefined') {
         try {
@@ -4145,11 +4205,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         action: 'play',
         isPlaying: true,
         timestamp: Date.now()
-      }, socketRef.current);
-
-      syncMasterLiveState({
-        videoPlaybackEvent: 'play',
-        isPlaying: true
       }, socketRef.current);
 
       setToast({

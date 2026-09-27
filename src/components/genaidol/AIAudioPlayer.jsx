@@ -788,13 +788,45 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     stopCurrent: () => {
       stopVoiceAudio();
       const aud = getAudio();
-      if (aud) aud.pause();
+      if (aud) {
+        try { aud.pause(); aud.src = ''; } catch(e) {}
+      }
       isBusyRef.current = false;
       priorityQueueRef.current = [];
       setIsPlaying(false);
       isPlayingRef.current = false;
       if (onAudioPlayStateChange) onAudioPlayStateChange(false);
       if (onActionTriggered) onActionTriggered({ type: 'LIPSYNC_ENDED' });
+    },
+    pause: () => {
+      stopVoiceAudio();
+      const aud = getAudio();
+      if (aud) {
+        try { aud.pause(); aud.src = ''; } catch(e) {}
+      }
+      isBusyRef.current = false;
+      priorityQueueRef.current = [];
+      setIsPlaying(false);
+      isPlayingRef.current = false;
+      if (onAudioPlayStateChange) onAudioPlayStateChange(false);
+      if (onActionTriggered) onActionTriggered({ type: 'LIPSYNC_ENDED' });
+    },
+    stopAll: () => {
+      stopVoiceAudio();
+      const aud = getAudio();
+      if (aud) {
+        try { aud.pause(); aud.src = ''; } catch(e) {}
+      }
+      isBusyRef.current = false;
+      priorityQueueRef.current = [];
+      setIsPlaying(false);
+      isPlayingRef.current = false;
+      if (onAudioPlayStateChange) onAudioPlayStateChange(false);
+      if (onActionTriggered) onActionTriggered({ type: 'LIPSYNC_ENDED' });
+    },
+    clearQueue: () => {
+      priorityQueueRef.current = [];
+      isBusyRef.current = false;
     }
   }));
 
