@@ -106,6 +106,14 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack 
     if (isScriptActive) {
       return;
     }
+    const isScriptStoppedByUser = typeof localStorage !== 'undefined' && (
+      localStorage.getItem('aidol_user_paused_script') === 'true' ||
+      localStorage.getItem('aidol_is_script_live_running') === 'false'
+    );
+    if (isScriptStoppedByUser) {
+      return;
+    }
+
     const configs = getSavedEventConfigs();
     if (configs.idle?.active === false) return;
     const idleSeconds = Number(configs.idle?.speakAfterIdleSeconds) || 30;
@@ -116,6 +124,12 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack 
         localStorage.getItem('avalive_master_live_running') === 'false'
       );
       if (stillUserPaused) return;
+
+      const stillScriptStopped = typeof localStorage !== 'undefined' && (
+        localStorage.getItem('aidol_user_paused_script') === 'true' ||
+        localStorage.getItem('aidol_is_script_live_running') === 'false'
+      );
+      if (stillScriptStopped) return;
 
       const stillScriptActive = (typeof localStorage !== 'undefined' && localStorage.getItem('aidol_is_script_live_running') === 'true') ||
                                 (typeof window !== 'undefined' && (window.__isScriptTestingRunning || window.__isScriptLiveRunning));
@@ -347,6 +361,15 @@ function fillTemplate(template, vars = {}) {
 
   // Hàm kích hoạt xử lý sự kiện Live từ TikTok / Chat / Giả lập (Hỗ trợ AI Brain Bất Đồng Bộ)
   const handleLiveEvent = async (type, payload = {}) => {
+    const isTestMode = payload?.isTest === true;
+    const isScriptStoppedByUser = typeof localStorage !== 'undefined' && (
+      localStorage.getItem('aidol_user_paused_script') === 'true' ||
+      localStorage.getItem('aidol_is_script_live_running') === 'false'
+    );
+    if (!isTestMode && isScriptStoppedByUser && (type === 'IDLE' || type === 'TALKING' || type === 'AI_TALK' || type === 'APOLOGY')) {
+      return;
+    }
+
     // Luôn cho phép chạy sự kiện khi đã kết nối Live hoặc khi bấm Chạy Test / Giả lập sự kiện
     resetIdleTimer();
 
@@ -358,7 +381,6 @@ function fillTemplate(template, vars = {}) {
     const rawUserName = (payload?.name || payload?.username || 'Bạn').trim();
     const userName = cleanUserNameForSpeech(rawUserName);
     const userDisplay = (userName === 'bạn' || userName === 'Bạn') ? 'bạn' : (userName.startsWith('bạn ') || userName.startsWith('anh ') || userName.startsWith('chị ') ? userName : `bạn ${userName}`);
-    const isTestMode = payload?.isTest === true;
 
     // Xác định tab sự kiện tương ứng để lấy cấu hình và giọng đọc (Voice) riêng biệt
     const evKey = type === 'GIFT' ? (payload?.isSpecial ? 'special_gift' : 'gift') : 

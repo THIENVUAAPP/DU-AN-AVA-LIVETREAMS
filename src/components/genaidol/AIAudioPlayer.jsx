@@ -730,6 +730,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   useImperativeHandle(ref, () => ({
     startScript: (customScriptText = null) => {
       try {
+        localStorage.removeItem('aidol_user_paused_script');
+        localStorage.setItem('aidol_is_script_live_running', 'true');
+        if (typeof window !== 'undefined') {
+          window.__isScriptLiveRunning = true;
+          window.__aidolUserPausedScript = false;
+        }
         clearAllActiveTimers();
         stopVoiceAudio();
         const scriptItems = loadScriptFromStorage(customScriptText);
@@ -750,6 +756,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }
     },
     stopScript: () => {
+      localStorage.setItem('aidol_is_script_live_running', 'false');
+      localStorage.setItem('aidol_user_paused_script', 'true');
+      if (typeof window !== 'undefined') {
+        window.__isScriptLiveRunning = false;
+        window.__aidolUserPausedScript = true;
+      }
       clearAllActiveTimers();
       stopVoiceAudio();
       const aud = getAudio();
@@ -758,6 +770,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }
       isBusyRef.current = false;
       priorityQueueRef.current = [];
+      queueRef.current = [];
       setIsPlaying(false);
       isPlayingRef.current = false;
       if (onAudioPlayStateChange) onAudioPlayStateChange(false);
@@ -774,7 +787,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       const isUserPaused = typeof localStorage !== 'undefined' && (
         localStorage.getItem('avalive_user_paused') === 'true' || 
         localStorage.getItem('avalive_window_capture_paused') === 'true' ||
-        localStorage.getItem('avalive_master_live_running') === 'false'
+        localStorage.getItem('avalive_master_live_running') === 'false' ||
+        localStorage.getItem('aidol_user_paused_script') === 'true' ||
+        localStorage.getItem('aidol_is_script_live_running') === 'false'
       );
       if (isUserPaused && !options?.isTest) {
         return;
@@ -916,9 +931,38 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         <button 
           onClick={() => {
             const nextState = !isPlaying;
-            setIsPlaying(nextState);
-            isPlayingRef.current = nextState;
-            if (!nextState) stopVoiceAudio();
+            if (!nextState) {
+              clearAllActiveTimers();
+              stopVoiceAudio();
+              const aud = getAudio();
+              if (aud) {
+                try { aud.pause(); aud.src = ''; } catch(e) {}
+              }
+              isBusyRef.current = false;
+              priorityQueueRef.current = [];
+              setIsPlaying(false);
+              isPlayingRef.current = false;
+              localStorage.setItem('aidol_is_script_live_running', 'false');
+              localStorage.setItem('aidol_user_paused_script', 'true');
+              if (typeof window !== 'undefined') {
+                window.__isScriptLiveRunning = false;
+                window.__aidolUserPausedScript = true;
+                window.dispatchEvent(new CustomEvent('aidol_script_updated', { detail: { isPlaying: false, forceRestart: false } }));
+                window.dispatchEvent(new CustomEvent('avalive_speaker_change', { detail: { avatarId: null, role: null, isSpeaking: false } }));
+              }
+            } else {
+              localStorage.removeItem('aidol_user_paused_script');
+              localStorage.setItem('aidol_is_script_live_running', 'true');
+              if (typeof window !== 'undefined') {
+                window.__isScriptLiveRunning = true;
+                window.__aidolUserPausedScript = false;
+              }
+              setIsPlaying(true);
+              isPlayingRef.current = true;
+              isBusyRef.current = false;
+              const curItem = queueRef.current[currentIndexRef.current] || queueRef.current[0];
+              if (curItem) playItem(curItem, true);
+            }
           }} 
           className={`flex-1 py-1.5 rounded text-xs font-bold transition-colors flex items-center justify-center gap-1 cursor-pointer ${
             isPlaying ? 'bg-red-500/20 text-red-400 hover:bg-red-500/30' : 'bg-[#00FF66]/20 text-[#00FF66] hover:bg-[#00FF66]/30'

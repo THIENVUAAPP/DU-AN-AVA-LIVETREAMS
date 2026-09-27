@@ -884,6 +884,10 @@ export default function DesktopAppUI() {
     try { localStorage.setItem('aidol_is_script_live_running', String(next)); } catch (e) {}
     
     if (next) {
+      try {
+        localStorage.removeItem('aidol_user_paused_script');
+        if (typeof window !== 'undefined') window.__aidolUserPausedScript = false;
+      } catch (e) {}
       const chosen = scriptTabsList.find(t => t.active) || scriptTabsList[0];
       let scriptText = chosen?.fixedScriptText || '';
       let scriptName = chosen?.name || 'Kịch bản Idol';
@@ -989,8 +993,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       const count = scriptText.split(/\r?\n/).filter(Boolean).length;
       showToast(`▶️ Đang phát kịch bản: "${scriptName}" (${count} câu thoại)`, 'success');
     } else {
-      if (typeof window !== 'undefined') window.__isScriptLiveRunning = false;
-      try { localStorage.setItem('aidol_is_script_live_running', 'false'); } catch (e) {}
+      if (typeof window !== 'undefined') {
+        window.__isScriptLiveRunning = false;
+        window.__aidolUserPausedScript = true;
+      }
+      try {
+        localStorage.setItem('aidol_is_script_live_running', 'false');
+        localStorage.setItem('aidol_user_paused_script', 'true');
+      } catch (e) {}
       if (audioPlayerRef.current) {
         try { audioPlayerRef.current.stopScript(); } catch(e) {}
         try { audioPlayerRef.current.stopAll(); } catch(e) {}
@@ -2033,6 +2043,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       selectedCharacter: selectedCharacter,
       characterName: customCharacters?.find(c => c.id === selectedCharacter)?.name || 'AI Idol',
       mediaUrl: broadcastUrl || null,
+      mainMediaUrl: (flowSequencerOverlay && flowSequencerOverlay.mainMediaUrl) || broadcastUrl || null,
+      mainMediaTransform: (flowSequencerOverlay && flowSequencerOverlay.mainMediaTransform) || null,
+      mainMediaChromaKey: (flowSequencerOverlay && flowSequencerOverlay.mainMediaChromaKey) || null,
       clearMedia: !broadcastUrl,
       isVideo: isVid,
       videoPlaybackEvent: isVideoPlaying ? 'play' : 'pause',
@@ -2047,8 +2060,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       overlayImageChromaKey: bannerChroma,
       overlayText: titleTxt,
       overlayTextTransform: textTrans,
+      overlayTextStyle: flowSequencerOverlay?.overlayTextStyle || null,
       overlayTextColor: flowSequencerOverlay?.overlayTextColor || null,
       overlayTextFontSize: flowSequencerOverlay?.overlayTextFontSize || null,
+      overlayTextFontFamily: flowSequencerOverlay?.overlayTextFontFamily || null,
+      extraImageLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers || flowSequencerOverlay.extraImageLayers)) || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.extraImageLayers : null) || [],
+      multiAvatarExtraLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers || flowSequencerOverlay.extraImageLayers)) || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.extraImageLayers : null) || [],
       syncedAvatars: (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.characters : null) || [],
       multiAvatarConfig: (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig() : null) || null,
       updatedAt: Date.now()

@@ -3267,6 +3267,56 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 </div>
               );
             })()}
+            {/* 🎨 LỚP PHỤ EXTRA MEDIA LAYERS (Hình ảnh, sticker, banner từ kịch bản hoặc sân khấu chính) */}
+            {Array.isArray(masterState.extraImageLayers) && masterState.extraImageLayers.length > 0 && !multiAvatarConfig?.enabled && (
+              <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 28 }}>
+                {masterState.extraImageLayers.map((layer, idx) => {
+                  const isImg = layer.type !== 'video' && (isImageMedia(layer.url) || !layer.type);
+                  const chromaStyle = getChromaStyle(layer.chromaKey);
+                  return (
+                    <div
+                      key={layer.id || `extra_layer_${idx}`}
+                      className="absolute overflow-hidden pointer-events-none"
+                      style={{
+                        left: `${layer.x ?? layer.transform?.x ?? 20}%`,
+                        top: `${layer.y ?? layer.transform?.y ?? 20}%`,
+                        width: `${layer.width ?? layer.transform?.width ?? 30}%`,
+                        height: `${layer.height ?? layer.transform?.height ?? 30}%`,
+                        zIndex: layer.zIndex || (28 + idx),
+                        borderRadius: `${layer.borderRadius ?? layer.transform?.borderRadius ?? 0}px`,
+                        opacity: (layer.opacity !== undefined ? layer.opacity : (layer.transform?.opacity !== undefined ? layer.transform.opacity : 100)) / 100,
+                        ...chromaStyle
+                      }}
+                    >
+                      {isImg ? (
+                        <img
+                          src={layer.url}
+                          alt={layer.name || 'Extra Layer'}
+                          className="w-full h-full bg-transparent select-none"
+                          style={{
+                            objectFit: layer.objectFit || layer.transform?.objectFit || 'contain',
+                            ...chromaStyle
+                          }}
+                        />
+                      ) : (
+                        <video
+                          src={layer.url}
+                          autoPlay
+                          loop
+                          muted={isVideoAudioMuted}
+                          playsInline
+                          className="w-full h-full bg-transparent select-none"
+                          style={{
+                            objectFit: layer.objectFit || layer.transform?.objectFit || 'contain',
+                            ...chromaStyle
+                          }}
+                        />
+                      )}
+                    </div>
+                  );
+                })}
+              </div>
+            )}
           </div>
         )}
 

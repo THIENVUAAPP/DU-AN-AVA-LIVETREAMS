@@ -8416,6 +8416,7 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
         localStorage.getItem('avalive_user_paused') === 'true' || 
         localStorage.getItem('avalive_window_capture_paused') === 'true' ||
         localStorage.getItem('avalive_master_live_running') === 'false' ||
+        localStorage.getItem('aidol_user_paused_script') === 'true' ||
         localStorage.getItem('aidol_is_script_live_running') === 'false'
       );
       if (!isTestingMode && isPausedNow) {
@@ -8960,11 +8961,12 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     localStorage.getItem('avalive_user_paused') === 'true' || 
     localStorage.getItem('avalive_window_capture_paused') === 'true' ||
     localStorage.getItem('avalive_master_live_running') === 'false' ||
+    localStorage.getItem('aidol_user_paused_script') === 'true' ||
     localStorage.getItem('aidol_is_script_live_running') === 'false'
   );
   if (!isTestingMode && isUserPaused) {
-    if (onEnd) onEnd();
-    return true;
+    // 🛡️ KHÓA CHẶT: Khi người dùng đã tắt / dừng kịch bản, TUYỆT ĐỐI KHÔNG gọi onEnd() tránh tự nhảy câu tiếp theo
+    return false;
   }
 
   const requestedVolume = voice?.volume !== undefined ? Math.max(0, Math.min(2.0, Number(voice.volume))) : 1.0;

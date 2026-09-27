@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.71';
+export const APP_VERSION = '4.9.72';
 export const RELEASE_DATE = '27/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.72 - Khóa Chặt Nút Tắt Đọc Kịch Bản Không Tự Mở Lại, Định Nghĩa renderMultiAvatarExtraLayers & Đồng Bộ Trọn Vẹn 100% Sân Khấu Chính/Phụ Sang Window Capture & TikTok Live Studio',
+    description: '1. Khóa Chặt Triệt Để Nút Tắt Đọc Kịch Bản Avatar Live: Khắc phục dứt điểm hiện tượng bấm tắt/dừng kịch bản rồi sau một khoảng thời gian hệ thống tự phát lại do timer IDLE ngầm hoặc callback onEnd(). Tích hợp cờ chặn aidol_user_paused_script xuyên suốt useLiveCoordinator, AIAudioPlayer và voiceSyncService; khi người dùng bấm tắt/dừng kịch bản thì toàn bộ timer, hàng đợi voice TTS và các sự kiện tự phát bị hủy hoàn toàn, đảm bảo tắt dứt điểm và không bao giờ tự ý nói lại. 2. Sửa Lỗi ReferenceError renderMultiAvatarExtraLayers & Đồng Bộ 100% Sân Khấu Sang Window Capture / TikTok Live Studio: Định nghĩa đầy đủ hàm renderMultiAvatarExtraLayers và tối ưu điều kiện kiểm tra hasAnyContent trên cả hai luồng /live-stream và /window-capture, giúp toàn bộ video chính/phụ (PiP), banner hình ảnh, tiêu đề chữ với typography và font family, multi-avatar và extra layers hiển thị đồng bộ mượt mà 60 FPS theo thời gian thực 0ms.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.71 - Khóa Chặt Nút Tắt Đọc Kịch Bản Avatar Không Tự Ý Đọc Lại & Đồng Bộ Trọn Vẹn Tất Cả Lớp Sân Khấu Chính/Phụ Sang Window Capture & TikTok Live Studio',
     description: '1. Khóa Chặt Nút Tắt Đọc Kịch Bản Live Idol Avatar (Tuyệt Đối Không Tự Mở Lại): Xử lý dứt điểm hiện tượng bấm tắt kịch bản rồi sau một khoảng thời gian hệ thống tự động nói lại do timer IDLE ngầm hoặc hàng đợi priority. Khi người dùng bấm tắt/dừng kịch bản, toàn bộ timer lặp, timer đệm, hàng đợi đọc và tiến trình Voice AI bị hủy bỏ và giải phóng sạch sẽ 100%, chỉ khi streamer chủ động bấm Bật lại thì mới phát kịch bản. 2. Đồng Bộ Trọn Vẹn 100% Video, Hình Ảnh, Tiêu Đề Từ Sân Khấu Chính & Sân Khấu Phụ Sang Window Capture OBS & TikTok Live Studio: Tất cả các lớp trên sân khấu chính và sân khấu phụ (Video/ảnh nền 60 FPS, Video phụ PiP với Transform/Chroma Key, Banner ảnh với Chroma Key, Tiêu đề chữ Headline với phong cách, font chữ và tọa độ, Multi-Avatar và Extra Layers) được gom và đồng bộ đầy đủ 100% thời gian thực 0ms.'

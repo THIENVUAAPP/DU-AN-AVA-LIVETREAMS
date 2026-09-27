@@ -1716,6 +1716,82 @@ app.get([
         });
       }
 
+      function renderMultiAvatarExtraLayers(configOrLayers) {
+        const container = document.getElementById('multiAvatarExtraLayers');
+        if (!container) return;
+        let layers = [];
+        if (Array.isArray(configOrLayers)) {
+          layers = configOrLayers;
+        } else if (configOrLayers && Array.isArray(configOrLayers.extraImageLayers)) {
+          layers = configOrLayers.extraImageLayers;
+        } else if (configOrLayers && Array.isArray(configOrLayers.extraLayers)) {
+          layers = configOrLayers.extraLayers;
+        } else if (configOrLayers && Array.isArray(configOrLayers.multiAvatarExtraLayers)) {
+          layers = configOrLayers.multiAvatarExtraLayers;
+        }
+        if (layers.length === 0) {
+          container.innerHTML = '';
+          return;
+        }
+
+        layers.forEach(function(layer, idx) {
+          const layerUrl = layer.url || layer.mediaUrl || layer.src;
+          if (!layerUrl) return;
+          const layerId = layer.id || ('layer_' + (idx + 1));
+          let layerEl = container.querySelector('[data-layer-id="' + layerId + '"]');
+          const resolvedUrl = resolveUrl(layerUrl);
+          const trans = layer.transform || { x: layer.x ?? 20, y: layer.y ?? 20, width: layer.width ?? 30, height: layer.height ?? 30 };
+          const isLayerVid = layer.type === 'video' || (!isImage(resolvedUrl) && resolvedUrl.endsWith('.mp4'));
+          const chromaClass = (layer.chromaKey && layer.chromaKey.enabled) ? (layer.chromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter') : '';
+
+          if (!layerEl) {
+            layerEl = document.createElement('div');
+            layerEl.setAttribute('data-layer-id', layerId);
+            layerEl.style.position = 'absolute';
+            layerEl.style.transition = 'all 0.3s ease';
+            layerEl.innerHTML = '<video autoplay loop muted playsinline style="width:100%;height:100%;object-fit:contain;background:transparent;display:none;"></video><img style="width:100%;height:100%;object-fit:contain;background:transparent;display:none;" />';
+            container.appendChild(layerEl);
+          }
+
+          layerEl.style.left = (trans.x ?? 20) + '%';
+          layerEl.style.top = (trans.y ?? 20) + '%';
+          layerEl.style.width = (trans.width ?? 30) + '%';
+          layerEl.style.height = (trans.height ?? 30) + '%';
+          layerEl.style.zIndex = trans.zIndex || (5 + idx);
+          layerEl.style.borderRadius = (trans.borderRadius || layer.borderRadius || 0) + 'px';
+          layerEl.style.opacity = (trans.opacity !== undefined ? trans.opacity : (layer.opacity !== undefined ? layer.opacity : 100)) / 100;
+          layerEl.className = chromaClass;
+
+          const v = layerEl.querySelector('video');
+          const img = layerEl.querySelector('img');
+          if (isLayerVid) {
+            if (img) img.style.display = 'none';
+            if (v) {
+              v.style.display = 'block';
+              if (!isSameMedia(v.src, resolvedUrl)) {
+                v.src = resolvedUrl;
+                v.play().catch(function() {});
+              }
+            }
+          } else {
+            if (v) { try { v.pause(); } catch(e) {} v.style.display = 'none'; }
+            if (img) {
+              img.style.display = 'block';
+              if (img.src !== resolvedUrl) img.src = resolvedUrl;
+            }
+          }
+        });
+
+        Array.from(container.children).forEach(function(child) {
+          const lid = child.getAttribute('data-layer-id');
+          if (!layers.some(function(l, i) { return (l.id || ('layer_' + (i + 1))) === lid; })) {
+            const v = child.querySelector('video');
+            if (v) { try { v.pause(); v.removeAttribute('src'); v.load(); } catch(e) {} }
+            child.remove();
+          }
+        });
+      }
+
       function applyLiveState(data) {
         if (!data) return;
         const emptyStage = document.getElementById('emptyStageView');
@@ -1743,8 +1819,16 @@ app.get([
           const u = a.talkVideo || a.idleVideo || a.mediaUrl || a.resolvedVidSrc || a.url || a.src || a.videoUrl;
           return u && typeof u === 'string';
         });
-        const hasExtraLayers = !!(data.multiAvatarConfig && Array.isArray(data.multiAvatarConfig.extraImageLayers) && data.multiAvatarConfig.extraImageLayers.length > 0) || !!(Array.isArray(data.multiAvatarExtraLayers) && data.multiAvatarExtraLayers.length > 0);
-        const hasAnyContent = !!(resolvedMainBg || hasValidAvatars || data.secondaryMediaUrl || data.overlayImage || hasExtraLayers);
+
+        const extraLayersList = (Array.isArray(data.extraImageLayers) && data.extraImageLayers.length > 0)
+          ? data.extraImageLayers
+          : ((data.multiAvatarConfig && Array.isArray(data.multiAvatarConfig.extraImageLayers) && data.multiAvatarConfig.extraImageLayers.length > 0)
+            ? data.multiAvatarConfig.extraImageLayers
+            : (Array.isArray(data.multiAvatarExtraLayers) ? data.multiAvatarExtraLayers : []));
+
+        const hasExtraLayers = extraLayersList.length > 0;
+        const hasTitle = !!((data.overlayText && data.overlayText.trim()) || (data.title && data.title.trim()) || (data.stepTitle && data.stepTitle.trim()));
+        const hasAnyContent = !!(resolvedMainBg || hasValidAvatars || data.secondaryMediaUrl || data.overlayImage || hasExtraLayers || hasTitle);
 
         // 1. Kiểm tra trạng thái XÓA SẠCH SÂN KHẤU (CLEAR_STAGE / clearMedia)
         if (data.clearMedia === true && !hasAnyContent) {
@@ -1766,7 +1850,7 @@ app.get([
           return;
         }
 
-        if (!resolvedMainBg && !hasValidAvatars && !data.secondaryMediaUrl && !data.overlayImage && !hasExtraLayers) {
+        if (!resolvedMainBg && !hasValidAvatars && !data.secondaryMediaUrl && !data.overlayImage && !hasExtraLayers && !hasTitle) {
           if (emptyStage) emptyStage.style.display = 'flex';
           if (multiStage) multiStage.style.display = 'none';
           if (pipContainer) pipContainer.style.display = 'none';
@@ -1839,13 +1923,13 @@ app.get([
         }
 
         // 4. Hiển thị Lớp Multi-Avatar & Extra Layers (Đồng bộ 100% Sân Khấu Chính)
-        if (hasValidAvatars || (data.multiAvatarConfig && Array.isArray(data.multiAvatarConfig.extraImageLayers) && data.multiAvatarConfig.extraImageLayers.length > 0) || (Array.isArray(data.multiAvatarExtraLayers) && data.multiAvatarExtraLayers.length > 0)) {
+        if (hasValidAvatars || hasExtraLayers) {
           if (multiStage) {
             multiStage.style.display = 'block';
             multiStage.style.background = data.multiAvatarConfig?.backgroundColor || 'transparent';
           }
           renderMultiAvatarCharacters(avatarsList, data.activeSpeakerId || data.avatarSpeaker);
-          renderMultiAvatarExtraLayers(data.multiAvatarConfig || { extraImageLayers: data.multiAvatarExtraLayers });
+          renderMultiAvatarExtraLayers(extraLayersList);
         } else {
           if (multiStage) multiStage.style.display = 'none';
         }
@@ -2904,6 +2988,82 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         });
       }
 
+      function renderMultiAvatarExtraLayers(configOrLayers) {
+        const container = document.getElementById('multiAvatarExtraLayers');
+        if (!container) return;
+        let layers = [];
+        if (Array.isArray(configOrLayers)) {
+          layers = configOrLayers;
+        } else if (configOrLayers && Array.isArray(configOrLayers.extraImageLayers)) {
+          layers = configOrLayers.extraImageLayers;
+        } else if (configOrLayers && Array.isArray(configOrLayers.extraLayers)) {
+          layers = configOrLayers.extraLayers;
+        } else if (configOrLayers && Array.isArray(configOrLayers.multiAvatarExtraLayers)) {
+          layers = configOrLayers.multiAvatarExtraLayers;
+        }
+        if (layers.length === 0) {
+          container.innerHTML = '';
+          return;
+        }
+
+        layers.forEach(function(layer, idx) {
+          const layerUrl = layer.url || layer.mediaUrl || layer.src;
+          if (!layerUrl) return;
+          const layerId = layer.id || ('layer_' + (idx + 1));
+          let layerEl = container.querySelector('[data-layer-id="' + layerId + '"]');
+          const resolvedUrl = resolveUrl(layerUrl);
+          const trans = layer.transform || { x: layer.x ?? 20, y: layer.y ?? 20, width: layer.width ?? 30, height: layer.height ?? 30 };
+          const isLayerVid = layer.type === 'video' || (!isImage(resolvedUrl) && resolvedUrl.endsWith('.mp4'));
+          const chromaClass = (layer.chromaKey && layer.chromaKey.enabled) ? (layer.chromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter') : '';
+
+          if (!layerEl) {
+            layerEl = document.createElement('div');
+            layerEl.setAttribute('data-layer-id', layerId);
+            layerEl.style.position = 'absolute';
+            layerEl.style.transition = 'all 0.3s ease';
+            layerEl.innerHTML = '<video autoplay loop muted playsinline style="width:100%;height:100%;object-fit:contain;background:transparent;display:none;"></video><img style="width:100%;height:100%;object-fit:contain;background:transparent;display:none;" />';
+            container.appendChild(layerEl);
+          }
+
+          layerEl.style.left = (trans.x ?? 20) + '%';
+          layerEl.style.top = (trans.y ?? 20) + '%';
+          layerEl.style.width = (trans.width ?? 30) + '%';
+          layerEl.style.height = (trans.height ?? 30) + '%';
+          layerEl.style.zIndex = trans.zIndex || (5 + idx);
+          layerEl.style.borderRadius = (trans.borderRadius || layer.borderRadius || 0) + 'px';
+          layerEl.style.opacity = (trans.opacity !== undefined ? trans.opacity : (layer.opacity !== undefined ? layer.opacity : 100)) / 100;
+          layerEl.className = chromaClass;
+
+          const v = layerEl.querySelector('video');
+          const img = layerEl.querySelector('img');
+          if (isLayerVid) {
+            if (img) img.style.display = 'none';
+            if (v) {
+              v.style.display = 'block';
+              if (!isSameMedia(v.src, resolvedUrl)) {
+                v.src = resolvedUrl;
+                v.play().catch(function() {});
+              }
+            }
+          } else {
+            if (v) { try { v.pause(); } catch(e) {} v.style.display = 'none'; }
+            if (img) {
+              img.style.display = 'block';
+              if (img.src !== resolvedUrl) img.src = resolvedUrl;
+            }
+          }
+        });
+
+        Array.from(container.children).forEach(function(child) {
+          const lid = child.getAttribute('data-layer-id');
+          if (!layers.some(function(l, i) { return (l.id || ('layer_' + (i + 1))) === lid; })) {
+            const v = child.querySelector('video');
+            if (v) { try { v.pause(); v.removeAttribute('src'); v.load(); } catch(e) {} }
+            child.remove();
+          }
+        });
+      }
+
       function applyLiveState(data) {
         if (!data) return;
         const emptyStage = document.getElementById('emptyStageView');
@@ -2931,8 +3091,16 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           const u = a.talkVideo || a.idleVideo || a.mediaUrl || a.resolvedVidSrc || a.url || a.src || a.videoUrl;
           return u && typeof u === 'string';
         });
-        const hasExtraLayers = !!(data.multiAvatarConfig && Array.isArray(data.multiAvatarConfig.extraImageLayers) && data.multiAvatarConfig.extraImageLayers.length > 0) || !!(Array.isArray(data.multiAvatarExtraLayers) && data.multiAvatarExtraLayers.length > 0);
-        const hasAnyContent = !!(resolvedMainBg || hasValidAvatars || data.secondaryMediaUrl || data.overlayImage || hasExtraLayers);
+
+        const extraLayersList = (Array.isArray(data.extraImageLayers) && data.extraImageLayers.length > 0)
+          ? data.extraImageLayers
+          : ((data.multiAvatarConfig && Array.isArray(data.multiAvatarConfig.extraImageLayers) && data.multiAvatarConfig.extraImageLayers.length > 0)
+            ? data.multiAvatarConfig.extraImageLayers
+            : (Array.isArray(data.multiAvatarExtraLayers) ? data.multiAvatarExtraLayers : []));
+
+        const hasExtraLayers = extraLayersList.length > 0;
+        const hasTitle = !!((data.overlayText && data.overlayText.trim()) || (data.title && data.title.trim()) || (data.stepTitle && data.stepTitle.trim()));
+        const hasAnyContent = !!(resolvedMainBg || hasValidAvatars || data.secondaryMediaUrl || data.overlayImage || hasExtraLayers || hasTitle);
 
         // 1. Kiểm tra trạng thái XÓA TRẮNG SÂN KHẤU (CLEAR_STAGE / clearMedia)
         if (data.clearMedia === true && !hasAnyContent) {
@@ -2954,7 +3122,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           return;
         }
 
-        if (!resolvedMainBg && !hasValidAvatars && !data.secondaryMediaUrl && !data.overlayImage && !hasExtraLayers) {
+        if (!resolvedMainBg && !hasValidAvatars && !data.secondaryMediaUrl && !data.overlayImage && !hasExtraLayers && !hasTitle) {
           if (emptyStage) emptyStage.style.display = 'flex';
           if (multiStage) multiStage.style.display = 'none';
           if (pipContainer) pipContainer.style.display = 'none';
@@ -3026,13 +3194,13 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         }
 
         // 4. Hiển thị Lớp Multi-Avatar & Extra Layers (Đồng bộ 100% Sân Khấu Chính)
-        if (hasValidAvatars || (data.multiAvatarConfig && Array.isArray(data.multiAvatarConfig.extraImageLayers) && data.multiAvatarConfig.extraImageLayers.length > 0) || (Array.isArray(data.multiAvatarExtraLayers) && data.multiAvatarExtraLayers.length > 0)) {
+        if (hasValidAvatars || hasExtraLayers) {
           if (multiStage) {
             multiStage.style.display = 'block';
             multiStage.style.background = data.multiAvatarConfig?.backgroundColor || 'transparent';
           }
           renderMultiAvatarCharacters(avatarsList, data.activeSpeakerId || data.avatarSpeaker);
-          renderMultiAvatarExtraLayers(data.multiAvatarConfig || { extraImageLayers: data.multiAvatarExtraLayers });
+          renderMultiAvatarExtraLayers(extraLayersList);
         } else {
           if (multiStage) multiStage.style.display = 'none';
         }
