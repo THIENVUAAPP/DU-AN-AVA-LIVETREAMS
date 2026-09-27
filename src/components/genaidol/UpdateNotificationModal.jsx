@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.65';
+export const APP_VERSION = '4.9.66';
 export const RELEASE_DATE = '27/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.66 - Khóa Chặt 100% Nút Bật/Tắt Tất Cả & Đóng Gói Toàn Diện Sân Khấu Chính Sang Window Capture / TikTok Live Studio',
+    description: '1. Khóa Chặt Nút Bật/Tắt Tất Cả (Chỉ Kích Hoạt Khi Bấm Thật): Triệt tiêu 100% hiện tượng nút "BẬT TẤT CẢ" tự ý bật lại hoặc tự đăng ký phím tắt. Khi người dùng bấm Tắt / Dừng thì hệ thống lập tức dừng hẳn 100% tất cả các tab, sự kiện, Voice AI, sequencer, game và video; các sự kiện broadcast hay phím tắt không thể tự ý kích hoạt lại. 2. Đóng Gói & Đồng Bộ Toàn Diện Dữ Liệu Sân Khấu Sang Window Capture / Link TikTok Live Studio: Sân Khấu Chính gom lại toàn bộ các lớp (Video/Ảnh nền, Video phụ PiP, Avatar nhân vật đa tầng, Banner ảnh và Tiêu đề chữ với đầy đủ hiệu ứng/tọa độ) và truyền tải nguyên vẹn 100% sang Window Capture OBS và link TikTok Live Studio với độ mượt 60 FPS.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.65 - Khóa Chặt Nút Bật/Tắt Tất Cả Không Tự Kích Hoạt & Khôi Phục 100% Đồng Bộ Sân Khấu Chính Sang Window Capture / TikTok Live Studio',
     description: '1. Khóa Chặt Nút Bật/Tắt Tất Cả (Chỉ Bật Khi Người Dùng Bấm): Triệt tiêu hoàn toàn hiện tượng nút "BẬT TẤT CẢ" tự ý kích hoạt lại hoặc tự đăng ký phím tắt. Khi người dùng bấm Tắt / Dừng thì dừng hẳn 100% tất cả các tab, sự kiện, Voice AI, bộ đọc kịch bản, game và video; các sự kiện ngầm hay phím cách Space không thể tự động mở lại. 2. Khôi Phục Toàn Diện Cấu Trúc Dữ Liệu & Đồng Bộ Sân Khấu Sang Window Capture / Link TikTok Live: Toàn bộ video trong các thư mục, ô nhân vật, video phụ PiP, avatar đa tầng, banner ảnh và tiêu đề từ Sân Khấu Chính đều được phân giải chính xác và hiển thị sắc nét 60 FPS đồng bộ thời gian thực lên Window Capture và Link TikTok Live Studio.'

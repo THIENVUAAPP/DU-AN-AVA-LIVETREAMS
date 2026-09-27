@@ -158,7 +158,6 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     try {
       localStorage.removeItem('avalive_user_paused');
       localStorage.removeItem('avalive_window_capture_paused');
-      localStorage.setItem('avalive_master_live_running', 'true');
       if (finalVideoUrl) {
         localStorage.setItem('avalive_active_video_src', finalVideoUrl);
         localStorage.setItem('avalive_user_locked_media', finalVideoUrl);
