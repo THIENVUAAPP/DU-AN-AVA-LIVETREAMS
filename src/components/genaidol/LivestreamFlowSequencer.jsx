@@ -931,6 +931,7 @@ export default function LivestreamFlowSequencer() {
     syncStepToServer(step, safeIndex, shouldPlay);
 
     const advanceNext = () => {
+      if (!isPlayingFlowRef.current) return;
       if (stepWatchdogRef.current) {
         clearTimeout(stepWatchdogRef.current);
         stepWatchdogRef.current = null;
@@ -965,6 +966,7 @@ export default function LivestreamFlowSequencer() {
 
       let hasAdvanced = false;
       const onSpeechFinished = () => {
+        if (!isPlayingFlowRef.current) return;
         if (hasAdvanced) return;
         hasAdvanced = true;
         setSpeakingStepId(null);
@@ -979,7 +981,7 @@ export default function LivestreamFlowSequencer() {
             if (isPlayingFlowRef.current) advanceNext();
           }, pauseDelay);
         } else {
-          advanceNext();
+          if (isPlayingFlowRef.current) advanceNext();
         }
       };
 

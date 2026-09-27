@@ -2,28 +2,28 @@
   "stage": "idol",
   "aspectRatio": "9:16",
   "characterId": "",
-  "characterName": "xoa-sach_video_tha…",
-  "mediaUrl": "/uploads/media-1790481664072-613745208.mp4",
-  "currentMedia": "/uploads/media-1790480285999-991836740.png",
+  "characterName": "Video Người Dùng",
+  "mediaUrl": null,
+  "currentMedia": null,
   "eventVideoUrl": null,
-  "isVideo": true,
-  "videoPlaybackEvent": "time_sync",
-  "isPlaying": true,
+  "isVideo": false,
+  "videoPlaybackEvent": "pause",
+  "isPlaying": false,
   "isAudioMuted": false,
   "isDarkMode": true,
-  "updatedAt": 1790483739810,
-  "isUserExplicitMediaLocked": true,
-  "selectedCharacter": "custom_1790481664049",
-  "videoCurrentTime": 0.472977,
+  "updatedAt": 1790484027417,
+  "isUserExplicitMediaLocked": false,
+  "selectedCharacter": "",
+  "videoCurrentTime": 0,
   "type": "MASTER_LIVE_STATE_UPDATE",
   "flvUrl": null,
   "isConnected": false,
   "currentLang": "vi",
   "activeTab": "flow_sequencer",
-  "stepTitle": "Bước 1: Avatar AI Chào Khán Giả & Mở Đầu Live",
+  "stepTitle": "Bước 1: Avatar AI Chào Khán Giả & Mở Đầu Live (Bản sao)",
   "actionType": "avatar_talk",
   "scriptText": "Dạ em xin chào tất cả mọi người đã vào xem phiên livestream hôm nay nha! Các bạn bấm thả tim và bình luận để nhận ưu đãi đặc biệt nhé!",
-  "voiceId": "brain_auto",
+  "voiceId": "vn_m_genz_gamer_caster_04",
   "avatarSpeaker": "avatar_1",
   "secondaryMediaUrl": null,
   "secondaryMediaTransform": null,
@@ -40,7 +40,7 @@
   "isVideoAudioMuted": false,
   "isMuted": false,
   "videoVolume": 1,
-  "clearMedia": false,
+  "clearMedia": true,
   "multiAvatarConfig": {
     "enabled": true,
     "activeCount": 2,
@@ -79,10 +79,17 @@
         "volume": 1,
         "rate": 1.1,
         "enabled": false,
-        "chromaKey": null,
+        "chromaKey": {
+          "enabled": false,
+          "color": "#00ff00",
+          "similarity": 0.45,
+          "smoothness": 0.15,
+          "spill": 0.15,
+          "mode": "green"
+        },
         "transform": {
-          "x": 8,
-          "y": 41,
+          "x": 53,
+          "y": 18,
           "width": 45,
           "height": 48,
           "zIndex": 8,
@@ -93,8 +100,8 @@
           "rotate": 0
         },
         "mediaUrl": "/uploads/media-1790481649878-646775102.mp4",
-        "resolvedVidSrc": "/uploads/media-1790481649878-646775102.mp4",
-        "isSpeakingNow": true
+        "resolvedVidSrc": "/uploads/media-1790480591844-384698498.mp4",
+        "isSpeakingNow": false
       },
       {
         "id": "avatar_2",
@@ -108,9 +115,16 @@
         "volume": 1,
         "rate": 1.1,
         "enabled": false,
-        "chromaKey": null,
+        "chromaKey": {
+          "enabled": false,
+          "color": "#00ff00",
+          "similarity": 0.45,
+          "smoothness": 0.15,
+          "spill": 0.15,
+          "mode": "green"
+        },
         "transform": {
-          "x": 55,
+          "x": 8,
           "y": 17,
           "width": 45,
           "height": 48,
@@ -122,13 +136,13 @@
           "rotate": 0
         },
         "mediaUrl": "/uploads/media-1790481649878-646775102.mp4",
-        "resolvedVidSrc": "/uploads/media-1790481649878-646775102.mp4",
-        "isSpeakingNow": false
+        "resolvedVidSrc": "/uploads/media-1790480591844-384698498.mp4",
+        "isSpeakingNow": true
       }
     ],
     "activeSpeakerId": "avatar_1",
     "fromSequencer": true,
-    "syncedAt": 1790483196423
+    "syncedAt": 1790482961236
   },
   "syncedAvatars": [
     {
@@ -143,10 +157,17 @@
       "volume": 1,
       "rate": 1.1,
       "enabled": false,
-      "chromaKey": null,
+      "chromaKey": {
+        "enabled": false,
+        "color": "#00ff00",
+        "similarity": 0.45,
+        "smoothness": 0.15,
+        "spill": 0.15,
+        "mode": "green"
+      },
       "transform": {
-        "x": 8,
-        "y": 41,
+        "x": 53,
+        "y": 18,
         "width": 45,
         "height": 48,
         "zIndex": 8,
@@ -157,8 +178,8 @@
         "rotate": 0
       },
       "mediaUrl": "/uploads/media-1790481649878-646775102.mp4",
-      "resolvedVidSrc": "/uploads/media-1790481649878-646775102.mp4",
-      "isSpeakingNow": true
+      "resolvedVidSrc": "/uploads/media-1790480591844-384698498.mp4",
+      "isSpeakingNow": false
     },
     {
       "id": "avatar_2",
@@ -172,9 +193,16 @@
       "volume": 1,
       "rate": 1.1,
       "enabled": false,
-      "chromaKey": null,
+      "chromaKey": {
+        "enabled": false,
+        "color": "#00ff00",
+        "similarity": 0.45,
+        "smoothness": 0.15,
+        "spill": 0.15,
+        "mode": "green"
+      },
       "transform": {
-        "x": 55,
+        "x": 8,
         "y": 17,
         "width": 45,
         "height": 48,
@@ -186,11 +214,11 @@
         "rotate": 0
       },
       "mediaUrl": "/uploads/media-1790481649878-646775102.mp4",
-      "resolvedVidSrc": "/uploads/media-1790481649878-646775102.mp4",
-      "isSpeakingNow": false
+      "resolvedVidSrc": "/uploads/media-1790480591844-384698498.mp4",
+      "isSpeakingNow": true
     }
   ],
-  "tunnelUrl": "https://earth-parameter-socket-dragon.trycloudflare.com",
+  "tunnelUrl": "https://restricted-tue-shepherd-acute.trycloudflare.com",
   "pinnedProduct": {
     "id": 2,
     "name": "Sản phẩm TikTok Shop #02",
@@ -205,6 +233,33 @@
     "pinnedAt": 1790473227384,
     "triggerSource": "interval_auto_rotation"
   },
-  "mainMediaUrl": "/uploads/media-1790481664072-613745208.mp4",
-  "title": "Video Đang Phát"
+  "mainMediaUrl": "",
+  "title": "Video Đang Phát",
+  "mainMediaTransform": {
+    "x": 0,
+    "y": 0,
+    "width": 100,
+    "height": 100,
+    "scale": 100,
+    "objectFit": "cover",
+    "blur": 0,
+    "brightness": 100
+  },
+  "multiAvatarExtraLayers": [],
+  "mainMediaChromaKey": {
+    "enabled": false,
+    "mode": "green",
+    "color": "#00ff00"
+  },
+  "secondaryMediaChromaKey": {
+    "enabled": false,
+    "mode": "green",
+    "color": "#00ff00"
+  },
+  "overlayImageChromaKey": {
+    "enabled": false,
+    "mode": "green",
+    "color": "#00ff00"
+  },
+  "overlayTextColor": "#ffffff"
 }

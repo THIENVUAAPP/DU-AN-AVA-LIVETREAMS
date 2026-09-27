@@ -4209,6 +4209,19 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           const targetId = matchedChar.id || `custom_${Date.now()}`;
           let targetMediaUrl = (matchedChar.mediaUrl && !matchedChar.mediaUrl.startsWith('blob:')) ? matchedChar.mediaUrl : '';
 
+          const restoredChar = {
+            ...matchedChar,
+            id: targetId,
+            name: charName,
+            url: localUrl,
+            mediaUrl: targetMediaUrl || localUrl,
+            type: 'video',
+            fileData: file,
+            fileBlob: file,
+            fileSize: file.size,
+            fileSignature: fileSig
+          };
+
           // Lưu tham chiếu Blob và signature vào RAM Cache
           registerFileInRAM(file, targetId);
           if (typeof window !== 'undefined') {
@@ -4219,6 +4232,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             window.__activeMediaBlobMap.set(localUrl, file);
             if (targetMediaUrl) window.__activeMediaBlobMap.set(targetMediaUrl, file);
           }
+
+          setCustomCharacters(prev => {
+            const exists = (prev || []).some(c => c.id === targetId);
+            const next = exists ? (prev || []).map(c => c.id === targetId ? restoredChar : c) : [...(prev || []), restoredChar];
+            try { localStorage.setItem('avalive_custom_characters', JSON.stringify(next)); } catch (e) {}
+            return next;
+          });
 
           setSelectedCharacter(targetId);
           try { localStorage.setItem('avalive_selected_char', targetId); } catch (e) {}
@@ -6607,7 +6627,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   return (
                     <button
                       key={`empty_slot_${index}`}
-                      onClick={() => fileInputRef.current?.click()}
+                      onClick={() => {
+                        if (fileInputRef.current) {
+                          fileInputRef.current.value = '';
+                          fileInputRef.current.click();
+                        }
+                      }}
                       className="w-10 h-10 rounded-lg border-2 border-dashed border-gray-600 hover:border-cyan-400 hover:bg-cyan-500/10 flex flex-col items-center justify-center text-gray-400 hover:text-cyan-300 transition-all duration-200 cursor-pointer shrink-0 group"
                       title={`Ô ${index + 1} (Trống) — Bấm để tải video/ảnh nhân vật lên`}
                     >

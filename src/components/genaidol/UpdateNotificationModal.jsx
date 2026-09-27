@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.60';
+export const APP_VERSION = '4.9.61';
 export const RELEASE_DATE = '27/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🚀 Bản Cập Nhật v4.9.61 - Khắc Phục Tải Lại Ô Nhân Vật Sân Khấu & Dừng Kịch Bản Triệt Để 100%',
+    description: '1. Khắc Phục Triệt Để Ô Nhân Vật (Tải Lên - Xóa - Tải Lại Mượt Mà): Người dùng tải video/hình ảnh vào ô nhân vật thì hiển thị ngay trên Sân Khấu Chính; khi bấm xóa thì sân khấu xóa sạch; khi tải lên lại (dù cùng file hay file mới) thì lập tức hiển thị và phát lại bình thường trên sân khấu chính, không bị kẹt ở Sân Khấu Trống. 2. Dừng Kịch Bản Triệt Để 100%: Khi bấm Dừng Demo / ngắt đồng bộ, toàn bộ Voice AI, timer chuyển bước và luồng phát kịch bản bị hủy ngay lập tức 0ms, không còn tình trạng chạy ngầm hay đọc chữ âm. 3. Đồng Bộ Đa Khung Hình Window Capture OBS & TikTok Live Studio: Toàn bộ avatar, video nền, video phụ PiP, banner và tiêu đề đều được lưu trữ và truyền tải đầy đủ 100% thời gian thực.'
+  },
   {
     title: '🚀 Bản Cập Nhật v4.9.60 - Dừng Toàn Bộ Đồng Bộ Voice/Video Tức Thì & Đồng Bộ Tuyệt Đối 100% Sân Khấu Lên Window Capture/TikTok Live Studio',
     description: '1. Dừng Toàn Bộ Tức Thì (Bấm Dừng Là Dừng Hết): Khắc phục triệt để lỗi khi bấm Dừng Demo hoặc ngắt kết nối Sân Khấu Chính mà voice AI vẫn tiếp tục đọc. Nay khi bấm Dừng, toàn bộ Voice AI, bộ đọc kịch bản, âm thanh và luồng phát video đều dừng ngay lập tức 0ms không độ trễ. Khi bấm Mở thì tất cả cùng chạy lại đồng bộ. 2. Đồng Bộ Tuyệt Đối 100% Dữ Liệu Sân Khấu Chính Lên Window Capture & TikTok Live Studio: Sân Khấu Chính hiển thị bao nhiêu video, bao nhiêu ô nhân vật/ảnh, bao nhiêu câu tiêu đề chữ thì Window Capture và đường link TikTok Live Studio đều hiển thị đầy đủ 100% y chang theo thời gian thực (Real-time 0ms), đúng tọa độ vị trí và hiệu ứng.'
