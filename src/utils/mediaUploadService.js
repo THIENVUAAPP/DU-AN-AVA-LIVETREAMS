@@ -180,11 +180,14 @@ export async function pushMediaToStageAndCapture(payload = {}, socket = null) {
     }
   }
 
+  const isValidTxt = (t) => t && typeof t === 'string' && t.trim() && !/^(bước|step)\s*\d+/i.test(t.trim());
+  const cleanTxt = isValidTxt(overlayText) ? overlayText.trim() : (isValidTxt(title) ? title.trim() : null);
+
   const syncData = {
     ...payload,
     stage: 'idol',
-    title: (overlayText && overlayText.trim()) ? overlayText.trim() : (title && title.trim()) ? title.trim() : null,
-    overlayText: (overlayText && overlayText.trim()) ? overlayText.trim() : (title && title.trim()) ? title.trim() : null,
+    title: cleanTxt,
+    overlayText: cleanTxt,
     stepTitle: stepTitle || null,
     isVideo: isVideo,
     isPlaying: isPlaying,

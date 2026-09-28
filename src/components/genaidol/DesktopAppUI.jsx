@@ -3125,6 +3125,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         try { localStorage.setItem('avalive_user_locked_media', effectiveMediaUrl); } catch (err) {}
       }
 
+      const rawTxt = overlayText;
+      const cleanOverlayText = (rawTxt && typeof rawTxt === 'string' && !/^(bước|step)\s*\d+/i.test(rawTxt.trim())) ? rawTxt.trim() : null;
+
       // 1. Cập nhật trạng thái Overlays Đa Lớp (Ảnh, Chữ, Video Phụ PiP, Ghim)
       const overlayData = {
         secondaryMediaUrl: secondaryMediaUrl || null,
@@ -3137,7 +3140,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         overlayImageScale: overlayImageScale || 100,
         overlayImageTransform: overlayImageTransform || null,
         overlayImageChromaKey: overlayImageChromaKey || null,
-        overlayText: overlayText || null,
+        overlayText: cleanOverlayText,
         overlayTextPos: overlayTextPos || 'top',
         overlayTextStyle: overlayTextStyle || 'banner',
         overlayTextFontFamily: overlayTextFontFamily || 'be_vietnam',
@@ -3210,7 +3213,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         isVideo: true,
         isPlaying: true,
         currentTime: 0,
-        force: !isMediaPinned,
+        force: true,
         source: 'sequencer',
         secondaryMediaUrl: secondaryMediaUrl || null,
         secondaryMediaPos: secondaryMediaPos || 'top-right',
@@ -3222,23 +3225,29 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         overlayImageScale: overlayImageScale || 100,
         overlayImageTransform: overlayImageTransform || null,
         overlayImageChromaKey: overlayImageChromaKey || null,
-        overlayText: overlayText || null,
+        overlayText: cleanOverlayText,
         overlayTextPos: overlayTextPos || 'top',
         overlayTextStyle: overlayTextStyle || 'banner',
         overlayTextFontFamily: overlayTextFontFamily || 'be_vietnam',
         overlayTextFontSize: overlayTextFontSize || 20,
         overlayTextColor: overlayTextColor || '#ffffff',
         overlayTextTransform: overlayTextTransform || null,
+        mainMediaUrl: effectiveMediaUrl,
         mainMediaTransform: mainMediaTransform || null,
         mainMediaChromaKey: mainMediaChromaKey || null,
         avatarTransforms: avatarTransforms || null,
+        syncedAvatars: e.detail?.syncedAvatars || (incomingMultiConfig && incomingMultiConfig.avatars) || null,
+        multiAvatarConfig: incomingMultiConfig || null,
         timestamp: Date.now()
       });
 
       // 4. Đồng bộ 0ms sang Đường Link Online HTTPS (TikTok Live Studio /live-stream) qua Backend
       syncMasterLiveState({
         stage: 'idol',
-        mediaUrl: mediaUrl,
+        mediaUrl: effectiveMediaUrl,
+        mainMediaUrl: effectiveMediaUrl,
+        mainMediaTransform: mainMediaTransform || null,
+        mainMediaChromaKey: mainMediaChromaKey || null,
         isVideo: true,
         isPlaying: true,
         aspectRatio: globalAspectRatio || '9:16',
@@ -3247,20 +3256,30 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         secondaryMediaUrl: secondaryMediaUrl || null,
         secondaryMediaPos: secondaryMediaPos || 'top-right',
         secondaryMediaScale: secondaryMediaScale || 40,
+        secondaryMediaTransform: secondaryMediaTransform || null,
+        secondaryMediaChromaKey: secondaryMediaChromaKey || null,
         overlayImage: overlayImage || null,
         overlayImagePos: overlayImagePos || 'top-left',
         overlayImageScale: overlayImageScale || 100,
-        overlayText: overlayText || null,
+        overlayImageTransform: overlayImageTransform || null,
+        overlayImageChromaKey: overlayImageChromaKey || null,
+        overlayText: cleanOverlayText,
         overlayTextPos: overlayTextPos || 'top',
         overlayTextStyle: overlayTextStyle || 'banner',
         overlayTextFontFamily: overlayTextFontFamily || 'be_vietnam',
         overlayTextFontSize: overlayTextFontSize || 20,
-        overlayTextColor: overlayTextColor || '#ffffff'
+        overlayTextColor: overlayTextColor || '#ffffff',
+        syncedAvatars: e.detail?.syncedAvatars || (incomingMultiConfig && incomingMultiConfig.avatars) || null,
+        multiAvatarConfig: incomingMultiConfig || null,
+        extraImageLayers: (incomingMultiConfig && incomingMultiConfig.extraImageLayers) || undefined,
+        force: true
       }, socketRef.current);
 
       // 🚀 TỰ ĐỘNG ĐẨY VIDEO/ẢNH/TIÊU ĐỀ TỪ SEQUENCER VÀO THƯ MỤC UPLOADS CỦA SERVER
       if (effectiveMediaUrl && (effectiveMediaUrl.startsWith('blob:') || effectiveMediaUrl.startsWith('data:'))) {
-        ensureServerMediaUrl(effectiveMediaUrl, `sequencer_${Date.now()}.mp4`).then(serverUrl => {
+        const isImg = isImageMedia(effectiveMediaUrl);
+        const ext = isImg ? 'jpg' : 'mp4';
+        ensureServerMediaUrl(effectiveMediaUrl, `sequencer_${Date.now()}.${ext}`).then(serverUrl => {
           if (serverUrl && serverUrl !== effectiveMediaUrl) {
             setUserLockedMediaUrl(serverUrl);
             setUserLockedMedia(serverUrl);
@@ -3270,19 +3289,22 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             syncMasterLiveState({
               stage: 'idol',
               mediaUrl: serverUrl,
-              isVideo: true,
+              mainMediaUrl: serverUrl,
+              currentMedia: serverUrl,
+              isVideo: !isImg,
               isPlaying: true,
               aspectRatio: globalAspectRatio || '9:16',
-              stepTitle: title,
-              actionType: actionType
+              force: true
             }, socketRef.current);
             postMasterBroadcast({
               type: 'GLOBAL_MEDIA_CHANGE',
               mediaUrl: serverUrl,
               blobUrl: serverUrl,
-              isVideo: true,
+              videoUrl: serverUrl,
+              isVideo: !isImg,
               isPlaying: true,
               source: 'sequencer_auto_upload',
+              force: true,
               timestamp: Date.now()
             });
           }
@@ -6140,7 +6162,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               })()}
 
               {/* LỚP 3: OVERLAY TIÊU ĐỀ / CHỮ NỔI BẬT TỪ SEQUENCER (ẢNH 4) */}
-              {flowSequencerOverlay?.overlayText && (() => {
+              {flowSequencerOverlay?.overlayText && typeof flowSequencerOverlay.overlayText === 'string' && !/^(bước|step)\s*\d+/i.test(flowSequencerOverlay.overlayText.trim()) && (() => {
                 const textTrans = flowSequencerOverlay.overlayTextTransform || {
                   x: 4,
                   y: 5,

@@ -1361,6 +1361,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               setMasterState(prev => ({
                 ...prev,
                 mediaUrl: null,
+                mainMediaUrl: null,
+                secondaryMediaUrl: null,
+                overlayImage: null,
+                overlayText: null,
+                multiAvatarConfig: null,
+                syncedAvatars: [],
+                clearMedia: true,
                 selectedCharacter: '',
                 isVideo: false,
                 isPlaying: false
@@ -1370,6 +1377,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 localStorage.removeItem('avalive_active_video_src');
                 localStorage.removeItem('avalive_user_locked_media');
                 localStorage.removeItem('aidol_idle_media_url');
+                localStorage.removeItem('avalive_sequencer_overlay');
               } catch (e) {}
               return;
             } else if (event.data.type === 'EMERGENCY_STOP_ALL') {
@@ -2424,7 +2432,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   LIVE 9:16
                 </span>
                 <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                  v4.9.89
+                  v4.9.90
                 </span>
               </div>
 
@@ -3306,7 +3314,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             })()}
 
             {/* 💬 LỚP 3: OVERLAY TIÊU ĐỀ / CHỮ NỔI BẬT ĐỒNG BỘ TỪ SÂN KHẤU CHÍNH */}
-            {masterState.overlayText && (() => {
+            {masterState.overlayText && typeof masterState.overlayText === 'string' && !/^(bước|step)\s*\d+/i.test(masterState.overlayText.trim()) && (() => {
               const textTrans = masterState.overlayTextTransform || {
                 x: 4,
                 y: 5,

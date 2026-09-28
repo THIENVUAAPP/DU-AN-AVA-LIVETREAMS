@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.89';
+export const APP_VERSION = '4.9.90';
 export const RELEASE_DATE = '28/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '✨ Bản Cập Nhật v4.9.89 - Sửa Lỗi Khởi Động SvgChromaFilters & Ổn Định Toàn Bộ Hệ Thống',
-    description: '1. Khắc Phục Triệt Để Lỗi Khởi Động (SvgChromaFilters): Đã khôi phục hoàn chỉnh các import module hệ thống, giúp phần mềm mở lên mượt mà 100%, không bị văng lỗi hay hiện màn hình báo lỗi khi giải nén. 2. Đồng Bộ Tức Thì 0ms: Sân khấu chính, Window Capture và liên kết TikTok Live Studio kết nối mượt mà 60 FPS. 3. Công Nghệ Xóa Phông Nền 4K Cho Video & Ảnh: Tách sạch phông xanh lá, xanh dương, đen, trắng và phòng thực tế không lem người/sản phẩm.'
+    title: '✨ Bản Cập Nhật v4.9.90 - Ẩn Bước Kịch Bản Chạy Ngầm, Đồng Bộ Nền Realtime 0ms & Tự Động Ngắt Sạch Sân Khấu',
+    description: '1. Ẩn Hoàn Toàn Tiến Trình Bước Kịch Bản: Các bước (Bước 1, Bước 2, Bước 3...) chỉ chạy ẩn dưới nền kịch bản, tuyệt đối không hiển thị đè lên Sân Khấu Chính, Window Capture OBS và TikTok Live Studio. 2. Đồng Bộ Nền Realtime 0ms: Luồng video/ảnh nền và đa lớp nhảy liên tục theo kịch bản, không còn bị đứng một khung hình hay thiếu nền. 3. Tự Động Ngắt Lập Tức: Khi dừng phát hoặc xóa sân khấu chính, Window Capture và TikTok Live Studio lập tức ngắt sạch về màn hình đen 0ms.'
   }
 ];
 

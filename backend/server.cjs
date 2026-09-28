@@ -950,8 +950,8 @@ app.get([
 
   const secMedia = (currentMasterLiveState && currentMasterLiveState.secondaryMediaUrl) || '';
   const secTrans = (currentMasterLiveState && currentMasterLiveState.secondaryMediaTransform) || { x: 2, y: 32, width: 47, height: 48, zIndex: 15 };
-  const overlayImg = (currentMasterLiveState && currentMasterLiveState.overlayImage) || '';
-  const overlayTxt = (currentMasterLiveState && currentMasterLiveState.overlayText) || '';
+  const rawOverlayTxt = (currentMasterLiveState && (currentMasterLiveState.overlayText || currentMasterLiveState.title)) || '';
+  const overlayTxt = (rawOverlayTxt && typeof rawOverlayTxt === 'string' && !/^(bước|step)\s*\d+/i.test(rawOverlayTxt.trim())) ? rawOverlayTxt.trim() : '';
   const soundParam = req.query.sound !== '0';
   const fitParam = req.query.fit || 'cover';
   const ratioParam = req.query.ratio || req.query.aspectRatio || (currentMasterLiveState && currentMasterLiveState.aspectRatio) || '9:16';
@@ -1819,6 +1819,7 @@ app.get([
                 v.style.display = 'block';
                 if (!isSameMedia(v.src, resolvedMedia)) {
                   v.src = resolvedMedia;
+                  try { v.load(); } catch(e) {}
                 }
                 if (isPlayingState !== false && !isStreamUserPaused) {
                   v.play().catch(function() {});
@@ -1973,6 +1974,14 @@ app.get([
           return u && typeof u === 'string';
         });
 
+        const isValidCustomOverlayText = (txt) => {
+          if (!txt || typeof txt !== 'string') return false;
+          const trimmed = txt.trim();
+          if (!trimmed) return false;
+          if (/^(bước|step)\s*\d+/i.test(trimmed)) return false;
+          return true;
+        };
+
         const extraLayersList = (Array.isArray(data.extraImageLayers) && data.extraImageLayers.length > 0)
           ? data.extraImageLayers
           : ((data.multiAvatarConfig && Array.isArray(data.multiAvatarConfig.extraImageLayers) && data.multiAvatarConfig.extraImageLayers.length > 0)
@@ -1980,18 +1989,38 @@ app.get([
             : (Array.isArray(data.multiAvatarExtraLayers) ? data.multiAvatarExtraLayers : []));
 
         const hasExtraLayers = extraLayersList.length > 0;
-        const hasTitle = !!((data.overlayText && data.overlayText.trim()) || (data.title && data.title.trim()) || (data.stepTitle && data.stepTitle.trim()));
+        const hasTitle = isValidCustomOverlayText(data.overlayText) || isValidCustomOverlayText(data.title);
         const hasPinnedProduct = !!(data.livePinnedProduct || data.pinnedProduct);
         const hasAnyContent = !!(resolvedMainBg || hasValidAvatars || data.secondaryMediaUrl || data.overlayImage || hasExtraLayers || hasTitle || hasPinnedProduct);
 
-        // 1. Kiểm tra trạng thái XÓA SẠCH SÂN KHẤU (CLEAR_STAGE / clearMedia)
-        if (data.clearMedia === true && !hasAnyContent) {
+        // 1. Kiểm tra trạng thái XÓA SẠCH SÂN KHẤU (CLEAR_STAGE / clearMedia / Dừng Live)
+        if (data.clearMedia === true || data.stageStatus === 'stopped' || data.isLiveEnded === true || (data.isPlaying === false && !resolvedMainBg && !hasValidAvatars && !data.secondaryMediaUrl)) {
           if (emptyStage) emptyStage.style.display = 'flex';
           if (multiStage) multiStage.style.display = 'none';
           if (pipContainer) pipContainer.style.display = 'none';
           if (overlayImgEl) overlayImgEl.style.display = 'none';
           if (banner) banner.style.display = 'none';
           const prodContainer = document.getElementById('pinnedProductContainer');
+          if (prodContainer) prodContainer.style.display = 'none';
+          if (vid) {
+            try { vid.pause(); vid.removeAttribute('src'); vid.src = ''; vid.load(); } catch(e) {}
+            vid.style.display = 'none';
+          }
+          const imgEl = document.getElementById('imagePlayer');
+          if (imgEl) {
+            try { imgEl.removeAttribute('src'); imgEl.src = ''; } catch(e) {}
+            imgEl.style.display = 'none';
+          }
+          const multiChars = document.getElementById('multiAvatarCharacters');
+          if (multiChars) multiChars.innerHTML = '';
+          const multiExtra = document.getElementById('multiAvatarExtraLayers');
+          if (multiExtra) multiExtra.innerHTML = '';
+          const multiBg = document.getElementById('multiAvatarBg');
+          if (multiBg) { multiBg.style.backgroundImage = 'none'; multiBg.style.display = 'none'; }
+          hideLoading();
+          updateDockUI();
+          return;
+        }
           if (prodContainer) prodContainer.style.display = 'none';
           if (vid) {
             try { vid.pause(); vid.removeAttribute('src'); vid.src = ''; vid.load(); } catch(e) {}
@@ -2088,6 +2117,7 @@ app.get([
               if (!isSameMedia(vid.src, resolvedMainBg)) {
                 currentSrc = resolvedMainBg;
                 vid.src = resolvedMainBg;
+                try { vid.load(); } catch(e) {}
               }
               if (data.isPlaying !== false && !isStreamUserPaused) safePlay();
             }
@@ -2178,16 +2208,17 @@ app.get([
           }
         }
 
-        // 6. Tiêu Đề Chữ Overlay (Đúng Tọa Độ Transform & Typography)
+        // 6. Tiêu Đề Chữ Overlay (Chỉ hiện khi người dùng nhập nội dung hợp lệ, TUYỆT ĐỐI KHÔNG HIỆN Bước 1, Bước 2...)
         if (banner && content) {
-          const txt = data.overlayText || data.title || data.stepTitle;
-          if (txt && typeof txt === 'string' && txt.trim()) {
+          const rawTxt = data.overlayText || (data.title && !/^(bước|step)\s*\d+/i.test(data.title.trim()) ? data.title : '');
+          const txt = isValidCustomOverlayText(rawTxt) ? rawTxt.trim() : '';
+          if (txt) {
             const trans = data.overlayTextTransform || { x: 4, y: 5, width: 92, zIndex: 35 };
             banner.style.left = (trans.x ?? 4) + '%';
             banner.style.top = (trans.y ?? 5) + '%';
             banner.style.width = (trans.width ?? 92) + '%';
             banner.style.zIndex = trans.zIndex || 35;
-            content.innerText = txt.trim();
+            content.innerText = txt;
             if (data.overlayTextColor) content.style.color = data.overlayTextColor;
             if (data.overlayTextFontSize) content.style.fontSize = data.overlayTextFontSize + 'px';
             if (data.overlayTextFontFamily) {
@@ -3335,6 +3366,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
                 v.style.display = 'block';
                 if (!isSameMedia(v.src, resolvedMedia)) {
                   v.src = resolvedMedia;
+                  try { v.load(); } catch(e) {}
                 }
                 if (isPlayingState !== false && !isStreamUserPaused) {
                   v.play().catch(function() {});
@@ -3489,6 +3521,14 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           return u && typeof u === 'string';
         });
 
+        const isValidCustomOverlayText = (txt) => {
+          if (!txt || typeof txt !== 'string') return false;
+          const trimmed = txt.trim();
+          if (!trimmed) return false;
+          if (/^(bước|step)\s*\d+/i.test(trimmed)) return false;
+          return true;
+        };
+
         const extraLayersList = (Array.isArray(data.extraImageLayers) && data.extraImageLayers.length > 0)
           ? data.extraImageLayers
           : ((data.multiAvatarConfig && Array.isArray(data.multiAvatarConfig.extraImageLayers) && data.multiAvatarConfig.extraImageLayers.length > 0)
@@ -3496,12 +3536,12 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
             : (Array.isArray(data.multiAvatarExtraLayers) ? data.multiAvatarExtraLayers : []));
 
         const hasExtraLayers = extraLayersList.length > 0;
-        const hasTitle = !!((data.overlayText && data.overlayText.trim()) || (data.title && data.title.trim()) || (data.stepTitle && data.stepTitle.trim()));
+        const hasTitle = isValidCustomOverlayText(data.overlayText) || isValidCustomOverlayText(data.title);
         const hasPinnedProduct = !!(data.livePinnedProduct || data.pinnedProduct);
         const hasAnyContent = !!(resolvedMainBg || hasValidAvatars || data.secondaryMediaUrl || data.overlayImage || hasExtraLayers || hasTitle || hasPinnedProduct);
 
-        // 1. Kiểm tra trạng thái XÓA TRẮNG SÂN KHẤU (CLEAR_STAGE / clearMedia)
-        if (data.clearMedia === true && !hasAnyContent) {
+        // 1. Kiểm tra trạng thái XÓA TRẮNG SÂN KHẤU (CLEAR_STAGE / clearMedia / Dừng Live)
+        if (data.clearMedia === true || data.stageStatus === 'stopped' || data.isLiveEnded === true || (data.isPlaying === false && !resolvedMainBg && !hasValidAvatars && !data.secondaryMediaUrl)) {
           if (emptyStage) emptyStage.style.display = 'flex';
           if (multiStage) multiStage.style.display = 'none';
           if (pipContainer) pipContainer.style.display = 'none';
@@ -3518,7 +3558,16 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
             try { imgEl.removeAttribute('src'); imgEl.src = ''; } catch(e) {}
             imgEl.style.display = 'none';
           }
+          const multiChars = document.getElementById('multiAvatarCharacters');
+          if (multiChars) multiChars.innerHTML = '';
+          const multiExtra = document.getElementById('multiAvatarExtraLayers');
+          if (multiExtra) multiExtra.innerHTML = '';
+          const multiBg = document.getElementById('multiAvatarBg');
+          if (multiBg) { multiBg.style.backgroundImage = 'none'; multiBg.style.display = 'none'; }
+          hideLoading();
           updateDockUI();
+          return;
+        }
           return;
         }
 
@@ -3603,6 +3652,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
               if (!isSameMedia(vid.src, resolvedMainBg)) {
                 currentSrc = resolvedMainBg;
                 vid.src = resolvedMainBg;
+                try { vid.load(); } catch(e) {}
               }
               if (data.isPlaying !== false && !isStreamUserPaused) safePlay();
             }
@@ -3693,16 +3743,17 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           }
         }
 
-        // 6. Tiêu Đề Chữ Overlay (Đúng Tọa Độ Transform & Typography)
+        // 6. Tiêu Đề Chữ Overlay (Chỉ hiện khi người dùng nhập nội dung hợp lệ, TUYỆT ĐỐI KHÔNG HIỆN Bước 1, Bước 2...)
         if (banner && content) {
-          const txt = data.overlayText || data.title || data.stepTitle;
-          if (txt && typeof txt === 'string' && txt.trim()) {
+          const rawTxt = data.overlayText || (data.title && !/^(bước|step)\s*\d+/i.test(data.title.trim()) ? data.title : '');
+          const txt = isValidCustomOverlayText(rawTxt) ? rawTxt.trim() : '';
+          if (txt) {
             const trans = data.overlayTextTransform || { x: 4, y: 5, width: 92, zIndex: 35 };
             banner.style.left = (trans.x ?? 4) + '%';
             banner.style.top = (trans.y ?? 5) + '%';
             banner.style.width = (trans.width ?? 92) + '%';
             banner.style.zIndex = trans.zIndex || 35;
-            content.innerText = txt.trim();
+            content.innerText = txt;
             if (data.overlayTextColor) content.style.color = data.overlayTextColor;
             if (data.overlayTextFontSize) content.style.fontSize = data.overlayTextFontSize + 'px';
             if (data.overlayTextFontFamily) {
@@ -4009,7 +4060,7 @@ let _cachedReleaseUrls = {};
 let _lastReleaseFetchTime = 0;
 async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
   const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
-  const targetVer = fallbackVer || '4.9.89';
+  const targetVer = fallbackVer || '4.9.90';
   const safeFallbackUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${targetVer}/${osPrefix}_v${targetVer}.zip`;
   
   const cacheKey = `${osPrefix}_v${targetVer}`;
@@ -4059,7 +4110,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.89';
+  let ver = '4.9.90';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -4099,7 +4150,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.89';
+  let ver = '4.9.90';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -5267,18 +5318,41 @@ app.post('/api/live-state', (req, res) => {
     delete payload.force; // Không lưu cờ force vào live state
 
     // 🗑️ NẾU YÊU CẦU XÓA MEDIA HOẶC ĐÃ XÓA VIDEO NỀN
-    if (payload.clearMedia === true || payload.isMainMediaDeleted || payload.mediaUrl === '') {
+    if (payload.clearMedia === true || payload.isMainMediaDeleted || payload.mediaUrl === '' || payload.mediaUrl === null) {
       payload.mediaUrl = null;
       payload.clearMedia = true;
       currentMasterLiveState.mediaUrl = null;
+      currentMasterLiveState.mainMediaUrl = null;
       currentMasterLiveState.clearMedia = true;
       currentMasterLiveState.isVideo = false;
       currentMasterLiveState.isPlaying = false;
       currentMasterLiveState.videoPlaybackEvent = 'pause';
       currentMasterLiveState.videoCurrentTime = 0;
-    } else if (payload.mediaUrl || payload.secondaryMediaUrl || (Array.isArray(payload.syncedAvatars) && payload.syncedAvatars.length > 0)) {
+      if (payload.clearMedia === true) {
+        currentMasterLiveState.syncedAvatars = [];
+        currentMasterLiveState.multiAvatarConfig = null;
+        currentMasterLiveState.secondaryMediaUrl = null;
+        currentMasterLiveState.overlayImage = null;
+        currentMasterLiveState.overlayText = null;
+        currentMasterLiveState.title = null;
+      }
+    } else if (payload.mediaUrl || payload.mainMediaUrl || payload.secondaryMediaUrl || (Array.isArray(payload.syncedAvatars) && payload.syncedAvatars.length > 0)) {
       payload.clearMedia = false;
       currentMasterLiveState.clearMedia = false;
+    }
+
+    // 🛡️ LỌC BỎ HOÀN TOÀN TÊN BƯỚC KỊCH BẢN (Bước 1, Bước 2, Step 1...) KHỎI overlayText
+    if (payload.overlayText && typeof payload.overlayText === 'string') {
+      if (/^(bước|step)\s*\d+/i.test(payload.overlayText.trim())) {
+        payload.overlayText = null;
+        currentMasterLiveState.overlayText = null;
+      }
+    }
+    if (payload.title && typeof payload.title === 'string') {
+      if (/^(bước|step)\s*\d+/i.test(payload.title.trim())) {
+        payload.title = null;
+        currentMasterLiveState.title = null;
+      }
     }
     
     // Tự động chuyển đổi base64 data: thành file thật trong uploads/
@@ -5294,7 +5368,8 @@ app.post('/api/live-state', (req, res) => {
       delete payload.mediaUrl; // Bảo vệ video hiện tại không bị gán đè null
     }
 
-    if (!payload.clearMedia && !payload.isMainMediaDeleted && !payload.mediaUrl && Array.isArray(payload.syncedAvatars) && payload.syncedAvatars.length > 0) {
+    // Chỉ fallback avatar 1 vào mediaUrl khi là chế độ Single Avatar (length === 1), KHÔNG gán đè khi Multi-Avatar
+    if (!payload.clearMedia && !payload.isMainMediaDeleted && !payload.mediaUrl && Array.isArray(payload.syncedAvatars) && payload.syncedAvatars.length === 1) {
       const avMedia = payload.syncedAvatars[0].resolvedVidSrc || payload.syncedAvatars[0].talkVideo || payload.syncedAvatars[0].idleVideo;
       if (avMedia && typeof avMedia === 'string' && !avMedia.startsWith('blob:')) {
         payload.mediaUrl = avMedia.includes('/uploads/') ? avMedia.substring(avMedia.indexOf('/uploads/')) : avMedia;

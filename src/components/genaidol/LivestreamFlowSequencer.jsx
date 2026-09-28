@@ -639,14 +639,16 @@ export default function LivestreamFlowSequencer() {
   // 📡 Đẩy video và dữ liệu phân đoạn của bước hiện tại lên Sân khấu chính (OBS / TikTok Live / Master)
   const syncStepToServer = (step, index = 0, isLivePlaying = true, forceSync = false) => {
     if (!step) return;
-    // 🛡️ CHỈ phát ra Sân Khấu Chính khi người dùng đã bấm BẬT ĐỒNG BỘ hoặc forceSync
-    if (!forceSync && !isMasterSyncedRef.current && !isMasterSynced) return;
+    // 🛡️ Đồng bộ ra Sân Khấu Chính khi forceSync hoặc đang chạy kịch bản hoặc người dùng đã bấm bật đồng bộ
+    const shouldSync = forceSync || isPlayingFlowRef.current || isPlayingFlow || isMasterSyncedRef.current || isMasterSynced;
+    if (!shouldSync) return;
     
     const resolved = resolveStepMedia(index);
-    let mediaToPlay = step.isMainMediaDeleted ? '' : (resolved.mediaUrl || step.mediaUrl || '');
+    let mediaToPlay = step.isMainMediaDeleted ? '' : (resolved.mediaUrl || step.mediaUrl || multiAvatarConfig?.backgroundUrl || '');
     const secondaryToPlay = resolved.secondaryMediaUrl;
     const overlayImgToPlay = resolved.overlayImage;
-    const overlayTxtToPlay = resolved.overlayText;
+    const rawOverlayTxt = resolved.overlayText || step.overlayText || '';
+    const overlayTxtToPlay = (rawOverlayTxt && typeof rawOverlayTxt === 'string' && !/^(bước|step)\s*\d+/i.test(rawOverlayTxt.trim())) ? rawOverlayTxt.trim() : null;
 
     // 👥 Tạo danh sách Avatar đã phân giải đầy đủ Media, Toạ độ Transform & Trạng thái phát chuẩn 100%
     const safeAvatarsList = (multiAvatarConfig?.avatars && multiAvatarConfig.avatars.length > 0)
@@ -675,8 +677,8 @@ export default function LivestreamFlowSequencer() {
       };
     });
 
-    // ⚡ FALLBACK: CHỈ fallback nếu bước này KHÔNG BỊ XÓA (isMainMediaDeleted !== true)
-    if (!step.isMainMediaDeleted && !mediaToPlay && syncedAvatars.length > 0) {
+    // ⚡ FALLBACK: CHỈ fallback nếu bước này KHÔNG BỊ XÓA VÀ LÀ SINGLE AVATAR
+    if (!step.isMainMediaDeleted && !mediaToPlay && avatarsList.length === 1 && syncedAvatars.length > 0) {
       mediaToPlay = syncedAvatars[0].resolvedVidSrc || syncedAvatars[0].talkVideo || syncedAvatars[0].idleVideo || '';
     }
     if (step.isMainMediaDeleted) {
@@ -775,6 +777,7 @@ export default function LivestreamFlowSequencer() {
 
     const fullSyncPayload = {
       ...payload,
+      forceSync: true,
       isMainMediaDeleted: !!step.isMainMediaDeleted,
       syncedAvatars: syncedAvatars,
       multiAvatarConfig: syncedConfig
@@ -856,6 +859,7 @@ export default function LivestreamFlowSequencer() {
       videoPlaybackEvent: isLivePlaying ? 'play' : 'pause',
       videoCurrentTime: 0,
       clearMedia: false,
+      force: true,
       updatedAt: Date.now()
     });
 
@@ -911,19 +915,24 @@ export default function LivestreamFlowSequencer() {
 
     // 🚀 Đảm bảo mọi video/ảnh blob từ sequencer đều được đẩy vào uploads/ của server
     if (mediaToPlay && (mediaToPlay.startsWith('blob:') || mediaToPlay.startsWith('data:'))) {
-      ensureServerMediaUrl(mediaToPlay, `sequencer_step_${step.id || Date.now()}.mp4`).then(srvUrl => {
+      const isImg = isImageMedia(mediaToPlay);
+      const ext = isImg ? 'jpg' : 'mp4';
+      ensureServerMediaUrl(mediaToPlay, `sequencer_step_${step.id || Date.now()}.${ext}`).then(srvUrl => {
         if (srvUrl && srvUrl !== mediaToPlay) {
           syncMasterLiveState({
             stage: 'idol',
             mediaUrl: srvUrl,
-            isVideo: true,
+            mainMediaUrl: srvUrl,
+            currentMedia: srvUrl,
+            isVideo: !isImg,
             isPlaying: isLivePlaying,
+            force: true,
             updatedAt: Date.now()
           });
           fetch('/api/live-state', {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ mediaUrl: srvUrl, currentMedia: srvUrl, updatedAt: Date.now() })
+            body: JSON.stringify({ mediaUrl: srvUrl, mainMediaUrl: srvUrl, currentMedia: srvUrl, isVideo: !isImg, updatedAt: Date.now() })
           }).catch(() => {});
           try {
             const bc = new BroadcastChannel('avalive_master_live_stream');
@@ -932,8 +941,10 @@ export default function LivestreamFlowSequencer() {
               mediaUrl: srvUrl,
               blobUrl: srvUrl,
               videoUrl: srvUrl,
+              isVideo: !isImg,
               isPlaying: isLivePlaying,
               source: 'sequencer_uploaded',
+              force: true,
               timestamp: Date.now()
             });
             setTimeout(() => bc.close(), 100);
