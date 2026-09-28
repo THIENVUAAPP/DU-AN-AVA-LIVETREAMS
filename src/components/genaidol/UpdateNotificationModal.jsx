@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.85';
+export const APP_VERSION = '4.9.86';
 export const RELEASE_DATE = '28/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '✨ Bản Cập Nhật v4.9.85 - Đồng Bộ Chuẩn Xác 100% Giọng Đọc Đã Cài Đặt Trong Tab Bộ Não AVA Live Khi Phát Kịch Bản',
-    description: '1. Khóa Chặt Giọng Đọc Bộ Não AVA Live: Khi bấm nút "▶️ Phát Kịch Bản Live", hệ thống nhận diện và phát chính xác 100% giọng đọc người dùng đã thiết lập trong tab "BỘ NÃO IDOL" và "GIỌNG AVA LIVE" (bao gồm Tốc độ đọc, Cao độ, Âm lượng, nhép miệng 60 FPS chuẩn xác). 2. Chặn Đứng Hoàn Toàn Tình Trạng Voice Bừa Bãi: Loại bỏ triệt để hiện tượng bị rơi về giọng mặc định free_vi_female hoặc voice cũ của tab kịch bản. 3. Tự Động Đổi Giọng Ngay Trên Sóng Trực Tiếp: Khi người dùng đổi giọng trong Cài đặt Bộ Não, hàng đợi câu thoại tự động cập nhật ngay lập tức sang giọng mới. 4. Tự Động Phục Vụ Gói Cài Đặt ZIP v4.9.85 Mới Nhất cho Windows & macOS.'
+    title: '✨ Bản Cập Nhật v4.9.86 - Đồng Bộ Chuẩn Xác Gói Tải Về File ZIP Mới Nhất Cho Máy Windows & Mac',
+    description: '1. Đồng Bộ Bản Cài Đặt ZIP Mới Nhất Cho Windows & Mac: Tự động phân giải và tải trực tiếp gói cài đặt độc lập v4.9.86 mới nhất (AvaLive_VIP_PRO_Windows_v4.9.86.zip và AvaLive_VIP_PRO_Mac_v4.9.86.zip), xóa bỏ hoàn toàn tình trạng đồng bộ file zip phiên bản cũ. 2. Bảo Mật Cao & Chạy Độc Lập 1-Click: Tích hợp đầy đủ Node Portable, backend core mã hóa và frontend tối ưu, giải nén là chạy ngay không cần cài đặt. 3. Phục Vụ Tự Động Toàn Diện: Cập nhật đồng bộ các endpoint tải file /api/download-windows, /api/download-mac, /api/download.js và backend server.'
   }
 ];
 

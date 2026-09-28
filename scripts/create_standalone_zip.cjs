@@ -40,8 +40,8 @@ if (fs.existsSync(macZipFilePath)) fs.unlinkSync(macZipFilePath);
 const distDir = path.join(rootDir, 'dist');
 if (fs.existsSync(distDir)) fs.rmSync(distDir, { recursive: true, force: true });
 
-// 🛡️ Dọn dẹp sạch sẽ thư mục uploads để file ZIP giải nén không chứa bất kỳ video chạy nền nào
-['backend/uploads', 'uploads', 'system/uploads'].forEach(d => {
+// 🛡️ Dọn dẹp sạch sẽ thư mục staging/system uploads để file ZIP giải nén không chứa bất kỳ video chạy nền nào
+['system/uploads'].forEach(d => {
   const uploadPath = path.join(rootDir, d);
   if (fs.existsSync(uploadPath)) {
     fs.readdirSync(uploadPath).forEach(f => {
