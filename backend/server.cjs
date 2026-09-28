@@ -1054,6 +1054,11 @@ app.get([
     }
     .chroma-green-filter { filter: url(#chroma-green); }
     .chroma-blue-filter { filter: url(#chroma-blue); }
+    .chroma-red-filter { filter: url(#chroma-red); }
+    .chroma-black-filter { filter: url(#chroma-black); }
+    .chroma-white-filter { filter: url(#chroma-white); }
+    .chroma-auto-filter { filter: url(#chroma-auto); }
+    .chroma-room-filter { filter: url(#chroma-room); }
     #hoverZone {
       position: fixed !important;
       top: 0 !important;
@@ -1200,10 +1205,47 @@ app.get([
 </head>
 <body>
   <div id="stage">
-    <!-- SVG Chroma Filters cho xoá phông xanh nhân vật -->
+    <!-- SVG Chroma Filters cho xoá phông xanh, xanh dương, đỏ, đen, trắng, phòng thực tế, tự động -->
     <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
-      <filter id="chroma-green"><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1 -1.5 1 0 0" /></filter>
-      <filter id="chroma-blue"><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1 1 -1.5 0 0" /></filter>
+      <defs>
+        <filter id="chroma-green" color-interpolation-filters="sRGB">
+          <feColorMatrix type="matrix" values="1 0 0 0 0  0.2 0.6 0.2 0 0  0 0 1 0 0  0 0 0 1 0" result="despilled" />
+          <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1.8 -3.2 1.8 1 0.15" result="mask" />
+          <feComponentTransfer in="mask" result="sharp_mask"><feFuncA type="linear" slope="3.5" intercept="-0.1" /></feComponentTransfer>
+          <feComposite in="despilled" in2="sharp_mask" operator="in" />
+        </filter>
+        <filter id="chroma-blue" color-interpolation-filters="sRGB">
+          <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0.2 0.2 0.6 0 0  0 0 0 1 0" result="despilled" />
+          <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1.8 1.8 -3.2 1 0.15" result="mask" />
+          <feComponentTransfer in="mask" result="sharp_mask"><feFuncA type="linear" slope="3.5" intercept="-0.1" /></feComponentTransfer>
+          <feComposite in="despilled" in2="sharp_mask" operator="in" />
+        </filter>
+        <filter id="chroma-red" color-interpolation-filters="sRGB">
+          <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  -3.0 1.8 1.8 1 0.2" result="mask" />
+          <feComponentTransfer in="mask" result="sharp_mask"><feFuncA type="linear" slope="3.5" intercept="-0.15" /></feComponentTransfer>
+          <feComposite in="SourceGraphic" in2="sharp_mask" operator="in" />
+        </filter>
+        <filter id="chroma-black" color-interpolation-filters="sRGB">
+          <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1.5 2.5 0.8 0 -0.08" result="mask" />
+          <feComponentTransfer in="mask" result="sharp_mask"><feFuncA type="linear" slope="6.0" intercept="-0.1" /></feComponentTransfer>
+          <feComposite in="SourceGraphic" in2="sharp_mask" operator="in" />
+        </filter>
+        <filter id="chroma-white" color-interpolation-filters="sRGB">
+          <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  -1.2 -1.8 -0.8 1 3.2" result="mask" />
+          <feComponentTransfer in="mask" result="sharp_mask"><feFuncA type="linear" slope="3.8" intercept="-0.15" /></feComponentTransfer>
+          <feComposite in="SourceGraphic" in2="sharp_mask" operator="in" />
+        </filter>
+        <filter id="chroma-auto" color-interpolation-filters="sRGB">
+          <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1.2 -2.4 1.2 1 0.25" result="mask" />
+          <feComponentTransfer in="mask" result="sharp_mask"><feFuncA type="linear" slope="3.2" intercept="-0.1" /></feComponentTransfer>
+          <feComposite in="SourceGraphic" in2="sharp_mask" operator="in" />
+        </filter>
+        <filter id="chroma-room" color-interpolation-filters="sRGB">
+          <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1.4 1.8 1.0 1 -0.2" result="mask" />
+          <feComponentTransfer in="mask" result="sharp_mask"><feFuncA type="linear" slope="3.5" intercept="-0.18" /></feComponentTransfer>
+          <feComposite in="SourceGraphic" in2="sharp_mask" operator="in" />
+        </filter>
+      </defs>
     </svg>
 
     <!-- Sân Khấu Trống (Khi người dùng xóa hết video) -->
@@ -1404,6 +1446,16 @@ app.get([
           btnFitToggle.style.background = currentFit === 'cover' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(255, 255, 255, 0.15)';
           btnFitToggle.style.borderColor = currentFit === 'cover' ? '#a855f7' : 'rgba(255, 255, 255, 0.35)';
         }
+      function getChromaClass(chroma) {
+        if (!chroma || !chroma.enabled) return '';
+        const m = (chroma.mode || 'auto').toLowerCase();
+        if (m === 'blue') return 'chroma-blue-filter';
+        if (m === 'red') return 'chroma-red-filter';
+        if (m === 'black') return 'chroma-black-filter';
+        if (m === 'white') return 'chroma-white-filter';
+        if (m === 'room') return 'chroma-room-filter';
+        if (m === 'auto') return 'chroma-auto-filter';
+        return 'chroma-green-filter';
       }
 
       function tryEnableAudioSafe() {
@@ -1758,8 +1810,7 @@ app.get([
                 borderRadius: 16
               };
           const baseTrans = avatar.transform || (avatar.transforms) || defaultTrans;
-          const trans = Object.assign({}, defaultTrans, baseTrans, customTrans);
-          const chromaClass = avatar.chromaKey && avatar.chromaKey.enabled ? (avatar.chromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter') : '';
+          const chromaClass = getChromaClass(avatar.chromaKey);
 
           if (!charEl) {
             charEl = document.createElement('div');
@@ -1868,8 +1919,7 @@ app.get([
           let layerEl = container.querySelector('[data-layer-id="' + layerId + '"]');
           const resolvedUrl = resolveUrl(layerUrl);
           const trans = layer.transform || { x: layer.x ?? 20, y: layer.y ?? 20, width: layer.width ?? 30, height: layer.height ?? 30 };
-          const isLayerVid = layer.type === 'video' || (!isImage(resolvedUrl) && resolvedUrl.endsWith('.mp4'));
-          const chromaClass = (layer.chromaKey && layer.chromaKey.enabled) ? (layer.chromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter') : '';
+          const chromaClass = getChromaClass(layer.chromaKey);
 
           if (!layerEl) {
             layerEl = document.createElement('div');
@@ -2051,10 +2101,7 @@ app.get([
         // 3. Hiển thị Lớp Nền Sân Khấu Chính (Background Layer)
         const imgEl = document.getElementById('imagePlayer');
         const mainBgLayer = document.getElementById('mainBackgroundLayer');
-        const mainTrans = data.mainMediaTransform || data.backgroundTransform || { x: 0, y: 0, width: 100, height: 100 };
-        const mainChromaClass = (data.mainMediaChromaKey && data.mainMediaChromaKey.enabled)
-          ? (data.mainMediaChromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter')
-          : (data.backgroundChromaKey && data.backgroundChromaKey.enabled ? (data.backgroundChromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter') : '');
+        const mainChromaClass = getChromaClass(data.mainMediaChromaKey || data.backgroundChromaKey);
 
         const bgFit = mainTrans.objectFit || currentFit || 'cover';
         const bgRot = mainTrans.rotation || mainTrans.rotate || 0;
@@ -2140,9 +2187,7 @@ app.get([
               height: Math.round((Number(data.secondaryMediaScale) || 40) * 1.2),
               zIndex: 25
             };
-            const secChromaClass = data.secondaryMediaChromaKey && data.secondaryMediaChromaKey.enabled
-              ? (data.secondaryMediaChromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter')
-              : '';
+            const secChromaClass = getChromaClass(data.secondaryMediaChromaKey);
             pipContainer.style.left = (trans.x ?? 55) + '%';
             pipContainer.style.top = (trans.y ?? 8) + '%';
             pipContainer.style.width = (trans.width ?? 40) + '%';
@@ -2182,9 +2227,7 @@ app.get([
               height: 20,
               zIndex: 30
             };
-            const imgChromaClass = data.overlayImageChromaKey && data.overlayImageChromaKey.enabled
-              ? (data.overlayImageChromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter')
-              : '';
+            const imgChromaClass = getChromaClass(data.overlayImageChromaKey);
             overlayImgEl.style.left = (trans.x ?? 10) + '%';
             overlayImgEl.style.top = (trans.y ?? 12) + '%';
             overlayImgEl.style.width = (trans.width ?? 80) + '%';
@@ -2754,6 +2797,11 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     }
     .chroma-green-filter { filter: url(#chroma-green); }
     .chroma-blue-filter { filter: url(#chroma-blue); }
+    .chroma-red-filter { filter: url(#chroma-red); }
+    .chroma-black-filter { filter: url(#chroma-black); }
+    .chroma-white-filter { filter: url(#chroma-white); }
+    .chroma-auto-filter { filter: url(#chroma-auto); }
+    .chroma-room-filter { filter: url(#chroma-room); }
   </style>
   <script src="/socket.io/socket.io.js"></script>
 </head>
@@ -2761,8 +2809,45 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
   <div id="stage">
     <!-- SVG Chroma Filters -->
     <svg style="position: absolute; width: 0; height: 0; pointer-events: none;">
-      <filter id="chroma-green"><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1 -1.5 1 0 0" /></filter>
-      <filter id="chroma-blue"><feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1 1 -1.5 0 0" /></filter>
+      <defs>
+        <filter id="chroma-green" color-interpolation-filters="sRGB">
+          <feColorMatrix type="matrix" values="1 0 0 0 0  0.2 0.6 0.2 0 0  0 0 1 0 0  0 0 0 1 0" result="despilled" />
+          <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1.8 -3.2 1.8 1 0.15" result="mask" />
+          <feComponentTransfer in="mask" result="sharp_mask"><feFuncA type="linear" slope="3.5" intercept="-0.1" /></feComponentTransfer>
+          <feComposite in="despilled" in2="sharp_mask" operator="in" />
+        </filter>
+        <filter id="chroma-blue" color-interpolation-filters="sRGB">
+          <feColorMatrix type="matrix" values="1 0 0 0 0  0 1 0 0 0  0.2 0.2 0.6 0 0  0 0 0 1 0" result="despilled" />
+          <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1.8 1.8 -3.2 1 0.15" result="mask" />
+          <feComponentTransfer in="mask" result="sharp_mask"><feFuncA type="linear" slope="3.5" intercept="-0.1" /></feComponentTransfer>
+          <feComposite in="despilled" in2="sharp_mask" operator="in" />
+        </filter>
+        <filter id="chroma-red" color-interpolation-filters="sRGB">
+          <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  -3.0 1.8 1.8 1 0.2" result="mask" />
+          <feComponentTransfer in="mask" result="sharp_mask"><feFuncA type="linear" slope="3.5" intercept="-0.15" /></feComponentTransfer>
+          <feComposite in="SourceGraphic" in2="sharp_mask" operator="in" />
+        </filter>
+        <filter id="chroma-black" color-interpolation-filters="sRGB">
+          <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1.5 2.5 0.8 0 -0.08" result="mask" />
+          <feComponentTransfer in="mask" result="sharp_mask"><feFuncA type="linear" slope="6.0" intercept="-0.1" /></feComponentTransfer>
+          <feComposite in="SourceGraphic" in2="sharp_mask" operator="in" />
+        </filter>
+        <filter id="chroma-white" color-interpolation-filters="sRGB">
+          <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  -1.2 -1.8 -0.8 1 3.2" result="mask" />
+          <feComponentTransfer in="mask" result="sharp_mask"><feFuncA type="linear" slope="3.8" intercept="-0.15" /></feComponentTransfer>
+          <feComposite in="SourceGraphic" in2="sharp_mask" operator="in" />
+        </filter>
+        <filter id="chroma-auto" color-interpolation-filters="sRGB">
+          <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1.2 -2.4 1.2 1 0.25" result="mask" />
+          <feComponentTransfer in="mask" result="sharp_mask"><feFuncA type="linear" slope="3.2" intercept="-0.1" /></feComponentTransfer>
+          <feComposite in="SourceGraphic" in2="sharp_auto_mask" operator="in" />
+        </filter>
+        <filter id="chroma-room" color-interpolation-filters="sRGB">
+          <feColorMatrix in="SourceGraphic" type="matrix" values="1 0 0 0 0  0 1 0 0 0  0 0 1 0 0  1.4 1.8 1.0 1 -0.2" result="mask" />
+          <feComponentTransfer in="mask" result="sharp_mask"><feFuncA type="linear" slope="3.5" intercept="-0.18" /></feComponentTransfer>
+          <feComposite in="SourceGraphic" in2="sharp_room_mask" operator="in" />
+        </filter>
+      </defs>
     </svg>
 
     <!-- Sân Khấu Trống (Khi người dùng xóa hết video) -->
@@ -2893,6 +2978,18 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
 
       function getAllVideos() {
         return Array.from(document.querySelectorAll('video'));
+      }
+
+      function getChromaClass(chroma) {
+        if (!chroma || !chroma.enabled) return '';
+        const m = (chroma.mode || 'auto').toLowerCase();
+        if (m === 'blue') return 'chroma-blue-filter';
+        if (m === 'red') return 'chroma-red-filter';
+        if (m === 'black') return 'chroma-black-filter';
+        if (m === 'white') return 'chroma-white-filter';
+        if (m === 'room') return 'chroma-room-filter';
+        if (m === 'auto') return 'chroma-auto-filter';
+        return 'chroma-green-filter';
       }
 
       try {
@@ -3294,8 +3391,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
                 borderRadius: 16
               };
           const baseTrans = avatar.transform || (avatar.transforms) || defaultTrans;
-          const trans = Object.assign({}, defaultTrans, baseTrans, customTrans);
-          const chromaClass = avatar.chromaKey && avatar.chromaKey.enabled ? (avatar.chromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter') : '';
+          const chromaClass = getChromaClass(avatar.chromaKey);
 
           if (!charEl) {
             charEl = document.createElement('div');
@@ -3404,8 +3500,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           let layerEl = container.querySelector('[data-layer-id="' + layerId + '"]');
           const resolvedUrl = resolveUrl(layerUrl);
           const trans = layer.transform || { x: layer.x ?? 20, y: layer.y ?? 20, width: layer.width ?? 30, height: layer.height ?? 30 };
-          const isLayerVid = layer.type === 'video' || (!isImage(resolvedUrl) && resolvedUrl.endsWith('.mp4'));
-          const chromaClass = (layer.chromaKey && layer.chromaKey.enabled) ? (layer.chromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter') : '';
+          const chromaClass = getChromaClass(layer.chromaKey);
 
           if (!layerEl) {
             layerEl = document.createElement('div');
@@ -3586,10 +3681,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         // 3. Hiển thị Lớp Nền Sân Khấu Chính (Background Layer)
         const imgEl = document.getElementById('imagePlayer');
         const mainBgLayer = document.getElementById('mainBackgroundLayer');
-        const mainTrans = data.mainMediaTransform || data.backgroundTransform || { x: 0, y: 0, width: 100, height: 100 };
-        const mainChromaClass = (data.mainMediaChromaKey && data.mainMediaChromaKey.enabled)
-          ? (data.mainMediaChromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter')
-          : (data.backgroundChromaKey && data.backgroundChromaKey.enabled ? (data.backgroundChromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter') : '');
+        const mainChromaClass = getChromaClass(data.mainMediaChromaKey || data.backgroundChromaKey);
 
         const bgFit = mainTrans.objectFit || currentFit || 'cover';
         const bgRot = mainTrans.rotation || mainTrans.rotate || 0;
@@ -3675,9 +3767,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
               height: Math.round((Number(data.secondaryMediaScale) || 40) * 1.2),
               zIndex: 25
             };
-            const secChromaClass = data.secondaryMediaChromaKey && data.secondaryMediaChromaKey.enabled
-              ? (data.secondaryMediaChromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter')
-              : '';
+            const secChromaClass = getChromaClass(data.secondaryMediaChromaKey);
             pipContainer.style.left = (trans.x ?? 55) + '%';
             pipContainer.style.top = (trans.y ?? 8) + '%';
             pipContainer.style.width = (trans.width ?? 40) + '%';
@@ -3717,9 +3807,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
               height: 20,
               zIndex: 30
             };
-            const imgChromaClass = data.overlayImageChromaKey && data.overlayImageChromaKey.enabled
-              ? (data.overlayImageChromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter')
-              : '';
+            const imgChromaClass = getChromaClass(data.overlayImageChromaKey);
             overlayImgEl.style.left = (trans.x ?? 10) + '%';
             overlayImgEl.style.top = (trans.y ?? 12) + '%';
             overlayImgEl.style.width = (trans.width ?? 80) + '%';
@@ -4049,7 +4137,7 @@ let _cachedReleaseUrls = {};
 let _lastReleaseFetchTime = 0;
 async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
   const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
-  const targetVer = fallbackVer || '4.9.91';
+  const targetVer = fallbackVer || '4.9.92';
   const safeFallbackUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${targetVer}/${osPrefix}_v${targetVer}.zip`;
   
   const cacheKey = `${osPrefix}_v${targetVer}`;
@@ -4099,7 +4187,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.91';
+  let ver = '4.9.92';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -4139,7 +4227,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.91';
+  let ver = '4.9.92';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));

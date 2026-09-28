@@ -7143,9 +7143,12 @@ export const isVideoMedia = (url) => {
 
 export const getChromaStyle = (chromaConfig) => {
   if (!chromaConfig || !chromaConfig.enabled) return {};
-  const mode = (chromaConfig.mode || 'green').toLowerCase();
+  const mode = (chromaConfig.mode || 'auto').toLowerCase();
   const color = (chromaConfig.color || '#00ff00').toLowerCase();
 
+  if (mode === 'red' || color === '#ff0000' || color.startsWith('#e') || color.startsWith('#f0')) {
+    return { filter: 'url(#avalive-chroma-red)' };
+  }
   if (mode === 'black' || color === '#000000' || color === '#0a0a0a' || color === '#050505') {
     return { filter: 'url(#avalive-chroma-black)' };
   }
@@ -7158,6 +7161,9 @@ export const getChromaStyle = (chromaConfig) => {
   if (mode === 'room' || mode === 'wall' || mode === 'ambient' || mode === 'background') {
     return { filter: 'url(#avalive-chroma-room)' };
   }
+  if (mode === 'auto' || mode === 'all') {
+    return { filter: 'url(#avalive-chroma-auto)' };
+  }
   return { filter: 'url(#avalive-chroma-green)' };
 };
 
@@ -7168,14 +7174,16 @@ export const removeImageBackgroundCanvas = async (imgSrc, mode = 'auto', toleran
   if (!imgSrc) return '';
 
   // 1. 🤖 TÁCH NỀN AI NƠ-RON MEDIAPIPE CAO CẤP (XỬ LÝ MỌI LOẠI PHÔNG NỀN: PHÒNG, TƯỜNG, ĐỒ VẬT, NEON, ẢNH CHỤP...)
+  // BẢO TỒN NGUYÊN VẸN 100% NHÂN VẬT & SẢN PHẨM BÁN HÀNG
   try {
     const { removeBackgroundAI } = await import('./aiBackgroundAndBeautyEngine.js');
     if (typeof removeBackgroundAI === 'function') {
       const aiResult = await removeBackgroundAI(imgSrc, {
-        featherRadius: 2,
+        featherRadius: 2.5,
         decontaminate: true,
         edgeRefinement: true,
-        maxResolution: 2048
+        maxResolution: 2560,
+        targetColor: mode === 'auto' ? null : mode
       });
       if (aiResult && typeof aiResult === 'string' && aiResult.startsWith('data:image')) {
         return aiResult;

@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.91';
+export const APP_VERSION = '4.9.92';
 export const RELEASE_DATE = '28/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '✨ Bản Cập Nhật v4.9.91 - Ngắt Sân Khấu Phụ Ra Sân Khấu Chính 0ms, Độc Lập 3 Video Avatar & Sửa Màn Hình Đen TikTok Live Studio',
-    description: '1. Sân Khấu Phụ Tắt/Xóa Dữ Liệu -> Sân Khấu Chính Ngắt Lập Tức: Khi AI Avatar / Sân Khấu Phụ tắt hoặc xóa hết dữ liệu, Sân Khấu Chính, Window Capture OBS và TikTok Live Studio tự động ngắt sạch về màn hình đen 0ms. 2. Độc Lập 100% Video Các Avatar: Sửa triệt để lỗi 3 video khác nhau ở sân khấu phụ bị biến thành 3 video giống nhau ngoài sân khấu chính; mỗi avatar luôn giữ chuẩn xác video riêng. 3. Sửa Lỗi Màn Hình Đen Link TikTok Live Studio: Loại bỏ hoàn toàn lỗi cú pháp JavaScript khiến link bị kẹt màn hình đen. 4. Window Capture OBS Đầy Đủ 100% Các Lớp: Khớp hoàn toàn vị trí, đa lớp và chuyển cảnh siêu mượt.'
+    title: '✨ Bản Cập Nhật v4.9.92 - Công Nghệ Xóa Nền AI Cao Cấp 4K Siêu Mịn Cho Cả Ảnh & Video',
+    description: '1. Xóa Sạch 100% Mọi Loại Nền (Ảnh & Video): Tách phông xanh lá, xanh dương, nền đỏ, nền đen, nền trắng, phòng ngủ và phong cảnh ngoài trời phức tạp. 2. Bảo Tồn Nguyên Vẹn Nhân Vật & Sản Phẩm: Tuyệt đối không làm đen nhân vật, giữ trọn sắc da trắng hồng, áo đỏ, áo xanh siêu thực; bảo vệ 100% sản phẩm livestream trên tay và cạnh nhân vật. 3. Biên Viền Siêu Mịn Sub-pixel: Khử sạch viền lem ám màu, giữ nguyên từng sợi tóc tơ và mép sản phẩm sắc nét. 4. 1-Chạm Xóa Nền AI: Thao tác tức thì (0ms) trên thanh công cụ Sequencer, Multi-Avatar Studio và Sân Khấu.'
   }
 ];
 

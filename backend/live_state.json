@@ -2,9 +2,9 @@
   "stage": "idol",
   "aspectRatio": "9:16",
   "characterId": "",
-  "characterName": "Video Người Dùng",
+  "characterName": "1788954961599_8037…",
   "mediaUrl": null,
-  "currentMedia": "/uploads/media-1790606083801-278612407.png",
+  "currentMedia": "",
   "eventVideoUrl": null,
   "isVideo": false,
   "videoPlaybackEvent": "pause",
@@ -12,9 +12,9 @@
   "isAudioMuted": false,
   "isDarkMode": true,
   "clearMedia": true,
-  "updatedAt": 1790606120689,
+  "updatedAt": 1790610273183,
   "isUserExplicitMediaLocked": false,
-  "selectedCharacter": "",
+  "selectedCharacter": "custom_1790610219104",
   "videoCurrentTime": 0,
   "type": "MASTER_LIVE_STATE_UPDATE",
   "flvUrl": null,
@@ -29,11 +29,41 @@
   "overlayImage": null,
   "overlayImageTransform": null,
   "overlayText": null,
-  "syncedAvatars": [],
-  "tunnelUrl": "https://paste-lite-portion-fisher.trycloudflare.com",
+  "syncedAvatars": [
+    {
+      "id": "avatar_1",
+      "role": "guest",
+      "tag": "Khách Mời",
+      "label": "Nhân Vật 4 (Khách Mời / Chuyên Gia)",
+      "name": "Nhân Vật 1",
+      "voiceId": "el_uk_female",
+      "idleVideo": "/uploads/media-1790610263206-383790915.png",
+      "talkVideo": "/uploads/media-1790610263206-383790915.png",
+      "volume": 1,
+      "rate": 1,
+      "enabled": false,
+      "chromaKey": null,
+      "transform": {
+        "x": 21,
+        "y": 20,
+        "width": 45,
+        "height": 48,
+        "zIndex": 8,
+        "pose": "stand",
+        "objectFit": "cover",
+        "borderRadius": 16,
+        "scale": 0.8,
+        "rotate": 0
+      },
+      "mediaUrl": "/uploads/media-1790610263206-383790915.png",
+      "resolvedVidSrc": "/uploads/media-1790610263206-383790915.png",
+      "isSpeakingNow": false
+    }
+  ],
+  "tunnelUrl": "https://rotary-personality-highway-tiny.trycloudflare.com",
   "multiAvatarConfig": {
     "enabled": true,
-    "activeCount": 0,
+    "activeCount": 1,
     "layoutMode": "custom_canvas",
     "backgroundUrl": "",
     "backgroundColor": "#0a0c14",
@@ -56,22 +86,43 @@
       "mode": "green"
     },
     "extraImageLayers": [],
-    "avatars": [],
+    "avatars": [
+      {
+        "id": "avatar_1",
+        "role": "guest",
+        "tag": "Khách Mời",
+        "label": "Nhân Vật 4 (Khách Mời / Chuyên Gia)",
+        "name": "Nhân Vật 1",
+        "voiceId": "el_uk_female",
+        "idleVideo": "/uploads/media-1790610263206-383790915.png",
+        "talkVideo": "/uploads/media-1790610263206-383790915.png",
+        "volume": 1,
+        "rate": 1,
+        "enabled": false,
+        "chromaKey": null,
+        "transform": {
+          "x": 21,
+          "y": 20,
+          "width": 45,
+          "height": 48,
+          "zIndex": 8,
+          "pose": "stand",
+          "objectFit": "cover",
+          "borderRadius": 16,
+          "scale": 0.8,
+          "rotate": 0
+        },
+        "mediaUrl": "/uploads/media-1790610263206-383790915.png",
+        "resolvedVidSrc": "/uploads/media-1790610263206-383790915.png",
+        "isSpeakingNow": false
+      }
+    ],
     "activeSpeakerId": "avatar_1",
     "fromSequencer": true,
-    "syncedAt": 1790606085780
+    "syncedAt": 1790610273123
   },
-  "mainMediaUrl": "/uploads/media-1790606083801-278612407.png",
-  "mainMediaTransform": {
-    "x": 0,
-    "y": 0,
-    "width": 100,
-    "height": 100,
-    "scale": 100,
-    "objectFit": "cover",
-    "blur": 0,
-    "brightness": 100
-  },
+  "mainMediaUrl": "",
+  "mainMediaTransform": null,
   "multiAvatarExtraLayers": [],
   "videoVolume": 1,
   "isVideoAudioMuted": false,
@@ -85,8 +136,8 @@
   "fit": "cover",
   "sound": true,
   "mainMediaChromaKey": {
-    "enabled": false,
-    "mode": "green",
+    "enabled": true,
+    "mode": "auto",
     "color": "#00ff00"
   },
   "secondaryMediaChromaKey": {
@@ -100,7 +151,7 @@
     "color": "#00ff00"
   },
   "overlayTextColor": "#ffffff",
-  "title": "Video Đang Phát",
+  "title": null,
   "extraImageLayers": [],
   "isVideoPlaying": false,
   "avatarTransforms": null,
@@ -125,5 +176,10 @@
   "productBanner": null,
   "volume": 1,
   "isMuted": true,
-  "isMainMediaDeleted": true
+  "isMainMediaDeleted": true,
+  "secondaryMediaPos": "top-right",
+  "secondaryMediaScale": 40,
+  "overlayImagePos": "top-left",
+  "overlayImageScale": 100,
+  "overlayTextPos": "top"
 }

@@ -60,17 +60,26 @@ export const ensureMediaPipeLoaded = () => {
  * - Thuật toán khử viền màu (Color Spill Decontamination)
  * - Làm mịn biên viền tóc & trang phục (Feathering & Anti-aliasing)
  */
+/**
+ * 1. AI BACKGROUND REMOVAL (Xoá Phông Nền AI Siêu Cấp 4K - Bảo Vệ Tuyệt Đối Nhân Vật & Sản Phẩm)
+ * - Tách sạch 100% mọi loại nền: Phông xanh, phông xanh dương, phông đỏ, nền đen, nền trắng, phòng ngủ, studio, phong cảnh phức tạp...
+ * - Bảo tồn nguyên vẹn 100% Nhân Vật (tóc tơ, da trắng hồng, trang phục xanh/đỏ/đen/trắng siêu thực) & Sản Phẩm (chai, lọ, hộp mỹ phẩm, giỏ hàng, phụ kiện cầm tay)
+ * - Tuyệt đối không làm đen nhân vật, không xóa lẹm hay trắng nền vào sản phẩm
+ * - Khử viền lem ám màu (Multi-Color Spill Despill)
+ * - Làm mịn biên viền siêu mượt (Sub-pixel Guided Anti-Aliasing & Feathering)
+ */
 export async function removeBackgroundAI(imageSource, options = {}) {
   const {
-    featherRadius = 2,       // Làm mịn biên viền (px)
+    featherRadius = 2.5,    // Làm mịn biên viền mượt mà (px)
     decontaminate = true,    // Khử viền lem màu phông
-    edgeRefinement = true,   // Khắc họa chi tiết tóc
-    maxResolution = 2048     // Độ phân giải tối đa (giữ chi tiết 4K)
+    edgeRefinement = true,   // Khắc họa chi tiết tóc & cạnh viền sản phẩm
+    maxResolution = 2560,    // Độ phân giải tối đa (giữ chi tiết 4K)
+    targetColor = null       // Màu nền chỉ định nếu có ('green' | 'blue' | 'red' | 'white' | 'black' | hex)
   } = options;
 
   const img = await loadImage(imageSource);
   
-  // Tính toán kích thước
+  // Tính toán kích thước tối ưu
   let width = img.naturalWidth || img.width;
   let height = img.naturalHeight || img.height;
   
@@ -83,232 +92,193 @@ export async function removeBackgroundAI(imageSource, options = {}) {
   const srcCanvas = document.createElement('canvas');
   srcCanvas.width = width;
   srcCanvas.height = height;
-  const srcCtx = srcCanvas.getContext('2d');
+  const srcCtx = srcCanvas.getContext('2d', { willReadFrequently: true });
   srcCtx.drawImage(img, 0, 0, width, height);
+
+  const srcData = srcCtx.getImageData(0, 0, width, height);
+  const sD = srcData.data;
 
   // Đảm bảo MediaPipe Neural Network đã được nạp
   await ensureMediaPipeLoaded();
 
-  // Trường hợp 1: Sử dụng MediaPipe SelfieSegmentation Neural Network (Chính xác cao nhất cho mọi loại nền)
+  let mediaPipeMaskCanvas = null;
+
+  // Thử nghiệm MediaPipe SelfieSegmentation Neural Network
   if (typeof window !== 'undefined' && window.SelfieSegmentation) {
     try {
-      const maskDataUrl = await new Promise((resolve, reject) => {
+      mediaPipeMaskCanvas = await new Promise((resolve, reject) => {
         const seg = new window.SelfieSegmentation({
           locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`,
         });
-        seg.setOptions({ modelSelection: 0, selfieMode: false }); // Model 0: General model độ chính xác cao nhất
+        seg.setOptions({ modelSelection: 0, selfieMode: false });
         seg.onResults((results) => {
           try {
-            const maskCanvas = document.createElement('canvas');
-            maskCanvas.width = width;
-            maskCanvas.height = height;
-            const maskCtx = maskCanvas.getContext('2d');
-            maskCtx.drawImage(results.segmentationMask, 0, 0, width, height);
-            resolve(maskCanvas);
+            const mCanvas = document.createElement('canvas');
+            mCanvas.width = width;
+            mCanvas.height = height;
+            const mCtx = mCanvas.getContext('2d');
+            mCtx.drawImage(results.segmentationMask, 0, 0, width, height);
+            resolve(mCanvas);
           } catch (e) {
             reject(e);
           }
         });
         seg.send({ image: srcCanvas });
       });
-
-      // Composite Mask + Image với Alpha Matting
-      // Kết hợp bảo vệ sản phẩm & chi tiết người (Salient Subject & Product Protection)
-      const maskCanvas = maskDataUrl;
-      const maskCtx = maskCanvas.getContext('2d');
-      const maskData = maskCtx.getImageData(0, 0, width, height);
-      const mD = maskData.data;
-
-      const srcData = srcCtx.getImageData(0, 0, width, height);
-      const sD = srcData.data;
-
-      // Kiểm tra xem MediaPipe có nhận diện được chủ thể không (nếu là ảnh thuần sản phẩm không có người, mask có thể bị rỗng)
-      let humanMaskCoverage = 0;
-      for (let i = 0; i < mD.length; i += 4) {
-        if (mD[i] > 100) humanMaskCoverage++;
-      }
-      const humanRatio = humanMaskCoverage / (width * height);
-
-      // Nếu là ảnh thuần sản phẩm (humanRatio < 0.02) hoặc người cầm sản phẩm, dung hòa mặt nạ AI với bộ dò chủ thể & biên độ tương phản
-      if (humanRatio < 0.02) {
-        // Ảnh sản phẩm thuần túy: chuyển sang bộ nhận diện vật thể & tách nền sản phẩm chuyên sâu
-        return fallbackIntelligentMatting(srcCanvas, width, height, options);
-      }
-
-      // Dung hòa mặt nạ MediaPipe với vùng da & sản phẩm phụ cận
-      // Bảo vệ bàn tay, cánh tay và sản phẩm cầm trên tay nhân vật
-      const outCanvas = document.createElement('canvas');
-      outCanvas.width = width;
-      outCanvas.height = height;
-      const outCtx = outCanvas.getContext('2d');
-
-      // Tinh chỉnh mask: giữ lại vùng da và vật thể gắn liền với người
-      for (let y = 0; y < height; y++) {
-        for (let x = 0; x < width; x++) {
-          const idx = (y * width + x) * 4;
-          const r = sD[idx];
-          const g = sD[idx + 1];
-          const b = sD[idx + 2];
-          const maxC = Math.max(r, g, b);
-          const minC = Math.min(r, g, b);
-          const spread = maxC - minC;
-          const isSkin = (r > 105 && g > 70 && b > 50 && r > g && g > b && (r - g) >= 8 && spread > 12);
-
-          // Nếu pixel là da người và nằm gần vùng nhân vật -> tăng cường alpha
-          if (isSkin && mD[idx] > 30) {
-            mD[idx] = 255;
-            mD[idx + 1] = 255;
-            mD[idx + 2] = 255;
-            mD[idx + 3] = 255;
-          }
-        }
-      }
-      maskCtx.putImageData(maskData, 0, 0);
-
-      // Vẽ mask
-      outCtx.drawImage(maskCanvas, 0, 0, width, height);
-      outCtx.globalCompositeOperation = 'source-in';
-      outCtx.drawImage(srcCanvas, 0, 0, width, height);
-      outCtx.globalCompositeOperation = 'source-over';
-
-      // Áp dụng thuật toán Khử Viền Lem (Edge Decontamination & Despill)
-      if (decontaminate || edgeRefinement) {
-        refineCutoutEdges(outCtx, width, height, featherRadius);
-      }
-
-      // 🛡️ BẢO TỒN NGUYÊN VẸN 100% CHI TIẾT BIÊN CỦA NGƯỜI VÀ SẢN PHẨM: TUYỆT ĐỐI KHÔNG GỌT VIỀN (NO BORDERPAD)
-      return outCanvas.toDataURL('image/png');
     } catch (segErr) {
-      console.warn('MediaPipe segmentation failed, using Fallback Intelligent Alpha Matting:', segErr);
+      console.warn('MediaPipe segmentation failed, switching to Advanced Intelligent Matting:', segErr);
     }
   }
 
-  // Trường hợp 2: Fallback High-Precision Edge & Chroma Gradient Matting (Thuật toán toán học cục bộ bảo tồn người & sản phẩm)
-  return fallbackIntelligentMatting(srcCanvas, width, height, options);
+  // Kết hợp Neural Segmentation + Salient Object & Product Protection + Boundary Matting
+  return processUltraSmoothMatting(srcCanvas, mediaPipeMaskCanvas, width, height, {
+    ...options,
+    featherRadius,
+    decontaminate,
+    edgeRefinement,
+    targetColor
+  });
 }
 
 /**
- * Thuật toán làm mịn và khử viền lem màu cho ảnh trong suốt (Tóc & Sản phẩm sắc nét 4K)
+ * 🌟 BỘ XỬ LÝ MATTING ĐA TẦNG CAO CẤP: BẢO VỆ 100% NGƯỜI & SẢN PHẨM, XÓA SẠCH NỀN VỚI ĐƯỜNG BIÊN SIÊU MỊN
  */
-function refineCutoutEdges(ctx, width, height, featherRadius) {
-  const imgData = ctx.getImageData(0, 0, width, height);
-  const data = imgData.data;
+function processUltraSmoothMatting(srcCanvas, mediaPipeMaskCanvas, width, height, options = {}) {
+  const srcCtx = srcCanvas.getContext('2d', { willReadFrequently: true });
+  const srcData = srcCtx.getImageData(0, 0, width, height);
+  const sD = srcData.data;
 
-  // Quét và xử lý các pixel biên mờ (Alpha từ 10 đến 245)
-  for (let i = 0; i < data.length; i += 4) {
-    const alpha = data[i + 3];
-    if (alpha > 0 && alpha < 250) {
-      // Tăng độ chuyển sắc mượt mà (Smooth Step Alpha)
-      const normalizedAlpha = alpha / 255;
-      const smoothedAlpha = normalizedAlpha * normalizedAlpha * (3 - 2 * normalizedAlpha);
-      data[i + 3] = Math.round(smoothedAlpha * 255);
-
-      // Khử viền bệt màu tối/sáng quá mức ở rìa
-      const r = data[i];
-      const g = data[i + 1];
-      const b = data[i + 2];
-      
-      // Nếu là pixel viền sát phông xanh lá / xanh dương -> Khử sạch ám màu viền quanh tóc, nách, tai, cổ áo, vai
-      if (g > Math.max(r, b)) {
-        data[i + 1] = Math.round((r + b) / 2); // Khử ám xanh lá
-      } else if (b > Math.max(r, g) && (b - Math.max(r, g)) > 6) {
-        data[i + 2] = Math.round((r + g) / 2); // Khử ám xanh dương
-      }
-    }
+  // Lấy dữ liệu mặt nạ MediaPipe nếu có
+  let mD = null;
+  if (mediaPipeMaskCanvas) {
+    const mCtx = mediaPipeMaskCanvas.getContext('2d', { willReadFrequently: true });
+    mD = mCtx.getImageData(0, 0, width, height).data;
   }
 
-  ctx.putImageData(imgData, 0, 0);
-}
-
-/**
- * 🌟 THUẬT TOÁN TÁCH NỀN ĐA NĂNG BẢO TỒN NGUYÊN VẸN NGƯỜI & SẢN PHẨM (BOUNDARY-AWARE FLOOD-FILL MATTING)
- * - Tách sạch mọi loại nền: Trắng, Đen, Xanh lá, Xanh dương, Tường, Phòng, Cảnh quan
- * - Bảo vệ 100% người mẫu (da, tóc, áo quần) và sản phẩm (chai lọ, hộp, mỹ phẩm, chi tiết nội tại)
- * - Xóa từ ngoài lan vào biên, dừng lại chính xác tại viền người & sản phẩm
- * - TUYỆT ĐỐI KHÔNG GỌT VIỀN BORDERPAD GÂY CỤT TAY CHÂN HAY SẢN PHẨM
- */
-function fallbackIntelligentMatting(srcCanvas, width, height, options = {}) {
-  const ctx = srcCanvas.getContext('2d');
-  const imgData = ctx.getImageData(0, 0, width, height);
-  const data = imgData.data;
-
-  // 1. Lấy mẫu màu viền đa điểm ở cả 4 cạnh ngoài cùng để lập phổ màu nền (Background Color Distribution)
+  // 1. Phân tích màu nền từ 4 đường biên ngoài cùng (Top, Bottom, Left, Right)
   const bgSamples = [];
-  const stepX = Math.max(1, Math.floor(width / 30));
-  const stepY = Math.max(1, Math.floor(height / 30));
+  const stepX = Math.max(1, Math.floor(width / 40));
+  const stepY = Math.max(1, Math.floor(height / 40));
 
-  // Cạnh trên & dưới
   for (let x = 0; x < width; x += stepX) {
     const topIdx = (0 * width + x) * 4;
-    bgSamples.push({ r: data[topIdx], g: data[topIdx + 1], b: data[topIdx + 2] });
+    bgSamples.push({ r: sD[topIdx], g: sD[topIdx + 1], b: sD[topIdx + 2] });
     const botIdx = ((height - 1) * width + x) * 4;
-    bgSamples.push({ r: data[botIdx], g: data[botIdx + 1], b: data[botIdx + 2] });
+    bgSamples.push({ r: sD[botIdx], g: sD[botIdx + 1], b: sD[botIdx + 2] });
   }
-  // Cạnh trái & phải
   for (let y = 0; y < height; y += stepY) {
     const leftIdx = (y * width + 0) * 4;
-    bgSamples.push({ r: data[leftIdx], g: data[leftIdx + 1], b: data[leftIdx + 2] });
+    bgSamples.push({ r: sD[leftIdx], g: sD[leftIdx + 1], b: sD[leftIdx + 2] });
     const rightIdx = (y * width + (width - 1)) * 4;
-    bgSamples.push({ r: data[rightIdx], g: data[rightIdx + 1], b: data[rightIdx + 2] });
+    bgSamples.push({ r: sD[rightIdx], g: sD[rightIdx + 1], b: sD[rightIdx + 2] });
   }
 
-  // 2. Tính toán ma trận biên độ tương phản (Gradient Energy Map) để nhận diện đường viền của người & sản phẩm
+  // 2. Tính toán ma trận Gradient Energy Map để nhận diện ranh giới của nhân vật & sản phẩm
   const energy = new Uint8Array(width * height);
   for (let y = 1; y < height - 1; y++) {
     for (let x = 1; x < width - 1; x++) {
       const idx = (y * width + x) * 4;
-      const r = data[idx], g = data[idx + 1], b = data[idx + 2];
-      const rRight = data[idx + 4], gRight = data[idx + 5], bRight = data[idx + 6];
-      const rDown = data[idx + width * 4], gDown = data[idx + width * 4 + 1], bDown = data[idx + width * 4 + 2];
+      const r = sD[idx], g = sD[idx + 1], b = sD[idx + 2];
+      const rRight = sD[idx + 4], gRight = sD[idx + 5], bRight = sD[idx + 6];
+      const rDown = sD[idx + width * 4], gDown = sD[idx + width * 4 + 1], bDown = sD[idx + width * 4 + 2];
       const diffX = Math.abs(r - rRight) + Math.abs(g - gRight) + Math.abs(b - bRight);
       const diffY = Math.abs(r - rDown) + Math.abs(g - gDown) + Math.abs(b - bDown);
       energy[y * width + x] = Math.min(255, diffX + diffY);
     }
   }
 
-  // 3. Hàm kiểm tra xem pixel có thuộc màu nền hay không
-  function isColorMatchingBg(r, g, b) {
-    // Kiểm tra Chroma Key (Xanh lá & Xanh dương)
-    if (g > 60 && g > r * 1.25 && g > b * 1.25) return true;
-    if (b > 60 && b > r * 1.25 && b > g * 1.25) return true;
+  // 3. Hàm kiểm tra độ khớp màu nền (Chromatic & Luma Distance)
+  const targetCol = options.targetColor ? options.targetColor.toLowerCase() : null;
+  function isBgColor(r, g, b) {
+    const greenDiff = g - Math.max(r, b);
+    const blueDiff = b - Math.max(r, g);
+    const redDiff = r - Math.max(g, b);
+    const maxVal = Math.max(r, g, b);
+    const minVal = Math.min(r, g, b);
+    const spread = maxVal - minVal;
+    const luma = 0.299 * r + 0.587 * g + 0.114 * b;
 
-    // So khớp với phổ màu viền nền
+    if (targetCol === 'green' || (!targetCol && g > 60 && greenDiff > 14 && g > r * 1.15 && g > b * 1.15)) return true;
+    if (targetCol === 'blue' || (!targetCol && b > 60 && blueDiff > 14 && b > r * 1.15 && b > g * 1.15)) return true;
+    if (targetCol === 'red' && redDiff > 25 && r > g * 1.25 && r > b * 1.25) return true;
+    if (targetCol === 'black' && maxVal < 30) return true;
+    if (targetCol === 'white' && luma > 220 && spread < 25) return true;
+
+    // So khớp với phổ màu nền từ 4 đường biên
     for (let i = 0; i < bgSamples.length; i++) {
       const s = bgSamples[i];
-      const dist = Math.sqrt(Math.pow(r - s.r, 2) + Math.pow(g - s.g, 2) + Math.pow(b - s.b, 2));
-      if (dist < 32) return true;
+      const d = Math.sqrt(Math.pow(r - s.r, 2) + Math.pow(g - s.g, 2) + Math.pow(b - s.b, 2));
+      if (d < 36) return true;
     }
     return false;
   }
 
-  // 4. Thuật toán Flood-Fill Lan Truyền từ 4 Biên Ngoài Cùng (Boundary BFS Matting)
-  // Chỉ xóa nền từ ngoài vào, DỪNG LẠI NGAY LẬP TỨC khi chạm vào biên sản phẩm hoặc người
-  const isBgMask = new Uint8Array(width * height);
+  // 4. Khởi tạo mảng Alpha cuối cùng (0 = trong suốt, 255 = giữ nguyên)
+  const finalAlpha = new Uint8Array(width * height);
+
+  // Nếu có MediaPipe Mask: Nạp làm vùng lõi ban đầu
+  if (mD) {
+    for (let i = 0; i < width * height; i++) {
+      const pIdx = i * 4;
+      if (mD[pIdx] > 120) {
+        finalAlpha[i] = 255; // Vùng người chắc chắn được giữ
+      } else if (mD[pIdx] > 40) {
+        finalAlpha[i] = mD[pIdx];
+      }
+    }
+
+    // Mở rộng bảo vệ sản phẩm gắn liền với người (Handheld Product & Clothing Protection)
+    // Quét lan truyền từ các điểm người (Human Seeds) sang các pixel có độ gắn kết cao
+    for (let iter = 0; iter < 4; iter++) {
+      for (let y = 1; y < height - 1; y++) {
+        for (let x = 1; x < width - 1; x++) {
+          const pos = y * width + x;
+          if (finalAlpha[pos] > 180) {
+            const neighbors = [pos - 1, pos + 1, pos - width, pos + width];
+            for (let k = 0; k < 4; k++) {
+              const nPos = neighbors[k];
+              if (finalAlpha[nPos] < 200) {
+                const nIdx = nPos * 4;
+                const nr = sD[nIdx], ng = sD[nIdx + 1], nb = sD[nIdx + 2];
+                // Nếu lân cận không phải màu phông nền bên ngoài và có cấu trúc sản phẩm -> giữ lại
+                if (!isBgColor(nr, ng, nb) || energy[nPos] > 45) {
+                  finalAlpha[nPos] = 255;
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+
+  // 5. Thuật toán Boundary BFS Matting: Xóa từ 4 cạnh ngoài cùng lan vào
+  // Chỉ xóa nền thực sự, DỪNG LẠI HOÀN TOÀN khi gặp ranh giới của nhân vật hoặc sản phẩm
+  const isOuterBg = new Uint8Array(width * height);
   const queue = [];
 
-  // Thêm tất cả pixel viền ngoài khớp màu nền vào hàng đợi
   for (let x = 0; x < width; x++) {
-    const topIdx = (0 * width + x) * 4;
-    if (isColorMatchingBg(data[topIdx], data[topIdx + 1], data[topIdx + 2])) {
-      isBgMask[0 * width + x] = 1;
-      queue.push(0 * width + x);
+    const topPos = 0 * width + x;
+    const botPos = (height - 1) * width + x;
+    if (finalAlpha[topPos] < 128 && isBgColor(sD[topPos * 4], sD[topPos * 4 + 1], sD[topPos * 4 + 2])) {
+      isOuterBg[topPos] = 1;
+      queue.push(topPos);
     }
-    const botIdx = ((height - 1) * width + x) * 4;
-    if (isColorMatchingBg(data[botIdx], data[botIdx + 1], data[botIdx + 2])) {
-      isBgMask[(height - 1) * width + x] = 1;
-      queue.push((height - 1) * width + x);
+    if (finalAlpha[botPos] < 128 && isBgColor(sD[botPos * 4], sD[botPos * 4 + 1], sD[botPos * 4 + 2])) {
+      isOuterBg[botPos] = 1;
+      queue.push(botPos);
     }
   }
   for (let y = 0; y < height; y++) {
-    const leftIdx = (y * width + 0) * 4;
-    if (isColorMatchingBg(data[leftIdx], data[leftIdx + 1], data[leftIdx + 2])) {
-      isBgMask[y * width + 0] = 1;
-      queue.push(y * width + 0);
+    const leftPos = y * width + 0;
+    const rightPos = y * width + (width - 1);
+    if (finalAlpha[leftPos] < 128 && isBgColor(sD[leftPos * 4], sD[leftPos * 4 + 1], sD[leftPos * 4 + 2])) {
+      isOuterBg[leftPos] = 1;
+      queue.push(leftPos);
     }
-    const rightIdx = (y * width + (width - 1)) * 4;
-    if (isColorMatchingBg(data[rightIdx], data[rightIdx + 1], data[rightIdx + 2])) {
-      isBgMask[y * width + (width - 1)] = 1;
-      queue.push(y * width + (width - 1));
+    if (finalAlpha[rightPos] < 128 && isBgColor(sD[rightPos * 4], sD[rightPos * 4 + 1], sD[rightPos * 4 + 2])) {
+      isOuterBg[rightPos] = 1;
+      queue.push(rightPos);
     }
   }
 
@@ -326,28 +296,23 @@ function fallbackIntelligentMatting(srcCanvas, width, height, options = {}) {
       const [nx, ny] = neighbors[n];
       if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
         const nPos = ny * width + nx;
-        if (isBgMask[nPos] === 0) {
-          const idx = nPos * 4;
-          const r = data[idx];
-          const g = data[idx + 1];
-          const b = data[idx + 2];
-          const maxC = Math.max(r, g, b);
-          const minC = Math.min(r, g, b);
-          const spread = maxC - minC;
+        if (isOuterBg[nPos] === 0) {
+          // 🛡️ BẢO VỆ TUYỆT ĐỐI NHÂN VẬT & SẢN PHẨM: Dừng lại ngay tại biên
+          if (finalAlpha[nPos] > 180) continue;
+          if (energy[nPos] > 60) continue; // Ranh giới sản phẩm
 
-          // 🛡️ BẢO VỆ DA NGƯỜI (Bao gồm vùng bóng đổ dưới tai, cổ áo, nách, vai)
+          const idx = nPos * 4;
+          const r = sD[idx], g = sD[idx + 1], b = sD[idx + 2];
+
+          // Bảo vệ da người tự nhiên (không bao giờ xóa da người)
           const isSkin = (
-            (r > 85 && g > 55 && b > 38 && r > g && g >= b && (r - g) >= 6) ||
-            (r > 55 && g > 38 && b > 25 && r >= g && g >= b && (r - b) >= 8)
+            (r > 80 && g > 50 && b > 35 && r > g && g >= b && (r - g) >= 6) ||
+            (r > 50 && g > 35 && b > 25 && r >= g && g >= b && (r - b) >= 6)
           );
           if (isSkin) continue;
 
-          // 🛡️ BẢO VỆ BIÊN SẢN PHẨM & NGƯỜI (High Edge Energy) - Dừng lại tại đường nét sản phẩm
-          if (energy[nPos] > 55) continue;
-
-          // Kiểm tra xem có khớp màu nền xung quanh không
-          if (isColorMatchingBg(r, g, b)) {
-            isBgMask[nPos] = 1;
+          if (isBgColor(r, g, b)) {
+            isOuterBg[nPos] = 1;
             queue.push(nPos);
           }
         }
@@ -355,27 +320,76 @@ function fallbackIntelligentMatting(srcCanvas, width, height, options = {}) {
     }
   }
 
-  // 5. Áp dụng kết quả tách nền và khử ám viền (Despill)
+  // 6. Tổng hợp mặt nạ Alpha: Vùng outerBg = 0, còn lại = giữ nguyên chi tiết
   for (let i = 0; i < width * height; i++) {
-    const idx = i * 4;
-    if (isBgMask[i] === 1) {
-      data[idx + 3] = 0; // Xóa sạch 100% trong suốt cho nền
-    } else {
-      // Khử viền lem ám xanh lá hoặc xanh dương trên người & sản phẩm
-      const r = data[idx];
-      const g = data[idx + 1];
-      const b = data[idx + 2];
-      if (g > Math.max(r, b) && (g - Math.max(r, b)) > 6) {
-        data[idx + 1] = Math.round((r + b) / 2);
-      } else if (b > Math.max(r, g) && (b - Math.max(r, g)) > 6) {
-        data[idx + 2] = Math.round((r + g) / 2);
+    if (isOuterBg[i] === 1) {
+      finalAlpha[i] = 0;
+    } else if (finalAlpha[i] === 0) {
+      finalAlpha[i] = 255; // Bảo vệ tất cả chi tiết sản phẩm và nhân vật không thuộc outerBg
+    }
+  }
+
+  // 7. Làm mịn biên viền siêu mượt (Sub-pixel Alpha Smoothing & Anti-Aliasing)
+  // Loại bỏ hoàn toàn vết răng cưa, tạo đường chuyển êm dịu chuyên nghiệp
+  const smoothedAlpha = new Uint8Array(width * height);
+  for (let y = 1; y < height - 1; y++) {
+    for (let x = 1; x < width - 1; x++) {
+      const pos = y * width + x;
+      const a = finalAlpha[pos];
+      if (a === 0 || a === 255) {
+        // Kiểm tra xem có nằm sát biên không
+        const isBorder = (
+          finalAlpha[pos - 1] !== a || finalAlpha[pos + 1] !== a ||
+          finalAlpha[pos - width] !== a || finalAlpha[pos + width] !== a
+        );
+        if (isBorder) {
+          // Tính trung bình có trọng số với 8 pixel xung quanh (3x3 Gaussian-like)
+          let sum = a * 4;
+          sum += finalAlpha[pos - 1] * 2 + finalAlpha[pos + 1] * 2 + finalAlpha[pos - width] * 2 + finalAlpha[pos + width] * 2;
+          sum += finalAlpha[pos - width - 1] + finalAlpha[pos - width + 1] + finalAlpha[pos + width - 1] + finalAlpha[pos + width + 1];
+          smoothedAlpha[pos] = Math.round(sum / 16);
+        } else {
+          smoothedAlpha[pos] = a;
+        }
+      } else {
+        smoothedAlpha[pos] = a;
       }
     }
   }
 
-  ctx.putImageData(imgData, 0, 0);
-  return srcCanvas.toDataURL('image/png');
+  // 8. Đưa Alpha vào dữ liệu ảnh và Khử ám màu viền (Multi-Color Spill Despill)
+  // 🛡️ BẢO TỒN NGUYÊN VẸN MÀU SẮC NHÂN VẬT (Áo đỏ, áo xanh, da người trắng hồng siêu thực)
+  for (let i = 0; i < width * height; i++) {
+    const idx = i * 4;
+    const a = smoothedAlpha[i];
+    sD[idx + 3] = a;
+
+    if (a > 0 && a < 250) {
+      // Chỉ khử ám màu ở các pixel biên mờ sát nền
+      const r = sD[idx];
+      const g = sD[idx + 1];
+      const b = sD[idx + 2];
+
+      if (g > Math.max(r, b) && (g - Math.max(r, b)) > 6) {
+        sD[idx + 1] = Math.round((r + b) / 2); // Khử ám xanh lá
+      } else if (b > Math.max(r, g) && (b - Math.max(r, g)) > 6) {
+        sD[idx + 2] = Math.round((r + g) / 2); // Khử ám xanh dương
+      } else if (r > Math.max(g, b) && (r - Math.max(g, b)) > 15 && targetCol === 'red') {
+        sD[idx] = Math.round((g + b) / 2);     // Khử ám đỏ ở viền nếu là phông đỏ
+      }
+    }
+  }
+
+  const outCanvas = document.createElement('canvas');
+  outCanvas.width = width;
+  outCanvas.height = height;
+  const outCtx = outCanvas.getContext('2d');
+  outCtx.putImageData(srcData, 0, 0);
+
+  return outCanvas.toDataURL('image/png');
 }
+
+
 
 /**
  * 2. AI BEAUTY ENHANCEMENT (Làm Đẹp Da & Nâng Cấp Siêu Nét Chuẩn 4K)

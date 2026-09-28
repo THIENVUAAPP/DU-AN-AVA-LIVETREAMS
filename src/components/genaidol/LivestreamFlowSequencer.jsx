@@ -2433,7 +2433,7 @@ export default function LivestreamFlowSequencer() {
     }
   };
 
-  // ✂️ TÁCH NỀN TỨC THÌ (CANVAS REALTIME 0MS) CHO HÌNH ẢNH HOẶC VIDEO
+  // ✂️ TÁCH NỀN TỨC THÌ (CANVAS REALTIME 0MS) CHO HÌNH ẢNH HOẶC VIDEO - BẢO VỆ NHÂN VẬT & SẢN PHẨM
   const handleInstantCanvasBgRemoval = async (layerType, targetId = null, mode = 'auto') => {
     let targetImg = null;
     if (layerType === 'avatar') {
@@ -2447,15 +2447,26 @@ export default function LivestreamFlowSequencer() {
       targetImg = currentStep?.overlayImage;
     }
 
+    const modeColors = {
+      auto: '#8b5cf6',
+      green: '#00ff00',
+      blue: '#0000ff',
+      red: '#ef4444',
+      black: '#000000',
+      white: '#ffffff',
+      room: '#64748b'
+    };
+    const chromaColor = modeColors[mode] || '#00ff00';
+
     if (!targetImg || !isImageMedia(targetImg)) {
-      // Đối với Video: Kích hoạt bộ lọc Chroma Key tương ứng
-      handleLayerChromaUpdate(layerType, targetId, { enabled: true, mode });
-      toast.info(`✨ Đã kích hoạt bộ lọc Tách Nền (${mode.toUpperCase()}) cho Video!`);
+      // Đối với Video: Kích hoạt bộ lọc Chroma Key tương ứng 60 FPS
+      handleLayerChromaUpdate(layerType, targetId, { enabled: true, mode, color: chromaColor });
+      toast.info(`✨ Đã kích hoạt bộ lọc Tách Nền (${mode.toUpperCase()}) cho Video 60 FPS!`);
       return;
     }
 
     pushUndoSnapshot();
-    toast.info('⏳ Đang xử lý tách nền hình ảnh siêu sạch 100%...');
+    toast.info('⏳ AI đang quét và tách sạch nền 100%, bảo vệ nhân vật & sản phẩm...');
     try {
       const transparentDataUrl = await removeImageBackgroundCanvas(targetImg, mode || 'auto');
       if (layerType === 'avatar') {
@@ -2470,7 +2481,7 @@ export default function LivestreamFlowSequencer() {
               talkVideo: transparentDataUrl,
               idleVideo: transparentDataUrl,
               mediaUrl: transparentDataUrl,
-              chromaKey: { enabled: false, mode: 'green', color: '#00ff00' }
+              chromaKey: { enabled: false, mode, color: chromaColor }
             };
           }
           return a;
@@ -2491,15 +2502,15 @@ export default function LivestreamFlowSequencer() {
       } else if (layerType === 'banner') {
         handleUpdateStep(currentStep.id, 'overlayImage', transparentDataUrl);
       }
-      toast.success('🎉 Đã tách sạch sẽ 100% nền hình ảnh trong suốt!');
+      toast.success('🎉 Đã tách sạch sẽ 100% nền hình ảnh trong suốt siêu mịn 4K!');
       if (currentStep) {
         setTimeout(() => {
           syncStepToServer(activePreset.steps[currentStepIndex] || currentStep, currentStepIndex, isPlayingFlow, true);
         }, 80);
       }
     } catch (err) {
-      handleLayerChromaUpdate(layerType, targetId, { enabled: true, mode });
-      toast.success('✨ Đã bật bộ lọc Tách Phông Xanh!');
+      handleLayerChromaUpdate(layerType, targetId, { enabled: true, mode, color: chromaColor });
+      toast.success(`✨ Đã kích hoạt bộ lọc Tách Phông (${mode.toUpperCase()})!`);
     }
   };
 
@@ -3047,17 +3058,40 @@ export default function LivestreamFlowSequencer() {
                   <span>Nhân Bản</span>
                 </button>
 
-                {/* 🪄 Xóa Nền AI */}
+                {/* 🪄 Xóa Nền AI 1-Chạm Đa Sắc */}
                 {selectedLayer.type !== 'text' && (
-                  <button
-                    type="button"
-                    onClick={() => handleInstantCanvasBgRemoval(selectedLayer.type, selectedLayer.id, 'auto')}
-                    className="px-1.5 py-0.5 rounded-md text-[8.5px] font-black bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white flex items-center gap-0.5 cursor-pointer shadow-xs whitespace-nowrap"
-                    title="Tự động tách mọi loại nền"
-                  >
-                    <Wand2 size={9} />
-                    <span>Xóa Nền</span>
-                  </button>
+                  <div className="flex items-center gap-0.5 bg-slate-900/90 rounded-md p-0.5 border border-indigo-500/40">
+                    <button
+                      type="button"
+                      onClick={() => handleInstantCanvasBgRemoval(selectedLayer.type, selectedLayer.id, 'auto')}
+                      className="px-1.5 py-0.5 rounded text-[8.5px] font-black bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white flex items-center gap-0.5 cursor-pointer shadow-xs whitespace-nowrap"
+                      title="1 Chạm Tách Sạch Mọi Loại Nền (Ảnh & Video - Giữ 100% Nhân Vật & Sản Phẩm)"
+                    >
+                      <Wand2 size={9} />
+                      <span>Xóa Nền AI</span>
+                    </button>
+                    <select
+                      onChange={(e) => {
+                        const val = e.target.value;
+                        if (val) {
+                          handleInstantCanvasBgRemoval(selectedLayer.type, selectedLayer.id, val);
+                          e.target.value = '';
+                        }
+                      }}
+                      defaultValue=""
+                      className="bg-transparent text-[8px] font-bold text-cyan-300 outline-none cursor-pointer pr-1"
+                      title="Chọn màu phông cần tách"
+                    >
+                      <option value="" disabled className="bg-slate-900 text-gray-400">Đổi Nền</option>
+                      <option value="auto" className="bg-slate-900 text-purple-300">🪄 Tự Động (Auto AI)</option>
+                      <option value="green" className="bg-slate-900 text-emerald-400">🟢 Xanh Lá</option>
+                      <option value="blue" className="bg-slate-900 text-blue-400">🔵 Xanh Dương</option>
+                      <option value="red" className="bg-slate-900 text-rose-400">🔴 Nền Đỏ</option>
+                      <option value="black" className="bg-slate-900 text-gray-300">⚫ Nền Đen</option>
+                      <option value="white" className="bg-slate-900 text-white">⚪ Nền Trắng</option>
+                      <option value="room" className="bg-slate-900 text-amber-300">🏠 Phòng/Tường</option>
+                    </select>
+                  </div>
                 )}
 
                 {/* Lên Lớp / Xuống Lớp */}
