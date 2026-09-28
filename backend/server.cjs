@@ -2923,6 +2923,9 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         } else if (e.key === 'm' || e.key === 'M') {
           e.preventDefault();
           handleMuteAction();
+        } else if (e.key === 'f' || e.key === 'F') {
+          e.preventDefault();
+          handleFitAction();
         } else if (e.key === 'h' || e.key === 'H') {
           e.preventDefault();
           toggleHideAll();
