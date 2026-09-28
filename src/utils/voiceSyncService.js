@@ -7302,19 +7302,7 @@ export const removeImageBackgroundCanvas = async (imgSrc, mode = 'auto', toleran
           }
         }
 
-        // 3. 🛡️ XÓA SẠCH HOÀN TOÀN ĐƯỜNG KHUNG VIỀN Ở 4 CẠNH ẢNH (Ảnh số 1: Xóa luôn khung của bức ảnh)
-        // Loại bỏ triệt để mọi vạch viền khung ảnh, viền đen chụp màn hình, viền cắt viền hộp 4 cạnh
-        const borderPad = Math.max(8, Math.min(24, Math.floor(Math.min(w, h) * 0.018)));
-        for (let y = 0; y < h; y++) {
-          for (let x = 0; x < w; x++) {
-            if (x < borderPad || x >= w - borderPad || y < borderPad || y >= h - borderPad) {
-              const idx = (y * w + x) * 4;
-              // Nếu pixel ở viền rìa ảnh, xóa trong suốt tuyệt đối để không còn sót lại khung viền
-              data[idx + 3] = 0;
-            }
-          }
-        }
-
+        // 3. 🛡️ BẢO TỒN NGUYÊN VẸN 100% CHI TIẾT NGƯỜI VÀ SẢN PHẨM Ở RÌA CẠNH (TUYỆT ĐỐI KHÔNG GỌT VIỀN BORDERPAD)
         ctx.putImageData(imgData, 0, 0);
         resolve(canvas.toDataURL('image/png'));
       } catch (err) {

@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.82';
+export const APP_VERSION = '4.9.83';
 export const RELEASE_DATE = '28/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🎙️ Bản Cập Nhật v4.9.82 - Khắc Phục Triệt Để Giọng Đọc Kịch Bản Avatar Live Idol & Phát Kịch Bản Live, Tự Động Phân Giải File ZIP Mới Nhất',
-    description: '1. Sửa Lỗi Giọng Đọc Kịch Bản AI Bị Câm: Loại bỏ triệt để xung đột cờ tạm dừng video (avalive_user_paused, avalive_window_capture_paused, avalive_audio_muted) khi chạy kịch bản Avatar Live IDOL và nút Phát Kịch Bản Live ngoài phần mềm, âm thanh cất giọng ngay lập tức, to rõ, chuẩn âm sắc. 2. Độc Lập Hóa Trạng Thái Phát Kịch Bản: Khi bấm phát kịch bản, hệ thống kích hoạt trực tiếp luồng voice AI ưu tiên mà không bị chặn bởi trạng thái Master Live hay video nền. 3. Phục Vụ Gói Cài Đặt ZIP Mới Nhất: Cập nhật tự động phân giải phiên bản mới nhất cho cả hệ điều hành Windows và macOS.'
+    title: '✨ Bản Cập Nhật v4.9.83 - Chuẩn Hóa Đường Link TikTok Live Studio & OBS Bắt Hình Sạch 100%, Đột Phá Công Nghệ Xóa Mọi Phông Nền AI Bảo Vệ Nhân Vật & Sản Phẩm Siêu Sắc Nét',
+    description: '1. Khắc Phục Triệt Để Lỗi "Khung Cái Khung" Trên TikTok Live Studio: Loại bỏ hiện tượng co cụm tỷ lệ và viền đen box-shadow, biến toàn bộ luồng phát thành Pure Full-Frame Tràn Viền 100vw x 100vh. 2. Làm Sạch 100% Khung Hình Live: Dock điều khiển và nút bấm hoàn toàn tàng hình khi phát sóng, chỉ xuất hiện mượt mà khi người dùng rê chuột vào mép trên màn hình. 3. Đồng Bộ Đầy Đủ Tọa Độ Sân Khấu Chính: Khớp 100% vị trí các lớp Video Nền, Multi-Avatar Đa Tầng, Sticker Extra Layers, Video Phụ PiP, Banner Hình Ảnh, Banner Tiêu Đề Cyber và Sản Phẩm Ghim TikTok Shop. 4. Đột Phá Xóa Mọi Phông Nền AI: Tách sạch bất kỳ nền nào (trắng, xanh, phòng cảnh, bối cảnh phức tạp) từng pixel/sợi tóc bằng thuật toán Boundary-Aware Flood-Fill Matting kết hợp bảo vệ tuyệt đối Nhân Vật, Người và Sản Phẩm siêu sắc nét. 5. Tự Động Phân Giải File ZIP v4.9.83 Mới Nhất cho Windows & macOS.'
   }
 ];
 

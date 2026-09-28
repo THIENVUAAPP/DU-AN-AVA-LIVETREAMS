@@ -982,17 +982,17 @@ app.get([
       user-select: none; -webkit-user-select: none;
     }
     #stage {
-      position: relative;
-      margin: auto;
+      position: absolute;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
       overflow: hidden;
       background: #000;
-      box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+      box-shadow: none;
+      border: none;
       z-index: 1;
-      aspect-ratio: ${isLandscapeInit ? '16 / 9' : '9 / 16'};
-      max-width: 100vw;
-      max-height: 100vh;
-      width: min(100vw, calc(${isLandscapeInit ? '100vh * 16 / 9' : '100vh * 9 / 16'}));
-      height: min(100vh, calc(${isLandscapeInit ? '100vw * 9 / 16' : '100vw * 16 / 9'}));
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1054,6 +1054,16 @@ app.get([
     }
     .chroma-green-filter { filter: url(#chroma-green); }
     .chroma-blue-filter { filter: url(#chroma-blue); }
+    #hoverZone {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 80px !important;
+      z-index: 2147483646 !important;
+      pointer-events: auto !important;
+      background: transparent !important;
+    }
     #controlsDock {
       position: fixed !important;
       top: 12px !important;
@@ -1075,19 +1085,25 @@ app.get([
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 16px rgba(6, 182, 212, 0.35) !important;
       z-index: 2147483647 !important;
       isolation: isolate !important;
-      will-change: transform !important;
-      opacity: 0.98 !important;
-      pointer-events: auto !important;
+      will-change: transform, opacity !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
       -webkit-app-region: no-drag !important;
       touch-action: manipulation !important;
       max-width: calc(100vw - 16px) !important;
       box-sizing: border-box !important;
       user-select: none !important;
       -webkit-user-select: none !important;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      transition: opacity 0.25s ease, transform 0.25s ease !important;
+    }
+    #hoverZone:hover ~ #controlsDock,
+    #controlsDock:hover,
+    #controlsDock.force-visible {
+      opacity: 0.98 !important;
+      pointer-events: auto !important;
+      transform: translateX(-50%) scale(1.02) !important;
     }
     #controlsDock.is-hidden { display: none !important; }
-    #controlsDock:hover { opacity: 1 !important; transform: translateX(-50%) scale(1.02) !important; }
     .dock-btn {
       background: rgba(255, 255, 255, 0.15) !important;
       border: 1px solid rgba(255, 255, 255, 0.35) !important;
@@ -1221,11 +1237,14 @@ app.get([
       />
     </div>
 
-    <!-- LỚP 1: CÁC LỚP HÌNH ẢNH PHỤ (Extra Layers / Sticker / Vòng tròn sàn / Logo) -->
-    <div id="multiAvatarExtraLayers" style="position: absolute; inset: 0; pointer-events: none; z-index: 5;"></div>
-
-    <!-- LỚP 2: CÁC KHUNG HÌNH NHÂN VẬT AVATAR (1 hoặc 2-4 Avatar Đa Tầng) -->
-    <div id="multiAvatarCharacters" style="position: absolute; inset: 0; pointer-events: none; z-index: 10;"></div>
+    <!-- CỤM MULTI-AVATAR STAGE (Bọc các lớp nhân vật và hình ảnh phụ) -->
+    <div id="multiAvatarStage" style="position: absolute; inset: 0; pointer-events: none; z-index: 5; overflow: hidden;">
+      <div id="multiAvatarBg" style="position: absolute; inset: 0; pointer-events: none; z-index: 1; display: none; background-size: cover; background-position: center;"></div>
+      <!-- LỚP 1: CÁC LỚP HÌNH ẢNH PHỤ (Extra Layers / Sticker / Vòng tròn sàn / Logo) -->
+      <div id="multiAvatarExtraLayers" style="position: absolute; inset: 0; pointer-events: none; z-index: 5;"></div>
+      <!-- LỚP 2: CÁC KHUNG HÌNH NHÂN VẬT AVATAR (1 hoặc 2-4 Avatar Đa Tầng) -->
+      <div id="multiAvatarCharacters" style="position: absolute; inset: 0; pointer-events: none; z-index: 10;"></div>
+    </div>
 
     <!-- LỚP 3: VIDEO PHỤ PIP (Picture-in-Picture) XẾP CHỒNG TỪ SEQUENCER -->
     <div id="pipContainer" style="position: absolute; left: ${secTrans.x}%; top: ${secTrans.y}%; width: ${secTrans.width}%; height: ${secTrans.height}%; z-index: ${secTrans.zIndex || 20}; pointer-events: none; display: ${secMedia ? 'block' : 'none'};">
@@ -1264,6 +1283,9 @@ app.get([
     <!-- Live badge is hidden on clean stream feed -->
   </div>
 
+  <!-- VÙNG CẢM ỨNG DI CHUỘT ĐỂ HIỆN DOCK ĐIỀU KHIỂN -->
+  <div id="hoverZone"></div>
+
   <!-- BẢNG ĐIỀU KHIỂN NỔI DOCK TOÀN CỤC CẤP BODY -->
   <div id="controlsDock">
     <button id="btnLiveStatus" class="dock-btn dock-btn-live" type="button" onclick="window.handleLiveRefreshToggle(event)" title="Luồng Trực Tiếp 60 FPS (Bấm để làm mới & đồng bộ luồng)">
@@ -1301,16 +1323,13 @@ app.get([
       function updateStageAspectRatio(ratio) {
         const stage = document.getElementById('stage');
         if (!stage) return;
-        const isLandscape = (ratio === '16:9' || ratio === '16/9');
-        if (isLandscape) {
-          stage.style.aspectRatio = '16 / 9';
-          stage.style.width = 'min(100vw, calc(100vh * 16 / 9))';
-          stage.style.height = 'min(100vh, calc(100vw * 9 / 16))';
-        } else {
-          stage.style.aspectRatio = '9 / 16';
-          stage.style.width = 'min(100vw, calc(100vh * 9 / 16))';
-          stage.style.height = 'min(100vh, calc(100vw * 16 / 9))';
-        }
+        stage.style.position = 'absolute';
+        stage.style.inset = '0';
+        stage.style.width = '100vw';
+        stage.style.height = '100vh';
+        stage.style.margin = '0';
+        stage.style.boxShadow = 'none';
+        stage.style.border = 'none';
       }
       updateStageAspectRatio('${ratioParam}');
 
@@ -1725,14 +1744,19 @@ app.get([
           const resolvedMedia = resolveUrl(targetVid);
 
           const customTrans = (avatarTransformsMap && (avatarTransformsMap[charId] || avatarTransformsMap[avatar.id] || avatarTransformsMap[avatar.role])) || {};
-          const baseTrans = avatar.transform || (avatar.transforms) || {
-            x: idx === 0 ? 8 : (idx === 1 ? 55 : (idx === 2 ? 30 : 50)),
-            y: idx === 0 ? 41 : (idx === 1 ? 17 : 20),
-            width: 45,
-            height: 48,
-            zIndex: 10 + idx
-          };
-          const trans = Object.assign({}, baseTrans, customTrans);
+          const isSingle = avatars.length === 1;
+          const defaultTrans = isSingle
+            ? { x: 0, y: 0, width: 100, height: 100, zIndex: 10, borderRadius: 0 }
+            : {
+                x: idx === 0 ? 8 : (idx === 1 ? 55 : (idx === 2 ? 30 : 50)),
+                y: idx === 0 ? 41 : (idx === 1 ? 17 : 20),
+                width: 45,
+                height: 48,
+                zIndex: 10 + idx,
+                borderRadius: 16
+              };
+          const baseTrans = avatar.transform || (avatar.transforms) || defaultTrans;
+          const trans = Object.assign({}, defaultTrans, baseTrans, customTrans);
           const chromaClass = avatar.chromaKey && avatar.chromaKey.enabled ? (avatar.chromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter') : '';
 
           if (!charEl) {
@@ -1745,12 +1769,12 @@ app.get([
             container.appendChild(charEl);
           }
 
-          charEl.style.left = (trans.x ?? (idx === 0 ? 8 : 55)) + '%';
-          charEl.style.top = (trans.y ?? (idx === 0 ? 41 : 17)) + '%';
-          charEl.style.width = (trans.width ?? 45) + '%';
-          charEl.style.height = (trans.height ?? 48) + '%';
+          charEl.style.left = (trans.x ?? (isSingle ? 0 : (idx === 0 ? 8 : 55))) + '%';
+          charEl.style.top = (trans.y ?? (isSingle ? 0 : (idx === 0 ? 41 : 17))) + '%';
+          charEl.style.width = (trans.width ?? (isSingle ? 100 : 45)) + '%';
+          charEl.style.height = (trans.height ?? (isSingle ? 100 : 48)) + '%';
           charEl.style.zIndex = trans.zIndex || (10 + idx);
-          charEl.style.borderRadius = (trans.borderRadius || 16) + 'px';
+          charEl.style.borderRadius = (trans.borderRadius || 0) + 'px';
           charEl.style.opacity = (trans.opacity !== undefined ? trans.opacity : 100) / 100;
 
           const rot = trans.rotation || trans.rotate || 0;
@@ -2090,12 +2114,18 @@ app.get([
         if (pipContainer && pipVideo && pipImage) {
           const pipUrl = resolveUrl(data.secondaryMediaUrl);
           if (pipUrl) {
-            const trans = data.secondaryMediaTransform || { x: 52, y: 28, width: 40, height: 48, zIndex: 25 };
+            const trans = data.secondaryMediaTransform || {
+              x: data.secondaryMediaPos === 'top-left' ? 4 : (data.secondaryMediaPos === 'bottom-left' ? 4 : 55),
+              y: (data.secondaryMediaPos === 'bottom-left' || data.secondaryMediaPos === 'bottom-right') ? 70 : 8,
+              width: Number(data.secondaryMediaScale) || 40,
+              height: Math.round((Number(data.secondaryMediaScale) || 40) * 1.2),
+              zIndex: 25
+            };
             const secChromaClass = data.secondaryMediaChromaKey && data.secondaryMediaChromaKey.enabled
               ? (data.secondaryMediaChromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter')
               : '';
-            pipContainer.style.left = (trans.x ?? 52) + '%';
-            pipContainer.style.top = (trans.y ?? 28) + '%';
+            pipContainer.style.left = (trans.x ?? 55) + '%';
+            pipContainer.style.top = (trans.y ?? 8) + '%';
             pipContainer.style.width = (trans.width ?? 40) + '%';
             pipContainer.style.height = (trans.height ?? 48) + '%';
             pipContainer.style.zIndex = trans.zIndex || 25;
@@ -2126,7 +2156,13 @@ app.get([
         if (overlayImgEl && overlayImgContent) {
           const imgUrl = resolveUrl(data.overlayImage || data.bannerUrl || data.posterUrl);
           if (imgUrl) {
-            const trans = data.overlayImageTransform || { x: 10, y: 12, width: 80, height: 20, zIndex: 30 };
+            const trans = data.overlayImageTransform || {
+              x: 10,
+              y: data.overlayImagePos === 'bottom' ? 70 : (data.overlayImagePos === 'top' ? 8 : 12),
+              width: Number(data.overlayImageScale) || 80,
+              height: 20,
+              zIndex: 30
+            };
             const imgChromaClass = data.overlayImageChromaKey && data.overlayImageChromaKey.enabled
               ? (data.overlayImageChromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter')
               : '';
@@ -2501,40 +2537,59 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       font-family: system-ui, -apple-system, sans-serif;
     }
     #stage {
-      position: relative;
-      margin: auto;
+      position: absolute;
+      inset: 0;
+      width: 100vw;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
       overflow: hidden;
       background: #000;
-      box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
+      box-shadow: none;
+      border: none;
       z-index: 1;
-      aspect-ratio: ${isLandscapeInit ? '16 / 9' : '9 / 16'};
-      max-width: 100vw;
-      max-height: 100vh;
-      width: min(100vw, calc(${isLandscapeInit ? '100vh * 16 / 9' : '100vh * 9 / 16'}));
-      height: min(100vh, calc(${isLandscapeInit ? '100vw * 9 / 16' : '100vw * 16 / 9'}));
       display: flex;
       align-items: center;
       justify-content: center;
     }
     video {
-      width: 100%; height: 100%;
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       object-fit: ${fitParam === 'contain' ? 'contain' : 'cover'};
+      object-position: center center;
       background-color: #000;
       display: ${isInitialImg ? 'none' : 'block'};
+      outline: none; border: none;
       image-rendering: -webkit-optimize-contrast;
       image-rendering: crisp-edges;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
     }
     #imagePlayer {
-      width: 100%; height: 100%;
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
       object-fit: ${fitParam === 'contain' ? 'contain' : 'cover'};
+      object-position: center center;
       background-color: #000;
       display: ${isInitialImg ? 'block' : 'none'};
       image-rendering: -webkit-optimize-contrast;
       image-rendering: crisp-edges;
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
+    }
+    #hoverZone {
+      position: fixed !important;
+      top: 0 !important;
+      left: 0 !important;
+      width: 100vw !important;
+      height: 80px !important;
+      z-index: 2147483646 !important;
+      pointer-events: auto !important;
+      background: transparent !important;
     }
     #controlsDock {
       position: fixed !important;
@@ -2557,19 +2612,25 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 16px rgba(6, 182, 212, 0.35) !important;
       z-index: 2147483647 !important;
       isolation: isolate !important;
-      will-change: transform !important;
-      opacity: 0.98 !important;
-      pointer-events: auto !important;
+      will-change: transform, opacity !important;
+      opacity: 0 !important;
+      pointer-events: none !important;
       -webkit-app-region: no-drag !important;
       touch-action: manipulation !important;
       max-width: calc(100vw - 16px) !important;
       box-sizing: border-box !important;
       user-select: none !important;
       -webkit-user-select: none !important;
-      transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      transition: opacity 0.25s ease, transform 0.25s ease !important;
+    }
+    #hoverZone:hover ~ #controlsDock,
+    #controlsDock:hover,
+    #controlsDock.force-visible {
+      opacity: 0.98 !important;
+      pointer-events: auto !important;
+      transform: translateX(-50%) scale(1.02) !important;
     }
     #controlsDock.is-hidden { display: none !important; }
-    #controlsDock:hover { opacity: 1 !important; transform: translateX(-50%) scale(1.02) !important; }
     .dock-btn {
       background: rgba(255, 255, 255, 0.15) !important;
       border: 1px solid rgba(255, 255, 255, 0.35) !important;
@@ -2707,11 +2768,14 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       />
     </div>
 
-    <!-- LỚP 1: CÁC LỚP HÌNH ẢNH PHỤ (Extra Layers / Sticker / Vòng tròn sàn / Logo) -->
-    <div id="multiAvatarExtraLayers" style="position: absolute; inset: 0; pointer-events: none; z-index: 5;"></div>
-
-    <!-- LỚP 2: CÁC KHUNG HÌNH NHÂN VẬT AVATAR (1 hoặc 2-4 Avatar Đa Tầng) -->
-    <div id="multiAvatarCharacters" style="position: absolute; inset: 0; pointer-events: none; z-index: 10;"></div>
+    <!-- CỤM MULTI-AVATAR STAGE (Bọc các lớp nhân vật và hình ảnh phụ) -->
+    <div id="multiAvatarStage" style="position: absolute; inset: 0; pointer-events: none; z-index: 5; overflow: hidden;">
+      <div id="multiAvatarBg" style="position: absolute; inset: 0; pointer-events: none; z-index: 1; display: none; background-size: cover; background-position: center;"></div>
+      <!-- LỚP 1: CÁC LỚP HÌNH ẢNH PHỤ (Extra Layers / Sticker / Vòng tròn sàn / Logo) -->
+      <div id="multiAvatarExtraLayers" style="position: absolute; inset: 0; pointer-events: none; z-index: 5;"></div>
+      <!-- LỚP 2: CÁC KHUNG HÌNH NHÂN VẬT AVATAR (1 hoặc 2-4 Avatar Đa Tầng) -->
+      <div id="multiAvatarCharacters" style="position: absolute; inset: 0; pointer-events: none; z-index: 10;"></div>
+    </div>
 
     <!-- LỚP 3: VIDEO PHỤ PIP (Picture-in-Picture) XẾP CHỒNG TỪ SEQUENCER -->
     <div id="pipContainer" style="position: absolute; left: ${secTrans.x}%; top: ${secTrans.y}%; width: ${secTrans.width}%; height: ${secTrans.height}%; z-index: ${secTrans.zIndex || 20}; pointer-events: none; display: ${secMedia ? 'block' : 'none'};">
@@ -2746,8 +2810,11 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         </div>
       </div>
     </div>
-    <div id="badge">🔴 4K 60 FPS TRỰC TIẾP v4.9.58</div>
+    <div id="badge" style="display: none !important;">🔴 4K 60 FPS TRỰC TIẾP v4.9.83</div>
   </div>
+
+  <!-- VÙNG CẢM ỨNG DI CHUỘT ĐỂ HIỆN DOCK ĐIỀU KHIỂN -->
+  <div id="hoverZone"></div>
 
   <!-- BẢNG ĐIỀU KHIỂN NỔI DOCK TOÀN CỤC CẤP BODY — CHỐNG BỊ GPU VIDEO LAYER CHE KHUẤT -->
   <div id="controlsDock">
@@ -2783,16 +2850,13 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       function updateStageAspectRatio(ratio) {
         const stage = document.getElementById('stage');
         if (!stage) return;
-        const isLandscape = (ratio === '16:9' || ratio === '16/9');
-        if (isLandscape) {
-          stage.style.aspectRatio = '16 / 9';
-          stage.style.width = 'min(100vw, calc(100vh * 16 / 9))';
-          stage.style.height = 'min(100vh, calc(100vw * 9 / 16))';
-        } else {
-          stage.style.aspectRatio = '9 / 16';
-          stage.style.width = 'min(100vw, calc(100vh * 9 / 16))';
-          stage.style.height = 'min(100vh, calc(100vw * 16 / 9))';
-        }
+        stage.style.position = 'absolute';
+        stage.style.inset = '0';
+        stage.style.width = '100vw';
+        stage.style.height = '100vh';
+        stage.style.margin = '0';
+        stage.style.boxShadow = 'none';
+        stage.style.border = 'none';
       }
       updateStageAspectRatio('${ratioParam}');
 
@@ -3188,14 +3252,19 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           const resolvedMedia = resolveUrl(targetVid);
 
           const customTrans = (avatarTransformsMap && (avatarTransformsMap[charId] || avatarTransformsMap[avatar.id] || avatarTransformsMap[avatar.role])) || {};
-          const baseTrans = avatar.transform || (avatar.transforms) || {
-            x: idx === 0 ? 8 : (idx === 1 ? 55 : (idx === 2 ? 30 : 50)),
-            y: idx === 0 ? 41 : (idx === 1 ? 17 : 20),
-            width: 45,
-            height: 48,
-            zIndex: 10 + idx
-          };
-          const trans = Object.assign({}, baseTrans, customTrans);
+          const isSingle = avatars.length === 1;
+          const defaultTrans = isSingle
+            ? { x: 0, y: 0, width: 100, height: 100, zIndex: 10, borderRadius: 0 }
+            : {
+                x: idx === 0 ? 8 : (idx === 1 ? 55 : (idx === 2 ? 30 : 50)),
+                y: idx === 0 ? 41 : (idx === 1 ? 17 : 20),
+                width: 45,
+                height: 48,
+                zIndex: 10 + idx,
+                borderRadius: 16
+              };
+          const baseTrans = avatar.transform || (avatar.transforms) || defaultTrans;
+          const trans = Object.assign({}, defaultTrans, baseTrans, customTrans);
           const chromaClass = avatar.chromaKey && avatar.chromaKey.enabled ? (avatar.chromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter') : '';
 
           if (!charEl) {
@@ -3208,12 +3277,12 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
             container.appendChild(charEl);
           }
 
-          charEl.style.left = (trans.x ?? (idx === 0 ? 8 : 55)) + '%';
-          charEl.style.top = (trans.y ?? (idx === 0 ? 41 : 17)) + '%';
-          charEl.style.width = (trans.width ?? 45) + '%';
-          charEl.style.height = (trans.height ?? 48) + '%';
+          charEl.style.left = (trans.x ?? (isSingle ? 0 : (idx === 0 ? 8 : 55))) + '%';
+          charEl.style.top = (trans.y ?? (isSingle ? 0 : (idx === 0 ? 41 : 17))) + '%';
+          charEl.style.width = (trans.width ?? (isSingle ? 100 : 45)) + '%';
+          charEl.style.height = (trans.height ?? (isSingle ? 100 : 48)) + '%';
           charEl.style.zIndex = trans.zIndex || (10 + idx);
-          charEl.style.borderRadius = (trans.borderRadius || 16) + 'px';
+          charEl.style.borderRadius = (trans.borderRadius || 0) + 'px';
           charEl.style.opacity = (trans.opacity !== undefined ? trans.opacity : 100) / 100;
 
           const rot = trans.rotation || trans.rotate || 0;
@@ -3552,12 +3621,18 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         if (pipContainer && pipVideo && pipImage) {
           const pipUrl = resolveUrl(data.secondaryMediaUrl);
           if (pipUrl) {
-            const trans = data.secondaryMediaTransform || { x: 52, y: 28, width: 40, height: 48, zIndex: 25 };
+            const trans = data.secondaryMediaTransform || {
+              x: data.secondaryMediaPos === 'top-left' ? 4 : (data.secondaryMediaPos === 'bottom-left' ? 4 : 55),
+              y: (data.secondaryMediaPos === 'bottom-left' || data.secondaryMediaPos === 'bottom-right') ? 70 : 8,
+              width: Number(data.secondaryMediaScale) || 40,
+              height: Math.round((Number(data.secondaryMediaScale) || 40) * 1.2),
+              zIndex: 25
+            };
             const secChromaClass = data.secondaryMediaChromaKey && data.secondaryMediaChromaKey.enabled
               ? (data.secondaryMediaChromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter')
               : '';
-            pipContainer.style.left = (trans.x ?? 52) + '%';
-            pipContainer.style.top = (trans.y ?? 28) + '%';
+            pipContainer.style.left = (trans.x ?? 55) + '%';
+            pipContainer.style.top = (trans.y ?? 8) + '%';
             pipContainer.style.width = (trans.width ?? 40) + '%';
             pipContainer.style.height = (trans.height ?? 48) + '%';
             pipContainer.style.zIndex = trans.zIndex || 25;
@@ -3588,7 +3663,13 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         if (overlayImgEl && overlayImgContent) {
           const imgUrl = resolveUrl(data.overlayImage || data.bannerUrl || data.posterUrl);
           if (imgUrl) {
-            const trans = data.overlayImageTransform || { x: 10, y: 12, width: 80, height: 20, zIndex: 30 };
+            const trans = data.overlayImageTransform || {
+              x: 10,
+              y: data.overlayImagePos === 'bottom' ? 70 : (data.overlayImagePos === 'top' ? 8 : 12),
+              width: Number(data.overlayImageScale) || 80,
+              height: 20,
+              zIndex: 30
+            };
             const imgChromaClass = data.overlayImageChromaKey && data.overlayImageChromaKey.enabled
               ? (data.overlayImageChromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter')
               : '';
@@ -3920,7 +4001,7 @@ let _cachedReleaseUrls = {};
 let _lastReleaseFetchTime = 0;
 async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
   const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
-  const targetVer = fallbackVer || '4.9.82';
+  const targetVer = fallbackVer || '4.9.83';
   const safeFallbackUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${targetVer}/${osPrefix}_v${targetVer}.zip`;
   
   const cacheKey = `${osPrefix}_latest`;
@@ -3970,7 +4051,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.82';
+  let ver = '4.9.83';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -4013,7 +4094,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.82';
+  let ver = '4.9.83';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
