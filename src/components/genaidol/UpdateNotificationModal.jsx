@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.87';
+export const APP_VERSION = '4.9.88';
 export const RELEASE_DATE = '28/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '✨ Bản Cập Nhật v4.9.87 - Đồng Bộ Toàn Diện Window Capture OBS 100% Sân Khấu Chính, Tiêu Đề Kịch Bản Ẩn & Tách Nền Siêu Sạch',
-    description: '1. Window Capture OBS Lấy Đầy Đủ 100% Sân Khấu Chính: Render trực tiếp CleanLiveOverlay với đầy đủ Multi-Avatar 1-4 người, Video/Ảnh nền, PiP Video phụ, Banner hình ảnh, Banner chữ nổi bật, Sticker/Logo và Sản phẩm ghim TikTok Shop; khắc phục triệt để lỗi chập chờn lúc hiện lúc không. 2. Live AI Avatar Tiêu Đề Bước Chạy Ẩn: Tên bước kịch bản (stepTitle) chạy ẩn hoàn toàn 100%, xóa bỏ tiêu đề mặc định; chỉ hiển thị chữ khi người dùng trực tiếp nhập tiêu đề. 3. Công Nghệ Xóa Phông Nền Siêu Sạch: Tối ưu bộ lọc SVG Chroma Filter và thuật toán Despill Canvas, khử sạch viền xanh/đen quanh tóc, tai, cổ áo, vai áo, nách và sản phẩm.'
+    title: '✨ Bản Cập Nhật v4.9.88 - Đồng Bộ Sân Khấu Đầu Tiên 0ms, Phân Biệt Tuyệt Đối Video vs Ảnh & Công Nghệ Xóa Sạch Mọi Loại Nền',
+    description: '1. Đồng Bộ Sân Khấu Đầu Tiên & Window Capture Tức Thì (0ms): Khởi tạo và nạp 100% tất cả các lớp của Sân Khấu Chính vào Window Capture OBS và link TikTok Live Studio ngay khi vừa mở; tự động phát video ngay lập tức không trễ 1 khung hình. 2. Phân Biệt Chuẩn Xác 100% Video & Ảnh: Tách biệt rõ ràng đâu là video, đâu là ảnh (ảnh upload không bị nhầm là video), đảm bảo các lớp layer, banner, avatar và video phụ hiển thị sắc nét, mượt mà 60 FPS. 3. Đột Phá Công Nghệ Xóa Phông Nền Cho Cả Video & Ảnh: Bộ lọc SVG Studio 4K và Canvas Engine chuyên nghiệp xóa sạch từng điểm một cho phông xanh lá, xanh dương, đen, trắng, phòng thực tế và tường; xóa mịn, xóa láng, không lem vào tóc, tai, nách, cổ áo hay sản phẩm.'
   }
 ];
 

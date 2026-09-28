@@ -31,9 +31,7 @@ import GameBanDoAdminModal from './game/GameBanDoAdminModal';
 import bandoEngine from './game/bandoGameEngine';
 import bandoAudio from './game/bandoAudioEngine';
 import { mapVoiceEngine, battleVoiceEngine } from './game/gameVoiceEngine';
-import battleCommentary from './game/battleCommentaryEngine';
-import { clearGlobalSpeechQueue, getMultiAvatarConfig, isImageMedia, getChromaStyle, ALL_SYSTEM_VOICES, previewVoiceAudio, stopVoiceAudio, getDualVoiceConfig, resolveEffectiveVoice } from '../../utils/voiceSyncService';
-import MultiAvatarStudioModal, { SvgChromaFilters } from './MultiAvatarStudioModal';
+import { clearGlobalSpeechQueue, getMultiAvatarConfig, isImageMedia, isVideoMedia, getChromaStyle, ALL_SYSTEM_VOICES, previewVoiceAudio, stopVoiceAudio, getDualVoiceConfig, resolveEffectiveVoice } from '../../utils/voiceSyncService';
 import AutoCaptchaSolver from '../AutoCaptchaSolver';
 import AIVoiceModule from '../kol-live/AIVoiceModule';
 import AICharacterBeautyModal from './AICharacterBeautyModal';
@@ -2051,7 +2049,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     }
 
     const broadcastUrl = serverActiveUrl || activeUrl || userLockedMediaUrl || '';
-    const isVid = isVideoPlaying !== false;
+    const isImage = isImageMedia(broadcastUrl);
+    const isVid = isImage ? false : (isVideoMedia(broadcastUrl) ? true : (isVideoPlaying !== false));
 
     // Lớp Video Phụ PiP từ Sequencer
     const secMedia = flowSequencerOverlay?.secondaryMediaUrl || null;
@@ -2237,6 +2236,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         newWin.__activeMediaBlob = currentFileBlobRef.current || window.__activeMediaBlob;
         newWin.__activeMediaBlobUrl = currentBlobUrlRef.current || window.__activeMediaBlobUrl;
         newWin.__activeMediaBlobMap = window.__activeMediaBlobMap;
+        newWin.__activeMasterStagePayload = payload;
         newWin.focus();
       } catch (e) {}
     }
@@ -2798,12 +2798,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
               }
               const currentPayload = getMasterStagePayload();
+              const effectiveMedia = playUrl || currentPayload.mediaUrl;
+              const isMediaImg = isImageMedia(effectiveMedia);
+              const finalIsVid = isMediaImg ? false : (isVideoMedia(effectiveMedia) ? true : (currentPayload.isVideo !== undefined ? currentPayload.isVideo : true));
               try {
                 // 🎯 1. Phục vụ toàn bộ 100% các lớp/state của Sân Khấu Chính cho Window Capture OBS
                 bc.postMessage({
                   type: 'MASTER_LIVE_STATE_UPDATE',
                   ...currentPayload,
-                  mediaUrl: playUrl || currentPayload.mediaUrl,
+                  mediaUrl: effectiveMedia,
                   blobUrl: blobUrl,
                   fileBlob: blob,
                   selectedCharacter: selectedCharacter,
@@ -2811,14 +2814,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   characterName: charMatch ? charMatch.name : '',
                   currentTime: curTime,
                   isPlaying: isPlaying,
-                  isVideo: true,
+                  isVideo: finalIsVid,
                   force: true,
                   timestamp: Date.now()
                 });
                 bc.postMessage({
                   type: 'RESPONSE_CURRENT_MEDIA',
                   ...currentPayload,
-                  mediaUrl: playUrl || currentPayload.mediaUrl,
+                  mediaUrl: effectiveMedia,
                   blobUrl: blobUrl,
                   fileBlob: blob,
                   selectedCharacter: selectedCharacter,
@@ -2826,7 +2829,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   characterName: charMatch ? charMatch.name : '',
                   currentTime: curTime,
                   isPlaying: isPlaying,
-                  isVideo: true,
+                  isVideo: finalIsVid,
                   force: true,
                   timestamp: Date.now()
                 });
@@ -5431,6 +5434,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     }
 
     const renderMainCharacter = () => {
+      const mainMediaChromaStyle = getChromaStyle(flowSequencerOverlay?.mainMediaChromaKey || multiAvatarConfig?.chromaKey || multiAvatarConfig?.backgroundChromaKey);
       if (lipSyncVideoUrl) {
         return (
           <video 
@@ -5603,21 +5607,22 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             {/* THẺ VIDEO PREVIEW TRÊN PHẦN MỀM (TƯƠNG THÍCH HOÀN HẢO VỚI OBS WINDOW CAPTURE - KHÔNG BAO GIỜ ĐEN MÀN HÌNH) */}
             <video 
               key={`main_desktop_vid_${selected.id || selected.url || 'default'}`}
-              ref={desktopVideoRef}
-              data-main-player="true"
-              src={selected.url} 
-              className="w-full h-full object-cover bg-black cursor-pointer main-video-player"
-              style={{ 
-                transform: 'translateZ(0)',
-                willChange: 'transform',
-                backfaceVisibility: 'hidden',
-                imageRendering: 'auto'
-              }}
-              autoPlay
-              loop 
-              muted={isLocalSpeakerMuted} 
-              controls={false}
-              preload="auto"
+                  ref={desktopVideoRef}
+                  data-main-player="true"
+                  src={selected.url} 
+                  className="w-full h-full object-cover bg-black cursor-pointer main-video-player"
+                  style={{ 
+                    transform: 'translateZ(0)',
+                    willChange: 'transform',
+                    backfaceVisibility: 'hidden',
+                    imageRendering: 'auto',
+                    ...mainMediaChromaStyle
+                  }}
+                  autoPlay
+                  loop 
+                  muted={isLocalSpeakerMuted} 
+                  controls={false}
+                  preload="auto"
               disablePictureInPicture
               disableRemotePlayback
               playsInline 
@@ -5952,7 +5957,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           <img 
             src={selected.url} 
             className="w-full h-full object-contain drop-shadow-[0_15px_35px_rgba(0,0,0,0.6)] transition-all duration-300 transform group-hover/charStage:scale-[1.01]"
-            style={{ imageRendering: '-webkit-optimize-contrast' }}
+            style={{ 
+              imageRendering: '-webkit-optimize-contrast',
+              ...mainMediaChromaStyle
+            }}
             alt={selected.name}
             onError={(e) => {
               e.currentTarget.onerror = null;

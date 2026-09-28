@@ -8,7 +8,7 @@ import GameChienDau from './game/GameChienDau';
 import { supabase } from '../../lib/supabaseClient';
 import { loadAllAidolItems } from '../../utils/idbHelper';
 import { syncMasterLiveState, getMasterLiveState, sendVideoControl } from '../../lib/masterLiveSync';
-import { getMultiAvatarConfig, isImageMedia, getChromaStyle } from '../../utils/voiceSyncService';
+import { getMultiAvatarConfig, isImageMedia, isVideoMedia, getChromaStyle } from '../../utils/voiceSyncService';
 import { SvgChromaFilters } from './MultiAvatarStudioModal';
 // Clean Live Overlay - Ultra HD OBS Window Capture
 import bandoAudio from './game/bandoAudioEngine';
@@ -90,8 +90,16 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   const [masterState, setMasterState] = useState(() => {
     let saved = null;
     try {
-      const raw = localStorage.getItem('avalive_master_live_state');
-      if (raw) saved = JSON.parse(raw);
+      if (typeof window !== 'undefined') {
+        if (window.opener && window.opener.__activeMasterStagePayload) {
+          saved = window.opener.__activeMasterStagePayload;
+        } else if (window.__activeMasterStagePayload) {
+          saved = window.__activeMasterStagePayload;
+        } else {
+          const raw = localStorage.getItem('avalive_master_live_state');
+          if (raw) saved = JSON.parse(raw);
+        }
+      }
     } catch (e) {}
 
     const urlParams = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
@@ -123,6 +131,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           if (locked) resolvedMedia = locked;
         }
         if (!resolvedMedia && saved?.mediaUrl) resolvedMedia = saved.mediaUrl;
+        if (!resolvedMedia && saved?.mainMediaUrl) resolvedMedia = saved.mainMediaUrl;
         if (!resolvedMedia) {
           const customChars = JSON.parse(localStorage.getItem('avalive_custom_characters') || '[]');
           const charId = urlParams?.get('char') || saved?.selectedCharacter || localStorage.getItem('avalive_selected_char');
@@ -142,12 +151,17 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       defaultStage = saved.stage;
     }
 
+    const initialMedia = resolvedMedia || saved?.mediaUrl || saved?.mainMediaUrl || null;
+    const isImage = isImageMedia(initialMedia);
+    const isVid = isImage ? false : (isVideoMedia(initialMedia) ? true : (saved?.isVideo !== false));
+
     return {
+      ...(saved || {}),
       stage: defaultStage, // 'idol' | 'dancefloor' | 'battle' | 'bando' | 'broadcast'
       aspectRatio: ratioParam || '9:16',
-      mediaUrl: resolvedMedia || (saved?.mediaUrl || null),
-      flvUrl: resolvedMedia || saved?.flvUrl || null,
-      isVideo: saved?.isVideo !== false,
+      mediaUrl: initialMedia,
+      flvUrl: initialMedia || saved?.flvUrl || null,
+      isVideo: isVid,
       selectedCharacter: urlParams?.get('char') || saved?.selectedCharacter || (typeof window !== 'undefined' ? localStorage.getItem('avalive_active_character_id') : '') || '',
       characterName: saved?.characterName || 'AvaLive VIP PRO',
       isConnected: true,
@@ -2152,13 +2166,18 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       }
     }
 
-    // 8. Xác định chính xác video hay ảnh
+    // 8. Xác định chính xác 100% video hay ảnh (Ưu tiên nhận diện ảnh trước, không bao giờ nhầm file ảnh trong /uploads/ thành video)
     if (typeof candidateUrl === 'string') {
-      const lower = candidateUrl.toLowerCase();
-      if (lower.endsWith('.mp4') || lower.endsWith('.webm') || lower.endsWith('.mov') || lower.includes('/uploads/')) {
-        isVideo = true;
-      } else if (lower.endsWith('.png') || lower.endsWith('.jpg') || lower.endsWith('.jpeg') || lower.endsWith('.webp')) {
+      if (isImageMedia(candidateUrl)) {
         isVideo = false;
+      } else if (isVideoMedia(candidateUrl)) {
+        isVideo = true;
+      } else if (candidateUrl.startsWith('data:video/')) {
+        isVideo = true;
+      } else if (candidateUrl.startsWith('data:image/')) {
+        isVideo = false;
+      } else {
+        isVideo = masterState.isVideo !== false;
       }
     }
 
@@ -2383,9 +2402,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   // THANH ĐIỀU KHIỂN NẰM NỔI (FLOATING OVERLAY) HOẶC ẨN HOÀN TOÀN (H) ĐỂ OBS / TIKTOK STUDIO CHỤP SIÊU SẮC NÉT 100% KHÔNG VIỀN ĐEN
   const currentStage = masterState.stage || 'idol';
   const ratio = masterState.aspectRatio || '9:16';
+  const singleMainChroma = getChromaStyle(masterState?.mainMediaChromaKey || multiAvatarConfig?.chromaKey || multiAvatarConfig?.backgroundChromaKey);
 
   return (
     <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black select-none font-sans relative">
+      {/* 🎨 BỘ LỌC TÁCH NỀN TOÀN DIỆN CHO MỌI LỚP VIDEO VÀ ẢNH (GREEN, BLUE, BLACK, WHITE, ROOM) */}
+      <SvgChromaFilters />
+
       {/* 👑 KHUNG QUẢN TRỊ NỔI TỰ ĐỘNG TÀNG HÌNH (100% SẠCH SẼ CHO TIKTOK LIVE STUDIO & OBS BROWSER SOURCE) */}
       {isWindowCapture && (
         <div className="fixed top-0 left-0 right-0 h-10 z-50 pointer-events-auto group/dockZone flex justify-center items-start pt-1">
@@ -2401,7 +2424,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   LIVE 9:16
                 </span>
                 <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                  v4.9.87
+                  v4.9.88
                 </span>
               </div>
 
@@ -2983,7 +3006,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     WebkitBackfaceVisibility: 'hidden',
                     imageRendering: '-webkit-optimize-contrast',
                     WebkitFontSmoothing: 'antialiased',
-                    willChange: 'transform'
+                    willChange: 'transform',
+                    ...singleMainChroma
                   }}
                   onLoadStart={(e) => {
                     const v = e.currentTarget;
@@ -3179,7 +3203,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               <img 
                 src={activeMedia.url} 
                 className="w-full h-full select-none absolute inset-0"
-                style={{ width: '100%', height: '100%', objectFit: objectFitState || 'cover', imageRendering: '-webkit-optimize-contrast' }}
+                style={{ width: '100%', height: '100%', objectFit: objectFitState || 'cover', imageRendering: '-webkit-optimize-contrast', ...singleMainChroma }}
                 alt="AI Idol"
               />
             ) : (

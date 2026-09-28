@@ -7134,18 +7134,29 @@ export const isImageMedia = (url) => {
   return /\.(png|jpe?g|webp|gif|svg|avif|bmp|ico)($|\?|#)/i.test(url);
 };
 
+export const isVideoMedia = (url) => {
+  if (!url || typeof url !== 'string') return false;
+  if (isImageMedia(url)) return false;
+  if (url.startsWith('data:video/') || url.includes('#type=video') || url.includes('type=video') || url.includes('video/')) return true;
+  return /\.(mp4|webm|mov|m4v|mkv|flv|m3u8)($|\?|#)/i.test(url);
+};
+
 export const getChromaStyle = (chromaConfig) => {
   if (!chromaConfig || !chromaConfig.enabled) return {};
-  const mode = chromaConfig.mode || 'green';
+  const mode = (chromaConfig.mode || 'green').toLowerCase();
   const color = (chromaConfig.color || '#00ff00').toLowerCase();
-  if (mode === 'black' || color === '#000000') {
-    return { mixBlendMode: 'screen', filter: 'contrast(105%)' };
+
+  if (mode === 'black' || color === '#000000' || color === '#0a0a0a' || color === '#050505') {
+    return { filter: 'url(#avalive-chroma-black)' };
   }
-  if (mode === 'white' || color === '#ffffff') {
-    return { mixBlendMode: 'multiply', filter: 'contrast(105%)' };
+  if (mode === 'white' || color === '#ffffff' || color === '#f5f5f5' || color === '#fafafa') {
+    return { filter: 'url(#avalive-chroma-white)' };
   }
-  if (mode === 'blue' || color.includes('0000ff')) {
+  if (mode === 'blue' || color.includes('0000ff') || color === '#0000ff' || color === '#0044ff') {
     return { filter: 'url(#avalive-chroma-blue)' };
+  }
+  if (mode === 'room' || mode === 'wall' || mode === 'ambient' || mode === 'background') {
+    return { filter: 'url(#avalive-chroma-room)' };
   }
   return { filter: 'url(#avalive-chroma-green)' };
 };

@@ -25,17 +25,15 @@ export const SvgChromaFilters = () => (
     <defs>
       {/* 🟢 TÁCH NỀN XANH LÁ SIÊU SẠCH 4K (KHỬ SẠCH ÁM XANH TÓC, VAI, CỔ ÁO, TAI, NÁCH & BẢO TOÀN SẢN PHẨM) */}
       <filter id="avalive-chroma-green" colorInterpolationFilters="sRGB" x="0%" y="0%" width="100%" height="100%">
-        {/* Bước 1: Khử ám xanh (Despill) thông minh bảo vệ màu da, áo và sản phẩm */}
         <feColorMatrix
           type="matrix"
           values="
             1.00  0.00  0.00  0.00  0.00
-            0.45  0.10  0.45  0.00  0.00
+            0.35  0.30  0.35  0.00  0.00
             0.00  0.00  1.00  0.00  0.00
             0.00  0.00  0.00  1.00  0.00"
           result="despilled_green"
         />
-        {/* Bước 2: Alpha Key Mask - Tách triệt để phông xanh, bảo tồn 100% chi tiết da, tóc, áo, nách, tai */}
         <feColorMatrix
           in="SourceGraphic"
           type="matrix"
@@ -43,12 +41,11 @@ export const SvgChromaFilters = () => (
             1.00  0.00  0.00  0.00  0.00
             0.00  1.00  0.00  0.00  0.00
             0.00  0.00  1.00  0.00  0.00
-            1.85 -3.60  1.85  1.00 -0.05"
+            2.00 -4.00  2.00  1.00 -0.10"
           result="raw_mask_green"
         />
-        {/* Bước 3: Chuẩn hóa biên độ Alpha sắc nét - Cắt bỏ viền mờ rác, giữ nguyên khối nhân vật */}
         <feComponentTransfer in="raw_mask_green" result="sharp_mask_green">
-          <feFuncA type="linear" slope="1.4" intercept="-0.1" />
+          <feFuncA type="linear" slope="3.0" intercept="-0.2" />
         </feComponentTransfer>
         <feComposite in="despilled_green" in2="sharp_mask_green" operator="in" />
       </filter>
@@ -60,8 +57,8 @@ export const SvgChromaFilters = () => (
           values="
             1.00  0.00  0.00  0.00  0.00
             0.00  1.00  0.00  0.00  0.00
-            0.45  0.45  0.10  0.00  0.00
-            0.00  0.00  1.00  0.00  0.00"
+            0.35  0.35  0.30  0.00  0.00
+            0.00  0.00  0.00  1.00  0.00"
           result="despilled_blue"
         />
         <feColorMatrix
@@ -71,13 +68,67 @@ export const SvgChromaFilters = () => (
             1.00  0.00  0.00  0.00  0.00
             0.00  1.00  0.00  0.00  0.00
             0.00  0.00  1.00  0.00  0.00
-            1.85  1.85 -3.60  1.00 -0.05"
+            2.00  2.00 -4.00  1.00 -0.10"
           result="raw_mask_blue"
         />
         <feComponentTransfer in="raw_mask_blue" result="sharp_mask_blue">
-          <feFuncA type="linear" slope="1.4" intercept="-0.1" />
+          <feFuncA type="linear" slope="3.0" intercept="-0.2" />
         </feComponentTransfer>
         <feComposite in="despilled_blue" in2="sharp_mask_blue" operator="in" />
+      </filter>
+
+      {/* ⚫ TÁCH NỀN ĐEN / TỐI SIÊU SẠCH (BLACK SCREEN LUMA ALPHA) */}
+      <filter id="avalive-chroma-black" colorInterpolationFilters="sRGB" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix
+          in="SourceGraphic"
+          type="matrix"
+          values="
+            1.00  0.00  0.00  0.00  0.00
+            0.00  1.00  0.00  0.00  0.00
+            0.00  0.00  1.00  0.00  0.00
+            2.00  3.50  1.00  0.00 -0.22"
+          result="luma_mask_black"
+        />
+        <feComponentTransfer in="luma_mask_black" result="sharp_mask_black">
+          <feFuncA type="linear" slope="4.5" intercept="-0.3" />
+        </feComponentTransfer>
+        <feComposite in="SourceGraphic" in2="sharp_mask_black" operator="in" />
+      </filter>
+
+      {/* ⚪ TÁCH NỀN TRẮNG / TƯỜNG SÁNG SIÊU SẠCH (WHITE SCREEN) */}
+      <filter id="avalive-chroma-white" colorInterpolationFilters="sRGB" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix
+          in="SourceGraphic"
+          type="matrix"
+          values="
+            1.00  0.00  0.00  0.00  0.00
+            0.00  1.00  0.00  0.00  0.00
+            0.00  0.00  1.00  0.00  0.00
+           -1.50 -2.50 -1.00  1.00  4.20"
+          result="raw_mask_white"
+        />
+        <feComponentTransfer in="raw_mask_white" result="sharp_mask_white">
+          <feFuncA type="linear" slope="3.5" intercept="-0.2" />
+        </feComponentTransfer>
+        <feComposite in="SourceGraphic" in2="sharp_mask_white" operator="in" />
+      </filter>
+
+      {/* 🏠 TÁCH BỐI CẢNH PHÒNG THỰC TẾ / TƯỜNG (ROOM / AMBIENT) */}
+      <filter id="avalive-chroma-room" colorInterpolationFilters="sRGB" x="0%" y="0%" width="100%" height="100%">
+        <feColorMatrix
+          in="SourceGraphic"
+          type="matrix"
+          values="
+            1.05  0.00  0.00  0.00 -0.02
+            0.00  1.05  0.00  0.00 -0.02
+            0.00  0.00  1.05  0.00 -0.02
+            1.60  2.20  1.20  1.00 -0.30"
+          result="room_mask"
+        />
+        <feComponentTransfer in="room_mask" result="sharp_room_mask">
+          <feFuncA type="linear" slope="3.8" intercept="-0.25" />
+        </feComponentTransfer>
+        <feComposite in="SourceGraphic" in2="sharp_room_mask" operator="in" />
       </filter>
     </defs>
   </svg>
