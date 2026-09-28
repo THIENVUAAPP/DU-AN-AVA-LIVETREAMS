@@ -50,6 +50,7 @@ import ShopeeLiveConnectModal from './ShopeeLiveConnectModal';
 import autoPinProductService from '../../utils/autoPinProductService';
 import { generateAiKnowledgeScript } from '../../utils/aiScriptGenerator';
 import { ensureServerMediaUrl, uploadMediaToServer, deleteServerMedia } from '../../utils/mediaUploadService';
+import AiRealtimeLipSyncAvatar from './AiRealtimeLipSyncAvatar';
 
 const CHARACTERS = {};
 
@@ -5327,11 +5328,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
                 return (
                   <div key={avatar.id} className="relative w-full h-full overflow-hidden rounded-lg bg-black flex items-center justify-center">
-                    {isImg ? (
-                      <img src={vidSrc} alt={avatar.name} className="w-full h-full object-cover" />
-                    ) : (
-                      <video src={vidSrc} autoPlay loop muted playsInline className="w-full h-full object-cover" />
-                    )}
+                    <AiRealtimeLipSyncAvatar
+                      src={vidSrc}
+                      type={isImg ? 'image' : 'video'}
+                      alt={avatar.name}
+                      isSpeaking={isSpeakingNow}
+                      speakerId={avatar.id}
+                      role={avatar.role}
+                      muted={true}
+                      className="w-full h-full object-cover"
+                      enableLipSync={true}
+                      showIndicator={false}
+                    />
                     <div className="absolute bottom-2 left-2 px-2 py-0.5 rounded bg-black/60 text-white text-[10px] font-bold">
                       {avatar.name} {isSpeakingNow && '🔊'}
                     </div>
@@ -5470,37 +5478,26 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                     }`}
                     style={{ background: avatar?.chromaKey?.enabled ? 'transparent' : 'transparent', ...chromaStyle }}
                   >
-                    {isImg ? (
-                      <img
-                        src={vidSrc}
-                        alt={avatar.name}
-                        className="w-full h-full select-none pointer-events-none bg-transparent"
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: transform.objectFit || 'cover',
-                          ...chromaStyle
-                        }}
-                      />
-                    ) : (
-                      <video
-                        key={`${avatar.id}_${isSpeakingNow ? 'talk' : 'idle'}_${vidSrc}`}
-                        src={vidSrc}
-                        autoPlay
-                        loop
-                        muted={liveAudioMuted}
-                        playsInline
-                        controls={false}
-                        className="w-full h-full select-none pointer-events-none bg-transparent"
-                        style={{
-                          width: '100%',
-                          height: '100%',
-                          objectFit: transform.objectFit || 'cover',
-                          backgroundColor: 'transparent',
-                          ...chromaStyle
-                        }}
-                      />
-                    )}
+                    <AiRealtimeLipSyncAvatar
+                      key={`${avatar.id}_${isSpeakingNow ? 'talk' : 'idle'}_${vidSrc}`}
+                      src={vidSrc}
+                      type={isImg ? 'image' : 'video'}
+                      alt={avatar.name}
+                      isSpeaking={isSpeakingNow}
+                      speakerId={avatar.id}
+                      role={avatar.role}
+                      muted={liveAudioMuted}
+                      className="w-full h-full select-none pointer-events-none bg-transparent"
+                      style={{
+                        width: '100%',
+                        height: '100%',
+                        objectFit: transform.objectFit || 'cover',
+                        backgroundColor: 'transparent',
+                        ...chromaStyle
+                      }}
+                      enableLipSync={true}
+                      showIndicator={false}
+                    />
                   </div>
                 </div>
               );
@@ -6041,18 +6038,20 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
       return (
         <div className="relative w-full h-full flex items-center justify-center bg-[#0d0d12] overflow-hidden select-none group/charStage">
-          <img 
+          <AiRealtimeLipSyncAvatar 
             src={selected.url} 
-            className="w-full h-full object-contain drop-shadow-[0_15px_35px_rgba(0,0,0,0.6)] transition-all duration-300 transform group-hover/charStage:scale-[1.01]"
+            type="image"
+            alt={selected.name}
+            isSpeaking={isSpeakerActive}
+            speakerId={activeSpeakerId || 'avatar_1'}
+            role="idol"
+            className="w-full h-full object-contain drop-shadow-[0_15px_35px_rgba(0,0,0,0.6)]"
             style={{ 
               imageRendering: '-webkit-optimize-contrast',
               ...mainMediaChromaStyle
             }}
-            alt={selected.name}
-            onError={(e) => {
-              e.currentTarget.onerror = null;
-              e.currentTarget.style.display = 'none';
-            }}
+            enableLipSync={true}
+            showIndicator={true}
           />
           <div className="absolute inset-0 pointer-events-none bg-gradient-to-t from-black/60 via-transparent to-black/20" />
           

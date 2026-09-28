@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.92';
+export const APP_VERSION = '4.9.93';
 export const RELEASE_DATE = '28/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '✨ Bản Cập Nhật v4.9.92 - Công Nghệ Xóa Nền AI Cao Cấp 4K Siêu Mịn Cho Cả Ảnh & Video',
-    description: '1. Xóa Sạch 100% Mọi Loại Nền (Ảnh & Video): Tách phông xanh lá, xanh dương, nền đỏ, nền đen, nền trắng, phòng ngủ và phong cảnh ngoài trời phức tạp. 2. Bảo Tồn Nguyên Vẹn Nhân Vật & Sản Phẩm: Tuyệt đối không làm đen nhân vật, giữ trọn sắc da trắng hồng, áo đỏ, áo xanh siêu thực; bảo vệ 100% sản phẩm livestream trên tay và cạnh nhân vật. 3. Biên Viền Siêu Mịn Sub-pixel: Khử sạch viền lem ám màu, giữ nguyên từng sợi tóc tơ và mép sản phẩm sắc nét. 4. 1-Chạm Xóa Nền AI: Thao tác tức thì (0ms) trên thanh công cụ Sequencer, Multi-Avatar Studio và Sân Khấu.'
+    title: '👄 Bản Cập Nhật v4.9.93 - Công Nghệ AI Nhép Miệng, Thần Thái & Biểu Cảm Khuôn Mặt Siêu Cấp (Ảnh & Video)',
+    description: '1. Đỉnh Cao AI Lip-Sync Tự Động Từ Ảnh & Video: Tải ảnh hoặc video bất kỳ lên, khi phát kịch bản nhân vật tự động nhép miệng khớp 100% từng âm vị (A, E, I, O, U, M, B, P, F) với độ trễ <15ms thời gian thực 60 FPS. 2. Biểu Cảm Thần Thái Sống Động: Tự động chớp mắt sinh học (Bio-Blink Engine), gật đầu nghiêng đầu nhấn nhá theo trọng âm câu nói (Head Bob & Tilt Prosody). 3. Nhịp Thở Cơ Thể Tự Nhiên: Chuyển động hô hấp tinh tế (Body Breathing Sway) giúp ảnh tĩnh và video luôn tràn đầy sức sống. 4. Đồng Bộ Realtime Toàn Diện: Hoạt động trơn tru trên Sân Khấu Chính, Window Capture OBS và luồng TikTok Live Studio trực tuyến.'
   }
 ];
 

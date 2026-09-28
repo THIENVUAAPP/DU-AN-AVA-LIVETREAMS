@@ -10,6 +10,7 @@ import { loadAllAidolItems } from '../../utils/idbHelper';
 import { syncMasterLiveState, getMasterLiveState, sendVideoControl } from '../../lib/masterLiveSync';
 import { getMultiAvatarConfig, isImageMedia, isVideoMedia, getChromaStyle } from '../../utils/voiceSyncService';
 import { SvgChromaFilters } from './MultiAvatarStudioModal';
+import AiRealtimeLipSyncAvatar from './AiRealtimeLipSyncAvatar';
 // Clean Live Overlay - Ultra HD OBS Window Capture
 import bandoAudio from './game/bandoAudioEngine';
 
@@ -2432,7 +2433,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   LIVE 9:16
                 </span>
                 <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                  v4.9.92
+                  v4.9.93
                 </span>
               </div>
 
@@ -2716,32 +2717,19 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                               }`}
                             >
                               {vidSrc ? (
-                                isImg ? (
-                                  <img
-                                    src={vidSrc}
-                                    alt={avatar.name}
-                                    className="w-full h-full object-cover select-none pointer-events-none transform-gpu"
-                                    style={{ imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto' }}
-                                  />
-                                ) : (
-                                  <video
-                                    key={`${avatar.id}_${isSpeakingNow ? 'talk' : 'idle'}_${vidSrc}`}
-                                    src={vidSrc}
-                                    autoPlay
-                                    loop
-                                    muted={isVideoAudioMuted}
-                                    playsInline
-                                    controls={false}
-                                    preload="auto"
-                                    disableRemotePlayback
-                                    className="w-full h-full object-cover select-none pointer-events-none transform-gpu bg-black"
-                                    style={{
-                                      transform: 'translate3d(0, 0, 0)',
-                                      WebkitTransform: 'translate3d(0, 0, 0)',
-                                      imageRendering: '-webkit-optimize-contrast'
-                                    }}
-                                  />
-                                )
+                                <AiRealtimeLipSyncAvatar
+                                  src={vidSrc}
+                                  type={isImg ? 'image' : 'video'}
+                                  alt={avatar.name}
+                                  isSpeaking={isSpeakingNow}
+                                  speakerId={avatar.id}
+                                  role={avatar.role}
+                                  muted={isVideoAudioMuted}
+                                  className="w-full h-full object-cover select-none pointer-events-none transform-gpu"
+                                  style={{ imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto' }}
+                                  enableLipSync={true}
+                                  showIndicator={false}
+                                />
                               ) : null}
                               <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm border border-white/10 text-[10px] font-bold text-white shadow-sm">
                                 <span className={`w-2 h-2 rounded-full ${isSpeakingNow ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'}`} />
@@ -2936,43 +2924,27 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                               className="w-full h-full overflow-hidden rounded-[inherit] bg-transparent"
                               style={chromaStyle}
                             >
-                              {isImg ? (
-                                <img
-                                  src={vidSrc}
-                                  alt={avatar.name}
-                                  className="w-full h-full select-none pointer-events-none transform-gpu bg-transparent"
-                                  style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: customTrans.objectFit || 'cover',
-                                    imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto',
-                                    ...chromaStyle
-                                  }}
-                                />
-                              ) : (
-                                <video
-                                  key={`${avatar.id}_${isSpeakingNow ? 'talk' : 'idle'}_${vidSrc}`}
-                                  src={vidSrc}
-                                  autoPlay
-                                  loop
-                                  muted={isVideoAudioMuted}
-                                  playsInline
-                                  controls={false}
-                                  preload="auto"
-                                  disableRemotePlayback
-                                  className="w-full h-full select-none pointer-events-none transform-gpu bg-transparent"
-                                  style={{
-                                    width: '100%',
-                                    height: '100%',
-                                    objectFit: customTrans.objectFit || 'cover',
-                                    backgroundColor: 'transparent',
-                                    transform: 'translate3d(0, 0, 0)',
-                                    WebkitTransform: 'translate3d(0, 0, 0)',
-                                    imageRendering: '-webkit-optimize-contrast',
-                                    ...chromaStyle
-                                  }}
-                                />
-                              )}
+                              <AiRealtimeLipSyncAvatar
+                                key={`${avatar.id}_${isSpeakingNow ? 'talk' : 'idle'}_${vidSrc}`}
+                                src={vidSrc}
+                                type={isImg ? 'image' : 'video'}
+                                alt={avatar.name}
+                                isSpeaking={isSpeakingNow}
+                                speakerId={avatar.id}
+                                role={avatar.role}
+                                muted={isVideoAudioMuted}
+                                className="w-full h-full select-none pointer-events-none transform-gpu bg-transparent"
+                                style={{
+                                  width: '100%',
+                                  height: '100%',
+                                  objectFit: customTrans.objectFit || 'cover',
+                                  backgroundColor: 'transparent',
+                                  imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto',
+                                  ...chromaStyle
+                                }}
+                                enableLipSync={true}
+                                showIndicator={false}
+                              />
                             </div>
 
                             {/* Speaker Active Tag Pill */}
@@ -3208,11 +3180,17 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 }}
               />
             ) : activeMedia.url ? (
-              <img 
+              <AiRealtimeLipSyncAvatar 
                 src={activeMedia.url} 
+                type="image"
+                alt="AI Idol"
+                isSpeaking={isSpeakerActive}
+                speakerId={activeSpeakerId || 'avatar_1'}
+                role="idol"
                 className="w-full h-full select-none absolute inset-0"
                 style={{ width: '100%', height: '100%', objectFit: objectFitState || 'cover', imageRendering: '-webkit-optimize-contrast', ...singleMainChroma }}
-                alt="AI Idol"
+                enableLipSync={true}
+                showIndicator={false}
               />
             ) : (
               <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#07080d] via-[#0d1017] to-[#040508] text-center p-6 select-none">
