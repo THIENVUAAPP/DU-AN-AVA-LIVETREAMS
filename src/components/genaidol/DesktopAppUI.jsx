@@ -824,6 +824,16 @@ export default function DesktopAppUI() {
     }
   });
 
+  // 📜 Kịch bản Idol số 1 Chuẩn Xịn 100% (Mỹ Phẩm & Skincare)
+  const DEFAULT_IDOL_SCRIPT_1 = `Chào mừng tất cả các tình yêu đã có mặt trong phiên livestream làm đẹp đặc biệt ngày hôm nay của shop em nha!
+Các chị đẹp ơi, ai đang lướt qua phiên live thì cho em xin một nút thả tim và một lượt chia sẻ để nhận quà mở bát đầu live nào!
+Hôm nay shop em mang đến cho cả nhà một siêu phẩm chăm sóc sắc đẹp và nâng tầm khí chất cực kỳ đỉnh cao luôn ạ!
+Đó chính là Bộ Đôi Tinh Chất Serum Tế Bào Gốc Phục Hồi Da Trẻ Hóa và Nước Hoa Pháp Cao Cấp lưu hương suốt 12 giờ đồng hồ!
+Chị nào mà da đang bị khô ráp, thâm sạm, không đều màu hoặc bắt đầu xuất hiện nếp nhăn lão hóa thì nhất định không được bỏ qua live này nhé!
+Chỉ sau đúng 7 ngày sử dụng, làn da của các chị sẽ căng bóng, mịn màng và mướt như da em bé luôn ạ!
+Duy nhất trong phiên livestream ngày hôm nay, giảm sốc 50% chỉ còn 890.000đ tặng kèm kem dưỡng ẩm mini và freeship toàn quốc!
+Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày, bấm vào Giỏ Hàng góc trái săn ngay nhé!`;
+
   // 📜 Quản lý Phát Kịch Bản Bán Hàng Trực Tiếp Ngoài Giao Diện (Script Broadcast Controller)
   const [isScriptLiveRunning, setIsScriptLiveRunning] = useState(false);
 
@@ -832,14 +842,29 @@ export default function DesktopAppUI() {
       const pTabs = localStorage.getItem('aidol_user_script_tabs_persistent');
       if (pTabs) {
         const parsed = JSON.parse(pTabs);
-        if (Array.isArray(parsed) && parsed.length > 0) return parsed;
+        if (Array.isArray(parsed) && parsed.length > 0) {
+          return parsed.map(t => {
+            if ((t.id === 'tab_1' || t.name?.includes('Kịch bản 1')) && (!t.fixedScriptText || !t.fixedScriptText.trim())) {
+              return { ...t, fixedScriptText: DEFAULT_IDOL_SCRIPT_1 };
+            }
+            return t;
+          });
+        }
       }
       const evConf = JSON.parse(localStorage.getItem('aidol_event_configs') || '{}');
-      return evConf.script_broadcast?.scriptTabs || [
-        { id: 'tab_1', name: 'Kịch bản 1: Mặc Định', active: true }
+      if (Array.isArray(evConf.script_broadcast?.scriptTabs) && evConf.script_broadcast.scriptTabs.length > 0) {
+        return evConf.script_broadcast.scriptTabs.map(t => {
+          if ((t.id === 'tab_1' || t.name?.includes('Kịch bản 1')) && (!t.fixedScriptText || !t.fixedScriptText.trim())) {
+            return { ...t, fixedScriptText: DEFAULT_IDOL_SCRIPT_1 };
+          }
+          return t;
+        });
+      }
+      return [
+        { id: 'tab_1', name: 'Kịch bản 1: Mặc Định', active: true, fixedScriptText: DEFAULT_IDOL_SCRIPT_1 }
       ];
     } catch (e) {
-      return [{ id: 'tab_1', name: 'Kịch bản 1: Mặc Định', active: true }];
+      return [{ id: 'tab_1', name: 'Kịch bản 1: Mặc Định', active: true, fixedScriptText: DEFAULT_IDOL_SCRIPT_1 }];
     }
   });
 
@@ -898,94 +923,83 @@ export default function DesktopAppUI() {
         }
         setIsLocalSpeakerMuted(false);
       } catch (e) {}
+
+      // 🎯 LẤY CHUẨN XÁC TAB KỊCH BẢN ĐANG ĐƯỢC CHỌN TRÊN DROPDOWN HEADER
       const chosen = scriptTabsList.find(t => t.active) || scriptTabsList[0];
-      let scriptText = chosen?.fixedScriptText || '';
-      let scriptName = chosen?.name || 'Kịch bản Idol';
-      
-      // Đọc cấu hình từ aidol_event_configs
-      let evConf = {};
-      try {
-        evConf = JSON.parse(localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup') || '{}');
-      } catch (e) {}
+      const targetTabId = chosen?.id || 'tab_1';
+      let scriptName = chosen?.name || 'Kịch bản 1: Mặc Định';
+      let scriptText = (chosen?.fixedScriptText && chosen.fixedScriptText.trim()) ? chosen.fixedScriptText : '';
 
-      const broadcastMode = evConf.script_broadcast?.broadcastMode || 'fixed_script';
-      const isAiBrainMode = broadcastMode === 'ai_brain' || broadcastMode === 'ai_prompt';
+      // 1. Nếu tab được chọn chưa có text, đọc từ aidol_user_script_tabs_persistent theo đúng targetTabId
+      if (!scriptText) {
+        try {
+          const pTabs = JSON.parse(localStorage.getItem('aidol_user_script_tabs_persistent') || '[]');
+          const matchedPTab = pTabs.find(t => t.id === targetTabId) || (targetTabId === 'tab_1' ? pTabs[0] : null);
+          if (matchedPTab?.fixedScriptText && matchedPTab.fixedScriptText.trim()) {
+            scriptText = matchedPTab.fixedScriptText;
+            scriptName = matchedPTab.name || scriptName;
+          }
+        } catch (e) {}
+      }
 
-      if (isAiBrainMode) {
-        // =========================================================================
-        // CHẾ ĐỘ 2: BỘ NÃO AI & TRI THỨC DOANH NGHIỆP TỰ ĐỘNG TẠO KỊCH BẢN
-        // =========================================================================
-        const durMin = evConf.script_broadcast?.scriptDurationMinutes || evConf.script_broadcast?.aiLiveDuration || 60;
-        scriptName = `Bộ Não AI Tri Thức (${durMin} phút)`;
-        scriptText = generateAiKnowledgeScript({
-          companyName: evConf.script_broadcast?.companyName || 'Cửa Hàng Trực Tuyến Chính Hãng',
-          productName: evConf.script_broadcast?.productName || 'Bộ Đôi Serum Tế Bào Gốc & Nước Hoa Pháp',
-          productPrice: evConf.script_broadcast?.productPrice || '1.850.000đ - Flash Sale chỉ còn 890.000đ',
-          promotions: evConf.script_broadcast?.promotions || 'Tặng kèm kem dưỡng mini + Freeship toàn quốc',
-          keyFeatures: evConf.script_broadcast?.keyFeatures || 'Dưỡng da căng bóng mịn màng sau 7 ngày, nước hoa lưu hương 12 giờ',
-          warrantyPolicy: evConf.script_broadcast?.warrantyPolicy || 'Bảo hành 1 đổi 1 trong 30 ngày, hoàn tiền 200% nếu hàng không chuẩn',
-          companyKnowledgeText: evConf.script_broadcast?.companyKnowledgeText || '',
-          aiLiveStyle: evConf.script_broadcast?.aiLiveStyle || 'sales_fast',
-          scriptDurationMinutes: durMin,
-          livePlatform: evConf.script_broadcast?.livePlatform || 'tiktok'
-        });
-      } else {
-        // =========================================================================
-        // CHẾ ĐỘ 1: KỊCH BẢN CÓ SẴN (FIXED SCRIPT - ĐỌC ĐÚNG 100% KỊCH BẢN ĐÃ CÀI ĐẶT)
-        // =========================================================================
-        // 1. Tìm tab kịch bản đang active trong event configs
-        const confTabs = evConf.script_broadcast?.scriptTabs;
-        if (Array.isArray(confTabs) && confTabs.length > 0) {
-          const activeConfTab = confTabs.find(t => t.active === true) || 
-            confTabs.find(t => t.id === evConf.script_broadcast?.activeScriptTabId) || 
-            confTabs[0];
-          if (activeConfTab) {
-            scriptName = activeConfTab.name || scriptName;
-            if (activeConfTab.fixedScriptText && activeConfTab.fixedScriptText.trim()) {
-              scriptText = activeConfTab.fixedScriptText;
+      // 2. Nếu vẫn chưa có, đọc từ aidol_event_configs theo đúng targetTabId
+      if (!scriptText) {
+        try {
+          const evConf = JSON.parse(localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup') || '{}');
+          const confTabs = evConf.script_broadcast?.scriptTabs;
+          if (Array.isArray(confTabs) && confTabs.length > 0) {
+            const matchedConfTab = confTabs.find(t => t.id === targetTabId) || (targetTabId === 'tab_1' ? confTabs[0] : null);
+            if (matchedConfTab?.fixedScriptText && matchedConfTab.fixedScriptText.trim()) {
+              scriptText = matchedConfTab.fixedScriptText;
+              scriptName = matchedConfTab.name || scriptName;
             }
           }
-        }
-
-        // 2. Tìm tab kịch bản trong persistent tabs
-        if (!scriptText || !scriptText.trim()) {
-          try {
-            const pTabs = JSON.parse(localStorage.getItem('aidol_user_script_tabs_persistent') || '[]');
-            const activePTab = pTabs.find(t => t.id === chosen?.id) || pTabs.find(t => t.active) || pTabs[0];
-            if (activePTab) {
-              scriptName = activePTab.name || scriptName;
-              if (activePTab.fixedScriptText && activePTab.fixedScriptText.trim()) {
-                scriptText = activePTab.fixedScriptText;
-              }
-            }
-          } catch (e) {}
-        }
-
-        // 3. Dự phòng fixedScriptText trong evConf
-        if ((!scriptText || !scriptText.trim()) && evConf.script_broadcast?.fixedScriptText) {
-          scriptText = evConf.script_broadcast.fixedScriptText;
-        }
-
-        // 4. Dự phòng chosen từ state
-        if ((!scriptText || !scriptText.trim()) && chosen?.fixedScriptText) {
-          scriptText = chosen.fixedScriptText;
-          scriptName = chosen.name || scriptName;
-        }
+          if (!scriptText && evConf.script_broadcast?.fixedScriptText && targetTabId === 'tab_1') {
+            scriptText = evConf.script_broadcast.fixedScriptText;
+          }
+        } catch (e) {}
       }
 
+      // 3. Nếu là Kịch bản 1 (hoặc scriptText vẫn rỗng) -> Nạp chuẩn 100% Kịch bản 1 Mặc Định
       if (!scriptText || !scriptText.trim()) {
-        scriptText = `Chào mừng tất cả các tình yêu đã có mặt trong phiên livestream đặc biệt ngày hôm nay của shop em nha!
-Các chị đẹp ơi, ai đang lướt qua phiên live thì cho em xin một nút thả tim và một lượt chia sẻ để nhận quà mở bát đầu live nào!
-Hôm nay shop em mang đến cho cả nhà một siêu phẩm cực kỳ đỉnh cao và độc quyền duy nhất trên sóng livestream!
-Đó chính là Bộ Đôi Tinh Chất Serum Tế Bào Gốc Phục Hồi Da Trẻ Hóa và Nước Hoa Cao Cấp lưu hương suốt 12 giờ đồng hồ!
-Chị nào mà da đang bị khô ráp, thâm sạm, không đều màu thì nhất định không được bỏ qua phiên live này nhé!
-Chỉ sau đúng 7 ngày sử dụng, làn da của các chị sẽ căng bóng, mịn màng và mướt như da em bé luôn ạ!
-Duy nhất trong phiên live hôm nay, giảm sốc 50% tặng kèm kem dưỡng ẩm mini và miễn phí giao hàng toàn quốc!
-Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày, bấm vào Giỏ Hàng góc trái săn ngay nhé!`;
+        scriptText = DEFAULT_IDOL_SCRIPT_1;
+        if (!scriptName || scriptName === 'Kịch bản Idol') {
+          scriptName = 'Kịch bản 1: Mặc Định';
+        }
       }
-      
+
+      // 4. Đồng bộ kịch bản chuẩn vào Persistent Tabs và Event Configs
+      try {
+        const pTabs = JSON.parse(localStorage.getItem('aidol_user_script_tabs_persistent') || '[]');
+        const baseTabs = Array.isArray(pTabs) && pTabs.length > 0 ? pTabs : scriptTabsList;
+        const updatedPTabs = baseTabs.map(t => ({
+          ...t,
+          active: t.id === targetTabId,
+          ...(t.id === targetTabId ? { fixedScriptText: scriptText } : {})
+        }));
+        localStorage.setItem('aidol_user_script_tabs_persistent', JSON.stringify(updatedPTabs));
+
+        let evConf = {};
+        try {
+          evConf = JSON.parse(localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup') || '{}');
+        } catch (e) {}
+        if (!evConf.script_broadcast) evConf.script_broadcast = {};
+        evConf.script_broadcast.broadcastMode = 'fixed_script';
+        evConf.script_broadcast.scriptTabs = updatedPTabs;
+        evConf.script_broadcast.activeScriptTabId = targetTabId;
+        evConf.script_broadcast.fixedScriptText = scriptText;
+        localStorage.setItem('aidol_event_configs', JSON.stringify(evConf));
+        localStorage.setItem('aidol_event_configs_backup', JSON.stringify(evConf));
+      } catch (e) {}
+
+      // 5. Khởi chạy đọc kịch bản qua AIAudioPlayer kèm đầy đủ cấu hình giọng đọc
       if (audioPlayerRef.current) {
-        audioPlayerRef.current.startScript(scriptText);
+        audioPlayerRef.current.startScript(scriptText, {
+          voiceId: chosen?.voiceId,
+          volume: chosen?.volume,
+          rate: chosen?.rate,
+          pitch: chosen?.pitch
+        });
       }
 
       // Giữ nguyên video nhân vật đang phát mượt mà liên tục, không bị gián đoạn hay chớp đen
@@ -997,11 +1011,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }
       
       window.dispatchEvent(new CustomEvent('aidol_script_updated', {
-        detail: { activeScriptTabId: chosen?.id, scriptTabs: scriptTabsList, fixedScriptText: scriptText, isPlaying: true, forceRestart: false }
+        detail: { activeScriptTabId: targetTabId, scriptTabs: scriptTabsList, fixedScriptText: scriptText, isPlaying: true, forceRestart: false }
       }));
       
       const count = scriptText.split(/\r?\n/).filter(Boolean).length;
-      showToast(`▶️ Đang phát kịch bản: "${scriptName}" (${count} câu thoại)`, 'success');
+      showToast(`▶️ Đang phát kịch bản: "${scriptName}" (${count} câu thoại chuẩn)!`, 'success');
     } else {
       if (typeof window !== 'undefined') {
         window.__isScriptLiveRunning = false;
@@ -1026,35 +1040,44 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   };
 
   const handleQuickSelectScriptTab = (tabId) => {
-    const updated = scriptTabsList.map(t => ({
-      ...t,
-      active: t.id === tabId
-    }));
-    const chosen = updated.find(t => t.id === tabId);
-    if (!chosen) return;
-    setScriptTabsList(updated);
-    
-    let scriptText = chosen.fixedScriptText || '';
-    if (!scriptText || !scriptText.trim()) {
+    let chosenTab = scriptTabsList.find(t => t.id === tabId);
+    let scriptText = (chosenTab?.fixedScriptText && chosenTab.fixedScriptText.trim()) ? chosenTab.fixedScriptText : '';
+
+    if (!scriptText) {
       try {
         const pTabs = JSON.parse(localStorage.getItem('aidol_user_script_tabs_persistent') || '[]');
-        const targetPTab = pTabs.find(t => t.id === tabId);
+        const targetPTab = pTabs.find(t => t.id === tabId) || (tabId === 'tab_1' ? pTabs[0] : null);
         if (targetPTab?.fixedScriptText && targetPTab.fixedScriptText.trim()) {
           scriptText = targetPTab.fixedScriptText;
         }
       } catch (e) {}
     }
+
+    if (!scriptText && (tabId === 'tab_1' || !chosenTab)) {
+      scriptText = DEFAULT_IDOL_SCRIPT_1;
+    }
+
+    const updated = scriptTabsList.map(t => ({
+      ...t,
+      active: t.id === tabId,
+      ...(t.id === tabId ? { fixedScriptText: scriptText } : {})
+    }));
+    const chosen = updated.find(t => t.id === tabId) || updated[0];
+    setScriptTabsList(updated);
     
     try {
       localStorage.setItem('aidol_user_script_tabs_persistent', JSON.stringify(updated));
-      const evConf = JSON.parse(localStorage.getItem('aidol_event_configs') || '{}');
-      if (evConf.script_broadcast) {
-        evConf.script_broadcast.scriptTabs = updated;
-        evConf.script_broadcast.activeScriptTabId = tabId;
-        evConf.script_broadcast.fixedScriptText = scriptText;
-        localStorage.setItem('aidol_event_configs', JSON.stringify(evConf));
-        localStorage.setItem('aidol_event_configs_backup', JSON.stringify(evConf));
-      }
+      let evConf = {};
+      try {
+        evConf = JSON.parse(localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup') || '{}');
+      } catch (e) {}
+      if (!evConf.script_broadcast) evConf.script_broadcast = {};
+      evConf.script_broadcast.broadcastMode = 'fixed_script';
+      evConf.script_broadcast.scriptTabs = updated;
+      evConf.script_broadcast.activeScriptTabId = tabId;
+      evConf.script_broadcast.fixedScriptText = scriptText;
+      localStorage.setItem('aidol_event_configs', JSON.stringify(evConf));
+      localStorage.setItem('aidol_event_configs_backup', JSON.stringify(evConf));
     } catch (e) {}
     
     window.dispatchEvent(new CustomEvent('aidol_script_updated', {
@@ -1062,7 +1085,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     }));
 
     if (isScriptLiveRunning && audioPlayerRef.current) {
-      audioPlayerRef.current.startScript(scriptText);
+      audioPlayerRef.current.startScript(scriptText, {
+        voiceId: chosen?.voiceId,
+        volume: chosen?.volume,
+        rate: chosen?.rate,
+        pitch: chosen?.pitch
+      });
     }
     const count = (scriptText || '').split(/\r?\n/).filter(Boolean).length;
     showToast(`🎯 Đã chuyển sang kịch bản "${chosen.name}" (${count} câu thoại)!`, 'success');

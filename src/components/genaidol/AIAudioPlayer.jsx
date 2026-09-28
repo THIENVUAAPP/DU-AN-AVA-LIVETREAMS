@@ -152,7 +152,7 @@ const AIAudioPlayer = forwardRef(({ isLive, isScriptRunning = false, onAudioPlay
   };
 
   // 1. Lấy Job & Kịch bản từ Workspace Sự Kiện hoặc LocalStorage khi Live bắt đầu
-  const loadScriptFromStorage = (customText = null) => {
+  const loadScriptFromStorage = (customText = null, voiceOptions = null) => {
     let scriptRaw = typeof customText === 'string' && customText.trim() ? customText : '';
     
     // Ưu tiên 1: Đọc từ aidol_event_configs để kiểm tra chế độ phát sóng
@@ -192,11 +192,6 @@ const AIAudioPlayer = forwardRef(({ isLive, isScriptRunning = false, onAudioPlay
       }
     }
 
-    let activeTabVoiceId = null;
-    let activeTabVolume = undefined;
-    let activeTabRate = undefined;
-    let activeTabPitch = undefined;
-
     // Ưu tiên 2: Kịch bản persistent của người dùng
     if (!scriptRaw) {
       const persistentTabsRaw = localStorage.getItem('aidol_user_script_tabs_persistent');
@@ -205,14 +200,8 @@ const AIAudioPlayer = forwardRef(({ isLive, isScriptRunning = false, onAudioPlay
           const pTabs = JSON.parse(persistentTabsRaw);
           if (Array.isArray(pTabs) && pTabs.length > 0) {
             const activeTab = pTabs.find(t => t.active) || pTabs[0];
-            if (activeTab) {
-              if (activeTab.fixedScriptText) {
-                scriptRaw = activeTab.fixedScriptText;
-              }
-              if (activeTab.voiceId) activeTabVoiceId = activeTab.voiceId;
-              if (activeTab.volume !== undefined) activeTabVolume = activeTab.volume;
-              if (activeTab.rate !== undefined) activeTabRate = activeTab.rate;
-              if (activeTab.pitch !== undefined) activeTabPitch = activeTab.pitch;
+            if (activeTab && activeTab.fixedScriptText) {
+              scriptRaw = activeTab.fixedScriptText;
             }
           }
         } catch (e) {}
@@ -233,7 +222,7 @@ const AIAudioPlayer = forwardRef(({ isLive, isScriptRunning = false, onAudioPlay
       }
     }
 
-    // Ưu tiên 4: Kịch bản mẫu mặc định
+    // Ưu tiên 4: Kịch bản mẫu mặc định (Kịch bản 1 Chuẩn 100%)
     if (!scriptRaw) {
       scriptRaw = `Chào mừng tất cả các tình yêu đã có mặt trong phiên livestream làm đẹp đặc biệt ngày hôm nay của shop em nha!
 Các chị đẹp ơi, ai đang lướt qua phiên live thì cho em xin một nút thả tim và một lượt chia sẻ để nhận quà mở bát đầu live nào!
@@ -243,6 +232,48 @@ Chị nào mà da đang bị khô ráp, thâm sạm, không đều màu hoặc b
 Chỉ sau đúng 7 ngày sử dụng, làn da của các chị sẽ căng bóng, mịn màng và mướt như da em bé luôn ạ!
 Duy nhất trong phiên livestream ngày hôm nay, giảm sốc 50% chỉ còn 890.000đ tặng kèm kem dưỡng ẩm mini và freeship toàn quốc!
 Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày, bấm vào Giỏ Hàng góc trái săn ngay nhé!`;
+    }
+
+    // 🎯 LUÔN LUÔN PHÂN GIẢI CẤU HÌNH GIỌNG ĐỌC CỦA ACTIVE TAB (BẢO TOÀN VOICE DÙ CÓ TRUYỀN customText)
+    let activeTabVoiceId = voiceOptions?.voiceId || null;
+    let activeTabVolume = voiceOptions?.volume;
+    let activeTabRate = voiceOptions?.rate;
+    let activeTabPitch = voiceOptions?.pitch;
+
+    if (!activeTabVoiceId) {
+      try {
+        const persistentTabsRaw = localStorage.getItem('aidol_user_script_tabs_persistent');
+        if (persistentTabsRaw) {
+          const pTabs = JSON.parse(persistentTabsRaw);
+          if (Array.isArray(pTabs) && pTabs.length > 0) {
+            const activeTab = pTabs.find(t => t.active) || pTabs[0];
+            if (activeTab) {
+              if (activeTab.voiceId) activeTabVoiceId = activeTab.voiceId;
+              if (activeTabVolume === undefined && activeTab.volume !== undefined) activeTabVolume = activeTab.volume;
+              if (activeTabRate === undefined && activeTab.rate !== undefined) activeTabRate = activeTab.rate;
+              if (activeTabPitch === undefined && activeTab.pitch !== undefined) activeTabPitch = activeTab.pitch;
+            }
+          }
+        }
+      } catch (e) {}
+    }
+
+    if (!activeTabVoiceId) {
+      try {
+        const evRaw = localStorage.getItem('aidol_event_configs');
+        if (evRaw) {
+          const evConf = JSON.parse(evRaw);
+          const activeTab = evConf.script_broadcast?.scriptTabs?.find(t => t.active) || 
+            evConf.script_broadcast?.scriptTabs?.find(t => t.id === evConf.script_broadcast?.activeScriptTabId) ||
+            evConf.script_broadcast?.scriptTabs?.[0];
+          if (activeTab) {
+            if (activeTab.voiceId) activeTabVoiceId = activeTab.voiceId;
+            if (activeTabVolume === undefined && activeTab.volume !== undefined) activeTabVolume = activeTab.volume;
+            if (activeTabRate === undefined && activeTab.rate !== undefined) activeTabRate = activeTab.rate;
+            if (activeTabPitch === undefined && activeTab.pitch !== undefined) activeTabPitch = activeTab.pitch;
+          }
+        }
+      } catch (e) {}
     }
 
     if (scriptRaw) {
@@ -748,7 +779,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
   // Expose methods to parent
   useImperativeHandle(ref, () => ({
-    startScript: (customScriptText = null) => {
+    startScript: (customScriptText = null, voiceOptions = null) => {
       try {
         localStorage.removeItem('aidol_user_paused_script');
         localStorage.removeItem('avalive_user_paused');
@@ -764,7 +795,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         clearAllActiveTimers();
         stopVoiceAudio();
         try { unlockAudioContext(); } catch(e) {}
-        const scriptItems = loadScriptFromStorage(customScriptText);
+        const scriptItems = loadScriptFromStorage(customScriptText, voiceOptions);
         setQueue(scriptItems);
         queueRef.current = scriptItems;
         setCurrentIndex(0);

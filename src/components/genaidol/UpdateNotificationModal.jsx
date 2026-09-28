@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.83';
+export const APP_VERSION = '4.9.84';
 export const RELEASE_DATE = '28/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '✨ Bản Cập Nhật v4.9.83 - Chuẩn Hóa Đường Link TikTok Live Studio & OBS Bắt Hình Sạch 100%, Đột Phá Công Nghệ Xóa Mọi Phông Nền AI Bảo Vệ Nhân Vật & Sản Phẩm Siêu Sắc Nét',
-    description: '1. Khắc Phục Triệt Để Lỗi "Khung Cái Khung" Trên TikTok Live Studio: Loại bỏ hiện tượng co cụm tỷ lệ và viền đen box-shadow, biến toàn bộ luồng phát thành Pure Full-Frame Tràn Viền 100vw x 100vh. 2. Làm Sạch 100% Khung Hình Live: Dock điều khiển và nút bấm hoàn toàn tàng hình khi phát sóng, chỉ xuất hiện mượt mà khi người dùng rê chuột vào mép trên màn hình. 3. Đồng Bộ Đầy Đủ Tọa Độ Sân Khấu Chính: Khớp 100% vị trí các lớp Video Nền, Multi-Avatar Đa Tầng, Sticker Extra Layers, Video Phụ PiP, Banner Hình Ảnh, Banner Tiêu Đề Cyber và Sản Phẩm Ghim TikTok Shop. 4. Đột Phá Xóa Mọi Phông Nền AI: Tách sạch bất kỳ nền nào (trắng, xanh, phòng cảnh, bối cảnh phức tạp) từng pixel/sợi tóc bằng thuật toán Boundary-Aware Flood-Fill Matting kết hợp bảo vệ tuyệt đối Nhân Vật, Người và Sản Phẩm siêu sắc nét. 5. Tự Động Phân Giải File ZIP v4.9.83 Mới Nhất cho Windows & macOS.'
+    title: '✨ Bản Cập Nhật v4.9.84 - Chuẩn Hóa 100% Phát Kịch Bản Idol Live, Đọc Đúng Từng Câu Thoại & Đồng Bộ Giọng Đọc',
+    description: '1. Khắc Phục Triệt Để Lỗi Đọc Sai Kịch Bản: Khi bấm nút "▶️ Phát Kịch Bản Live" trên thanh công cụ hoặc chọn kịch bản ở dropdown, hệ thống tự động nhận diện và đọc chuẩn xác 100% kịch bản của tab đang chọn (đặc biệt là Kịch bản 1 Chuẩn Xịn: Mỹ Phẩm & Skincare 8 câu kinh điển). 2. Khóa Chặt Không Bị Ghi Đè: Chặn đứng tình trạng tự động sinh kịch bản AI Brain đè lên kịch bản do người dùng lựa chọn. 3. Bảo Toàn Cấu Hình Giọng Đọc: Tự động phân giải Voice ID, Tốc độ (Rate), Độ cao (Pitch), Âm lượng (Volume) của từng tab kịch bản khi phát sóng, nhép miệng 60 FPS chuẩn xác. 4. Tự Động Phục Vụ Gói Cài Đặt ZIP v4.9.84 Mới Nhất cho Windows & macOS.'
   }
 ];
 
