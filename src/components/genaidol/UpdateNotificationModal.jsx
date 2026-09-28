@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.93';
-export const RELEASE_DATE = '28/09/2026';
+export const APP_VERSION = '4.9.94';
+export const RELEASE_DATE = '29/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '👄 Bản Cập Nhật v4.9.93 - Công Nghệ AI Nhép Miệng, Thần Thái & Biểu Cảm Khuôn Mặt Siêu Cấp (Ảnh & Video)',
-    description: '1. Đỉnh Cao AI Lip-Sync Tự Động Từ Ảnh & Video: Tải ảnh hoặc video bất kỳ lên, khi phát kịch bản nhân vật tự động nhép miệng khớp 100% từng âm vị (A, E, I, O, U, M, B, P, F) với độ trễ <15ms thời gian thực 60 FPS. 2. Biểu Cảm Thần Thái Sống Động: Tự động chớp mắt sinh học (Bio-Blink Engine), gật đầu nghiêng đầu nhấn nhá theo trọng âm câu nói (Head Bob & Tilt Prosody). 3. Nhịp Thở Cơ Thể Tự Nhiên: Chuyển động hô hấp tinh tế (Body Breathing Sway) giúp ảnh tĩnh và video luôn tràn đầy sức sống. 4. Đồng Bộ Realtime Toàn Diện: Hoạt động trơn tru trên Sân Khấu Chính, Window Capture OBS và luồng TikTok Live Studio trực tuyến.'
+    title: '✨ Bản Cập Nhật v4.9.94 - Công Nghệ Xóa Nền AI 1-Chạm Siêu Mượt, Triệt Tiêu Gợi Ý Rườm Rà',
+    description: '1. 1-Chạm Xóa Sạch Sành Sanh Nền (Ảnh & Video): Tự động AI nhận diện và quét sạch 100% mọi loại nền (xanh lá, xanh dương, đỏ, đen, trắng, phòng ngủ, tường nhà, phong cảnh phức tạp) chỉ với 1 cú click duy nhất. 2. Loại Bỏ Triệt Để Các Gợi Ý Đổi Phông Nền: Tinh gọn giao diện tối đa, không cần chọn màu nền thủ công. 3. Bảo Tồn Nguyên Vẹn 100% Nhân Vật & Sản Phẩm: Tuyệt đối không làm đen nhân vật, giữ trọn sắc da trắng hồng, áo đỏ, áo xanh siêu thực; bảo vệ nguyên khối mọi sản phẩm bán hàng livestream. 4. Biên Viền 5x5 Siêu Mịn Sub-pixel: Đường cắt êm dịu, mịn màng không một vết răng cưa hay tì vết.'
   }
 ];
 

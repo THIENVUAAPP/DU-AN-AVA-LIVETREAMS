@@ -155,10 +155,10 @@ function processUltraSmoothMatting(srcCanvas, mediaPipeMaskCanvas, width, height
     mD = mCtx.getImageData(0, 0, width, height).data;
   }
 
-  // 1. Phân tích màu nền từ 4 đường biên ngoài cùng (Top, Bottom, Left, Right)
+  // 1. Phân tích màu nền từ 4 đường biên ngoài cùng và 4 góc (Dày đặc và đa dạng)
   const bgSamples = [];
-  const stepX = Math.max(1, Math.floor(width / 40));
-  const stepY = Math.max(1, Math.floor(height / 40));
+  const stepX = Math.max(1, Math.floor(width / 60));
+  const stepY = Math.max(1, Math.floor(height / 60));
 
   for (let x = 0; x < width; x += stepX) {
     const topIdx = (0 * width + x) * 4;
@@ -189,7 +189,7 @@ function processUltraSmoothMatting(srcCanvas, mediaPipeMaskCanvas, width, height
 
   // 3. Hàm kiểm tra độ khớp màu nền (Chromatic & Luma Distance)
   const targetCol = options.targetColor ? options.targetColor.toLowerCase() : null;
-  function isBgColor(r, g, b) {
+  function isBgColor(r, g, b, x, y) {
     const greenDiff = g - Math.max(r, b);
     const blueDiff = b - Math.max(r, g);
     const redDiff = r - Math.max(g, b);
@@ -198,17 +198,33 @@ function processUltraSmoothMatting(srcCanvas, mediaPipeMaskCanvas, width, height
     const spread = maxVal - minVal;
     const luma = 0.299 * r + 0.587 * g + 0.114 * b;
 
-    if (targetCol === 'green' || (!targetCol && g > 60 && greenDiff > 14 && g > r * 1.15 && g > b * 1.15)) return true;
-    if (targetCol === 'blue' || (!targetCol && b > 60 && blueDiff > 14 && b > r * 1.15 && b > g * 1.15)) return true;
+    // Kiểm tra màu da người tự nhiên (Tuyệt đối không bao giờ coi da người là nền)
+    const isSkin = (
+      (r > 75 && g > 45 && b > 30 && r > g && g >= b && (r - g) >= 5) ||
+      (r > 45 && g > 30 && b > 20 && r >= g && g >= b && (r - b) >= 5) ||
+      (r > 120 && g > 80 && b > 60 && Math.abs(g - b) < 40 && r > b + 15)
+    );
+    if (isSkin) return false;
+
+    // Vùng trung tâm lõi nhân vật (Central Core) có cấu trúc -> không phải nền
+    if (x !== undefined && y !== undefined) {
+      const isCentral = (x > width * 0.22 && x < width * 0.78 && y > height * 0.18 && y < height * 0.88);
+      if (isCentral && (energy[y * width + x] > 35 || spread > 20)) {
+        return false;
+      }
+    }
+
+    if (targetCol === 'green' || (!targetCol && g > 60 && greenDiff > 12 && g > r * 1.12 && g > b * 1.12)) return true;
+    if (targetCol === 'blue' || (!targetCol && b > 60 && blueDiff > 12 && b > r * 1.12 && b > g * 1.12)) return true;
     if (targetCol === 'red' && redDiff > 25 && r > g * 1.25 && r > b * 1.25) return true;
-    if (targetCol === 'black' && maxVal < 30) return true;
+    if (targetCol === 'black' && maxVal < 26) return true;
     if (targetCol === 'white' && luma > 220 && spread < 25) return true;
 
-    // So khớp với phổ màu nền từ 4 đường biên
+    // So khớp với phổ mẫu màu nền từ các đường biên ngoài cùng
     for (let i = 0; i < bgSamples.length; i++) {
       const s = bgSamples[i];
       const d = Math.sqrt(Math.pow(r - s.r, 2) + Math.pow(g - s.g, 2) + Math.pow(b - s.b, 2));
-      if (d < 36) return true;
+      if (d < 38) return true;
     }
     return false;
   }
@@ -220,28 +236,28 @@ function processUltraSmoothMatting(srcCanvas, mediaPipeMaskCanvas, width, height
   if (mD) {
     for (let i = 0; i < width * height; i++) {
       const pIdx = i * 4;
-      if (mD[pIdx] > 120) {
+      if (mD[pIdx] > 110) {
         finalAlpha[i] = 255; // Vùng người chắc chắn được giữ
-      } else if (mD[pIdx] > 40) {
+      } else if (mD[pIdx] > 30) {
         finalAlpha[i] = mD[pIdx];
       }
     }
 
     // Mở rộng bảo vệ sản phẩm gắn liền với người (Handheld Product & Clothing Protection)
-    // Quét lan truyền từ các điểm người (Human Seeds) sang các pixel có độ gắn kết cao
-    for (let iter = 0; iter < 4; iter++) {
+    for (let iter = 0; iter < 5; iter++) {
       for (let y = 1; y < height - 1; y++) {
         for (let x = 1; x < width - 1; x++) {
           const pos = y * width + x;
-          if (finalAlpha[pos] > 180) {
+          if (finalAlpha[pos] > 170) {
             const neighbors = [pos - 1, pos + 1, pos - width, pos + width];
             for (let k = 0; k < 4; k++) {
               const nPos = neighbors[k];
               if (finalAlpha[nPos] < 200) {
                 const nIdx = nPos * 4;
                 const nr = sD[nIdx], ng = sD[nIdx + 1], nb = sD[nIdx + 2];
-                // Nếu lân cận không phải màu phông nền bên ngoài và có cấu trúc sản phẩm -> giữ lại
-                if (!isBgColor(nr, ng, nb) || energy[nPos] > 45) {
+                const nx = nPos % width;
+                const ny = Math.floor(nPos / width);
+                if (!isBgColor(nr, ng, nb, nx, ny) || energy[nPos] > 40) {
                   finalAlpha[nPos] = 255;
                 }
               }
@@ -253,18 +269,17 @@ function processUltraSmoothMatting(srcCanvas, mediaPipeMaskCanvas, width, height
   }
 
   // 5. Thuật toán Boundary BFS Matting: Xóa từ 4 cạnh ngoài cùng lan vào
-  // Chỉ xóa nền thực sự, DỪNG LẠI HOÀN TOÀN khi gặp ranh giới của nhân vật hoặc sản phẩm
   const isOuterBg = new Uint8Array(width * height);
   const queue = [];
 
   for (let x = 0; x < width; x++) {
     const topPos = 0 * width + x;
     const botPos = (height - 1) * width + x;
-    if (finalAlpha[topPos] < 128 && isBgColor(sD[topPos * 4], sD[topPos * 4 + 1], sD[topPos * 4 + 2])) {
+    if (finalAlpha[topPos] < 128 && isBgColor(sD[topPos * 4], sD[topPos * 4 + 1], sD[topPos * 4 + 2], x, 0)) {
       isOuterBg[topPos] = 1;
       queue.push(topPos);
     }
-    if (finalAlpha[botPos] < 128 && isBgColor(sD[botPos * 4], sD[botPos * 4 + 1], sD[botPos * 4 + 2])) {
+    if (finalAlpha[botPos] < 128 && isBgColor(sD[botPos * 4], sD[botPos * 4 + 1], sD[botPos * 4 + 2], x, height - 1)) {
       isOuterBg[botPos] = 1;
       queue.push(botPos);
     }
@@ -272,11 +287,11 @@ function processUltraSmoothMatting(srcCanvas, mediaPipeMaskCanvas, width, height
   for (let y = 0; y < height; y++) {
     const leftPos = y * width + 0;
     const rightPos = y * width + (width - 1);
-    if (finalAlpha[leftPos] < 128 && isBgColor(sD[leftPos * 4], sD[leftPos * 4 + 1], sD[leftPos * 4 + 2])) {
+    if (finalAlpha[leftPos] < 128 && isBgColor(sD[leftPos * 4], sD[leftPos * 4 + 1], sD[leftPos * 4 + 2], 0, y)) {
       isOuterBg[leftPos] = 1;
       queue.push(leftPos);
     }
-    if (finalAlpha[rightPos] < 128 && isBgColor(sD[rightPos * 4], sD[rightPos * 4 + 1], sD[rightPos * 4 + 2])) {
+    if (finalAlpha[rightPos] < 128 && isBgColor(sD[rightPos * 4], sD[rightPos * 4 + 1], sD[rightPos * 4 + 2], width - 1, y)) {
       isOuterBg[rightPos] = 1;
       queue.push(rightPos);
     }
@@ -299,19 +314,12 @@ function processUltraSmoothMatting(srcCanvas, mediaPipeMaskCanvas, width, height
         if (isOuterBg[nPos] === 0) {
           // 🛡️ BẢO VỆ TUYỆT ĐỐI NHÂN VẬT & SẢN PHẨM: Dừng lại ngay tại biên
           if (finalAlpha[nPos] > 180) continue;
-          if (energy[nPos] > 60) continue; // Ranh giới sản phẩm
+          if (energy[nPos] > 55) continue; // Ranh giới sản phẩm/nhân vật
 
           const idx = nPos * 4;
           const r = sD[idx], g = sD[idx + 1], b = sD[idx + 2];
 
-          // Bảo vệ da người tự nhiên (không bao giờ xóa da người)
-          const isSkin = (
-            (r > 80 && g > 50 && b > 35 && r > g && g >= b && (r - g) >= 6) ||
-            (r > 50 && g > 35 && b > 25 && r >= g && g >= b && (r - b) >= 6)
-          );
-          if (isSkin) continue;
-
-          if (isBgColor(r, g, b)) {
+          if (isBgColor(r, g, b, nx, ny)) {
             isOuterBg[nPos] = 1;
             queue.push(nPos);
           }
@@ -320,37 +328,48 @@ function processUltraSmoothMatting(srcCanvas, mediaPipeMaskCanvas, width, height
     }
   }
 
-  // 6. Tổng hợp mặt nạ Alpha: Vùng outerBg = 0, còn lại = giữ nguyên chi tiết
+  // 6. Tổng hợp mặt nạ Alpha
   for (let i = 0; i < width * height; i++) {
     if (isOuterBg[i] === 1) {
       finalAlpha[i] = 0;
     } else if (finalAlpha[i] === 0) {
-      finalAlpha[i] = 255; // Bảo vệ tất cả chi tiết sản phẩm và nhân vật không thuộc outerBg
+      finalAlpha[i] = 255;
     }
   }
 
-  // 7. Làm mịn biên viền siêu mượt (Sub-pixel Alpha Smoothing & Anti-Aliasing)
-  // Loại bỏ hoàn toàn vết răng cưa, tạo đường chuyển êm dịu chuyên nghiệp
+  // 7. BỘ LỌC BIÊN VIỀN SIÊU MƯỢT 5X5 GUIDED SOFT-EDGE ANTI-ALIASING
+  // Tạo độ chuyển tiếp sub-pixel cực kỳ mềm mại, loại bỏ 100% vết răng cưa và gồ ghề
   const smoothedAlpha = new Uint8Array(width * height);
-  for (let y = 1; y < height - 1; y++) {
-    for (let x = 1; x < width - 1; x++) {
+  for (let y = 2; y < height - 2; y++) {
+    for (let x = 2; x < width - 2; x++) {
       const pos = y * width + x;
       const a = finalAlpha[pos];
-      if (a === 0 || a === 255) {
-        // Kiểm tra xem có nằm sát biên không
-        const isBorder = (
-          finalAlpha[pos - 1] !== a || finalAlpha[pos + 1] !== a ||
-          finalAlpha[pos - width] !== a || finalAlpha[pos + width] !== a
-        );
-        if (isBorder) {
-          // Tính trung bình có trọng số với 8 pixel xung quanh (3x3 Gaussian-like)
-          let sum = a * 4;
-          sum += finalAlpha[pos - 1] * 2 + finalAlpha[pos + 1] * 2 + finalAlpha[pos - width] * 2 + finalAlpha[pos + width] * 2;
-          sum += finalAlpha[pos - width - 1] + finalAlpha[pos - width + 1] + finalAlpha[pos + width - 1] + finalAlpha[pos + width + 1];
-          smoothedAlpha[pos] = Math.round(sum / 16);
-        } else {
-          smoothedAlpha[pos] = a;
+
+      // Kiểm tra có nằm trong vùng biên giới chuyển tiếp không
+      let isBorderZone = false;
+      for (let dy = -2; dy <= 2; dy++) {
+        for (let dx = -2; dx <= 2; dx++) {
+          if (finalAlpha[(y + dy) * width + (x + dx)] !== a) {
+            isBorderZone = true;
+            break;
+          }
         }
+        if (isBorderZone) break;
+      }
+
+      if (isBorderZone) {
+        // Áp dụng 5x5 Gaussian Kernel Smoothing
+        let sum = 0;
+        let weightSum = 0;
+        for (let dy = -2; dy <= 2; dy++) {
+          for (let dx = -2; dx <= 2; dx++) {
+            const distSq = dx * dx + dy * dy;
+            const w = distSq === 0 ? 6 : distSq <= 1 ? 4 : distSq <= 2 ? 3 : distSq <= 4 ? 2 : 1;
+            sum += finalAlpha[(y + dy) * width + (x + dx)] * w;
+            weightSum += w;
+          }
+        }
+        smoothedAlpha[pos] = Math.round(sum / weightSum);
       } else {
         smoothedAlpha[pos] = a;
       }

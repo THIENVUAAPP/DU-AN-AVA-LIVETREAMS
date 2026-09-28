@@ -7326,7 +7326,30 @@ export const removeImageBackgroundCanvas = async (imgSrc, mode = 'auto', toleran
           }
         }
 
-        // 3. 🛡️ BẢO TỒN NGUYÊN VẸN 100% CHI TIẾT NGƯỜI VÀ SẢN PHẨM Ở RÌA CẠNH (TUYỆT ĐỐI KHÔNG GỌT VIỀN BORDERPAD)
+        // 3. 🛡️ BẢO TỒN NGUYÊN VẸN 100% CHI TIẾT NGƯỜI & SẢN PHẨM + LÀM MỊN BIÊN VIỀN SIÊU MƯỢT
+        // Làm mịn alpha chuyển tiếp ở viền để đường cắt mềm mại tự nhiên 100%
+        const alphaCopy = new Uint8Array(w * h);
+        for (let i = 0; i < w * h; i++) alphaCopy[i] = data[i * 4 + 3];
+
+        for (let y = 1; y < h - 1; y++) {
+          for (let x = 1; x < w - 1; x++) {
+            const idx = y * w + x;
+            const a = alphaCopy[idx];
+            if (a === 0 || a === 255) {
+              const isBorder = (
+                alphaCopy[idx - 1] !== a || alphaCopy[idx + 1] !== a ||
+                alphaCopy[idx - w] !== a || alphaCopy[idx + w] !== a
+              );
+              if (isBorder) {
+                let sum = a * 4;
+                sum += alphaCopy[idx - 1] * 2 + alphaCopy[idx + 1] * 2 + alphaCopy[idx - w] * 2 + alphaCopy[idx + w] * 2;
+                sum += alphaCopy[idx - w - 1] + alphaCopy[idx - w + 1] + alphaCopy[idx + w - 1] + alphaCopy[idx + w + 1];
+                data[idx * 4 + 3] = Math.round(sum / 16);
+              }
+            }
+          }
+        }
+
         ctx.putImageData(imgData, 0, 0);
         resolve(canvas.toDataURL('image/png'));
       } catch (err) {

@@ -2239,33 +2239,6 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                   </div>
 
                   <div className="space-y-2">
-                    <span className="text-[10px] text-gray-400 block font-bold">Màu phông nền cần tách:</span>
-                    <div className="grid grid-cols-4 gap-1 text-[11px] font-black">
-                      {[
-                        { id: 'auto', color: '#8b5cf6', label: '🪄 Tự Động' },
-                        { id: 'green', color: '#00ff00', label: 'Xanh Lá' },
-                        { id: 'blue', color: '#0000ff', label: 'Xanh Dương' },
-                        { id: 'red', color: '#ef4444', label: 'Nền Đỏ' },
-                        { id: 'black', color: '#000000', label: 'Nền Đen' },
-                        { id: 'white', color: '#ffffff', label: 'Nền Trắng' },
-                        { id: 'room', color: '#64748b', label: 'Phòng/Tường' }
-                      ].map(m => (
-                        <button
-                          key={m.id}
-                          type="button"
-                          onClick={() => handleAvatarChromaBatch(selectedAvatar.id, { mode: m.id, color: m.color, enabled: true })}
-                          className={`p-1.5 rounded-xl border flex items-center justify-center gap-1 cursor-pointer transition-all ${
-                            selectedAvatar.chromaKey?.mode === m.id
-                              ? 'bg-emerald-600 text-white border-emerald-400 shadow-sm font-black'
-                              : 'bg-black/40 text-gray-300 border-gray-800 hover:border-gray-600'
-                          }`}
-                        >
-                          <span className="w-2.5 h-2.5 rounded-full border border-black/40 shrink-0" style={{ backgroundColor: m.color }} />
-                          <span className="truncate">{m.label}</span>
-                        </button>
-                      ))}
-                    </div>
-
                     {/* Nút 1-Chạm Xóa Nền AI Siêu Mịn cho Avatar */}
                     <button
                       type="button"

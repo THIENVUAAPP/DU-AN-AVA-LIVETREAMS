@@ -3058,40 +3058,17 @@ export default function LivestreamFlowSequencer() {
                   <span>Nhân Bản</span>
                 </button>
 
-                {/* 🪄 Xóa Nền AI 1-Chạm Đa Sắc */}
+                {/* 🪄 1-CHẠM XÓA SẠCH NỀN AI (TỰ ĐỘNG QUÉT & XÓA MỌI LOẠI NỀN - GIỮ NGUYÊN 100% NHÂN VẬT & SẢN PHẨM) */}
                 {selectedLayer.type !== 'text' && (
-                  <div className="flex items-center gap-0.5 bg-slate-900/90 rounded-md p-0.5 border border-indigo-500/40">
-                    <button
-                      type="button"
-                      onClick={() => handleInstantCanvasBgRemoval(selectedLayer.type, selectedLayer.id, 'auto')}
-                      className="px-1.5 py-0.5 rounded text-[8.5px] font-black bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-600 hover:from-purple-500 hover:to-cyan-500 text-white flex items-center gap-0.5 cursor-pointer shadow-xs whitespace-nowrap"
-                      title="1 Chạm Tách Sạch Mọi Loại Nền (Ảnh & Video - Giữ 100% Nhân Vật & Sản Phẩm)"
-                    >
-                      <Wand2 size={9} />
-                      <span>Xóa Nền AI</span>
-                    </button>
-                    <select
-                      onChange={(e) => {
-                        const val = e.target.value;
-                        if (val) {
-                          handleInstantCanvasBgRemoval(selectedLayer.type, selectedLayer.id, val);
-                          e.target.value = '';
-                        }
-                      }}
-                      defaultValue=""
-                      className="bg-transparent text-[8px] font-bold text-cyan-300 outline-none cursor-pointer pr-1"
-                      title="Chọn màu phông cần tách"
-                    >
-                      <option value="" disabled className="bg-slate-900 text-gray-400">Đổi Nền</option>
-                      <option value="auto" className="bg-slate-900 text-purple-300">🪄 Tự Động (Auto AI)</option>
-                      <option value="green" className="bg-slate-900 text-emerald-400">🟢 Xanh Lá</option>
-                      <option value="blue" className="bg-slate-900 text-blue-400">🔵 Xanh Dương</option>
-                      <option value="red" className="bg-slate-900 text-rose-400">🔴 Nền Đỏ</option>
-                      <option value="black" className="bg-slate-900 text-gray-300">⚫ Nền Đen</option>
-                      <option value="white" className="bg-slate-900 text-white">⚪ Nền Trắng</option>
-                      <option value="room" className="bg-slate-900 text-amber-300">🏠 Phòng/Tường</option>
-                    </select>
-                  </div>
+                  <button
+                    type="button"
+                    onClick={() => handleInstantCanvasBgRemoval(selectedLayer.type, selectedLayer.id, 'auto')}
+                    className="px-2 py-0.5 rounded text-[8.5px] font-black bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white flex items-center gap-1 cursor-pointer shadow-md shadow-indigo-900/30 hover:scale-105 active:scale-95 transition-all whitespace-nowrap border border-cyan-400/40"
+                    title="1 Chạm Xóa Sạch Sành Sanh Nền (Bảo Vệ 100% Nhân Vật & Sản Phẩm Siêu Mịn 4K)"
+                  >
+                    <Wand2 size={9.5} className="text-cyan-200 animate-pulse" />
+                    <span>✨ Xóa Nền AI</span>
+                  </button>
                 )}
 
                 {/* Lên Lớp / Xuống Lớp */}
