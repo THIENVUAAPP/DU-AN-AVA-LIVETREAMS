@@ -31,6 +31,7 @@ import LiveStreamStandalonePlayer from "./components/genaidol/LiveStreamStandalo
 import WindowCapturePlayer from "./components/genaidol/WindowCapturePlayer";
 import TemplateLibraryModal from "./components/genaidol/TemplateLibraryModal";
 import LivestreamFlowSequencer from "./components/genaidol/LivestreamFlowSequencer";
+import { SvgChromaFilters } from "./components/genaidol/MultiAvatarStudioModal";
 import { bootstrapDefaultPresets } from "./utils/defaultPresetsBootstrap";
 import { Lock, Sparkles, ShieldCheck, Mail, LogIn, ArrowRight } from "lucide-react";
 
@@ -474,6 +475,9 @@ export default function App() {
         onClose={() => setTemplateLibraryOpen(false)}
         onAddTemplate={() => setTemplateLibraryOpen(false)}
       />
+
+      {/* Bộ lọc Tách Nền Chroma Key 60 FPS Toàn Cục */}
+      <SvgChromaFilters />
 
       {/* Thông báo cập nhật phiên bản mới */}
       <UpdateNotificationModal />

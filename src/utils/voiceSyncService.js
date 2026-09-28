@@ -7173,16 +7173,14 @@ export const getChromaStyle = (chromaConfig) => {
 export const removeImageBackgroundCanvas = async (imgSrc, mode = 'auto', tolerance = 45) => {
   if (!imgSrc) return '';
 
-  // 1. 🤖 TÁCH NỀN AI NƠ-RON MEDIAPIPE CAO CẤP (XỬ LÝ MỌI LOẠI PHÔNG NỀN: PHÒNG, TƯỜNG, ĐỒ VẬT, NEON, ẢNH CHỤP...)
-  // BẢO TỒN NGUYÊN VẸN 100% NHÂN VẬT & SẢN PHẨM BÁN HÀNG
   try {
     const { removeBackgroundAI } = await import('./aiBackgroundAndBeautyEngine.js');
     if (typeof removeBackgroundAI === 'function') {
       const aiResult = await removeBackgroundAI(imgSrc, {
-        featherRadius: 2.5,
+        featherRadius: 2.0,
         decontaminate: true,
         edgeRefinement: true,
-        maxResolution: 2560,
+        maxResolution: 2048,
         targetColor: mode === 'auto' ? null : mode
       });
       if (aiResult && typeof aiResult === 'string' && aiResult.startsWith('data:image')) {
@@ -7190,176 +7188,10 @@ export const removeImageBackgroundCanvas = async (imgSrc, mode = 'auto', toleran
       }
     }
   } catch (aiErr) {
-    console.warn('AI MediaPipe background removal fallback to canvas algorithm:', aiErr);
+    console.warn('[removeImageBackgroundCanvas] Error in AI background removal:', aiErr);
   }
 
-  // 2. CANVAS FALLBACK CHO CHROMA KEY HOẶC KHI OFFLINE
-  return new Promise((resolve) => {
-    const img = new Image();
-    img.crossOrigin = 'anonymous';
-    img.onload = () => {
-      try {
-        const canvas = document.createElement('canvas');
-        const w = img.naturalWidth || img.width;
-        const h = img.naturalHeight || img.height;
-        canvas.width = w;
-        canvas.height = h;
-        const ctx = canvas.getContext('2d', { willReadFrequently: true });
-        if (!ctx) return resolve(imgSrc);
-
-        ctx.drawImage(img, 0, 0);
-        const imgData = ctx.getImageData(0, 0, w, h);
-        const data = imgData.data;
-
-        // 1. Lấy mẫu màu từ 4 cạnh và 4 góc (Sample ambient background along all 4 borders)
-        const sampleCoords = [
-          [2, 2], [Math.floor(w / 4), 2], [Math.floor(w / 2), 2], [Math.floor(w * 0.75), 2], [w - 3, 2],
-          [2, Math.floor(h / 4)], [w - 3, Math.floor(h / 4)],
-          [2, Math.floor(h / 2)], [w - 3, Math.floor(h / 2)],
-          [2, Math.floor(h * 0.75)], [w - 3, Math.floor(h * 0.75)],
-          [2, h - 3], [Math.floor(w / 4), h - 3], [Math.floor(w / 2), h - 3], [Math.floor(w * 0.75), h - 3], [w - 3, h - 3]
-        ];
-
-        const bgSamples = [];
-        sampleCoords.forEach(([sx, sy]) => {
-          if (sx >= 0 && sx < w && sy >= 0 && sy < h) {
-            const idx = (sy * w + sx) * 4;
-            bgSamples.push({ r: data[idx], g: data[idx + 1], b: data[idx + 2] });
-          }
-        });
-
-        // Tính màu trung bình viền
-        let avgR = 0, avgG = 0, avgB = 0;
-        bgSamples.forEach(s => { avgR += s.r; avgG += s.g; avgB += s.b; });
-        if (bgSamples.length > 0) {
-          avgR = Math.round(avgR / bgSamples.length);
-          avgG = Math.round(avgG / bgSamples.length);
-          avgB = Math.round(avgB / bgSamples.length);
-        }
-
-        const effectiveTol = Math.max(20, Math.min(85, tolerance || 45));
-
-        // 2. Quét từng pixel và xóa sạch mọi loại phông nền
-        for (let i = 0; i < data.length; i += 4) {
-          const r = data[i];
-          const g = data[i + 1];
-          const b = data[i + 2];
-          const alpha = data[i + 3];
-          if (alpha === 0) continue;
-
-          let isBg = false;
-
-          const greenDiff = g - Math.max(r, b);
-          const blueDiff = b - Math.max(r, g);
-          const luminance = 0.299 * r + 0.587 * g + 0.114 * b;
-          const maxVal = Math.max(r, g, b);
-          const minVal = Math.min(r, g, b);
-          const colorSpread = maxVal - minVal;
-
-          // Bảo vệ toàn diện da người (bao gồm cả vùng bóng đổ dưới tai, cổ áo, nách, vai)
-          const isSkinTone = (
-            (r > 85 && g > 55 && b > 38 && r > g && g >= b && (r - g) >= 6) ||
-            (r > 55 && g > 38 && b > 25 && r >= g && g >= b && (r - b) >= 8)
-          );
-          // Bảo vệ trang phục, chi tiết tóc và sản phẩm có độ chi tiết cao
-          const isProtectedSubject = isSkinTone || (colorSpread > 28 && Math.abs(greenDiff) < 18);
-
-          if (mode === 'green') {
-            // Phông xanh lá cây: Chỉ xóa khi màu xanh thực sự vượt trội, không xóa lẹm tóc/tai/cổ áo/nách
-            if ((g > 65 && greenDiff > 12 && g > r * 1.15 && g > b * 1.15) || (g > 95 && greenDiff > 18)) {
-              isBg = true;
-            }
-          } else if (mode === 'blue') {
-            // Phông xanh dương: Chỉ xóa khi màu xanh dương thực sự vượt trội
-            if ((b > 65 && blueDiff > 12 && b > r * 1.15 && b > g * 1.15) || (b > 95 && blueDiff > 18)) {
-              isBg = true;
-            }
-          } else if (mode === 'black') {
-            // Phông đen / tối: Chỉ xóa khi nền tối sâu và không thuộc da hay trang phục
-            if (maxVal < 24 && !isSkinTone && !isProtectedSubject) {
-              isBg = true;
-            }
-          } else if (mode === 'white' || mode === 'room' || mode === 'wall') {
-            // Phông trắng, tường sáng, phòng
-            if (!isSkinTone && !isProtectedSubject) {
-              if (luminance > 215 && colorSpread < 25) {
-                isBg = true;
-              } else {
-                const distFromBorder = Math.sqrt(Math.pow(r - avgR, 2) + Math.pow(g - avgG, 2) + Math.pow(b - avgB, 2));
-                if (distFromBorder < effectiveTol * 1.15) isBg = true;
-              }
-            }
-          } else {
-            // 🪄 MODE AUTO: TỰ ĐỘNG NHẬN DIỆN VÀ XÓA MỌI LOẠI NỀN (BẢO VỆ TUYỆT ĐỐI NGƯỜI & SẢN PHẨM)
-            if ((g > 65 && greenDiff > 12 && g > r * 1.15 && g > b * 1.15) || (g > 95 && greenDiff > 18)) {
-              isBg = true;
-            } else if ((b > 65 && blueDiff > 12 && b > r * 1.15 && b > g * 1.15) || (b > 95 && blueDiff > 18)) {
-              isBg = true;
-            } else if (maxVal < 22 && !isSkinTone && !isProtectedSubject) {
-              isBg = true;
-            } else if (!isSkinTone && !isProtectedSubject) {
-              if (luminance > 220 && colorSpread < 25) {
-                isBg = true;
-              } else {
-                // So khớp với mẫu màu viền xung quanh với độ nhạy chặt chẽ
-                for (let s = 0; s < bgSamples.length; s++) {
-                  const sm = bgSamples[s];
-                  const dist = Math.sqrt(Math.pow(r - sm.r, 2) + Math.pow(g - sm.g, 2) + Math.pow(b - sm.b, 2));
-                  if (dist < effectiveTol * 1.1) {
-                    isBg = true;
-                    break;
-                  }
-                }
-              }
-            }
-          }
-
-          if (isBg) {
-            data[i + 3] = 0; // Xóa sạch sẽ 100% trong suốt
-          } else {
-            // Khử viền ám xanh lá hoặc xanh dương (Color Despill) mượt mà không làm tối viền
-            if (g > Math.max(r, b)) {
-              data[i + 1] = Math.round((r + b) / 2);
-            } else if (b > Math.max(r, g) && blueDiff > 6) {
-              data[i + 2] = Math.round((r + g) / 2);
-            }
-          }
-        }
-
-        // 3. 🛡️ BẢO TỒN NGUYÊN VẸN 100% CHI TIẾT NGƯỜI & SẢN PHẨM + LÀM MỊN BIÊN VIỀN SIÊU MƯỢT
-        // Làm mịn alpha chuyển tiếp ở viền để đường cắt mềm mại tự nhiên 100%
-        const alphaCopy = new Uint8Array(w * h);
-        for (let i = 0; i < w * h; i++) alphaCopy[i] = data[i * 4 + 3];
-
-        for (let y = 1; y < h - 1; y++) {
-          for (let x = 1; x < w - 1; x++) {
-            const idx = y * w + x;
-            const a = alphaCopy[idx];
-            if (a === 0 || a === 255) {
-              const isBorder = (
-                alphaCopy[idx - 1] !== a || alphaCopy[idx + 1] !== a ||
-                alphaCopy[idx - w] !== a || alphaCopy[idx + w] !== a
-              );
-              if (isBorder) {
-                let sum = a * 4;
-                sum += alphaCopy[idx - 1] * 2 + alphaCopy[idx + 1] * 2 + alphaCopy[idx - w] * 2 + alphaCopy[idx + w] * 2;
-                sum += alphaCopy[idx - w - 1] + alphaCopy[idx - w + 1] + alphaCopy[idx + w - 1] + alphaCopy[idx + w + 1];
-                data[idx * 4 + 3] = Math.round(sum / 16);
-              }
-            }
-          }
-        }
-
-        ctx.putImageData(imgData, 0, 0);
-        resolve(canvas.toDataURL('image/png'));
-      } catch (err) {
-        console.warn('Canvas background removal error:', err);
-        resolve(imgSrc);
-      }
-    };
-    img.onerror = () => resolve(imgSrc);
-    img.src = imgSrc;
-  });
+  return imgSrc;
 };
 
 export function getMultiAvatarConfig() {

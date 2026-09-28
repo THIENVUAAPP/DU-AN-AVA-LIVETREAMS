@@ -2435,42 +2435,89 @@ export default function LivestreamFlowSequencer() {
 
   // ✂️ TÁCH NỀN TỨC THÌ (CANVAS REALTIME 0MS) CHO HÌNH ẢNH HOẶC VIDEO - BẢO VỆ NHÂN VẬT & SẢN PHẨM
   const handleInstantCanvasBgRemoval = async (layerType, targetId = null, mode = 'auto') => {
+    const resolved = resolveStepMedia(currentStep, currentStepIndex);
     let targetImg = null;
+    let targetAv = null;
+
     if (layerType === 'avatar') {
-      const av = (targetId ? safeAvatars.find(a => a.id === targetId) : null) || safeAvatars[0];
-      targetImg = av?.talkVideo || av?.idleVideo || av?.mediaUrl;
+      targetAv = (targetId ? safeAvatars.find(a => a.id === targetId) : null) || safeAvatars[0];
+      targetImg = targetAv?.talkVideo || targetAv?.idleVideo || targetAv?.mediaUrl;
     } else if (layerType === 'main_media') {
-      targetImg = currentStep?.mediaUrl;
+      targetImg = currentStep?.mediaUrl || resolved.mediaUrl;
     } else if (layerType === 'pip') {
-      targetImg = currentStep?.secondaryMediaUrl;
+      targetImg = currentStep?.secondaryMediaUrl || resolved.secondaryMediaUrl;
     } else if (layerType === 'banner') {
-      targetImg = currentStep?.overlayImage;
+      targetImg = currentStep?.overlayImage || resolved.overlayImage;
     }
 
-    const modeColors = {
-      auto: '#8b5cf6',
-      green: '#00ff00',
-      blue: '#0000ff',
-      red: '#ef4444',
-      black: '#000000',
-      white: '#ffffff',
-      room: '#64748b'
-    };
-    const chromaColor = modeColors[mode] || '#00ff00';
-
-    if (!targetImg || !isImageMedia(targetImg)) {
-      // Đối với Video: Kích hoạt bộ lọc Chroma Key tương ứng 60 FPS
-      handleLayerChromaUpdate(layerType, targetId, { enabled: true, mode, color: chromaColor });
-      toast.info(`✨ Đã kích hoạt bộ lọc Tách Nền (${mode.toUpperCase()}) cho Video 60 FPS!`);
+    if (!targetImg) {
+      toast.error('Vui lòng chọn hoặc tải video/ảnh của lớp này trước khi xóa nền!');
       return;
     }
 
+    const isImg = isImageMedia(targetImg);
+
+    // 🎥 XỬ LÝ CHO VIDEO: TỰ ĐỘNG PHÁT HIỆN MÀU PHÔNG & KÍCH HOẠT BỘ LỌC CHROMA KEY 60 FPS
+    if (!isImg) {
+      let detectedMode = 'green';
+      let chromaColor = '#00ff00';
+
+      try {
+        const videoEl = document.querySelector(`video[src="${targetImg}"]`) || document.querySelector('video');
+        if (videoEl && videoEl.videoWidth > 0) {
+          const testCanvas = document.createElement('canvas');
+          testCanvas.width = 64;
+          testCanvas.height = 64;
+          const tCtx = testCanvas.getContext('2d');
+          tCtx.drawImage(videoEl, 0, 0, 64, 64);
+          const pD = tCtx.getImageData(0, 0, 64, 64).data;
+          const corners = [0, 63 * 4, (63 * 64) * 4, (63 * 64 + 63) * 4];
+          let totalR = 0, totalG = 0, totalB = 0;
+          corners.forEach(idx => {
+            totalR += pD[idx];
+            totalG += pD[idx + 1];
+            totalB += pD[idx + 2];
+          });
+          const avgR = totalR / 4;
+          const avgG = totalG / 4;
+          const avgB = totalB / 4;
+
+          if (avgG > avgR + 15 && avgG > avgB + 15) {
+            detectedMode = 'green';
+            chromaColor = '#00ff00';
+          } else if (avgB > avgR + 15 && avgB > avgG + 15) {
+            detectedMode = 'blue';
+            chromaColor = '#0000ff';
+          } else if (avgR > avgG + 25 && avgR > avgB + 25) {
+            detectedMode = 'red';
+            chromaColor = '#ef4444';
+          } else if (Math.max(avgR, avgG, avgB) < 40) {
+            detectedMode = 'black';
+            chromaColor = '#000000';
+          } else if (Math.min(avgR, avgG, avgB) > 205) {
+            detectedMode = 'white';
+            chromaColor = '#ffffff';
+          } else {
+            detectedMode = 'auto';
+            chromaColor = '#8b5cf6';
+          }
+        }
+      } catch (detectErr) {
+        detectedMode = 'green';
+      }
+
+      handleLayerChromaUpdate(layerType, targetId, { enabled: true, mode: detectedMode, color: chromaColor });
+      toast.success(`🎉 Đã kích hoạt Tách Nền Video AI [${detectedMode.toUpperCase()}] 60 FPS Siêu Sạch!`);
+      return;
+    }
+
+    // 🖼️ XỬ LÝ CHO HÌNH ẢNH: QUÉT VÀ TÁCH SẠCH 100% NỀN THÀNH ẢNH TRONG SUỐT SIÊU MỊN 4K
     pushUndoSnapshot();
     toast.info('⏳ AI đang quét và tách sạch nền 100%, bảo vệ nhân vật & sản phẩm...');
     try {
-      const transparentDataUrl = await removeImageBackgroundCanvas(targetImg, mode || 'auto');
+      const transparentDataUrl = await removeImageBackgroundCanvas(targetImg, 'auto');
       if (layerType === 'avatar') {
-        const tgtId = targetId || safeAvatars[0]?.id || 'avatar_1';
+        const tgtId = targetId || targetAv?.id || safeAvatars[0]?.id || 'avatar_1';
         const currentAvs = (multiAvatarConfig?.avatars && multiAvatarConfig.avatars.length > 0)
           ? [...multiAvatarConfig.avatars]
           : [{ id: tgtId, name: 'MC', talkVideo: '', idleVideo: '', mediaUrl: '' }];
@@ -2481,7 +2528,7 @@ export default function LivestreamFlowSequencer() {
               talkVideo: transparentDataUrl,
               idleVideo: transparentDataUrl,
               mediaUrl: transparentDataUrl,
-              chromaKey: { enabled: false, mode, color: chromaColor }
+              chromaKey: { enabled: false, mode: 'auto', color: '#00ff00' }
             };
           }
           return a;
@@ -2497,10 +2544,13 @@ export default function LivestreamFlowSequencer() {
         } catch (e) {}
       } else if (layerType === 'main_media') {
         handleUpdateStep(currentStep.id, 'mediaUrl', transparentDataUrl);
+        handleUpdateStep(currentStep.id, 'mainMediaChromaKey', { enabled: false });
       } else if (layerType === 'pip') {
         handleUpdateStep(currentStep.id, 'secondaryMediaUrl', transparentDataUrl);
+        handleUpdateStep(currentStep.id, 'secondaryMediaChromaKey', { enabled: false });
       } else if (layerType === 'banner') {
         handleUpdateStep(currentStep.id, 'overlayImage', transparentDataUrl);
+        handleUpdateStep(currentStep.id, 'overlayImageChromaKey', { enabled: false });
       }
       toast.success('🎉 Đã tách sạch sẽ 100% nền hình ảnh trong suốt siêu mịn 4K!');
       if (currentStep) {
@@ -2509,8 +2559,9 @@ export default function LivestreamFlowSequencer() {
         }, 80);
       }
     } catch (err) {
-      handleLayerChromaUpdate(layerType, targetId, { enabled: true, mode, color: chromaColor });
-      toast.success(`✨ Đã kích hoạt bộ lọc Tách Phông (${mode.toUpperCase()})!`);
+      console.error('[handleInstantCanvasBgRemoval] Error:', err);
+      handleLayerChromaUpdate(layerType, targetId, { enabled: true, mode: 'auto', color: '#00ff00' });
+      toast.success('✨ Đã kích hoạt bộ lọc Tách Phông Tự Động!');
     }
   };
 

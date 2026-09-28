@@ -23,13 +23,13 @@ import UniversalMediaPicker from './UniversalMediaPicker';
 export const SvgChromaFilters = () => (
   <svg width="0" height="0" className="absolute pointer-events-none opacity-0" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>
     <defs>
-      {/* 🟢 TÁCH NỀN XANH LÁ SIÊU SẠCH 4K (BẢO TOÀN 100% DA TRẮNG HỒNG, ÁO ĐỎ, SẢN PHẨM - TUYỆT ĐỐI KHÔNG ĐEN NHÂN VẬT) */}
+      {/* 🟢 TÁCH NỀN XANH LÁ SIÊU SẠCH 4K (BẢO TOÀN 100% DA TRẮNG HỒNG, ÁO ĐỎ, SẢN PHẨM - KHÔNG ĐEN NHÂN VẬT) */}
       <filter id="avalive-chroma-green" colorInterpolationFilters="sRGB" x="0%" y="0%" width="100%" height="100%">
         <feColorMatrix
           type="matrix"
           values="
             1.00  0.00  0.00  0.00  0.00
-            0.20  0.60  0.20  0.00  0.00
+            0.15  0.65  0.20  0.00  0.00
             0.00  0.00  1.00  0.00  0.00
             0.00  0.00  0.00  1.00  0.00"
           result="despilled_green"
@@ -38,16 +38,17 @@ export const SvgChromaFilters = () => (
           in="SourceGraphic"
           type="matrix"
           values="
-            1.00  0.00  0.00  0.00  0.00
-            0.00  1.00  0.00  0.00  0.00
-            0.00  0.00  1.00  0.00  0.00
-            1.80 -3.20  1.80  1.00  0.15"
+            0.00  0.00  0.00  0.00  0.00
+            0.00  0.00  0.00  0.00  0.00
+            0.00  0.00  0.00  0.00  0.00
+            3.20 -3.40  1.80  0.00  0.20"
           result="raw_mask_green"
         />
         <feComponentTransfer in="raw_mask_green" result="sharp_mask_green">
-          <feFuncA type="linear" slope="3.5" intercept="-0.1" />
+          <feFuncA type="linear" slope="4.5" intercept="-0.15" />
         </feComponentTransfer>
-        <feComposite in="despilled_green" in2="sharp_mask_green" operator="in" />
+        <feGaussianBlur in="sharp_mask_green" stdDeviation="0.6" result="smooth_mask_green" />
+        <feComposite in="despilled_green" in2="smooth_mask_green" operator="in" />
       </filter>
 
       {/* 🔵 TÁCH NỀN XANH DƯƠNG SIÊU SẠCH 4K */}
@@ -57,7 +58,7 @@ export const SvgChromaFilters = () => (
           values="
             1.00  0.00  0.00  0.00  0.00
             0.00  1.00  0.00  0.00  0.00
-            0.20  0.20  0.60  0.00  0.00
+            0.15  0.20  0.65  0.00  0.00
             0.00  0.00  0.00  1.00  0.00"
           result="despilled_blue"
         />
@@ -65,16 +66,17 @@ export const SvgChromaFilters = () => (
           in="SourceGraphic"
           type="matrix"
           values="
-            1.00  0.00  0.00  0.00  0.00
-            0.00  1.00  0.00  0.00  0.00
-            0.00  0.00  1.00  0.00  0.00
-            1.80  1.80 -3.20  1.00  0.15"
+            0.00  0.00  0.00  0.00  0.00
+            0.00  0.00  0.00  0.00  0.00
+            0.00  0.00  0.00  0.00  0.00
+            1.80  3.20 -3.40  0.00  0.20"
           result="raw_mask_blue"
         />
         <feComponentTransfer in="raw_mask_blue" result="sharp_mask_blue">
-          <feFuncA type="linear" slope="3.5" intercept="-0.1" />
+          <feFuncA type="linear" slope="4.5" intercept="-0.15" />
         </feComponentTransfer>
-        <feComposite in="despilled_blue" in2="sharp_mask_blue" operator="in" />
+        <feGaussianBlur in="sharp_mask_blue" stdDeviation="0.6" result="smooth_mask_blue" />
+        <feComposite in="despilled_blue" in2="smooth_mask_blue" operator="in" />
       </filter>
 
       {/* 🔴 TÁCH NỀN ĐỎ SIÊU SẠCH 4K (RED SCREEN KEYING) */}
@@ -83,34 +85,36 @@ export const SvgChromaFilters = () => (
           in="SourceGraphic"
           type="matrix"
           values="
-            1.00  0.00  0.00  0.00  0.00
-            0.00  1.00  0.00  0.00  0.00
-            0.00  0.00  1.00  0.00  0.00
-           -3.00  1.80  1.80  1.00  0.20"
+            0.00  0.00  0.00  0.00  0.00
+            0.00  0.00  0.00  0.00  0.00
+            0.00  0.00  0.00  0.00  0.00
+           -3.40  2.20  2.20  0.00  0.25"
           result="raw_mask_red"
         />
         <feComponentTransfer in="raw_mask_red" result="sharp_mask_red">
-          <feFuncA type="linear" slope="3.5" intercept="-0.15" />
+          <feFuncA type="linear" slope="4.2" intercept="-0.15" />
         </feComponentTransfer>
-        <feComposite in="SourceGraphic" in2="sharp_mask_red" operator="in" />
+        <feGaussianBlur in="sharp_mask_red" stdDeviation="0.6" result="smooth_mask_red" />
+        <feComposite in="SourceGraphic" in2="smooth_mask_red" operator="in" />
       </filter>
 
-      {/* ⚫ TÁCH NỀN ĐEN / TỐI SIÊU SẠCH (BẢO VỆ TÓC ĐEN, MẮT ĐEN, ÁO ĐEN & SẢN PHẨM KHÔNG BỊ ĐỤC THỦNG) */}
+      {/* ⚫ TÁCH NỀN ĐEN / TỐI SIÊU SẠCH (BẢO VỆ TÓC ĐEN, MẮT ĐEN, ÁO ĐEN & SẢN PHẨM) */}
       <filter id="avalive-chroma-black" colorInterpolationFilters="sRGB" x="0%" y="0%" width="100%" height="100%">
         <feColorMatrix
           in="SourceGraphic"
           type="matrix"
           values="
-            1.00  0.00  0.00  0.00  0.00
-            0.00  1.00  0.00  0.00  0.00
-            0.00  0.00  1.00  0.00  0.00
-            1.50  2.50  0.80  0.00 -0.08"
+            0.00  0.00  0.00  0.00  0.00
+            0.00  0.00  0.00  0.00  0.00
+            0.00  0.00  0.00  0.00  0.00
+            2.00  3.00  1.20  0.00 -0.25"
           result="luma_mask_black"
         />
         <feComponentTransfer in="luma_mask_black" result="sharp_mask_black">
-          <feFuncA type="linear" slope="6.0" intercept="-0.1" />
+          <feFuncA type="linear" slope="8.0" intercept="-0.1" />
         </feComponentTransfer>
-        <feComposite in="SourceGraphic" in2="sharp_mask_black" operator="in" />
+        <feGaussianBlur in="sharp_mask_black" stdDeviation="0.6" result="smooth_mask_black" />
+        <feComposite in="SourceGraphic" in2="smooth_mask_black" operator="in" />
       </filter>
 
       {/* ⚪ TÁCH NỀN TRẮNG / TƯỜNG SÁNG SIÊU SẠCH (BẢO VỆ DA TRẮNG & SẢN PHẨM SÁNG MÀU) */}
@@ -119,34 +123,45 @@ export const SvgChromaFilters = () => (
           in="SourceGraphic"
           type="matrix"
           values="
-            1.00  0.00  0.00  0.00  0.00
-            0.00  1.00  0.00  0.00  0.00
-            0.00  0.00  1.00  0.00  0.00
-           -1.20 -1.80 -0.80  1.00  3.20"
+            0.00  0.00  0.00  0.00  0.00
+            0.00  0.00  0.00  0.00  0.00
+            0.00  0.00  0.00  0.00  0.00
+           -1.50 -2.20 -1.00  0.00  3.80"
           result="raw_mask_white"
         />
         <feComponentTransfer in="raw_mask_white" result="sharp_mask_white">
-          <feFuncA type="linear" slope="3.8" intercept="-0.15" />
+          <feFuncA type="linear" slope="5.0" intercept="-0.2" />
         </feComponentTransfer>
+        <feGaussianBlur in="sharp_mask_white" stdDeviation="0.6" result="smooth_mask_white" />
         <feComposite in="SourceGraphic" in2="sharp_mask_white" operator="in" />
       </filter>
 
       {/* 🪄 TỰ ĐỘNG TÁCH MỌI LOẠI NỀN (AUTO KEYING - BẢO VỆ NHÂN VẬT SIÊU NÉT) */}
       <filter id="avalive-chroma-auto" colorInterpolationFilters="sRGB" x="0%" y="0%" width="100%" height="100%">
         <feColorMatrix
-          in="SourceGraphic"
           type="matrix"
           values="
             1.00  0.00  0.00  0.00  0.00
-            0.00  1.00  0.00  0.00  0.00
+            0.15  0.65  0.20  0.00  0.00
             0.00  0.00  1.00  0.00  0.00
-            1.20 -2.40  1.20  1.00  0.25"
+            0.00  0.00  0.00  1.00  0.00"
+          result="despilled_auto"
+        />
+        <feColorMatrix
+          in="SourceGraphic"
+          type="matrix"
+          values="
+            0.00  0.00  0.00  0.00  0.00
+            0.00  0.00  0.00  0.00  0.00
+            0.00  0.00  0.00  0.00  0.00
+            3.00 -3.20  1.60  0.00  0.22"
           result="auto_mask"
         />
         <feComponentTransfer in="auto_mask" result="sharp_auto_mask">
-          <feFuncA type="linear" slope="3.2" intercept="-0.1" />
+          <feFuncA type="linear" slope="4.5" intercept="-0.15" />
         </feComponentTransfer>
-        <feComposite in="SourceGraphic" in2="sharp_auto_mask" operator="in" />
+        <feGaussianBlur in="sharp_auto_mask" stdDeviation="0.6" result="smooth_auto_mask" />
+        <feComposite in="despilled_auto" in2="smooth_auto_mask" operator="in" />
       </filter>
 
       {/* 🏠 TÁCH BỐI CẢNH PHÒNG THỰC TẾ / TƯỜNG (ROOM / AMBIENT) */}
@@ -155,15 +170,16 @@ export const SvgChromaFilters = () => (
           in="SourceGraphic"
           type="matrix"
           values="
-            1.00  0.00  0.00  0.00  0.00
-            0.00  1.00  0.00  0.00  0.00
-            0.00  0.00  1.00  0.00  0.00
-            1.40  1.80  1.00  1.00 -0.20"
+            0.00  0.00  0.00  0.00  0.00
+            0.00  0.00  0.00  0.00  0.00
+            0.00  0.00  0.00  0.00  0.00
+            2.00 -2.40  1.40  0.00  0.18"
           result="room_mask"
         />
         <feComponentTransfer in="room_mask" result="sharp_room_mask">
-          <feFuncA type="linear" slope="3.5" intercept="-0.18" />
+          <feFuncA type="linear" slope="4.0" intercept="-0.15" />
         </feComponentTransfer>
+        <feGaussianBlur in="sharp_room_mask" stdDeviation="0.6" result="smooth_room_mask" />
         <feComposite in="SourceGraphic" in2="sharp_room_mask" operator="in" />
       </filter>
     </defs>

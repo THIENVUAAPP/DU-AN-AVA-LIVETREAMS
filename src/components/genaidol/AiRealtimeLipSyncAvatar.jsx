@@ -309,8 +309,11 @@ export default function AiRealtimeLipSyncAvatar({
   return (
     <div 
       ref={containerRef}
-      className={`relative w-full h-full overflow-hidden select-none bg-black flex items-center justify-center ${className}`}
-      style={style}
+      className={`relative w-full h-full overflow-hidden select-none bg-transparent flex items-center justify-center ${className}`}
+      style={{
+        backgroundColor: 'transparent',
+        ...style
+      }}
     >
       {/* 1. TRƯỜNG HỢP MEDIA LÀ VIDEO: PHÁT VIDEO CHUẨN + ACCENT LIP-SYNC MOTION */}
       {isVideoMedia ? (
@@ -318,10 +321,12 @@ export default function AiRealtimeLipSyncAvatar({
           ref={activeVideoRef}
           data-main-player={dataMainPlayer ? "true" : undefined}
           src={src}
-          className="w-full h-full object-cover bg-black"
+          className="w-full h-full object-cover bg-transparent"
           style={{
             ...videoTransformStyle,
-            imageRendering: '-webkit-optimize-contrast'
+            imageRendering: '-webkit-optimize-contrast',
+            backgroundColor: 'transparent',
+            filter: style?.filter || undefined
           }}
           autoPlay={autoPlay}
           loop={loop}
@@ -341,13 +346,15 @@ export default function AiRealtimeLipSyncAvatar({
         />
       ) : (
         /* 2. TRƯỜNG HỢP MEDIA LÀ ẢNH TĨNH: RENDER BẰNG CANVAS AI REALTIME LIP-SYNC ENGINE */
-        <div className="relative w-full h-full flex items-center justify-center">
+        <div className="relative w-full h-full flex items-center justify-center bg-transparent">
           <canvas
             ref={canvasRef}
-            className="w-full h-full object-cover"
+            className="w-full h-full object-cover bg-transparent"
             style={{
               imageRendering: '-webkit-optimize-contrast',
-              display: imageLoaded ? 'block' : 'none'
+              display: imageLoaded ? 'block' : 'none',
+              backgroundColor: 'transparent',
+              filter: style?.filter || undefined
             }}
           />
           {/* Fallback Image nếu Canvas chưa nạp xong */}
@@ -355,7 +362,11 @@ export default function AiRealtimeLipSyncAvatar({
             <img 
               src={src} 
               alt={alt}
-              className="w-full h-full object-cover opacity-80" 
+              className="w-full h-full object-cover opacity-80 bg-transparent" 
+              style={{
+                backgroundColor: 'transparent',
+                filter: style?.filter || undefined
+              }}
               onError={onError}
             />
           )}
