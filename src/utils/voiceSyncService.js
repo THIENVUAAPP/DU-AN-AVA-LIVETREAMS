@@ -8426,10 +8426,8 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
       const isPausedNow = typeof localStorage !== 'undefined' && (
         localStorage.getItem('avalive_user_paused') === 'true' || 
         localStorage.getItem('avalive_window_capture_paused') === 'true' ||
-        localStorage.getItem('avalive_master_live_running') === 'false' ||
         localStorage.getItem('aidol_user_paused_script') === 'true' ||
-        localStorage.getItem('aidol_is_script_live_running') === 'false' ||
-        (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
+        (typeof window !== 'undefined' && window.__aidolUserPausedScript === true)
       );
       if (!isTestingMode && isPausedNow) {
         return resolve(false);
@@ -8453,10 +8451,8 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
     const isPausedBeforeStart = typeof localStorage !== 'undefined' && (
       localStorage.getItem('avalive_user_paused') === 'true' || 
       localStorage.getItem('avalive_window_capture_paused') === 'true' ||
-      localStorage.getItem('avalive_master_live_running') === 'false' ||
       localStorage.getItem('aidol_user_paused_script') === 'true' ||
-      localStorage.getItem('aidol_is_script_live_running') === 'false' ||
-      (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
+      (typeof window !== 'undefined' && window.__aidolUserPausedScript === true)
     );
     if (!isTestingMode && isPausedBeforeStart) {
       if (safetyTimer) {
@@ -8980,15 +8976,13 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
   stopCurrentActiveAudioNode();
   const thisSpeechId = ++currentSpeechGenerationId;
 
-  const isTestingMode = isTest === true || voice?.isTest === true;
+  const isTestingMode = isTest === true || voice?.isTest === true || voice?.priority === true;
 
   const isUserPaused = typeof localStorage !== 'undefined' && (
     localStorage.getItem('avalive_user_paused') === 'true' || 
     localStorage.getItem('avalive_window_capture_paused') === 'true' ||
-    localStorage.getItem('avalive_master_live_running') === 'false' ||
     localStorage.getItem('aidol_user_paused_script') === 'true' ||
-    localStorage.getItem('aidol_is_script_live_running') === 'false' ||
-    (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
+    (typeof window !== 'undefined' && window.__aidolUserPausedScript === true)
   );
   if (!isTestingMode && isUserPaused) {
     // 🛡️ KHÓA CHẶT: Khi người dùng đã tắt / dừng kịch bản, TUYỆT ĐỐI KHÔNG gọi onEnd() tránh tự nhảy câu tiếp theo
@@ -9191,10 +9185,8 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
                   const isPausedNow = typeof localStorage !== 'undefined' && (
                     localStorage.getItem('avalive_user_paused') === 'true' || 
                     localStorage.getItem('avalive_window_capture_paused') === 'true' ||
-                    localStorage.getItem('avalive_master_live_running') === 'false' ||
                     localStorage.getItem('aidol_user_paused_script') === 'true' ||
-                    localStorage.getItem('aidol_is_script_live_running') === 'false' ||
-                    (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
+                    (typeof window !== 'undefined' && window.__aidolUserPausedScript === true)
                   );
                   if (!isTestingMode && isPausedNow) return resolve(false);
                   if (onEnd) onEnd();
@@ -9258,10 +9250,8 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
         const isPausedNow = typeof localStorage !== 'undefined' && (
           localStorage.getItem('avalive_user_paused') === 'true' || 
           localStorage.getItem('avalive_window_capture_paused') === 'true' ||
-          localStorage.getItem('avalive_master_live_running') === 'false' ||
           localStorage.getItem('aidol_user_paused_script') === 'true' ||
-          localStorage.getItem('aidol_is_script_live_running') === 'false' ||
-          (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
+          (typeof window !== 'undefined' && window.__aidolUserPausedScript === true)
         );
         if (!isTestingMode && isPausedNow) return resolve(false);
         if (onEnd) onEnd();

@@ -1081,6 +1081,16 @@ export default function LivestreamFlowSequencer() {
   const handleStopFlow = () => {
     isPlayingFlowRef.current = false;
     setIsPlayingFlow(false);
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.setItem('aidol_user_paused_script', 'true');
+        localStorage.setItem('aidol_is_script_live_running', 'false');
+      }
+      if (typeof window !== 'undefined') {
+        window.__aidolUserPausedScript = true;
+        window.__isScriptLiveRunning = false;
+      }
+    } catch (e) {}
     if (stepWatchdogRef.current) {
       clearTimeout(stepWatchdogRef.current);
       stepWatchdogRef.current = null;
@@ -1121,6 +1131,17 @@ export default function LivestreamFlowSequencer() {
           return;
         }
       }
+      try {
+        if (typeof localStorage !== 'undefined') {
+          localStorage.removeItem('aidol_user_paused_script');
+          localStorage.removeItem('avalive_user_paused');
+          localStorage.setItem('aidol_is_script_live_running', 'true');
+        }
+        if (typeof window !== 'undefined') {
+          window.__aidolUserPausedScript = false;
+          window.__isScriptLiveRunning = true;
+        }
+      } catch (e) {}
       if (!isMasterVoiceEnabled) {
         setIsMasterVoiceEnabled(true);
       }
@@ -1139,11 +1160,24 @@ export default function LivestreamFlowSequencer() {
     setIsMasterSynced(nextSync);
     try {
       if (nextSync) {
+        localStorage.removeItem('aidol_user_paused_script');
+        localStorage.removeItem('avalive_user_paused');
+        localStorage.setItem('aidol_is_script_live_running', 'true');
         localStorage.setItem('avalive_master_sync_active', 'true');
+        if (typeof window !== 'undefined') {
+          window.__aidolUserPausedScript = false;
+          window.__isScriptLiveRunning = true;
+        }
       } else {
+        localStorage.setItem('aidol_user_paused_script', 'true');
+        localStorage.setItem('aidol_is_script_live_running', 'false');
         localStorage.removeItem('avalive_master_sync_active');
         localStorage.removeItem('avalive_sequencer_overlay');
         localStorage.removeItem('avalive_user_locked_media');
+        if (typeof window !== 'undefined') {
+          window.__aidolUserPausedScript = true;
+          window.__isScriptLiveRunning = false;
+        }
       }
     } catch (e) {}
 
@@ -2624,6 +2658,14 @@ export default function LivestreamFlowSequencer() {
       stopVoiceAudio();
     }
     try { unlockAudioContext(); } catch (e) {}
+    try {
+      if (typeof localStorage !== 'undefined') {
+        localStorage.removeItem('aidol_user_paused_script');
+      }
+      if (typeof window !== 'undefined') {
+        window.__aidolUserPausedScript = false;
+      }
+    } catch (e) {}
     
     const effectiveVoiceId = (!voiceId || voiceId === 'brain_auto') 
       ? getBrainVoiceForSpeaker(speakerId) 

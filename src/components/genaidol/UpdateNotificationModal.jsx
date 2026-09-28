@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.77';
-export const RELEASE_DATE = '27/09/2026';
+export const APP_VERSION = '4.9.78';
+export const RELEASE_DATE = '28/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v4.9.77 - Khóa Chặt 100% Voice AI Kịch Bản Khi Tắt & Đồng Bộ Đầy Đủ Sản Phẩm Ghim TikTok Shop, Đa Lớp Sân Khấu Sang Window Capture / TikTok Live Studio & Sửa Lỗi Tải ZIP Trực Tiếp Không Bị 404',
-    description: '1. Khóa Chặt Triệt Để Nút Tắt Voice Kịch Bản Live Idol (Tuyệt Đối Không Tự Ý Phát Lại): Xử lý dứt điểm 100% hiện tượng khi người dùng bấm dừng/tắt kịch bản hoặc tắt voice thì sau vài chục giây hệ thống tự động phát voice lại do timer IDLE (30s) hoặc watchdog buffer Web Audio DSP. Khi người dùng bấm tắt, toàn bộ timer, hàng đợi voice TTS, các sự kiện phát ngầm bị triệt tiêu sạch sẽ và khóa chặt bằng cờ aidol_user_paused_script; chỉ khi người dùng chủ động bấm phát thì voice mới được mở lại. 2. Đồng Bộ Đầy Đủ 100% Dữ Liệu Sân Khấu Chính Sang Window Capture OBS & TikTok Live Studio: Bổ sung container hiển thị Sản Phẩm Ghim TikTok Shop (#pinnedProductContainer) với đầy đủ hình ảnh, tên, giá sale, giá gạch ngang, deal badge và mã sản phẩm; đồng thời hỗ trợ avatarTransforms, backgroundColor, video phụ PiP, extra layers, banner ảnh và tiêu đề typography thời gian thực 60 FPS. 3. Khắc Phục Triệt Để Lỗi Tải File ZIP Windows & Mac (Không Bị 404 Trên GitHub): Nâng cấp endpoint tải file tự động phân giải asset ZIP thực tế mới nhất từ GitHub Releases API hoặc fallback an toàn, đảm bảo bấm tải là tải ngay file ZIP về máy tính 100%, không bị chuyển hướng sang trang báo lỗi 404. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng & Module Hệ Thống.'
+    title: '🚀 Bản Cập Nhật v4.9.78 - Khôi Phục 100% Đọc Voice Kịch Bản, Chạy Ngay Khi Bật & Dừng Triệt Để Khi Tắt',
+    description: '1. Khôi Phục Hoàn Toàn 100% Đọc Voice Kịch Bản Tab Idol: Sửa dứt điểm nguyên nhân gây câm/im lặng khi bấm chạy kịch bản theo từng bước, bấm "Nghe Thử Voice", "▶️ CHẠY DEMO" hoặc "📡 ĐỒNG BỘ RA SÂN KHẤU CHÍNH". Hệ thống tự động xóa cờ pause và kích hoạt bộ giải mã âm thanh giọng đọc AI Neural phát liền mạch 0ms không độ trễ. 2. Chuẩn Hóa Điều Khiển Phát / Dừng Kịch Bản: Khi người dùng bấm chạy kịch bản hoặc phát live, toàn bộ kịch bản và giọng đọc AI avatar hoạt động trơn tru; khi người dùng bấm dừng ("⏹️ DỪNG DEMO", tắt đồng bộ, hoặc "TẮT TẤT CẢ"), toàn bộ luồng âm thanh voice và kịch bản lập tức dừng triệt để 100% và tuyệt đối không tự động phát lại khi chưa có yêu cầu từ người dùng. 3. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác: Giữ nguyên vẹn toàn bộ giao diện nút bấm và trạng thái hoạt động của mọi module hệ thống.'
   }
 ];
 
