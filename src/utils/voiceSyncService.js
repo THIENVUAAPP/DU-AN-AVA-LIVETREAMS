@@ -7496,6 +7496,28 @@ export function isVoiceFavorite(voiceId) {
   return getFavoriteVoiceIds().includes(voiceId);
 }
 
+// Helper tìm kiếm giọng đọc theo ID ở mọi nguồn (Hệ Thống, ElevenLabs, Custom...)
+function findVoiceByIdAnywhere(vId, customList = []) {
+  if (!vId) return null;
+  let match = ALL_SYSTEM_VOICES.find(v => v.id === vId);
+  if (match) return match;
+  try {
+    const el = JSON.parse(localStorage.getItem('elevenlabs_user_voices') || '[]');
+    match = el.find(v => v.id === vId);
+    if (match) return match;
+  } catch(e) {}
+  if (Array.isArray(customList)) {
+    match = customList.find(v => v.id === vId);
+    if (match) return match;
+  }
+  try {
+    const cust = JSON.parse(localStorage.getItem('avalive_custom_voices') || '[]');
+    match = cust.find(v => v.id === vId);
+    if (match) return match;
+  } catch(e) {}
+  return null;
+}
+
 export function getSavedVoiceConfig() {
   if (typeof window === 'undefined') return DEFAULT_VOICE_CONFIG;
   let baseConfig = { ...DEFAULT_VOICE_CONFIG };
@@ -7512,8 +7534,9 @@ export function getSavedVoiceConfig() {
     const generalSaved = localStorage.getItem('aidol_general_settings');
     if (generalSaved) {
       const g = JSON.parse(generalSaved);
-      if (g.mainVoiceId) {
-        const idolMatch = ALL_SYSTEM_VOICES.find(v => v.id === g.mainVoiceId);
+      const targetMainVoiceId = g.mainVoiceId || g.avatar1VoiceId;
+      if (targetMainVoiceId) {
+        const idolMatch = findVoiceByIdAnywhere(targetMainVoiceId, g.customVoices) || baseConfig.idolVoice;
         if (idolMatch) {
           baseConfig.idolVoice = {
             ...idolMatch,
@@ -7523,10 +7546,12 @@ export function getSavedVoiceConfig() {
             rate: g.mainVoiceRate !== undefined ? Number(g.mainVoiceRate) : (baseConfig.idolVoice?.rate ?? 1.0),
             pitch: g.mainVoicePitch !== undefined ? Number(g.mainVoicePitch) : (baseConfig.idolVoice?.pitch ?? 1.0)
           };
+          baseConfig.avatar1Voice = { ...baseConfig.idolVoice, role: 'avatar_1' };
         }
       }
-      if (g.assistantVoiceId) {
-        const asstMatch = ALL_SYSTEM_VOICES.find(v => v.id === g.assistantVoiceId);
+      if (g.assistantVoiceId || g.avatar2VoiceId) {
+        const asstId = g.assistantVoiceId || g.avatar2VoiceId;
+        const asstMatch = findVoiceByIdAnywhere(asstId, g.customVoices) || baseConfig.managerVoice;
         if (asstMatch) {
           baseConfig.managerVoice = {
             ...asstMatch,
@@ -7536,10 +7561,12 @@ export function getSavedVoiceConfig() {
             rate: g.assistantVoiceRate !== undefined ? Number(g.assistantVoiceRate) : (baseConfig.managerVoice?.rate ?? 1.0),
             pitch: g.assistantVoicePitch !== undefined ? Number(g.assistantVoicePitch) : (baseConfig.managerVoice?.pitch ?? 1.0)
           };
+          baseConfig.avatar2Voice = { ...baseConfig.managerVoice, role: 'avatar_2' };
         }
       }
-      if (g.commentVoiceId) {
-        const commMatch = ALL_SYSTEM_VOICES.find(v => v.id === g.commentVoiceId);
+      if (g.commentVoiceId || g.avatar4VoiceId) {
+        const commId = g.commentVoiceId || g.avatar4VoiceId;
+        const commMatch = findVoiceByIdAnywhere(commId, g.customVoices) || baseConfig.commentVoice;
         if (commMatch) {
           baseConfig.commentVoice = {
             ...commMatch,
@@ -7549,10 +7576,12 @@ export function getSavedVoiceConfig() {
             rate: g.commentVoiceRate !== undefined ? Number(g.commentVoiceRate) : (baseConfig.commentVoice?.rate ?? 1.0),
             pitch: g.commentVoicePitch !== undefined ? Number(g.commentVoicePitch) : (baseConfig.commentVoice?.pitch ?? 1.0)
           };
+          baseConfig.avatar4Voice = { ...baseConfig.commentVoice, role: 'avatar_4' };
         }
       }
-      if (g.gameVoiceId) {
-        const gameMatch = ALL_SYSTEM_VOICES.find(v => v.id === g.gameVoiceId);
+      if (g.gameVoiceId || g.avatar3VoiceId) {
+        const gVoiceId = g.gameVoiceId || g.avatar3VoiceId;
+        const gameMatch = findVoiceByIdAnywhere(gVoiceId, g.customVoices) || baseConfig.gameBlvVoice;
         if (gameMatch) {
           baseConfig.gameBlvVoice = {
             ...gameMatch,
@@ -7561,6 +7590,7 @@ export function getSavedVoiceConfig() {
             rate: g.gameVoiceRate !== undefined ? Number(g.gameVoiceRate) : (baseConfig.gameBlvVoice?.rate ?? 1.0),
             pitch: g.gameVoicePitch !== undefined ? Number(g.gameVoicePitch) : (baseConfig.gameBlvVoice?.pitch ?? 1.0)
           };
+          baseConfig.avatar3Voice = { ...baseConfig.gameBlvVoice, role: 'avatar_3' };
         }
       }
       
@@ -7569,7 +7599,7 @@ export function getSavedVoiceConfig() {
         const keyId = `avatar${i}VoiceId`;
         const vId = g[keyId] || (i === 1 ? g.mainVoiceId : i === 2 ? g.assistantVoiceId : i === 3 ? g.gameVoiceId : i === 4 ? g.commentVoiceId : null);
         if (vId) {
-          const match = ALL_SYSTEM_VOICES.find(v => v.id === vId);
+          const match = findVoiceByIdAnywhere(vId, g.customVoices);
           if (match) {
             baseConfig[`avatar${i}Voice`] = {
               ...match,
@@ -7636,57 +7666,55 @@ export function updateActiveVoiceAudio(role, voiceObj) {
  * - TUYỆT ĐỐI KHÔNG CHỒNG CHÉO: Luôn phát duy nhất đúng 1 giọng được chọn.
  */
 export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId = null, avatarId = null) {
-  // 🎯 ƯU TIÊN SỐ 1 (CAO NHẤT KHI TEST / CHỌN GIỌNG TRỰC TIẾP): NẾU TRUYỀN taskSpecificVoiceId CỤ THỂ THÌ DÙNG NGAY taskSpecificVoiceId
-  if (taskSpecificVoiceId) {
-    if (typeof taskSpecificVoiceId === 'object' && taskSpecificVoiceId.id) {
-      const fullVoice = ALL_SYSTEM_VOICES.find(v => v.id === taskSpecificVoiceId.id) || taskSpecificVoiceId;
-      return {
-        ...fullVoice,
-        ...taskSpecificVoiceId,
-        volume: taskSpecificVoiceId.volume !== undefined ? Number(taskSpecificVoiceId.volume) : (fullVoice.volume ?? 1.0),
-        rate: taskSpecificVoiceId.rate !== undefined ? Number(taskSpecificVoiceId.rate) : (fullVoice.rate ?? 1.0),
-        pitch: taskSpecificVoiceId.pitch !== undefined ? Number(taskSpecificVoiceId.pitch) : (fullVoice.pitch ?? 1.0)
-      };
-    }
-    if (typeof taskSpecificVoiceId === 'string' && taskSpecificVoiceId.trim()) {
-      const matchedVoice = ALL_SYSTEM_VOICES.find(v => v.id === taskSpecificVoiceId.trim());
-      if (matchedVoice) return matchedVoice;
-    }
-  }
-
   const dualConfig = getSavedVoiceConfig();
   const normalizedRole = (roleOrEvent || '').toLowerCase().trim();
   const normalizedAvatarId = (avatarId || '').toLowerCase().trim();
 
+  // 1. Phân giải theo ID Avatar nhân vật 1 - 5 cụ thể đã cấu hình trong Bộ Não AI & Giọng AVA Live
   let brainVoice = null;
-
-  // 1. Phân giải theo ID Avatar nhân vật 1 - 5 cụ thể đã cấu hình trong Bộ Não AI
-  if (normalizedAvatarId === 'avatar_1' || normalizedRole === 'avatar_1') {
+  if (normalizedAvatarId === 'avatar_1' || normalizedRole === 'avatar_1' || normalizedRole === 'idol') {
     brainVoice = dualConfig.avatar1Voice || dualConfig.idolVoice;
-  } else if (normalizedAvatarId === 'avatar_2' || normalizedRole === 'avatar_2') {
+  } else if (normalizedAvatarId === 'avatar_2' || normalizedRole === 'avatar_2' || normalizedRole === 'manager' || normalizedRole === 'assistant') {
     brainVoice = dualConfig.avatar2Voice || dualConfig.managerVoice || dualConfig.idolVoice;
-  } else if (normalizedAvatarId === 'avatar_3' || normalizedRole === 'avatar_3') {
+  } else if (normalizedAvatarId === 'avatar_3' || normalizedRole === 'avatar_3' || normalizedRole === 'game' || normalizedRole === 'blv') {
     brainVoice = dualConfig.avatar3Voice || dualConfig.gameBlvVoice || dualConfig.gameVoice || dualConfig.commentVoice || dualConfig.idolVoice;
-  } else if (normalizedAvatarId === 'avatar_4' || normalizedRole === 'avatar_4') {
+  } else if (normalizedAvatarId === 'avatar_4' || normalizedRole === 'avatar_4' || normalizedRole === 'comment') {
     brainVoice = dualConfig.avatar4Voice || dualConfig.commentVoice || dualConfig.managerVoice || dualConfig.idolVoice;
   } else if (normalizedAvatarId === 'avatar_5' || normalizedRole === 'avatar_5') {
     brainVoice = dualConfig.avatar5Voice || dualConfig.idolVoice;
-  }
-  // 2. Phân giải theo vai trò / kênh tác vụ
-  else if (normalizedRole === 'comment' || normalizedRole === 'ask_reply' || normalizedRole === 'qna' || normalizedRole === 'binhluan' || normalizedRole === 'hoi_dap') {
-    brainVoice = dualConfig.avatar4Voice || dualConfig.commentVoice || dualConfig.idolVoice;
-  } else if (normalizedRole === 'manager' || normalizedRole === 'assistant' || normalizedRole === 'checkout' || normalizedRole === 'purchase' || normalizedRole === 'troly' || normalizedRole === 'quanly' || normalizedRole === 'chot_don') {
-    brainVoice = dualConfig.avatar2Voice || dualConfig.managerVoice || dualConfig.idolVoice;
-  } else if (normalizedRole === 'game' || normalizedRole === 'battle' || normalizedRole === 'bando' || normalizedRole === 'blv' || normalizedRole === 'pk') {
-    brainVoice = dualConfig.avatar3Voice || dualConfig.gameBlvVoice || dualConfig.gameVoice || dualConfig.idolVoice;
   } else {
-    // idol, welcome, gift, follow, like, script, talking, idle, apology, call_to_action, general
     brainVoice = dualConfig.avatar1Voice || dualConfig.idolVoice;
   }
 
-  // 🎯 ƯU TIÊN SỐ 2: CẤU HÌNH TRONG TAB BỘ NÃO AI
+  // 🎯 KIỂM TRA taskSpecificVoiceId:
+  // Nếu taskSpecificVoiceId được truyền vào và là một đối tượng voice hoặc ID cụ thể KHÁC 'brain_auto':
+  // Tuy nhiên, đối với vai Idol phát kịch bản Live: nếu trong Bộ Não AVA Live đã cài đặt giọng riêng (khác free_vi_female hoặc đã được lưu)
+  // và taskSpecificVoiceId lại là fallback 'free_vi_female', thì BẮT BUỘC ƯU TIÊN GIỌNG ĐỌC BỘ NÃO AVA LIVE!
+  if (taskSpecificVoiceId && taskSpecificVoiceId !== 'brain_auto') {
+    if (typeof taskSpecificVoiceId === 'object' && taskSpecificVoiceId.id) {
+      const match = findVoiceByIdAnywhere(taskSpecificVoiceId.id) || taskSpecificVoiceId;
+      return {
+        ...match,
+        ...taskSpecificVoiceId,
+        volume: taskSpecificVoiceId.volume !== undefined ? Number(taskSpecificVoiceId.volume) : (match.volume ?? 1.0),
+        rate: taskSpecificVoiceId.rate !== undefined ? Number(taskSpecificVoiceId.rate) : (match.rate ?? 1.0),
+        pitch: taskSpecificVoiceId.pitch !== undefined ? Number(taskSpecificVoiceId.pitch) : (match.pitch ?? 1.0)
+      };
+    }
+    if (typeof taskSpecificVoiceId === 'string' && taskSpecificVoiceId.trim()) {
+      const sId = taskSpecificVoiceId.trim();
+      const brainIsConfigured = brainVoice && brainVoice.id && brainVoice.id !== 'free_vi_female';
+      // Nếu không bị rơi vào trường hợp fallback free_vi_female ghi đè lên cấu hình Bộ Não:
+      if (!brainIsConfigured || sId !== 'free_vi_female') {
+        const matched = findVoiceByIdAnywhere(sId);
+        if (matched) return matched;
+      }
+    }
+  }
+
+  // 🎯 ƯU TIÊN SỐ 1 TUYỆT ĐỐI: CẤU HÌNH TRONG TAB BỘ NÃO AI & GIỌNG AVA LIVE
   if (brainVoice && brainVoice.id && brainVoice.enabled !== false) {
-    const fullVoice = ALL_SYSTEM_VOICES.find(v => v.id === brainVoice.id) || brainVoice;
+    const fullVoice = findVoiceByIdAnywhere(brainVoice.id) || brainVoice;
     return {
       ...fullVoice,
       ...brainVoice,
@@ -7696,7 +7724,7 @@ export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId 
     };
   }
 
-  // 🎯 ƯU TIÊN SỐ 3: FALLBACK MẶC ĐỊNH CHUẨN XÁC TỪ IDOL VOICE CỦA BỘ NÃO AI
+  // 🎯 FALLBACK: GIỌNG IDOL MẶC ĐỊNH
   return dualConfig.idolVoice || DEFAULT_VOICE_CONFIG.idolVoice;
 }
 

@@ -32,7 +32,7 @@ import bandoEngine from './game/bandoGameEngine';
 import bandoAudio from './game/bandoAudioEngine';
 import { mapVoiceEngine, battleVoiceEngine } from './game/gameVoiceEngine';
 import battleCommentary from './game/battleCommentaryEngine';
-import { clearGlobalSpeechQueue, getMultiAvatarConfig, isImageMedia, getChromaStyle, ALL_SYSTEM_VOICES, previewVoiceAudio, stopVoiceAudio, getDualVoiceConfig } from '../../utils/voiceSyncService';
+import { clearGlobalSpeechQueue, getMultiAvatarConfig, isImageMedia, getChromaStyle, ALL_SYSTEM_VOICES, previewVoiceAudio, stopVoiceAudio, getDualVoiceConfig, resolveEffectiveVoice } from '../../utils/voiceSyncService';
 import MultiAvatarStudioModal, { SvgChromaFilters } from './MultiAvatarStudioModal';
 import AutoCaptchaSolver from '../AutoCaptchaSolver';
 import AIVoiceModule from '../kol-live/AIVoiceModule';
@@ -992,13 +992,17 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         localStorage.setItem('aidol_event_configs_backup', JSON.stringify(evConf));
       } catch (e) {}
 
-      // 5. Khởi chạy đọc kịch bản qua AIAudioPlayer kèm đầy đủ cấu hình giọng đọc
+      // 5. Khởi chạy đọc kịch bản qua AIAudioPlayer kèm đầy đủ cấu hình giọng đọc CHUẨN XÁC TỪ BỘ NÃO AVA LIVE
+      const brainVoiceConfig = getDualVoiceConfig();
+      const brainIdolVoice = brainVoiceConfig.idolVoice || brainVoiceConfig.avatar1Voice || resolveEffectiveVoice('idol', null, 'avatar_1');
+
       if (audioPlayerRef.current) {
         audioPlayerRef.current.startScript(scriptText, {
-          voiceId: chosen?.voiceId,
-          volume: chosen?.volume,
-          rate: chosen?.rate,
-          pitch: chosen?.pitch
+          voiceId: brainIdolVoice?.id,
+          voiceObj: brainIdolVoice,
+          volume: brainIdolVoice?.volume,
+          rate: brainIdolVoice?.rate,
+          pitch: brainIdolVoice?.pitch
         });
       }
 
@@ -1015,7 +1019,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }));
       
       const count = scriptText.split(/\r?\n/).filter(Boolean).length;
-      showToast(`▶️ Đang phát kịch bản: "${scriptName}" (${count} câu thoại chuẩn)!`, 'success');
+      const voiceLabel = brainIdolVoice?.name ? ` • 🎤 Giọng: ${brainIdolVoice.name}` : '';
+      showToast(`▶️ Đang phát kịch bản: "${scriptName}" (${count} câu thoại chuẩn)${voiceLabel}!`, 'success');
     } else {
       if (typeof window !== 'undefined') {
         window.__isScriptLiveRunning = false;
@@ -1085,11 +1090,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     }));
 
     if (isScriptLiveRunning && audioPlayerRef.current) {
+      const brainVoiceConfig = getDualVoiceConfig();
+      const brainIdolVoice = brainVoiceConfig.idolVoice || brainVoiceConfig.avatar1Voice || resolveEffectiveVoice('idol', null, 'avatar_1');
       audioPlayerRef.current.startScript(scriptText, {
-        voiceId: chosen?.voiceId,
-        volume: chosen?.volume,
-        rate: chosen?.rate,
-        pitch: chosen?.pitch
+        voiceId: brainIdolVoice?.id,
+        voiceObj: brainIdolVoice,
+        volume: brainIdolVoice?.volume,
+        rate: brainIdolVoice?.rate,
+        pitch: brainIdolVoice?.pitch
       });
     }
     const count = (scriptText || '').split(/\r?\n/).filter(Boolean).length;

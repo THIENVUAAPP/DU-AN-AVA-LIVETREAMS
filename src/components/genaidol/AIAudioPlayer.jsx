@@ -99,17 +99,35 @@ const AIAudioPlayer = forwardRef(({ isLive, isScriptRunning = false, onAudioPlay
     return () => window.removeEventListener('avalive_pause_between_sentences_updated', handlePauseUpdate);
   }, []);
 
-  // Đồng bộ cấu hình Voice toàn app khi có cập nhật
+  // Đồng bộ cấu hình Voice toàn app khi có cập nhật từ Tab Bộ Não AVA Live
   useEffect(() => {
     const handleVoiceUpdate = (e) => {
-      if (e.detail) {
-        setVoiceConfig(e.detail);
-      } else {
-        setVoiceConfig(getDualVoiceConfig());
+      const newConfig = e.detail || getDualVoiceConfig();
+      setVoiceConfig(newConfig);
+      // Cập nhật ngay giọng cho các câu thoại còn lại trong hàng đợi nếu đang phát
+      const newIdol = newConfig.idolVoice || newConfig.avatar1Voice;
+      if (newIdol && queueRef.current && queueRef.current.length > 0) {
+        queueRef.current = queueRef.current.map(item => {
+          if (item.voiceChannel === 'idol' || item.role === 'idol' || !item.role) {
+            return {
+              ...item,
+              voiceId: newIdol.id,
+              voiceObj: newIdol,
+              volume: newIdol.volume ?? item.volume ?? 1.0,
+              rate: newIdol.rate ?? item.rate ?? 1.0,
+              pitch: newIdol.pitch ?? item.pitch ?? 1.0
+            };
+          }
+          return item;
+        });
       }
     };
     window.addEventListener('aidol_voice_sync_updated', handleVoiceUpdate);
-    return () => window.removeEventListener('aidol_voice_sync_updated', handleVoiceUpdate);
+    window.addEventListener('ava_voice_config_updated', handleVoiceUpdate);
+    return () => {
+      window.removeEventListener('aidol_voice_sync_updated', handleVoiceUpdate);
+      window.removeEventListener('ava_voice_config_updated', handleVoiceUpdate);
+    };
   }, []);
 
   // Lắng nghe lệnh Dừng Tất Cả & Dừng Khẩn Cấp toàn phần mềm
@@ -291,25 +309,42 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     const multiConf = getMultiAvatarConfig();
     const hasRoleTags = /\[([^\]]+)\]\s*:/i.test(scriptRaw) || /^(Idol|Trợ Lý|Quản Lý|BLV|Game|Khách Mời|Host)\s*:/im.test(scriptRaw);
 
+    // 🧠 LẤY CHUẨN XÁC TOÀN BỘ CẤU HÌNH GIỌNG ĐỌC TỪ TAB BỘ NÃO AVA LIVE
+    const dualConf = getDualVoiceConfig();
+    const brainIdolVoice = dualConf.idolVoice || dualConf.avatar1Voice || resolveEffectiveVoice('idol', null, 'avatar_1');
+
     if (multiConf.enabled || hasRoleTags) {
       const parsedMulti = parseMultiCharacterScript(scriptRaw, multiConf);
       if (parsedMulti.length > 0) {
-        return parsedMulti.map((pItem, idx) => ({
-          id: `script_${idx}`,
-          type: 'script',
-          text: pItem.text,
-          rawLine: pItem.rawLine,
-          avatarId: pItem.avatarId,
-          avatarName: pItem.avatarName,
-          role: pItem.role,
-          voiceId: pItem.voiceId,
-          voiceObj: pItem.voiceObj,
-          volume: pItem.volume,
-          rate: pItem.rate,
-          pitch: pItem.pitch,
-          voiceChannel: pItem.role || 'idol',
-          index: idx
-        }));
+        return parsedMulti.map((pItem, idx) => {
+          let vObj = pItem.voiceObj;
+          const role = (pItem.role || pItem.voiceChannel || 'idol').toLowerCase();
+          if (role === 'idol' || pItem.avatarId === 'avatar_1') {
+            vObj = dualConf.idolVoice || dualConf.avatar1Voice || pItem.voiceObj;
+          } else if (role === 'assistant' || role === 'manager' || pItem.avatarId === 'avatar_2') {
+            vObj = dualConf.managerVoice || dualConf.avatar2Voice || pItem.voiceObj;
+          } else if (role === 'game' || role === 'blv' || pItem.avatarId === 'avatar_3') {
+            vObj = dualConf.gameBlvVoice || dualConf.avatar3Voice || pItem.voiceObj;
+          } else if (role === 'comment' || pItem.avatarId === 'avatar_4') {
+            vObj = dualConf.commentVoice || dualConf.avatar4Voice || pItem.voiceObj;
+          }
+          return {
+            id: `script_${idx}`,
+            type: 'script',
+            text: pItem.text,
+            rawLine: pItem.rawLine,
+            avatarId: pItem.avatarId,
+            avatarName: pItem.avatarName,
+            role: pItem.role,
+            voiceId: vObj?.id || pItem.voiceId,
+            voiceObj: vObj,
+            volume: vObj?.volume ?? pItem.volume ?? 1.0,
+            rate: vObj?.rate ?? pItem.rate ?? 1.0,
+            pitch: vObj?.pitch ?? pItem.pitch ?? 1.0,
+            voiceChannel: pItem.role || 'idol',
+            index: idx
+          };
+        });
       }
     }
 
@@ -325,7 +360,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       splitSentences.push(cleanLine);
     });
 
-    const resolvedDefaultVoice = resolveEffectiveVoice('idol', activeTabVoiceId, 'avatar_1');
+    const resolvedDefaultVoice = brainIdolVoice;
     return splitSentences.map((s, idx) => ({
       id: `script_${idx}`,
       type: 'script',
@@ -333,11 +368,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       voiceChannel: 'idol',
       role: 'idol',
       avatarId: 'avatar_1',
-      voiceId: activeTabVoiceId || resolvedDefaultVoice.id,
+      voiceId: resolvedDefaultVoice.id,
       voiceObj: resolvedDefaultVoice,
-      volume: activeTabVolume ?? resolvedDefaultVoice.volume ?? 1.0,
-      rate: activeTabRate ?? resolvedDefaultVoice.rate ?? 1.0,
-      pitch: activeTabPitch ?? resolvedDefaultVoice.pitch ?? 1.0,
+      volume: resolvedDefaultVoice.volume ?? 1.0,
+      rate: resolvedDefaultVoice.rate ?? 1.0,
+      pitch: resolvedDefaultVoice.pitch ?? 1.0,
       index: idx
     }));
   };

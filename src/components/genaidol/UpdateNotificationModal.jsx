@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.84';
+export const APP_VERSION = '4.9.85';
 export const RELEASE_DATE = '28/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '✨ Bản Cập Nhật v4.9.84 - Chuẩn Hóa 100% Phát Kịch Bản Idol Live, Đọc Đúng Từng Câu Thoại & Đồng Bộ Giọng Đọc',
-    description: '1. Khắc Phục Triệt Để Lỗi Đọc Sai Kịch Bản: Khi bấm nút "▶️ Phát Kịch Bản Live" trên thanh công cụ hoặc chọn kịch bản ở dropdown, hệ thống tự động nhận diện và đọc chuẩn xác 100% kịch bản của tab đang chọn (đặc biệt là Kịch bản 1 Chuẩn Xịn: Mỹ Phẩm & Skincare 8 câu kinh điển). 2. Khóa Chặt Không Bị Ghi Đè: Chặn đứng tình trạng tự động sinh kịch bản AI Brain đè lên kịch bản do người dùng lựa chọn. 3. Bảo Toàn Cấu Hình Giọng Đọc: Tự động phân giải Voice ID, Tốc độ (Rate), Độ cao (Pitch), Âm lượng (Volume) của từng tab kịch bản khi phát sóng, nhép miệng 60 FPS chuẩn xác. 4. Tự Động Phục Vụ Gói Cài Đặt ZIP v4.9.84 Mới Nhất cho Windows & macOS.'
+    title: '✨ Bản Cập Nhật v4.9.85 - Đồng Bộ Chuẩn Xác 100% Giọng Đọc Đã Cài Đặt Trong Tab Bộ Não AVA Live Khi Phát Kịch Bản',
+    description: '1. Khóa Chặt Giọng Đọc Bộ Não AVA Live: Khi bấm nút "▶️ Phát Kịch Bản Live", hệ thống nhận diện và phát chính xác 100% giọng đọc người dùng đã thiết lập trong tab "BỘ NÃO IDOL" và "GIỌNG AVA LIVE" (bao gồm Tốc độ đọc, Cao độ, Âm lượng, nhép miệng 60 FPS chuẩn xác). 2. Chặn Đứng Hoàn Toàn Tình Trạng Voice Bừa Bãi: Loại bỏ triệt để hiện tượng bị rơi về giọng mặc định free_vi_female hoặc voice cũ của tab kịch bản. 3. Tự Động Đổi Giọng Ngay Trên Sóng Trực Tiếp: Khi người dùng đổi giọng trong Cài đặt Bộ Não, hàng đợi câu thoại tự động cập nhật ngay lập tức sang giọng mới. 4. Tự Động Phục Vụ Gói Cài Đặt ZIP v4.9.85 Mới Nhất cho Windows & macOS.'
   }
 ];
 
