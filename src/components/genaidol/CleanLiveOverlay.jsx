@@ -1050,10 +1050,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         }
       }
 
-      if (data.pinnedProduct !== undefined) {
-        setPinnedProduct(data.pinnedProduct);
-        if (data.pinnedProduct) {
-          try { localStorage.setItem('avalive_current_pinned_product', JSON.stringify(data.pinnedProduct)); } catch (e) {}
+      const prod = data.pinnedProduct !== undefined ? data.pinnedProduct : data.livePinnedProduct;
+      if (prod !== undefined) {
+        setPinnedProduct(prod);
+        if (prod) {
+          try { localStorage.setItem('avalive_current_pinned_product', JSON.stringify(prod)); } catch (e) {}
         }
       }
 
@@ -1076,7 +1077,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         const keys = [
           'stage', 'aspectRatio', 'mediaUrl', 'mainMediaUrl', 'mainMediaTransform', 'mainMediaChromaKey', 'flvUrl', 'isVideo', 'selectedCharacter', 'characterName', 'isPlaying', 'isDarkMode', 'tunnelUrl',
           'secondaryMediaUrl', 'secondaryMediaTransform', 'secondaryMediaChromaKey', 'overlayImage', 'overlayImageTransform', 'overlayImageChromaKey',
-          'overlayText', 'overlayTextTransform', 'overlayTextStyle', 'overlayTextFontFamily', 'overlayTextColor', 'overlayTextFontSize', 'multiAvatarConfig', 'syncedAvatars', 'extraImageLayers', 'multiAvatarExtraLayers'
+          'overlayText', 'overlayTextTransform', 'overlayTextStyle', 'overlayTextFontFamily', 'overlayTextColor', 'overlayTextFontSize', 
+          'multiAvatarConfig', 'syncedAvatars', 'avatarTransforms', 'extraImageLayers', 'multiAvatarExtraLayers',
+          'backgroundColor', 'backgroundUrl', 'backgroundTransform', 'backgroundChromaKey', 'pinnedProduct', 'livePinnedProduct', 'activeSpeakerId'
         ];
         for (const k of keys) {
           if (data[k] !== undefined && JSON.stringify(data[k]) !== JSON.stringify(prev[k])) {
@@ -1501,7 +1504,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               bandoAudio.setMuted(isMuted);
               bandoAudio.setMasterVolume(vol);
               setTimeout(() => { isInternalAudioChangeRef.current = false; }, 300);
-            } else if (event.data.type === 'GLOBAL_MEDIA_CHANGE') {
+            } else if (event.data.type === 'GLOBAL_MEDIA_CHANGE' || event.data.type === 'RESPONSE_CURRENT_MEDIA') {
               if (event.data.source === 'overlay') return;
               let newUrl = null;
               if (event.data.fileBlob && (event.data.fileBlob instanceof Blob || event.data.fileBlob instanceof File)) {
@@ -1513,41 +1516,49 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 newUrl = event.data.blobUrl;
               }
               if (!newUrl) {
-                newUrl = event.data.mediaUrl;
+                newUrl = event.data.mediaUrl || event.data.videoUrl || null;
               }
-              if (newUrl) {
-                let cleanUrl = newUrl;
-                if (typeof cleanUrl === 'string' && cleanUrl.includes('/uploads/')) {
-                  cleanUrl = cleanUrl.substring(cleanUrl.indexOf('/uploads/'));
-                }
+              let cleanUrl = newUrl;
+              if (typeof cleanUrl === 'string' && cleanUrl.includes('/uploads/')) {
+                cleanUrl = cleanUrl.substring(cleanUrl.indexOf('/uploads/'));
+              }
+              if (cleanUrl) {
                 try {
                   localStorage.removeItem('avalive_user_paused');
                   localStorage.removeItem('avalive_window_capture_paused');
                   localStorage.setItem('avalive_user_locked_media', cleanUrl);
                   localStorage.setItem('avalive_active_video_src', cleanUrl);
                 } catch (e) {}
+              }
 
-                setMasterState(prev => ({
-                  ...prev,
-                  mediaUrl: cleanUrl,
-                  selectedCharacter: event.data.characterId || prev.selectedCharacter,
-                  characterName: event.data.characterName || prev.characterName,
-                  stage: 'idol',
-                  isVideo: event.data.isVideo !== false,
-                  isPlaying: true,
-                  videoPlaybackEvent: 'play',
-                  videoCurrentTime: 0
-                }));
+              // 🎯 Đồng bộ và nạp trọn vẹn 100% tất cả các lớp của Sân Khấu Chính
+              const payloadToApply = {
+                ...event.data,
+                stage: event.data.stage || 'idol',
+                mediaUrl: cleanUrl !== null ? cleanUrl : event.data.mediaUrl,
+                selectedCharacter: event.data.characterId || event.data.selectedCharacter,
+                characterName: event.data.characterName,
+                isVideo: event.data.isVideo !== false,
+                isPlaying: event.data.isPlaying !== undefined ? !!event.data.isPlaying : true,
+                videoPlaybackEvent: event.data.isPlaying === false ? 'pause' : 'play',
+                videoCurrentTime: typeof event.data.currentTime === 'number' ? event.data.currentTime : (typeof event.data.videoCurrentTime === 'number' ? event.data.videoCurrentTime : 0)
+              };
 
-                const v = overlayVideoRef.current;
-                if (v) {
-                  v.dataset.userPaused = 'false';
+              applyMasterState(payloadToApply);
+
+              const v = overlayVideoRef.current;
+              if (v && cleanUrl) {
+                v.dataset.userPaused = 'false';
+                if (!isSameMediaUrl(v.src, cleanUrl)) {
                   v.src = cleanUrl;
-                  v.currentTime = typeof event.data.currentTime === 'number' ? event.data.currentTime : 0;
-                  v.muted = isVideoAudioMuted;
-                  if (!isVideoAudioMuted) v.volume = videoVolume;
-                  v.play().catch(() => {});
+                  v.load();
                 }
+                v.currentTime = typeof event.data.currentTime === 'number' ? event.data.currentTime : 0;
+                v.muted = isVideoAudioMuted;
+                if (!isVideoAudioMuted) v.volume = videoVolume;
+                v.play().catch(() => {});
+              }
+              if (event.data.isPlaying !== false) {
                 setIsPlayingState(true);
               }
             } else if (event.data.type === 'EVENT_VIDEO_PLAY') {
@@ -2390,7 +2401,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   LIVE 9:16
                 </span>
                 <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                  v4.9.86
+                  v4.9.87
                 </span>
               </div>
 

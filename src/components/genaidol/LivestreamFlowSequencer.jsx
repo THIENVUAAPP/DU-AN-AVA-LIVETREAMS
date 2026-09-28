@@ -138,7 +138,7 @@ export const DEFAULT_PRESETS = [
         lipsyncUrl: '',
         voiceMode: 'avatar_lipsync',
         commentHandling: 'ai_brain',
-        overlayText: '🌸 CHÀO MỪNG ĐẾN VỚI PHIÊN LIVESTREAM',
+        overlayText: '',
         overlayTextStyle: 'fire_sale',
         overlayTextFontSize: 20,
         overlayTextFontFamily: 'be_vietnam',
@@ -3465,10 +3465,13 @@ export default function LivestreamFlowSequencer() {
                 );
               })()}
 
-              {/* Lớp 4: Tiêu Đề Chữ Typography Xếp Chồng */}
-              {(activeOverlayText || currentStep?.overlayTextTransform || (!isStageLocked && selectedLayer?.type === 'text')) && (() => {
+              {/* Lớp 4: Tiêu Đề Chữ Typography Xếp Chồng (Chạy Ẩn, Chỉ Hiện Khi Người Dùng Nhập Nội Dung) */}
+              {(((activeOverlayText && activeOverlayText.trim().length > 0)) || (!isStageLocked && selectedLayer?.type === 'text')) && (() => {
                 const textTrans = getLayerCurrentTransform('text');
                 const isSelected = !isStageLocked && selectedLayer?.type === 'text';
+                const hasText = !!(activeOverlayText && activeOverlayText.trim().length > 0);
+                if (!hasText && !isSelected) return null;
+
                 const styleConfig = TEXT_STYLE_PRESETS.find(s => s.id === currentStep?.overlayTextStyle) || TEXT_STYLE_PRESETS[0];
                 const fontConfig = FONT_FAMILIES.find(f => f.id === currentStep?.overlayTextFontFamily) || FONT_FAMILIES[0];
 
@@ -3486,7 +3489,7 @@ export default function LivestreamFlowSequencer() {
                       zIndex: textTrans.zIndex || 30
                     }}
                   >
-                    {activeOverlayText ? (
+                    {hasText ? (
                       <div className={`inline-block w-full px-2.5 py-1 rounded-xl font-black shadow-2xl tracking-wide ${styleConfig.className}`}
                         style={{
                           fontSize: `${Math.max(10, Math.min(22, (currentStep.overlayTextFontSize || 20) * 0.65))}px`,
@@ -3495,12 +3498,12 @@ export default function LivestreamFlowSequencer() {
                       >
                         {activeOverlayText}
                       </div>
-                    ) : (
-                      /* Khung Trống Chữ */
+                    ) : isSelected ? (
+                      /* Khung Trống Chữ Chỉ Hiện Khi Streamer Chủ Động Bấm Chọn Lớp Text Để Soạn Thảo */
                       <div className="w-full h-full flex items-center justify-center border-2 border-dashed border-rose-400/80 bg-slate-950/85 rounded-xl text-center px-2 py-1">
                         <span className="text-[10px] font-black text-rose-300 uppercase">Khung Chữ (Trống - Nhập nội dung ở thanh trên)</span>
                       </div>
-                    )}
+                    ) : null}
 
 
 

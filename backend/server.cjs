@@ -2504,6 +2504,14 @@ app.get([
 // - Nút icon [👁️] hoặc phím tắt [H] khôi phục lại bảng điều khiển tức thì
 // ============================================================
 app.get(['/window-capture', '/window_capture'], (req, res) => {
+  // ⚡ PHỤC VỤ TRỰC TIẾP REACT SPA INDEX.HTML ĐỂ CHẠY CLEANLIVEOVERLAY TOÀN NĂNG 100% TỪ SÂN KHẤU CHÍNH
+  // Đầy đủ Multi-Avatar 1-4 người, Video phụ PiP, Banner, Sticker, Sản phẩm TikTok Shop, Tách nền Chroma Key siêu sạch
+  if (distPath && fs.existsSync(path.join(distPath, 'index.html'))) {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.sendFile(path.join(distPath, 'index.html'));
+  }
+
   let vParam = resolveMediaForStage(req.query.v, currentMasterLiveState);
   const soundParam = req.query.sound !== '0';
   const fitParam = req.query.fit || 'cover';
@@ -4001,7 +4009,7 @@ let _cachedReleaseUrls = {};
 let _lastReleaseFetchTime = 0;
 async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
   const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
-  const targetVer = fallbackVer || '4.9.86';
+  const targetVer = fallbackVer || '4.9.87';
   const safeFallbackUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${targetVer}/${osPrefix}_v${targetVer}.zip`;
   
   const cacheKey = `${osPrefix}_v${targetVer}`;
@@ -4051,7 +4059,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.86';
+  let ver = '4.9.87';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -4091,7 +4099,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.86';
+  let ver = '4.9.87';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));

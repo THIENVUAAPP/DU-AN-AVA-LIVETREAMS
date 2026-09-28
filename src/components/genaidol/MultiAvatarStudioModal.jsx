@@ -23,19 +23,19 @@ import UniversalMediaPicker from './UniversalMediaPicker';
 export const SvgChromaFilters = () => (
   <svg width="0" height="0" className="absolute pointer-events-none opacity-0" style={{ position: 'absolute', width: 0, height: 0, overflow: 'hidden' }}>
     <defs>
-      {/* 🟢 TÁCH NỀN XANH LÁ SIÊU SẠCH 4K (KHỬ SẠCH ÁM XANH TÓC & VIỀN NGƯỜI) */}
+      {/* 🟢 TÁCH NỀN XANH LÁ SIÊU SẠCH 4K (KHỬ SẠCH ÁM XANH TÓC, VAI, CỔ ÁO, TAI, NÁCH & BẢO TOÀN SẢN PHẨM) */}
       <filter id="avalive-chroma-green" colorInterpolationFilters="sRGB" x="0%" y="0%" width="100%" height="100%">
-        {/* Khử ám xanh (Despill) */}
+        {/* Bước 1: Khử ám xanh (Despill) thông minh bảo vệ màu da, áo và sản phẩm */}
         <feColorMatrix
           type="matrix"
           values="
             1.00  0.00  0.00  0.00  0.00
-            0.35  0.30  0.35  0.00  0.00
+            0.45  0.10  0.45  0.00  0.00
             0.00  0.00  1.00  0.00  0.00
             0.00  0.00  0.00  1.00  0.00"
           result="despilled_green"
         />
-        {/* Alpha Key Mask (Tách triệt để phông xanh) */}
+        {/* Bước 2: Alpha Key Mask - Tách triệt để phông xanh, bảo tồn 100% chi tiết da, tóc, áo, nách, tai */}
         <feColorMatrix
           in="SourceGraphic"
           type="matrix"
@@ -43,10 +43,14 @@ export const SvgChromaFilters = () => (
             1.00  0.00  0.00  0.00  0.00
             0.00  1.00  0.00  0.00  0.00
             0.00  0.00  1.00  0.00  0.00
-            2.60 -3.80  2.60  1.00 -0.10"
-          result="alpha_mask_green"
+            1.85 -3.60  1.85  1.00 -0.05"
+          result="raw_mask_green"
         />
-        <feComposite in="despilled_green" in2="alpha_mask_green" operator="in" />
+        {/* Bước 3: Chuẩn hóa biên độ Alpha sắc nét - Cắt bỏ viền mờ rác, giữ nguyên khối nhân vật */}
+        <feComponentTransfer in="raw_mask_green" result="sharp_mask_green">
+          <feFuncA type="linear" slope="1.4" intercept="-0.1" />
+        </feComponentTransfer>
+        <feComposite in="despilled_green" in2="sharp_mask_green" operator="in" />
       </filter>
 
       {/* 🔵 TÁCH NỀN XANH DƯƠNG SIÊU SẠCH 4K */}
@@ -56,8 +60,8 @@ export const SvgChromaFilters = () => (
           values="
             1.00  0.00  0.00  0.00  0.00
             0.00  1.00  0.00  0.00  0.00
-            0.35  0.35  0.30  0.00  0.00
-            0.00  0.00  0.00  1.00  0.00"
+            0.45  0.45  0.10  0.00  0.00
+            0.00  0.00  1.00  0.00  0.00"
           result="despilled_blue"
         />
         <feColorMatrix
@@ -67,10 +71,13 @@ export const SvgChromaFilters = () => (
             1.00  0.00  0.00  0.00  0.00
             0.00  1.00  0.00  0.00  0.00
             0.00  0.00  1.00  0.00  0.00
-            2.60  2.60 -3.80  1.00 -0.10"
-          result="alpha_mask_blue"
+            1.85  1.85 -3.60  1.00 -0.05"
+          result="raw_mask_blue"
         />
-        <feComposite in="despilled_blue" in2="alpha_mask_blue" operator="in" />
+        <feComponentTransfer in="raw_mask_blue" result="sharp_mask_blue">
+          <feFuncA type="linear" slope="1.4" intercept="-0.1" />
+        </feComponentTransfer>
+        <feComposite in="despilled_blue" in2="sharp_mask_blue" operator="in" />
       </filter>
     </defs>
   </svg>

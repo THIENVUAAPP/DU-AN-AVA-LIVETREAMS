@@ -2162,6 +2162,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       const bc = new BroadcastChannel('avalive_master_live_stream');
       bc.postMessage({
         type: 'GLOBAL_MEDIA_CHANGE',
+        ...payload,
         mediaUrl: broadcastUrl,
         blobUrl: broadcastUrl,
         fileBlob: activeBlob,
@@ -2482,8 +2483,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         fileBlob: fileBlob,
         characterId: charItem.id,
         characterName: charItem.name || 'AI Idol',
-        title: flowSequencerOverlay?.overlayText || charItem.name || 'AI Idol',
-        overlayText: flowSequencerOverlay?.overlayText || null,
+        title: (flowSequencerOverlay?.overlayText && flowSequencerOverlay.overlayText.trim()) ? flowSequencerOverlay.overlayText.trim() : null,
+        overlayText: (flowSequencerOverlay?.overlayText && flowSequencerOverlay.overlayText.trim()) ? flowSequencerOverlay.overlayText.trim() : null,
         isVideo: true,
         isPlaying: true,
         currentTime: 0,
@@ -2511,8 +2512,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       stage: 'idol',
       selectedCharacter: charItem.id,
       characterName: charItem.name || 'AI Idol',
-      title: flowSequencerOverlay?.overlayText || charItem.name || 'AI Idol',
-      overlayText: flowSequencerOverlay?.overlayText || null,
+      title: (flowSequencerOverlay?.overlayText && flowSequencerOverlay.overlayText.trim()) ? flowSequencerOverlay.overlayText.trim() : null,
+      overlayText: (flowSequencerOverlay?.overlayText && flowSequencerOverlay.overlayText.trim()) ? flowSequencerOverlay.overlayText.trim() : null,
       mediaUrl: effectiveMediaUrl,
       isVideo: isVid,
       videoPlaybackEvent: 'play',
@@ -2534,8 +2535,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             stage: 'idol',
             selectedCharacter: charItem.id,
             characterName: charItem.name || 'AI Idol',
-            title: flowSequencerOverlay?.overlayText || charItem.name || 'AI Idol',
-            overlayText: flowSequencerOverlay?.overlayText || null,
+            title: (flowSequencerOverlay?.overlayText && flowSequencerOverlay.overlayText.trim()) ? flowSequencerOverlay.overlayText.trim() : null,
+            overlayText: (flowSequencerOverlay?.overlayText && flowSequencerOverlay.overlayText.trim()) ? flowSequencerOverlay.overlayText.trim() : null,
             mediaUrl: srvUrl,
             isVideo: !isImageMedia(srvUrl),
             videoPlaybackEvent: 'play',
@@ -2565,8 +2566,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               stage: 'idol',
               selectedCharacter: charItem.id,
               characterName: charItem.name || 'AI Idol',
-              title: flowSequencerOverlay?.overlayText || charItem.name || 'AI Idol',
-              overlayText: flowSequencerOverlay?.overlayText || null,
+              title: (flowSequencerOverlay?.overlayText && flowSequencerOverlay.overlayText.trim()) ? flowSequencerOverlay.overlayText.trim() : null,
+              overlayText: (flowSequencerOverlay?.overlayText && flowSequencerOverlay.overlayText.trim()) ? flowSequencerOverlay.overlayText.trim() : null,
               mediaUrl: fileUrl,
               isVideo: !isImageMedia(fileUrl),
               videoPlaybackEvent: 'play',
@@ -2796,10 +2797,28 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               if (typeof playUrl === 'string' && playUrl.includes('/uploads/')) {
                 playUrl = playUrl.substring(playUrl.indexOf('/uploads/'));
               }
+              const currentPayload = getMasterStagePayload();
               try {
+                // 🎯 1. Phục vụ toàn bộ 100% các lớp/state của Sân Khấu Chính cho Window Capture OBS
+                bc.postMessage({
+                  type: 'MASTER_LIVE_STATE_UPDATE',
+                  ...currentPayload,
+                  mediaUrl: playUrl || currentPayload.mediaUrl,
+                  blobUrl: blobUrl,
+                  fileBlob: blob,
+                  selectedCharacter: selectedCharacter,
+                  characterId: selectedCharacter,
+                  characterName: charMatch ? charMatch.name : '',
+                  currentTime: curTime,
+                  isPlaying: isPlaying,
+                  isVideo: true,
+                  force: true,
+                  timestamp: Date.now()
+                });
                 bc.postMessage({
                   type: 'RESPONSE_CURRENT_MEDIA',
-                  mediaUrl: playUrl,
+                  ...currentPayload,
+                  mediaUrl: playUrl || currentPayload.mediaUrl,
                   blobUrl: blobUrl,
                   fileBlob: blob,
                   selectedCharacter: selectedCharacter,

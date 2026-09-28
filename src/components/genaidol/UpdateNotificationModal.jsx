@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.86';
+export const APP_VERSION = '4.9.87';
 export const RELEASE_DATE = '28/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '✨ Bản Cập Nhật v4.9.86 - Đồng Bộ Chuẩn Xác Gói Tải Về File ZIP Mới Nhất Cho Máy Windows & Mac',
-    description: '1. Đồng Bộ Bản Cài Đặt ZIP Mới Nhất Cho Windows & Mac: Tự động phân giải và tải trực tiếp gói cài đặt độc lập v4.9.86 mới nhất (AvaLive_VIP_PRO_Windows_v4.9.86.zip và AvaLive_VIP_PRO_Mac_v4.9.86.zip), xóa bỏ hoàn toàn tình trạng đồng bộ file zip phiên bản cũ. 2. Bảo Mật Cao & Chạy Độc Lập 1-Click: Tích hợp đầy đủ Node Portable, backend core mã hóa và frontend tối ưu, giải nén là chạy ngay không cần cài đặt. 3. Phục Vụ Tự Động Toàn Diện: Cập nhật đồng bộ các endpoint tải file /api/download-windows, /api/download-mac, /api/download.js và backend server.'
+    title: '✨ Bản Cập Nhật v4.9.87 - Đồng Bộ Toàn Diện Window Capture OBS 100% Sân Khấu Chính, Tiêu Đề Kịch Bản Ẩn & Tách Nền Siêu Sạch',
+    description: '1. Window Capture OBS Lấy Đầy Đủ 100% Sân Khấu Chính: Render trực tiếp CleanLiveOverlay với đầy đủ Multi-Avatar 1-4 người, Video/Ảnh nền, PiP Video phụ, Banner hình ảnh, Banner chữ nổi bật, Sticker/Logo và Sản phẩm ghim TikTok Shop; khắc phục triệt để lỗi chập chờn lúc hiện lúc không. 2. Live AI Avatar Tiêu Đề Bước Chạy Ẩn: Tên bước kịch bản (stepTitle) chạy ẩn hoàn toàn 100%, xóa bỏ tiêu đề mặc định; chỉ hiển thị chữ khi người dùng trực tiếp nhập tiêu đề. 3. Công Nghệ Xóa Phông Nền Siêu Sạch: Tối ưu bộ lọc SVG Chroma Filter và thuật toán Despill Canvas, khử sạch viền xanh/đen quanh tóc, tai, cổ áo, vai áo, nách và sản phẩm.'
   }
 ];
 

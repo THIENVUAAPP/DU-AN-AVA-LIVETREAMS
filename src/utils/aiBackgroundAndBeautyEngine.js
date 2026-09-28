@@ -208,10 +208,10 @@ function refineCutoutEdges(ctx, width, height, featherRadius) {
       const g = data[i + 1];
       const b = data[i + 2];
       
-      // Nếu là pixel viền sát phông xanh lá / xanh dương -> Khử ám màu viền
-      if (g > r * 1.15 && g > b * 1.15) {
+      // Nếu là pixel viền sát phông xanh lá / xanh dương -> Khử sạch ám màu viền quanh tóc, nách, tai, cổ áo, vai
+      if (g > Math.max(r, b)) {
         data[i + 1] = Math.round((r + b) / 2); // Khử ám xanh lá
-      } else if (b > r * 1.15 && b > g * 1.15) {
+      } else if (b > Math.max(r, g) && (b - Math.max(r, g)) > 6) {
         data[i + 2] = Math.round((r + g) / 2); // Khử ám xanh dương
       }
     }
@@ -335,8 +335,11 @@ function fallbackIntelligentMatting(srcCanvas, width, height, options = {}) {
           const minC = Math.min(r, g, b);
           const spread = maxC - minC;
 
-          // 🛡️ BẢO VỆ DA NGƯỜI (Skin Tone Protection) - Không bao giờ lan vào da người
-          const isSkin = (r > 105 && g > 70 && b > 50 && r > g && g > b && (r - g) >= 8 && spread > 12);
+          // 🛡️ BẢO VỆ DA NGƯỜI (Bao gồm vùng bóng đổ dưới tai, cổ áo, nách, vai)
+          const isSkin = (
+            (r > 85 && g > 55 && b > 38 && r > g && g >= b && (r - g) >= 6) ||
+            (r > 55 && g > 38 && b > 25 && r >= g && g >= b && (r - b) >= 8)
+          );
           if (isSkin) continue;
 
           // 🛡️ BẢO VỆ BIÊN SẢN PHẨM & NGƯỜI (High Edge Energy) - Dừng lại tại đường nét sản phẩm

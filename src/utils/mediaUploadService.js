@@ -183,9 +183,9 @@ export async function pushMediaToStageAndCapture(payload = {}, socket = null) {
   const syncData = {
     ...payload,
     stage: 'idol',
-    mediaUrl: effectiveUrl,
-    title: overlayText || title || stepTitle || null,
-    overlayText: overlayText || title || stepTitle || null,
+    title: (overlayText && overlayText.trim()) ? overlayText.trim() : (title && title.trim()) ? title.trim() : null,
+    overlayText: (overlayText && overlayText.trim()) ? overlayText.trim() : (title && title.trim()) ? title.trim() : null,
+    stepTitle: stepTitle || null,
     isVideo: isVideo,
     isPlaying: isPlaying,
     videoPlaybackEvent: isPlaying ? 'play' : 'pause',

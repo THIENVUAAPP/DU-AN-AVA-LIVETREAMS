@@ -7237,51 +7237,56 @@ export const removeImageBackgroundCanvas = async (imgSrc, mode = 'auto', toleran
           const minVal = Math.min(r, g, b);
           const colorSpread = maxVal - minVal;
 
-          // Kiểm tra da người để không bị xóa nhầm
-          const isSkinTone = (r > 110 && g > 75 && b > 55 && r > g && g > b && (r - g) >= 10 && colorSpread > 15);
+          // Bảo vệ toàn diện da người (bao gồm cả vùng bóng đổ dưới tai, cổ áo, nách, vai)
+          const isSkinTone = (
+            (r > 85 && g > 55 && b > 38 && r > g && g >= b && (r - g) >= 6) ||
+            (r > 55 && g > 38 && b > 25 && r >= g && g >= b && (r - b) >= 8)
+          );
+          // Bảo vệ trang phục, chi tiết tóc và sản phẩm có độ chi tiết cao
+          const isProtectedSubject = isSkinTone || (colorSpread > 28 && Math.abs(greenDiff) < 18);
 
           if (mode === 'green') {
-            // Phông xanh lá cây
-            if ((g > 55 && greenDiff > 8) || (g > 90 && g > r * 1.12 && g > b * 1.12)) {
+            // Phông xanh lá cây: Chỉ xóa khi màu xanh thực sự vượt trội, không xóa lẹm tóc/tai/cổ áo/nách
+            if ((g > 65 && greenDiff > 12 && g > r * 1.15 && g > b * 1.15) || (g > 95 && greenDiff > 18)) {
               isBg = true;
             }
           } else if (mode === 'blue') {
-            // Phông xanh dương
-            if ((b > 55 && blueDiff > 8) || (b > 90 && b > r * 1.12 && b > g * 1.12)) {
+            // Phông xanh dương: Chỉ xóa khi màu xanh dương thực sự vượt trội
+            if ((b > 65 && blueDiff > 12 && b > r * 1.15 && b > g * 1.15) || (b > 95 && blueDiff > 18)) {
               isBg = true;
             }
           } else if (mode === 'black') {
-            // Phông đen / tối
-            if (maxVal < 45) {
+            // Phông đen / tối: Chỉ xóa khi nền tối sâu và không thuộc da hay trang phục
+            if (maxVal < 24 && !isSkinTone && !isProtectedSubject) {
               isBg = true;
             }
           } else if (mode === 'white' || mode === 'room' || mode === 'wall') {
             // Phông trắng, tường sáng, phòng
-            if (!isSkinTone) {
-              if (luminance > 185 && colorSpread < 45) {
+            if (!isSkinTone && !isProtectedSubject) {
+              if (luminance > 215 && colorSpread < 25) {
                 isBg = true;
               } else {
                 const distFromBorder = Math.sqrt(Math.pow(r - avgR, 2) + Math.pow(g - avgG, 2) + Math.pow(b - avgB, 2));
-                if (distFromBorder < effectiveTol * 1.4) isBg = true;
+                if (distFromBorder < effectiveTol * 1.15) isBg = true;
               }
             }
           } else {
-            // 🪄 MODE AUTO: TỰ ĐỘNG NHẬN DIỆN VÀ XÓA MỌI LOẠI NỀN (XANH, ĐEN, TRẮNG, TƯỜNG, PHÒNG, GRADIENT)
-            if ((g > 55 && greenDiff > 8) || (g > 90 && g > r * 1.12 && g > b * 1.12)) {
+            // 🪄 MODE AUTO: TỰ ĐỘNG NHẬN DIỆN VÀ XÓA MỌI LOẠI NỀN (BẢO VỆ TUYỆT ĐỐI NGƯỜI & SẢN PHẨM)
+            if ((g > 65 && greenDiff > 12 && g > r * 1.15 && g > b * 1.15) || (g > 95 && greenDiff > 18)) {
               isBg = true;
-            } else if ((b > 55 && blueDiff > 8) || (b > 90 && b > r * 1.12 && b > g * 1.12)) {
+            } else if ((b > 65 && blueDiff > 12 && b > r * 1.15 && b > g * 1.15) || (b > 95 && blueDiff > 18)) {
               isBg = true;
-            } else if (maxVal < 42) {
+            } else if (maxVal < 22 && !isSkinTone && !isProtectedSubject) {
               isBg = true;
-            } else if (!isSkinTone) {
-              if (luminance > 190 && colorSpread < 40) {
+            } else if (!isSkinTone && !isProtectedSubject) {
+              if (luminance > 220 && colorSpread < 25) {
                 isBg = true;
               } else {
-                // So khớp với mẫu màu viền xung quanh
+                // So khớp với mẫu màu viền xung quanh với độ nhạy chặt chẽ
                 for (let s = 0; s < bgSamples.length; s++) {
                   const sm = bgSamples[s];
                   const dist = Math.sqrt(Math.pow(r - sm.r, 2) + Math.pow(g - sm.g, 2) + Math.pow(b - sm.b, 2));
-                  if (dist < effectiveTol * 1.3) {
+                  if (dist < effectiveTol * 1.1) {
                     isBg = true;
                     break;
                   }
@@ -7293,10 +7298,10 @@ export const removeImageBackgroundCanvas = async (imgSrc, mode = 'auto', toleran
           if (isBg) {
             data[i + 3] = 0; // Xóa sạch sẽ 100% trong suốt
           } else {
-            // Khử viền ám xanh lá hoặc xanh dương (Color Despill)
-            if (g > Math.max(r, b) && greenDiff > 5) {
+            // Khử viền ám xanh lá hoặc xanh dương (Color Despill) mượt mà không làm tối viền
+            if (g > Math.max(r, b)) {
               data[i + 1] = Math.round((r + b) / 2);
-            } else if (b > Math.max(r, g) && blueDiff > 5) {
+            } else if (b > Math.max(r, g) && blueDiff > 6) {
               data[i + 2] = Math.round((r + g) / 2);
             }
           }
