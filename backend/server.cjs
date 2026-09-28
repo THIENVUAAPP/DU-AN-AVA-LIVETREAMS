@@ -1048,7 +1048,7 @@ app.get([
       position: fixed !important;
       top: 12px !important;
       left: 50% !important;
-      transform: translateX(-50%) translateZ(9999px) !important;
+      transform: translateX(-50%) !important;
       display: ${showDock ? 'inline-flex' : 'none'} !important;
       flex-direction: row !important;
       align-items: center !important;
@@ -1077,7 +1077,7 @@ app.get([
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     #controlsDock.is-hidden { display: none !important; }
-    #controlsDock:hover { opacity: 1 !important; transform: translateX(-50%) translateZ(9999px) scale(1.02) !important; }
+    #controlsDock:hover { opacity: 1 !important; transform: translateX(-50%) scale(1.02) !important; }
     .dock-btn {
       background: rgba(255, 255, 255, 0.15) !important;
       border: 1px solid rgba(255, 255, 255, 0.35) !important;
@@ -1546,8 +1546,10 @@ app.get([
       }
 
       function isImage(u) {
-        if (!u) return false;
-        return /\.(png|jpe?g|webp|gif|svg|avif|bmp)($|\?|#)/i.test(u) || u.startsWith('data:image/');
+        if (!u || typeof u !== 'string') return false;
+        if (u.startsWith('data:image/')) return true;
+        var clean = u.split('?')[0].split('#')[0].toLowerCase();
+        return clean.endsWith('.png') || clean.endsWith('.jpg') || clean.endsWith('.jpeg') || clean.endsWith('.webp') || clean.endsWith('.gif') || clean.endsWith('.svg') || clean.endsWith('.avif') || clean.endsWith('.bmp');
       }
 
       // 🎬 NẠP VÀ PHÁT VIDEO / ẢNH 4K 60 FPS LIỀN MẠCH TUYỆT ĐỐI (SIÊU SẮC NÉT & KHÔNG BAO GIỜ ĐEN MÀN HÌNH)
@@ -2460,7 +2462,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       position: fixed !important;
       top: 12px !important;
       left: 50% !important;
-      transform: translateX(-50%) translateZ(9999px) !important;
+      transform: translateX(-50%) !important;
       display: inline-flex !important;
       flex-direction: row !important;
       align-items: center !important;
@@ -2489,7 +2491,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     #controlsDock.is-hidden { display: none !important; }
-    #controlsDock:hover { opacity: 1 !important; transform: translateX(-50%) translateZ(9999px) scale(1.02) !important; }
+    #controlsDock:hover { opacity: 1 !important; transform: translateX(-50%) scale(1.02) !important; }
     .dock-btn {
       background: rgba(255, 255, 255, 0.15) !important;
       border: 1px solid rgba(255, 255, 255, 0.35) !important;
@@ -3006,8 +3008,10 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       }
 
       function isImage(u) {
-        if (!u) return false;
-        return /\.(png|jpe?g|webp|gif|svg|avif|bmp)($|\?|#)/i.test(u) || u.startsWith('data:image/');
+        if (!u || typeof u !== 'string') return false;
+        if (u.startsWith('data:image/')) return true;
+        var clean = u.split('?')[0].split('#')[0].toLowerCase();
+        return clean.endsWith('.png') || clean.endsWith('.jpg') || clean.endsWith('.jpeg') || clean.endsWith('.webp') || clean.endsWith('.gif') || clean.endsWith('.svg') || clean.endsWith('.avif') || clean.endsWith('.bmp');
       }
 
       function loadAndPlay(src, forceSeekTime) {

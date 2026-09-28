@@ -3,8 +3,8 @@
   "aspectRatio": "9:16",
   "characterId": "",
   "characterName": "Cảm ơn khách ha…",
-  "mediaUrl": "/uploads/media-1790557934476-823971949.mp4",
-  "currentMedia": "/uploads/media-1790480285999-991836740.png",
+  "mediaUrl": "/uploads/media-1790564391879-979708556.mp4",
+  "currentMedia": null,
   "eventVideoUrl": null,
   "isVideo": true,
   "videoPlaybackEvent": "pause",
@@ -12,10 +12,10 @@
   "isAudioMuted": false,
   "isDarkMode": true,
   "clearMedia": false,
-  "updatedAt": 1790559511735,
+  "updatedAt": 1790564402874,
   "isUserExplicitMediaLocked": false,
-  "selectedCharacter": "custom_1790557934456",
-  "videoCurrentTime": 0.471256,
+  "selectedCharacter": "custom_1790564391834",
+  "videoCurrentTime": 4.81738,
   "type": "MASTER_LIVE_STATE_UPDATE",
   "flvUrl": null,
   "isConnected": false,
@@ -103,9 +103,9 @@
       "isSpeakingNow": true
     }
   ],
-  "tunnelUrl": "https://cure-does-cadillac-editing.trycloudflare.com",
+  "tunnelUrl": "https://equity-shaped-assists-franchise.trycloudflare.com",
   "multiAvatarConfig": {
-    "enabled": true,
+    "enabled": false,
     "activeCount": 2,
     "layoutMode": "custom_canvas",
     "backgroundUrl": "",
@@ -204,10 +204,11 @@
       }
     ],
     "activeSpeakerId": "avatar_1",
-    "fromSequencer": true,
-    "syncedAt": 1790482961236
+    "fromSequencer": false,
+    "syncedAt": 1790482961236,
+    "_syncedFromSequencer": false
   },
-  "mainMediaUrl": "/uploads/media-1790557934476-823971949.mp4",
+  "mainMediaUrl": "/uploads/media-1790564391879-979708556.mp4",
   "mainMediaTransform": {
     "x": 0,
     "y": 0,

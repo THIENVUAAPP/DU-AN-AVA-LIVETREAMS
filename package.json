@@ -1,7 +1,7 @@
 {
   "name": "du-an-ava-livestreams",
   "private": true,
-  "version": "4.9.79",
+  "version": "4.9.80",
   "type": "module",
   "main": "electron-main.cjs",
   "build": {
