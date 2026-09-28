@@ -954,6 +954,8 @@ app.get([
   const overlayTxt = (currentMasterLiveState && currentMasterLiveState.overlayText) || '';
   const soundParam = req.query.sound !== '0';
   const fitParam = req.query.fit || 'cover';
+  const ratioParam = req.query.ratio || req.query.aspectRatio || (currentMasterLiveState && currentMasterLiveState.aspectRatio) || '9:16';
+  const isLandscapeInit = ratioParam === '16:9' || ratioParam === '16/9';
   const isImageMediaHelper = (u) => {
     if (!u || typeof u !== 'string') return false;
     return /\.(png|jpe?g|webp|gif|svg|avif|bmp)($|\?|#)/i.test(u) || u.startsWith('data:image/');
@@ -980,19 +982,26 @@ app.get([
       user-select: none; -webkit-user-select: none;
     }
     #stage {
-      position: absolute;
-      inset: 0;
-      width: 100vw; height: 100vh;
-      margin: 0; padding: 0;
-      display: flex; align-items: center; justify-content: center;
-      background: #000;
+      position: relative;
+      margin: auto;
       overflow: hidden;
+      background: #000;
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
       z-index: 1;
+      aspect-ratio: ${isLandscapeInit ? '16 / 9' : '9 / 16'};
+      max-width: 100vw;
+      max-height: 100vh;
+      width: min(100vw, calc(${isLandscapeInit ? '100vh * 16 / 9' : '100vh * 9 / 16'}));
+      height: min(100vh, calc(${isLandscapeInit ? '100vw * 9 / 16' : '100vw * 16 / 9'}));
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     video {
       position: absolute;
       inset: 0;
-      width: 100vw; height: 100vh;
+      width: 100%;
+      height: 100%;
       object-fit: ${fitParam === 'contain' ? 'contain' : 'cover'};
       object-position: center center;
       background: #000;
@@ -1006,7 +1015,8 @@ app.get([
     #imagePlayer {
       position: absolute;
       inset: 0;
-      width: 100vw; height: 100vh;
+      width: 100%;
+      height: 100%;
       object-fit: ${fitParam === 'contain' ? 'contain' : 'cover'};
       object-position: center center;
       background: #000;
@@ -1287,6 +1297,22 @@ app.get([
       let currentFit = ${JSON.stringify(fitParam)};
       let isPlayPending = false;
       let isDockHidden = false;
+
+      function updateStageAspectRatio(ratio) {
+        const stage = document.getElementById('stage');
+        if (!stage) return;
+        const isLandscape = (ratio === '16:9' || ratio === '16/9');
+        if (isLandscape) {
+          stage.style.aspectRatio = '16 / 9';
+          stage.style.width = 'min(100vw, calc(100vh * 16 / 9))';
+          stage.style.height = 'min(100vh, calc(100vw * 9 / 16))';
+        } else {
+          stage.style.aspectRatio = '9 / 16';
+          stage.style.width = 'min(100vw, calc(100vh * 9 / 16))';
+          stage.style.height = 'min(100vh, calc(100vw * 16 / 9))';
+        }
+      }
+      updateStageAspectRatio('${ratioParam}');
 
       function getAllVideos() {
         return Array.from(document.querySelectorAll('video'));
@@ -1699,11 +1725,11 @@ app.get([
           const resolvedMedia = resolveUrl(targetVid);
 
           const customTrans = (avatarTransformsMap && (avatarTransformsMap[charId] || avatarTransformsMap[avatar.id] || avatarTransformsMap[avatar.role])) || {};
-          const baseTrans = avatar.transform || {
-            x: idx === 0 ? 10 : (idx === 1 ? 55 : (idx === 2 ? 30 : 50)),
-            y: 15,
-            width: 40,
-            height: 70,
+          const baseTrans = avatar.transform || (avatar.transforms) || {
+            x: idx === 0 ? 8 : (idx === 1 ? 55 : (idx === 2 ? 30 : 50)),
+            y: idx === 0 ? 41 : (idx === 1 ? 17 : 20),
+            width: 45,
+            height: 48,
             zIndex: 10 + idx
           };
           const trans = Object.assign({}, baseTrans, customTrans);
@@ -1715,28 +1741,39 @@ app.get([
             charEl.style.position = 'absolute';
             charEl.style.transition = 'all 0.3s ease';
             charEl.style.overflow = 'hidden';
-            charEl.innerHTML = '<video autoplay loop muted playsinline webkit-playsinline style="width:100%;height:100%;object-fit:cover;background:transparent;display:none;"></video><img style="width:100%;height:100%;object-fit:cover;background:transparent;display:none;" />';
+            charEl.innerHTML = '<video autoplay loop muted playsinline webkit-playsinline style="width:100%;height:100%;object-fit:' + (trans.objectFit || 'cover') + ';background:transparent;display:none;pointer-events:none;border-radius:inherit;"></video><img style="width:100%;height:100%;object-fit:' + (trans.objectFit || 'cover') + ';background:transparent;display:none;pointer-events:none;border-radius:inherit;" />';
             container.appendChild(charEl);
           }
 
-          charEl.style.left = (trans.x ?? 10) + '%';
-          charEl.style.top = (trans.y ?? 15) + '%';
-          charEl.style.width = (trans.width ?? 40) + '%';
-          charEl.style.height = (trans.height || 70) + '%';
+          charEl.style.left = (trans.x ?? (idx === 0 ? 8 : 55)) + '%';
+          charEl.style.top = (trans.y ?? (idx === 0 ? 41 : 17)) + '%';
+          charEl.style.width = (trans.width ?? 45) + '%';
+          charEl.style.height = (trans.height ?? 48) + '%';
           charEl.style.zIndex = trans.zIndex || (10 + idx);
           charEl.style.borderRadius = (trans.borderRadius || 16) + 'px';
-          charEl.style.boxShadow = trans.boxShadow || '0 8px 25px rgba(0,0,0,0.65)';
-          if (trans.scale && trans.scale !== 1) {
-            charEl.style.transform = 'scale(' + trans.scale + ')';
+          charEl.style.opacity = (trans.opacity !== undefined ? trans.opacity : 100) / 100;
+
+          const rot = trans.rotation || trans.rotate || 0;
+          const scaleX = (trans.flipH ? -1 : 1) * (trans.scale || 1);
+          const scaleY = (trans.flipV ? -1 : 1) * (trans.scale || 1);
+          charEl.style.transform = (rot || trans.flipH || trans.flipV || (trans.scale && trans.scale !== 1))
+            ? 'rotate(' + rot + 'deg) scale(' + scaleX + ', ' + scaleY + ')'
+            : 'none';
+          charEl.style.transformOrigin = 'center center';
+
+          if (isSpeaking) {
+            charEl.style.boxShadow = '0 0 20px rgba(52, 211, 153, 0.8), 0 0 0 2px rgba(52, 211, 153, 0.9)';
           } else {
-            charEl.style.transform = 'none';
+            charEl.style.boxShadow = trans.boxShadow || 'none';
           }
           charEl.className = chromaClass;
 
           const v = charEl.querySelector('video');
           const img = charEl.querySelector('img');
+          const charFit = trans.objectFit || 'cover';
 
           if (v) {
+            v.style.objectFit = charFit;
             v.muted = true;
             v.defaultMuted = true;
             v.setAttribute('muted', '');
@@ -1823,17 +1860,30 @@ app.get([
           layerEl.style.zIndex = trans.zIndex || (5 + idx);
           layerEl.style.borderRadius = (trans.borderRadius || layer.borderRadius || 0) + 'px';
           layerEl.style.opacity = (trans.opacity !== undefined ? trans.opacity : (layer.opacity !== undefined ? layer.opacity : 100)) / 100;
+
+          const rot = trans.rotation || trans.rotate || 0;
+          const scaleX = (trans.flipH ? -1 : 1) * (trans.scale || 1);
+          const scaleY = (trans.flipV ? -1 : 1) * (trans.scale || 1);
+          layerEl.style.transform = (rot || trans.flipH || trans.flipV || (trans.scale && trans.scale !== 1))
+            ? 'rotate(' + rot + 'deg) scale(' + scaleX + ', ' + scaleY + ')'
+            : 'none';
+          layerEl.style.transformOrigin = 'center center';
           layerEl.className = chromaClass;
 
           const v = layerEl.querySelector('video');
           const img = layerEl.querySelector('img');
+          const layerFit = trans.objectFit || layer.objectFit || 'contain';
           if (v) {
+            v.style.objectFit = layerFit;
             v.muted = true;
             v.defaultMuted = true;
             v.setAttribute('muted', '');
             v.playsInline = true;
             v.setAttribute('playsinline', '');
             v.setAttribute('webkit-playsinline', '');
+          }
+          if (img) {
+            img.style.objectFit = layerFit;
           }
           if (isLayerVid) {
             if (img) img.style.display = 'none';
@@ -1865,6 +1915,9 @@ app.get([
 
       function applyLiveState(data) {
         if (!data) return;
+        if (data.aspectRatio) {
+          updateStageAspectRatio(data.aspectRatio);
+        }
         const stageEl = document.getElementById('stage');
         const emptyStage = document.getElementById('emptyStageView');
         const multiStage = document.getElementById('multiAvatarStage');
@@ -1955,10 +2008,33 @@ app.get([
 
         // 3. Hiển thị Lớp Nền Sân Khấu Chính (Background Layer)
         const imgEl = document.getElementById('imagePlayer');
-        const mainTrans = data.mainMediaTransform || { x: 0, y: 0, width: 100, height: 100 };
-        const mainChromaClass = data.mainMediaChromaKey && data.mainMediaChromaKey.enabled 
+        const mainBgLayer = document.getElementById('mainBackgroundLayer');
+        const mainTrans = data.mainMediaTransform || data.backgroundTransform || { x: 0, y: 0, width: 100, height: 100 };
+        const mainChromaClass = (data.mainMediaChromaKey && data.mainMediaChromaKey.enabled)
           ? (data.mainMediaChromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter')
-          : '';
+          : (data.backgroundChromaKey && data.backgroundChromaKey.enabled ? (data.backgroundChromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter') : '');
+
+        const bgFit = mainTrans.objectFit || currentFit || 'cover';
+        const bgRot = mainTrans.rotation || mainTrans.rotate || 0;
+        const bgScaleX = (mainTrans.flipH ? -1 : 1) * (mainTrans.scale || 1);
+        const bgScaleY = (mainTrans.flipV ? -1 : 1) * (mainTrans.scale || 1);
+        const bgTransform = (bgRot || mainTrans.flipH || mainTrans.flipV || (mainTrans.scale && mainTrans.scale !== 1))
+          ? 'rotate(' + bgRot + 'deg) scale(' + bgScaleX + ', ' + bgScaleY + ')'
+          : 'none';
+        const bgOpacity = (mainTrans.opacity !== undefined ? mainTrans.opacity : 100) / 100;
+        const bgRadius = (mainTrans.borderRadius || 0) + 'px';
+
+        if (mainBgLayer) {
+          mainBgLayer.style.left = (mainTrans.x ?? 0) + '%';
+          mainBgLayer.style.top = (mainTrans.y ?? 0) + '%';
+          mainBgLayer.style.width = (mainTrans.width ?? 100) + '%';
+          mainBgLayer.style.height = (mainTrans.height ?? 100) + '%';
+          mainBgLayer.style.transform = bgTransform;
+          mainBgLayer.style.transformOrigin = 'center center';
+          mainBgLayer.style.opacity = bgOpacity;
+          mainBgLayer.style.borderRadius = bgRadius;
+          mainBgLayer.style.zIndex = mainTrans.zIndex || 0;
+        }
 
         if (multiBg && resolvedMainBg) {
           multiBg.style.backgroundImage = 'url(' + resolvedMainBg + ')';
@@ -1971,10 +2047,7 @@ app.get([
           if (isImage(resolvedMainBg)) {
             if (imgEl) {
               if (imgEl.src !== resolvedMainBg) imgEl.src = resolvedMainBg;
-              imgEl.style.left = (mainTrans.x ?? 0) + '%';
-              imgEl.style.top = (mainTrans.y ?? 0) + '%';
-              imgEl.style.width = (mainTrans.width ?? 100) + '%';
-              imgEl.style.height = (mainTrans.height ?? 100) + '%';
+              imgEl.style.objectFit = bgFit;
               imgEl.className = mainChromaClass;
               imgEl.style.display = 'block';
             }
@@ -1985,10 +2058,7 @@ app.get([
           } else {
             if (imgEl) imgEl.style.display = 'none';
             if (vid) {
-              vid.style.left = (mainTrans.x ?? 0) + '%';
-              vid.style.top = (mainTrans.y ?? 0) + '%';
-              vid.style.width = (mainTrans.width ?? 100) + '%';
-              vid.style.height = (mainTrans.height ?? 100) + '%';
+              vid.style.objectFit = bgFit;
               vid.className = mainChromaClass;
               vid.style.display = 'block';
               if (!isSameMedia(vid.src, resolvedMainBg)) {
@@ -2401,6 +2471,8 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
   let vParam = resolveMediaForStage(req.query.v, currentMasterLiveState);
   const soundParam = req.query.sound !== '0';
   const fitParam = req.query.fit || 'cover';
+  const ratioParam = req.query.ratio || req.query.aspectRatio || (currentMasterLiveState && currentMasterLiveState.aspectRatio) || '9:16';
+  const isLandscapeInit = ratioParam === '16:9' || ratioParam === '16/9';
   const isImageMediaHelper = (u) => {
     if (!u || typeof u !== 'string') return false;
     return /\.(png|jpe?g|webp|gif|svg|avif|bmp)($|\?|#)/i.test(u) || u.startsWith('data:image/');
@@ -2430,13 +2502,19 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     }
     #stage {
       position: relative;
-      width: 100%; height: 100%;
-      max-width: 100vw; max-height: 100vh;
-      aspect-ratio: 9 / 16;
-      display: flex; align-items: center; justify-content: center;
-      background: #000;
+      margin: auto;
       overflow: hidden;
+      background: #000;
+      box-shadow: 0 0 50px rgba(0, 0, 0, 0.9);
       z-index: 1;
+      aspect-ratio: ${isLandscapeInit ? '16 / 9' : '9 / 16'};
+      max-width: 100vw;
+      max-height: 100vh;
+      width: min(100vw, calc(${isLandscapeInit ? '100vh * 16 / 9' : '100vh * 9 / 16'}));
+      height: min(100vh, calc(${isLandscapeInit ? '100vw * 9 / 16' : '100vw * 16 / 9'}));
+      display: flex;
+      align-items: center;
+      justify-content: center;
     }
     video {
       width: 100%; height: 100%;
@@ -2701,6 +2779,23 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       let targetMuted = ${soundParam ? 'false' : 'true'};
       let currentFit = ${JSON.stringify(fitParam)};
       let isDockHidden = false;
+
+      function updateStageAspectRatio(ratio) {
+        const stage = document.getElementById('stage');
+        if (!stage) return;
+        const isLandscape = (ratio === '16:9' || ratio === '16/9');
+        if (isLandscape) {
+          stage.style.aspectRatio = '16 / 9';
+          stage.style.width = 'min(100vw, calc(100vh * 16 / 9))';
+          stage.style.height = 'min(100vh, calc(100vw * 9 / 16))';
+        } else {
+          stage.style.aspectRatio = '9 / 16';
+          stage.style.width = 'min(100vw, calc(100vh * 9 / 16))';
+          stage.style.height = 'min(100vh, calc(100vw * 16 / 9))';
+        }
+      }
+      updateStageAspectRatio('${ratioParam}');
+
       let socket = null;
       let bc = null;
 
@@ -3093,11 +3188,11 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           const resolvedMedia = resolveUrl(targetVid);
 
           const customTrans = (avatarTransformsMap && (avatarTransformsMap[charId] || avatarTransformsMap[avatar.id] || avatarTransformsMap[avatar.role])) || {};
-          const baseTrans = avatar.transform || {
-            x: idx === 0 ? 10 : (idx === 1 ? 55 : (idx === 2 ? 30 : 50)),
-            y: 15,
-            width: 40,
-            height: 70,
+          const baseTrans = avatar.transform || (avatar.transforms) || {
+            x: idx === 0 ? 8 : (idx === 1 ? 55 : (idx === 2 ? 30 : 50)),
+            y: idx === 0 ? 41 : (idx === 1 ? 17 : 20),
+            width: 45,
+            height: 48,
             zIndex: 10 + idx
           };
           const trans = Object.assign({}, baseTrans, customTrans);
@@ -3109,28 +3204,39 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
             charEl.style.position = 'absolute';
             charEl.style.transition = 'all 0.3s ease';
             charEl.style.overflow = 'hidden';
-            charEl.innerHTML = '<video autoplay loop muted playsinline webkit-playsinline style="width:100%;height:100%;object-fit:cover;background:transparent;display:none;"></video><img style="width:100%;height:100%;object-fit:cover;background:transparent;display:none;" />';
+            charEl.innerHTML = '<video autoplay loop muted playsinline webkit-playsinline style="width:100%;height:100%;object-fit:' + (trans.objectFit || 'cover') + ';background:transparent;display:none;pointer-events:none;border-radius:inherit;"></video><img style="width:100%;height:100%;object-fit:' + (trans.objectFit || 'cover') + ';background:transparent;display:none;pointer-events:none;border-radius:inherit;" />';
             container.appendChild(charEl);
           }
 
-          charEl.style.left = (trans.x ?? 10) + '%';
-          charEl.style.top = (trans.y ?? 15) + '%';
-          charEl.style.width = (trans.width ?? 40) + '%';
-          charEl.style.height = (trans.height || 70) + '%';
+          charEl.style.left = (trans.x ?? (idx === 0 ? 8 : 55)) + '%';
+          charEl.style.top = (trans.y ?? (idx === 0 ? 41 : 17)) + '%';
+          charEl.style.width = (trans.width ?? 45) + '%';
+          charEl.style.height = (trans.height ?? 48) + '%';
           charEl.style.zIndex = trans.zIndex || (10 + idx);
           charEl.style.borderRadius = (trans.borderRadius || 16) + 'px';
-          charEl.style.boxShadow = trans.boxShadow || '0 8px 25px rgba(0,0,0,0.65)';
-          if (trans.scale && trans.scale !== 1) {
-            charEl.style.transform = 'scale(' + trans.scale + ')';
+          charEl.style.opacity = (trans.opacity !== undefined ? trans.opacity : 100) / 100;
+
+          const rot = trans.rotation || trans.rotate || 0;
+          const scaleX = (trans.flipH ? -1 : 1) * (trans.scale || 1);
+          const scaleY = (trans.flipV ? -1 : 1) * (trans.scale || 1);
+          charEl.style.transform = (rot || trans.flipH || trans.flipV || (trans.scale && trans.scale !== 1))
+            ? 'rotate(' + rot + 'deg) scale(' + scaleX + ', ' + scaleY + ')'
+            : 'none';
+          charEl.style.transformOrigin = 'center center';
+
+          if (isSpeaking) {
+            charEl.style.boxShadow = '0 0 20px rgba(52, 211, 153, 0.8), 0 0 0 2px rgba(52, 211, 153, 0.9)';
           } else {
-            charEl.style.transform = 'none';
+            charEl.style.boxShadow = trans.boxShadow || 'none';
           }
           charEl.className = chromaClass;
 
           const v = charEl.querySelector('video');
           const img = charEl.querySelector('img');
+          const charFit = trans.objectFit || 'cover';
 
           if (v) {
+            v.style.objectFit = charFit;
             v.muted = true;
             v.defaultMuted = true;
             v.setAttribute('muted', '');
@@ -3217,17 +3323,30 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           layerEl.style.zIndex = trans.zIndex || (5 + idx);
           layerEl.style.borderRadius = (trans.borderRadius || layer.borderRadius || 0) + 'px';
           layerEl.style.opacity = (trans.opacity !== undefined ? trans.opacity : (layer.opacity !== undefined ? layer.opacity : 100)) / 100;
+
+          const rot = trans.rotation || trans.rotate || 0;
+          const scaleX = (trans.flipH ? -1 : 1) * (trans.scale || 1);
+          const scaleY = (trans.flipV ? -1 : 1) * (trans.scale || 1);
+          layerEl.style.transform = (rot || trans.flipH || trans.flipV || (trans.scale && trans.scale !== 1))
+            ? 'rotate(' + rot + 'deg) scale(' + scaleX + ', ' + scaleY + ')'
+            : 'none';
+          layerEl.style.transformOrigin = 'center center';
           layerEl.className = chromaClass;
 
           const v = layerEl.querySelector('video');
           const img = layerEl.querySelector('img');
+          const layerFit = trans.objectFit || layer.objectFit || 'contain';
           if (v) {
+            v.style.objectFit = layerFit;
             v.muted = true;
             v.defaultMuted = true;
             v.setAttribute('muted', '');
             v.playsInline = true;
             v.setAttribute('playsinline', '');
             v.setAttribute('webkit-playsinline', '');
+          }
+          if (img) {
+            img.style.objectFit = layerFit;
           }
           if (isLayerVid) {
             if (img) img.style.display = 'none';
@@ -3259,6 +3378,9 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
 
       function applyLiveState(data) {
         if (!data) return;
+        if (data.aspectRatio) {
+          updateStageAspectRatio(data.aspectRatio);
+        }
         const stageEl = document.getElementById('stage');
         const emptyStage = document.getElementById('emptyStageView');
         const multiStage = document.getElementById('multiAvatarStage');
@@ -3348,10 +3470,33 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
 
         // 3. Hiển thị Lớp Nền Sân Khấu Chính (Background Layer)
         const imgEl = document.getElementById('imagePlayer');
-        const mainTrans = data.mainMediaTransform || { x: 0, y: 0, width: 100, height: 100 };
-        const mainChromaClass = data.mainMediaChromaKey && data.mainMediaChromaKey.enabled 
+        const mainBgLayer = document.getElementById('mainBackgroundLayer');
+        const mainTrans = data.mainMediaTransform || data.backgroundTransform || { x: 0, y: 0, width: 100, height: 100 };
+        const mainChromaClass = (data.mainMediaChromaKey && data.mainMediaChromaKey.enabled)
           ? (data.mainMediaChromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter')
-          : '';
+          : (data.backgroundChromaKey && data.backgroundChromaKey.enabled ? (data.backgroundChromaKey.mode === 'blue' ? 'chroma-blue-filter' : 'chroma-green-filter') : '');
+
+        const bgFit = mainTrans.objectFit || currentFit || 'cover';
+        const bgRot = mainTrans.rotation || mainTrans.rotate || 0;
+        const bgScaleX = (mainTrans.flipH ? -1 : 1) * (mainTrans.scale || 1);
+        const bgScaleY = (mainTrans.flipV ? -1 : 1) * (mainTrans.scale || 1);
+        const bgTransform = (bgRot || mainTrans.flipH || mainTrans.flipV || (mainTrans.scale && mainTrans.scale !== 1))
+          ? 'rotate(' + bgRot + 'deg) scale(' + bgScaleX + ', ' + bgScaleY + ')'
+          : 'none';
+        const bgOpacity = (mainTrans.opacity !== undefined ? mainTrans.opacity : 100) / 100;
+        const bgRadius = (mainTrans.borderRadius || 0) + 'px';
+
+        if (mainBgLayer) {
+          mainBgLayer.style.left = (mainTrans.x ?? 0) + '%';
+          mainBgLayer.style.top = (mainTrans.y ?? 0) + '%';
+          mainBgLayer.style.width = (mainTrans.width ?? 100) + '%';
+          mainBgLayer.style.height = (mainTrans.height ?? 100) + '%';
+          mainBgLayer.style.transform = bgTransform;
+          mainBgLayer.style.transformOrigin = 'center center';
+          mainBgLayer.style.opacity = bgOpacity;
+          mainBgLayer.style.borderRadius = bgRadius;
+          mainBgLayer.style.zIndex = mainTrans.zIndex || 0;
+        }
 
         if (multiBg && resolvedMainBg) {
           multiBg.style.backgroundImage = 'url(' + resolvedMainBg + ')';
@@ -3364,10 +3509,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           if (isImage(resolvedMainBg)) {
             if (imgEl) {
               if (imgEl.src !== resolvedMainBg) imgEl.src = resolvedMainBg;
-              imgEl.style.left = (mainTrans.x ?? 0) + '%';
-              imgEl.style.top = (mainTrans.y ?? 0) + '%';
-              imgEl.style.width = (mainTrans.width ?? 100) + '%';
-              imgEl.style.height = (mainTrans.height ?? 100) + '%';
+              imgEl.style.objectFit = bgFit;
               imgEl.className = mainChromaClass;
               imgEl.style.display = 'block';
             }
@@ -3378,10 +3520,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           } else {
             if (imgEl) imgEl.style.display = 'none';
             if (vid) {
-              vid.style.left = (mainTrans.x ?? 0) + '%';
-              vid.style.top = (mainTrans.y ?? 0) + '%';
-              vid.style.width = (mainTrans.width ?? 100) + '%';
-              vid.style.height = (mainTrans.height ?? 100) + '%';
+              vid.style.objectFit = bgFit;
               vid.className = mainChromaClass;
               vid.style.display = 'block';
               if (!isSameMedia(vid.src, resolvedMainBg)) {

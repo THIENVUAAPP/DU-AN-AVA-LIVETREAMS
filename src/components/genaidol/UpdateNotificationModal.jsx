@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.80';
+export const APP_VERSION = '4.9.81';
 export const RELEASE_DATE = '28/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v4.9.80 - Khắc Phục Triệt Để 100% Các Nút Bấm Thanh Điều Khiển Window Capture & TikTok Live Studio',
-    description: '1. Sửa Dứt Điểm Lỗi Syntax Error Khiến Toàn Bộ Nút Bị Liệt: Khắc phục lỗi cú pháp Regex nội suy chuỗi template trong server khiến trình duyệt chặn thực thi JavaScript. Giờ đây toàn bộ script chạy 100% trơn tru, tất cả các hàm và sự kiện click đều phản hồi ngay tức thì 0ms. 2. Chuẩn Hóa Lớp Hit-Testing Chuột Cho Thanh Điều Khiển: Điều chỉnh transform loại bỏ độ lệch hit-test trên CEF/Chrome, đảm bảo bấm trúng mọi nút (• TRỰC TIẾP 60FPS, ⏸️ Tạm Dừng / ▶️ Tiếp Tục, 🔇 Tắt Tiếng / 🔊 Bật Tiếng, 📐 Tràn Màn / Vừa Khung, ✕ Ẩn Nút / Hiện Nút). 3. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác: Giữ nguyên vẹn mọi module hệ thống.'
+    title: '🚀 Bản Cập Nhật v4.9.81 - Đồng Bộ Khung Hình Chuẩn 9:16 & Sao Chép 100% Sân Khấu Chính Sang Window Capture & TikTok Live Studio',
+    description: '1. Khớp Chuẩn Tuyệt Đối Tỷ Lệ & Tọa Độ Sân Khấu Chính: Đồng bộ khung hình dọc tỷ lệ chuẩn 9:16 trên cả Window Capture OBS và đường link TikTok Live Studio, sao chép 100% vị trí, kích thước, hiệu ứng transform và khung hình avatar đa tầng từ Sân Khấu Chính. 2. Loại Bỏ Hiện Tượng Tràn Lệch & Méo Khung Hình: Loại bỏ hoàn toàn lỗi vỡ tỷ lệ khi mở trên màn hình rộng 16:9, đảm bảo video nền và nhân vật hiển thị siêu sắc nét, mượt mà 60 FPS không giật lag. 3. Khóa Chặt 100% Mọi Tab Module Hệ Thống: Bảo toàn nguyên vẹn toàn bộ các tab và cấu hình tính năng khác.'
   }
 ];
 

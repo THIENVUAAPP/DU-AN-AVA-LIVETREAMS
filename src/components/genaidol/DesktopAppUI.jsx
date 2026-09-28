@@ -2162,7 +2162,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     const origin = typeof window !== 'undefined' && window.location.origin && window.location.origin !== 'null' && !window.location.origin.startsWith('file:')
       ? window.location.origin
       : 'http://localhost:3001';
-    const captureUrl = `${origin}/window-capture?mode=window_capture&sound=1&autoplay=1&fit=cover${query}`;
+    const ratioQuery = `&ratio=${encodeURIComponent(globalAspectRatio || '9:16')}`;
+    const captureUrl = `${origin}/window-capture?mode=window_capture&sound=1&autoplay=1&fit=cover${ratioQuery}${query}`;
     
     let newWin = null;
     try {
