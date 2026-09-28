@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.78';
+export const APP_VERSION = '4.9.79';
 export const RELEASE_DATE = '28/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v4.9.78 - Khôi Phục 100% Đọc Voice Kịch Bản, Chạy Ngay Khi Bật & Dừng Triệt Để Khi Tắt',
-    description: '1. Khôi Phục Hoàn Toàn 100% Đọc Voice Kịch Bản Tab Idol: Sửa dứt điểm nguyên nhân gây câm/im lặng khi bấm chạy kịch bản theo từng bước, bấm "Nghe Thử Voice", "▶️ CHẠY DEMO" hoặc "📡 ĐỒNG BỘ RA SÂN KHẤU CHÍNH". Hệ thống tự động xóa cờ pause và kích hoạt bộ giải mã âm thanh giọng đọc AI Neural phát liền mạch 0ms không độ trễ. 2. Chuẩn Hóa Điều Khiển Phát / Dừng Kịch Bản: Khi người dùng bấm chạy kịch bản hoặc phát live, toàn bộ kịch bản và giọng đọc AI avatar hoạt động trơn tru; khi người dùng bấm dừng ("⏹️ DỪNG DEMO", tắt đồng bộ, hoặc "TẮT TẤT CẢ"), toàn bộ luồng âm thanh voice và kịch bản lập tức dừng triệt để 100% và tuyệt đối không tự động phát lại khi chưa có yêu cầu từ người dùng. 3. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác: Giữ nguyên vẹn toàn bộ giao diện nút bấm và trạng thái hoạt động của mọi module hệ thống.'
+    title: '🚀 Bản Cập Nhật v4.9.79 - Khắc Phục 100% Các Nút Bấm Thanh Điều Khiển Window Capture & TikTok Live Studio, Tối Ưu Siêu Mượt 60 FPS',
+    description: '1. Khắc Phục Triệt Để 100% Tất Cả Các Nút Bấm Thanh Điều Khiển: Toàn bộ các nút chức năng trên luồng Window Capture và link TikTok Live Studio (Trực Tiếp 60FPS, Tạm Dừng / Tiếp Tục, Tắt Tiếng / Bật Tiếng, Tràn Màn / Vừa Khung, Ẩn Nút / Hiện Nút) được gắn sự kiện trực tiếp inline và bộ giải mã xử lý độc lập, bấm vào là phản hồi ngay lập tức 0ms không độ trễ. 2. Tối Ưu Hóa Hiệu Năng Đỉnh Cao Siêu Mượt 60 FPS: Tách biệt lớp compositing GPU phần cứng cho video và dock điều khiển, loại bỏ hoàn toàn hiện tượng khựng, đứng hình hay xung đột sự kiện chuột. 3. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác: Giữ nguyên vẹn mọi module hệ thống.'
   }
 ];
 

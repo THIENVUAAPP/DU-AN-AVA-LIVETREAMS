@@ -946,7 +946,7 @@ app.get([
   res.setHeader('Content-Type', 'text/html; charset=utf-8');
 
   let vParam = resolveMediaForStage(req.query.v, currentMasterLiveState);
-  const showDock = req.query.dock === '1' || req.query.controls === '1';
+  const showDock = req.query.dock !== '0' && req.query.clean !== '1';
 
   const secMedia = (currentMasterLiveState && currentMasterLiveState.secondaryMediaUrl) || '';
   const secTrans = (currentMasterLiveState && currentMasterLiveState.secondaryMediaTransform) || { x: 2, y: 32, width: 47, height: 48, zIndex: 15 };
@@ -987,6 +987,7 @@ app.get([
       display: flex; align-items: center; justify-content: center;
       background: #000;
       overflow: hidden;
+      z-index: 1;
     }
     video {
       position: absolute;
@@ -1047,7 +1048,7 @@ app.get([
       position: fixed !important;
       top: 12px !important;
       left: 50% !important;
-      transform: translateX(-50%) !important;
+      transform: translateX(-50%) translateZ(9999px) !important;
       display: ${showDock ? 'inline-flex' : 'none'} !important;
       flex-direction: row !important;
       align-items: center !important;
@@ -1063,6 +1064,8 @@ app.get([
       border: 1.5px solid rgba(6, 182, 212, 0.75) !important;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 16px rgba(6, 182, 212, 0.35) !important;
       z-index: 2147483647 !important;
+      isolation: isolate !important;
+      will-change: transform !important;
       opacity: 0.98 !important;
       pointer-events: auto !important;
       -webkit-app-region: no-drag !important;
@@ -1074,7 +1077,7 @@ app.get([
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     #controlsDock.is-hidden { display: none !important; }
-    #controlsDock:hover { opacity: 1 !important; transform: translateX(-50%) scale(1.02) !important; }
+    #controlsDock:hover { opacity: 1 !important; transform: translateX(-50%) translateZ(9999px) scale(1.02) !important; }
     .dock-btn {
       background: rgba(255, 255, 255, 0.15) !important;
       border: 1px solid rgba(255, 255, 255, 0.35) !important;
@@ -1253,16 +1256,16 @@ app.get([
 
   <!-- BẢNG ĐIỀU KHIỂN NỔI DOCK TOÀN CỤC CẤP BODY -->
   <div id="controlsDock">
-    <button id="btnLiveStatus" class="dock-btn dock-btn-live" type="button" title="Luồng Trực Tiếp 60 FPS (Bấm để làm mới & đồng bộ luồng)">
+    <button id="btnLiveStatus" class="dock-btn dock-btn-live" type="button" onclick="window.handleLiveRefreshToggle(event)" title="Luồng Trực Tiếp 60 FPS (Bấm để làm mới & đồng bộ luồng)">
       <span class="dock-pulse-dot"></span>• TRỰC TIẾP 60FPS
     </button>
-    <button id="btnPlayPause" class="dock-btn" type="button" title="Tạm dừng / Tiếp tục độc lập (Phím tắt: Space)">⏸️ Tạm Dừng</button>
-    <button id="btnMuteUnmute" class="dock-btn" type="button" title="Bật / Tắt âm thanh độc lập (Phím tắt: M)">${soundParam ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}</button>
-    <button id="btnFitToggle" class="dock-btn" type="button" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa Khung' : '📐 Tràn Màn'}</button>
-    <button id="btnHideAll" class="dock-btn dock-btn-hide" type="button" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn Nút (H)</button>
+    <button id="btnPlayPause" class="dock-btn" type="button" onclick="window.handlePlayPauseToggle(event)" title="Tạm dừng / Tiếp tục độc lập (Phím tắt: Space)">⏸️ Tạm Dừng</button>
+    <button id="btnMuteUnmute" class="dock-btn" type="button" onclick="window.handleMuteToggle(event)" title="Bật / Tắt âm thanh độc lập (Phím tắt: M)">${soundParam ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}</button>
+    <button id="btnFitToggle" class="dock-btn" type="button" onclick="window.handleFitToggle(event)" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa Khung' : '📐 Tràn Màn'}</button>
+    <button id="btnHideAll" class="dock-btn dock-btn-hide" type="button" onclick="window.toggleHideAll(true, event)" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn Nút (H)</button>
   </div>
 
-  <button id="btnRestoreIcon" type="button" title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)">👁️</button>
+  <button id="btnRestoreIcon" type="button" onclick="window.toggleHideAll(false, event)" title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)">👁️</button>
 
   <script>
     (function() {
@@ -1353,6 +1356,8 @@ app.get([
         }
         if (btnFitToggle) {
           btnFitToggle.innerHTML = currentFit === 'cover' ? '📐 Tràn Màn' : '📐 Vừa Khung';
+          btnFitToggle.style.background = currentFit === 'cover' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(255, 255, 255, 0.15)';
+          btnFitToggle.style.borderColor = currentFit === 'cover' ? '#a855f7' : 'rgba(255, 255, 255, 0.35)';
         }
       }
 
@@ -1406,55 +1411,52 @@ app.get([
         }
       }
 
-      function bindDockBtn(el, actionFn) {
-        if (!el) return;
-        let lastAction = 0;
-        function execute(e) {
-          if (e) {
-            try { e.stopPropagation(); } catch(err) {}
-          }
-          const now = Date.now();
-          if (now - lastAction < 150) return;
-          lastAction = now;
-          try {
-            el.style.transform = 'scale(0.92)';
-            setTimeout(function() { el.style.transform = ''; }, 120);
-            actionFn(e);
-          } catch(err) {
-            console.error('Dock action error:', err);
-          }
-        }
-        el.addEventListener('click', execute);
-        el.addEventListener('pointerdown', execute);
-        el.addEventListener('touchend', execute);
-      }
-
-      window.handleLiveRefreshToggle = function() {
+      window.handleLiveRefreshToggle = function(e) {
+        if (e) { try { e.preventDefault(); e.stopPropagation(); } catch(err) {} }
         isStreamUserPaused = false;
+        if (btnLiveStatus) {
+          btnLiveStatus.innerHTML = '<span class="dock-pulse-dot"></span>⚡ ĐÃ LÀM MỚI 60FPS';
+          btnLiveStatus.style.borderColor = '#22c55e';
+          btnLiveStatus.style.background = 'rgba(34, 197, 94, 0.45)';
+          setTimeout(function() {
+            if (btnLiveStatus) {
+              btnLiveStatus.innerHTML = '<span class="dock-pulse-dot"></span>• TRỰC TIẾP 60FPS';
+              btnLiveStatus.style.borderColor = '';
+              btnLiveStatus.style.background = '';
+            }
+          }, 1500);
+        }
         if (typeof fetchLatestState === 'function') fetchLatestState();
         getAllVideos().forEach(function(v) {
-          try { v.play().catch(function() {}); } catch(err) {}
+          try {
+            v.muted = !targetSoundEnabled;
+            v.play().catch(function() {});
+          } catch(err) {}
         });
-        updateDockUI();
-      };
-
-      window.handlePlayPauseToggle = function() {
-        if (isStreamUserPaused || (vid && vid.paused)) {
-          isStreamUserPaused = false;
-          getAllVideos().forEach(function(v) {
-            try { v.play().catch(function() {}); } catch(err) {}
-          });
+        if (vid && vid.src) {
           safePlay();
-        } else {
-          isStreamUserPaused = true;
-          getAllVideos().forEach(function(v) {
-            try { v.pause(); } catch(e) {}
-          });
         }
         updateDockUI();
       };
 
-      window.handleMuteToggle = function() {
+      window.handlePlayPauseToggle = function(e) {
+        if (e) { try { e.preventDefault(); e.stopPropagation(); } catch(err) {} }
+        isStreamUserPaused = !isStreamUserPaused;
+        getAllVideos().forEach(function(v) {
+          if (isStreamUserPaused) {
+            try { v.pause(); } catch(e) {}
+          } else {
+            try { v.play().catch(function() {}); } catch(e) {}
+          }
+        });
+        if (!isStreamUserPaused) {
+          safePlay();
+        }
+        updateDockUI();
+      };
+
+      window.handleMuteToggle = function(e) {
+        if (e) { try { e.preventDefault(); e.stopPropagation(); } catch(err) {} }
         targetSoundEnabled = !targetSoundEnabled;
         getAllVideos().forEach(function(v) {
           try {
@@ -1468,20 +1470,21 @@ app.get([
         updateDockUI();
       };
 
-      window.handleFitToggle = function() {
-        currentFit = currentFit === 'cover' ? 'contain' : 'cover';
+      window.handleFitToggle = function(e) {
+        if (e) { try { e.preventDefault(); e.stopPropagation(); } catch(err) {} }
+        currentFit = (currentFit === 'cover' ? 'contain' : 'cover');
+        try { localStorage.setItem('avalive_media_fit_mode', currentFit); } catch(e) {}
         if (vid) vid.style.objectFit = currentFit;
         const imgEl = document.getElementById('imagePlayer');
         if (imgEl) imgEl.style.objectFit = currentFit;
+        const pipV = document.getElementById('pipVideo');
+        if (pipV) pipV.style.objectFit = currentFit;
+        const pipI = document.getElementById('pipImage');
+        if (pipI) pipI.style.objectFit = currentFit;
         updateDockUI();
       };
 
-      bindDockBtn(btnLiveStatus, window.handleLiveRefreshToggle);
-      bindDockBtn(btnPlayPause, window.handlePlayPauseToggle);
-      bindDockBtn(btnMuteUnmute, window.handleMuteToggle);
-      bindDockBtn(btnFitToggle, window.handleFitToggle);
-      bindDockBtn(btnHideAll, function() { toggleHideAll(true); });
-      bindDockBtn(btnRestore, function() { toggleHideAll(false); });
+      window.toggleHideAll = toggleHideAll;
 
       window.addEventListener('keydown', function(e) {
         if (['input', 'textarea', 'select'].includes(document.activeElement?.tagName?.toLowerCase())) return;
@@ -2244,6 +2247,8 @@ app.get([
       }
 
       function handleLiveUserInteraction(e) {
+        // Tránh kích hoạt khi người dùng đang bấm vào dock hoặc restore icon
+        if (e && e.target && (e.target.closest('#controlsDock') || e.target.closest('#btnRestoreIcon'))) return;
         // Bấm vào giữa màn hình video: BẬT VOICE (unmute) và phát video tức thì
         targetSoundEnabled = true;
         try {
@@ -2429,6 +2434,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       display: flex; align-items: center; justify-content: center;
       background: #000;
       overflow: hidden;
+      z-index: 1;
     }
     video {
       width: 100%; height: 100%;
@@ -2454,7 +2460,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       position: fixed !important;
       top: 12px !important;
       left: 50% !important;
-      transform: translateX(-50%) !important;
+      transform: translateX(-50%) translateZ(9999px) !important;
       display: inline-flex !important;
       flex-direction: row !important;
       align-items: center !important;
@@ -2470,6 +2476,8 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       border: 1.5px solid rgba(6, 182, 212, 0.75) !important;
       box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9), 0 0 16px rgba(6, 182, 212, 0.35) !important;
       z-index: 2147483647 !important;
+      isolation: isolate !important;
+      will-change: transform !important;
       opacity: 0.98 !important;
       pointer-events: auto !important;
       -webkit-app-region: no-drag !important;
@@ -2481,7 +2489,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       transition: all 0.2s cubic-bezier(0.4, 0, 0.2, 1) !important;
     }
     #controlsDock.is-hidden { display: none !important; }
-    #controlsDock:hover { opacity: 1 !important; transform: translateX(-50%) scale(1.02) !important; }
+    #controlsDock:hover { opacity: 1 !important; transform: translateX(-50%) translateZ(9999px) scale(1.02) !important; }
     .dock-btn {
       background: rgba(255, 255, 255, 0.15) !important;
       border: 1px solid rgba(255, 255, 255, 0.35) !important;
@@ -2663,16 +2671,16 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
 
   <!-- BẢNG ĐIỀU KHIỂN NỔI DOCK TOÀN CỤC CẤP BODY — CHỐNG BỊ GPU VIDEO LAYER CHE KHUẤT -->
   <div id="controlsDock">
-    <button id="btnLiveStatus" class="dock-btn dock-btn-live" type="button" title="Luồng Trực Tiếp 60 FPS (Bấm để làm mới & đồng bộ luồng)">
+    <button id="btnLiveStatus" class="dock-btn dock-btn-live" type="button" onclick="window.handleLiveRefreshToggle(event)" title="Luồng Trực Tiếp 60 FPS (Bấm để làm mới & đồng bộ luồng)">
       <span class="dock-pulse-dot"></span>• TRỰC TIẾP 60FPS
     </button>
-    <button id="btnPlayPause" class="dock-btn" type="button" title="Tạm dừng / Tiếp tục độc lập (Phím tắt: Space)">⏸️ Tạm Dừng</button>
-    <button id="btnMuteUnmute" class="dock-btn" type="button" title="Bật / Tắt âm thanh độc lập (Phím tắt: M)">${soundParam ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}</button>
-    <button id="btnFitToggle" class="dock-btn" type="button" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa Khung' : '📐 Tràn Màn'}</button>
-    <button id="btnHideAll" class="dock-btn dock-btn-hide" type="button" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn Nút (H)</button>
+    <button id="btnPlayPause" class="dock-btn" type="button" onclick="window.handlePlayPauseToggle(event)" title="Tạm dừng / Tiếp tục độc lập (Phím tắt: Space)">⏸️ Tạm Dừng</button>
+    <button id="btnMuteUnmute" class="dock-btn" type="button" onclick="window.handleMuteToggle(event)" title="Bật / Tắt âm thanh độc lập (Phím tắt: M)">${soundParam ? '🔇 Tắt Tiếng' : '🔊 Bật Tiếng'}</button>
+    <button id="btnFitToggle" class="dock-btn" type="button" onclick="window.handleFitToggle(event)" title="Chuyển chế độ Khung hình (Tràn / Vừa)">${fitParam === 'contain' ? '📐 Vừa Khung' : '📐 Tràn Màn'}</button>
+    <button id="btnHideAll" class="dock-btn dock-btn-hide" type="button" onclick="window.toggleHideAll(true, event)" title="Ẩn toàn bộ nút trên giao diện video để bắt hình sạch 100% (Phím tắt: H)">✕ Ẩn Nút (H)</button>
   </div>
 
-  <button id="btnRestoreIcon" type="button" title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)">👁️</button>
+  <button id="btnRestoreIcon" type="button" onclick="window.toggleHideAll(false, event)" title="Bấm để hiện lại toàn bộ nút chức năng (Phím tắt: H)">👁️</button>
 
   <script>
     (function() {
@@ -2680,6 +2688,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       const badge = document.getElementById('badge');
       const dock = document.getElementById('controlsDock');
       const btnRestore = document.getElementById('btnRestoreIcon');
+      const btnLiveStatus = document.getElementById('btnLiveStatus');
       const btnPlayPause = document.getElementById('btnPlayPause');
       const btnMuteUnmute = document.getElementById('btnMuteUnmute');
       const btnFitToggle = document.getElementById('btnFitToggle');
@@ -2720,7 +2729,8 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       }
       applyDockVisibility();
 
-      function toggleHideAll(forceVal) {
+      function toggleHideAll(forceVal, e) {
+        if (e) { try { e.preventDefault(); e.stopPropagation(); } catch(err) {} }
         isDockHidden = typeof forceVal === 'boolean' ? forceVal : !isDockHidden;
         try {
           localStorage.setItem('avalive_window_capture_dock_hidden', String(isDockHidden));
@@ -2729,7 +2739,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       }
 
       function updateDockUI() {
-        const anyPaused = isStreamUserPaused;
+        const anyPaused = isStreamUserPaused || (vid && vid.paused);
         if (btnPlayPause) {
           btnPlayPause.innerHTML = anyPaused ? '▶️ Tiếp Tục' : '⏸️ Tạm Dừng';
           btnPlayPause.style.background = anyPaused ? 'rgba(16, 185, 129, 0.45)' : 'rgba(255, 255, 255, 0.15)';
@@ -2742,6 +2752,8 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         }
         if (btnFitToggle) {
           btnFitToggle.innerHTML = currentFit === 'cover' ? '📐 Tràn Màn' : '📐 Vừa Khung';
+          btnFitToggle.style.background = currentFit === 'cover' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(255, 255, 255, 0.15)';
+          btnFitToggle.style.borderColor = currentFit === 'cover' ? '#a855f7' : 'rgba(255, 255, 255, 0.35)';
         }
       }
 
@@ -2769,7 +2781,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         }
       }
 
-      function handlePlayPauseAction(e) {
+      window.handlePlayPauseToggle = function(e) {
         if (e) {
           try { e.preventDefault(); e.stopPropagation(); } catch(err) {}
         }
@@ -2804,9 +2816,9 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
             });
           } catch(e) {}
         }
-      }
+      };
 
-      function handleMuteAction(e) {
+      window.handleMuteToggle = function(e) {
         if (e) {
           try { e.preventDefault(); e.stopPropagation(); } catch(err) {}
         }
@@ -2830,20 +2842,25 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
             });
           } catch(e) {}
         }
-      }
+      };
 
-      function handleFitAction(e) {
+      window.handleFitToggle = function(e) {
         if (e) {
           try { e.preventDefault(); e.stopPropagation(); } catch(err) {}
         }
         currentFit = currentFit === 'cover' ? 'contain' : 'cover';
+        try { localStorage.setItem('avalive_media_fit_mode', currentFit); } catch(e) {}
         if (vid) vid.style.objectFit = currentFit;
         const imgEl = document.getElementById('imagePlayer');
         if (imgEl) imgEl.style.objectFit = currentFit;
+        const pipV = document.getElementById('secondaryVideoPlayer');
+        if (pipV) pipV.style.objectFit = currentFit;
+        const pipI = document.getElementById('secondaryImagePlayer');
+        if (pipI) pipI.style.objectFit = currentFit;
         updateDockUI();
-      }
+      };
 
-      function handleLiveRefreshAction(e) {
+      window.handleLiveRefreshToggle = function(e) {
         if (e) {
           try { e.preventDefault(); e.stopPropagation(); } catch(err) {}
         }
@@ -2875,44 +2892,9 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           safePlay();
         }
         updateDockUI();
-      }
+      };
 
-      function bindDockBtn(el, actionFn) {
-        if (!el) return;
-        let lastAction = 0;
-        function execute(e) {
-          if (e) {
-            try { e.preventDefault(); e.stopPropagation(); } catch(err) {}
-          }
-          const now = Date.now();
-          if (now - lastAction < 150) return;
-          lastAction = now;
-          try {
-            el.style.transform = 'scale(0.92)';
-            setTimeout(function() { el.style.transform = ''; }, 120);
-            actionFn(e);
-          } catch(err) {
-            console.error('Dock action error:', err);
-          }
-        }
-        el.addEventListener('pointerdown', execute, { passive: false });
-        el.addEventListener('touchstart', execute, { passive: false });
-        el.addEventListener('click', execute);
-      }
-
-      window.handleLiveRefreshToggle = handleLiveRefreshAction;
-      window.handlePlayPauseToggle = handlePlayPauseAction;
-      window.handleMuteToggle = handleMuteAction;
-      window.handleFitToggle = handleFitAction;
       window.toggleHideAll = toggleHideAll;
-
-      const btnLiveStatus = document.getElementById('btnLiveStatus');
-      bindDockBtn(btnLiveStatus, handleLiveRefreshAction);
-      bindDockBtn(btnPlayPause, handlePlayPauseAction);
-      bindDockBtn(btnMuteUnmute, handleMuteAction);
-      bindDockBtn(btnFitToggle, handleFitAction);
-      bindDockBtn(btnHideAll, function(e) { toggleHideAll(true); });
-      bindDockBtn(btnRestore, function(e) { toggleHideAll(false); });
 
       // PHÍM TẮT BÀN PHÍM TOÀN CỤC CHO STREAMER
       window.addEventListener('keydown', function(e) {
