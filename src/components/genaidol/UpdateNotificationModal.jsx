@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.90';
+export const APP_VERSION = '4.9.91';
 export const RELEASE_DATE = '28/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '✨ Bản Cập Nhật v4.9.90 - Ẩn Bước Kịch Bản Chạy Ngầm, Đồng Bộ Nền Realtime 0ms & Tự Động Ngắt Sạch Sân Khấu',
-    description: '1. Ẩn Hoàn Toàn Tiến Trình Bước Kịch Bản: Các bước (Bước 1, Bước 2, Bước 3...) chỉ chạy ẩn dưới nền kịch bản, tuyệt đối không hiển thị đè lên Sân Khấu Chính, Window Capture OBS và TikTok Live Studio. 2. Đồng Bộ Nền Realtime 0ms: Luồng video/ảnh nền và đa lớp nhảy liên tục theo kịch bản, không còn bị đứng một khung hình hay thiếu nền. 3. Tự Động Ngắt Lập Tức: Khi dừng phát hoặc xóa sân khấu chính, Window Capture và TikTok Live Studio lập tức ngắt sạch về màn hình đen 0ms.'
+    title: '✨ Bản Cập Nhật v4.9.91 - Ngắt Sân Khấu Phụ Ra Sân Khấu Chính 0ms, Độc Lập 3 Video Avatar & Sửa Màn Hình Đen TikTok Live Studio',
+    description: '1. Sân Khấu Phụ Tắt/Xóa Dữ Liệu -> Sân Khấu Chính Ngắt Lập Tức: Khi AI Avatar / Sân Khấu Phụ tắt hoặc xóa hết dữ liệu, Sân Khấu Chính, Window Capture OBS và TikTok Live Studio tự động ngắt sạch về màn hình đen 0ms. 2. Độc Lập 100% Video Các Avatar: Sửa triệt để lỗi 3 video khác nhau ở sân khấu phụ bị biến thành 3 video giống nhau ngoài sân khấu chính; mỗi avatar luôn giữ chuẩn xác video riêng. 3. Sửa Lỗi Màn Hình Đen Link TikTok Live Studio: Loại bỏ hoàn toàn lỗi cú pháp JavaScript khiến link bị kẹt màn hình đen. 4. Window Capture OBS Đầy Đủ 100% Các Lớp: Khớp hoàn toàn vị trí, đa lớp và chuyển cảnh siêu mượt.'
   }
 ];
 

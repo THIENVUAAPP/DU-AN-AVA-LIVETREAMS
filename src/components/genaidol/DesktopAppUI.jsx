@@ -540,11 +540,24 @@ export default function DesktopAppUI() {
   const [showMultiAvatarStudioModal, setShowMultiAvatarStudioModal] = useState(false);
   const [activeSpeakerId, setActiveSpeakerId] = useState(null);
   const [isSpeakerActive, setIsSpeakerActive] = useState(false);
+  const [isStageExplicitlyCleared, setIsStageExplicitlyCleared] = useState(false);
 
   useEffect(() => {
     const handleMultiAvatarChange = (e) => {
       if (e.detail) {
-        setMultiAvatarConfig(e.detail);
+        const incoming = e.detail;
+        setMultiAvatarConfig(incoming);
+        if (incoming.enabled === false || incoming.clearMedia === true) {
+          setIsStageExplicitlyCleared(true);
+          setUserLockedMediaUrl('');
+          if (desktopVideoRef.current) {
+            desktopVideoRef.current.pause();
+            desktopVideoRef.current.src = '';
+          }
+          setIsVideoPlaying(false);
+        } else if (incoming.enabled === true) {
+          setIsStageExplicitlyCleared(false);
+        }
       } else {
         setMultiAvatarConfig(getMultiAvatarConfig());
       }
@@ -566,6 +579,7 @@ export default function DesktopAppUI() {
       if (!isSynced) {
         setFlowSequencerOverlay(null);
         setUserLockedMediaUrl(null);
+        setIsStageExplicitlyCleared(true);
         try {
           localStorage.removeItem('avalive_master_sync_active');
           localStorage.removeItem('avalive_sequencer_overlay');
@@ -577,21 +591,14 @@ export default function DesktopAppUI() {
           fromSequencer: false,
           enabled: false
         }));
-        // Khôi phục video/ảnh của nhân vật đang chọn
-        const customMatch = (customCharacters && Array.isArray(customCharacters)) 
-          ? customCharacters.find(c => c.id === selectedCharacter && (c.url || c.mediaUrl)) 
-          : null;
-        const charUrl = customMatch?.url || (selectedCharacter && CHARACTERS[selectedCharacter]?.url) || '';
+        // ⚡ NGẮT SẠCH SÂN KHẤU CHÍNH VỀ NỀN ĐEN 0MS — TUYỆT ĐỐI KHÔNG KHÔI PHỤC VIDEO CŨ
         if (desktopVideoRef.current) {
-          if (charUrl && (!customMatch || customMatch.type === 'video')) {
-            desktopVideoRef.current.src = charUrl;
-            desktopVideoRef.current.currentTime = 0;
-            desktopVideoRef.current.play().catch(() => {});
-          } else {
-            desktopVideoRef.current.pause();
-            desktopVideoRef.current.src = '';
-          }
+          desktopVideoRef.current.pause();
+          desktopVideoRef.current.src = '';
         }
+        setIsVideoPlaying(false);
+      } else {
+        setIsStageExplicitlyCleared(false);
       }
     };
 
@@ -733,7 +740,9 @@ export default function DesktopAppUI() {
         fromSequencer: false,
         enabled: false
       }));
-      // Xóa trắng Sân Khấu Chính (clear stage) — KHÔNG restore video cũ
+      // Xóa trắng Sân Khấu Chính (clear stage) 0ms — KHÔNG restore video cũ
+      setIsStageExplicitlyCleared(true);
+      setIsVideoPlaying(false);
       if (desktopVideoRef.current) {
         desktopVideoRef.current.pause();
         desktopVideoRef.current.src = '';
@@ -2085,6 +2094,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       zIndex: 35
     } : null);
 
+    const hasAnyAvatars = (flowSequencerOverlay?.syncedAvatars && flowSequencerOverlay.syncedAvatars.length > 0) ||
+      (multiAvatarConfig?.enabled && (multiAvatarConfig?.avatars || []).some(a => a.talkVideo || a.idleVideo || a.mediaUrl || a.videoUrl || a.resolvedVidSrc));
+    const hasAnyStageMedia = !!broadcastUrl || !!flowSequencerOverlay?.mainMediaUrl || !!secMedia || !!bannerImg || hasAnyAvatars;
+    const shouldClearMedia = isStageExplicitlyCleared || !hasAnyStageMedia;
+
     return {
       stage: 'idol',
       selectedCharacter: selectedCharacter,
@@ -2093,7 +2107,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       mainMediaUrl: (flowSequencerOverlay && flowSequencerOverlay.mainMediaUrl) || broadcastUrl || null,
       mainMediaTransform: (flowSequencerOverlay && flowSequencerOverlay.mainMediaTransform) || null,
       mainMediaChromaKey: (flowSequencerOverlay && flowSequencerOverlay.mainMediaChromaKey) || null,
-      clearMedia: !broadcastUrl,
+      clearMedia: shouldClearMedia,
       isVideo: isVid,
       videoPlaybackEvent: isVideoPlaying ? 'play' : 'pause',
       videoCurrentTime: curTime,
@@ -2904,9 +2918,48 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             setTimeout(() => { isInternalPlaybackChangeRef.current = false; }, 300);
           }
 
+          // 1.4. Xóa trắng sân khấu & Ngắt sạch lập tức 0ms khi nhận lệnh CLEAR_STAGE
+          if (event.data.type === 'CLEAR_STAGE' || (event.data.clearMedia === true && !event.data.mediaUrl)) {
+            setIsStageExplicitlyCleared(true);
+            setIsMasterStageSynced(false);
+            setFlowSequencerOverlay(null);
+            setUserLockedMediaUrl('');
+            setMultiAvatarConfig(prev => ({ ...prev, enabled: false, _syncedFromSequencer: false }));
+            if (desktopVideoRef.current) {
+              desktopVideoRef.current.pause();
+              desktopVideoRef.current.src = '';
+            }
+            setIsVideoPlaying(false);
+          }
+
+          if (event.data.type === 'MULTI_AVATAR_UPDATE' && event.data.config) {
+            setMultiAvatarConfig(event.data.config);
+            if (event.data.config.enabled === false) {
+              setIsStageExplicitlyCleared(true);
+              if (desktopVideoRef.current) {
+                desktopVideoRef.current.pause();
+                desktopVideoRef.current.src = '';
+              }
+              setIsVideoPlaying(false);
+            } else {
+              setIsStageExplicitlyCleared(false);
+            }
+          }
+
           // 1.5. Đồng bộ đổi Video Nhân Vật tức thì từ Window Capture sang Phần Mềm
           if (event.data.type === 'GLOBAL_MEDIA_CHANGE') {
             if (event.data.source === 'desktop') return;
+            if (event.data.clearMedia === true) {
+              setIsStageExplicitlyCleared(true);
+              setUserLockedMediaUrl('');
+              if (desktopVideoRef.current) {
+                desktopVideoRef.current.pause();
+                desktopVideoRef.current.src = '';
+              }
+              setIsVideoPlaying(false);
+              return;
+            }
+            setIsStageExplicitlyCleared(false);
             const newUrl = event.data.mediaUrl;
             const newCharId = event.data.characterId || event.data.selectedCharacter;
             if (newUrl) {
@@ -5238,11 +5291,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             ? (userLockedMediaUrl || '') 
             : (customMatch?.url || userLockedMediaUrl || '');
           
-          const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || '';
-          const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || '';
-          const vidSrc = avatar.resolvedVidSrc || (isSpeakingNow 
-            ? (talkSrc || idleSrc || (idx === 0 ? fallbackUrl : '')) 
-            : (idleSrc || talkSrc || (idx === 0 ? fallbackUrl : '')));
+          const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || avatar.url || avatar.src || '';
+          const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || avatar.url || avatar.src || '';
+          const ownSrc = isSpeakingNow ? (talkSrc || idleSrc) : (idleSrc || talkSrc);
+          // ⚡ ĐỘC LẬP 100%: Mỗi avatar dùng media riêng của mình, tuyệt đối KHÔNG gán fallbackUrl của Avatar 1 cho Avatar 2, 3!
+          const vidSrc = avatar.resolvedVidSrc || ownSrc || (idx === 0 ? fallbackUrl : '');
           
           return {
             ...avatar,
@@ -5504,6 +5557,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         mediaUrl: savedIdleVideoUrl,
         type: 'video'
       } : null;
+
+      // 🛡️ NẾU SÂN KHẤU VỪA ĐƯỢC TẮT/NGẮT ĐỒNG BỘ: GIỮ MÀN HÌNH ĐEN SẠCH SẼ, TUYỆT ĐỐI KHÔNG KHÔI PHỤC VIDEO CŨ
+      if (isStageExplicitlyCleared && !userLockedMediaUrl) {
+        return (
+          <div className="w-full h-full bg-black flex flex-col items-center justify-center text-gray-500 text-xs">
+            <span className="text-2xl mb-2">⏹️</span>
+            <span>Sân Khấu Đã Tắt • Sẵn Sàng Bắt Đầu</span>
+          </div>
+        );
+      }
 
       // 🛡️ ƯU TIÊN TUYỆT ĐỐI NHÂN VẬT/VIDEO NGƯỜI DÙNG TẢI LÊN HOẶC ĐANG CHỌN (KHÔNG BỊ CHẬP CHỜN / MẤT VIDEO)
       let selected = customMatch || 

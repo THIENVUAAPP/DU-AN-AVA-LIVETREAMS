@@ -663,14 +663,22 @@ export default function LivestreamFlowSequencer() {
         || (step.avatarTransforms && step.avatarTransforms[av.id]) 
         || av.transform 
         || { x: 5 + avIdx * 24, y: 15, width: 45, height: 75, zIndex: 10 + avIdx };
-      const vidSrc = isCurrentSpeaker 
-        ? (av.talkVideo || av.idleVideo || mediaToPlay) 
-        : (av.idleVideo || av.talkVideo || mediaToPlay);
+
+      const avTalk = av.talkVideo || av.mediaUrl || av.videoUrl || av.url || av.src || '';
+      const avIdle = av.idleVideo || av.mediaUrl || av.videoUrl || av.url || av.src || '';
+      const avOwnMedia = isCurrentSpeaker ? (avTalk || avIdle) : (avIdle || avTalk);
+      // ⚡ CHỈ fallback sang mediaToPlay khi CHỈ CÓ 1 avatar duy nhất và avatar đó chưa có media riêng
+      // Khi có từ 2 avatar trở lên, TUYỆT ĐỐI KHÔNG gán đè mediaToPlay của avatar 1 sang avatar 2, 3!
+      const vidSrc = avOwnMedia || (avatarsList.length === 1 ? mediaToPlay : '');
+
       return {
         ...av,
         id: av.id,
         name: av.name || `Nhân Vật ${avIdx + 1}`,
         resolvedVidSrc: vidSrc,
+        talkVideo: avTalk || vidSrc,
+        idleVideo: avIdle || vidSrc,
+        mediaUrl: vidSrc,
         transform,
         chromaKey: (av.chromaKey && av.chromaKey.enabled) ? av.chromaKey : null,
         isSpeakingNow: isCurrentSpeaker && isLivePlaying
@@ -1241,24 +1249,43 @@ export default function LivestreamFlowSequencer() {
       syncMasterLiveState({
         isPlaying: false,
         videoPlaybackEvent: 'pause',
-        clearMedia: false,
+        clearMedia: true,
+        mediaUrl: '',
+        mainMediaUrl: '',
         stepTitle: '',
         actionType: '',
         secondaryMediaUrl: null,
         overlayImage: null,
-        overlayText: null
+        overlayText: null,
+        syncedAvatars: [],
+        multiAvatarConfig: { ...(multiAvatarConfig || {}), enabled: false }
       });
       sendVideoControl({
         action: 'pause',
         isPlaying: false,
+        clearMedia: true,
         timestamp: Date.now()
       });
 
-      // 🔌 Ngắt kết nối đồng bộ — fire event để Sân Khấu Chính xóa sạch lớp phủ sequencer
+      // 🔌 Ngắt kết nối đồng bộ — fire event để Sân Khấu Chính xóa sạch lớp phủ sequencer & ngắt lập tức 0ms
       window.dispatchEvent(new CustomEvent('avalive:sequencer_sync_disconnected', {
-        detail: { isSynced: false, source: 'user_toggle' }
+        detail: { isSynced: false, source: 'user_toggle', clearStage: true }
       }));
-      toast.info('📴 Đã ngắt đồng bộ & dừng phát — Đã tắt toàn bộ voice và video');
+      window.dispatchEvent(new CustomEvent('avalive_multi_avatar_changed', {
+        detail: { ...(multiAvatarConfig || {}), enabled: false, clearMedia: true }
+      }));
+      try {
+        const bc = new BroadcastChannel('avalive_master_live_stream');
+        bc.postMessage({
+          type: 'CLEAR_STAGE',
+          clearMedia: true,
+          clearAvatars: true,
+          source: 'sequencer_disconnect',
+          timestamp: Date.now()
+        });
+        setTimeout(() => bc.close(), 100);
+      } catch (e) {}
+      toast.info('📴 Đã ngắt đồng bộ & dừng phát — Sân Khấu Chính và link Live tự động ngắt sạch sẽ');
     }
   };
 
@@ -1369,6 +1396,18 @@ export default function LivestreamFlowSequencer() {
     };
     setMultiAvatarConfig(updated);
     saveMultiAvatarConfig(updated);
+    window.dispatchEvent(new CustomEvent('avalive_multi_avatar_changed', { detail: updated }));
+    try {
+      const bc = new BroadcastChannel('avalive_master_live_stream');
+      bc.postMessage({
+        type: 'MULTI_AVATAR_UPDATE',
+        config: updated,
+        clearMedia: newCount === 0,
+        timestamp: Date.now()
+      });
+      setTimeout(() => bc.close(), 100);
+    } catch (e) {}
+
     setSelectedLayer(null);
     if (!skipUndo) {
       toast.info(`🗑️ Đã xóa ô Avatar khỏi Sân Khấu!`);

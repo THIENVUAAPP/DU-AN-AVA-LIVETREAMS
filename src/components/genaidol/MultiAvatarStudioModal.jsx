@@ -234,10 +234,43 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     const updated = { ...config, enabled: nextVal };
     setConfig(updated);
     saveMultiAvatarConfig(updated);
+
+    // 1. Dispatch Custom Event nội bộ cho Sân Khấu Chính
+    window.dispatchEvent(new CustomEvent('avalive_multi_avatar_changed', { 
+      detail: { ...updated, clearMedia: !nextVal } 
+    }));
+
+    // 2. BroadcastChannel cho OBS Window Capture & TikTok Live Studio
+    try {
+      const bc = new BroadcastChannel('avalive_master_live_stream');
+      bc.postMessage({
+        type: nextVal ? 'MULTI_AVATAR_UPDATE' : 'CLEAR_STAGE',
+        config: updated,
+        mediaUrl: nextVal ? (updated.backgroundUrl || '') : '',
+        clearMedia: !nextVal,
+        clearAvatars: !nextVal,
+        timestamp: Date.now()
+      });
+      setTimeout(() => bc.close(), 100);
+    } catch (e) {}
+
+    // 3. Đẩy lên Backend Live State
+    fetch('/api/live-state', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        activeTab: nextVal ? 'multi_avatar' : 'single_avatar',
+        multiAvatarConfig: updated,
+        mediaUrl: nextVal ? (updated.backgroundUrl || '') : '',
+        clearMedia: !nextVal,
+        updatedAt: Date.now()
+      })
+    }).catch(() => {});
+
     if (nextVal) {
       toast.success('✅ Đã BẬT chế độ Studio 1–4 Avatar cho phòng Live!');
     } else {
-      toast.info('⏹️ Đã TẮT Studio 1–4 Avatar, phòng Live trở về 1 Avatar tiêu chuẩn.');
+      toast.info('⏹️ Đã TẮT Studio 1–4 Avatar — Sân Khấu Chính và link Live tự động ngắt sạch sẽ.');
     }
   };
 
@@ -2059,6 +2092,20 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
                         <span className="text-[9px] text-gray-400">Chọn Avatar chuẩn HD</span>
                       </button>
                     </div>
+                    {(selectedAvatar.talkVideo || selectedAvatar.idleVideo || selectedAvatar.mediaUrl) && (
+                      <button
+                        type="button"
+                        onClick={() => {
+                          handleAvatarChange(selectedAvatar.id, 'talkVideo', '');
+                          handleAvatarChange(selectedAvatar.id, 'idleVideo', '');
+                          handleAvatarChange(selectedAvatar.id, 'mediaUrl', '');
+                          toast.info(`🗑️ Đã xóa video của ${selectedAvatar.name}`);
+                        }}
+                        className="w-full mt-1.5 py-1 px-2 rounded-lg bg-red-600/20 hover:bg-red-600/30 border border-red-500/40 text-red-300 text-[11px] font-bold flex items-center justify-center gap-1.5 cursor-pointer"
+                      >
+                        <Trash2 size={13} /> Xóa Video Nhân Vật Này
+                      </button>
+                    )}
                   </div>
 
                   {/* Tư thế mẫu 1-Click */}

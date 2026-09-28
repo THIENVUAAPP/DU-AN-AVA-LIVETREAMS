@@ -1740,7 +1740,9 @@ app.get([
           const charId = avatar.id || ('avatar_' + (idx + 1));
           let charEl = container.querySelector('[data-char-id="' + charId + '"]');
           const isSpeaking = activeSpeakerId ? (activeSpeakerId === avatar.id || activeSpeakerId === avatar.role) : (avatar.isSpeaking || avatar.isSpeakingNow);
-          const targetVid = isSpeaking && avatar.talkVideo ? avatar.talkVideo : (avatar.idleVideo || avatar.talkVideo || avatar.resolvedVidSrc || avatar.mediaUrl || avatar.videoUrl || avatar.url || avatar.src);
+          const avTalk = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || avatar.url || avatar.src || '';
+          const avIdle = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || avatar.url || avatar.src || '';
+          const targetVid = avatar.resolvedVidSrc || (isSpeaking ? (avTalk || avIdle) : (avIdle || avTalk)) || '';
           const resolvedMedia = resolveUrl(targetVid);
 
           const customTrans = (avatarTransformsMap && (avatarTransformsMap[charId] || avatarTransformsMap[avatar.id] || avatarTransformsMap[avatar.role])) || {};
@@ -2018,19 +2020,6 @@ app.get([
           const multiBg = document.getElementById('multiAvatarBg');
           if (multiBg) { multiBg.style.backgroundImage = 'none'; multiBg.style.display = 'none'; }
           hideLoading();
-          updateDockUI();
-          return;
-        }
-          if (prodContainer) prodContainer.style.display = 'none';
-          if (vid) {
-            try { vid.pause(); vid.removeAttribute('src'); vid.src = ''; vid.load(); } catch(e) {}
-            vid.style.display = 'none';
-          }
-          const imgEl = document.getElementById('imagePlayer');
-          if (imgEl) {
-            try { imgEl.removeAttribute('src'); imgEl.src = ''; } catch(e) {}
-            imgEl.style.display = 'none';
-          }
           updateDockUI();
           return;
         }
@@ -3287,7 +3276,9 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           const charId = avatar.id || ('avatar_' + (idx + 1));
           let charEl = container.querySelector('[data-char-id="' + charId + '"]');
           const isSpeaking = activeSpeakerId ? (activeSpeakerId === avatar.id || activeSpeakerId === avatar.role) : (avatar.isSpeaking || avatar.isSpeakingNow);
-          const targetVid = isSpeaking && avatar.talkVideo ? avatar.talkVideo : (avatar.idleVideo || avatar.talkVideo || avatar.resolvedVidSrc || avatar.mediaUrl || avatar.videoUrl || avatar.url || avatar.src);
+          const avTalk = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || avatar.url || avatar.src || '';
+          const avIdle = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || avatar.url || avatar.src || '';
+          const targetVid = avatar.resolvedVidSrc || (isSpeaking ? (avTalk || avIdle) : (avIdle || avTalk)) || '';
           const resolvedMedia = resolveUrl(targetVid);
 
           const customTrans = (avatarTransformsMap && (avatarTransformsMap[charId] || avatarTransformsMap[avatar.id] || avatarTransformsMap[avatar.role])) || {};
@@ -3566,8 +3557,6 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           if (multiBg) { multiBg.style.backgroundImage = 'none'; multiBg.style.display = 'none'; }
           hideLoading();
           updateDockUI();
-          return;
-        }
           return;
         }
 
@@ -4060,7 +4049,7 @@ let _cachedReleaseUrls = {};
 let _lastReleaseFetchTime = 0;
 async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
   const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
-  const targetVer = fallbackVer || '4.9.90';
+  const targetVer = fallbackVer || '4.9.91';
   const safeFallbackUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${targetVer}/${osPrefix}_v${targetVer}.zip`;
   
   const cacheKey = `${osPrefix}_v${targetVer}`;
@@ -4110,7 +4099,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.90';
+  let ver = '4.9.91';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -4150,7 +4139,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '4.9.90';
+  let ver = '4.9.91';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));

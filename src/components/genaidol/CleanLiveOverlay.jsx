@@ -2432,7 +2432,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   LIVE 9:16
                 </span>
                 <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                  v4.9.90
+                  v4.9.91
                 </span>
               </div>
 
@@ -2898,11 +2898,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                         const isSpeakingNow = isSpeakerActive && (activeSpeakerId === avatar.id || (!activeSpeakerId && avatar.id === 'idol'));
                         const fallbackUrl = activeMedia?.url || '';
                         
-                        const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || '';
-                        const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || '';
-                        const vidSrc = avatar.resolvedVidSrc || (isSpeakingNow 
-                          ? (talkSrc || idleSrc || (idx === 0 ? fallbackUrl : '')) 
-                          : (idleSrc || talkSrc || (idx === 0 ? fallbackUrl : '')));
+                        const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || avatar.url || avatar.src || '';
+                        const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || avatar.url || avatar.src || '';
+                        const ownSrc = isSpeakingNow ? (talkSrc || idleSrc) : (idleSrc || talkSrc);
+                        // ⚡ ĐỘC LẬP 100%: Mỗi avatar dùng media riêng của mình, tuyệt đối KHÔNG gán fallbackUrl của Avatar 1 cho Avatar 2, 3!
+                        const vidSrc = avatar.resolvedVidSrc || ownSrc || (idx === 0 ? fallbackUrl : '');
                         if (!vidSrc) return null;
 
                         const isImg = isImageMedia(vidSrc);
