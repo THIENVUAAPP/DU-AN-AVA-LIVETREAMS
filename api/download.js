@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     }
 
     // Đọc phiên bản mới nhất từ package.json hoặc fallback version hiện tại
-    let currentVersion = '4.9.81';
+    let currentVersion = '4.9.82';
     try {
       const fs = await import('fs');
       const path = await import('path');
@@ -34,7 +34,7 @@ export default async function handler(req, res) {
     const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
     const targetFileName = `${osPrefix}_v${currentVersion}.zip`;
 
-    let downloadUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v4.9.54/${osPrefix}_v4.9.54.zip`;
+    let downloadUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${currentVersion}/${targetFileName}`;
 
     try {
       const token = process.env.GITHUB_TOKEN || '';

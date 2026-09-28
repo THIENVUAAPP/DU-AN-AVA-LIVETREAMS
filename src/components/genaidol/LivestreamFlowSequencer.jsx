@@ -232,6 +232,10 @@ export default function LivestreamFlowSequencer() {
       return true;
     }
   });
+  const isMasterVoiceEnabledRef = useRef(isMasterVoiceEnabled);
+  useEffect(() => {
+    isMasterVoiceEnabledRef.current = isMasterVoiceEnabled;
+  }, [isMasterVoiceEnabled]);
 
   // Lưu trạng thái Master Voice & Đồng Bộ Voice Của Tất Cả Video trong Live Idol Avatar
   useEffect(() => {
@@ -994,8 +998,9 @@ export default function LivestreamFlowSequencer() {
     // 🎙️ PHÁT GIỌNG ĐỌC KHI ĐƯỢC PHÉP, MASTER VOICE BẬT VÀ BƯỚC ĐÓ BẬT VOICE
     const isStepVoiceOn = step.voiceEnabled !== false;
     const hasScriptText = !!(step.scriptText && step.scriptText.trim());
+    const masterVoiceOn = isMasterVoiceEnabledRef.current || isMasterVoiceEnabled || (typeof localStorage !== 'undefined' && localStorage.getItem('avalive_master_voice_enabled') !== 'false');
 
-    if (shouldPlay && isMasterVoiceEnabled && isStepVoiceOn && hasScriptText) {
+    if (shouldPlay && masterVoiceOn && isStepVoiceOn && hasScriptText) {
       const effectiveVoiceId = (!step.voiceId || step.voiceId === 'brain_auto')
         ? getBrainVoiceForSpeaker(step.avatarSpeaker)
         : step.voiceId;
@@ -1040,6 +1045,7 @@ export default function LivestreamFlowSequencer() {
       previewVoiceAudio(effectiveVoiceId, step.scriptText.trim(), onSpeechFinished, { 
         priority: true, 
         isTest: true, 
+        isScript: true,
         volume: 1.0, 
         rate: step.voiceRate || 1.0,
         sentencePauseSeconds: step.sentencePauseSeconds !== undefined ? step.sentencePauseSeconds : 0
@@ -1135,16 +1141,19 @@ export default function LivestreamFlowSequencer() {
         if (typeof localStorage !== 'undefined') {
           localStorage.removeItem('aidol_user_paused_script');
           localStorage.removeItem('avalive_user_paused');
+          localStorage.removeItem('avalive_window_capture_paused');
+          localStorage.removeItem('avalive_audio_muted');
+          localStorage.removeItem('avalive_local_speaker_muted');
           localStorage.setItem('aidol_is_script_live_running', 'true');
+          localStorage.setItem('avalive_master_voice_enabled', 'true');
         }
         if (typeof window !== 'undefined') {
           window.__aidolUserPausedScript = false;
           window.__isScriptLiveRunning = true;
         }
       } catch (e) {}
-      if (!isMasterVoiceEnabled) {
-        setIsMasterVoiceEnabled(true);
-      }
+      isMasterVoiceEnabledRef.current = true;
+      setIsMasterVoiceEnabled(true);
       isPlayingFlowRef.current = true;
       setIsPlayingFlow(true);
       startStep(currentStepIndex, true);
@@ -2661,6 +2670,11 @@ export default function LivestreamFlowSequencer() {
     try {
       if (typeof localStorage !== 'undefined') {
         localStorage.removeItem('aidol_user_paused_script');
+        localStorage.removeItem('avalive_user_paused');
+        localStorage.removeItem('avalive_window_capture_paused');
+        localStorage.removeItem('avalive_audio_muted');
+        localStorage.removeItem('avalive_local_speaker_muted');
+        localStorage.setItem('avalive_master_voice_enabled', 'true');
       }
       if (typeof window !== 'undefined') {
         window.__aidolUserPausedScript = false;
@@ -2688,6 +2702,8 @@ export default function LivestreamFlowSequencer() {
     }, {
       priority: true,
       isTest: true,
+      isScript: true,
+      volume: 1.0,
       rate: voiceRate,
       sentencePauseSeconds
     });

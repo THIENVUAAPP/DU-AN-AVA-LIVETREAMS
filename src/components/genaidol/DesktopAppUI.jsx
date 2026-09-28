@@ -886,7 +886,17 @@ export default function DesktopAppUI() {
     if (next) {
       try {
         localStorage.removeItem('aidol_user_paused_script');
-        if (typeof window !== 'undefined') window.__aidolUserPausedScript = false;
+        localStorage.removeItem('avalive_user_paused');
+        localStorage.removeItem('avalive_window_capture_paused');
+        localStorage.removeItem('avalive_audio_muted');
+        localStorage.removeItem('avalive_local_speaker_muted');
+        localStorage.setItem('aidol_is_script_live_running', 'true');
+        localStorage.setItem('avalive_master_voice_enabled', 'true');
+        if (typeof window !== 'undefined') {
+          window.__aidolUserPausedScript = false;
+          window.__isScriptLiveRunning = true;
+        }
+        setIsLocalSpeakerMuted(false);
       } catch (e) {}
       const chosen = scriptTabsList.find(t => t.active) || scriptTabsList[0];
       let scriptText = chosen?.fixedScriptText || '';

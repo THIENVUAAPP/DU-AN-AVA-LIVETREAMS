@@ -8931,6 +8931,7 @@ export async function previewVoiceAudio(voiceOrId, sampleText = null, onEndOrPri
     ...voiceObj,
     isTest: isTest || customOptions.isTest || false,
     priority: priority || customOptions.priority || false,
+    isScript: customOptions.isScript || voiceObj.isScript || false,
     volume: customOptions.volume !== undefined ? customOptions.volume : (voiceObj.volume !== undefined ? voiceObj.volume : 1.0),
     rate: customOptions.rate !== undefined ? customOptions.rate : (voiceObj.rate !== undefined ? voiceObj.rate : 1.0),
     pitch: customOptions.pitch !== undefined ? customOptions.pitch : (voiceObj.pitch !== undefined ? voiceObj.pitch : 1.0),
@@ -8976,17 +8977,25 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
   stopCurrentActiveAudioNode();
   const thisSpeechId = ++currentSpeechGenerationId;
 
-  const isTestingMode = isTest === true || voice?.isTest === true || voice?.priority === true;
+  const isTestingMode = isTest === true || voice?.isTest === true || voice?.priority === true || voice?.isScript === true;
 
-  const isUserPaused = typeof localStorage !== 'undefined' && (
-    localStorage.getItem('avalive_user_paused') === 'true' || 
-    localStorage.getItem('avalive_window_capture_paused') === 'true' ||
+  const isScriptPaused = typeof localStorage !== 'undefined' && (
     localStorage.getItem('aidol_user_paused_script') === 'true' ||
     (typeof window !== 'undefined' && window.__aidolUserPausedScript === true)
   );
-  if (!isTestingMode && isUserPaused) {
-    // 🛡️ KHÓA CHẶT: Khi người dùng đã tắt / dừng kịch bản, TUYỆT ĐỐI KHÔNG gọi onEnd() tránh tự nhảy câu tiếp theo
-    return false;
+  const isGlobalPaused = typeof localStorage !== 'undefined' && (
+    localStorage.getItem('avalive_user_paused') === 'true' || 
+    localStorage.getItem('avalive_window_capture_paused') === 'true'
+  );
+
+  if (isTestingMode) {
+    if (isScriptPaused && voice?.isScript === true) {
+      return false;
+    }
+  } else {
+    if (isScriptPaused || isGlobalPaused) {
+      return false;
+    }
   }
 
   const requestedVolume = voice?.volume !== undefined ? Math.max(0, Math.min(2.0, Number(voice.volume))) : 1.0;
@@ -9000,9 +9009,9 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     localStorage.getItem('avalive_audio_muted') === 'true'
   );
 
-  const effectiveVoiceVolume = isTestingMode 
-    ? requestedVolume 
-    : (isLocalSpeakerMuted ? 0 : Math.max(0, Math.min(2.0, requestedVolume * (savedGlobalVol !== null && !isNaN(savedGlobalVol) ? savedGlobalVol : 1.0))));
+  const effectiveVoiceVolume = (isTestingMode || voice?.isScript) 
+    ? Math.max(0.8, requestedVolume) 
+    : (isLocalSpeakerMuted ? 0 : Math.max(0.2, Math.min(2.0, requestedVolume * (savedGlobalVol !== null && !isNaN(savedGlobalVol) ? savedGlobalVol : 1.0))));
 
   const isVietnameseVoice = voice?.lang === 'vi-VN' || voice?.region === 'vi' || voice?.id?.startsWith('vn_') || voice?.id === 'free_vi_female' || voice?.id === 'el_adam';
   const rawLang = voice?.lang || (isVietnameseVoice ? 'vi-VN' : 'en-US');

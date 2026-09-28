@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.81';
+export const APP_VERSION = '4.9.82';
 export const RELEASE_DATE = '28/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v4.9.81 - Đồng Bộ Khung Hình Chuẩn 9:16 & Sao Chép 100% Sân Khấu Chính Sang Window Capture & TikTok Live Studio',
-    description: '1. Khớp Chuẩn Tuyệt Đối Tỷ Lệ & Tọa Độ Sân Khấu Chính: Đồng bộ khung hình dọc tỷ lệ chuẩn 9:16 trên cả Window Capture OBS và đường link TikTok Live Studio, sao chép 100% vị trí, kích thước, hiệu ứng transform và khung hình avatar đa tầng từ Sân Khấu Chính. 2. Loại Bỏ Hiện Tượng Tràn Lệch & Méo Khung Hình: Loại bỏ hoàn toàn lỗi vỡ tỷ lệ khi mở trên màn hình rộng 16:9, đảm bảo video nền và nhân vật hiển thị siêu sắc nét, mượt mà 60 FPS không giật lag. 3. Khóa Chặt 100% Mọi Tab Module Hệ Thống: Bảo toàn nguyên vẹn toàn bộ các tab và cấu hình tính năng khác.'
+    title: '🎙️ Bản Cập Nhật v4.9.82 - Khắc Phục Triệt Để Giọng Đọc Kịch Bản Avatar Live Idol & Phát Kịch Bản Live, Tự Động Phân Giải File ZIP Mới Nhất',
+    description: '1. Sửa Lỗi Giọng Đọc Kịch Bản AI Bị Câm: Loại bỏ triệt để xung đột cờ tạm dừng video (avalive_user_paused, avalive_window_capture_paused, avalive_audio_muted) khi chạy kịch bản Avatar Live IDOL và nút Phát Kịch Bản Live ngoài phần mềm, âm thanh cất giọng ngay lập tức, to rõ, chuẩn âm sắc. 2. Độc Lập Hóa Trạng Thái Phát Kịch Bản: Khi bấm phát kịch bản, hệ thống kích hoạt trực tiếp luồng voice AI ưu tiên mà không bị chặn bởi trạng thái Master Live hay video nền. 3. Phục Vụ Gói Cài Đặt ZIP Mới Nhất: Cập nhật tự động phân giải phiên bản mới nhất cho cả hệ điều hành Windows và macOS.'
   }
 ];
 
