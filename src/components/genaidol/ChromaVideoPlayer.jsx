@@ -70,18 +70,29 @@ const ChromaVideoPlayer = ({
             const g = data[i + 1];
             const b = data[i + 2];
             const maxRB = Math.max(r, b);
-            const diff = g - maxRB;
+            const greenExcess = g - maxRB;
 
-            if (diff > 10 && g > 38 && g > r * 1.08 && g > b * 1.05) {
-              if (diff < 30) {
-                const a = 1.0 - (diff - 10) / 20;
-                data[i + 1] = maxRB; // Khử ám xanh lá viền (Despill)
-                data[i + 3] = Math.round(a * 255);
-              } else {
-                data[i + 3] = 0; // Trong suốt 100%
+            const isSkin = (r > 80 && g > 45 && b > 30 && r > g && r > b && (r - b) >= 6);
+
+            if (isSkin) {
+              // Bảo vệ da mặt & cơ thể, khử ánh xanh phản chiếu
+              if (r - g < 14 && g > b) {
+                data[i + 1] = Math.round(r * 0.86 + b * 0.14);
               }
-            } else if (g > maxRB && g > 45) {
-              data[i + 1] = Math.round((g + maxRB) / 2); // Khử ám nhẹ
+            } else if (greenExcess > 0) {
+              const clipBlack = 26;
+              if (greenExcess >= clipBlack) {
+                data[i + 3] = 0; // Trong suốt 100%
+              } else {
+                const norm = greenExcess / clipBlack;
+                data[i + 3] = Math.max(0, Math.min(255, Math.round((1.0 - norm) * 255)));
+                data[i + 1] = maxRB; // Despill viền
+              }
+            }
+
+            // Global Multi-Color Despill
+            if (data[i + 1] > Math.max(data[i], data[i + 2])) {
+              data[i + 1] = Math.max(data[i], data[i + 2]);
             }
           }
         } else if (chromaMode === 'blue') {
@@ -90,16 +101,21 @@ const ChromaVideoPlayer = ({
             const g = data[i + 1];
             const b = data[i + 2];
             const maxRG = Math.max(r, g);
-            const diff = b - maxRG;
+            const blueExcess = b - maxRG;
 
-            if (diff > 10 && b > 38 && b > r * 1.08 && b > g * 1.05) {
-              if (diff < 30) {
-                const a = 1.0 - (diff - 10) / 20;
-                data[i + 2] = maxRG; // Despill xanh dương
-                data[i + 3] = Math.round(a * 255);
-              } else {
+            if (blueExcess > 0) {
+              const clipBlack = 26;
+              if (blueExcess >= clipBlack) {
                 data[i + 3] = 0;
+              } else {
+                const norm = blueExcess / clipBlack;
+                data[i + 3] = Math.max(0, Math.min(255, Math.round((1.0 - norm) * 255)));
+                data[i + 2] = maxRG;
               }
+            }
+
+            if (data[i + 2] > Math.max(data[i], data[i + 1])) {
+              data[i + 2] = Math.max(data[i], data[i + 1]);
             }
           }
         } else if (chromaMode === 'red') {
@@ -108,15 +124,15 @@ const ChromaVideoPlayer = ({
             const g = data[i + 1];
             const b = data[i + 2];
             const maxGB = Math.max(g, b);
-            const diff = r - maxGB;
+            const redExcess = r - maxGB;
 
-            if (diff > 30 && r > 90) {
-              if (diff < 50) {
-                const a = 1.0 - (diff - 30) / 20;
-                data[i] = maxGB;
-                data[i + 3] = Math.round(a * 255);
-              } else {
+            if (redExcess > 25 && r > 90) {
+              if (redExcess > 45) {
                 data[i + 3] = 0;
+              } else {
+                const norm = (redExcess - 25) / 20;
+                data[i + 3] = Math.max(0, Math.min(255, Math.round((1.0 - norm) * 255)));
+                data[i] = maxGB;
               }
             }
           }

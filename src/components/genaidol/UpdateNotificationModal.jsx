@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.97';
+export const APP_VERSION = '4.9.98';
 export const RELEASE_DATE = '29/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '✨ Bản Cập Nhật v4.9.97 - 1-Chạm Xóa Sạch Nền AI Siêu Tốc 60 FPS Chuẩn TikTok 4K (Khử Sạch Phông Xanh & Nền Phức Tạp, Bảo Vệ Tuyệt Đối Nhân Vật & Sản Phẩm)',
-    description: '1. Tinh Gọn Đúng 1 Nút Duy Nhất "✨ Xóa Nền AI": Gỡ bỏ hoàn toàn mọi lựa chọn thừa thãi theo yêu cầu người dùng, chỉ cần 1 chạm là tự động quét, bóc tách và xóa sạch 100% phông nền (ảnh & video). 2. Động Cơ Realtime Canvas Chroma Player 60 FPS: Khắc phục triệt để lỗi video phông xanh không xóa trên CEF/Electron/OBS Browser Source, khử sạch hoàn toàn nền xanh với độ trong suốt 100%, khử viền lem (despill) siêu mượt. 3. Thuật Toán Matting Trực Tiếp Đột Phá: Bóc tách từng chi tiết tóc tơ, trang phục và sản phẩm bán hàng, không để lại bất kỳ vết lem nền nào. 4. Khóa chặt 100% mọi tab chức năng và hệ thống.'
+    title: '✨ Bản Cập Nhật v4.9.98 - Đột Phá AI Keylight Hollywood Chuẩn TikTok 4K (Khử Sạch 100% Ám Xanh Phản Chiếu, Bảo Toàn Làn Da & Tóc Tơ Tự Nhiên)',
+    description: '1. Thuật Toán Hollywood Keylight Bóc Tách Trực Tiếp: Tính toán liên tục độ lệch sắc tố phông nền, loại bỏ sạch 100% phông xanh/lam ngay cả trong vùng đổ bóng tối nhất. 2. Khử Ám Xanh Toàn Diện (Skin & Multi-Color Despill): Tự động trung hòa ánh sáng xanh phản chiếu từ phông phòng thu lên da mặt, cánh tay và trang phục, trả lại màu da hồng hào và tóc tơ đen mượt tự nhiên. 3. Video Chroma 60 FPS Siêu Mượt: Đồng bộ động cơ Canvas Keylight 60 FPS trên toàn bộ luồng phát TikTok Live Studio & OBS Browser Source. 4. Khóa chặt 100% tất cả các tab và module khác.'
   }
 ];
 
