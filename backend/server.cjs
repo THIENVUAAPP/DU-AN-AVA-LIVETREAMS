@@ -4151,7 +4151,7 @@ let _cachedReleaseUrls = {};
 let _lastReleaseFetchTime = 0;
 async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
   const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
-  const targetVer = fallbackVer || '5.0.4';
+  const targetVer = fallbackVer || '5.0.5';
   const cacheKey = `${osPrefix}_v${targetVer}`;
   if (_cachedReleaseUrls[cacheKey] && (Date.now() - _lastReleaseFetchTime < 60000)) {
     return _cachedReleaseUrls[cacheKey];
@@ -4209,7 +4209,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '5.0.4';
+  let ver = '5.0.5';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -4247,7 +4247,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '5.0.4';
+  let ver = '5.0.5';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -5344,10 +5344,45 @@ function syncToVercelCloudState() {
   _syncVercelTimer = setTimeout(async () => {
     try {
       if (!currentMasterLiveState) return;
+      const tunnel = currentTunnelUrl || currentMasterLiveState.tunnelUrl || null;
+      
+      const toAbsoluteUrl = (u) => {
+        if (!u || typeof u !== 'string') return u;
+        if (u.startsWith('http://') || u.startsWith('https://') || u.startsWith('data:')) return u;
+        if (tunnel && u.includes('/uploads/')) {
+          const pathPart = u.substring(u.indexOf('/uploads/'));
+          return `${tunnel.replace(/\/$/, '')}${pathPart}`;
+        }
+        return u;
+      };
+
       const bodyData = {
         ...currentMasterLiveState,
-        tunnelUrl: currentTunnelUrl || currentMasterLiveState.tunnelUrl || null
+        tunnelUrl: tunnel,
+        mediaUrl: toAbsoluteUrl(currentMasterLiveState.mediaUrl),
+        mainMediaUrl: toAbsoluteUrl(currentMasterLiveState.mainMediaUrl),
+        secondaryMediaUrl: toAbsoluteUrl(currentMasterLiveState.secondaryMediaUrl),
+        overlayImage: toAbsoluteUrl(currentMasterLiveState.overlayImage),
+        backgroundUrl: toAbsoluteUrl(currentMasterLiveState.backgroundUrl),
+        syncedAvatars: Array.isArray(currentMasterLiveState.syncedAvatars)
+          ? currentMasterLiveState.syncedAvatars.map(a => ({
+              ...a,
+              resolvedVidSrc: toAbsoluteUrl(a.resolvedVidSrc),
+              talkVideo: toAbsoluteUrl(a.talkVideo),
+              idleVideo: toAbsoluteUrl(a.idleVideo),
+              mediaUrl: toAbsoluteUrl(a.mediaUrl),
+              url: toAbsoluteUrl(a.url)
+            }))
+          : currentMasterLiveState.syncedAvatars,
+        extraImageLayers: Array.isArray(currentMasterLiveState.extraImageLayers)
+          ? currentMasterLiveState.extraImageLayers.map(l => ({
+              ...l,
+              url: toAbsoluteUrl(l.url),
+              mediaUrl: toAbsoluteUrl(l.mediaUrl)
+            }))
+          : currentMasterLiveState.extraImageLayers
       };
+
       await fetch('https://avalivepro.vercel.app/api/live-state', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -5413,7 +5448,7 @@ app.post('/api/live-state', (req, res) => {
     delete payload.force; // Không lưu cờ force vào live state
 
     // 🗑️ NẾU YÊU CẦU XÓA MEDIA HOẶC ĐÃ XÓA VIDEO NỀN
-    if (payload.clearStage === true || payload.clearMedia === true || (payload.isMasterSynced === false && payload.clearMedia)) {
+    if (payload.clearStage === true || payload.clearMedia === true) {
       payload.mediaUrl = null;
       payload.mainMediaUrl = null;
       payload.clearMedia = true;
@@ -5430,7 +5465,7 @@ app.post('/api/live-state', (req, res) => {
       currentMasterLiveState.overlayImage = null;
       currentMasterLiveState.overlayText = null;
       currentMasterLiveState.title = null;
-    } else if (payload.isMainMediaDeleted || payload.mediaUrl === '' || payload.mediaUrl === null) {
+    } else if (payload.isMainMediaDeleted === true && !payload.mediaUrl && !payload.mainMediaUrl) {
       payload.mediaUrl = null;
       payload.mainMediaUrl = null;
       payload.clearMedia = false;
@@ -5439,7 +5474,10 @@ app.post('/api/live-state', (req, res) => {
       currentMasterLiveState.clearMedia = false;
     } else {
       payload.clearMedia = false;
+      payload.clearStage = false;
+      payload.isMainMediaDeleted = false;
       currentMasterLiveState.clearMedia = false;
+      currentMasterLiveState.isMainMediaDeleted = false;
     }
 
     // 🛡️ LỌC BỎ HOÀN TOÀN TÊN BƯỚC KỊCH BẢN (Bước 1, Bước 2, Step 1...) KHỎI overlayText

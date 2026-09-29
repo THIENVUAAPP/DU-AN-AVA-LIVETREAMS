@@ -1018,8 +1018,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
       const vid = overlayVideoRef.current || document.querySelector('video');
 
-      // 🛑 XÓA SẠCH 100% TOÀN BỘ SÂN KHẤU KHI NGẮT ĐỒNG BỘ HOẶC CÓ TÍN HIỆU CLEAR_STAGE
-      if (data.clearMedia || data.type === 'CLEAR_STAGE' || data.isMasterSynced === false || (data.isSynced === false && (data.clearMedia || data.clearStage))) {
+      // 🛑 CHỈ XÓA SÂN KHẤU KHI NGƯỜI DÙNG BẤM XÓA HOẶC CÓ TÍN HIỆU CLEAR_STAGE RÕ RÀNG
+      if (data.clearMedia === true || data.type === 'CLEAR_STAGE' || data.clearStage === true) {
         if (vid) {
           try {
             vid.pause();
@@ -1039,6 +1039,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           multiAvatarConfig: null,
           syncedAvatars: [],
           clearMedia: true,
+          clearStage: true,
           isMasterSynced: false,
           selectedCharacter: '',
           isVideo: false,
@@ -2710,58 +2711,206 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               {/* SÂN KHẤU 1: LIVE AI IDOL (HỖ TRỢ 1 AVATAR HOẶC MULTI-AVATAR STUDIO 2–4 NHÂN VẬT) */}
               {currentStage === 'idol' && (
                 <div className="w-full h-full absolute inset-0 flex items-center justify-center overflow-hidden bg-black">
-                {/* MULTI-AVATAR & SEQUENCER VISUAL STUDIO CANVAS (ĐỒNG BỘ 100% SÂN KHẤU CHÍNH) */}
-                {(!masterState?.clearMedia && masterState?.isMasterSynced !== false && (
-                  (Array.isArray(masterState?.syncedAvatars) && masterState.syncedAvatars.length > 0) ||
-                  (multiAvatarConfig?.enabled && Array.isArray(multiAvatarConfig?.avatars) && multiAvatarConfig.avatars.length > 0) ||
-                  (Array.isArray(masterState?.extraImageLayers) && masterState.extraImageLayers.length > 0) ||
-                  masterState?.mainMediaTransform
-                )) ? (() => {
-                  const sourceAvatars = (Array.isArray(masterState?.syncedAvatars) && masterState.syncedAvatars.length > 0)
+                {/* 🎬 ĐỒNG BỘ CHUẨN XÁC 100% SỐ LƯỢNG KHUNG HÌNH (1 KHUNG HÌNH = 1 VIDEO, 2 KHUNG HÌNH = 2 VIDEO) */}
+                {isStageCleared ? (
+                  <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#07080d] via-[#0d1017] to-[#040508] text-center p-6 select-none">
+                    <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-pink-600 via-rose-600 to-red-600 flex items-center justify-center mb-5 shadow-2xl shadow-rose-500/30 animate-pulse">
+                      <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                      </svg>
+                    </div>
+                    <h3 className="text-xl sm:text-2xl font-black text-white tracking-wide uppercase">SẴN SÀNG PHÁT LUỒNG (9:16)</h3>
+                    <p className="text-gray-400 text-xs mt-2 max-w-xs leading-relaxed">
+                      Vui lòng tải lên hoặc chọn video trên phần mềm để bắt đầu phát trực tiếp
+                    </p>
+                  </div>
+                ) : (() => {
+                  const rawAvatars = (Array.isArray(masterState?.syncedAvatars) && masterState.syncedAvatars.length > 0)
                     ? masterState.syncedAvatars
-                    : ((multiAvatarConfig?.enabled && Array.isArray(multiAvatarConfig?.avatars) && multiAvatarConfig.avatars.length > 0)
+                    : ((multiAvatarConfig?.enabled && Array.isArray(multiAvatarConfig?.avatars))
                         ? multiAvatarConfig.avatars
                         : []);
+
+                  const activeAvatars = rawAvatars
+                    .filter(a => a && a.enabled !== false && a.visible !== false && (a.resolvedVidSrc || a.talkVideo || a.idleVideo || a.mediaUrl || a.url || a.src))
+                    .slice(0, 4);
 
                   const extraLayers = (Array.isArray(masterState?.extraImageLayers) && masterState.extraImageLayers.length > 0)
                     ? masterState.extraImageLayers
                     : (Array.isArray(multiAvatarConfig?.extraImageLayers) ? multiAvatarConfig.extraImageLayers : []);
 
-                  const activeList = sourceAvatars
-                    .filter(a => a && a.visible !== false && a.enabled !== false)
-                    .slice(0, 4);
+                  const isMultiAvatar = activeAvatars.length >= 2;
 
-                  const isGridOnly = multiAvatarConfig?.enabled && multiAvatarConfig?.layoutMode === 'grid' && activeList.length >= 2;
+                  // 🅰️ MULTI-AVATAR STUDIO (2, 3, HOẶC 4 NHÂN VẬT ĐỒNG THỜI)
+                  if (isMultiAvatar) {
+                    const isGridOnly = multiAvatarConfig?.enabled && multiAvatarConfig?.layoutMode === 'grid';
+                    if (isGridOnly) {
+                      const count = activeAvatars.length;
+                      const gridClass = count === 2 
+                        ? 'grid grid-cols-2 w-full h-full gap-1 p-1 bg-black'
+                        : count === 3 
+                        ? 'grid grid-cols-3 w-full h-full gap-1 p-1 bg-black'
+                        : 'grid grid-cols-2 grid-rows-2 w-full h-full gap-1 p-1 bg-black';
 
-                  if (isGridOnly) {
-                    const count = activeList.length;
-                    const gridClass = count === 2 
-                      ? 'grid grid-cols-2 w-full h-full gap-1 p-1 bg-black'
-                      : count === 3 
-                      ? 'grid grid-cols-3 w-full h-full gap-1 p-1 bg-black'
-                      : 'grid grid-cols-2 grid-rows-2 w-full h-full gap-1 p-1 bg-black';
+                      return (
+                        <div className={gridClass}>
+                          {activeAvatars.map((avatar, idx) => {
+                            const isSpeakingNow = isSpeakerActive && (activeSpeakerId === avatar.id || (!activeSpeakerId && avatar.id === 'idol'));
+                            const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || '';
+                            const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || '';
+                            const vidSrc = avatar.resolvedVidSrc || (isSpeakingNow ? (talkSrc || idleSrc) : (idleSrc || talkSrc));
+                            const isImg = isImageMedia(vidSrc);
+
+                            return (
+                              <div 
+                                key={avatar.id || idx} 
+                                className={`relative w-full h-full overflow-hidden rounded-lg bg-slate-950 flex items-center justify-center transition-all duration-300 ${
+                                  isSpeakingNow ? 'ring-2 ring-amber-400/80 shadow-[0_0_20px_rgba(251,191,36,0.4)] z-10' : 'opacity-95'
+                                }`}
+                              >
+                                {vidSrc ? (
+                                  <AiRealtimeLipSyncAvatar
+                                    src={vidSrc}
+                                    type={isImg ? 'image' : 'video'}
+                                    alt={avatar.name}
+                                    isSpeaking={isSpeakingNow}
+                                    speakerId={avatar.id}
+                                    role={avatar.role}
+                                    muted={isVideoAudioMuted}
+                                    className="w-full h-full object-cover select-none pointer-events-none transform-gpu"
+                                    style={{ imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto' }}
+                                    enableLipSync={true}
+                                    showIndicator={false}
+                                  />
+                                ) : null}
+                                <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm border border-white/10 text-[10px] font-bold text-white shadow-sm">
+                                  <span className={`w-2 h-2 rounded-full ${isSpeakingNow ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'}`} />
+                                  <span className="truncate max-w-[100px]">{avatar.name}</span>
+                                </div>
+                              </div>
+                            );
+                          })}
+                        </div>
+                      );
+                    }
+
+                    // Freeform Multi-Avatar Studio Canvas
+                    const bgSrc = masterState?.backgroundUrl || (multiAvatarConfig?.backgroundUrl || '');
+                    const bgTrans = masterState?.backgroundTransform || multiAvatarConfig?.backgroundTransform || { x: 0, y: 0, width: 100, height: 100 };
+                    const bgChroma = getChromaStyle(masterState?.backgroundChromaKey || multiAvatarConfig?.backgroundChromaKey);
+                    const isBgImg = isImageMedia(bgSrc);
 
                     return (
-                      <div className={gridClass}>
-                        {activeList.map((avatar, idx) => {
+                      <div 
+                        className="relative w-full h-full overflow-hidden"
+                        style={{ backgroundColor: masterState?.backgroundColor || multiAvatarConfig?.backgroundColor || '#000000' }}
+                      >
+                        {/* 1. Nền Sân Khấu (CHỈ render nếu có backgroundUrl độc lập được cấu hình) */}
+                        {bgSrc ? (
+                          <div
+                            className="absolute pointer-events-none transition-all duration-300"
+                            style={{
+                              left: `${bgTrans.x ?? 0}%`,
+                              top: `${bgTrans.y ?? 0}%`,
+                              width: `${bgTrans.width ?? 100}%`,
+                              height: `${bgTrans.height ?? 100}%`,
+                              zIndex: bgTrans.zIndex || 0,
+                              overflow: 'hidden',
+                              ...bgChroma
+                            }}
+                          >
+                            {isBgImg ? (
+                              <img src={bgSrc} alt="Studio Background" className="w-full h-full" style={{ objectFit: bgTrans.objectFit || 'cover', ...bgChroma }} />
+                            ) : (
+                              <ChromaVideoPlayer src={bgSrc} chromaKey={masterState?.backgroundChromaKey || multiAvatarConfig?.backgroundChromaKey} isPaused={false} isMuted={isVideoAudioMuted} className="w-full h-full" style={{ objectFit: bgTrans.objectFit || 'cover', ...bgChroma }} />
+                            )}
+                          </div>
+                        ) : null}
+
+                        <SvgChromaFilters />
+
+                        {/* 2. Extra Layers (Logo, Sticker, Decor) */}
+                        {extraLayers.map((layer, lIdx) => {
+                          const lUrl = layer.url || layer.mediaUrl;
+                          if (!lUrl) return null;
+                          const isImg = layer.type === 'image' ? true : layer.type === 'video' ? false : isImageMedia(lUrl) && !isVideoMedia(lUrl);
+                          const chromaStyle = getChromaStyle(layer.chromaKey);
+                          const lTrans = layer.transform || { x: layer.x ?? 20, y: layer.y ?? 20, width: layer.width ?? 30, height: layer.height ?? 30 };
+                          return (
+                            <div
+                              key={layer.id || lIdx}
+                              className="absolute overflow-hidden pointer-events-none transition-all duration-300"
+                              style={{
+                                left: `${lTrans.x ?? 20}%`,
+                                top: `${lTrans.y ?? 20}%`,
+                                width: `${lTrans.width ?? 30}%`,
+                                height: `${lTrans.height ?? 30}%`,
+                                zIndex: lTrans.zIndex || (5 + lIdx),
+                                borderRadius: `${lTrans.borderRadius || 0}px`,
+                                opacity: (lTrans.opacity !== undefined ? lTrans.opacity : 100) / 100,
+                                transform: (lTrans.rotation || lTrans.flipH || lTrans.flipV || (lTrans.scale && lTrans.scale !== 100))
+                                  ? `rotate(${lTrans.rotation || 0}deg) scale(${(lTrans.flipH ? -1 : 1) * (lTrans.scale ? lTrans.scale / 100 : 1)}, ${(lTrans.flipV ? -1 : 1) * (lTrans.scale ? lTrans.scale / 100 : 1)})`
+                                  : 'none',
+                                transformOrigin: 'center center',
+                                ...chromaStyle
+                              }}
+                            >
+                              {isImg ? (
+                                <img src={lUrl} alt={layer.name || 'Extra Layer'} className="w-full h-full bg-transparent select-none" style={{ objectFit: lTrans.objectFit || 'contain', ...chromaStyle }} />
+                              ) : (
+                                <video src={lUrl} autoPlay loop muted={isVideoAudioMuted} playsInline className="w-full h-full bg-transparent select-none" style={{ objectFit: lTrans.objectFit || 'contain', ...chromaStyle }} />
+                              )}
+                            </div>
+                          );
+                        })}
+
+                        {/* 3. Render đúng N Avatars (2-4 nhân vật tại đúng toạ độ) */}
+                        {activeAvatars.map((avatar, idx) => {
+                          const customTrans = (masterState?.avatarTransforms && (masterState.avatarTransforms[avatar.id] || masterState.avatarTransforms[avatar.role])) ||
+                            (multiAvatarConfig?.avatarTransforms && (multiAvatarConfig.avatarTransforms[avatar.id] || multiAvatarConfig.avatarTransforms[avatar.role])) ||
+                            avatar.transform || { 
+                              x: idx === 0 ? 4 : idx === 1 ? 48 : idx === 2 ? 25 : 65, 
+                              y: idx === 0 ? 8 : idx === 1 ? 28 : idx === 2 ? 60 : 10, 
+                              width: 48, 
+                              height: 75, 
+                              zIndex: 10 + idx, 
+                              objectFit: 'cover',
+                              borderRadius: 16
+                            };
+
                           const isSpeakingNow = isSpeakerActive && (activeSpeakerId === avatar.id || (!activeSpeakerId && avatar.id === 'idol'));
-                          const fallbackUrl = activeMedia?.url || '';
-                          const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || '';
-                          const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || '';
-                          const vidSrc = isSpeakingNow 
-                            ? (talkSrc || idleSrc || (idx === 0 ? fallbackUrl : '')) 
-                            : (idleSrc || talkSrc || (idx === 0 ? fallbackUrl : ''));
+                          const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || avatar.url || avatar.src || '';
+                          const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || avatar.url || avatar.src || '';
+                          const ownSrc = isSpeakingNow ? (talkSrc || idleSrc) : (idleSrc || talkSrc);
+                          const vidSrc = avatar.resolvedVidSrc || ownSrc;
+                          if (!vidSrc) return null;
+
                           const isImg = isImageMedia(vidSrc);
+                          const chromaStyle = getChromaStyle(avatar.chromaKey || multiAvatarConfig?.chromaKey);
 
                           return (
                             <div 
                               key={avatar.id || idx} 
-                              className={`relative w-full h-full overflow-hidden rounded-lg bg-slate-950 flex items-center justify-center transition-all duration-300 ${
-                                isSpeakingNow ? 'ring-2 ring-amber-400/80 shadow-[0_0_20px_rgba(251,191,36,0.4)] z-10' : 'opacity-95'
+                              className={`absolute overflow-hidden transition-all duration-300 pointer-events-none ${
+                                isSpeakingNow ? 'ring-2 ring-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.6)] z-30' : ''
                               }`}
+                              style={{
+                                left: `${customTrans.x ?? 0}%`,
+                                top: `${customTrans.y ?? 0}%`,
+                                width: `${customTrans.width ?? 100}%`,
+                                height: `${customTrans.height ?? 100}%`,
+                                zIndex: isSpeakingNow ? (customTrans.zIndex || 10) + 15 : (customTrans.zIndex || 10),
+                                borderRadius: `${customTrans.borderRadius ?? 0}px`,
+                                opacity: (customTrans.opacity !== undefined ? customTrans.opacity : 100) / 100,
+                                transform: (customTrans.rotation || customTrans.flipH || customTrans.flipV || (customTrans.scale && customTrans.scale !== 100))
+                                  ? `rotate(${customTrans.rotation || 0}deg) scale(${(customTrans.flipH ? -1 : 1) * (customTrans.scale ? customTrans.scale / 100 : 1)}, ${(customTrans.flipV ? -1 : 1) * (customTrans.scale ? customTrans.scale / 100 : 1)})`
+                                  : 'none',
+                                transformOrigin: 'center center'
+                              }}
                             >
-                              {vidSrc ? (
+                              <div className="w-full h-full overflow-hidden rounded-[inherit] bg-transparent" style={chromaStyle}>
                                 <AiRealtimeLipSyncAvatar
+                                  key={`${avatar.id}_${isSpeakingNow ? 'talk' : 'idle'}_${vidSrc}`}
                                   src={vidSrc}
                                   type={isImg ? 'image' : 'video'}
                                   alt={avatar.name}
@@ -2769,15 +2918,18 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                                   speakerId={avatar.id}
                                   role={avatar.role}
                                   muted={isVideoAudioMuted}
-                                  className="w-full h-full object-cover select-none pointer-events-none transform-gpu"
-                                  style={{ imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto' }}
+                                  className="w-full h-full select-none pointer-events-none transform-gpu bg-transparent"
+                                  style={{
+                                    width: '100%',
+                                    height: '100%',
+                                    objectFit: customTrans.objectFit || 'cover',
+                                    backgroundColor: 'transparent',
+                                    imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto',
+                                    ...chromaStyle
+                                  }}
                                   enableLipSync={true}
                                   showIndicator={false}
                                 />
-                              ) : null}
-                              <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1.5 px-2 py-0.5 rounded-md bg-black/70 backdrop-blur-sm border border-white/10 text-[10px] font-bold text-white shadow-sm">
-                                <span className={`w-2 h-2 rounded-full ${isSpeakingNow ? 'bg-amber-400 animate-ping' : 'bg-emerald-400'}`} />
-                                <span className="truncate max-w-[100px]">{avatar.name}</span>
                               </div>
                             </div>
                           );
@@ -2786,668 +2938,349 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     );
                   }
 
-                  // 🎨 Freeform Visual Studio Stage Canvas (ĐÚNG TỌA ĐỘ VÀ VỊ TRÍ CẤU HÌNH SẴN TỪ SÂN KHẤU CHÍNH)
-                  const bgSrc = masterState?.mainMediaUrl || (!masterState?.isMainMediaDeleted ? (multiAvatarConfig?.backgroundUrl || activeMedia?.url) : '');
-                  const bgTrans = masterState?.mainMediaTransform || multiAvatarConfig?.backgroundTransform || { x: 0, y: 0, width: 100, height: 100 };
-                  const bgChroma = getChromaStyle(masterState?.mainMediaChromaKey || multiAvatarConfig?.backgroundChromaKey);
-                  const isBgImg = isImageMedia(bgSrc);
+                  // 🅱️ SINGLE MEDIA / SINGLE AVATAR (1 KHUNG HÌNH DUY NHẤT: KHÔNG THỪA KHÔNG THIẾU)
+                  const singleUrl = activeMedia.url || masterState.mediaUrl || masterState.mainMediaUrl || (activeAvatars.length === 1 ? (activeAvatars[0].resolvedVidSrc || activeAvatars[0].talkVideo || activeAvatars[0].idleVideo || activeAvatars[0].mediaUrl) : null);
 
-                  const bgRot = bgTrans.rotation || 0;
-                  const bgScaleX = (bgTrans.flipH ? -1 : 1) * (bgTrans.scale ? bgTrans.scale / 100 : 1);
-                  const bgScaleY = (bgTrans.flipV ? -1 : 1) * (bgTrans.scale ? bgTrans.scale / 100 : 1);
+                  if (singleUrl) {
+                    const isImg = isImageMedia(singleUrl) || (!activeMedia.isVideo && !isVideoMedia(singleUrl));
+                    const singleTrans = masterState.mainMediaTransform || (activeAvatars.length === 1 ? (masterState.avatarTransforms?.[activeAvatars[0].id] || activeAvatars[0].transform) : null);
+                    const singleChroma = getChromaStyle(masterState.mainMediaChromaKey || (activeAvatars.length === 1 ? activeAvatars[0].chromaKey : null));
+                    const hasCustomTransform = !!singleTrans && (singleTrans.x !== 0 || singleTrans.y !== 0 || (singleTrans.width && singleTrans.width !== 100) || (singleTrans.height && singleTrans.height !== 100));
 
-                  return (
-                    <div 
-                      className="relative w-full h-full overflow-hidden"
-                      style={{
-                        backgroundColor: masterState?.backgroundColor || multiAvatarConfig?.backgroundColor || '#000000'
-                      }}
-                    >
-                      {/* 1. Nền Chính Sân Khấu (Main Media / Studio Background Layer với đầy đủ Transform) */}
-                      {bgSrc && (
-                        <div
+                    return (
+                      <div 
+                        className="relative w-full h-full overflow-hidden" 
+                        style={{ backgroundColor: masterState?.backgroundColor || '#000000' }}
+                      >
+                        <SvgChromaFilters />
+
+                        {/* Extra Layers nếu có trên kịch bản */}
+                        {extraLayers.map((layer, lIdx) => {
+                          const lUrl = layer.url || layer.mediaUrl;
+                          if (!lUrl) return null;
+                          const isLayerImg = layer.type === 'image' ? true : layer.type === 'video' ? false : isImageMedia(lUrl) && !isVideoMedia(lUrl);
+                          const chromaStyle = getChromaStyle(layer.chromaKey);
+                          const lTrans = layer.transform || { x: layer.x ?? 20, y: layer.y ?? 20, width: layer.width ?? 30, height: layer.height ?? 30 };
+                          return (
+                            <div
+                              key={layer.id || `single_extra_${lIdx}`}
+                              className="absolute overflow-hidden pointer-events-none transition-all duration-300"
+                              style={{
+                                left: `${lTrans.x ?? 20}%`,
+                                top: `${lTrans.y ?? 20}%`,
+                                width: `${lTrans.width ?? 30}%`,
+                                height: `${lTrans.height ?? 30}%`,
+                                zIndex: lTrans.zIndex || (5 + lIdx),
+                                borderRadius: `${lTrans.borderRadius || 0}px`,
+                                opacity: (lTrans.opacity !== undefined ? lTrans.opacity : 100) / 100,
+                                transform: (lTrans.rotation || lTrans.flipH || lTrans.flipV || (lTrans.scale && lTrans.scale !== 100))
+                                  ? `rotate(${lTrans.rotation || 0}deg) scale(${(lTrans.flipH ? -1 : 1) * (lTrans.scale ? lTrans.scale / 100 : 1)}, ${(lTrans.flipV ? -1 : 1) * (lTrans.scale ? lTrans.scale / 100 : 1)})`
+                                  : 'none',
+                                transformOrigin: 'center center',
+                                ...chromaStyle
+                              }}
+                            >
+                              {isLayerImg ? (
+                                <img src={lUrl} alt={layer.name || 'Extra Layer'} className="w-full h-full bg-transparent select-none" style={{ objectFit: lTrans.objectFit || 'contain', ...chromaStyle }} />
+                              ) : (
+                                <video src={lUrl} autoPlay loop muted={isVideoAudioMuted} playsInline className="w-full h-full bg-transparent select-none" style={{ objectFit: lTrans.objectFit || 'contain', ...chromaStyle }} />
+                              )}
+                            </div>
+                          );
+                        })}
+
+                        {/* ⚡ ĐÚNG 1 KHUNG HÌNH VIDEO / ẢNH DUY NHẤT TRÊN SÂN KHẤU */}
+                        <div 
                           className="absolute pointer-events-none transition-all duration-300"
                           style={{
-                            left: `${bgTrans.x ?? 0}%`,
-                            top: `${bgTrans.y ?? 0}%`,
-                            width: `${bgTrans.width ?? 100}%`,
-                            height: `${bgTrans.height ?? 100}%`,
-                            transform: (bgRot || bgTrans.flipH || bgTrans.flipV || (bgTrans.scale && bgTrans.scale !== 100))
-                              ? `rotate(${bgRot}deg) scale(${bgScaleX}, ${bgScaleY})`
+                            left: hasCustomTransform ? `${singleTrans.x ?? 0}%` : '0%',
+                            top: hasCustomTransform ? `${singleTrans.y ?? 0}%` : '0%',
+                            width: hasCustomTransform ? `${singleTrans.width ?? 100}%` : '100%',
+                            height: hasCustomTransform ? `${singleTrans.height ?? 100}%` : '100%',
+                            zIndex: singleTrans?.zIndex || 10,
+                            transform: (singleTrans?.rotation || singleTrans?.flipH || singleTrans?.flipV || (singleTrans?.scale && singleTrans?.scale !== 100))
+                              ? `rotate(${singleTrans.rotation || 0}deg) scale(${(singleTrans.flipH ? -1 : 1) * (singleTrans.scale ? singleTrans.scale / 100 : 1)}, ${(singleTrans.flipV ? -1 : 1) * (singleTrans.scale ? singleTrans.scale / 100 : 1)})`
                               : 'none',
-                            transformOrigin: 'center center',
-                            opacity: (bgTrans.opacity !== undefined ? bgTrans.opacity : 100) / 100,
-                            borderRadius: `${bgTrans.borderRadius || 0}px`,
-                            zIndex: bgTrans.zIndex || 0,
+                            borderRadius: `${singleTrans?.borderRadius || 0}px`,
                             overflow: 'hidden',
-                            ...bgChroma
+                            ...singleChroma
                           }}
                         >
-                          {isBgImg ? (
+                          {isImg ? (
                             <img 
-                              src={bgSrc}
-                              alt="Studio Background"
-                              className="w-full h-full bg-transparent"
-                              style={{
-                                objectFit: bgTrans.objectFit || objectFitState || 'cover',
-                                filter: `${bgTrans.blur ? `blur(${bgTrans.blur}px)` : ''} ${bgTrans.brightness ? `brightness(${bgTrans.brightness}%)` : ''}`.trim() || undefined,
-                                ...bgChroma
+                              src={singleUrl} 
+                              alt="Stage Media"
+                              className="w-full h-full select-none block pointer-events-none"
+                              style={{ 
+                                width: '100%', 
+                                height: '100%', 
+                                objectFit: singleTrans?.objectFit || objectFitState || 'cover', 
+                                imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto', 
+                                ...singleChroma 
                               }}
                             />
                           ) : (
-                            <ChromaVideoPlayer
-                              src={bgSrc}
-                              chromaKey={masterState?.mainMediaChromaKey || multiAvatarConfig?.backgroundChromaKey}
-                              isPaused={false}
-                              isMuted={isVideoAudioMuted}
-                              className="w-full h-full bg-transparent"
+                            <video
+                              ref={overlayVideoRef}
+                              key={`single_main_vid_${singleUrl}`}
+                              src={singleUrl}
+                              autoPlay={true}
+                              loop={true}
+                              muted={isVideoAudioMuted}
+                              playsInline
+                              webkit-playsinline
+                              controls={false}
+                              preload="auto"
+                              className="w-full h-full select-none block pointer-events-none"
                               style={{
-                                objectFit: bgTrans.objectFit || objectFitState || 'cover',
-                                filter: `${bgTrans.blur ? `blur(${bgTrans.blur}px)` : ''} ${bgTrans.brightness ? `brightness(${bgTrans.brightness}%)` : ''}`.trim() || undefined,
-                                ...bgChroma
+                                width: '100%',
+                                height: '100%',
+                                objectFit: singleTrans?.objectFit || objectFitState || 'cover',
+                                backgroundColor: 'transparent',
+                                display: 'block',
+                                transform: 'translate3d(0, 0, 0)',
+                                WebkitTransform: 'translate3d(0, 0, 0)',
+                                backfaceVisibility: 'hidden',
+                                WebkitBackfaceVisibility: 'hidden',
+                                imageRendering: '-webkit-optimize-contrast',
+                                WebkitFontSmoothing: 'antialiased',
+                                willChange: 'transform',
+                                ...singleChroma
+                              }}
+                              onLoadStart={(e) => {
+                                const v = e.currentTarget;
+                                if (!checkIfUserPaused()) {
+                                  v.dataset.userPaused = 'false';
+                                  v.muted = isVideoAudioMuted;
+                                  v.play().catch(() => {});
+                                }
+                              }}
+                              onLoadedMetadata={(e) => {
+                                const v = e.currentTarget;
+                                if (lastOverlayTimeRef.current > 0) {
+                                  try { v.currentTime = lastOverlayTimeRef.current; } catch (err) {}
+                                } else if (initialTimeParamRef.current > 0) {
+                                  try { v.currentTime = initialTimeParamRef.current; } catch (err) {}
+                                }
+                                if (!checkIfUserPaused()) {
+                                  v.dataset.userPaused = 'false';
+                                  v.muted = isVideoAudioMuted;
+                                  try { v.volume = videoVolume; } catch (err) {}
+                                  v.play().catch(() => {});
+                                }
+                              }}
+                              onCanPlay={(e) => {
+                                const v = e.currentTarget;
+                                if (!checkIfUserPaused() && v.paused) {
+                                  v.dataset.userPaused = 'false';
+                                  v.muted = isVideoAudioMuted;
+                                  try { v.volume = videoVolume; } catch (err) {}
+                                  v.play().catch(() => {
+                                    v.muted = true;
+                                    v.play().catch(() => {});
+                                  });
+                                }
+                              }}
+                              onTimeUpdate={(e) => {
+                                const ct = e.currentTarget.currentTime;
+                                if (ct > 0) lastOverlayTimeRef.current = ct;
+                              }}
+                              onEnded={(e) => {
+                                if (!checkIfUserPaused()) {
+                                  e.currentTarget.currentTime = 0;
+                                  e.currentTarget.play().catch(() => {});
+                                }
+                              }}
+                              onError={(e) => {
+                                const v = e.currentTarget;
+                                console.warn('[CleanLiveOverlay] Video playback retry:', v?.error);
+                                fetch('/api/live-state')
+                                  .then(r => r.json())
+                                  .then(d => {
+                                    if (d && d.mediaUrl && !d.mediaUrl.startsWith('blob:') && v && !isSameMediaUrl(v.src, d.mediaUrl)) {
+                                      v.src = d.mediaUrl;
+                                      v.load();
+                                      v.play().catch(() => {});
+                                    }
+                                  }).catch(() => {});
                               }}
                             />
                           )}
                         </div>
-                      )}
+                      </div>
+                    );
+                  }
 
-                      <SvgChromaFilters />
+                  // 🅲 ACTIVE STREAM FLV
+                  if (activeStreamUrl) {
+                    return (
+                      <video
+                        ref={flvVideoRef}
+                        key={activeStreamUrl}
+                        autoPlay
+                        muted={isVideoAudioMuted}
+                        playsInline
+                        className="w-full h-full select-none bg-black absolute inset-0 block"
+                        style={{ 
+                          width: '100%', 
+                          height: '100%', 
+                          objectFit: objectFitState || 'contain',
+                          backgroundColor: '#000000'
+                        }}
+                      />
+                    );
+                  }
 
-                      {/* 2. Các Lớp Ảnh / Video Phụ Extra Layers (Logo, Sticker, Decor) */}
-                      {extraLayers.map((layer, lIdx) => {
-                        const lUrl = layer.url || layer.mediaUrl;
-                        if (!lUrl) return null;
-                        // ⚡ FIX: Phân loại chính xác ảnh/video - ưu tiên type rõ ràng trước, rồi mới nhận diện qua URL
-                        const isImg = layer.type === 'image' ? true : layer.type === 'video' ? false : isImageMedia(lUrl) && !isVideoMedia(lUrl);
-                        const chromaStyle = getChromaStyle(layer.chromaKey);
-                        const lTrans = layer.transform || { x: layer.x ?? 20, y: layer.y ?? 20, width: layer.width ?? 30, height: layer.height ?? 30 };
-                        const lRot = lTrans.rotation || 0;
-                        const lScaleX = (lTrans.flipH ? -1 : 1) * (lTrans.scale ? lTrans.scale / 100 : 1);
-                        const lScaleY = (lTrans.flipV ? -1 : 1) * (lTrans.scale ? lTrans.scale / 100 : 1);
-
-                        return (
-                          <div
-                            key={layer.id || lIdx}
-                            className="absolute overflow-hidden pointer-events-none transition-all duration-300"
-                            style={{
-                              left: `${lTrans.x ?? 20}%`,
-                              top: `${lTrans.y ?? 20}%`,
-                              width: `${lTrans.width ?? 30}%`,
-                              height: `${lTrans.height ?? 30}%`,
-                              zIndex: lTrans.zIndex || (5 + lIdx),
-                              borderRadius: `${lTrans.borderRadius || layer.borderRadius || 0}px`,
-                              opacity: (lTrans.opacity !== undefined ? lTrans.opacity : 100) / 100,
-                              transform: (lRot || lTrans.flipH || lTrans.flipV || (lTrans.scale && lTrans.scale !== 100))
-                                ? `rotate(${lRot}deg) scale(${lScaleX}, ${lScaleY})`
-                                : 'none',
-                              transformOrigin: 'center center',
-                              ...chromaStyle
-                            }}
-                          >
-                            {isImg ? (
-                              <img
-                                src={lUrl}
-                                alt={layer.name || 'Extra Layer'}
-                                className="w-full h-full bg-transparent select-none"
-                                style={{
-                                  objectFit: lTrans.objectFit || layer.objectFit || 'contain',
-                                  ...chromaStyle
-                                }}
-                              />
-                            ) : (
-                              <video
-                                src={lUrl}
-                                autoPlay
-                                loop
-                                muted={isVideoAudioMuted}
-                                playsInline
-                                className="w-full h-full bg-transparent select-none"
-                                style={{
-                                  objectFit: lTrans.objectFit || layer.objectFit || 'contain',
-                                  ...chromaStyle
-                                }}
-                              />
-                            )}
-                          </div>
-                        );
-                      })}
-
-                      {/* 3. Các Nhân Vật Avatars (ĐÚNG TỌA ĐỘ VÀ VỊ TRÍ CẤU HÌNH TỪ SÂN KHẤU CHÍNH) */}
-                      {activeList.map((avatar, idx) => {
-                        const customTrans = (masterState?.avatarTransforms && (masterState.avatarTransforms[avatar.id] || masterState.avatarTransforms[avatar.role])) ||
-                          (multiAvatarConfig?.avatarTransforms && (multiAvatarConfig.avatarTransforms[avatar.id] || multiAvatarConfig.avatarTransforms[avatar.role])) ||
-                          avatar.transform || { 
-                            x: idx === 0 ? 4 : idx === 1 ? 48 : idx === 2 ? 25 : 65, 
-                            y: idx === 0 ? 8 : idx === 1 ? 28 : idx === 2 ? 60 : 10, 
-                            width: 48, 
-                            height: 75, 
-                            zIndex: 10 + idx, 
-                            objectFit: 'cover',
-                            borderRadius: 16
-                          };
-
-                        const isSpeakingNow = isSpeakerActive && (activeSpeakerId === avatar.id || (!activeSpeakerId && avatar.id === 'idol'));
-                        const fallbackUrl = activeMedia?.url || '';
-                        
-                        const talkSrc = avatar.talkVideo || avatar.videoUrl || avatar.mediaUrl || avatar.url || avatar.src || '';
-                        const idleSrc = avatar.idleVideo || avatar.videoUrl || avatar.mediaUrl || avatar.url || avatar.src || '';
-                        const ownSrc = isSpeakingNow ? (talkSrc || idleSrc) : (idleSrc || talkSrc);
-                        // ⚡ ĐỘC LẬP 100%: Mỗi avatar dùng media riêng của mình, tuyệt đối KHÔNG gán fallbackUrl của Avatar 1 cho Avatar 2, 3!
-                        const vidSrc = avatar.resolvedVidSrc || ownSrc || (idx === 0 ? fallbackUrl : '');
-                        if (!vidSrc) return null;
-
-                        const isImg = isImageMedia(vidSrc);
-                        const chromaStyle = getChromaStyle(avatar.chromaKey || multiAvatarConfig?.chromaKey);
-
-                        const aRot = customTrans.rotation || 0;
-                        const aScaleX = (customTrans.flipH ? -1 : 1) * (customTrans.scale ? customTrans.scale / 100 : 1);
-                        const aScaleY = (customTrans.flipV ? -1 : 1) * (customTrans.scale ? customTrans.scale / 100 : 1);
-
-                        return (
-                          <div 
-                            key={avatar.id || idx} 
-                            className={`absolute overflow-hidden transition-all duration-300 pointer-events-none ${
-                              isSpeakingNow ? 'ring-2 ring-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.6)] z-30' : ''
-                            }`}
-                            style={{
-                              left: `${customTrans.x ?? 0}%`,
-                              top: `${customTrans.y ?? 0}%`,
-                              width: `${customTrans.width ?? 100}%`,
-                              height: `${customTrans.height ?? 100}%`,
-                              zIndex: isSpeakingNow ? (customTrans.zIndex || 10) + 15 : (customTrans.zIndex || 10),
-                              borderRadius: `${customTrans.borderRadius ?? 0}px`,
-                              opacity: (customTrans.opacity !== undefined ? customTrans.opacity : 100) / 100,
-                              transform: (aRot || customTrans.flipH || customTrans.flipV || (customTrans.scale && customTrans.scale !== 100))
-                                ? `rotate(${aRot}deg) scale(${aScaleX}, ${aScaleY})`
-                                : 'none',
-                              transformOrigin: 'center center'
-                            }}
-                          >
-                            <div 
-                              className="w-full h-full overflow-hidden rounded-[inherit] bg-transparent"
-                              style={chromaStyle}
-                            >
-                              <AiRealtimeLipSyncAvatar
-                                key={`${avatar.id}_${isSpeakingNow ? 'talk' : 'idle'}_${vidSrc}`}
-                                src={vidSrc}
-                                type={isImg ? 'image' : 'video'}
-                                alt={avatar.name}
-                                isSpeaking={isSpeakingNow}
-                                speakerId={avatar.id}
-                                role={avatar.role}
-                                muted={isVideoAudioMuted}
-                                className="w-full h-full select-none pointer-events-none transform-gpu bg-transparent"
-                                style={{
-                                  width: '100%',
-                                  height: '100%',
-                                  objectFit: customTrans.objectFit || 'cover',
-                                  backgroundColor: 'transparent',
-                                  imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto',
-                                  ...chromaStyle
-                                }}
-                                enableLipSync={true}
-                                showIndicator={false}
-                              />
-                            </div>
-
-                            {/* Speaker Active Tag Pill */}
-                            {isSpeakingNow && (
-                              <div className="absolute bottom-1.5 left-1.5 z-20 flex items-center gap-1.5 px-2 py-0.5 rounded bg-black/75 backdrop-blur-sm border border-white/10 text-[9px] font-black text-white shadow-sm pointer-events-none">
-                                <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-ping" />
-                                <span className="truncate max-w-[90px]">{avatar.name}</span>
-                                <span className="text-amber-300 text-[8px] uppercase tracking-wider font-black">Nói</span>
-                              </div>
-                            )}
-                          </div>
-                        );
-                      })}
+                  // 🅳 SẴN SÀNG PHÁT LUỒNG
+                  return (
+                    <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#07080d] via-[#0d1017] to-[#040508] text-center p-6 select-none">
+                      <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-pink-600 via-rose-600 to-red-600 flex items-center justify-center mb-5 shadow-2xl shadow-rose-500/30 animate-pulse">
+                        <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                          <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
+                        </svg>
+                      </div>
+                      <h3 className="text-xl sm:text-2xl font-black text-white tracking-wide uppercase">SẴN SÀNG PHÁT LUỒNG (9:16)</h3>
+                      <p className="text-gray-400 text-xs mt-2 max-w-xs leading-relaxed">
+                        Vui lòng tải lên hoặc chọn video trên phần mềm để bắt đầu phát trực tiếp
+                      </p>
+                      <div className="mt-4 px-3.5 py-1.5 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-[11px] text-cyan-300 font-mono flex items-center gap-2">
+                        <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
+                        <span>Đang kết nối Realtime với phần mềm AvaLive...</span>
+                      </div>
                     </div>
                   );
-                })() : activeMedia.url && activeMedia.isVideo ? (
-              <>
-                <video
-                  ref={overlayVideoRef}
-                  key="avalive_overlay_main_video"
-                  src={activeMedia.url}
-                  autoPlay={true}
-                  loop={true}
-                  muted={isVideoAudioMuted}
-                  playsInline
-                  webkit-playsinline
-                  controls={false}
-                  preload="auto"
-                  className="w-full h-full select-none"
-                  style={{
-                    width: '100%',
-                    height: '100%',
-                    objectFit: objectFitState || 'cover',
-                    backgroundColor: 'transparent',
-                    display: 'block',
-                    transform: 'translate3d(0, 0, 0)',
-                    WebkitTransform: 'translate3d(0, 0, 0)',
-                    backfaceVisibility: 'hidden',
-                    WebkitBackfaceVisibility: 'hidden',
-                    imageRendering: '-webkit-optimize-contrast',
-                    WebkitFontSmoothing: 'antialiased',
-                    willChange: 'transform',
-                    ...singleMainChroma
-                  }}
-                  onLoadStart={(e) => {
-                    const v = e.currentTarget;
-                    if (!checkIfUserPaused()) {
-                      v.dataset.userPaused = 'false';
-                      v.muted = isVideoAudioMuted;
-                      v.play().catch(() => {});
-                    }
-                  }}
-                  onLoadedMetadata={(e) => {
-                    const v = e.currentTarget;
-                    // ⚡ Khôi phục thời gian đang phát nếu có chuyển stage hoặc reload tab (Không phát lại từ đầu 0:00)
-                    if (lastOverlayTimeRef.current > 0) {
-                      try {
-                        v.currentTime = lastOverlayTimeRef.current;
-                      } catch (err) {}
-                    } else if (initialTimeParamRef.current > 0) {
-                      try {
-                        v.currentTime = initialTimeParamRef.current;
-                      } catch (err) {}
-                    }
-                    if (!checkIfUserPaused()) {
-                      v.dataset.userPaused = 'false';
-                      v.muted = isVideoAudioMuted;
-                      try { v.volume = videoVolume; } catch (err) {}
-                      v.play().catch(() => {});
-                    }
-                  }}
-                  onCanPlay={(e) => {
-                    // ⚡ INSTANT 0MS PLAYBACK: Phát ngay lập tức khi frame đầu tiên sẵn sàng
-                    const v = e.currentTarget;
-                    const isUserPaused = checkIfUserPaused();
-                    if (!isUserPaused && v.paused) {
-                      v.dataset.userPaused = 'false';
-                      v.muted = isVideoAudioMuted;
-                      try { v.volume = videoVolume; } catch (err) {}
-                      const p = v.play();
-                      if (p !== undefined) {
-                        p.then(() => {
-                          setIsPlayingState(true);
-                          hasAutoplayStartedRef.current = true;
-                        }).catch(() => {
-                          v.muted = true;
-                          v.play().then(() => {
-                            setIsPlayingState(true);
-                            hasAutoplayStartedRef.current = true;
-                          }).catch(() => {});
-                        });
-                      }
-                    }
-                  }}
-                  onTimeUpdate={(e) => {
-                    const ct = e.currentTarget.currentTime;
-                    if (ct > 0) {
-                      lastOverlayTimeRef.current = ct;
-                    }
-                  }}
-                  onPlay={() => {
-                    setIsPlayingState(true);
-                    hasAutoplayStartedRef.current = true;
-                  }}
-                  onPause={(e) => {
-                    if (e.target && e.target.seeking) return;
-                    if (!isUserPausedRef.current) return;
-                    setIsPlayingState(false);
-                  }}
-                  onCanPlayThrough={(e) => {
-                    const v = e.currentTarget;
-                    if (!checkIfUserPaused() && v.paused && v.readyState >= 3) {
-                      v.play().catch(() => {});
-                    }
-                  }}
-                  onWaiting={(e) => {
-                    const v = e.currentTarget;
-                    if (v && !checkIfUserPaused() && v.paused && v.readyState >= 2) {
-                      try { v.play().catch(() => {}); } catch(err) {}
-                    }
-                  }}
-                  onStalled={(e) => {
-                    const v = e.currentTarget;
-                    if (v && !checkIfUserPaused() && v.paused && v.readyState >= 2) {
-                      try { v.play().catch(() => {}); } catch(err){}
-                    }
-                  }}
-                  onEnded={(e) => {
-                    // ⚡ PHÁT LIÊN TỤC 24/24 KHÔNG DỪNG CHO ĐẾN KHI STREAMER BẤM DỪNG
-                    const isUserPaused = checkIfUserPaused();
-                    if (!isUserPaused) {
-                      const v = e.currentTarget;
-                      // Kiểm tra xem streamer có danh sách nhiều video (Playlist Auto-Next) không
-                      try {
-                        const customRaw = localStorage.getItem('avalive_custom_characters');
-                        const customList = customRaw ? JSON.parse(customRaw) : [];
-                        const validVideos = Array.isArray(customList) 
-                          ? customList.filter(c => (c.url || c.mediaUrl) && !c.url?.startsWith('blob:')) 
-                          : [];
-                        
-                        if (validVideos.length > 1) {
-                          const curUrl = v.currentSrc || v.src || '';
-                          const currentIndex = validVideos.findIndex(item => (item.url && curUrl.includes(item.url)) || (item.mediaUrl && curUrl.includes(item.mediaUrl)));
-                          const nextIndex = (currentIndex >= 0 && currentIndex < validVideos.length - 1) ? currentIndex + 1 : 0;
-                          const nextItem = validVideos[nextIndex];
-                          const nextUrl = nextItem.url || nextItem.mediaUrl;
-                          if (nextUrl) {
-                            setMasterState(prev => ({
-                              ...prev,
-                              selectedCharacter: nextItem.id,
-                              mediaUrl: nextUrl,
-                              videoPlaybackEvent: 'play',
-                              videoCurrentTime: 0,
-                              force: true
-                            }));
-                            return;
-                          }
-                        }
-                      } catch (err) {}
+                })()}
 
-                      // 🎬 NẾU VỪA KẾT THÚC VIDEO SỰ KIỆN -> TỰ ĐỘNG TRỞ VỀ VIDEO CHỜ IDLE
-                      try {
-                        const idleVid = localStorage.getItem('aidol_idle_media_url') || localStorage.getItem('avalive_user_locked_media');
-                        if (idleVid && (v.dataset.isEventVideo === 'true' || (v.src && !v.src.includes(idleVid)))) {
-                          v.dataset.isEventVideo = 'false';
-                          v.src = idleVid;
-                          v.currentTime = 0;
-                          v.loop = true;
-                          v.play().catch(() => {});
-                          setMasterState(prev => ({
-                            ...prev,
-                            mediaUrl: idleVid,
-                            isVideo: true,
-                            isPlaying: true,
-                            videoPlaybackEvent: 'play',
-                            videoCurrentTime: 0
-                          }));
-                          return;
-                        }
-                      } catch (err) {}
+                {/* 🖼️ LỚP 1.5: VIDEO PHỤ PIP (PICTURE-IN-PICTURE) ĐỒNG BỘ TỪ SÂN KHẤU CHÍNH */}
+                {!isStageCleared && masterState.secondaryMediaUrl && (() => {
+                  const pipTrans = masterState.secondaryMediaTransform || {
+                    x: masterState.secondaryMediaPos === 'top-left' ? 4 : masterState.secondaryMediaPos === 'bottom-left' ? 4 : masterState.secondaryMediaPos === 'bottom-right' ? 55 : 55,
+                    y: masterState.secondaryMediaPos === 'bottom-left' || masterState.secondaryMediaPos === 'bottom-right' ? 70 : 8,
+                    width: masterState.secondaryMediaScale || 40,
+                    height: 25,
+                    zIndex: 20
+                  };
+                  const pipChroma = getChromaStyle(masterState.secondaryMediaChromaKey);
+                  const isPipImg = isImageMedia(masterState.secondaryMediaUrl);
 
-                      // Mặc định lặp lại 0ms liền mạch (Seamless Zero-Latency Loop) cho video đơn
-                      try {
-                        v.currentTime = 0;
-                        v.play().catch(() => {});
-                      } catch (err) {}
-                    } else {
-                      e.currentTarget.pause();
-                      setIsPlayingState(false);
-                    }
-                  }}
-                  onPlaying={() => {
-                    setIsPlayingState(true);
-                  }}
-                  onError={(e) => {
-                    const v = e.currentTarget;
-                    const err = v?.error;
-                    console.warn('[CleanLiveOverlay] Video playback notification:', err ? `${err.code} - ${err.message}` : '');
-                    fetch('/api/live-state')
-                      .then(r => r.json())
-                      .then(d => {
-                        if (d && d.mediaUrl && !d.mediaUrl.startsWith('blob:') && v && !isSameMediaUrl(v.src, d.mediaUrl)) {
-                          v.src = d.mediaUrl;
-                          v.load();
-                          v.play().catch(() => {});
-                        }
-                      }).catch(() => {});
-                    if (v && !checkIfUserPaused()) {
-                      setTimeout(() => {
-                        try { v.play().catch(() => {}); } catch(err) {}
-                      }, 500);
-                    }
-                  }}
-                />
-              </>
-            ) : activeStreamUrl ? (
-              <video
-                ref={flvVideoRef}
-                key={activeStreamUrl}
-                autoPlay
-                muted={isVideoAudioMuted}
-                playsInline
-                className="w-full h-full select-none bg-black absolute inset-0 block"
-                style={{ 
-                  width: '100%', 
-                  height: '100%', 
-                  objectFit: objectFitState || 'contain',
-                  backgroundColor: '#000000',
-                  transform: 'translate3d(0, 0, 0)',
-                  WebkitTransform: 'translate3d(0, 0, 0)',
-                  imageRendering: '-webkit-optimize-contrast',
-                  WebkitFontSmoothing: 'antialiased'
-                }}
-              />
-            ) : activeMedia.url ? (
-              isImageMedia(activeMedia.url) ? (
-                <img 
-                  src={activeMedia.url} 
-                  alt="Stage Media"
-                  className="w-full h-full select-none absolute inset-0 block pointer-events-none"
-                  style={{ 
-                    width: '100%', 
-                    height: '100%', 
-                    objectFit: objectFitState || 'cover', 
-                    imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto', 
-                    ...singleMainChroma 
-                  }}
-                />
-              ) : (
-                <AiRealtimeLipSyncAvatar 
-                  src={activeMedia.url} 
-                  type="video"
-                  alt="AI Idol"
-                  isSpeaking={isSpeakerActive}
-                  speakerId={activeSpeakerId || 'avatar_1'}
-                  role="idol"
-                  className="w-full h-full select-none absolute inset-0"
-                  style={{ width: '100%', height: '100%', objectFit: objectFitState || 'cover', imageRendering: '-webkit-optimize-contrast', ...singleMainChroma }}
-                  enableLipSync={true}
-                  showIndicator={false}
-                />
-              )
-            ) : (
-              <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#07080d] via-[#0d1017] to-[#040508] text-center p-6 select-none">
-                <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-pink-600 via-rose-600 to-red-600 flex items-center justify-center mb-5 shadow-2xl shadow-rose-500/30 animate-pulse">
-                  <svg className="w-10 h-10 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M15 10l4.553-2.276A1 1 0 0121 8.618v6.764a1 1 0 01-1.447.894L15 14M5 18h8a2 2 0 002-2V8a2 2 0 00-2-2H5a2 2 0 00-2 2v8a2 2 0 002 2z" />
-                  </svg>
-                </div>
-                <h3 className="text-xl sm:text-2xl font-black text-white tracking-wide uppercase">SẴN SÀNG PHÁT LUỒNG (9:16)</h3>
-                <p className="text-gray-400 text-xs mt-2 max-w-xs leading-relaxed">
-                  Vui lòng tải lên hoặc chọn video trên phần mềm để bắt đầu phát trực tiếp
-                </p>
-                <div className="mt-4 px-3.5 py-1.5 rounded-full bg-cyan-950/60 border border-cyan-500/30 text-[11px] text-cyan-300 font-mono flex items-center gap-2">
-                  <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></span>
-                  <span>Đang kết nối Realtime với phần mềm AvaLive...</span>
-                </div>
-              </div>
-            )}
-
-            {/* 🖼️ LỚP 1.5: VIDEO PHỤ PIP (PICTURE-IN-PICTURE) ĐỒNG BỘ TỪ SÂN KHẤU CHÍNH */}
-            {!isStageCleared && masterState.secondaryMediaUrl && (() => {
-              const pipTrans = masterState.secondaryMediaTransform || {
-                x: masterState.secondaryMediaPos === 'top-left' ? 4 : masterState.secondaryMediaPos === 'bottom-left' ? 4 : masterState.secondaryMediaPos === 'bottom-right' ? 55 : 55,
-                y: masterState.secondaryMediaPos === 'bottom-left' || masterState.secondaryMediaPos === 'bottom-right' ? 70 : 8,
-                width: masterState.secondaryMediaScale || 40,
-                height: 25,
-                zIndex: 20
-              };
-              const pipChroma = getChromaStyle(masterState.secondaryMediaChromaKey);
-              const isPipImg = isImageMedia(masterState.secondaryMediaUrl);
-
-              return (
-                <div 
-                  className="absolute transition-all duration-300 pointer-events-none"
-                  style={{
-                    left: `${pipTrans.x}%`,
-                    top: `${pipTrans.y}%`,
-                    width: `${pipTrans.width}%`,
-                    height: pipTrans.height ? `${pipTrans.height}%` : 'auto',
-                    zIndex: pipTrans.zIndex || 20,
-                    backgroundColor: 'transparent',
-                    ...pipChroma
-                  }}
-                >
-                  {isPipImg ? (
-                    <img
-                      src={masterState.secondaryMediaUrl}
-                      alt="PiP Media"
-                      className="w-full h-full object-cover rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.85)] bg-transparent"
-                      style={pipChroma}
-                    />
-                  ) : (
-                    <ChromaVideoPlayer
-                      src={masterState.secondaryMediaUrl}
-                      chromaKey={masterState.secondaryMediaChromaKey}
-                      isPaused={false}
-                      isMuted={isVideoAudioMuted}
-                      className="w-full h-full object-cover rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.85)] bg-transparent"
-                      style={pipChroma}
-                    />
-                  )}
-                </div>
-              );
-            })()}
-
-            {/* 🏷️ LỚP 2: OVERLAY HÌNH ẢNH / BANNER / POSTER ĐỒNG BỘ TỪ SÂN KHẤU CHÍNH */}
-            {!isStageCleared && masterState.overlayImage && (() => {
-              const bannerTrans = masterState.overlayImageTransform || {
-                x: masterState.overlayImagePos === 'top-right' ? 65 : masterState.overlayImagePos === 'bottom-left' ? 4 : masterState.overlayImagePos === 'bottom-right' ? 65 : 10,
-                y: masterState.overlayImagePos === 'bottom-left' || masterState.overlayImagePos === 'bottom-right' ? 70 : 12,
-                width: 80,
-                height: 20,
-                zIndex: 25
-              };
-              const bannerChroma = getChromaStyle(masterState.overlayImageChromaKey);
-
-              return (
-                <div 
-                  className="absolute pointer-events-none transition-all duration-300 animate-fadeIn"
-                  style={{
-                    left: `${bannerTrans.x}%`,
-                    top: `${bannerTrans.y}%`,
-                    width: `${bannerTrans.width}%`,
-                    height: bannerTrans.height ? `${bannerTrans.height}%` : 'auto',
-                    zIndex: bannerTrans.zIndex || 30,
-                    backgroundColor: 'transparent',
-                    ...bannerChroma
-                  }}
-                >
-                  <img 
-                    src={masterState.overlayImage} 
-                    alt="Sequencer Overlay" 
-                    className="w-full h-full object-contain rounded-xl drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] bg-transparent"
-                    style={bannerChroma}
-                  />
-                </div>
-              );
-            })()}
-
-            {/* 💬 LỚP 3: OVERLAY TIÊU ĐỀ / CHỮ NỔI BẬT ĐỒNG BỘ TỪ SÂN KHẤU CHÍNH */}
-            {!isStageCleared && masterState.overlayText && typeof masterState.overlayText === 'string' && !/^(bước|step)\s*\d+/i.test(masterState.overlayText.trim()) && (() => {
-              const textTrans = masterState.overlayTextTransform || {
-                x: 4,
-                y: 5,
-                width: 92,
-                zIndex: 35
-              };
-
-              return (
-                <div 
-                  className="absolute pointer-events-none transition-all duration-300 animate-fadeIn"
-                  style={{
-                    left: `${textTrans.x}%`,
-                    top: `${textTrans.y}%`,
-                    width: `${textTrans.width}%`,
-                    zIndex: textTrans.zIndex || 35
-                  }}
-                >
-                  <div 
-                    className={`w-full py-1.5 px-3 rounded-2xl text-center font-black tracking-wide uppercase transition-all ${
-                      masterState.overlayTextStyle === 'neon_cyber' 
-                        ? 'bg-slate-950/90 border border-cyan-400 text-cyan-300 shadow-[0_0_25px_rgba(6,182,212,0.8)]' :
-                      masterState.overlayTextStyle === 'gold_luxury' 
-                        ? 'bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500 text-slate-950 shadow-[0_0_25px_rgba(251,191,36,0.9)] border border-yellow-200' :
-                      masterState.overlayTextStyle === 'gradient_rose' 
-                        ? 'bg-gradient-to-r from-rose-600 via-pink-500 to-rose-600 text-white shadow-[0_0_25px_rgba(244,63,94,0.8)] border border-pink-300/40' :
-                      masterState.overlayTextStyle === 'minimal_dark' 
-                        ? 'bg-black/85 border border-white/20 text-white backdrop-blur-md shadow-2xl' :
-                        'bg-gradient-to-r from-red-600 via-amber-500 to-red-600 text-white shadow-[0_0_25px_rgba(239,68,68,0.85)] border border-amber-300/50'
-                    }`}
-                    style={{
-                      fontFamily: masterState.overlayTextFontFamily === 'montserrat' ? "'Montserrat', sans-serif" :
-                                  masterState.overlayTextFontFamily === 'be_vietnam' ? "'Be Vietnam Pro', sans-serif" :
-                                  masterState.overlayTextFontFamily === 'lexend' ? "'Lexend', sans-serif" :
-                                  masterState.overlayTextFontFamily === 'impact' ? "Impact, sans-serif" :
-                                  masterState.overlayTextFontFamily === 'inter' ? "'Inter', sans-serif" :
-                                  masterState.overlayTextFontFamily === 'roboto' ? "'Roboto', sans-serif" :
-                                  masterState.overlayTextFontFamily === 'playfair' ? "'Playfair Display', serif" :
-                                  masterState.overlayTextFontFamily === 'anton' ? "'Anton', sans-serif" : undefined,
-                      fontSize: masterState.overlayTextFontSize ? `${masterState.overlayTextFontSize}px` : '15px',
-                      color: masterState.overlayTextColor || undefined
-                    }}
-                  >
-                    {masterState.overlayText}
-                  </div>
-                </div>
-              );
-            })()}
-            {/* 🎨 LỚP PHỤ EXTRA MEDIA LAYERS (Hình ảnh, sticker, banner từ kịch bản hoặc sân khấu chính) */}
-            {Array.isArray(masterState.extraImageLayers) && masterState.extraImageLayers.length > 0 && !multiAvatarConfig?.enabled && (
-              <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 28 }}>
-                {masterState.extraImageLayers.map((layer, idx) => {
-                  const isImg = layer.type === 'image' ? true : layer.type === 'video' ? false : isImageMedia(layer.url) && !isVideoMedia(layer.url);
-                  const chromaStyle = getChromaStyle(layer.chromaKey);
                   return (
-                    <div
-                      key={layer.id || `extra_layer_${idx}`}
-                      className="absolute overflow-hidden pointer-events-none"
+                    <div 
+                      className="absolute transition-all duration-300 pointer-events-none"
                       style={{
-                        left: `${layer.x ?? layer.transform?.x ?? 20}%`,
-                        top: `${layer.y ?? layer.transform?.y ?? 20}%`,
-                        width: `${layer.width ?? layer.transform?.width ?? 30}%`,
-                        height: `${layer.height ?? layer.transform?.height ?? 30}%`,
-                        zIndex: layer.zIndex || (28 + idx),
-                        borderRadius: `${layer.borderRadius ?? layer.transform?.borderRadius ?? 0}px`,
-                        opacity: (layer.opacity !== undefined ? layer.opacity : (layer.transform?.opacity !== undefined ? layer.transform.opacity : 100)) / 100,
-                        ...chromaStyle
+                        left: `${pipTrans.x}%`,
+                        top: `${pipTrans.y}%`,
+                        width: `${pipTrans.width}%`,
+                        height: pipTrans.height ? `${pipTrans.height}%` : 'auto',
+                        zIndex: pipTrans.zIndex || 20,
+                        backgroundColor: 'transparent',
+                        ...pipChroma
                       }}
                     >
-                      {isImg ? (
+                      {isPipImg ? (
                         <img
-                          src={layer.url}
-                          alt={layer.name || 'Extra Layer'}
-                          className="w-full h-full bg-transparent select-none"
-                          style={{
-                            objectFit: layer.objectFit || layer.transform?.objectFit || 'contain',
-                            ...chromaStyle
-                          }}
+                          src={masterState.secondaryMediaUrl}
+                          alt="PiP Media"
+                          className="w-full h-full object-cover rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.85)] bg-transparent"
+                          style={pipChroma}
                         />
                       ) : (
-                        <video
-                          src={layer.url}
-                          autoPlay
-                          loop
-                          muted={isVideoAudioMuted}
-                          playsInline
-                          className="w-full h-full bg-transparent select-none"
-                          style={{
-                            objectFit: layer.objectFit || layer.transform?.objectFit || 'contain',
-                            ...chromaStyle
-                          }}
+                        <ChromaVideoPlayer
+                          src={masterState.secondaryMediaUrl}
+                          chromaKey={masterState.secondaryMediaChromaKey}
+                          isPaused={false}
+                          isMuted={isVideoAudioMuted}
+                          className="w-full h-full object-cover rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.85)] bg-transparent"
+                          style={pipChroma}
                         />
                       )}
                     </div>
                   );
-                })}
+                })()}
+
+                {/* 🏷️ LỚP 2: OVERLAY HÌNH ẢNH / BANNER / POSTER ĐỒNG BỘ TỪ SÂN KHẤU CHÍNH */}
+                {!isStageCleared && masterState.overlayImage && (() => {
+                  const bannerTrans = masterState.overlayImageTransform || {
+                    x: masterState.overlayImagePos === 'top-right' ? 65 : masterState.overlayImagePos === 'bottom-left' ? 4 : masterState.overlayImagePos === 'bottom-right' ? 65 : 10,
+                    y: masterState.overlayImagePos === 'bottom-left' || masterState.overlayImagePos === 'bottom-right' ? 70 : 12,
+                    width: 80,
+                    height: 20,
+                    zIndex: 25
+                  };
+                  const bannerChroma = getChromaStyle(masterState.overlayImageChromaKey);
+
+                  return (
+                    <div 
+                      className="absolute pointer-events-none transition-all duration-300 animate-fadeIn"
+                      style={{
+                        left: `${bannerTrans.x}%`,
+                        top: `${bannerTrans.y}%`,
+                        width: `${bannerTrans.width}%`,
+                        height: bannerTrans.height ? `${bannerTrans.height}%` : 'auto',
+                        zIndex: bannerTrans.zIndex || 30,
+                        backgroundColor: 'transparent',
+                        ...bannerChroma
+                      }}
+                    >
+                      <img 
+                        src={masterState.overlayImage} 
+                        alt="Sequencer Overlay" 
+                        className="w-full h-full object-contain rounded-xl drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] bg-transparent"
+                        style={bannerChroma}
+                      />
+                    </div>
+                  );
+                })()}
+
+                {/* 💬 LỚP 3: OVERLAY TIÊU ĐỀ / CHỮ NỔI BẬT ĐỒNG BỘ TỪ SÂN KHẤU CHÍNH */}
+                {!isStageCleared && masterState.overlayText && typeof masterState.overlayText === 'string' && !/^(bước|step)\s*\d+/i.test(masterState.overlayText.trim()) && (() => {
+                  const textTrans = masterState.overlayTextTransform || {
+                    x: 4,
+                    y: 5,
+                    width: 92,
+                    zIndex: 35
+                  };
+
+                  return (
+                    <div 
+                      className="absolute pointer-events-none transition-all duration-300 animate-fadeIn"
+                      style={{
+                        left: `${textTrans.x}%`,
+                        top: `${textTrans.y}%`,
+                        width: `${textTrans.width}%`,
+                        zIndex: textTrans.zIndex || 35
+                      }}
+                    >
+                      <div 
+                        className={`w-full py-1.5 px-3 rounded-2xl text-center font-black tracking-wide uppercase transition-all ${
+                          masterState.overlayTextStyle === 'neon_cyber' 
+                            ? 'bg-slate-950/90 border border-cyan-400 text-cyan-300 shadow-[0_0_25px_rgba(6,182,212,0.8)]' :
+                          masterState.overlayTextStyle === 'gold_luxury' 
+                            ? 'bg-gradient-to-r from-amber-500 via-yellow-300 to-amber-500 text-slate-950 shadow-[0_0_25px_rgba(251,191,36,0.9)] border border-yellow-200' :
+                          masterState.overlayTextStyle === 'gradient_rose' 
+                            ? 'bg-gradient-to-r from-rose-600 via-pink-500 to-rose-600 text-white shadow-[0_0_25px_rgba(244,63,94,0.8)] border border-pink-300/40' :
+                          masterState.overlayTextStyle === 'minimal_dark' 
+                            ? 'bg-black/85 border border-white/20 text-white backdrop-blur-md shadow-2xl' :
+                            'bg-gradient-to-r from-red-600 via-amber-500 to-red-600 text-white shadow-[0_0_25px_rgba(239,68,68,0.85)] border border-amber-300/50'
+                        }`}
+                        style={{
+                          fontFamily: masterState.overlayTextFontFamily === 'montserrat' ? "'Montserrat', sans-serif" :
+                                      masterState.overlayTextFontFamily === 'be_vietnam' ? "'Be Vietnam Pro', sans-serif" :
+                                      masterState.overlayTextFontFamily === 'lexend' ? "'Lexend', sans-serif" :
+                                      masterState.overlayTextFontFamily === 'impact' ? "Impact, sans-serif" :
+                                      masterState.overlayTextFontFamily === 'inter' ? "'Inter', sans-serif" :
+                                      masterState.overlayTextFontFamily === 'roboto' ? "'Roboto', sans-serif" :
+                                      masterState.overlayTextFontFamily === 'playfair' ? "'Playfair Display', serif" :
+                                      masterState.overlayTextFontFamily === 'anton' ? "'Anton', sans-serif" : undefined,
+                          fontSize: masterState.overlayTextFontSize ? `${masterState.overlayTextFontSize}px` : '15px',
+                          color: masterState.overlayTextColor || undefined
+                        }}
+                      >
+                        {masterState.overlayText}
+                      </div>
+                    </div>
+                  );
+                })()}
               </div>
-            )}
-          </div>
         )}
 
         {/* SÂN KHẤU 2: GAME BẢN ĐỒ VIỆT NAM (CẮM CỜ 63 TỈNH THÀNH) - CHỈ MOUNT KHI BẬT TAB BẢN ĐỒ */}

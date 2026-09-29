@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.0.4';
+export const APP_VERSION = '5.0.5';
 export const RELEASE_DATE = '29/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🔥 Bản Cập Nhật v5.0.4 - Đồng Bộ 100% Video/Avatar/Layer Tới TikTok Live Studio & Window Capture',
-    description: '1. Khắc phục triệt để bug video extra layers hiển thị sai (render <img> thay vì <video>) - nay nhận diện chính xác mọi loại layer. 2. Loại bỏ hoàn toàn blob: URLs trong avatar data - URL local chỉ hợp lệ trong tab gốc, nay tự động chuyển sang server URL để Window Capture và TikTok Live Studio hiển thị đầy đủ toàn bộ video avatar. 3. Đồng bộ 100% N avatar (không chỉ 1-2) cùng với tất cả extra image/video layers, PiP, tiêu đề, phụ đề và tọa độ transform. 4. Backend tự động làm sạch mọi blob URL trước khi lưu trạng thái - đảm bảo mọi client nhận được URL hợp lệ.'
+    title: '🚀 Bản Cập Nhật v5.0.5 - Khắc Phục Triệt Để Lỗi Đen Màn Hình & Chuẩn Xác 100% Khung Hình Sân Khấu Chính',
+    description: '1. Chuẩn xác 100% số lượng khung hình: Sân khấu có 1 video -> Window Capture và link TikTok Live Studio hiển thị DUY NHẤT 1 video, tuyệt đối không bị thừa/dư khung hình nền và nhân vật đè lặp. 2. Khắc phục triệt để màn hình đen TikTok Live Studio: Tự động chuyển đổi toàn bộ đường dẫn /uploads/ sang Cloudflare Tunnel HTTPS an toàn cao, chống lỗi CORS và chống 404 trên mọi trình duyệt CEF. 3. Đồng bộ hoàn hảo Multi-Avatar: Hiển thị đúng 2-4 nhân vật theo kịch bản, các lớp PiP, Banner, Text hoạt động mượt mà 60 FPS.'
   }
 ];
 
