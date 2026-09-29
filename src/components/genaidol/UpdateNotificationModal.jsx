@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.0.5';
+export const APP_VERSION = '5.0.6';
 export const RELEASE_DATE = '29/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v5.0.5 - Khắc Phục Triệt Để Lỗi Đen Màn Hình & Chuẩn Xác 100% Khung Hình Sân Khấu Chính',
-    description: '1. Chuẩn xác 100% số lượng khung hình: Sân khấu có 1 video -> Window Capture và link TikTok Live Studio hiển thị DUY NHẤT 1 video, tuyệt đối không bị thừa/dư khung hình nền và nhân vật đè lặp. 2. Khắc phục triệt để màn hình đen TikTok Live Studio: Tự động chuyển đổi toàn bộ đường dẫn /uploads/ sang Cloudflare Tunnel HTTPS an toàn cao, chống lỗi CORS và chống 404 trên mọi trình duyệt CEF. 3. Đồng bộ hoàn hảo Multi-Avatar: Hiển thị đúng 2-4 nhân vật theo kịch bản, các lớp PiP, Banner, Text hoạt động mượt mà 60 FPS.'
+    title: '🚀 Bản Cập Nhật v5.0.6 - Tối Ưu Giao Diện Sân Khấu & Độc Lập Trạng Thái Live Idol Avatar',
+    description: '1. Giao diện sạch & tinh gọn: Đã xóa các nút OBS CAPTURE, LINK TIKTOK và nút Link Live ngoài header theo yêu cầu. 2. Ngắt kết nối đồng bộ tức thì: Khi ngắt đồng bộ Sân Khấu Phụ (Live Idol Avatar) sang Sân Khấu Chính, hệ thống ngắt ngay lập tức 0ms và bảo toàn 100% video, nhân vật và thiết lập trên sân khấu phụ. 3. Khóa trạng thái Tạm Dừng & Tắt Tiếng: Khi người dùng bấm Tạm dừng hoặc Tắt tiếng trên Sân Khấu Chính, hệ thống tuyệt đối giữ nguyên trạng thái và không tự ý phát lại hay tự ý bật tiếng.'
   }
 ];
 

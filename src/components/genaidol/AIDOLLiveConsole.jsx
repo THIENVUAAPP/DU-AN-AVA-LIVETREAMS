@@ -690,68 +690,6 @@ export default function AIDOLLiveConsole() {
               <span className="text-[10px] font-black text-red-400">ĐANG LIVE</span>
             </div>
           )}
-
-          {/* 🖥️ NÚT MỞ CỬA SỔ WINDOW CAPTURE OBS */}
-          <button
-            type="button"
-            onClick={() => {
-              if (typeof window !== 'undefined') {
-                window.open('/window-capture?stage=idol&mode=window_capture&sound=1&autoplay=1&fit=cover', 'AvaLiveWindowCaptureIdol', 'width=450,height=800,menubar=no,toolbar=no,location=no,status=no');
-              }
-            }}
-            className="px-3 py-1.5 bg-cyan-950/90 hover:bg-cyan-900 text-cyan-300 border border-cyan-500/50 rounded-lg text-[11px] font-black flex items-center gap-1.5 shadow-md cursor-pointer transition-all"
-            title="Mở Cửa Sổ 9:16 Siêu Nét Để Thêm Vào Nguồn Window Capture Trên OBS / TikTok Live Studio"
-          >
-            <Monitor className="w-3.5 h-3.5 text-cyan-400" />
-            <span className="hidden sm:inline">OBS CAPTURE</span>
-          </button>
-
-          {/* 📋 NÚT COPY LINK TIKTOK LIVE STUDIO (ONLINE HTTPS CHUẨN CLOUDFLARE TUNNEL) */}
-          <button
-            type="button"
-            onClick={async () => {
-              if (typeof window !== 'undefined') {
-                let tunnelUrl = '';
-                try {
-                  const savedTunnel = localStorage.getItem('avalive_tunnel_url') || localStorage.getItem('aidol_online_stream_url');
-                  if (savedTunnel && savedTunnel.startsWith('https://') && !savedTunnel.includes('localhost') && !savedTunnel.includes('127.0.0.1') && !savedTunnel.includes('avalivepro.vercel.app')) {
-                    tunnelUrl = savedTunnel;
-                  }
-                } catch(e) {}
-
-                // Nếu chưa có hoặc là local, fetch từ backend để lấy Tunnel HTTPS thật
-                if (!tunnelUrl) {
-                  try {
-                    const res = await fetch('/api/live-state');
-                    if (res.ok) {
-                      const data = await res.json();
-                      const backendTunnel = data.tunnelUrl || (data.tunnels && data.tunnels[0]) || '';
-                      if (backendTunnel && backendTunnel.startsWith('https://') && !backendTunnel.includes('localhost') && !backendTunnel.includes('127.0.0.1') && !backendTunnel.includes('avalivepro.vercel.app')) {
-                        tunnelUrl = backendTunnel;
-                        try { localStorage.setItem('avalive_tunnel_url', backendTunnel); } catch(e) {}
-                      }
-                    }
-                  } catch(e) {}
-                }
-
-                if (!tunnelUrl) {
-                  alert('⚠️ TikTok Live Studio chặn localhost và website! Máy chủ đang tự động kích hoạt Cloudflare Tunnel HTTPS, vui lòng đợi 3-5 giây rồi bấm lại nút này!');
-                  return;
-                }
-
-                const liveUrl = `${tunnelUrl.replace(/\/$/, '')}/live-stream`;
-                if (navigator.clipboard) {
-                  navigator.clipboard.writeText(liveUrl);
-                  alert(`📋 Đã sao chép link TikTok Live Studio (Online HTTPS):\n${liveUrl}`);
-                }
-              }
-            }}
-            className="px-3 py-1.5 bg-fuchsia-950/90 hover:bg-fuchsia-900 text-fuchsia-300 border border-fuchsia-500/50 rounded-lg text-[11px] font-black flex items-center gap-1.5 shadow-md cursor-pointer transition-all"
-            title="Sao chép đường link Online HTTPS (Cloudflare Tunnel) để dán vào TikTok Live Studio (Browser Source)"
-          >
-            <Radio className="w-3.5 h-3.5 text-fuchsia-400 animate-pulse" />
-            <span className="hidden sm:inline">LINK TIKTOK</span>
-          </button>
         </div>
 
         <div className="flex items-center gap-2">

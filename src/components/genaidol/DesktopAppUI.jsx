@@ -2641,8 +2641,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         try {
           sessionStorage.setItem('aidol_user_paused_script', 'true');
           sessionStorage.setItem('aidol_is_script_live_running', 'false');
+          sessionStorage.setItem('avalive_user_paused', 'true');
           localStorage.setItem('aidol_user_paused_script', 'true');
           localStorage.setItem('aidol_is_script_live_running', 'false');
+          localStorage.setItem('avalive_user_paused', 'true');
           window.__aidolUserPausedScript = true;
         } catch (e) {}
         try {
@@ -2680,17 +2682,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       } else {
         try {
           sessionStorage.removeItem('aidol_user_paused_script');
+          sessionStorage.removeItem('avalive_user_paused');
           localStorage.removeItem('aidol_user_paused_script');
+          localStorage.removeItem('avalive_user_paused');
           window.__aidolUserPausedScript = false;
         } catch (e) {}
+        const isCurrentMuted = isLocalSpeakerMuted || liveAudioMuted;
         if (vid && vid.src) {
           vid.dataset.userPaused = 'false';
-          // Bấm vào giữa màn hình video: BẬT VOICE (unmute) và phát video
-          setIsLocalSpeakerMuted(false);
-          setLiveAudioMuted(false);
-          isLocalSpeakerMutedRef.current = false;
-          vid.muted = false;
-          vid.volume = liveVolume || 1.0;
+          vid.muted = isCurrentMuted;
+          if (!isCurrentMuted) {
+            vid.volume = liveVolume || 1.0;
+          }
           const playPromise = vid.play();
           if (playPromise !== undefined) {
             playPromise.catch((err) => {
@@ -2706,7 +2709,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         sendVideoControl({
           action: 'play',
           isPlaying: true,
-          isMuted: false,
+          isMuted: isCurrentMuted,
           currentTime: vid ? vid.currentTime : 0,
           mediaUrl: vid ? (vid.currentSrc || vid.src) : null,
           timestamp: Date.now()
@@ -2717,12 +2720,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           isPlaying: true,
           videoCurrentTime: vid ? vid.currentTime : 0
         }, socketRef.current);
-        showToast('▶️ Đang tiếp tục phát video (Đã BẬT VOICE)', 'success');
+        showToast('▶️ Đang tiếp tục phát video', 'success');
       }
     } catch (err) {
       console.warn('[VideoPlayback] Error toggling video:', err);
     }
-  }, [isVideoPlaying, liveVolume]);
+  }, [isVideoPlaying, liveVolume, isLocalSpeakerMuted, liveAudioMuted]);
 
   // Phím tắt thông minh [Phím Cách / Space] điều khiển Tạm dừng / Tiếp tục Video trên khung hình
   useEffect(() => {
@@ -5673,6 +5676,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             disableRemotePlayback
             muted={liveAudioMuted || isLocalSpeakerMuted}
             onLoadedData={(e) => {
+              const isPausedByUser = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
+              if (isPausedByUser || e.currentTarget.dataset.userPaused === 'true') {
+                try { e.currentTarget.pause(); } catch (err) {}
+                return;
+              }
               try {
                 e.currentTarget.play().then(() => setIsVideoPlaying(true)).catch(() => {});
               } catch (err) {}
@@ -5689,7 +5697,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   try {
                     const freshUrl = URL.createObjectURL(blob);
                     e.currentTarget.src = freshUrl;
-                    e.currentTarget.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+                    const isPausedByUser = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
+                    if (!isPausedByUser && e.currentTarget.dataset.userPaused !== 'true') {
+                      e.currentTarget.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+                    }
                     return;
                   } catch (recErr) {}
                 }
@@ -6769,18 +6780,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
           <button onClick={() => setIsDarkMode(!isDarkMode)} className={`p-0.5 rounded transition-colors ${isDarkMode ? 'bg-gray-800 text-gray-300 hover:bg-gray-700' : 'bg-gray-400 text-gray-800 hover:bg-gray-500'}`}>
             {isDarkMode ? <Sun size={10} /> : <Moon size={10} />}
-          </button>
-
-          {/* Nút Mở Link Realtime TikTok LIVE Studio & OBS Studio (Cloudflare Tunnel) */}
-          <button
-            onClick={() => {
-              setShowOverlayModal(true);
-            }}
-            className="flex items-center gap-1 px-1.5 py-0.5 rounded-md text-[10px] font-bold border shadow-xs transition-all hover:scale-105 cursor-pointer bg-cyan-600/80 hover:bg-cyan-500 text-white border-cyan-400/50"
-            title="Mở & Sao chép Link Live Overlay Cloudflare Tunnel cho TikTok LIVE Studio / OBS Studio"
-          >
-            <Radio size={10} className="text-yellow-300 animate-pulse" />
-            <span className="whitespace-nowrap">📡 Link Live</span>
           </button>
 
           {/* 👑 1 Ô DUY NHẤT: LOGO TÀI KHOẢN + GÓI + SỐ DƯ TOKEN & THỜI GIAN LIVE */}

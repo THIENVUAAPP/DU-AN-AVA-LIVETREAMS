@@ -191,7 +191,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
   // 🎯 KIỂM TRA CHÍNH XÁC XEM STREAMER CÓ CHỦ ĐỘNG BẤM TẠM DỪNG HAY KHÔNG (MẶC ĐỊNH LUÔN PHÁT 0MS KHI MỞ LINK)
   const checkIfUserPaused = () => {
-    return isUserPausedRef.current === true;
+    if (isUserPausedRef.current === true) return true;
+    try {
+      if (typeof localStorage !== 'undefined' && isWindowCapture && localStorage.getItem('avalive_user_paused') === 'true') {
+        return true;
+      }
+    } catch (e) {}
+    return false;
   };
 
   // Khởi tạo: Trừ khi URL cố ý truyền ?paused=true, còn lại mặc định luôn PHÁT NGAY LẬP TỨC 0ms

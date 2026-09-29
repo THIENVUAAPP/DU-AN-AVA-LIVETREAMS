@@ -1279,11 +1279,9 @@ export default function LivestreamFlowSequencer() {
       });
 
       // 🔌 Ngắt kết nối đồng bộ — fire event để Sân Khấu Chính xóa sạch lớp phủ sequencer & ngắt lập tức 0ms
+      // 🛡️ Sân khấu phụ (Live Idol Avatar) giữ nguyên 100% video, nhân vật và cấu hình hiện tại
       window.dispatchEvent(new CustomEvent('avalive:sequencer_sync_disconnected', {
         detail: { isSynced: false, source: 'user_toggle', clearStage: true, clearMedia: true }
-      }));
-      window.dispatchEvent(new CustomEvent('avalive_multi_avatar_changed', {
-        detail: { ...(multiAvatarConfig || {}), enabled: false, activeCount: 0, avatars: [], clearMedia: true }
       }));
       try {
         const bc = new BroadcastChannel('avalive_master_live_stream');
@@ -1299,7 +1297,7 @@ export default function LivestreamFlowSequencer() {
         });
         setTimeout(() => bc.close(), 100);
       } catch (e) {}
-      toast.info('📴 Đã ngắt đồng bộ & dừng phát — Sân Khấu Chính và link Live tự động ngắt sạch sẽ');
+      toast.info('📴 Đã ngắt đồng bộ & dừng phát — Sân Khấu Chính tự động ngắt, Sân Khấu Phụ được bảo toàn');
     }
   };
 
@@ -3040,69 +3038,6 @@ export default function LivestreamFlowSequencer() {
           >
             {isMasterVoiceEnabled ? <Volume2 size={13} className="text-emerald-400" /> : <Volume2 size={13} className="text-rose-400 opacity-60" />}
             <span className="hidden sm:inline">{isMasterVoiceEnabled ? 'VOICE AI: BẬT' : 'VOICE AI: TẮT'}</span>
-          </button>
-
-          {/* 🖥️ NÚT MỞ CỬA SỔ WINDOW CAPTURE OBS */}
-          <button
-            type="button"
-            onClick={() => {
-              if (typeof window !== 'undefined') {
-                window.open('/window-capture?stage=idol&mode=window_capture&sound=1&autoplay=1&fit=cover', 'AvaLiveWindowCaptureIdol', 'width=450,height=800,menubar=no,toolbar=no,location=no,status=no');
-                toast.success('🖥️ Đã mở Cửa Sổ Window Capture OBS cho Luồng Live Idol Avatar!');
-              }
-            }}
-            className="px-2.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md cursor-pointer bg-cyan-950/90 hover:bg-cyan-900 text-cyan-300 border border-cyan-500/50"
-            title="Mở Cửa Sổ 9:16 Siêu Nét Để Thêm Vào Nguồn Window Capture Trên OBS / TikTok Live Studio"
-          >
-            <Monitor size={13} className="text-cyan-400" />
-            <span className="hidden sm:inline">OBS CAPTURE</span>
-          </button>
-
-          {/* 📋 NÚT COPY LINK TIKTOK LIVE STUDIO (ONLINE HTTPS CHUẨN CLOUDFLARE TUNNEL) */}
-          <button
-            type="button"
-            onClick={async () => {
-              if (typeof window !== 'undefined') {
-                let tunnelUrl = '';
-                try {
-                  const savedTunnel = localStorage.getItem('avalive_tunnel_url') || localStorage.getItem('aidol_online_stream_url');
-                  if (savedTunnel && savedTunnel.startsWith('https://') && !savedTunnel.includes('localhost') && !savedTunnel.includes('127.0.0.1') && !savedTunnel.includes('avalivepro.vercel.app')) {
-                    tunnelUrl = savedTunnel;
-                  }
-                } catch(e) {}
-
-                // Nếu chưa có hoặc là local, fetch từ backend để lấy Tunnel HTTPS thật
-                if (!tunnelUrl) {
-                  try {
-                    const res = await fetch('/api/live-state');
-                    if (res.ok) {
-                      const data = await res.json();
-                      const backendTunnel = data.tunnelUrl || (data.tunnels && data.tunnels[0]) || '';
-                      if (backendTunnel && backendTunnel.startsWith('https://') && !backendTunnel.includes('localhost') && !backendTunnel.includes('127.0.0.1') && !backendTunnel.includes('avalivepro.vercel.app')) {
-                        tunnelUrl = backendTunnel;
-                        try { localStorage.setItem('avalive_tunnel_url', backendTunnel); } catch(e) {}
-                      }
-                    }
-                  } catch(e) {}
-                }
-
-                if (!tunnelUrl) {
-                  toast.error('⚠️ TikTok Live Studio chặn localhost và website! Máy chủ đang tự động kích hoạt Cloudflare Tunnel HTTPS, vui lòng đợi 3-5 giây rồi bấm lại nút này!', { duration: 5000 });
-                  return;
-                }
-
-                const liveUrl = `${tunnelUrl.replace(/\/$/, '')}/live-stream`;
-                if (navigator.clipboard) {
-                  navigator.clipboard.writeText(liveUrl);
-                  toast.success(`📋 Đã sao chép link TikTok Live Studio (Online HTTPS): ${liveUrl}`);
-                }
-              }
-            }}
-            className="px-2.5 py-1.5 rounded-xl text-xs font-black transition-all flex items-center gap-1.5 shadow-md cursor-pointer bg-fuchsia-950/90 hover:bg-fuchsia-900 text-fuchsia-300 border border-fuchsia-500/50"
-            title="Sao chép đường link Online HTTPS (Cloudflare Tunnel) để dán vào TikTok Live Studio (Browser Source)"
-          >
-            <Radio size={13} className="text-fuchsia-400 animate-pulse" />
-            <span className="hidden sm:inline">LINK TIKTOK</span>
           </button>
 
           {/* 📡 NÚT ĐỒNG BỘ RA SÂN KHẤU CHÍNH (BẬT = MÀU XANH, TẮT = MÀU ĐỎ - DO NGƯỜI DÙNG BẤM TẮT/MỞ) */}
