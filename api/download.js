@@ -43,23 +43,40 @@ export default async function handler(req, res) {
 
       // 1. Ưu tiên cao nhất: Kiểm tra tag của đúng phiên bản hiện tại v${currentVersion}
       const tagRes = await fetch(`https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/tags/v${currentVersion}`, { headers });
+      let foundAsset = false;
       if (tagRes.ok) {
         const rel = await tagRes.json();
         const asset = (rel.assets || []).find(a => a.name && (a.name === targetFileName || (a.name.startsWith(osPrefix) && a.name.endsWith('.zip'))));
         if (asset && asset.browser_download_url) {
           downloadUrl = asset.browser_download_url;
+          foundAsset = true;
         }
-      } else {
-        // 2. Quét danh sách Releases mới nhất nếu có asset chính xác của phiên bản hiện tại
-        const relsRes = await fetch('https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases?per_page=10', { headers });
+      }
+
+      // 2. Nếu chưa có trên tag hiện tại, quét danh sách Releases mới nhất
+      if (!foundAsset) {
+        const relsRes = await fetch('https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases?per_page=15', { headers });
         if (relsRes.ok) {
           const releases = await relsRes.json();
           if (Array.isArray(releases)) {
+            // Ưu tiên theo tên file phiên bản hiện tại
             for (const rel of releases) {
               const asset = (rel.assets || []).find(a => a.name && a.name === targetFileName);
               if (asset && asset.browser_download_url) {
                 downloadUrl = asset.browser_download_url;
+                foundAsset = true;
                 break;
+              }
+            }
+            // Nếu vẫn chưa có, lấy asset zip mới nhất của OS này
+            if (!foundAsset) {
+              for (const rel of releases) {
+                const asset = (rel.assets || []).find(a => a.name && a.name.startsWith(osPrefix) && a.name.endsWith('.zip'));
+                if (asset && asset.browser_download_url) {
+                  downloadUrl = asset.browser_download_url;
+                  foundAsset = true;
+                  break;
+                }
               }
             }
           }

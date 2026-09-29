@@ -4152,8 +4152,6 @@ let _lastReleaseFetchTime = 0;
 async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
   const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
   const targetVer = fallbackVer || '5.0.4';
-  const safeFallbackUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${targetVer}/${osPrefix}_v${targetVer}.zip`;
-  
   const cacheKey = `${osPrefix}_v${targetVer}`;
   if (_cachedReleaseUrls[cacheKey] && (Date.now() - _lastReleaseFetchTime < 60000)) {
     return _cachedReleaseUrls[cacheKey];
@@ -4178,13 +4176,23 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
       }
     }
 
-    // 2. Thử lấy danh sách Releases mới nhất từ GitHub khớp chính xác version
-    const relsRes = await fetch('https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases?per_page=10', { headers });
+    // 2. Thử lấy danh sách Releases mới nhất từ GitHub khớp chính xác version hoặc lấy asset zip mới nhất
+    const relsRes = await fetch('https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases?per_page=15', { headers });
     if (relsRes.ok) {
       const releases = await relsRes.json();
       if (Array.isArray(releases)) {
+        // Ưu tiên 1: release có tên file khớp version
         for (const rel of releases) {
           const asset = (rel.assets || []).find(a => a.name && a.name === `${osPrefix}_v${targetVer}.zip`);
+          if (asset && asset.browser_download_url) {
+            _cachedReleaseUrls[cacheKey] = asset.browser_download_url;
+            _lastReleaseFetchTime = Date.now();
+            return asset.browser_download_url;
+          }
+        }
+        // Ưu tiên 2: bất kỳ asset zip nào thuộc OS này trong các release gần nhất
+        for (const rel of releases) {
+          const asset = (rel.assets || []).find(a => a.name && a.name.startsWith(osPrefix) && a.name.endsWith('.zip'));
           if (asset && asset.browser_download_url) {
             _cachedReleaseUrls[cacheKey] = asset.browser_download_url;
             _lastReleaseFetchTime = Date.now();
@@ -4196,7 +4204,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
   } catch (e) {
     console.warn('[Download] Error resolving GitHub asset URL:', e.message);
   }
-  return safeFallbackUrl;
+  return `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${targetVer}/${osPrefix}_v${targetVer}.zip`;
 }
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
@@ -4227,9 +4235,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
         const statB = fs.statSync(path.join(releaseDir, b)).mtimeMs;
         return statB - statA;
       });
-      if (files[0].includes(`_v${ver}.zip`)) {
-        return res.download(path.join(releaseDir, files[0]), `AvaLive_VIP_PRO_Windows_v${ver}.zip`);
-      }
+      return res.download(path.join(releaseDir, files[0]), `AvaLive_VIP_PRO_Windows_v${ver}.zip`);
     }
   }
 
@@ -4268,9 +4274,7 @@ app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VI
         const statB = fs.statSync(path.join(releaseDir, b)).mtimeMs;
         return statB - statA;
       });
-      if (files[0].includes(`_v${ver}.zip`)) {
-        return res.download(path.join(releaseDir, files[0]), `AvaLive_VIP_PRO_Mac_v${ver}.zip`);
-      }
+      return res.download(path.join(releaseDir, files[0]), `AvaLive_VIP_PRO_Mac_v${ver}.zip`);
     }
   }
 
