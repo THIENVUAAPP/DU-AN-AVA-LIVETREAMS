@@ -1812,7 +1812,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     };
     window.addEventListener('storage', handleStorage);
 
-    // 6. HEARTBEAT POLLING (Có khóa chống dồn ứ request khi phát sóng hàng chục tiếng)
+    // 6. HEARTBEAT POLLING (Đồng bộ thời gian thực siêu tốc OBS & TikTok Live Studio)
     let lastUpdatedTimestamp = 0;
     let isFetchingLiveState = false;
     const pollInterval = setInterval(() => {
@@ -1820,7 +1820,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         const saved = localStorage.getItem('avalive_master_live_state');
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (!masterStateRef.current?.mediaUrl || (parsed.updatedAt && parsed.updatedAt > lastUpdatedTimestamp) || (parsed.mediaUrl && !isSameMediaUrl(parsed.mediaUrl, masterStateRef.current?.mediaUrl))) {
+          if (parsed && (parsed.updatedAt !== lastUpdatedTimestamp || parsed.mediaUrl !== masterStateRef.current?.mediaUrl || parsed.clearMedia !== masterStateRef.current?.clearMedia)) {
             if (parsed.updatedAt) lastUpdatedTimestamp = parsed.updatedAt;
             applyMasterState(parsed);
           }
@@ -1833,7 +1833,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       fetch(endpoint)
         .then(r => r.json())
         .then(data => {
-          if (data && (!masterStateRef.current?.mediaUrl || (data.updatedAt && data.updatedAt > lastUpdatedTimestamp) || (data.mediaUrl && !isSameMediaUrl(data.mediaUrl, masterStateRef.current?.mediaUrl)))) {
+          if (data && (data.updatedAt !== lastUpdatedTimestamp || data.mediaUrl !== masterStateRef.current?.mediaUrl || data.clearMedia !== masterStateRef.current?.clearMedia)) {
             if (data.updatedAt) lastUpdatedTimestamp = data.updatedAt;
             applyMasterState(data);
           }
@@ -1842,7 +1842,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         .finally(() => {
           isFetchingLiveState = false;
         });
-    }, 2000);
+    }, 1500);
 
     return () => {
       clearInterval(frameInterval);
@@ -2474,7 +2474,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   LIVE 9:16
                 </span>
                 <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                  v5.0.1
+                  v5.0.2
                 </span>
               </div>
 
@@ -3221,18 +3221,33 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 }}
               />
             ) : activeMedia.url ? (
-              <AiRealtimeLipSyncAvatar 
-                src={activeMedia.url} 
-                type="image"
-                alt="AI Idol"
-                isSpeaking={isSpeakerActive}
-                speakerId={activeSpeakerId || 'avatar_1'}
-                role="idol"
-                className="w-full h-full select-none absolute inset-0"
-                style={{ width: '100%', height: '100%', objectFit: objectFitState || 'cover', imageRendering: '-webkit-optimize-contrast', ...singleMainChroma }}
-                enableLipSync={true}
-                showIndicator={false}
-              />
+              isImageMedia(activeMedia.url) ? (
+                <img 
+                  src={activeMedia.url} 
+                  alt="Stage Media"
+                  className="w-full h-full select-none absolute inset-0 block pointer-events-none"
+                  style={{ 
+                    width: '100%', 
+                    height: '100%', 
+                    objectFit: objectFitState || 'cover', 
+                    imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto', 
+                    ...singleMainChroma 
+                  }}
+                />
+              ) : (
+                <AiRealtimeLipSyncAvatar 
+                  src={activeMedia.url} 
+                  type="video"
+                  alt="AI Idol"
+                  isSpeaking={isSpeakerActive}
+                  speakerId={activeSpeakerId || 'avatar_1'}
+                  role="idol"
+                  className="w-full h-full select-none absolute inset-0"
+                  style={{ width: '100%', height: '100%', objectFit: objectFitState || 'cover', imageRendering: '-webkit-optimize-contrast', ...singleMainChroma }}
+                  enableLipSync={true}
+                  showIndicator={false}
+                />
+              )
             ) : (
               <div className="absolute inset-0 w-full h-full flex flex-col items-center justify-center bg-gradient-to-br from-[#07080d] via-[#0d1017] to-[#040508] text-center p-6 select-none">
                 <div className="w-20 h-20 rounded-3xl bg-gradient-to-tr from-pink-600 via-rose-600 to-red-600 flex items-center justify-center mb-5 shadow-2xl shadow-rose-500/30 animate-pulse">

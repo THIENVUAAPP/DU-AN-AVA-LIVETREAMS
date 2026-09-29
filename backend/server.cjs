@@ -4137,7 +4137,7 @@ let _cachedReleaseUrls = {};
 let _lastReleaseFetchTime = 0;
 async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
   const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
-  const targetVer = fallbackVer || '5.0.1';
+  const targetVer = fallbackVer || '5.0.2';
   const safeFallbackUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${targetVer}/${osPrefix}_v${targetVer}.zip`;
   
   const cacheKey = `${osPrefix}_v${targetVer}`;
@@ -4187,7 +4187,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '5.0.1';
+  let ver = '5.0.2';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -4227,7 +4227,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '5.0.1';
+  let ver = '5.0.2';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -5395,8 +5395,9 @@ app.post('/api/live-state', (req, res) => {
     delete payload.force; // Không lưu cờ force vào live state
 
     // 🗑️ NẾU YÊU CẦU XÓA MEDIA HOẶC ĐÃ XÓA VIDEO NỀN
-    if (payload.clearMedia === true || payload.isMainMediaDeleted || payload.mediaUrl === '' || payload.mediaUrl === null) {
+    if (payload.clearStage === true || payload.clearMedia === true || (payload.isMasterSynced === false && payload.clearMedia)) {
       payload.mediaUrl = null;
+      payload.mainMediaUrl = null;
       payload.clearMedia = true;
       currentMasterLiveState.mediaUrl = null;
       currentMasterLiveState.mainMediaUrl = null;
@@ -5405,15 +5406,20 @@ app.post('/api/live-state', (req, res) => {
       currentMasterLiveState.isPlaying = false;
       currentMasterLiveState.videoPlaybackEvent = 'pause';
       currentMasterLiveState.videoCurrentTime = 0;
-      if (payload.clearMedia === true) {
-        currentMasterLiveState.syncedAvatars = [];
-        currentMasterLiveState.multiAvatarConfig = null;
-        currentMasterLiveState.secondaryMediaUrl = null;
-        currentMasterLiveState.overlayImage = null;
-        currentMasterLiveState.overlayText = null;
-        currentMasterLiveState.title = null;
-      }
-    } else if (payload.mediaUrl || payload.mainMediaUrl || payload.secondaryMediaUrl || (Array.isArray(payload.syncedAvatars) && payload.syncedAvatars.length > 0)) {
+      currentMasterLiveState.syncedAvatars = [];
+      currentMasterLiveState.multiAvatarConfig = null;
+      currentMasterLiveState.secondaryMediaUrl = null;
+      currentMasterLiveState.overlayImage = null;
+      currentMasterLiveState.overlayText = null;
+      currentMasterLiveState.title = null;
+    } else if (payload.isMainMediaDeleted || payload.mediaUrl === '' || payload.mediaUrl === null) {
+      payload.mediaUrl = null;
+      payload.mainMediaUrl = null;
+      payload.clearMedia = false;
+      currentMasterLiveState.mediaUrl = null;
+      currentMasterLiveState.mainMediaUrl = null;
+      currentMasterLiveState.clearMedia = false;
+    } else {
       payload.clearMedia = false;
       currentMasterLiveState.clearMedia = false;
     }

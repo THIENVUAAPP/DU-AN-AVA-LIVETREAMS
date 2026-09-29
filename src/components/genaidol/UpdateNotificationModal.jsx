@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.0.1';
+export const APP_VERSION = '5.0.2';
 export const RELEASE_DATE = '29/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v5.0.1 - Hoàn Thiện Đồng Bộ Siêu Tốc 60 FPS Cho Window Capture OBS & TikTok Live Studio',
-    description: '1. Sửa Triệt Để Lỗi Hiển Thị Window Capture & TikTok Live Studio: Đảm bảo luồng phát trực tiếp từ Sân Khấu Chính đồng bộ 100% thời gian thực ra Window Capture OBS và link TikTok Live Studio, hình ảnh/video/avatar siêu sắc nét 60 FPS, không còn hiện tượng crash hay màn hình đen. 2. Bảo Toàn Dữ Liệu Sân Khấu Phụ (Live Idol Avatar): Khi ngắt đồng bộ ra ngoài Sân Khấu Chính, toàn bộ kịch bản, bước chạy, avatar, video và thiết lập bên trong Sân Khấu Phụ được giữ nguyên vẹn 100% cho người dùng biên soạn. 3. Khóa chặt bảo toàn toàn bộ các tab và module khác.'
+    title: '🚀 Bản Cập Nhật v5.0.2 - Đồng Bộ Tuyệt Đối 100% Sân Khấu Chính, Window Capture OBS & TikTok Live Studio (Ảnh Nền Tĩnh Siêu Sắc Nét 60 FPS)',
+    description: '1. Đồng Bộ Tuyệt Đối Toàn Bộ Khung Hình: Đồng bộ 100% thời gian thực tất cả các lớp video, ảnh nền chính, PiP, Avatar 1-4, lời thoại/phụ đề, tiêu đề, âm thanh và tọa độ Transform ra Window Capture OBS và link TikTok Live Studio. 2. Khóa Nền Tĩnh Siêu Sắc Nét: Ảnh nền luôn ở trạng thái tĩnh 100%, tuyệt đối không bị rung lắc hay chuyển động nhép miệng ngoài ý muốn, hiển thị siêu sắc nét 60 FPS. 3. Bảo toàn nguyên vẹn mọi kịch bản và tab chức năng khác.'
   }
 ];
 
