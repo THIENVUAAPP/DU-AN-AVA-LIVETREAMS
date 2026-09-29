@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.0.6';
+export const APP_VERSION = '5.0.7';
 export const RELEASE_DATE = '29/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v5.0.6 - Tối Ưu Giao Diện Sân Khấu & Độc Lập Trạng Thái Live Idol Avatar',
-    description: '1. Giao diện sạch & tinh gọn: Đã xóa các nút OBS CAPTURE, LINK TIKTOK và nút Link Live ngoài header theo yêu cầu. 2. Ngắt kết nối đồng bộ tức thì: Khi ngắt đồng bộ Sân Khấu Phụ (Live Idol Avatar) sang Sân Khấu Chính, hệ thống ngắt ngay lập tức 0ms và bảo toàn 100% video, nhân vật và thiết lập trên sân khấu phụ. 3. Khóa trạng thái Tạm Dừng & Tắt Tiếng: Khi người dùng bấm Tạm dừng hoặc Tắt tiếng trên Sân Khấu Chính, hệ thống tuyệt đối giữ nguyên trạng thái và không tự ý phát lại hay tự ý bật tiếng.'
+    title: '🚀 Bản Cập Nhật v5.0.7 - Chuyển Cảnh Siêu Mượt & Khóa Chặt Ngắt Kết Nối Đồng Bộ',
+    description: '1. Chuyển cảnh siêu mượt mà: Đồng bộ hoàn hảo 100% mọi thiết lập giữa Live Idol Avatar và Sân Khấu Chính (Voice AI, video nền, hình ảnh PiP, banner, tiêu đề chữ nổi, Multi-Avatar transforms và hiệu ứng phát âm) mượt mà 60 FPS, không chớp tắt, không giật lag. 2. Khóa ngắt kết nối tuyệt đối: Khi streamer tắt đồng bộ từ Sân Khấu Phụ sang Sân Khấu Chính, hệ thống ngắt kết nối lập tức 0ms và tuyệt đối không tự ý mở lại hoặc gửi dữ liệu bất kỳ bước nào khi chưa bật đồng bộ. 3. Sân khấu phụ hoạt động độc lập hoàn toàn, bảo toàn nguyên vẹn 100% video và nhân vật.'
   }
 ];
 

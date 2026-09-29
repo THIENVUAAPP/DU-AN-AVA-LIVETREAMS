@@ -640,9 +640,11 @@ export default function LivestreamFlowSequencer() {
   // 📡 Đẩy video và dữ liệu phân đoạn của bước hiện tại lên Sân khấu chính (OBS / TikTok Live / Master)
   const syncStepToServer = (step, index = 0, isLivePlaying = true, forceSync = false) => {
     if (!step) return;
-    // 🛡️ Đồng bộ ra Sân Khấu Chính khi forceSync hoặc đang chạy kịch bản hoặc người dùng đã bấm bật đồng bộ
-    const shouldSync = forceSync || isPlayingFlowRef.current || isPlayingFlow || isMasterSyncedRef.current || isMasterSynced;
-    if (!shouldSync) return;
+    // 🛡️ CHỈ ĐỒNG BỘ RA SÂN KHẤU CHÍNH KHI NGƯỜI DÙNG ĐÃ CHỦ ĐỘNG BẬT "ĐỒNG BỘ RA SÂN KHẤU CHÍNH"
+    // Nếu người dùng đã tắt / ngắt kết nối thì TUYỆT ĐỐI KHÔNG gửi bất kỳ dữ liệu nào sang Sân Khấu Chính
+    const isCurrentlySynced = isMasterSyncedRef.current ?? isMasterSynced;
+    if (!isCurrentlySynced && !forceSync) return;
+    if (!isCurrentlySynced) return;
     
     const resolved = resolveStepMedia(index);
     let mediaToPlay = step.isMainMediaDeleted ? '' : (resolved.mediaUrl || step.mediaUrl || multiAvatarConfig?.backgroundUrl || '');
@@ -1192,6 +1194,7 @@ export default function LivestreamFlowSequencer() {
   const handleToggleMasterSync = () => {
     const nextSync = !isMasterSynced;
     setIsMasterSynced(nextSync);
+    isMasterSyncedRef.current = nextSync;
     try {
       if (nextSync) {
         localStorage.removeItem('aidol_user_paused_script');
