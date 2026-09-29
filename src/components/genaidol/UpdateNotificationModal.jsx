@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.1.3';
+export const APP_VERSION = '5.1.4';
 export const RELEASE_DATE = '29/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '🛍️ Bản Cập Nhật v5.1.4 - Đồng Bộ Sản Phẩm THẬT 100% Từ TikTok Shop Dashboard & Giải Captcha Thông Minh',
+    description: '1. Đồng bộ dữ liệu thật 100%: Thay thế toàn bộ dữ liệu mock bằng danh mục sản phẩm thật từ TikTok Shop Dashboard (HAVATA, Tạ tay 40KG, Quấn cổ chân, Mini Band, Thảm Yoga...). 2. Ghim sản phẩm live chuẩn xác: Tự động nhận diện và ghim sản phẩm thật trực tiếp lên luồng Live Studio. 3. Giải Captcha thông minh: Tự động vượt qua Slider Puzzle & Turnstile cho TikTok Shop và Shopee Live mà không làm gián đoạn phiên live.'
+  },
   {
     title: '🎥 Bản Cập Nhật v5.1.3 - Bộ Điều Khiển Camera Live Studio 8 Hướng & Xóa Phông AI Siêu Sạch',
     description: '1. Xóa phông bất kỳ vị trí nào siêu sạch: Tích hợp AI tách người, chế độ giữ nhân vật + bàn ghế / máy tính / sản phẩm, Chroma Key phông xanh lá / xanh dương và cắt xén đa điểm mượt mà 60 FPS. 2. Điều khiển Camera 8 hướng siêu tiện lợi: D-Pad 8 hướng di chuyển camera lên/xuống/trái/phải và 4 góc chéo. 3. Tinh chỉnh đa góc đa điểm: Phóng to Zoom 1.0x - 3.5x, xoay góc 360°, lật gương và chuyển đổi tỉ lệ 16:9, 9:16 TikTok, tròn.'

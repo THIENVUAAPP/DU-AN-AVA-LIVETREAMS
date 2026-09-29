@@ -510,11 +510,12 @@ const getDefaultEventConfigs = () => {
         }
       ] : [],
 
-      // Checkout Products
+      // Checkout Products (Đồng bộ trực tiếp từ sàn TikTok Shop shop.tiktok.com)
       checkoutProducts: ev.id === 'checkout' ? [
-        { id: 1, active: true, productName: 'AVA LIVE', keywords: 'ava live;phần mềm;giá;liên hệ;tư vấn;mua;dùng thử;gói;bản quyền', priceInfo: 'Giá gốc 3.500.000đ - Giá live 1.750.000đ', videoFolder: 'bình luận', videoUrl: '', useAi: true, useTTS: true, ttsVoiceRole: 'idol', muteSourceVideo: true, aiPrompt: NEW_AI_PROMPT },
-        { id: 2, active: false, productName: '', keywords: '', priceInfo: '', videoFolder: '', videoUrl: '', useAi: false, useTTS: false, ttsVoiceRole: 'idol', muteSourceVideo: false, aiPrompt: '' },
-        { id: 3, active: false, productName: '', keywords: '', priceInfo: '', videoFolder: '', videoUrl: '', useAi: false, useTTS: false, ttsVoiceRole: 'idol', muteSourceVideo: false, aiPrompt: '' }
+        { id: 1, active: true, productName: 'Áo bra có mút cổ yếm HAVATA cao cấp nâng ngực dáng thể thao tập gym yoga', keywords: 'mã 1;mã 01;áo bra;bra;áo tập;havata;yếm;chốt 1;sp1;mua 1', priceInfo: '49.999 ₫ (Gốc: 83.332 ₫)', videoFolder: 'bình luận', videoUrl: '', imageUrl: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=500&q=80', useAi: true, useTTS: true, ttsVoiceRole: 'idol', muteSourceVideo: true, aiPrompt: NEW_AI_PROMPT },
+        { id: 2, active: true, productName: '[ COMBO] Quấn Cổ Chân + Dây Kháng Lực Tập Mông Đùi Săn Chắc Chuyên Nghiệp', keywords: 'mã 2;mã 02;combo;quấn cổ chân;dây kháng lực;tập mông;chốt 2;sp2;mua 2', priceInfo: '42.000 ₫', videoFolder: '', videoUrl: '', imageUrl: 'https://images.unsplash.com/photo-1598289431512-b97b0917affc?auto=format&fit=crop&w=500&q=80', useAi: true, useTTS: true, ttsVoiceRole: 'idol', muteSourceVideo: false, aiPrompt: '' },
+        { id: 3, active: true, productName: 'Bộ Tạ Tay Nhựa PVC 40KG Đa Năng Tháo Lắp Ghép Đòn Tạ Tập Gym Tại Nhà', keywords: 'mã 3;mã 03;bộ tạ;tạ tay;40kg;tạ gym;tập tại nhà;chốt 3;sp3;mua 3', priceInfo: '1.299.000 ₫', videoFolder: '', videoUrl: '', imageUrl: 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=500&q=80', useAi: true, useTTS: true, ttsVoiceRole: 'idol', muteSourceVideo: false, aiPrompt: '' },
+        { id: 4, active: true, productName: 'Dây Cao Su Tập Kháng Lực Mini Band Siêu Bền Đẹp Co Giãn Tốt', keywords: 'mã 4;mã 04;dây cao su;mini band;kháng lực;dây tập;chốt 4;sp4;mua 4', priceInfo: '79.000 ₫ (Gốc: 120.000 ₫)', videoFolder: '', videoUrl: '', imageUrl: 'https://images.unsplash.com/photo-1598289431512-b97b0917affc?auto=format&fit=crop&w=500&q=80', useAi: true, useTTS: true, ttsVoiceRole: 'idol', muteSourceVideo: false, aiPrompt: '' }
       ] : []
     };
   });

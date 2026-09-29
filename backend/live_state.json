@@ -12,7 +12,7 @@
   "isAudioMuted": false,
   "isDarkMode": true,
   "clearMedia": false,
-  "updatedAt": 1790697112126,
+  "updatedAt": 1790697758450,
   "isUserExplicitMediaLocked": false,
   "selectedCharacter": "",
   "videoCurrentTime": 0.817931,
@@ -129,7 +129,7 @@
     "stock": 99,
     "keywords": "ava live;ava;phần mềm ava live;phần mềm livestream ai;livestream ai;livestream bằng ai;nhân vật",
     "storeUrl": "https://shop.tiktok.com/streamer/live/product/dashboard",
-    "pinnedAt": 1790697112126,
+    "pinnedAt": 1790697758450,
     "triggerSource": "interval_auto_rotation"
   },
   "activeSpeakerId": null,

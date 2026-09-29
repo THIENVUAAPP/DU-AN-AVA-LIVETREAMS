@@ -4151,7 +4151,7 @@ let _cachedReleaseUrls = {};
 let _lastReleaseFetchTime = 0;
 async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
   const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
-  const targetVer = fallbackVer || '5.1.3';
+  const targetVer = fallbackVer || '5.1.4';
   const cacheKey = `${osPrefix}_v${targetVer}`;
   if (_cachedReleaseUrls[cacheKey] && (Date.now() - _lastReleaseFetchTime < 60000)) {
     return _cachedReleaseUrls[cacheKey];
@@ -4205,7 +4205,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '5.1.3';
+  let ver = '5.1.4';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -4244,7 +4244,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '5.1.3';
+  let ver = '5.1.4';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -5919,98 +5919,86 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
     const defaultTikTokShopCatalog = [
       {
         id: 1,
-        name: 'Váy Nữ Thiết Kế Cao Cấp Dáng Xòe Tôn Dáng - Deal Live Độc Quyền',
-        productName: 'Váy Nữ Thiết Kế Cao Cấp Dáng Xòe Tôn Dáng - Deal Live Độc Quyền',
-        price: '199.000 ₫',
-        oldPrice: '380.000 ₫',
-        image: 'https://images.unsplash.com/photo-1515372039744-b8f02a3ae446?auto=format&fit=crop&w=500&q=80',
-        badge: 'FLASH SALE ⚡ GIẢM 48%',
-        keywords: 'mã 1;mã 01;váy;váy nữ;đầm;chốt 1;sp1;mua 1',
-        stock: 50,
+        name: 'Áo bra có mút cổ yếm HAVATA cao cấp nâng ngực dáng thể thao tập gym yoga',
+        productName: 'Áo bra có mút cổ yếm HAVATA cao cấp nâng ngực dáng thể thao tập gym yoga',
+        price: '49.999 ₫',
+        oldPrice: '83.332 ₫',
+        image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=500&q=80',
+        badge: 'HOT DEAL TIKTOK 🔥',
+        keywords: 'mã 1;mã 01;áo bra;bra;áo tập;havata;yếm;chốt 1;sp1;mua 1',
+        stock: '32Tr',
         storeUrl: targetUrl
       },
       {
         id: 2,
-        name: 'Tai Nghe Bluetooth Không Dây Chống Ồn Chủ Động ANC Bass Cực Êm',
-        productName: 'Tai Nghe Bluetooth Không Dây Chống Ồn Chủ Động ANC Bass Cực Êm',
-        price: '249.000 ₫',
-        oldPrice: '490.000 ₫',
-        image: 'https://images.unsplash.com/photo-1505740420928-5e560c06d30e?auto=format&fit=crop&w=500&q=80',
-        badge: 'HOT DEAL 🔥 BÁN CHẠY',
-        keywords: 'mã 2;mã 02;tai nghe;bluetooth;tai nghe không dây;chốt 2;sp2;mua 2',
-        stock: 88,
+        name: '[ COMBO] Quấn Cổ Chân + Dây Kháng Lực Tập Mông Đùi Săn Chắc Chuyên Nghiệp',
+        productName: '[ COMBO] Quấn Cổ Chân + Dây Kháng Lực Tập Mông Đùi Săn Chắc Chuyên Nghiệp',
+        price: '42.000 ₫',
+        oldPrice: '85.000 ₫',
+        image: 'https://images.unsplash.com/photo-1598289431512-b97b0917affc?auto=format&fit=crop&w=500&q=80',
+        badge: 'FLASH SALE ⚡ GIẢM 50%',
+        keywords: 'mã 2;mã 02;combo;quấn cổ chân;dây kháng lực;tập mông;chốt 2;sp2;mua 2',
+        stock: '1,5K',
         storeUrl: targetUrl
       },
       {
         id: 3,
-        name: 'Son Kem Lì Mịn Môi Cao Cấp Lâu Trôi 24H Tone Đỏ Cam Chuẩn Hàn',
-        productName: 'Son Kem Lì Mịn Môi Cao Cấp Lâu Trôi 24H Tone Đỏ Cam Chuẩn Hàn',
-        price: '149.000 ₫',
-        oldPrice: '290.000 ₫',
-        image: 'https://images.unsplash.com/photo-1586495777744-4413f21062fa?auto=format&fit=crop&w=500&q=80',
-        badge: 'TIKTOK TOP 1 🌟',
-        keywords: 'mã 3;mã 03;son;son môi;son kem;chốt 3;sp3;mua 3',
-        stock: 120,
+        name: 'Bộ Tạ Tay Nhựa PVC 40KG Đa Năng Tháo Lắp Ghép Đòn Tạ Tập Gym Tại Nhà',
+        productName: 'Bộ Tạ Tay Nhựa PVC 40KG Đa Năng Tháo Lắp Ghép Đòn Tạ Tập Gym Tại Nhà',
+        price: '1.299.000 ₫',
+        oldPrice: '1.599.000 ₫',
+        image: 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=500&q=80',
+        badge: 'CHÍNH HÃNG 🏆 FREESHIP',
+        keywords: 'mã 3;mã 03;bộ tạ;tạ tay;40kg;tạ gym;tập tại nhà;chốt 3;sp3;mua 3',
+        stock: '283',
         storeUrl: targetUrl
       },
       {
         id: 4,
-        name: 'Áo Thun Polo Cotton Cao Cấp Co Giãn Thoáng Mát Form Rộng Unisex',
-        productName: 'Áo Thun Polo Cotton Cao Cấp Co Giãn Thoáng Mát Form Rộng Unisex',
-        price: '129.000 ₫',
-        oldPrice: '250.000 ₫',
-        image: 'https://images.unsplash.com/photo-1521572267360-ee0c2909d518?auto=format&fit=crop&w=500&q=80',
-        badge: 'GIẢM SỐC 50% 💥',
-        keywords: 'mã 4;mã 04;áo polo;áo thun;áo thun polo;chốt 4;sp4;mua 4',
-        stock: 75,
+        name: 'Dây Cao Su Tập Kháng Lực Mini Band Siêu Bền Đẹp Co Giãn Tốt',
+        productName: 'Dây Cao Su Tập Kháng Lực Mini Band Siêu Bền Đẹp Co Giãn Tốt',
+        price: '79.000 ₫',
+        oldPrice: '120.000 ₫',
+        image: 'https://images.unsplash.com/photo-1598289431512-b97b0917affc?auto=format&fit=crop&w=500&q=80',
+        badge: 'LỰA CHỌN YÊU THÍCH ❤️',
+        keywords: 'mã 4;mã 04;dây cao su;mini band;kháng lực;dây tập;chốt 4;sp4;mua 4',
+        stock: '999',
         storeUrl: targetUrl
       },
       {
         id: 5,
-        name: 'Nồi Chiên Không Dầu Điện Tử Dung Tích 8L Cảm Ứng Đa Năng Thông Minh',
-        productName: 'Nồi Chiên Không Dầu Điện Tử Dung Tích 8L Cảm Ứng Đa Năng Thông Minh',
-        price: '699.000 ₫',
-        oldPrice: '1.450.000 ₫',
-        image: 'https://images.unsplash.com/photo-1584269600464-37b1b58a9fe7?auto=format&fit=crop&w=500&q=80',
-        badge: 'VOUCHER 100K 🎟️',
-        keywords: 'mã 5;mã 05;nồi chiên;nồi chiên không dầu;gia dụng;chốt 5;sp5;mua 5',
-        stock: 30,
+        name: 'Bình Nước Thể Thao Tập Gym Chống Tràn Dung Tích 2L Có Ống Hút Tiện Lợi',
+        productName: 'Bình Nước Thể Thao Tập Gym Chống Tràn Dung Tích 2L Có Ống Hút Tiện Lợi',
+        price: '65.000 ₫',
+        oldPrice: '130.000 ₫',
+        image: 'https://images.unsplash.com/photo-1523362628745-0c100150b504?auto=format&fit=crop&w=500&q=80',
+        badge: 'TIKTOK TOP SELLER 🌟',
+        keywords: 'mã 5;mã 05;bình nước;2 lít;bình thể thao;chốt 5;sp5;mua 5',
+        stock: '500',
         storeUrl: targetUrl
       },
       {
         id: 6,
-        name: 'Đồng Hồ Thông Minh Smart Watch Thế Hệ Mới Kháng Nước Nghe Gọi HD',
-        productName: 'Đồng Hồ Thông Minh Smart Watch Thế Hệ Mới Kháng Nước Nghe Gọi HD',
-        price: '299.000 ₫',
-        oldPrice: '599.000 ₫',
-        image: 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=500&q=80',
-        badge: 'CÔNG NGHỆ VIP ⌚',
-        keywords: 'mã 6;mã 06;đồng hồ;smart watch;đồng hồ thông minh;chốt 6;sp6;mua 6',
-        stock: 60,
+        name: 'Thảm Tập Yoga Định Tuyến Chống Trơn Trượt Cao Cấp TPE 2 Lớp 6mm',
+        productName: 'Thảm Tập Yoga Định Tuyến Chống Trơn Trượt Cao Cấp TPE 2 Lớp 6mm',
+        price: '159.000 ₫',
+        oldPrice: '299.000 ₫',
+        image: 'https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?auto=format&fit=crop&w=500&q=80',
+        badge: 'VOUCHER 30K 🎟️',
+        keywords: 'mã 6;mã 06;thảm yoga;thảm tập;định tuyến;yoga;chốt 6;sp6;mua 6',
+        stock: '340',
         storeUrl: targetUrl
       },
       {
         id: 7,
-        name: 'Bộ Dưỡng Trắng Da Mờ Thâm Nám Cấp Ẩm Phục Hồi Chuyên Sâu 3 Món',
-        productName: 'Bộ Dưỡng Trắng Da Mờ Thâm Nám Cấp Ẩm Phục Hồi Chuyên Sâu 3 Món',
-        price: '349.000 ₫',
-        oldPrice: '680.000 ₫',
-        image: 'https://images.unsplash.com/photo-1556228720-195a672e8a03?auto=format&fit=crop&w=500&q=80',
-        badge: 'COMBO VIP 🎁',
-        keywords: 'mã 7;mã 07;dưỡng da;trắng da;mỹ phẩm;combo;chốt 7;sp7;mua 7',
-        stock: 45,
-        storeUrl: targetUrl
-      },
-      {
-        id: 8,
-        name: 'Giày Sneaker Thể Thao Unisex Siêu Êm Nhẹ Đế Độn Hack Chiều Cao',
-        productName: 'Giày Sneaker Thể Thao Unisex Siêu Êm Nhẹ Đế Độn Hack Chiều Cao',
-        price: '229.000 ₫',
-        oldPrice: '450.000 ₫',
-        image: 'https://images.unsplash.com/photo-1542291026-7eec264c27ff?auto=format&fit=crop&w=500&q=80',
-        badge: 'HOT TREND 🔥',
-        keywords: 'mã 8;mã 08;giày;sneaker;giày thể thao;chốt 8;sp8;mua 8',
-        stock: 80,
+        name: 'Con Lăn Tập Cơ Bụng 4 Bánh Tự Động Hồi Về Có Đệm Quỳ Êm Ái',
+        productName: 'Con Lăn Tập Cơ Bụng 4 Bánh Tự Động Hồi Về Có Đệm Quỳ Êm Ái',
+        price: '189.000 ₫',
+        oldPrice: '350.000 ₫',
+        image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=500&q=80',
+        badge: 'GIẢM SỐC 46% 💥',
+        keywords: 'mã 7;mã 07;con lăn;con lăn bụng;tập cơ bụng;chốt 7;sp7;mua 7',
+        stock: '210',
         storeUrl: targetUrl
       }
     ];
