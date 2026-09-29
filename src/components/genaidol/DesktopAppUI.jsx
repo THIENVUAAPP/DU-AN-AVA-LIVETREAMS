@@ -725,39 +725,95 @@ export default function DesktopAppUI() {
 
 
 
-    // 🔌 KHI NGƯỜI DÙNG BẤM TẮT ĐỒNG BỘ TỪ SÂN KHẤU PHỤ → XÓA SÂN KHẤU CHÍNH
+    // 🔌 KHI NGƯỜI DÙNG BẤM TẮT ĐỒNG BỘ TỪ SÂN KHẤU PHỤ → NGẮT SẠCH DỮ LIỆU & TRẢ LẠI GIAO DIỆN CHÍNH BAN ĐẦU
     const handleSequencerSyncDisconnected = () => {
       setIsMasterStageSynced(false);
       setFlowSequencerOverlay(null);
       setUserLockedMediaUrl(null);
+      setLivePinnedProduct(null);
       try {
         localStorage.removeItem('avalive_master_sync_active');
         localStorage.removeItem('avalive_sequencer_overlay');
         localStorage.removeItem('avalive_user_locked_media');
+        localStorage.removeItem('avalive_current_pinned_product');
       } catch (err) {}
-      setMultiAvatarConfig(prev => ({
-        ...prev,
-        _syncedFromSequencer: false,
-        fromSequencer: false,
-        enabled: false
-      }));
-      // Xóa trắng Sân Khấu Chính (clear stage) 0ms — KHÔNG restore video cũ
-      setIsStageExplicitlyCleared(true);
-      setIsVideoPlaying(false);
-      if (desktopVideoRef.current) {
-        desktopVideoRef.current.pause();
-        desktopVideoRef.current.src = '';
+
+      // Dừng toàn bộ âm thanh voice/script kịch bản
+      if (audioPlayerRef.current) {
+        try {
+          audioPlayerRef.current.stopScript();
+          audioPlayerRef.current.clearQueue();
+        } catch (e) {}
       }
-      // Broadcast CLEAR_STAGE đến Window Capture và LiveStream Player
+      try {
+        stopVoiceAudio();
+        clearGlobalSpeechQueue();
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+      } catch (e) {}
+
+      // Reset cấu hình Multi-Avatar về trạng thái ban đầu sạch sẽ
+      try {
+        setMultiAvatarConfig(getMultiAvatarConfig());
+      } catch (e) {
+        setMultiAvatarConfig({ enabled: false, activeCount: 1, layout: 'auto', avatars: [] });
+      }
+
+      // Trả lại giao diện Sân Khấu Chính ban đầu với video/nhân vật mặc định
+      const customMatch = (customCharacters && Array.isArray(customCharacters)) 
+        ? customCharacters.find(c => c.id === selectedCharacter && (c.url || c.mediaUrl)) 
+        : null;
+      const firstCustom = (customCharacters && Array.isArray(customCharacters) && customCharacters.length > 0)
+        ? customCharacters[0]
+        : null;
+      const defaultChar = customMatch || (selectedCharacter && CHARACTERS[selectedCharacter]) || firstCustom || (Object.keys(CHARACTERS).length > 0 ? Object.values(CHARACTERS)[0] : null);
+      const charUrl = defaultChar?.url || defaultChar?.mediaUrl || '';
+
+      setIsStageExplicitlyCleared(false);
+      if (desktopVideoRef.current) {
+        if (charUrl && (!defaultChar?.type || defaultChar.type === 'video')) {
+          desktopVideoRef.current.src = charUrl;
+          desktopVideoRef.current.currentTime = 0;
+          desktopVideoRef.current.dataset.userPaused = 'false';
+          desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+        } else {
+          desktopVideoRef.current.pause();
+          desktopVideoRef.current.src = '';
+        }
+      }
+
+      // Broadcast và sync Master Live State sang Window Capture & Live Link để trả lại giao diện sạch
+      syncMasterLiveState({
+        stage: 'idol',
+        isMasterSynced: false,
+        isSynced: false,
+        clearMedia: false,
+        mediaUrl: charUrl || null,
+        mainMediaUrl: charUrl || null,
+        secondaryMediaUrl: null,
+        overlayImage: null,
+        overlayText: null,
+        syncedAvatars: [],
+        multiAvatarConfig: { enabled: false, activeCount: 1, avatars: [] },
+        stepTitle: '',
+        actionType: '',
+        isPlaying: !!charUrl
+      }, socketRef.current);
+
       try {
         const bcClear = new BroadcastChannel('avalive_master_live_stream');
         bcClear.postMessage({
           type: 'CLEAR_STAGE',
           source: 'sequencer_disconnect',
+          mediaUrl: charUrl || null,
+          clearOverlays: true,
+          clearMedia: false,
           timestamp: Date.now()
         });
         setTimeout(() => bcClear.close(), 100);
       } catch (e) {}
+      showToast('📴 Đã ngắt đồng bộ — Sân Khấu Chính đã trả lại giao diện bình thường', 'info');
     };
 
     // ↩️ KHI UNDO/REDO TỪ SÂN KHẤU PHỤ → CẬP NHẬT VIDEO Ở SÂN KHẤU CHÍNH
@@ -2453,6 +2509,82 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       return nextState;
     });
   }, [liveVolume]);
+
+  // 🔄 HÀM BẤM VÀO LOGO: LOAD LẠI TOÀN BỘ GIAO DIỆN PHẦN MỀM QUAY LẠI TỪ ĐẦU (RESET SẠCH SÂN KHẤU CHÍNH)
+  const handleResetAndReloadApp = useCallback(() => {
+    try {
+      // 1. Dừng toàn bộ âm thanh, voice, script
+      if (audioPlayerRef.current) {
+        try {
+          audioPlayerRef.current.stopScript();
+          audioPlayerRef.current.clearQueue();
+        } catch (e) {}
+      }
+      try {
+        stopVoiceAudio();
+        clearGlobalSpeechQueue();
+        if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+          window.speechSynthesis.cancel();
+        }
+      } catch (e) {}
+    } catch (e) {}
+
+    // 2. Dọn dẹp các trạng thái tạm thời đang chạy trên Sân Khấu Chính
+    try {
+      localStorage.removeItem('avalive_master_sync_active');
+      localStorage.removeItem('avalive_sequencer_overlay');
+      localStorage.removeItem('avalive_user_locked_media');
+      localStorage.removeItem('avalive_current_pinned_product');
+      localStorage.removeItem('aidol_user_paused_script');
+      localStorage.removeItem('aidol_is_script_live_running');
+      localStorage.removeItem('avalive_user_paused');
+      localStorage.removeItem('avalive_window_capture_paused');
+      sessionStorage.clear();
+    } catch (e) {}
+
+    // 3. Reset các state React tức thì
+    setIsMasterStageSynced(false);
+    setFlowSequencerOverlay(null);
+    setUserLockedMediaUrl(null);
+    setLivePinnedProduct(null);
+    setIsVideoPlaying(true);
+    setIsStageExplicitlyCleared(false);
+
+    // 4. Bắn tín hiệu Clear đến tất cả các kênh Window Capture và Socket
+    try {
+      syncMasterLiveState({
+        stage: 'idol',
+        isMasterSynced: false,
+        isSynced: false,
+        clearMedia: false,
+        secondaryMediaUrl: null,
+        overlayImage: null,
+        overlayText: null,
+        syncedAvatars: [],
+        multiAvatarConfig: { enabled: false, activeCount: 1, avatars: [] },
+        stepTitle: '',
+        actionType: '',
+        isPlaying: true,
+        resetStage: true
+      }, socketRef.current);
+
+      const bc = new BroadcastChannel('avalive_master_live_stream');
+      bc.postMessage({
+        type: 'RESET_APP_STATE',
+        source: 'logo_click',
+        timestamp: Date.now()
+      });
+      setTimeout(() => bc.close(), 100);
+    } catch (e) {}
+
+    // 5. Tải lại toàn bộ giao diện từ đầu (0ms)
+    showToast('🔄 Đang tải lại toàn bộ giao diện phần mềm...', 'info');
+    setTimeout(() => {
+      if (typeof window !== 'undefined') {
+        window.location.href = window.location.pathname;
+      }
+    }, 150);
+  }, []);
 
   const handleSelectCharacter = useCallback((charId) => {
     setIsMasterStageSynced(false);
@@ -6645,15 +6777,20 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       {/* 1. Fake Window Title Bar (Thu nhỏ ~30% đồng đều tất cả các ô nút bấm) */}
       <div className={`flex items-center justify-between px-2 py-1 ${isDarkMode ? 'bg-[#1c1c23] border-gray-800 text-white' : 'bg-slate-200 border-slate-300 text-slate-800'} select-none z-50 border-b`}>
         <div className="flex items-center gap-2 shrink-0 max-w-[40%]">
-          <div className="relative flex items-center justify-center shrink-0 group">
+          <div 
+            onClick={handleResetAndReloadApp}
+            className="relative flex items-center justify-center shrink-0 group cursor-pointer active:scale-95 transition-all"
+            title="🔄 Bấm vào Logo để Load lại toàn bộ giao diện từ đầu (Reset sạch Sân Khấu Chính)"
+          >
             <div className="absolute -inset-1 bg-gradient-to-r from-cyan-500 to-pink-500 rounded-lg blur-xs opacity-75 group-hover:opacity-100 transition animate-pulse"></div>
-            <div className="relative w-5 h-5 rounded-md overflow-hidden border border-cyan-300/60 shadow-[0_0_10px_rgba(6,182,212,0.5)] bg-black">
+            <div className="relative w-5 h-5 rounded-md overflow-hidden border border-cyan-300/60 shadow-[0_0_10px_rgba(6,182,212,0.5)] bg-black group-hover:scale-105 transition-transform">
               <img src="/official_logo.jpg" alt="AvaLive Logo" className="w-full h-full object-cover" />
             </div>
           </div>
           <span 
-            className="text-[11px] font-black tracking-tight truncate max-w-[130px] sm:max-w-[180px] bg-gradient-to-r from-white via-cyan-200 to-blue-200 bg-clip-text text-transparent"
-            title={CHARACTERS[selectedCharacter]?.name || (Object.keys(CHARACTERS).length > 0 ? Object.values(CHARACTERS)[0]?.name : 'Live Idol Pro')}
+            onClick={handleResetAndReloadApp}
+            className="text-[11px] font-black tracking-tight truncate max-w-[130px] sm:max-w-[180px] bg-gradient-to-r from-white via-cyan-200 to-blue-200 bg-clip-text text-transparent cursor-pointer hover:opacity-80 transition-opacity"
+            title="🔄 Bấm để Load lại toàn bộ giao diện phần mềm quay lại từ đầu"
           >
             Profile: {CHARACTERS[selectedCharacter]?.name || (Object.keys(CHARACTERS).length > 0 ? Object.values(CHARACTERS)[0]?.name : 'Live Idol Pro (Chưa đặt tên)')}
           </span>

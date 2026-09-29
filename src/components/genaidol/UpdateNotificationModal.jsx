@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.0.7';
+export const APP_VERSION = '5.0.8';
 export const RELEASE_DATE = '29/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v5.0.7 - Chuyển Cảnh Siêu Mượt & Khóa Chặt Ngắt Kết Nối Đồng Bộ',
-    description: '1. Chuyển cảnh siêu mượt mà: Đồng bộ hoàn hảo 100% mọi thiết lập giữa Live Idol Avatar và Sân Khấu Chính (Voice AI, video nền, hình ảnh PiP, banner, tiêu đề chữ nổi, Multi-Avatar transforms và hiệu ứng phát âm) mượt mà 60 FPS, không chớp tắt, không giật lag. 2. Khóa ngắt kết nối tuyệt đối: Khi streamer tắt đồng bộ từ Sân Khấu Phụ sang Sân Khấu Chính, hệ thống ngắt kết nối lập tức 0ms và tuyệt đối không tự ý mở lại hoặc gửi dữ liệu bất kỳ bước nào khi chưa bật đồng bộ. 3. Sân khấu phụ hoạt động độc lập hoàn toàn, bảo toàn nguyên vẹn 100% video và nhân vật.'
+    title: '🚀 Bản Cập Nhật v5.0.8 - Trả Lại Giao Diện Gốc Khi Ngắt Đồng Bộ & Nút Logo Reload Toàn Diện',
+    description: '1. Ngắt kết nối sạch sẽ 100%: Khi ngắt đồng bộ Sân Khấu Phụ (Live Idol Avatar), Sân Khấu Chính tự động xóa sạch toàn bộ lớp phủ tạm thời và trả lại giao diện gốc bình thường ban đầu. 2. Tính năng bấm vào Logo ở góc trái: Người dùng bấm vào Logo để load lại toàn bộ giao diện phần mềm quay lại từ đầu, làm mới sạch sẽ toàn bộ dữ liệu sân khấu chính. 3. Vận hành chuẩn xác từng bước kịch bản: Tất cả các luồng chuyển bước voice, video, hình ảnh, tiêu đề chạy mượt mà 60 FPS theo đúng cấu hình.'
   }
 ];
 
