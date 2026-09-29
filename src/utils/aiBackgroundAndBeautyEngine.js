@@ -114,6 +114,35 @@ export async function removeBackgroundAI(imageSource, options = {}) {
     targetColor = null
   } = options;
 
+  // 1. 🌟 ĐỘNG CƠ TÁCH NỀN NEURAL NETWORK TIKTOK/CAPCUT (@imgly/background-removal)
+  // Xóa sạch sành sanh 100% mọi loại nền phòng phức tạp, bảo vệ trọn vẹn cả người mẫu & sản phẩm livestream
+  if (typeof window !== 'undefined') {
+    try {
+      const { removeBackground } = await import('@imgly/background-removal');
+      let imglyInput = imageSource;
+      if (typeof imageSource === 'string' && !imageSource.startsWith('data:') && !imageSource.startsWith('blob:') && !imageSource.startsWith('http')) {
+        imglyInput = window.location.origin + (imageSource.startsWith('/') ? '' : '/') + imageSource;
+      }
+      const bgBlob = await removeBackground(imglyInput, {
+        debug: false,
+        model: 'medium'
+      });
+      if (bgBlob && bgBlob.size > 0) {
+        const dataUrl = await new Promise((resolve, reject) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result);
+          reader.onerror = reject;
+          reader.readAsDataURL(bgBlob);
+        });
+        if (dataUrl && typeof dataUrl === 'string' && dataUrl.startsWith('data:image')) {
+          return dataUrl;
+        }
+      }
+    } catch (imglyErr) {
+      console.warn('[removeBackgroundAI] Neural removal fallback to local matting pipeline:', imglyErr);
+    }
+  }
+
   const img = await loadImage(imageSource);
   
   let width = img.naturalWidth || img.width;
@@ -266,22 +295,22 @@ function processUltraSmoothMatting(srcCanvas, mediaPipeMaskCanvas, width, height
       if (energy[y * width + x] > 40 && spread > 30) return false;
     }
 
-    // Nhận diện phông xanh lá (Green Screen)
-    if (targetCol === 'green' || (!targetCol && g > 55 && greenDiff > 12 && g > r * 1.10 && g > b * 1.10)) return true;
+    // Nhận diện phông xanh lá (Green Screen) - Bắt chuẩn cả xanh lá tươi lẫn xanh lá sẫm (R=34, G=88, B=55)
+    if (targetCol === 'green' || (!targetCol && g > 40 && greenDiff > 8 && g > r * 1.08 && g > b * 1.08)) return true;
     // Nhận diện phông xanh dương (Blue Screen)
-    if (targetCol === 'blue' || (!targetCol && b > 55 && blueDiff > 12 && b > r * 1.10 && b > g * 1.10)) return true;
+    if (targetCol === 'blue' || (!targetCol && b > 40 && blueDiff > 8 && b > r * 1.08 && b > g * 1.08)) return true;
     // Nhận diện phông đỏ (Red Screen)
-    if (targetCol === 'red' || (targetCol === 'auto' && redDiff > 30 && r > g * 1.30 && r > b * 1.30)) return true;
+    if (targetCol === 'red' || (targetCol === 'auto' && redDiff > 35 && r > g * 1.35 && r > b * 1.35 && r > 100)) return true;
     // Nhận diện phông đen / tối sâu
-    if (targetCol === 'black' || (targetCol === 'auto' && maxVal < 26)) return true;
+    if (targetCol === 'black' || (targetCol === 'auto' && maxVal < 30)) return true;
     // Nhận diện phông trắng / tường sáng
-    if (targetCol === 'white' || (targetCol === 'auto' && luma > 225 && spread < 20)) return true;
+    if (targetCol === 'white' || (targetCol === 'auto' && luma > 220 && spread < 25)) return true;
 
     // So khớp với danh sách các cụm màu nền thu thập từ viền ngoài cùng
     for (let c = 0; c < bgClusters.length; c++) {
       const cl = bgClusters[c];
       const d = Math.sqrt(Math.pow(r - cl.r, 2) + Math.pow(g - cl.g, 2) + Math.pow(b - cl.b, 2));
-      if (d < 42) return true;
+      if (d < 46) return true;
     }
 
     return false;

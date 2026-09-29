@@ -41,11 +41,11 @@ export const SvgChromaFilters = () => (
             0.00  0.00  0.00  0.00  0.00
             0.00  0.00  0.00  0.00  0.00
             0.00  0.00  0.00  0.00  0.00
-            3.20 -3.40  1.80  0.00  0.20"
+            3.20 -3.80  2.00  0.00  0.22"
           result="raw_mask_green"
         />
         <feComponentTransfer in="raw_mask_green" result="sharp_mask_green">
-          <feFuncA type="linear" slope="4.5" intercept="-0.15" />
+          <feFuncA type="linear" slope="5.0" intercept="-0.12" />
         </feComponentTransfer>
         <feGaussianBlur in="sharp_mask_green" stdDeviation="0.6" result="smooth_mask_green" />
         <feComposite in="despilled_green" in2="smooth_mask_green" operator="in" />
@@ -154,11 +154,11 @@ export const SvgChromaFilters = () => (
             0.00  0.00  0.00  0.00  0.00
             0.00  0.00  0.00  0.00  0.00
             0.00  0.00  0.00  0.00  0.00
-            3.00 -3.20  1.60  0.00  0.22"
+            3.00 -3.60  1.80  0.00  0.22"
           result="auto_mask"
         />
         <feComponentTransfer in="auto_mask" result="sharp_auto_mask">
-          <feFuncA type="linear" slope="4.5" intercept="-0.15" />
+          <feFuncA type="linear" slope="5.0" intercept="-0.12" />
         </feComponentTransfer>
         <feGaussianBlur in="sharp_auto_mask" stdDeviation="0.6" result="smooth_auto_mask" />
         <feComposite in="despilled_auto" in2="smooth_auto_mask" operator="in" />

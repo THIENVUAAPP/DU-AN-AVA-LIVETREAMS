@@ -2459,51 +2459,111 @@ export default function LivestreamFlowSequencer() {
 
     // 🎥 XỬ LÝ CHO VIDEO: TỰ ĐỘNG PHÁT HIỆN MÀU PHÔNG & KÍCH HOẠT BỘ LỌC CHROMA KEY 60 FPS
     if (!isImg) {
-      let detectedMode = 'green';
-      let chromaColor = '#00ff00';
+      let detectedMode = (mode && mode !== 'auto') ? mode : 'green';
+      let chromaColor = detectedMode === 'blue' ? '#0000ff' : detectedMode === 'red' ? '#ef4444' : detectedMode === 'black' ? '#000000' : detectedMode === 'white' ? '#ffffff' : '#00ff00';
 
-      try {
-        const videoEl = document.querySelector(`video[src="${targetImg}"]`) || document.querySelector('video');
-        if (videoEl && videoEl.videoWidth > 0) {
-          const testCanvas = document.createElement('canvas');
-          testCanvas.width = 64;
-          testCanvas.height = 64;
-          const tCtx = testCanvas.getContext('2d');
-          tCtx.drawImage(videoEl, 0, 0, 64, 64);
-          const pD = tCtx.getImageData(0, 0, 64, 64).data;
-          const corners = [0, 63 * 4, (63 * 64) * 4, (63 * 64 + 63) * 4];
-          let totalR = 0, totalG = 0, totalB = 0;
-          corners.forEach(idx => {
-            totalR += pD[idx];
-            totalG += pD[idx + 1];
-            totalB += pD[idx + 2];
+      if (mode === 'auto') {
+        try {
+          const allVideos = Array.from(document.querySelectorAll('video'));
+          let videoEl = allVideos.find(v => {
+            const s = v.src || v.currentSrc || '';
+            if (!s || !targetImg) return false;
+            const sClean = s.split('?')[0].split('#')[0];
+            const tClean = targetImg.split('?')[0].split('#')[0];
+            return sClean.endsWith(tClean) || tClean.endsWith(sClean) || sClean.includes(tClean) || tClean.includes(sClean);
           });
-          const avgR = totalR / 4;
-          const avgG = totalG / 4;
-          const avgB = totalB / 4;
 
-          if (avgG > avgR + 15 && avgG > avgB + 15) {
-            detectedMode = 'green';
-            chromaColor = '#00ff00';
-          } else if (avgB > avgR + 15 && avgB > avgG + 15) {
-            detectedMode = 'blue';
-            chromaColor = '#0000ff';
-          } else if (avgR > avgG + 25 && avgR > avgB + 25) {
-            detectedMode = 'red';
-            chromaColor = '#ef4444';
-          } else if (Math.max(avgR, avgG, avgB) < 40) {
-            detectedMode = 'black';
-            chromaColor = '#000000';
-          } else if (Math.min(avgR, avgG, avgB) > 205) {
-            detectedMode = 'white';
-            chromaColor = '#ffffff';
-          } else {
-            detectedMode = 'auto';
-            chromaColor = '#8b5cf6';
+          // Nếu chưa tìm thấy video đã render hoặc video chưa load xong, tạo offscreen video trích xuất frame chuẩn xác
+          if (!videoEl || videoEl.videoWidth === 0 || videoEl.readyState < 2) {
+            try {
+              videoEl = await new Promise((resolve) => {
+                const v = document.createElement('video');
+                v.crossOrigin = 'anonymous';
+                v.muted = true;
+                v.playsInline = true;
+                v.preload = 'auto';
+                let done = false;
+                const finish = () => {
+                  if (!done && v.videoWidth > 0) {
+                    done = true;
+                    resolve(v);
+                  }
+                };
+                v.onloadeddata = () => {
+                  try {
+                    v.currentTime = Math.min(0.5, (v.duration || 1) / 2);
+                  } catch (e) {
+                    finish();
+                  }
+                };
+                v.onseeked = finish;
+                v.onerror = () => resolve(null);
+                v.src = targetImg.startsWith('http') || targetImg.startsWith('data:') || targetImg.startsWith('blob:')
+                  ? targetImg
+                  : `${window.location.origin}${targetImg.startsWith('/') ? '' : '/'}${targetImg}`;
+                setTimeout(() => {
+                  if (!done) resolve(v.videoWidth > 0 ? v : null);
+                }, 1500);
+              });
+            } catch (vErr) {
+              videoEl = null;
+            }
           }
+
+          if (videoEl && videoEl.videoWidth > 0) {
+            const testCanvas = document.createElement('canvas');
+            testCanvas.width = 64;
+            testCanvas.height = 64;
+            const tCtx = testCanvas.getContext('2d');
+            tCtx.drawImage(videoEl, 0, 0, 64, 64);
+            const pD = tCtx.getImageData(0, 0, 64, 64).data;
+
+            // Lấy mẫu màu đa điểm trên 4 cạnh viền ngoài (Perimeter Sampling)
+            let totalR = 0, totalG = 0, totalB = 0, count = 0;
+            for (let x = 4; x <= 59; x += 3) {
+              const topIdx = (4 * 64 + x) * 4;
+              totalR += pD[topIdx]; totalG += pD[topIdx + 1]; totalB += pD[topIdx + 2];
+              const botIdx = (59 * 64 + x) * 4;
+              totalR += pD[botIdx]; totalG += pD[botIdx + 1]; totalB += pD[botIdx + 2];
+              count += 2;
+            }
+            for (let y = 6; y <= 57; y += 3) {
+              const leftIdx = (y * 64 + 4) * 4;
+              totalR += pD[leftIdx]; totalG += pD[leftIdx + 1]; totalB += pD[leftIdx + 2];
+              const rightIdx = (y * 64 + 59) * 4;
+              totalR += pD[rightIdx]; totalG += pD[rightIdx + 1]; totalB += pD[rightIdx + 2];
+              count += 2;
+            }
+
+            const avgR = count > 0 ? totalR / count : 0;
+            const avgG = count > 0 ? totalG / count : 255;
+            const avgB = count > 0 ? totalB / count : 0;
+
+            // Nhận diện chuẩn xác dải màu phông video (bao gồm cả xanh lá sẫm như R=34, G=88, B=55)
+            if (avgG > avgR * 1.12 && avgG > avgB * 1.08 && avgG > 40) {
+              detectedMode = 'green';
+              chromaColor = '#00ff00';
+            } else if (avgB > avgR * 1.12 && avgB > avgG * 1.08 && avgB > 40) {
+              detectedMode = 'blue';
+              chromaColor = '#0000ff';
+            } else if (avgR > avgG * 1.35 && avgR > avgB * 1.35 && avgR > 110) {
+              detectedMode = 'red';
+              chromaColor = '#ef4444';
+            } else if (Math.max(avgR, avgG, avgB) < 32) {
+              detectedMode = 'black';
+              chromaColor = '#000000';
+            } else if (Math.min(avgR, avgG, avgB) > 218) {
+              detectedMode = 'white';
+              chromaColor = '#ffffff';
+            } else {
+              detectedMode = 'green';
+              chromaColor = '#00ff00';
+            }
+          }
+        } catch (detectErr) {
+          detectedMode = 'green';
+          chromaColor = '#00ff00';
         }
-      } catch (detectErr) {
-        detectedMode = 'green';
       }
 
       handleLayerChromaUpdate(layerType, targetId, { enabled: true, mode: detectedMode, color: chromaColor });
@@ -3110,17 +3170,63 @@ export default function LivestreamFlowSequencer() {
                 </button>
 
                 {/* 🪄 1-CHẠM XÓA SẠCH NỀN AI (TỰ ĐỘNG QUÉT & XÓA MỌI LOẠI NỀN - GIỮ NGUYÊN 100% NHÂN VẬT & SẢN PHẨM) */}
-                {selectedLayer.type !== 'text' && (
-                  <button
-                    type="button"
-                    onClick={() => handleInstantCanvasBgRemoval(selectedLayer.type, selectedLayer.id, 'auto')}
-                    className="px-2 py-0.5 rounded text-[8.5px] font-black bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white flex items-center gap-1 cursor-pointer shadow-md shadow-indigo-900/30 hover:scale-105 active:scale-95 transition-all whitespace-nowrap border border-cyan-400/40"
-                    title="1 Chạm Xóa Sạch Sành Sanh Nền (Bảo Vệ 100% Nhân Vật & Sản Phẩm Siêu Mịn 4K)"
-                  >
-                    <Wand2 size={9.5} className="text-cyan-200 animate-pulse" />
-                    <span>✨ Xóa Nền AI</span>
-                  </button>
-                )}
+                {selectedLayer.type !== 'text' && (() => {
+                  let layerChroma = null;
+                  if (selectedLayer.type === 'avatar') {
+                    const av = safeAvatars.find(a => a.id === selectedLayer.id) || safeAvatars[0];
+                    layerChroma = av?.chromaKey;
+                  } else if (selectedLayer.type === 'main_media') {
+                    layerChroma = currentStep?.mainMediaChromaKey;
+                  } else if (selectedLayer.type === 'pip') {
+                    layerChroma = currentStep?.secondaryMediaChromaKey;
+                  } else if (selectedLayer.type === 'banner') {
+                    layerChroma = currentStep?.overlayImageChromaKey;
+                  }
+
+                  return (
+                    <div className="flex items-center gap-0.5">
+                      <button
+                        type="button"
+                        onClick={() => handleInstantCanvasBgRemoval(selectedLayer.type, selectedLayer.id, 'auto')}
+                        className="px-2 py-0.5 rounded text-[8.5px] font-black bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white flex items-center gap-1 cursor-pointer shadow-md shadow-indigo-900/30 hover:scale-105 active:scale-95 transition-all whitespace-nowrap border border-cyan-400/40"
+                        title="1 Chạm Xóa Sạch Sành Sanh Nền (Bảo Vệ 100% Nhân Vật & Sản Phẩm Siêu Mịn 4K)"
+                      >
+                        <Wand2 size={9.5} className="text-cyan-200 animate-pulse" />
+                        <span>✨ Xóa Nền AI</span>
+                      </button>
+
+                      {/* Nút Chọn Phông Nhanh Khi Tách Nền Video / Lớp */}
+                      {layerChroma?.enabled && (
+                        <div className="flex items-center gap-0.5 bg-slate-900/90 px-1 py-0.5 rounded border border-slate-700/80">
+                          <button
+                            type="button"
+                            onClick={() => handleLayerChromaUpdate(selectedLayer.type, selectedLayer.id, { enabled: true, mode: 'green', color: '#00ff00' })}
+                            className={`px-1 py-0.2 rounded text-[7.5px] font-black ${layerChroma.mode === 'green' ? 'bg-green-600 text-white shadow-xs' : 'text-green-400 hover:bg-slate-800'}`}
+                            title="Đổi sang Phông Xanh Lá (#00ff00)"
+                          >
+                            🟢 Lá
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleLayerChromaUpdate(selectedLayer.type, selectedLayer.id, { enabled: true, mode: 'blue', color: '#0000ff' })}
+                            className={`px-1 py-0.2 rounded text-[7.5px] font-black ${layerChroma.mode === 'blue' ? 'bg-blue-600 text-white shadow-xs' : 'text-blue-400 hover:bg-slate-800'}`}
+                            title="Đổi sang Phông Xanh Dương (#0000ff)"
+                          >
+                            🔵 Lam
+                          </button>
+                          <button
+                            type="button"
+                            onClick={() => handleLayerChromaUpdate(selectedLayer.type, selectedLayer.id, { enabled: false })}
+                            className="px-1 py-0.2 rounded text-[7.5px] font-black text-rose-400 hover:bg-rose-950/60"
+                            title="Tắt Tách Nền Cho Lớp Này"
+                          >
+                            ✕
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  );
+                })()}
 
                 {/* Lên Lớp / Xuống Lớp */}
                 <button

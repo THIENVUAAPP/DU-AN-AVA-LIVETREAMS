@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.95';
+export const APP_VERSION = '4.9.96';
 export const RELEASE_DATE = '29/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '✨ Bản Cập Nhật v4.9.95 - Đột Phá Công Nghệ Xóa Nền AI Chuẩn TikTok Siêu Sạch Cho Cả Ảnh & Video',
-    description: '1. Xóa Sạch 100% Phông Nền Cả Ảnh & Video: Tự động phân tích màu sắc, loại bỏ hoàn toàn mọi loại nền (phông xanh, xanh dương, đỏ, đen, trắng, phòng ngủ, tường nhà, bối cảnh phức tạp) chỉ bằng 1-chạm vào "✨ Xóa Nền AI". 2. Tự Động Nhận Dạng Màu Nền Video 60 FPS: Hệ thống quét 4 góc video và tự động kích hoạt bộ lọc Chroma Key cao cấp với Gaussian Feathering êm ái, khử viền lem màu despill. 3. Thuật Toán Perimeter Saliency Matting Cho Ảnh: Tách sạch nền không bị lỗi CORS/Tainted Canvas, bảo vệ 100% da người trắng hồng, trang phục và sản phẩm livestream không bị đục thủng hay sạm đen. 4. Khóa Chặt 100% Toàn Bộ Các Tab Khác.'
+    title: '✨ Bản Cập Nhật v4.9.96 - Đột Phá AI Xóa Nền Chuẩn TikTok 4K Siêu Sạch (Bảo Vệ Trọn Vẹn Nhân Vật & Sản Phẩm, Khử Phông Video 60 FPS)',
+    description: '1. Tích Hợp Neural Network ISNet (@imgly/background-removal): Bóc tách sạch sành sanh 100% phông nền ảnh studio phức tạp (kể cả kệ sách, chữ trên tường, bối cảnh phòng tập gym), giữ nguyên 100% người mẫu tóc tơ và toàn bộ bao bì gói sản phẩm bán hàng siêu sắc nét. 2. Nhận Diện Phông Video Chuẩn Xác 60 FPS: Sửa triệt để bộ quét video, tự động phát hiện đúng phông xanh lá sẫm (#225837), xanh dương, kích hoạt Chroma Key mượt mà không lẹm da người. 3. Phím Chọn Phông Nhanh Trực Tiếp: Bổ sung thanh chọn nhanh [🟢 Lá], [🔵 Lam], [✕ Tắt] ngay cạnh nút "✨ Xóa Nền AI". 4. Khóa chặt 100% toàn bộ các tab và module khác.'
   }
 ];
 
