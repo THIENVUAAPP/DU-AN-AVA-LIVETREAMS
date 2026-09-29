@@ -292,7 +292,7 @@ export default function App() {
   };
 
   if (isWindowCaptureStandalone) return <WindowCapturePlayer />;
-  if (isLiveStreamStandalone) return <LiveStreamStandalonePlayer />;
+  if (isLiveStreamStandalone) return <CleanLiveOverlay />;
   if (isOverlayBattle) return <GameBattleOverlay />;
   if (isOverlayBanDo) return <GameBanDoOverlay />;
   if (isOverlayStudio || isOverlayIdol || isMasterLiveOverlay) return <CleanLiveOverlay />;

@@ -1250,6 +1250,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
       socket.on('connect', () => {
         socket.emit('REQUEST_MASTER_LIVE_STATE');
+        fetchLiveState();
+      });
+
+      socket.on('reconnect', () => {
+        socket.emit('REQUEST_MASTER_LIVE_STATE');
+        fetchLiveState();
       });
 
       // ⚡ Nhận lệnh điều khiển video trực tiếp tức thì 0ms từ phần mềm chính
@@ -1812,18 +1818,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     };
     window.addEventListener('storage', handleStorage);
 
-    // 6. HEARTBEAT POLLING (Đồng bộ thời gian thực siêu tốc OBS & TikTok Live Studio)
-    let lastUpdatedTimestamp = 0;
+    // 6. HEARTBEAT POLLING (Đồng bộ thời gian thực siêu tốc 1000ms cho OBS & TikTok Live Studio)
     let isFetchingLiveState = false;
     const pollInterval = setInterval(() => {
       try {
         const saved = localStorage.getItem('avalive_master_live_state');
         if (saved) {
           const parsed = JSON.parse(saved);
-          if (parsed && (parsed.updatedAt !== lastUpdatedTimestamp || parsed.mediaUrl !== masterStateRef.current?.mediaUrl || parsed.clearMedia !== masterStateRef.current?.clearMedia)) {
-            if (parsed.updatedAt) lastUpdatedTimestamp = parsed.updatedAt;
-            applyMasterState(parsed);
-          }
+          if (parsed) applyMasterState(parsed);
         }
       } catch (e) {}
 
@@ -1833,8 +1835,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       fetch(endpoint)
         .then(r => r.json())
         .then(data => {
-          if (data && (data.updatedAt !== lastUpdatedTimestamp || data.mediaUrl !== masterStateRef.current?.mediaUrl || data.clearMedia !== masterStateRef.current?.clearMedia)) {
-            if (data.updatedAt) lastUpdatedTimestamp = data.updatedAt;
+          if (data) {
             applyMasterState(data);
           }
         })
@@ -1842,7 +1843,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         .finally(() => {
           isFetchingLiveState = false;
         });
-    }, 1500);
+    }, 1000);
 
     return () => {
       clearInterval(frameInterval);
@@ -2474,7 +2475,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   LIVE 9:16
                 </span>
                 <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                  v5.0.2
+                  v5.0.3
                 </span>
               </div>
 

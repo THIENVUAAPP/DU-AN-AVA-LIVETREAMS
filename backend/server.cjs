@@ -937,6 +937,14 @@ app.get([
   '/idol', '/live', '/stage', '/stream', '/overlay-live', '/tiktok-live',
   '/overlay-idol', '/cleanlive', '/live-overlay'
 ], (req, res) => {
+  // ⚡ PHỤC VỤ TRỰC TIẾP REACT SPA INDEX.HTML ĐỂ CHẠY CLEANLIVEOVERLAY TOÀN NĂNG 100% TỪ SÂN KHẤU CHÍNH
+  // Đầy đủ Multi-Avatar 1-4 người, Video/Ảnh nền chính, PiP Video phụ, Banner, Sticker, Sản phẩm TikTok Shop, Tách nền Chroma Key siêu sạch
+  if (distPath && fs.existsSync(path.join(distPath, 'index.html'))) {
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    return res.sendFile(path.join(distPath, 'index.html'));
+  }
+
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
   res.setHeader('Access-Control-Allow-Headers', '*');
@@ -1810,6 +1818,7 @@ app.get([
                 borderRadius: 16
               };
           const baseTrans = avatar.transform || (avatar.transforms) || defaultTrans;
+          const trans = Object.assign({}, baseTrans, customTrans);
           const chromaClass = getChromaClass(avatar.chromaKey);
 
           if (!charEl) {
@@ -1962,6 +1971,7 @@ app.get([
           if (img) {
             img.style.objectFit = layerFit;
           }
+          const isLayerVid = !isImage(resolvedUrl);
           if (isLayerVid) {
             if (img) img.style.display = 'none';
             if (v) {
@@ -2102,6 +2112,7 @@ app.get([
         const imgEl = document.getElementById('imagePlayer');
         const mainBgLayer = document.getElementById('mainBackgroundLayer');
         const mainChromaClass = getChromaClass(data.mainMediaChromaKey || data.backgroundChromaKey);
+        const mainTrans = data.mainMediaTransform || (data.multiAvatarConfig && data.multiAvatarConfig.backgroundTransform) || { x: 0, y: 0, width: 100, height: 100 };
 
         const bgFit = mainTrans.objectFit || currentFit || 'cover';
         const bgRot = mainTrans.rotation || mainTrans.rotate || 0;
@@ -3391,6 +3402,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
                 borderRadius: 16
               };
           const baseTrans = avatar.transform || (avatar.transforms) || defaultTrans;
+          const trans = Object.assign({}, baseTrans, customTrans);
           const chromaClass = getChromaClass(avatar.chromaKey);
 
           if (!charEl) {
@@ -3543,6 +3555,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           if (img) {
             img.style.objectFit = layerFit;
           }
+          const isLayerVid = !isImage(resolvedUrl);
           if (isLayerVid) {
             if (img) img.style.display = 'none';
             if (v) {
@@ -3682,6 +3695,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         const imgEl = document.getElementById('imagePlayer');
         const mainBgLayer = document.getElementById('mainBackgroundLayer');
         const mainChromaClass = getChromaClass(data.mainMediaChromaKey || data.backgroundChromaKey);
+        const mainTrans = data.mainMediaTransform || (data.multiAvatarConfig && data.multiAvatarConfig.backgroundTransform) || { x: 0, y: 0, width: 100, height: 100 };
 
         const bgFit = mainTrans.objectFit || currentFit || 'cover';
         const bgRot = mainTrans.rotation || mainTrans.rotate || 0;
@@ -4137,7 +4151,7 @@ let _cachedReleaseUrls = {};
 let _lastReleaseFetchTime = 0;
 async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
   const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
-  const targetVer = fallbackVer || '5.0.2';
+  const targetVer = fallbackVer || '5.0.3';
   const safeFallbackUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${targetVer}/${osPrefix}_v${targetVer}.zip`;
   
   const cacheKey = `${osPrefix}_v${targetVer}`;
@@ -4187,7 +4201,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '5.0.2';
+  let ver = '5.0.3';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -4227,7 +4241,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '5.0.2';
+  let ver = '5.0.3';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));

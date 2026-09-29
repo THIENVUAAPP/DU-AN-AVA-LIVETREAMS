@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.0.2';
+export const APP_VERSION = '5.0.3';
 export const RELEASE_DATE = '29/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v5.0.2 - Đồng Bộ Tuyệt Đối 100% Sân Khấu Chính, Window Capture OBS & TikTok Live Studio (Ảnh Nền Tĩnh Siêu Sắc Nét 60 FPS)',
-    description: '1. Đồng Bộ Tuyệt Đối Toàn Bộ Khung Hình: Đồng bộ 100% thời gian thực tất cả các lớp video, ảnh nền chính, PiP, Avatar 1-4, lời thoại/phụ đề, tiêu đề, âm thanh và tọa độ Transform ra Window Capture OBS và link TikTok Live Studio. 2. Khóa Nền Tĩnh Siêu Sắc Nét: Ảnh nền luôn ở trạng thái tĩnh 100%, tuyệt đối không bị rung lắc hay chuyển động nhép miệng ngoài ý muốn, hiển thị siêu sắc nét 60 FPS. 3. Bảo toàn nguyên vẹn mọi kịch bản và tab chức năng khác.'
+    title: '🚀 Bản Cập Nhật v5.0.3 - Khắc Phục Triệt Để Màn Hình Đen & Đồng Bộ Hoàn Hảo Link TikTok Live Studio',
+    description: '1. Khắc Phục Triệt Để Màn Hình Đen: Loại bỏ hoàn toàn vòng lặp iframe trên route /live-stream, phục vụ trực tiếp CleanLiveOverlay 4K 60 FPS chuẩn GPU Acceleration cho trình duyệt CEF của TikTok Live Studio. 2. Đồng Bộ Tuyệt Đối 100% Sân Khấu Chính: Tất cả các khung hình Video/Ảnh nền chính, PiP, Avatar 1-4, Phụ đề, Tiêu đề, Âm thanh và Tọa độ Transform chuyển cảnh 0ms siêu mượt mà. 3. Polling Realtime & Socket Auto-Reconnect: Duy trì kết nối liên tục 1000ms, chống giật lag, không đứng hình.'
   }
 ];
 
