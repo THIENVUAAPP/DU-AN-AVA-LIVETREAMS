@@ -2100,6 +2100,34 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     const hasAnyStageMedia = !!broadcastUrl || !!flowSequencerOverlay?.mainMediaUrl || !!secMedia || !!bannerImg || hasAnyAvatars;
     const shouldClearMedia = isStageExplicitlyCleared || !hasAnyStageMedia;
 
+    // ⚡ FIX CRITICAL: Chuyển đổi blob: URLs trong avatars sang server URLs trước khi gửi
+    // Blob URLs chỉ hợp lệ trong cùng tab/window, KHÔNG accessible từ Window Capture hay TikTok Live Studio
+    const resolveAvatarForBroadcast = (av) => {
+      const serverUrl = (av.mediaUrl && !av.mediaUrl.startsWith('blob:')) ? av.mediaUrl : 
+                        (av.videoUrl && !av.videoUrl.startsWith('blob:')) ? av.videoUrl : null;
+      const cleanUrl = (u) => {
+        if (!u || u.startsWith('blob:')) return serverUrl;
+        if (u.includes('/uploads/')) return u.substring(u.indexOf('/uploads/'));
+        return u;
+      };
+      return {
+        ...av,
+        resolvedVidSrc: cleanUrl(av.resolvedVidSrc) || cleanUrl(av.talkVideo) || cleanUrl(av.idleVideo) || serverUrl,
+        talkVideo: cleanUrl(av.talkVideo),
+        idleVideo: cleanUrl(av.idleVideo),
+        videoUrl: cleanUrl(av.videoUrl),
+        url: av.url && !av.url.startsWith('blob:') ? av.url : null,
+        mediaUrl: serverUrl,
+      };
+    };
+
+    const rawAvatars = (flowSequencerOverlay?.syncedAvatars) || (multiAvatarConfig?.avatars) || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.avatars : null) || [];
+    const resolvedSyncedAvatars = rawAvatars.length > 0
+      ? rawAvatars.map(resolveAvatarForBroadcast).filter(av => av.resolvedVidSrc || av.talkVideo || av.idleVideo || av.mediaUrl)
+      : undefined; // Gửi undefined (không gửi []!) để không ghi đè state backend khi không có avatars
+
+    const rawExtraLayers = (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers || flowSequencerOverlay.extraImageLayers)) || (multiAvatarConfig?.extraImageLayers) || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.extraImageLayers : null) || undefined;
+
     return {
       stage: 'idol',
       selectedCharacter: selectedCharacter,
@@ -2126,9 +2154,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       overlayTextColor: flowSequencerOverlay?.overlayTextColor || null,
       overlayTextFontSize: flowSequencerOverlay?.overlayTextFontSize || null,
       overlayTextFontFamily: flowSequencerOverlay?.overlayTextFontFamily || null,
-      extraImageLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers || flowSequencerOverlay.extraImageLayers)) || (multiAvatarConfig?.extraImageLayers) || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.extraImageLayers : null) || [],
-      multiAvatarExtraLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers || flowSequencerOverlay.extraImageLayers)) || (multiAvatarConfig?.extraImageLayers) || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.extraImageLayers : null) || [],
-      syncedAvatars: (flowSequencerOverlay?.syncedAvatars) || (multiAvatarConfig?.avatars) || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.avatars : null) || [],
+      extraImageLayers: rawExtraLayers,
+      multiAvatarExtraLayers: rawExtraLayers,
+      syncedAvatars: resolvedSyncedAvatars, // undefined nếu không có avatars - không ghi đè backend state
       avatarTransforms: flowSequencerOverlay?.avatarTransforms || multiAvatarConfig?.avatarTransforms || null,
       multiAvatarConfig: multiAvatarConfig || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig() : null) || null,
       backgroundColor: flowSequencerOverlay?.backgroundColor || multiAvatarConfig?.backgroundColor || null,
@@ -5412,11 +5440,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               );
             })()}
 
-            {/* Extra Images Layers */}
+            {/* Extra Images/Video Layers - Hỗ trợ cả ảnh và video */}
             {(multiAvatarConfig.extraImageLayers || []).map(layer => {
               if (!layer.url) return null;
               const trans = layer.transform || { x: 0, y: 0, width: 100, height: 100 };
               const chroma = getChromaStyle(layer.chromaKey);
+              // ⚡ FIX: Nhận diện đúng loại layer - ảnh hay video
+              const isLayerVid = layer.type === 'video' ? true : layer.type === 'image' ? false : isVideoMedia(layer.url) && !isImageMedia(layer.url);
               return (
                 <div 
                   key={layer.id}
@@ -5432,15 +5462,24 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                     borderRadius: `${trans.borderRadius || 0}px`
                   }}
                 >
-                  <img 
-                    src={layer.url} 
-                    alt="Extra Layer" 
-                    className="w-full h-full"
-                    style={{
-                      objectFit: trans.objectFit || 'contain',
-                      ...chroma
-                    }}
-                  />
+                  {isLayerVid ? (
+                    <video
+                      src={layer.url}
+                      autoPlay
+                      loop
+                      muted
+                      playsInline
+                      className="w-full h-full"
+                      style={{ objectFit: trans.objectFit || 'contain', ...chroma }}
+                    />
+                  ) : (
+                    <img 
+                      src={layer.url} 
+                      alt="Extra Layer" 
+                      className="w-full h-full"
+                      style={{ objectFit: trans.objectFit || 'contain', ...chroma }}
+                    />
+                  )}
                 </div>
               );
             })}

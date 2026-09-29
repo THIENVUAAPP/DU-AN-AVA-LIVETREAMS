@@ -4151,7 +4151,7 @@ let _cachedReleaseUrls = {};
 let _lastReleaseFetchTime = 0;
 async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
   const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
-  const targetVer = fallbackVer || '5.0.3';
+  const targetVer = fallbackVer || '5.0.4';
   const safeFallbackUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${targetVer}/${osPrefix}_v${targetVer}.zip`;
   
   const cacheKey = `${osPrefix}_v${targetVer}`;
@@ -4201,7 +4201,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '5.0.3';
+  let ver = '5.0.4';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -4241,7 +4241,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '5.0.3';
+  let ver = '5.0.4';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -5491,11 +5491,66 @@ app.post('/api/live-state', (req, res) => {
 
     if (Array.isArray(payload.syncedAvatars)) {
       payload.syncedAvatars = payload.syncedAvatars.map(av => {
+        // Chuyển đổi data: thành file server
         if (av.talkVideo && av.talkVideo.startsWith('data:')) av.talkVideo = saveBase64MediaToUploads(av.talkVideo, 'avatar_talk');
         if (av.idleVideo && av.idleVideo.startsWith('data:')) av.idleVideo = saveBase64MediaToUploads(av.idleVideo, 'avatar_idle');
         if (av.resolvedVidSrc && av.resolvedVidSrc.startsWith('data:')) av.resolvedVidSrc = saveBase64MediaToUploads(av.resolvedVidSrc, 'avatar_src');
-        return av;
-      });
+        // ⚡ FIX CRITICAL: Loại bỏ blob: URL - chỉ có giá trị trong tab gốc, KHÔNG accessible từ Window Capture hoặc TikTok Live Studio
+        // Ưu tiên: mediaUrl (server) > talkVideo/idleVideo/resolvedVidSrc nếu là server URL
+        const serverMediaUrl = av.mediaUrl && !av.mediaUrl.startsWith('blob:') ? av.mediaUrl : null;
+        const resolveAvatarUrl = (url) => {
+          if (!url || url.startsWith('blob:')) return serverMediaUrl || null;
+          if (url.includes('/uploads/')) return url.substring(url.indexOf('/uploads/'));
+          return url;
+        };
+        return {
+          ...av,
+          talkVideo: resolveAvatarUrl(av.talkVideo),
+          idleVideo: resolveAvatarUrl(av.idleVideo),
+          resolvedVidSrc: resolveAvatarUrl(av.resolvedVidSrc) || resolveAvatarUrl(av.talkVideo) || resolveAvatarUrl(av.idleVideo),
+          videoUrl: av.videoUrl && !av.videoUrl.startsWith('blob:') ? av.videoUrl : null,
+          url: av.url && !av.url.startsWith('blob:') ? av.url : null,
+          mediaUrl: serverMediaUrl,
+          src: av.src && !av.src.startsWith('blob:') ? av.src : null,
+        };
+      }).filter(av => av.resolvedVidSrc || av.talkVideo || av.idleVideo || av.mediaUrl); // Lọc bỏ avatar không có URL hợp lệ
+    }
+
+    // ⚡ FIX: Loại bỏ blob: URL khỏi extraImageLayers - không thể dùng từ Window Capture / TikTok Live Studio
+    const cleanExtraLayers = (layers) => {
+      if (!Array.isArray(layers)) return layers;
+      return layers.map(layer => ({
+        ...layer,
+        url: (layer.url && !layer.url.startsWith('blob:')) ? (layer.url.includes('/uploads/') ? layer.url.substring(layer.url.indexOf('/uploads/')) : layer.url) : (layer.mediaUrl && !layer.mediaUrl.startsWith('blob:') ? layer.mediaUrl : null),
+        mediaUrl: (layer.mediaUrl && !layer.mediaUrl.startsWith('blob:')) ? layer.mediaUrl : null,
+      })).filter(layer => layer.url);
+    };
+    if (Array.isArray(payload.extraImageLayers)) payload.extraImageLayers = cleanExtraLayers(payload.extraImageLayers);
+    if (Array.isArray(payload.multiAvatarExtraLayers)) payload.multiAvatarExtraLayers = cleanExtraLayers(payload.multiAvatarExtraLayers);
+    // ⚡ FIX: Loại bỏ blob: URLs trong multiAvatarConfig.avatars (nested avatar data)
+    if (payload.multiAvatarConfig && Array.isArray(payload.multiAvatarConfig.avatars)) {
+      payload.multiAvatarConfig = {
+        ...payload.multiAvatarConfig,
+        avatars: payload.multiAvatarConfig.avatars.map(av => {
+          const serverMediaUrl = av.mediaUrl && !av.mediaUrl.startsWith('blob:') ? av.mediaUrl : 
+                                 av.videoUrl && !av.videoUrl.startsWith('blob:') ? av.videoUrl : null;
+          const cleanUrl = (u) => {
+            if (!u || u.startsWith('blob:')) return serverMediaUrl || null;
+            if (u.includes('/uploads/')) return u.substring(u.indexOf('/uploads/'));
+            return u;
+          };
+          return {
+            ...av,
+            talkVideo: cleanUrl(av.talkVideo),
+            idleVideo: cleanUrl(av.idleVideo),
+            resolvedVidSrc: cleanUrl(av.resolvedVidSrc) || cleanUrl(av.talkVideo) || cleanUrl(av.idleVideo),
+            videoUrl: cleanUrl(av.videoUrl),
+            url: av.url && !av.url.startsWith('blob:') ? av.url : null,
+            mediaUrl: serverMediaUrl,
+            src: av.src && !av.src.startsWith('blob:') ? av.src : null,
+          };
+        })
+      };
     }
 
     if (currentTunnelUrl && !payload.tunnelUrl) {

@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.0.3';
+export const APP_VERSION = '5.0.4';
 export const RELEASE_DATE = '29/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v5.0.3 - Khắc Phục Triệt Để Màn Hình Đen & Đồng Bộ Hoàn Hảo Link TikTok Live Studio',
-    description: '1. Khắc Phục Triệt Để Màn Hình Đen: Loại bỏ hoàn toàn vòng lặp iframe trên route /live-stream, phục vụ trực tiếp CleanLiveOverlay 4K 60 FPS chuẩn GPU Acceleration cho trình duyệt CEF của TikTok Live Studio. 2. Đồng Bộ Tuyệt Đối 100% Sân Khấu Chính: Tất cả các khung hình Video/Ảnh nền chính, PiP, Avatar 1-4, Phụ đề, Tiêu đề, Âm thanh và Tọa độ Transform chuyển cảnh 0ms siêu mượt mà. 3. Polling Realtime & Socket Auto-Reconnect: Duy trì kết nối liên tục 1000ms, chống giật lag, không đứng hình.'
+    title: '🔥 Bản Cập Nhật v5.0.4 - Đồng Bộ 100% Video/Avatar/Layer Tới TikTok Live Studio & Window Capture',
+    description: '1. Khắc phục triệt để bug video extra layers hiển thị sai (render <img> thay vì <video>) - nay nhận diện chính xác mọi loại layer. 2. Loại bỏ hoàn toàn blob: URLs trong avatar data - URL local chỉ hợp lệ trong tab gốc, nay tự động chuyển sang server URL để Window Capture và TikTok Live Studio hiển thị đầy đủ toàn bộ video avatar. 3. Đồng bộ 100% N avatar (không chỉ 1-2) cùng với tất cả extra image/video layers, PiP, tiêu đề, phụ đề và tọa độ transform. 4. Backend tự động làm sạch mọi blob URL trước khi lưu trạng thái - đảm bảo mọi client nhận được URL hợp lệ.'
   }
 ];
 

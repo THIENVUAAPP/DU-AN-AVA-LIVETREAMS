@@ -2857,7 +2857,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                       {extraLayers.map((layer, lIdx) => {
                         const lUrl = layer.url || layer.mediaUrl;
                         if (!lUrl) return null;
-                        const isImg = layer.type !== 'video' && (isImageMedia(lUrl) || !layer.type);
+                        // ⚡ FIX: Phân loại chính xác ảnh/video - ưu tiên type rõ ràng trước, rồi mới nhận diện qua URL
+                        const isImg = layer.type === 'image' ? true : layer.type === 'video' ? false : isImageMedia(lUrl) && !isVideoMedia(lUrl);
                         const chromaStyle = getChromaStyle(layer.chromaKey);
                         const lTrans = layer.transform || { x: layer.x ?? 20, y: layer.y ?? 20, width: layer.width ?? 30, height: layer.height ?? 30 };
                         const lRot = lTrans.rotation || 0;
@@ -3400,7 +3401,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             {Array.isArray(masterState.extraImageLayers) && masterState.extraImageLayers.length > 0 && !multiAvatarConfig?.enabled && (
               <div className="absolute inset-0 pointer-events-none overflow-hidden" style={{ zIndex: 28 }}>
                 {masterState.extraImageLayers.map((layer, idx) => {
-                  const isImg = layer.type !== 'video' && (isImageMedia(layer.url) || !layer.type);
+                  const isImg = layer.type === 'image' ? true : layer.type === 'video' ? false : isImageMedia(layer.url) && !isVideoMedia(layer.url);
                   const chromaStyle = getChromaStyle(layer.chromaKey);
                   return (
                     <div
