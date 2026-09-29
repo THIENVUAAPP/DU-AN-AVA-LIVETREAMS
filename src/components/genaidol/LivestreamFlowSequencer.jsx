@@ -1035,6 +1035,10 @@ export default function LivestreamFlowSequencer() {
         if (!isPlayingFlowRef.current) return;
         if (hasAdvanced) return;
         hasAdvanced = true;
+        if (stepWatchdogRef.current) {
+          clearTimeout(stepWatchdogRef.current);
+          stepWatchdogRef.current = null;
+        }
         setSpeakingStepId(null);
         setIsSpeakingPreview(false);
 
@@ -1053,11 +1057,12 @@ export default function LivestreamFlowSequencer() {
         }
       };
 
-      // Watchdog timeout an toàn chống treo: nếu TTS không báo kết thúc, tự chuyển bước sau estimatedSeconds + 4s
-      const watchdogMs = Math.max(5000, (estimatedSeconds + 4) * 1000);
+      // 🛡️ Safety Watchdog: Chỉ kích hoạt nếu mạng/TTS bị lỗi hoàn toàn để chống kẹt luồng (tối thiểu 120s hoặc 2 phút)
+      // TUYỆT ĐỐI KHÔNG CẮT NGANG GIỮA CHỪNG KHI VOICE AI ĐANG ĐỌC
+      const watchdogMs = Math.max(120000, wordsCount * 2000 + 60000);
       stepWatchdogRef.current = setTimeout(() => {
         if (!hasAdvanced && isPlayingFlowRef.current) {
-          console.warn('[Sequencer] Speech watchdog triggered -> auto advancing next step');
+          console.warn('[Sequencer] Speech safety watchdog fallback triggered -> advancing next step');
           onSpeechFinished();
         }
       }, watchdogMs);
@@ -1077,7 +1082,7 @@ export default function LivestreamFlowSequencer() {
 
       if (shouldPlay) {
         // Chế độ không lời thoại hoặc Master Voice tắt: chạy hết thời lượng bước rồi tự động chuyển bước
-        const stepTimeMs = Math.max(3000, estimatedSeconds * 1000);
+        const stepTimeMs = Math.max(3000, (step.durationSeconds || 10) * 1000);
         stepWatchdogRef.current = setTimeout(() => {
           if (isPlayingFlowRef.current) {
             advanceNext();
@@ -1248,39 +1253,47 @@ export default function LivestreamFlowSequencer() {
       setSpeakingStepId(null);
 
       syncMasterLiveState({
+        stage: 'idol',
         isPlaying: false,
+        isMasterSynced: false,
+        isSynced: false,
         videoPlaybackEvent: 'pause',
         clearMedia: true,
-        mediaUrl: '',
-        mainMediaUrl: '',
+        clearStage: true,
+        mediaUrl: null,
+        mainMediaUrl: null,
         stepTitle: '',
         actionType: '',
         secondaryMediaUrl: null,
         overlayImage: null,
         overlayText: null,
         syncedAvatars: [],
-        multiAvatarConfig: { ...(multiAvatarConfig || {}), enabled: false }
+        multiAvatarConfig: { ...(multiAvatarConfig || {}), enabled: false, activeCount: 0, avatars: [] }
       });
       sendVideoControl({
         action: 'pause',
         isPlaying: false,
         clearMedia: true,
+        clearStage: true,
         timestamp: Date.now()
       });
 
       // 🔌 Ngắt kết nối đồng bộ — fire event để Sân Khấu Chính xóa sạch lớp phủ sequencer & ngắt lập tức 0ms
       window.dispatchEvent(new CustomEvent('avalive:sequencer_sync_disconnected', {
-        detail: { isSynced: false, source: 'user_toggle', clearStage: true }
+        detail: { isSynced: false, source: 'user_toggle', clearStage: true, clearMedia: true }
       }));
       window.dispatchEvent(new CustomEvent('avalive_multi_avatar_changed', {
-        detail: { ...(multiAvatarConfig || {}), enabled: false, clearMedia: true }
+        detail: { ...(multiAvatarConfig || {}), enabled: false, activeCount: 0, avatars: [], clearMedia: true }
       }));
       try {
         const bc = new BroadcastChannel('avalive_master_live_stream');
         bc.postMessage({
           type: 'CLEAR_STAGE',
           clearMedia: true,
+          clearStage: true,
           clearAvatars: true,
+          isMasterSynced: false,
+          isSynced: false,
           source: 'sequencer_disconnect',
           timestamp: Date.now()
         });

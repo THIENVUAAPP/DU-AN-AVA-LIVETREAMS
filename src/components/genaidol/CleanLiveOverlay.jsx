@@ -1016,9 +1016,46 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     const applyMasterState = (data) => {
       if (!data) return;
 
-      // 🎬 ĐỒNG BỘ NẠP VIDEO & PHÁT LIỀN MẠCH 60 FPS
       const vid = overlayVideoRef.current || document.querySelector('video');
 
+      // 🛑 XÓA SẠCH 100% TOÀN BỘ SÂN KHẤU KHI NGẮT ĐỒNG BỘ HOẶC CÓ TÍN HIỆU CLEAR_STAGE
+      if (data.clearMedia || data.type === 'CLEAR_STAGE' || data.isMasterSynced === false || (data.isSynced === false && (data.clearMedia || data.clearStage))) {
+        if (vid) {
+          try {
+            vid.pause();
+            vid.removeAttribute('src');
+            vid.src = '';
+            vid.load();
+          } catch (e) {}
+        }
+        setActiveMedia({ url: '', isVideo: false, name: '' });
+        setMasterState(prev => ({
+          ...prev,
+          mediaUrl: null,
+          mainMediaUrl: null,
+          secondaryMediaUrl: null,
+          overlayImage: null,
+          overlayText: null,
+          multiAvatarConfig: null,
+          syncedAvatars: [],
+          clearMedia: true,
+          isMasterSynced: false,
+          selectedCharacter: '',
+          isVideo: false,
+          isPlaying: false
+        }));
+        setIsPlayingState(false);
+        try {
+          localStorage.removeItem('avalive_active_video_src');
+          localStorage.removeItem('avalive_user_locked_media');
+          localStorage.removeItem('aidol_idle_media_url');
+          localStorage.removeItem('avalive_sequencer_overlay');
+          localStorage.removeItem('avalive_master_sync_active');
+        } catch (e) {}
+        return;
+      }
+
+      // 🎬 ĐỒNG BỘ NẠP VIDEO & PHÁT LIỀN MẠCH 60 FPS
       if (data.mediaUrl && typeof data.mediaUrl === 'string') {
         let cleanUrl = data.mediaUrl;
         if (cleanUrl.includes('/uploads/')) cleanUrl = cleanUrl.substring(cleanUrl.indexOf('/uploads/'));
@@ -2046,15 +2083,18 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       } catch (e) {}
     }
 
+    // 🛑 NẾU ĐÃ NGẮT ĐỒNG BỘ HOẶC CÓ TÍN HIỆU CLEAR MEDIA -> KHÔNG LẤY BẤT KỲ FALLBACK NÀO
+    const isStageCleared = masterState?.clearMedia === true || masterState?.isMasterSynced === false;
+
     // 1. Trực tiếp từ masterState.mediaUrl
-    if (!candidateUrl && masterState.mediaUrl && typeof masterState.mediaUrl === 'string') {
+    if (!isStageCleared && !candidateUrl && masterState.mediaUrl && typeof masterState.mediaUrl === 'string') {
       if (!masterState.mediaUrl.startsWith('blob:') || isLocalOrigin) {
         candidateUrl = masterState.mediaUrl;
       }
     }
 
     // 2. Kiểm tra video đã được người dùng chọn phát cố định (Persistent Lock)
-    if (!candidateUrl) {
+    if (!isStageCleared && !candidateUrl) {
       try {
         const locked = localStorage.getItem('avalive_user_locked_media');
         if (locked && typeof locked === 'string' && locked !== 'null' && locked !== 'undefined' && locked.trim() !== '') {
@@ -2066,7 +2106,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     }
 
     // 3. Kiểm tra active video src lưu trong localStorage
-    if (!candidateUrl) {
+    if (!isStageCleared && !candidateUrl) {
       try {
         const activeSrc = localStorage.getItem('avalive_active_video_src');
         if (activeSrc && typeof activeSrc === 'string' && activeSrc.trim() !== '') {
@@ -2078,7 +2118,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     }
 
     // 4. Kiểm tra trong danh sách custom characters người dùng đã tải lên
-    if (!candidateUrl) {
+    if (!isStageCleared && !candidateUrl) {
       try {
         const customRaw = localStorage.getItem('avalive_custom_characters');
         if (customRaw) {
@@ -2102,7 +2142,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     }
 
     // 5. Kiểm tra trong localDbItems (IndexedDB)
-    if (!candidateUrl && localDbItems.length > 0) {
+    if (!isStageCleared && !candidateUrl && localDbItems.length > 0) {
       const match = localDbItems.find(i => i.id === masterState.selectedCharacter) || localDbItems[0];
       if (match) {
         const m = match.mediaUrl || match.url;
@@ -2115,7 +2155,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     }
 
     // 6. Kiểm tra state lưu trữ từ phiên trước
-    if (!candidateUrl) {
+    if (!isStageCleared && !candidateUrl) {
       try {
         const saved = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
         if (saved.mediaUrl && typeof saved.mediaUrl === 'string' && (!saved.mediaUrl.startsWith('blob:') || isLocalOrigin)) {
@@ -2434,7 +2474,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   LIVE 9:16
                 </span>
                 <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                  v4.9.99
+                  v5.0.0
                 </span>
               </div>
 
@@ -2670,10 +2710,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               {currentStage === 'idol' && (
                 <div className="w-full h-full absolute inset-0 flex items-center justify-center overflow-hidden bg-black">
                 {/* MULTI-AVATAR & SEQUENCER VISUAL STUDIO CANVAS (ĐỒNG BỘ 100% SÂN KHẤU CHÍNH) */}
-                {((Array.isArray(masterState?.syncedAvatars) && masterState.syncedAvatars.length > 0) ||
+                {(!masterState?.clearMedia && masterState?.isMasterSynced !== false && (
+                  (Array.isArray(masterState?.syncedAvatars) && masterState.syncedAvatars.length > 0) ||
                   (multiAvatarConfig?.enabled && Array.isArray(multiAvatarConfig?.avatars) && multiAvatarConfig.avatars.length > 0) ||
                   (Array.isArray(masterState?.extraImageLayers) && masterState.extraImageLayers.length > 0) ||
-                  masterState?.mainMediaTransform) ? (() => {
+                  masterState?.mainMediaTransform
+                )) ? (() => {
                   const sourceAvatars = (Array.isArray(masterState?.syncedAvatars) && masterState.syncedAvatars.length > 0)
                     ? masterState.syncedAvatars
                     : ((multiAvatarConfig?.enabled && Array.isArray(multiAvatarConfig?.avatars) && multiAvatarConfig.avatars.length > 0)
@@ -3210,7 +3252,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             )}
 
             {/* 🖼️ LỚP 1.5: VIDEO PHỤ PIP (PICTURE-IN-PICTURE) ĐỒNG BỘ TỪ SÂN KHẤU CHÍNH */}
-            {masterState.secondaryMediaUrl && (() => {
+            {!isStageCleared && masterState.secondaryMediaUrl && (() => {
               const pipTrans = masterState.secondaryMediaTransform || {
                 x: masterState.secondaryMediaPos === 'top-left' ? 4 : masterState.secondaryMediaPos === 'bottom-left' ? 4 : masterState.secondaryMediaPos === 'bottom-right' ? 55 : 55,
                 y: masterState.secondaryMediaPos === 'bottom-left' || masterState.secondaryMediaPos === 'bottom-right' ? 70 : 8,
@@ -3256,7 +3298,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             })()}
 
             {/* 🏷️ LỚP 2: OVERLAY HÌNH ẢNH / BANNER / POSTER ĐỒNG BỘ TỪ SÂN KHẤU CHÍNH */}
-            {masterState.overlayImage && (() => {
+            {!isStageCleared && masterState.overlayImage && (() => {
               const bannerTrans = masterState.overlayImageTransform || {
                 x: masterState.overlayImagePos === 'top-right' ? 65 : masterState.overlayImagePos === 'bottom-left' ? 4 : masterState.overlayImagePos === 'bottom-right' ? 65 : 10,
                 y: masterState.overlayImagePos === 'bottom-left' || masterState.overlayImagePos === 'bottom-right' ? 70 : 12,
@@ -3290,7 +3332,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             })()}
 
             {/* 💬 LỚP 3: OVERLAY TIÊU ĐỀ / CHỮ NỔI BẬT ĐỒNG BỘ TỪ SÂN KHẤU CHÍNH */}
-            {masterState.overlayText && typeof masterState.overlayText === 'string' && !/^(bước|step)\s*\d+/i.test(masterState.overlayText.trim()) && (() => {
+            {!isStageCleared && masterState.overlayText && typeof masterState.overlayText === 'string' && !/^(bước|step)\s*\d+/i.test(masterState.overlayText.trim()) && (() => {
               const textTrans = masterState.overlayTextTransform || {
                 x: 4,
                 y: 5,
