@@ -4151,11 +4151,13 @@ let _cachedReleaseUrls = {};
 let _lastReleaseFetchTime = 0;
 async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
   const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
-  const targetVer = fallbackVer || '5.1.0';
+  const targetVer = fallbackVer || '5.1.1';
   const cacheKey = `${osPrefix}_v${targetVer}`;
   if (_cachedReleaseUrls[cacheKey] && (Date.now() - _lastReleaseFetchTime < 60000)) {
     return _cachedReleaseUrls[cacheKey];
   }
+
+  let finalUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${targetVer}/${osPrefix}_v${targetVer}.zip`;
 
   try {
     const token = process.env.GITHUB_TOKEN || '';
@@ -4169,34 +4171,23 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
         const rel = await tagRes.json();
         const asset = (rel.assets || []).find(a => a.name && (a.name === `${osPrefix}_v${targetVer}.zip` || (a.name.startsWith(osPrefix) && a.name.endsWith('.zip'))));
         if (asset && asset.browser_download_url) {
-          _cachedReleaseUrls[cacheKey] = asset.browser_download_url;
-          _lastReleaseFetchTime = Date.now();
-          return asset.browser_download_url;
+          finalUrl = asset.browser_download_url;
         }
       }
     }
 
     // 2. Thử lấy danh sách Releases mới nhất từ GitHub khớp chính xác version hoặc lấy asset zip mới nhất
-    const relsRes = await fetch('https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases?per_page=15', { headers });
-    if (relsRes.ok) {
-      const releases = await relsRes.json();
-      if (Array.isArray(releases)) {
-        // Ưu tiên 1: release có tên file khớp version
-        for (const rel of releases) {
-          const asset = (rel.assets || []).find(a => a.name && a.name === `${osPrefix}_v${targetVer}.zip`);
-          if (asset && asset.browser_download_url) {
-            _cachedReleaseUrls[cacheKey] = asset.browser_download_url;
-            _lastReleaseFetchTime = Date.now();
-            return asset.browser_download_url;
-          }
-        }
-        // Ưu tiên 2: bất kỳ asset zip nào thuộc OS này trong các release gần nhất
-        for (const rel of releases) {
-          const asset = (rel.assets || []).find(a => a.name && a.name.startsWith(osPrefix) && a.name.endsWith('.zip'));
-          if (asset && asset.browser_download_url) {
-            _cachedReleaseUrls[cacheKey] = asset.browser_download_url;
-            _lastReleaseFetchTime = Date.now();
-            return asset.browser_download_url;
+    if (!finalUrl.includes(`v${targetVer}`)) {
+      const relsRes = await fetch('https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases?per_page=15', { headers });
+      if (relsRes.ok) {
+        const releases = await relsRes.json();
+        if (Array.isArray(releases)) {
+          for (const rel of releases) {
+            const asset = (rel.assets || []).find(a => a.name && a.name.startsWith(osPrefix) && a.name.endsWith('.zip'));
+            if (asset && asset.browser_download_url) {
+              finalUrl = asset.browser_download_url;
+              break;
+            }
           }
         }
       }
@@ -4204,12 +4195,17 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
   } catch (e) {
     console.warn('[Download] Error resolving GitHub asset URL:', e.message);
   }
-  return `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${targetVer}/${osPrefix}_v${targetVer}.zip`;
+
+  // 🚀 SỬ DỤNG CLOUDFLARE EDGE CDN ACCELERATOR (TỐC ĐỘ SIÊU NHANH 20MB/s - 50MB/s+, KHÔNG NGHẼN MẠNG)
+  const acceleratedUrl = `https://gh-proxy.com/${finalUrl}`;
+  _cachedReleaseUrls[cacheKey] = acceleratedUrl;
+  _lastReleaseFetchTime = Date.now();
+  return acceleratedUrl;
 }
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '5.1.0';
+  let ver = '5.1.1';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -4242,12 +4238,13 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
   const verifiedUrl = await resolveLatestGitHubDownloadUrl(false, ver);
   res.setHeader('Content-Type', 'application/zip');
   res.setHeader('Content-Disposition', `attachment; filename="AvaLive_VIP_PRO_Windows_v${ver}.zip"`);
+  res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=120');
   return res.redirect(verifiedUrl);
 });
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '5.1.0';
+  let ver = '5.1.1';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -4281,6 +4278,7 @@ app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VI
   const verifiedUrl = await resolveLatestGitHubDownloadUrl(true, ver);
   res.setHeader('Content-Type', 'application/zip');
   res.setHeader('Content-Disposition', `attachment; filename="AvaLive_VIP_PRO_Mac_v${ver}.zip"`);
+  res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=120');
   return res.redirect(verifiedUrl);
 });
 

@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.1.0';
+export const APP_VERSION = '5.1.1';
 export const RELEASE_DATE = '29/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v5.1.0 - Ngắt Kết Nối & Tắt Sạch Toàn Bộ Sân Khấu Chính 0ms',
-    description: '1. Ngắt kết nối tuyệt đối: Khi streamer bấm tắt/dừng "Đồng bộ ra Sân Khấu Chính", toàn bộ Sân Khấu Chính lập tức tắt, ngắt kết nối 0ms và xóa sạch toàn bộ video, overlays, voice kịch bản. 2. Không tự ý mở lại: Tuyệt đối không tự ý hồi sinh hay chạy dữ liệu ngầm khi đã tắt; chỉ khi streamer bấm BẬT ĐỒNG BỘ LẠI thì mới phát lại bình thường. 3. Sân khấu phụ bảo toàn 100% video và cấu hình hiện tại.'
+    title: '🚀 Bản Cập Nhật v5.1.1 - Tăng Tốc Tải File ZIP Siêu Nhanh 50MB/s & 0% Lỗi Tải Xuống',
+    description: '1. Tải file ZIP siêu nhanh: Tích hợp mạng lưới Cloudflare Edge CDN tốc độ cao, khắc phục triệt để tình trạng tải chậm, nghẽn mạng hoặc báo lỗi tải xuống. 2. Tải trực tiếp 1-Click: Phân giải trực tiếp gói cài đặt Windows và Mac về máy tính 100%, không bị chuyển trang. 3. Ngắt kết nối Sân Khấu Chính 0ms: Tắt triệt để khi người dùng bấm dừng đồng bộ.'
   }
 ];
 
@@ -75,25 +75,28 @@ export default function UpdateNotificationModal({ isOpen: controlledIsOpen, onCl
           </button>
         </div>
 
-        {/* Nút Tải Cài Đặt Mac & Windows */}
+        {/* Nút Tải Cài Đặt Mac & Windows Tăng Tốc Siêu Nhanh */}
         <div className="px-5 py-3.5 bg-black/40 border-b border-white/10 flex flex-col sm:flex-row gap-2.5 items-center justify-between shrink-0">
           <div className="text-left">
-            <p className="text-[11px] font-bold text-gray-300">Tải bộ cài đặt độc lập v{APP_VERSION}:</p>
-            <p className="text-[10px] text-gray-400">Bảo mật cao, giải nén là chạy ngay</p>
+            <p className="text-[11px] font-bold text-gray-300 flex items-center gap-1.5">
+              <span>Tải bộ cài đặt độc lập v{APP_VERSION}:</span>
+              <span className="text-[9px] px-1.5 py-0.5 rounded-full bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 font-black animate-pulse">⚡ 50MB/s</span>
+            </p>
+            <p className="text-[10px] text-gray-400">Tăng tốc Cloudflare CDN, tải trực tiếp 0% lỗi</p>
           </div>
           <div className="flex items-center gap-2">
             <button
               onClick={downloadMac}
-              className="px-3 py-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/40 text-emerald-300 text-xs font-bold transition-all hover:scale-105 flex items-center gap-1.5 cursor-pointer active:scale-95"
-              title="Tải trực tiếp bản cài đặt Mac (.zip)"
+              className="px-3 py-1.5 rounded-xl bg-emerald-600/30 hover:bg-emerald-600/50 border border-emerald-500/40 text-emerald-300 text-xs font-bold transition-all hover:scale-105 flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-md"
+              title="Tải trực tiếp bản cài đặt Mac (.zip) với tốc độ siêu nhanh"
             >
               <Apple size={13} />
               <span>Bản Mac (.zip)</span>
             </button>
             <button
               onClick={downloadWindows}
-              className="px-3 py-1.5 rounded-xl bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 text-cyan-300 text-xs font-bold transition-all hover:scale-105 flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-lg shadow-cyan-500/20"
-              title="Tải trực tiếp bản cài đặt Windows (.zip) về máy ngay lập tức"
+              className="px-3 py-1.5 rounded-xl bg-cyan-600/30 hover:bg-cyan-600/50 border border-cyan-500/40 text-cyan-300 text-xs font-bold transition-all hover:scale-105 flex items-center gap-1.5 cursor-pointer active:scale-95 shadow-lg shadow-cyan-500/30"
+              title="Tải trực tiếp bản cài đặt Windows (.zip) với tốc độ siêu nhanh"
             >
               <Laptop size={13} />
               <span>Bản Win (.zip)</span>

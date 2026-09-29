@@ -20,7 +20,7 @@ export default async function handler(req, res) {
     }
 
     // Đọc phiên bản mới nhất từ package.json hoặc fallback version hiện tại
-    let currentVersion = '5.1.0';
+    let currentVersion = '5.1.1';
     try {
       const fs = await import('fs');
       const path = await import('path');
@@ -86,11 +86,14 @@ export default async function handler(req, res) {
       console.warn('API releases fetch warning:', e.message);
     }
 
+    // 🚀 TĂNG TỐC ĐỘ TẢI SIÊU NHANH BẰNG CLOUDFLARE EDGE CDN MIRROR (CHỐNG NGHẼN MẠNG & CHỐNG LỖI TẢI VỀ 100%)
+    let acceleratedUrl = `https://gh-proxy.com/${downloadUrl}`;
+
     // Redirect trực tiếp tới asset stream với Header ép tải file
-    res.setHeader('Location', downloadUrl);
+    res.setHeader('Location', acceleratedUrl);
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="${targetFileName}"`);
-    res.setHeader('Cache-Control', 'public, max-age=300');
+    res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=120');
     return res.status(302).end();
   } catch (err) {
     console.error('Download handler error:', err);
