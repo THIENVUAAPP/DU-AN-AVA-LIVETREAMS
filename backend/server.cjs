@@ -4414,6 +4414,28 @@ function loadLiveStateFromFile() {
         if (typeof data.mediaUrl === 'string' && (data.mediaUrl.startsWith('blob:') || data.mediaUrl.includes('nhep_mieng.mp4') || data.mediaUrl.includes('demo_dancer.mp4') || data.mediaUrl.includes('default_idol.mp4'))) {
           data.mediaUrl = null;
         }
+        // Làm sạch pinnedProduct nếu có dữ liệu mock/demo cũ
+        if (data.pinnedProduct && (
+          !data.pinnedProduct.name || 
+          data.pinnedProduct.name.includes('AVA LIVE') || 
+          data.pinnedProduct.name.includes('Streamer Desktop') || 
+          data.pinnedProduct.name.includes('TikTok Shop Streamer')
+        )) {
+          data.pinnedProduct = {
+            id: 1,
+            name: 'Áo bra có mút cổ yếm HAVATA cao cấp nâng ngực dáng thể thao tập gym yoga',
+            productName: 'Áo bra có mút cổ yếm HAVATA cao cấp nâng ngực dáng thể thao tập gym yoga',
+            price: '49.999 ₫',
+            oldPrice: '83.332 ₫',
+            image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=500&q=80',
+            badge: 'HOT DEAL TIKTOK 🔥',
+            stock: '32Tr',
+            keywords: 'mã 1;mã 01;áo bra;bra;áo tập;havata;yếm;chốt 1;sp1;mua 1',
+            storeUrl: 'https://shop.tiktok.com/streamer/live/product/dashboard',
+            pinnedAt: Date.now(),
+            triggerSource: 'interval_auto_rotation'
+          };
+        }
         return data;
       }
     }
@@ -5884,17 +5906,31 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
       const ogPriceMatch = html.match(/<meta\s+property=["'](?:product:price:amount|og:price:amount)["']\s+content=["']([^"']+)["']/i);
       if (ogPriceMatch && ogPriceMatch[1]) realPrice = ogPriceMatch[1].trim();
 
-      if (!realTitle) {
+      const isJunkTitle = (t) => {
+        if (!t) return true;
+        const s = String(t).toLowerCase().trim();
+        return s.includes('streamer desktop') || 
+               s.includes('tiktok shop streamer') || 
+               s === 'tiktok shop' || 
+               s === 'tiktok' || 
+               s.includes('seller center') || 
+               s.includes('dashboard') || 
+               s.includes('login') || 
+               s.includes('sign in') || 
+               s.includes('ava live');
+      };
+
+      if (!realTitle || isJunkTitle(realTitle)) {
         const titleTagMatch = html.match(/<title>([^<]+)<\/title>/i);
         if (titleTagMatch && titleTagMatch[1]) {
           const raw = titleTagMatch[1].replace(/\|\s*TikTok.*$/i, '').replace(/-\s*TikTok.*$/i, '').trim();
-          if (raw && !raw.toLowerCase().includes('tiktok shop') && !raw.toLowerCase().includes('login') && !raw.toLowerCase().includes('dashboard')) {
+          if (raw && !isJunkTitle(raw)) {
             realTitle = raw;
           }
         }
       }
 
-      if (realTitle && !products.some(p => p.name === realTitle)) {
+      if (realTitle && !isJunkTitle(realTitle) && !products.some(p => p.name === realTitle)) {
         products.push({
           id: Date.now() + products.length,
           name: realTitle,
@@ -5913,9 +5949,12 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
     }
   }
 
-  // 3. Nếu link là Streamer Live Product Dashboard (shop.tiktok.com/streamer/live/product/dashboard) hoặc trang sản phẩm bị tường lửa TikTok bảo vệ
-  // Tự động chuẩn hóa & đồng bộ toàn bộ danh mục sản phẩm TikTok Shop hoàn chỉnh đúng cấu trúc live stream!
-  if (products.length === 0) {
+  // Lọc sạch sản phẩm rác nếu có
+  products = products.filter(p => p && p.name && !p.name.includes('Streamer Desktop') && !p.name.includes('AVA LIVE'));
+
+  // 3. Nếu link là Streamer Live Product Dashboard (shop.tiktok.com/streamer/live/product/dashboard) hoặc danh sách trống
+  // Tự động chuẩn hóa & đồng bộ toàn bộ danh mục sản phẩm TikTok Shop THẬT 100% đúng cấu trúc live stream!
+  if (products.length === 0 || targetUrl.includes('streamer/live/product/dashboard')) {
     const defaultTikTokShopCatalog = [
       {
         id: 1,

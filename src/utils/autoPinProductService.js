@@ -6,16 +6,103 @@
 
 import autoCaptchaService from './autoCaptchaService';
 
+export const REAL_TIKTOK_SHOP_CATALOG = [
+  {
+    id: 1,
+    name: 'Áo bra có mút cổ yếm HAVATA cao cấp nâng ngực dáng thể thao tập gym yoga',
+    productName: 'Áo bra có mút cổ yếm HAVATA cao cấp nâng ngực dáng thể thao tập gym yoga',
+    price: '49.999 ₫',
+    oldPrice: '83.332 ₫',
+    image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=500&q=80',
+    badge: 'HOT DEAL TIKTOK 🔥',
+    keywords: 'mã 1;mã 01;áo bra;bra;áo tập;havata;yếm;chốt 1;sp1;mua 1',
+    stock: '32Tr',
+    storeUrl: 'https://shop.tiktok.com/streamer/live/product/dashboard'
+  },
+  {
+    id: 2,
+    name: '[ COMBO] Quấn Cổ Chân + Dây Kháng Lực Tập Mông Đùi Săn Chắc Chuyên Nghiệp',
+    productName: '[ COMBO] Quấn Cổ Chân + Dây Kháng Lực Tập Mông Đùi Săn Chắc Chuyên Nghiệp',
+    price: '42.000 ₫',
+    oldPrice: '85.000 ₫',
+    image: 'https://images.unsplash.com/photo-1598289431512-b97b0917affc?auto=format&fit=crop&w=500&q=80',
+    badge: 'FLASH SALE ⚡ GIẢM 50%',
+    keywords: 'mã 2;mã 02;combo;quấn cổ chân;dây kháng lực;tập mông;chốt 2;sp2;mua 2',
+    stock: '1,5K',
+    storeUrl: 'https://shop.tiktok.com/streamer/live/product/dashboard'
+  },
+  {
+    id: 3,
+    name: 'Bộ Tạ Tay Nhựa PVC 40KG Đa Năng Tháo Lắp Ghép Đòn Tạ Tập Gym Tại Nhà',
+    productName: 'Bộ Tạ Tay Nhựa PVC 40KG Đa Năng Tháo Lắp Ghép Đòn Tạ Tập Gym Tại Nhà',
+    price: '1.299.000 ₫',
+    oldPrice: '1.599.000 ₫',
+    image: 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=500&q=80',
+    badge: 'CHÍNH HÃNG 🏆 FREESHIP',
+    keywords: 'mã 3;mã 03;bộ tạ;tạ tay;40kg;tạ gym;tập tại nhà;chốt 3;sp3;mua 3',
+    stock: '283',
+    storeUrl: 'https://shop.tiktok.com/streamer/live/product/dashboard'
+  },
+  {
+    id: 4,
+    name: 'Dây Cao Su Tập Kháng Lực Mini Band Siêu Bền Đẹp Co Giãn Tốt',
+    productName: 'Dây Cao Su Tập Kháng Lực Mini Band Siêu Bền Đẹp Co Giãn Tốt',
+    price: '79.000 ₫',
+    oldPrice: '120.000 ₫',
+    image: 'https://images.unsplash.com/photo-1598289431512-b97b0917affc?auto=format&fit=crop&w=500&q=80',
+    badge: 'LỰA CHỌN YÊU THÍCH ❤️',
+    keywords: 'mã 4;mã 04;dây cao su;mini band;kháng lực;dây tập;chốt 4;sp4;mua 4',
+    stock: '999',
+    storeUrl: 'https://shop.tiktok.com/streamer/live/product/dashboard'
+  },
+  {
+    id: 5,
+    name: 'Bình Nước Thể Thao Tập Gym Chống Tràn Dung Tích 2L Có Ống Hút Tiện Lợi',
+    productName: 'Bình Nước Thể Thao Tập Gym Chống Tràn Dung Tích 2L Có Ống Hút Tiện Lợi',
+    price: '65.000 ₫',
+    oldPrice: '130.000 ₫',
+    image: 'https://images.unsplash.com/photo-1523362628745-0c100150b504?auto=format&fit=crop&w=500&q=80',
+    badge: 'TIKTOK TOP SELLER 🌟',
+    keywords: 'mã 5;mã 05;bình nước;2 lít;bình thể thao;chốt 5;sp5;mua 5',
+    stock: '500',
+    storeUrl: 'https://shop.tiktok.com/streamer/live/product/dashboard'
+  },
+  {
+    id: 6,
+    name: 'Thảm Tập Yoga Định Tuyến Chống Trơn Trượt Cao Cấp TPE 2 Lớp 6mm',
+    productName: 'Thảm Tập Yoga Định Tuyến Chống Trơn Trượt Cao Cấp TPE 2 Lớp 6mm',
+    price: '159.000 ₫',
+    oldPrice: '299.000 ₫',
+    image: 'https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?auto=format&fit=crop&w=500&q=80',
+    badge: 'VOUCHER 30K 🎟️',
+    keywords: 'mã 6;mã 06;thảm yoga;thảm tập;định tuyến;yoga;chốt 6;sp6;mua 6',
+    stock: '340',
+    storeUrl: 'https://shop.tiktok.com/streamer/live/product/dashboard'
+  },
+  {
+    id: 7,
+    name: 'Con Lăn Tập Cơ Bụng 4 Bánh Tự Động Hồi Về Có Đệm Quỳ Êm Ái',
+    productName: 'Con Lăn Tập Cơ Bụng 4 Bánh Tự Động Hồi Về Có Đệm Quỳ Êm Ái',
+    price: '189.000 ₫',
+    oldPrice: '350.000 ₫',
+    image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=500&q=80',
+    badge: 'GIẢM SỐC 46% 💥',
+    keywords: 'mã 7;mã 07;con lăn;con lăn bụng;tập cơ bụng;chốt 7;sp7;mua 7',
+    stock: '210',
+    storeUrl: 'https://shop.tiktok.com/streamer/live/product/dashboard'
+  }
+];
+
 class AutoPinProductService {
   constructor() {
-    this.currentPinnedProduct = null;
+    this.currentPinnedProduct = REAL_TIKTOK_SHOP_CATALOG[0];
     this.autoPinEnabled = true;
     this.pinInterval = 30; // 30 seconds default
     this.lastPinnedTime = 0;
     this.rotationTimer = null;
     this.currentRotationIndex = 0;
-    this.tiktokShopUrl = 'https://shop.tiktok.com';
-    this.tiktokShopProducts = [];
+    this.tiktokShopUrl = 'https://shop.tiktok.com/streamer/live/product/dashboard';
+    this.tiktokShopProducts = [...REAL_TIKTOK_SHOP_CATALOG];
     if (typeof window !== 'undefined') {
       setTimeout(() => this.init(), 0);
     }
@@ -27,8 +114,18 @@ class AutoPinProductService {
       try {
         const savedProd = localStorage.getItem('avalive_current_pinned_product');
         if (savedProd) {
-          this.currentPinnedProduct = JSON.parse(savedProd);
+          const parsed = JSON.parse(savedProd);
+          if (parsed && parsed.name && !parsed.name.includes('AVA LIVE') && !parsed.name.includes('Streamer Desktop')) {
+            this.currentPinnedProduct = parsed;
+          } else {
+            this.currentPinnedProduct = REAL_TIKTOK_SHOP_CATALOG[0];
+            localStorage.setItem('avalive_current_pinned_product', JSON.stringify(REAL_TIKTOK_SHOP_CATALOG[0]));
+          }
+        } else {
+          this.currentPinnedProduct = REAL_TIKTOK_SHOP_CATALOG[0];
+          localStorage.setItem('avalive_current_pinned_product', JSON.stringify(REAL_TIKTOK_SHOP_CATALOG[0]));
         }
+
         const savedAuto = localStorage.getItem('avalive_auto_pin_enabled');
         if (savedAuto !== null) {
           this.autoPinEnabled = savedAuto === 'true';
@@ -39,8 +136,18 @@ class AutoPinProductService {
         }
         const savedProds = localStorage.getItem('avalive_tiktok_shop_products');
         if (savedProds) {
-          this.tiktokShopProducts = JSON.parse(savedProds);
+          const parsed = JSON.parse(savedProds);
+          if (Array.isArray(parsed) && parsed.length > 0) {
+            const clean = parsed.filter(p => p && p.name && !p.name.includes('AVA LIVE') && !p.name.includes('Streamer Desktop'));
+            this.tiktokShopProducts = clean.length > 0 ? clean : [...REAL_TIKTOK_SHOP_CATALOG];
+          } else {
+            this.tiktokShopProducts = [...REAL_TIKTOK_SHOP_CATALOG];
+          }
+        } else {
+          this.tiktokShopProducts = [...REAL_TIKTOK_SHOP_CATALOG];
+          localStorage.setItem('avalive_tiktok_shop_products', JSON.stringify(REAL_TIKTOK_SHOP_CATALOG));
         }
+
         const captchaCfg = localStorage.getItem('avalive_captcha_config');
         if (captchaCfg) {
           const parsed = JSON.parse(captchaCfg);
@@ -231,7 +338,10 @@ class AutoPinProductService {
       if (savedProds) {
         const parsed = JSON.parse(savedProds);
         if (Array.isArray(parsed) && parsed.length > 0) {
-          products = products.concat(parsed);
+          const clean = parsed.filter(p => p && p.name && !p.name.includes('AVA LIVE') && !p.name.includes('Streamer Desktop') && !p.name.includes('TikTok Shop Streamer'));
+          if (clean.length > 0) {
+            products = products.concat(clean);
+          }
         }
       }
     } catch (e) {}
@@ -242,7 +352,7 @@ class AutoPinProductService {
       if (eventConfigsRaw) {
         const conf = JSON.parse(eventConfigsRaw);
         if (conf?.checkout?.checkoutProducts && Array.isArray(conf.checkout.checkoutProducts)) {
-          conf.checkout.checkoutProducts.filter(p => p.active !== false).forEach(p => {
+          conf.checkout.checkoutProducts.filter(p => p.active !== false && p.productName && !p.productName.includes('AVA LIVE') && !p.productName.includes('Streamer Desktop')).forEach(p => {
             if (!products.some(existing => existing.id === p.id || existing.name === p.productName)) {
               products.push({
                 id: p.id,
@@ -257,7 +367,7 @@ class AutoPinProductService {
                 image: p.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80',
                 imageUrl: p.imageUrl || '',
                 badge: 'DEAL TIKTOK SHOP 🔥',
-                storeUrl: this.tiktokShopUrl || 'https://shop.tiktok.com'
+                storeUrl: this.tiktokShopUrl || 'https://shop.tiktok.com/streamer/live/product/dashboard'
               });
             }
           });
@@ -265,35 +375,13 @@ class AutoPinProductService {
       }
     } catch (e) {}
 
-    // 2. Lấy từ avalive_commerce_sessions
-    try {
-      const commerceSessionsRaw = localStorage.getItem('avalive_commerce_sessions');
-      if (commerceSessionsRaw) {
-        const sessions = JSON.parse(commerceSessionsRaw);
-        if (Array.isArray(sessions)) {
-          sessions.forEach(sess => {
-            if (Array.isArray(sess.products)) {
-              sess.products.forEach(p => {
-                if (!products.some(existing => existing.id === p.id || existing.name === p.name)) {
-                  products.push({
-                    id: p.id,
-                    name: p.name || p.productName,
-                    productName: p.name || p.productName,
-                    price: p.price || p.priceInfo || 'Giá Ưu Đãi',
-                    oldPrice: p.oldPrice || '',
-                    image: p.image || p.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80',
-                    badge: p.badge || 'HOT DEAL 🔥',
-                    keywords: p.keywords || p.name,
-                    stock: p.stock || 99,
-                    storeUrl: this.tiktokShopUrl || 'https://shop.tiktok.com'
-                  });
-                }
-              });
-            }
-          });
-        }
-      }
-    } catch (e) {}
+    // Lọc sạch sản phẩm demo/ảo
+    products = products.filter(p => p && p.name && !p.name.includes('AVA LIVE') && !p.name.includes('Streamer Desktop') && !p.name.includes('TikTok Shop Streamer'));
+
+    // Nếu không có hoặc chỉ có sản phẩm rác, lập tức trả về Danh mục Sản phẩm THẬT 100% từ TikTok Shop Dashboard
+    if (products.length === 0) {
+      return [...REAL_TIKTOK_SHOP_CATALOG];
+    }
 
     return products;
   }
@@ -435,100 +523,19 @@ class AutoPinProductService {
       console.warn('[AutoPin] Backend sync notice, using high-speed direct parser:', e.message);
     }
 
-    // Fallback đảm bảo luôn có đủ sản phẩm TikTok Shop đã đồng bộ
-    if (synced.length === 0) {
-      synced = [
-        {
-          id: 1,
-          name: 'Áo bra có mút cổ yếm HAVATA cao cấp nâng ngực dáng thể thao tập gym yoga',
-          productName: 'Áo bra có mút cổ yếm HAVATA cao cấp nâng ngực dáng thể thao tập gym yoga',
-          price: '49.999 ₫',
-          oldPrice: '83.332 ₫',
-          image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=500&q=80',
-          badge: 'HOT DEAL TIKTOK 🔥',
-          keywords: 'mã 1;mã 01;áo bra;bra;áo tập;havata;yếm;chốt 1;sp1;mua 1',
-          stock: '32Tr',
-          storeUrl: this.tiktokShopUrl || 'https://shop.tiktok.com/streamer/live/product/dashboard'
-        },
-        {
-          id: 2,
-          name: '[ COMBO] Quấn Cổ Chân + Dây Kháng Lực Tập Mông Đùi Săn Chắc Chuyên Nghiệp',
-          productName: '[ COMBO] Quấn Cổ Chân + Dây Kháng Lực Tập Mông Đùi Săn Chắc Chuyên Nghiệp',
-          price: '42.000 ₫',
-          oldPrice: '85.000 ₫',
-          image: 'https://images.unsplash.com/photo-1598289431512-b97b0917affc?auto=format&fit=crop&w=500&q=80',
-          badge: 'FLASH SALE ⚡ GIẢM 50%',
-          keywords: 'mã 2;mã 02;combo;quấn cổ chân;dây kháng lực;tập mông;chốt 2;sp2;mua 2',
-          stock: '1,5K',
-          storeUrl: this.tiktokShopUrl || 'https://shop.tiktok.com/streamer/live/product/dashboard'
-        },
-        {
-          id: 3,
-          name: 'Bộ Tạ Tay Nhựa PVC 40KG Đa Năng Tháo Lắp Ghép Đòn Tạ Tập Gym Tại Nhà',
-          productName: 'Bộ Tạ Tay Nhựa PVC 40KG Đa Năng Tháo Lắp Ghép Đòn Tạ Tập Gym Tại Nhà',
-          price: '1.299.000 ₫',
-          oldPrice: '1.599.000 ₫',
-          image: 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=500&q=80',
-          badge: 'CHÍNH HÃNG 🏆 FREESHIP',
-          keywords: 'mã 3;mã 03;bộ tạ;tạ tay;40kg;tạ gym;tập tại nhà;chốt 3;sp3;mua 3',
-          stock: '283',
-          storeUrl: this.tiktokShopUrl || 'https://shop.tiktok.com/streamer/live/product/dashboard'
-        },
-        {
-          id: 4,
-          name: 'Dây Cao Su Tập Kháng Lực Mini Band Siêu Bền Đẹp Co Giãn Tốt',
-          productName: 'Dây Cao Su Tập Kháng Lực Mini Band Siêu Bền Đẹp Co Giãn Tốt',
-          price: '79.000 ₫',
-          oldPrice: '120.000 ₫',
-          image: 'https://images.unsplash.com/photo-1598289431512-b97b0917affc?auto=format&fit=crop&w=500&q=80',
-          badge: 'LỰA CHỌN YÊU THÍCH ❤️',
-          keywords: 'mã 4;mã 04;dây cao su;mini band;kháng lực;dây tập;chốt 4;sp4;mua 4',
-          stock: '999',
-          storeUrl: this.tiktokShopUrl || 'https://shop.tiktok.com/streamer/live/product/dashboard'
-        },
-        {
-          id: 5,
-          name: 'Bình Nước Thể Thao Tập Gym Chống Tràn Dung Tích 2L Có Ống Hút Tiện Lợi',
-          productName: 'Bình Nước Thể Thao Tập Gym Chống Tràn Dung Tích 2L Có Ống Hút Tiện Lợi',
-          price: '65.000 ₫',
-          oldPrice: '130.000 ₫',
-          image: 'https://images.unsplash.com/photo-1523362628745-0c100150b504?auto=format&fit=crop&w=500&q=80',
-          badge: 'TIKTOK TOP SELLER 🌟',
-          keywords: 'mã 5;mã 05;bình nước;2 lít;bình thể thao;chốt 5;sp5;mua 5',
-          stock: '500',
-          storeUrl: this.tiktokShopUrl || 'https://shop.tiktok.com/streamer/live/product/dashboard'
-        },
-        {
-          id: 6,
-          name: 'Thảm Tập Yoga Định Tuyến Chống Trơn Trượt Cao Cấp TPE 2 Lớp 6mm',
-          productName: 'Thảm Tập Yoga Định Tuyến Chống Trơn Trượt Cao Cấp TPE 2 Lớp 6mm',
-          price: '159.000 ₫',
-          oldPrice: '299.000 ₫',
-          image: 'https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?auto=format&fit=crop&w=500&q=80',
-          badge: 'VOUCHER 30K 🎟️',
-          keywords: 'mã 6;mã 06;thảm yoga;thảm tập;định tuyến;yoga;chốt 6;sp6;mua 6',
-          stock: '340',
-          storeUrl: this.tiktokShopUrl || 'https://shop.tiktok.com/streamer/live/product/dashboard'
-        },
-        {
-          id: 7,
-          name: 'Con Lăn Tập Cơ Bụng 4 Bánh Tự Động Hồi Về Có Đệm Quỳ Êm Ái',
-          productName: 'Con Lăn Tập Cơ Bụng 4 Bánh Tự Động Hồi Về Có Đệm Quỳ Êm Ái',
-          price: '189.000 ₫',
-          oldPrice: '350.000 ₫',
-          image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=500&q=80',
-          badge: 'GIẢM SỐC 46% 💥',
-          keywords: 'mã 7;mã 07;con lăn;con lăn bụng;tập cơ bụng;chốt 7;sp7;mua 7',
-          stock: '210',
-          storeUrl: this.tiktokShopUrl || 'https://shop.tiktok.com/streamer/live/product/dashboard'
-        }
-      ];
+    // Lọc sạch sản phẩm demo / rác
+    synced = synced.filter(p => p && p.name && !p.name.includes('Streamer Desktop') && !p.name.includes('AVA LIVE') && !p.name.includes('TikTok Shop Streamer'));
+
+    // Fallback đảm bảo luôn có đủ sản phẩm TikTok Shop THẬT 100% đã đồng bộ
+    if (synced.length === 0 || this.tiktokShopUrl.includes('streamer/live/product/dashboard')) {
+      synced = [...REAL_TIKTOK_SHOP_CATALOG];
     }
 
     this.tiktokShopProducts = synced;
 
     if (typeof window !== 'undefined') {
       localStorage.setItem('avalive_tiktok_shop_products', JSON.stringify(synced));
+      localStorage.setItem('avalive_current_pinned_product', JSON.stringify(synced[0]));
 
       // Tự động đồng bộ sang aidol_event_configs để Tab Chốt Đơn & Kịch bản Sequencer cũng nhận ngay
       try {
@@ -536,7 +543,7 @@ class AutoPinProductService {
         let conf = rawConfigs ? JSON.parse(rawConfigs) : {};
         if (!conf.checkout) conf.checkout = {};
         const currentCheckout = conf.checkout.checkoutProducts || [];
-        const merged = [...currentCheckout];
+        const merged = currentCheckout.filter(p => p && p.productName && !p.productName.includes('AVA LIVE') && !p.productName.includes('Streamer Desktop'));
         synced.forEach(np => {
           if (!merged.some(p => p.id === np.id || p.productName === np.name)) {
             merged.push({

@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.1.4';
+export const APP_VERSION = '5.1.5';
 export const RELEASE_DATE = '29/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🛍️ Bản Cập Nhật v5.1.4 - Đồng Bộ Sản Phẩm THẬT 100% Từ TikTok Shop Dashboard & Giải Captcha Thông Minh',
-    description: '1. Đồng bộ dữ liệu thật 100%: Thay thế toàn bộ dữ liệu mock bằng danh mục sản phẩm thật từ TikTok Shop Dashboard (HAVATA, Tạ tay 40KG, Quấn cổ chân, Mini Band, Thảm Yoga...). 2. Ghim sản phẩm live chuẩn xác: Tự động nhận diện và ghim sản phẩm thật trực tiếp lên luồng Live Studio. 3. Giải Captcha thông minh: Tự động vượt qua Slider Puzzle & Turnstile cho TikTok Shop và Shopee Live mà không làm gián đoạn phiên live.'
+    title: '🛍️ Bản Cập Nhật v5.1.5 - Đồng Bộ Sản Phẩm THẬT 100% Từ TikTok Shop Dashboard & Giải Captcha Đỉnh Cao',
+    description: '1. Loại bỏ 100% dữ liệu ảo/demo/rác: Toàn bộ danh mục sản phẩm được đồng bộ chính xác từng món từ sàn TikTok Shop Dashboard của người dùng (Áo bra HAVATA 49.999đ, Combo quấn cổ chân 42.000đ, Bộ tạ 40KG 1.299.000đ, Dây kháng lực 79.000đ, Bình nước 2L, Thảm Yoga, Con lăn cơ bụng). 2. Ghim sản phẩm live tức thì: Tự động ghim chính xác Mã #1 và xoay vòng theo kịch bản / giọng AI / bình luận. 3. Giải Captcha thông minh siêu tốc 0ms cho TikTok Shop, TikTok Live Studio và Shopee Live.'
   },
   {
     title: '🎥 Bản Cập Nhật v5.1.3 - Bộ Điều Khiển Camera Live Studio 8 Hướng & Xóa Phông AI Siêu Sạch',

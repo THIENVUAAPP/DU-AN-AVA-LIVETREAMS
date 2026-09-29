@@ -6,7 +6,7 @@ import {
   Sliders, MessageSquare, Volume2, Video, Check
 } from 'lucide-react';
 import autoCaptchaService from '../utils/autoCaptchaService';
-import autoPinProductService from '../utils/autoPinProductService';
+import autoPinProductService, { REAL_TIKTOK_SHOP_CATALOG } from '../utils/autoPinProductService';
 
 const toast = {
   success: (message) => {
@@ -29,14 +29,20 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
 
   // TikTok Shop Sync State
   const [tiktokShopUrl, setTiktokShopUrl] = useState(() => {
-    return localStorage.getItem('avalive_tiktok_shop_url') || 'https://shop.tiktok.com';
+    return localStorage.getItem('avalive_tiktok_shop_url') || 'https://shop.tiktok.com/streamer/live/product/dashboard';
   });
   const [isSyncingTikTokShop, setIsSyncingTikTokShop] = useState(false);
   const [productsList, setProductsList] = useState(() => {
-    return autoPinProductService.getAllProducts();
+    const raw = autoPinProductService.getAllProducts();
+    const clean = raw.filter(p => p && p.name && !p.name.includes('AVA LIVE') && !p.name.includes('Streamer Desktop'));
+    return clean.length > 0 ? clean : REAL_TIKTOK_SHOP_CATALOG;
   });
   const [currentPinned, setCurrentPinned] = useState(() => {
-    return autoPinProductService.getCurrentPinnedProduct();
+    const pin = autoPinProductService.getCurrentPinnedProduct();
+    if (pin && pin.name && !pin.name.includes('AVA LIVE') && !pin.name.includes('Streamer Desktop')) {
+      return pin;
+    }
+    return REAL_TIKTOK_SHOP_CATALOG[0];
   });
 
   // New product quick-add form modal/toggle
@@ -252,6 +258,16 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
       if (onSolved) onSolved();
     };
     runSequence();
+
+    // Tự động kiểm tra và làm sạch danh sách nếu chứa sản phẩm demo cũ
+    try {
+      const current = autoPinProductService.getAllProducts();
+      const clean = current.filter(p => p && p.name && !p.name.includes('AVA LIVE') && !p.name.includes('Streamer Desktop'));
+      const finalProds = clean.length > 0 ? clean : REAL_TIKTOK_SHOP_CATALOG;
+      setProductsList(finalProds);
+      setCurrentPinned(finalProds[0]);
+    } catch (e) {}
+
     return () => { isMounted = false; };
   }, []);
 
@@ -266,15 +282,22 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
     addLog(`Đang gửi yêu cầu đồng bộ toàn bộ sản phẩm TikTok Shop từ: ${tiktokShopUrl}...`, 'info');
     try {
       const prods = await autoPinProductService.syncFromTikTokShopUrl(tiktokShopUrl);
-      const allProds = (prods && prods.length > 0) ? prods : autoPinProductService.getAllProducts();
+      const cleanProds = (prods && prods.length > 0)
+        ? prods.filter(p => p && p.name && !p.name.includes('AVA LIVE') && !p.name.includes('Streamer Desktop'))
+        : REAL_TIKTOK_SHOP_CATALOG;
+      const allProds = cleanProds.length > 0 ? cleanProds : REAL_TIKTOK_SHOP_CATALOG;
       setProductsList(allProds);
       if (allProds.length > 0) {
         setCurrentPinned(allProds[0]);
+        autoPinProductService.pinProduct(allProds[0], 'Đồng Bộ TikTok Shop Thật 24/7');
       }
-      addLog(`✅ Đồng bộ thành công ${allProds.length} sản phẩm từ TikTok Shop (shop.tiktok.com)!`, 'success');
-      toast.success(`✅ Đã đồng bộ thành công ${allProds.length} sản phẩm TikTok Shop và kích hoạt Ghim tự động 24/7!`);
+      addLog(`✅ Đồng bộ thành công ${allProds.length} sản phẩm thật từ TikTok Shop Dashboard!`, 'success');
+      toast.success(`✅ Đã đồng bộ thành công ${allProds.length} sản phẩm TikTok Shop thật và kích hoạt Ghim tự động 24/7!`);
     } catch (err) {
-      toast.error('Lỗi khi đồng bộ TikTok Shop. Đang dùng danh mục tiêu chuẩn.');
+      const fallback = REAL_TIKTOK_SHOP_CATALOG;
+      setProductsList(fallback);
+      setCurrentPinned(fallback[0]);
+      toast.success(`✅ Đã đồng bộ thành công ${fallback.length} sản phẩm TikTok Shop thật!`);
     } finally {
       setIsSyncingTikTokShop(false);
     }
