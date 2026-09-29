@@ -319,6 +319,7 @@ export default function AiRealtimeLipSyncAvatar({
       {isVideoMedia ? (
         <video
           ref={activeVideoRef}
+          crossOrigin="anonymous"
           data-main-player={dataMainPlayer ? "true" : undefined}
           src={src}
           className="w-full h-full object-cover bg-transparent"

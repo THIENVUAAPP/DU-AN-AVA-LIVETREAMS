@@ -11,6 +11,7 @@ import { syncMasterLiveState, getMasterLiveState, sendVideoControl } from '../..
 import { getMultiAvatarConfig, isImageMedia, isVideoMedia, getChromaStyle } from '../../utils/voiceSyncService';
 import { SvgChromaFilters } from './MultiAvatarStudioModal';
 import AiRealtimeLipSyncAvatar from './AiRealtimeLipSyncAvatar';
+import ChromaVideoPlayer from './ChromaVideoPlayer';
 // Clean Live Overlay - Ultra HD OBS Window Capture
 import bandoAudio from './game/bandoAudioEngine';
 
@@ -2433,7 +2434,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   LIVE 9:16
                 </span>
                 <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                  v4.9.96
+                  v4.9.97
                 </span>
               </div>
 
@@ -2791,13 +2792,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                               }}
                             />
                           ) : (
-                            <video
+                            <ChromaVideoPlayer
                               src={bgSrc}
-                              autoPlay
-                              loop
-                              muted={isVideoAudioMuted}
-                              playsInline
-                              controls={false}
+                              chromaKey={masterState?.mainMediaChromaKey || multiAvatarConfig?.backgroundChromaKey}
+                              isPaused={false}
+                              isMuted={isVideoAudioMuted}
                               className="w-full h-full bg-transparent"
                               style={{
                                 objectFit: bgTrans.objectFit || objectFitState || 'cover',
@@ -3243,12 +3242,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                       style={pipChroma}
                     />
                   ) : (
-                    <video
+                    <ChromaVideoPlayer
                       src={masterState.secondaryMediaUrl}
-                      autoPlay
-                      loop
-                      muted={isVideoAudioMuted}
-                      playsInline
+                      chromaKey={masterState.secondaryMediaChromaKey}
+                      isPaused={false}
+                      isMuted={isVideoAudioMuted}
                       className="w-full h-full object-cover rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.85)] bg-transparent"
                       style={pipChroma}
                     />

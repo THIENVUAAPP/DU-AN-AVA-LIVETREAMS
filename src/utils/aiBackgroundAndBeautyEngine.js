@@ -221,6 +221,7 @@ function processUltraSmoothMatting(srcCanvas, mediaPipeMaskCanvas, width, height
   // Thu thập các mẫu màu viền đại diện cho phông nền
   const bgClusters = [];
   const addBgSample = (r, g, b) => {
+    if (typeof r !== 'number' || isNaN(r) || typeof g !== 'number' || isNaN(g) || typeof b !== 'number' || isNaN(b)) return;
     for (let c = 0; c < bgClusters.length; c++) {
       const cl = bgClusters[c];
       const dist = Math.sqrt(Math.pow(r - cl.r, 2) + Math.pow(g - cl.g, 2) + Math.pow(b - cl.b, 2));
@@ -269,54 +270,10 @@ function processUltraSmoothMatting(srcCanvas, mediaPipeMaskCanvas, width, height
     }
   }
 
-  // 3. Hàm kiểm tra pixel có phải màu nền hay không
+  // 3. Hàm kiểm tra pixel có phải màu nền hay không & Phân tích dải màu
   const targetCol = options.targetColor ? options.targetColor.toLowerCase() : null;
 
-  function isBgPixel(r, g, b, x, y) {
-    const greenDiff = g - Math.max(r, b);
-    const blueDiff = b - Math.max(r, g);
-    const redDiff = r - Math.max(g, b);
-    const maxVal = Math.max(r, g, b);
-    const minVal = Math.min(r, g, b);
-    const spread = maxVal - minVal;
-    const luma = 0.299 * r + 0.587 * g + 0.114 * b;
-
-    // VÙNG LÕI CHỦ THỂ (Central Core): Nằm ở trung tâm khung hình
-    const isCentral = (x > width * 0.22 && x < width * 0.78 && y > height * 0.18 && y < height * 0.90);
-
-    // BẢO VỆ DA TRẮNG HỒNG TỰ NHIÊN (Chỉ áp dụng trong vùng chủ thể trung tâm, không nhầm lẫn với viền tường gỗ bên ngoài)
-    if (isCentral) {
-      const isSkin = (
-        (r > 80 && g > 50 && b > 35 && r > g && g >= b - 10 && (r - g) >= 8 && (r - b) >= 14) ||
-        (r > 130 && g > 90 && b > 75 && Math.abs(g - b) < 35 && r > b + 20)
-      );
-      if (isSkin) return false;
-      // Nếu có chi tiết kết cấu và năng lượng biên cao trong lõi -> giữ nguyên
-      if (energy[y * width + x] > 40 && spread > 30) return false;
-    }
-
-    // Nhận diện phông xanh lá (Green Screen) - Bắt chuẩn cả xanh lá tươi lẫn xanh lá sẫm (R=34, G=88, B=55)
-    if (targetCol === 'green' || (!targetCol && g > 40 && greenDiff > 8 && g > r * 1.08 && g > b * 1.08)) return true;
-    // Nhận diện phông xanh dương (Blue Screen)
-    if (targetCol === 'blue' || (!targetCol && b > 40 && blueDiff > 8 && b > r * 1.08 && b > g * 1.08)) return true;
-    // Nhận diện phông đỏ (Red Screen)
-    if (targetCol === 'red' || (targetCol === 'auto' && redDiff > 35 && r > g * 1.35 && r > b * 1.35 && r > 100)) return true;
-    // Nhận diện phông đen / tối sâu
-    if (targetCol === 'black' || (targetCol === 'auto' && maxVal < 30)) return true;
-    // Nhận diện phông trắng / tường sáng
-    if (targetCol === 'white' || (targetCol === 'auto' && luma > 220 && spread < 25)) return true;
-
-    // So khớp với danh sách các cụm màu nền thu thập từ viền ngoài cùng
-    for (let c = 0; c < bgClusters.length; c++) {
-      const cl = bgClusters[c];
-      const d = Math.sqrt(Math.pow(r - cl.r, 2) + Math.pow(g - cl.g, 2) + Math.pow(b - cl.b, 2));
-      if (d < 46) return true;
-    }
-
-    return false;
-  }
-
-  // 4. Khởi tạo mảng Alpha
+  // 4. Khởi tạo mảng Alpha và tính toán Alpha trực tiếp cho từng pixel (Chống tắc nghẽn BFS do nhiễu hạt)
   const finalAlpha = new Uint8Array(width * height);
 
   // Nếu có MediaPipe Neural Network Mask: Nạp sẵn làm lõi nhận diện
@@ -329,111 +286,90 @@ function processUltraSmoothMatting(srcCanvas, mediaPipeMaskCanvas, width, height
         finalAlpha[i] = mD[pIdx];
       }
     }
-
-    // Bảo vệ sản phẩm cầm tay gắn liền với người (Product Boundary Expansion)
-    for (let iter = 0; iter < 4; iter++) {
-      for (let y = 1; y < height - 1; y++) {
-        for (let x = 1; x < width - 1; x++) {
-          const pos = y * width + x;
-          if (finalAlpha[pos] > 180) {
-            const neighbors = [pos - 1, pos + 1, pos - width, pos + width];
-            for (let k = 0; k < 4; k++) {
-              const nPos = neighbors[k];
-              if (finalAlpha[nPos] < 200) {
-                const nIdx = nPos * 4;
-                const nr = sD[nIdx], ng = sD[nIdx + 1], nb = sD[nIdx + 2];
-                const nx = nPos % width;
-                const ny = Math.floor(nPos / width);
-                if (!isBgPixel(nr, ng, nb, nx, ny) || energy[nPos] > 40) {
-                  finalAlpha[nPos] = 255;
-                }
-              }
-            }
-          }
-        }
-      }
-    }
   }
 
-  // 5. Thuật toán Boundary BFS Matting: Xóa từ 4 cạnh ngoài lan vào
-  const isOuterBg = new Uint8Array(width * height);
-  const queue = [];
-
-  // Đưa tất cả các điểm trên 4 cạnh viền ngoài vào hàng đợi nếu khớp màu nền
-  for (let x = 0; x < width; x++) {
-    const topPos = 0 * width + x;
-    const botPos = (height - 1) * width + x;
-    if (finalAlpha[topPos] < 128 && isBgPixel(sD[topPos * 4], sD[topPos * 4 + 1], sD[topPos * 4 + 2], x, 0)) {
-      isOuterBg[topPos] = 1;
-      queue.push(topPos);
-    }
-    if (finalAlpha[botPos] < 128 && isBgPixel(sD[botPos * 4], sD[botPos * 4 + 1], sD[botPos * 4 + 2], x, height - 1)) {
-      isOuterBg[botPos] = 1;
-      queue.push(botPos);
-    }
-  }
+  // Quét toàn bộ điểm ảnh và tính toán Alpha + Despill trực tiếp chuẩn xác 100%
   for (let y = 0; y < height; y++) {
-    const leftPos = y * width + 0;
-    const rightPos = y * width + (width - 1);
-    if (finalAlpha[leftPos] < 128 && isBgPixel(sD[leftPos * 4], sD[leftPos * 4 + 1], sD[leftPos * 4 + 2], 0, y)) {
-      isOuterBg[leftPos] = 1;
-      queue.push(leftPos);
-    }
-    if (finalAlpha[rightPos] < 128 && isBgPixel(sD[rightPos * 4], sD[rightPos * 4 + 1], sD[rightPos * 4 + 2], width - 1, y)) {
-      isOuterBg[rightPos] = 1;
-      queue.push(rightPos);
-    }
-  }
+    for (let x = 0; x < width; x++) {
+      const pos = y * width + x;
+      const idx = pos * 4;
+      let r = sD[idx];
+      let g = sD[idx + 1];
+      let b = sD[idx + 2];
 
-  // Nếu hàng đợi ban đầu còn ít (do màu viền đặc biệt), nạp thêm 4 góc
-  if (queue.length < 10) {
-    const corners = [0, width - 1, (height - 1) * width, (height - 1) * width + width - 1];
-    for (const cPos of corners) {
-      if (isOuterBg[cPos] === 0) {
-        isOuterBg[cPos] = 1;
-        queue.push(cPos);
+      // BẢO VỆ DA TRẮNG HỒNG & SẢN PHẨM (Da người, trang phục, sản phẩm luôn được bảo toàn)
+      const isSkin = (r > 80 && g > 45 && b > 30 && r > g && (r - g) >= 6 && r > b);
+      if (isSkin && !mD) {
+        finalAlpha[pos] = 255;
+        continue;
       }
-    }
-  }
 
-  // Lan truyền BFS xóa sạch mọi ngóc ngách nền
-  let head = 0;
-  while (head < queue.length) {
-    const curr = queue[head++];
-    const cx = curr % width;
-    const cy = Math.floor(curr / width);
+      // 1. Phông Xanh Lá (Green Screen) - Bắt chuẩn cả xanh lá tươi lẫn xanh lá sẫm
+      const maxRB = Math.max(r, b);
+      const greenDiff = g - maxRB;
+      if (targetCol === 'green' || (!targetCol && greenDiff > 8 && g > 38 && g > r * 1.06 && g > b * 1.05)) {
+        if (greenDiff > 24) {
+          finalAlpha[pos] = 0;
+        } else {
+          const softA = 1.0 - (greenDiff - 8) / 16;
+          finalAlpha[pos] = Math.max(0, Math.min(255, Math.round(softA * 255)));
+          // Khử ám màu viền xanh lá (Despill)
+          sD[idx + 1] = maxRB;
+        }
+        continue;
+      }
 
-    const neighbors = [
-      [cx + 1, cy], [cx - 1, cy], [cx, cy + 1], [cx, cy - 1]
-    ];
+      // 2. Phông Xanh Dương (Blue Screen)
+      const maxRG = Math.max(r, g);
+      const blueDiff = b - maxRG;
+      if (targetCol === 'blue' || (!targetCol && blueDiff > 8 && b > 38 && b > r * 1.06 && b > g * 1.05)) {
+        if (blueDiff > 24) {
+          finalAlpha[pos] = 0;
+        } else {
+          const softA = 1.0 - (blueDiff - 8) / 16;
+          finalAlpha[pos] = Math.max(0, Math.min(255, Math.round(softA * 255)));
+          sD[idx + 2] = maxRG;
+        }
+        continue;
+      }
 
-    for (let n = 0; n < neighbors.length; n++) {
-      const [nx, ny] = neighbors[n];
-      if (nx >= 0 && nx < width && ny >= 0 && ny < height) {
-        const nPos = ny * width + nx;
-        if (isOuterBg[nPos] === 0) {
-          // BẢO VỆ CHỦ THỂ & SẢN PHẨM: Dừng lại ngay khi chạm tới ranh giới chủ thể
-          if (finalAlpha[nPos] > 180) continue;
-          if (energy[nPos] > 55) continue;
+      // 3. Phông Đỏ (Red Screen)
+      const maxGB = Math.max(g, b);
+      const redDiff = r - maxGB;
+      if (targetCol === 'red' || (targetCol === 'auto' && redDiff > 35 && r > g * 1.35 && r > b * 1.35 && r > 100)) {
+        if (redDiff > 50) {
+          finalAlpha[pos] = 0;
+        } else {
+          const softA = 1.0 - (redDiff - 35) / 15;
+          finalAlpha[pos] = Math.max(0, Math.min(255, Math.round(softA * 255)));
+          sD[idx] = maxGB;
+        }
+        continue;
+      }
 
-          const idx = nPos * 4;
-          const r = sD[idx], g = sD[idx + 1], b = sD[idx + 2];
-
-          if (isBgPixel(r, g, b, nx, ny)) {
-            isOuterBg[nPos] = 1;
-            queue.push(nPos);
-          }
+      // 4. So khớp với các cụm màu nền lấy mẫu từ 4 cạnh viền ngoài
+      let matchedBgCluster = false;
+      for (let c = 0; c < bgClusters.length; c++) {
+        const cl = bgClusters[c];
+        if (cl.r === undefined) continue;
+        const d = Math.sqrt(Math.pow(r - cl.r, 2) + Math.pow(g - cl.g, 2) + Math.pow(b - cl.b, 2));
+        if (d < 36) {
+          finalAlpha[pos] = 0;
+          matchedBgCluster = true;
+          break;
+        } else if (d < 48) {
+          const softA = (d - 36) / 12;
+          finalAlpha[pos] = Math.min(finalAlpha[pos] || 255, Math.round(softA * 255));
+          matchedBgCluster = true;
+          break;
         }
       }
-    }
-  }
+      if (matchedBgCluster) continue;
 
-  // 6. Tổng hợp mặt nạ Alpha: Các vùng nền bị xóa hoàn toàn (Alpha = 0)
-  for (let i = 0; i < width * height; i++) {
-    if (isOuterBg[i] === 1) {
-      finalAlpha[i] = 0;
-    } else if (finalAlpha[i] === 0) {
-      finalAlpha[i] = 255;
+      // Nếu không thuộc vùng nền nào -> Giữ nguyên chủ thể
+      if (!mD) {
+        finalAlpha[pos] = 255;
+      }
     }
   }
 

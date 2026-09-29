@@ -10,6 +10,7 @@ import {
   ArrowDownToLine, ArrowUp, ArrowDown, Lock, Unlock, EyeOff, LayoutGrid, Radio, Scissors
 } from 'lucide-react';
 import UniversalMediaPicker from './UniversalMediaPicker';
+import ChromaVideoPlayer from './ChromaVideoPlayer';
 import { readUniversalFile } from '../../utils/universalDocumentParser';
 import { SvgChromaFilters } from './MultiAvatarStudioModal';
 import { 
@@ -2457,8 +2458,27 @@ export default function LivestreamFlowSequencer() {
 
     const isImg = isImageMedia(targetImg);
 
+    // Lấy trạng thái phông hiện tại của lớp
+    let currentChroma = null;
+    if (layerType === 'avatar') {
+      currentChroma = targetAv?.chromaKey;
+    } else if (layerType === 'main_media') {
+      currentChroma = currentStep?.mainMediaChromaKey;
+    } else if (layerType === 'pip') {
+      currentChroma = currentStep?.secondaryMediaChromaKey;
+    } else if (layerType === 'banner') {
+      currentChroma = currentStep?.overlayImageChromaKey;
+    }
+
     // 🎥 XỬ LÝ CHO VIDEO: TỰ ĐỘNG PHÁT HIỆN MÀU PHÔNG & KÍCH HOẠT BỘ LỌC CHROMA KEY 60 FPS
     if (!isImg) {
+      if (currentChroma?.enabled) {
+        // 1-Chạm bấm lại là hoàn tác, khôi phục lại video gốc
+        handleLayerChromaUpdate(layerType, targetId, { enabled: false });
+        toast.info('↩️ Đã hoàn tác, khôi phục lại video gốc!');
+        return;
+      }
+
       let detectedMode = (mode && mode !== 'auto') ? mode : 'green';
       let chromaColor = detectedMode === 'blue' ? '#0000ff' : detectedMode === 'red' ? '#ef4444' : detectedMode === 'black' ? '#000000' : detectedMode === 'white' ? '#ffffff' : '#00ff00';
 
@@ -3170,63 +3190,17 @@ export default function LivestreamFlowSequencer() {
                 </button>
 
                 {/* 🪄 1-CHẠM XÓA SẠCH NỀN AI (TỰ ĐỘNG QUÉT & XÓA MỌI LOẠI NỀN - GIỮ NGUYÊN 100% NHÂN VẬT & SẢN PHẨM) */}
-                {selectedLayer.type !== 'text' && (() => {
-                  let layerChroma = null;
-                  if (selectedLayer.type === 'avatar') {
-                    const av = safeAvatars.find(a => a.id === selectedLayer.id) || safeAvatars[0];
-                    layerChroma = av?.chromaKey;
-                  } else if (selectedLayer.type === 'main_media') {
-                    layerChroma = currentStep?.mainMediaChromaKey;
-                  } else if (selectedLayer.type === 'pip') {
-                    layerChroma = currentStep?.secondaryMediaChromaKey;
-                  } else if (selectedLayer.type === 'banner') {
-                    layerChroma = currentStep?.overlayImageChromaKey;
-                  }
-
-                  return (
-                    <div className="flex items-center gap-0.5">
-                      <button
-                        type="button"
-                        onClick={() => handleInstantCanvasBgRemoval(selectedLayer.type, selectedLayer.id, 'auto')}
-                        className="px-2 py-0.5 rounded text-[8.5px] font-black bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white flex items-center gap-1 cursor-pointer shadow-md shadow-indigo-900/30 hover:scale-105 active:scale-95 transition-all whitespace-nowrap border border-cyan-400/40"
-                        title="1 Chạm Xóa Sạch Sành Sanh Nền (Bảo Vệ 100% Nhân Vật & Sản Phẩm Siêu Mịn 4K)"
-                      >
-                        <Wand2 size={9.5} className="text-cyan-200 animate-pulse" />
-                        <span>✨ Xóa Nền AI</span>
-                      </button>
-
-                      {/* Nút Chọn Phông Nhanh Khi Tách Nền Video / Lớp */}
-                      {layerChroma?.enabled && (
-                        <div className="flex items-center gap-0.5 bg-slate-900/90 px-1 py-0.5 rounded border border-slate-700/80">
-                          <button
-                            type="button"
-                            onClick={() => handleLayerChromaUpdate(selectedLayer.type, selectedLayer.id, { enabled: true, mode: 'green', color: '#00ff00' })}
-                            className={`px-1 py-0.2 rounded text-[7.5px] font-black ${layerChroma.mode === 'green' ? 'bg-green-600 text-white shadow-xs' : 'text-green-400 hover:bg-slate-800'}`}
-                            title="Đổi sang Phông Xanh Lá (#00ff00)"
-                          >
-                            🟢 Lá
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleLayerChromaUpdate(selectedLayer.type, selectedLayer.id, { enabled: true, mode: 'blue', color: '#0000ff' })}
-                            className={`px-1 py-0.2 rounded text-[7.5px] font-black ${layerChroma.mode === 'blue' ? 'bg-blue-600 text-white shadow-xs' : 'text-blue-400 hover:bg-slate-800'}`}
-                            title="Đổi sang Phông Xanh Dương (#0000ff)"
-                          >
-                            🔵 Lam
-                          </button>
-                          <button
-                            type="button"
-                            onClick={() => handleLayerChromaUpdate(selectedLayer.type, selectedLayer.id, { enabled: false })}
-                            className="px-1 py-0.2 rounded text-[7.5px] font-black text-rose-400 hover:bg-rose-950/60"
-                            title="Tắt Tách Nền Cho Lớp Này"
-                          >
-                            ✕
-                          </button>
-                        </div>
-                      )}
-                    </div>
-                  );
-                })()}
+                {selectedLayer.type !== 'text' && (
+                  <button
+                    type="button"
+                    onClick={() => handleInstantCanvasBgRemoval(selectedLayer.type, selectedLayer.id, 'auto')}
+                    className="px-2 py-0.5 rounded text-[8.5px] font-black bg-gradient-to-r from-purple-600 via-indigo-600 to-cyan-500 hover:from-purple-500 hover:to-cyan-400 text-white flex items-center gap-1 cursor-pointer shadow-md shadow-indigo-900/30 hover:scale-105 active:scale-95 transition-all whitespace-nowrap border border-cyan-400/40"
+                    title="1 Chạm Xóa Sạch Sành Sanh Nền (Bảo Vệ 100% Nhân Vật & Sản Phẩm Siêu Mịn 4K)"
+                  >
+                    <Wand2 size={9.5} className="text-cyan-200 animate-pulse" />
+                    <span>✨ Xóa Nền AI</span>
+                  </button>
+                )}
 
                 {/* Lên Lớp / Xuống Lớp */}
                 <button
@@ -3378,25 +3352,13 @@ export default function LivestreamFlowSequencer() {
                             style={chromaStyle}
                           />
                         ) : (
-                          <video 
+                          <ChromaVideoPlayer 
                             key={activeMediaUrl || 'default_bg'}
-                            ref={el => {
-                              if (el) {
-                                el.muted = !isMasterVoiceEnabled;
-                                if (isMasterVoiceEnabled) el.volume = 1.0;
-                                if (isStageMediaPaused) el.pause();
-                                else el.play().catch(() => {});
-                              }
-                            }}
-                            src={activeMediaUrl} 
-                            autoPlay={!isStageMediaPaused} 
-                            loop 
-                            muted={!isMasterVoiceEnabled} 
-                            playsInline 
-                            onCanPlay={(e) => { 
-                              e.target.muted = !isMasterVoiceEnabled;
-                              if (!isStageMediaPaused) e.target.play().catch(() => {}); 
-                            }}
+                            src={activeMediaUrl}
+                            chromaKey={chromaKey}
+                            isPaused={isStageMediaPaused}
+                            isMuted={!isMasterVoiceEnabled}
+                            volume={isMasterVoiceEnabled ? 1.0 : 0}
                             className="w-full h-full object-cover pointer-events-none"
                             style={chromaStyle}
                           />
@@ -3478,24 +3440,13 @@ export default function LivestreamFlowSequencer() {
                             style={chromaStyle}
                           />
                         ) : (
-                          <video 
-                            ref={el => {
-                              if (el) {
-                                el.muted = !isMasterVoiceEnabled;
-                                if (isMasterVoiceEnabled) el.volume = 1.0;
-                                if (isStageMediaPaused) el.pause();
-                                else el.play().catch(() => {});
-                              }
-                            }}
-                            src={activeSecondaryMediaUrl} 
-                            autoPlay={!isStageMediaPaused} 
-                            loop 
-                            muted={!isMasterVoiceEnabled} 
-                            playsInline 
-                            onCanPlay={(e) => { 
-                              e.target.muted = !isMasterVoiceEnabled;
-                              if (!isStageMediaPaused) e.target.play().catch(() => {}); 
-                            }}
+                          <ChromaVideoPlayer 
+                            key={activeSecondaryMediaUrl || 'default_pip'}
+                            src={activeSecondaryMediaUrl}
+                            chromaKey={chromaKey}
+                            isPaused={isStageMediaPaused}
+                            isMuted={!isMasterVoiceEnabled}
+                            volume={isMasterVoiceEnabled ? 1.0 : 0}
                             className="w-full h-full object-cover pointer-events-none"
                             style={chromaStyle}
                           />
@@ -3580,24 +3531,13 @@ export default function LivestreamFlowSequencer() {
                             style={chromaStyle}
                           />
                         ) : (
-                          <video 
-                            ref={el => {
-                              if (el) {
-                                el.muted = !isMasterVoiceEnabled;
-                                if (isMasterVoiceEnabled) el.volume = 1.0;
-                                if (isStageMediaPaused) el.pause();
-                                else el.play().catch(() => {});
-                              }
-                            }}
-                            src={vidSrc} 
-                            autoPlay={!isStageMediaPaused} 
-                            loop 
-                            muted={!isMasterVoiceEnabled} 
-                            playsInline 
-                            onCanPlay={(e) => { 
-                              e.target.muted = !isMasterVoiceEnabled;
-                              if (!isStageMediaPaused) e.target.play().catch(() => {}); 
-                            }}
+                          <ChromaVideoPlayer 
+                            key={`${av.id}_${vidSrc}`}
+                            src={vidSrc}
+                            chromaKey={av?.chromaKey}
+                            isPaused={isStageMediaPaused}
+                            isMuted={!isMasterVoiceEnabled}
+                            volume={isMasterVoiceEnabled ? 1.0 : 0}
                             className="w-full h-full object-cover pointer-events-none"
                             style={chromaStyle}
                           />

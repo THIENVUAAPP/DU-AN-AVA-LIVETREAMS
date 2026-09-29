@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.96';
+export const APP_VERSION = '4.9.97';
 export const RELEASE_DATE = '29/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '✨ Bản Cập Nhật v4.9.96 - Đột Phá AI Xóa Nền Chuẩn TikTok 4K Siêu Sạch (Bảo Vệ Trọn Vẹn Nhân Vật & Sản Phẩm, Khử Phông Video 60 FPS)',
-    description: '1. Tích Hợp Neural Network ISNet (@imgly/background-removal): Bóc tách sạch sành sanh 100% phông nền ảnh studio phức tạp (kể cả kệ sách, chữ trên tường, bối cảnh phòng tập gym), giữ nguyên 100% người mẫu tóc tơ và toàn bộ bao bì gói sản phẩm bán hàng siêu sắc nét. 2. Nhận Diện Phông Video Chuẩn Xác 60 FPS: Sửa triệt để bộ quét video, tự động phát hiện đúng phông xanh lá sẫm (#225837), xanh dương, kích hoạt Chroma Key mượt mà không lẹm da người. 3. Phím Chọn Phông Nhanh Trực Tiếp: Bổ sung thanh chọn nhanh [🟢 Lá], [🔵 Lam], [✕ Tắt] ngay cạnh nút "✨ Xóa Nền AI". 4. Khóa chặt 100% toàn bộ các tab và module khác.'
+    title: '✨ Bản Cập Nhật v4.9.97 - 1-Chạm Xóa Sạch Nền AI Siêu Tốc 60 FPS Chuẩn TikTok 4K (Khử Sạch Phông Xanh & Nền Phức Tạp, Bảo Vệ Tuyệt Đối Nhân Vật & Sản Phẩm)',
+    description: '1. Tinh Gọn Đúng 1 Nút Duy Nhất "✨ Xóa Nền AI": Gỡ bỏ hoàn toàn mọi lựa chọn thừa thãi theo yêu cầu người dùng, chỉ cần 1 chạm là tự động quét, bóc tách và xóa sạch 100% phông nền (ảnh & video). 2. Động Cơ Realtime Canvas Chroma Player 60 FPS: Khắc phục triệt để lỗi video phông xanh không xóa trên CEF/Electron/OBS Browser Source, khử sạch hoàn toàn nền xanh với độ trong suốt 100%, khử viền lem (despill) siêu mượt. 3. Thuật Toán Matting Trực Tiếp Đột Phá: Bóc tách từng chi tiết tóc tơ, trang phục và sản phẩm bán hàng, không để lại bất kỳ vết lem nền nào. 4. Khóa chặt 100% mọi tab chức năng và hệ thống.'
   }
 ];
 
