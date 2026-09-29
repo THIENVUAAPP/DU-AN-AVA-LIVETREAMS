@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.0.8';
+export const APP_VERSION = '5.0.9';
 export const RELEASE_DATE = '29/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v5.0.8 - Trả Lại Giao Diện Gốc Khi Ngắt Đồng Bộ & Nút Logo Reload Toàn Diện',
-    description: '1. Ngắt kết nối sạch sẽ 100%: Khi ngắt đồng bộ Sân Khấu Phụ (Live Idol Avatar), Sân Khấu Chính tự động xóa sạch toàn bộ lớp phủ tạm thời và trả lại giao diện gốc bình thường ban đầu. 2. Tính năng bấm vào Logo ở góc trái: Người dùng bấm vào Logo để load lại toàn bộ giao diện phần mềm quay lại từ đầu, làm mới sạch sẽ toàn bộ dữ liệu sân khấu chính. 3. Vận hành chuẩn xác từng bước kịch bản: Tất cả các luồng chuyển bước voice, video, hình ảnh, tiêu đề chạy mượt mà 60 FPS theo đúng cấu hình.'
+    title: '🚀 Bản Cập Nhật v5.0.9 - Xóa Sạch 100% Video & Hình Ảnh Chạy Ẩn Nền, Tối Ưu Siêu Nhẹ',
+    description: '1. Xóa sạch dữ liệu chạy ẩn/nền: Toàn bộ video và hình ảnh nền chạy ẩn được dọn dẹp sạch sẽ 100%, không lưu lại ngầm trên máy giúp phần mềm siêu nhẹ và không quá tải. 2. Sân khấu chính hiển thị chuẩn xác: Chỉ khi người dùng tải lên video/hình ảnh mới thì mới hiển thị, không tự ý khôi phục video cũ. 3. Xóa vĩnh viễn: Khi bấm xóa video/nhân vật là xóa triệt để khỏi bộ nhớ và ổ đĩa lập tức.'
   }
 ];
 

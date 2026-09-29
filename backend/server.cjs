@@ -4151,7 +4151,7 @@ let _cachedReleaseUrls = {};
 let _lastReleaseFetchTime = 0;
 async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
   const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
-  const targetVer = fallbackVer || '5.0.8';
+  const targetVer = fallbackVer || '5.0.9';
   const cacheKey = `${osPrefix}_v${targetVer}`;
   if (_cachedReleaseUrls[cacheKey] && (Date.now() - _lastReleaseFetchTime < 60000)) {
     return _cachedReleaseUrls[cacheKey];
@@ -4209,7 +4209,7 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '5.0.8';
+  let ver = '5.0.9';
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
     if (pkg.version) ver = pkg.version;
@@ -4247,7 +4247,7 @@ app.get(['/api/download/windows', '/api/download-windows', '/download/windows', 
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '5.0.8';
+  let ver = '5.0.9';
 
   try {
     const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
@@ -5699,6 +5699,29 @@ app.post('/api/clear-media', (req, res) => {
   cleanupBlackAndCorruptUploads();
 
   const isClearAll = req.body?.clearAll === true || !currentMasterLiveState.mediaUrl || currentMasterLiveState.mediaUrl === targetMedia;
+
+  if (isClearAll || req.body?.deletePhysicalFiles === true) {
+    try {
+      const allUploadDirs = [
+        uploadsDir,
+        path.join(process.cwd(), 'system', 'uploads'),
+        path.join(process.cwd(), 'uploads'),
+        path.join(__dirname, '..', 'uploads'),
+        path.join(__dirname, '..', 'system', 'uploads')
+      ];
+      for (const dir of allUploadDirs) {
+        if (fs.existsSync(dir)) {
+          const files = fs.readdirSync(dir);
+          for (const f of files) {
+            if (f !== '.gitkeep') {
+              try { fs.unlinkSync(path.join(dir, f)); } catch (e) {}
+            }
+          }
+        }
+      }
+      console.log('[Clear-Media] 🧹 Đã dọn dẹp sạch sẽ 100% tất cả file upload trên đĩa');
+    } catch (e) {}
+  }
 
   currentMasterLiveState = {
     ...currentMasterLiveState,
