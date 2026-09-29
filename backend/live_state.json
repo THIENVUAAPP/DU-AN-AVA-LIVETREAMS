@@ -7,12 +7,12 @@
   "currentMedia": "/uploads/media-1790653159920-183384347.mp4",
   "eventVideoUrl": null,
   "isVideo": true,
-  "videoPlaybackEvent": "play",
-  "isPlaying": true,
+  "videoPlaybackEvent": "pause",
+  "isPlaying": false,
   "isAudioMuted": false,
   "isDarkMode": true,
   "clearMedia": false,
-  "updatedAt": 1790654446225,
+  "updatedAt": 1790654709344,
   "isUserExplicitMediaLocked": false,
   "selectedCharacter": "",
   "videoCurrentTime": 0,
@@ -23,7 +23,7 @@
   "activeTab": "flow_sequencer",
   "stepTitle": "Bước 1: Avatar AI Chào Khán Giả & Mở Đầu Live",
   "actionType": "avatar_talk",
-  "scriptText": "Chào mừng tất cả các tình yêu đã có mặt trong phiên livestream làm đẹp đặc biệt ngày hôm nay của shop em nha!\nCác chị đẹp ơi, ai đang lướt qua phiên live thì cho em xin một nút thả tim và một lượt chia sẻ để nhận quà mở bát đầu live nào!\nHôm nay shop em mang đến cho cả nhà một siêu phẩm chăm sóc sắc đẹp và nâng tầm khí chất cực kỳ đỉnh cao luôn ạ!",
+  "scriptText": "Dạ em xin chào tất cả mọi người đã vào xem phiên livestream hôm nay nha! Các bạn bấm thả tim và bình luận để nhận ưu đãi đặc biệt nhé!",
   "secondaryMediaUrl": null,
   "secondaryMediaTransform": null,
   "overlayImage": null,
@@ -84,7 +84,7 @@
       "isSpeakingNow": false
     }
   ],
-  "tunnelUrl": "https://resort-kept-cycling-kijiji.trycloudflare.com",
+  "tunnelUrl": "https://retention-frequency-representative-cms.trycloudflare.com",
   "multiAvatarConfig": {
     "enabled": true,
     "activeCount": 2,
@@ -167,7 +167,7 @@
     ],
     "activeSpeakerId": "avatar_1",
     "fromSequencer": true,
-    "syncedAt": 1790654446170
+    "syncedAt": 1790653255647
   },
   "mainMediaUrl": "/uploads/media-1790653159920-183384347.mp4",
   "mainMediaTransform": {
@@ -179,7 +179,7 @@
   },
   "multiAvatarExtraLayers": [],
   "videoVolume": 1,
-  "isVideoAudioMuted": false,
+  "isVideoAudioMuted": true,
   "voiceId": "vn_f_dna_02_sweet_girl",
   "avatarSpeaker": "avatar_1",
   "overlayTextStyle": "fire_sale",

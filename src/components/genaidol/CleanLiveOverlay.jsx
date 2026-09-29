@@ -2044,6 +2044,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     }
   }, []);
 
+  // 🛑 NẾU ĐÃ NGẮT ĐỒNG BỘ HOẶC CÓ TÍN HIỆU CLEAR MEDIA -> KHÔNG LẤY BẤT KỲ FALLBACK NÀO
+  const isStageCleared = masterState?.clearMedia === true || masterState?.isMasterSynced === false;
+
   // Helper giải mã URL media chính xác (tôn trọng 100% video/nhân vật người dùng chọn)
   const resolveActiveMedia = () => {
     let candidateUrl = null;
@@ -2082,9 +2085,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         }
       } catch (e) {}
     }
-
-    // 🛑 NẾU ĐÃ NGẮT ĐỒNG BỘ HOẶC CÓ TÍN HIỆU CLEAR MEDIA -> KHÔNG LẤY BẤT KỲ FALLBACK NÀO
-    const isStageCleared = masterState?.clearMedia === true || masterState?.isMasterSynced === false;
 
     // 1. Trực tiếp từ masterState.mediaUrl
     if (!isStageCleared && !candidateUrl && masterState.mediaUrl && typeof masterState.mediaUrl === 'string') {
@@ -2474,7 +2474,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   LIVE 9:16
                 </span>
                 <span className="px-1 py-0.2 rounded bg-cyan-500/20 border border-cyan-400/40 text-[8.5px] font-bold text-cyan-300">
-                  v5.0.0
+                  v5.0.1
                 </span>
               </div>
 

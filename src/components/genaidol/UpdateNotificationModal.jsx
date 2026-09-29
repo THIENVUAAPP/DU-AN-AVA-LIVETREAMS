@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.0.0';
+export const APP_VERSION = '5.0.1';
 export const RELEASE_DATE = '29/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Siêu Bản Cập Nhật v5.0.0 - Đồng Bộ & Ngắt Luồng Tuyệt Đối Sân Khấu Chính / OBS / TikTok Live Studio & Đọc Kịch Bản Voice AI Từng Bước Chuẩn 100%',
-    description: '1. Đồng Bộ & Ngắt Luồng Tuyệt Đối: Khi ngắt kết nối đồng bộ, Sân Khấu Chính, OBS Window Capture và đường link TikTok Live Studio được xóa sạch 100% dữ liệu (màn hình đen/trống hoàn toàn, không vương lại bất kỳ video/ảnh cũ nào). Khi bật đồng bộ lại, hiển thị đầy đủ, chính xác, chi tiết 100% theo luồng chạy. 2. Đọc Kịch Bản Voice AI Từng Bước Hoàn Hảo: Đọc hết 100% toàn bộ lời thoại của từng bước, tuyệt đối không bị cắt ngang giữa chừng. Đọc xong toàn bộ câu thoại mới tự động chuyển sang bước tiếp theo và nhảy video/hình ảnh/avatar đồng bộ. 3. Khóa chặt 100% bảo toàn mọi tab chức năng và module.'
+    title: '🚀 Bản Cập Nhật v5.0.1 - Hoàn Thiện Đồng Bộ Siêu Tốc 60 FPS Cho Window Capture OBS & TikTok Live Studio',
+    description: '1. Sửa Triệt Để Lỗi Hiển Thị Window Capture & TikTok Live Studio: Đảm bảo luồng phát trực tiếp từ Sân Khấu Chính đồng bộ 100% thời gian thực ra Window Capture OBS và link TikTok Live Studio, hình ảnh/video/avatar siêu sắc nét 60 FPS, không còn hiện tượng crash hay màn hình đen. 2. Bảo Toàn Dữ Liệu Sân Khấu Phụ (Live Idol Avatar): Khi ngắt đồng bộ ra ngoài Sân Khấu Chính, toàn bộ kịch bản, bước chạy, avatar, video và thiết lập bên trong Sân Khấu Phụ được giữ nguyên vẹn 100% cho người dùng biên soạn. 3. Khóa chặt bảo toàn toàn bộ các tab và module khác.'
   }
 ];
 
