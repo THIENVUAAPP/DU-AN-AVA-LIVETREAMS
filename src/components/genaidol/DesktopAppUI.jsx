@@ -51,6 +51,7 @@ import autoPinProductService from '../../utils/autoPinProductService';
 import { generateAiKnowledgeScript } from '../../utils/aiScriptGenerator';
 import { ensureServerMediaUrl, uploadMediaToServer, deleteServerMedia } from '../../utils/mediaUploadService';
 import AiRealtimeLipSyncAvatar from './AiRealtimeLipSyncAvatar';
+import CameraStudioWindow from './CameraStudioWindow';
 
 const CHARACTERS = {};
 
@@ -7807,43 +7808,17 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           />
         </div>
 
-        {/* Cửa sổ nổi hiển thị Webcam từ Studio (Draggable & Resizable) */}
+        {/* Cửa sổ nổi hiển thị Webcam từ Studio (Draggable & Resizable, Xóa Phông AI, 8 Hướng, Đa Góc) */}
         {isWebcamActive && (
-          <div 
-            className="absolute rounded-lg overflow-hidden shadow-2xl border-[2px] border-green-500 bg-black z-30 group"
-            style={{ 
-              left: webcamPos.x, 
-              top: webcamPos.y, 
-              width: '200px', 
-              minWidth: '150px',
-              minHeight: '100px',
-              aspectRatio: '16/9',
-              resize: 'both',
-              position: 'absolute'
-            }}
-          >
-            {/* Thanh tiêu đề để kéo thả */}
-            <div 
-              onMouseDown={handleDragStart}
-              className={`w-full h-6 bg-gradient-to-r from-gray-800 to-gray-900 cursor-move flex items-center justify-between px-2 ${isDraggingWebcam ? 'opacity-100' : 'opacity-0 group-hover:opacity-100'} transition-opacity absolute top-0 left-0 z-40`}
-            >
-              <span className="text-white text-[10px] font-medium flex items-center gap-1 pointer-events-none">
-                <Video size={10} />
-                Studio
-              </span>
-              <button onClick={toggleWebcam} className="text-gray-300 hover:text-white p-0.5 hover:bg-red-500 rounded">
-                <X size={12} />
-              </button>
-    </div>
-
-            <video 
-              ref={videoRef} 
-              autoPlay 
-              playsInline 
-              muted 
-              className="w-full h-full object-cover pointer-events-none" 
-            />
-    </div>
+          <CameraStudioWindow 
+            isWebcamActive={isWebcamActive}
+            onClose={toggleWebcam}
+            stream={streamRef.current}
+            position={webcamPos}
+            onPositionChange={setWebcamPos}
+            isDragging={isDraggingWebcam}
+            onDragStart={handleDragStart}
+          />
         )}
 
         {/* Cửa sổ Nổi: Công cụ Giả lập Live (Pre-Live Simulator) */}

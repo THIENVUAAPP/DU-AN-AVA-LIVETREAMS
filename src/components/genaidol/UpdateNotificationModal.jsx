@@ -2,17 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.1.2';
+export const APP_VERSION = '5.1.3';
 export const RELEASE_DATE = '29/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🛍️ Bản Cập Nhật v5.1.2 - Đồng Bộ Tức Thì 100% Toàn Bộ Sản Phẩm TikTok Shop & Tự Động Ghim Giỏ Hàng',
-    description: '1. Đồng bộ toàn bộ sản phẩm TikTok Shop: Tự động quét và nạp toàn bộ danh mục sản phẩm từ link shop.tiktok.com / Streamer Live Product Dashboard theo đúng cấu trúc chuẩn. 2. Tự động ghim giỏ hàng lên phiên Live: Tự động ghim sản phẩm #1 và luân chuyển theo chu kỳ, nhận diện giọng đọc AI, từ khóa bình luận của khách hàng hoặc video clip minh họa. 3. Tải file ZIP siêu tốc độ 50MB/s+ qua CDN Cloudflare Edge Mirror.'
+    title: '🎥 Bản Cập Nhật v5.1.3 - Bộ Điều Khiển Camera Live Studio 8 Hướng & Xóa Phông AI Siêu Sạch',
+    description: '1. Xóa phông bất kỳ vị trí nào siêu sạch: Tích hợp AI tách người, chế độ giữ nhân vật + bàn ghế / máy tính / sản phẩm, Chroma Key phông xanh lá / xanh dương và cắt xén đa điểm mượt mà 60 FPS. 2. Điều khiển Camera 8 hướng siêu tiện lợi: D-Pad 8 hướng di chuyển camera lên/xuống/trái/phải và 4 góc chéo. 3. Tinh chỉnh đa góc đa điểm: Phóng to Zoom 1.0x - 3.5x, xoay góc 360°, lật gương và chuyển đổi tỉ lệ 16:9, 9:16 TikTok, tròn.'
   },
   {
-    title: '🚀 Bản Cập Nhật v5.1.1 - Tăng Tốc Tải File ZIP Siêu Nhanh 50MB/s & 0% Lỗi Tải Xuống',
-    description: '1. Tải file ZIP siêu nhanh: Tích hợp mạng lưới Cloudflare Edge CDN tốc độ cao. 2. Tải trực tiếp 1-Click: Phân giải trực tiếp gói cài đặt Windows và Mac. 3. Ngắt kết nối Sân Khấu Chính 0ms: Tắt triệt để khi người dùng bấm dừng đồng bộ.'
+    title: '🛍️ Bản Cập Nhật v5.1.2 - Đồng Bộ Tức Thì 100% Toàn Bộ Sản Phẩm TikTok Shop & Tự Động Ghim Giỏ Hàng',
+    description: '1. Đồng bộ toàn bộ sản phẩm TikTok Shop từ link shop.tiktok.com. 2. Tự động ghim giỏ hàng lên phiên Live 24/7.'
   }
 ];
 
