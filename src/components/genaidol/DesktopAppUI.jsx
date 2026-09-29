@@ -580,24 +580,50 @@ export default function DesktopAppUI() {
       if (!isSynced) {
         setFlowSequencerOverlay(null);
         setUserLockedMediaUrl(null);
+        setLipSyncVideoUrl(null);
+        setQuickResponseActiveVideo(null);
+        setLivePinnedProduct(null);
         setIsStageExplicitlyCleared(true);
+        setIsVideoPlaying(false);
         try {
           localStorage.removeItem('avalive_master_sync_active');
           localStorage.removeItem('avalive_sequencer_overlay');
           localStorage.removeItem('avalive_user_locked_media');
+          localStorage.removeItem('avalive_active_video_src');
+          localStorage.removeItem('aidol_is_script_live_running');
+          localStorage.setItem('aidol_user_paused_script', 'true');
         } catch (err) {}
         setMultiAvatarConfig(prev => ({
           ...prev,
           _syncedFromSequencer: false,
           fromSequencer: false,
-          enabled: false
+          enabled: false,
+          activeCount: 0,
+          avatars: []
         }));
-        // ⚡ NGẮT SẠCH SÂN KHẤU CHÍNH VỀ NỀN ĐEN 0MS — TUYỆT ĐỐI KHÔNG KHÔI PHỤC VIDEO CŨ
+        // ⚡ DỪNG & TẮT SẠCH SÂN KHẤU CHÍNH 0MS — TUYỆT ĐỐI KHÔNG TỰ Ý MỞ LẠI KHI ĐÃ BẤM TẮT
         if (desktopVideoRef.current) {
-          desktopVideoRef.current.pause();
-          desktopVideoRef.current.src = '';
+          try {
+            desktopVideoRef.current.pause();
+            desktopVideoRef.current.removeAttribute('src');
+            desktopVideoRef.current.src = '';
+            desktopVideoRef.current.srcObject = null;
+            desktopVideoRef.current.load();
+          } catch (e) {}
         }
-        setIsVideoPlaying(false);
+        if (audioPlayerRef.current) {
+          try {
+            audioPlayerRef.current.stopScript();
+            audioPlayerRef.current.clearQueue();
+          } catch (e) {}
+        }
+        try {
+          stopVoiceAudio();
+          clearGlobalSpeechQueue();
+          if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
+            window.speechSynthesis.cancel();
+          }
+        } catch (e) {}
       } else {
         setIsStageExplicitlyCleared(false);
       }
@@ -725,17 +751,25 @@ export default function DesktopAppUI() {
 
 
 
-    // 🔌 KHI NGƯỜI DÙNG BẤM TẮT ĐỒNG BỘ TỪ SÂN KHẤU PHỤ → NGẮT SẠCH DỮ LIỆU & TRẢ LẠI GIAO DIỆN CHÍNH BAN ĐẦU
+    // 🔌 KHI NGƯỜI DÙNG BẤM TẮT/DỪNG ĐỒNG BỘ TỪ SÂN KHẤU PHỤ → NGẮT KẾT NỐI & TẮT SẠCH TOÀN BỘ SÂN KHẤU CHÍNH 0MS
     const handleSequencerSyncDisconnected = () => {
       setIsMasterStageSynced(false);
       setFlowSequencerOverlay(null);
       setUserLockedMediaUrl(null);
+      setLipSyncVideoUrl(null);
+      setQuickResponseActiveVideo(null);
       setLivePinnedProduct(null);
+      setIsVideoPlaying(false);
+      setIsStageExplicitlyCleared(true);
+
       try {
         localStorage.removeItem('avalive_master_sync_active');
         localStorage.removeItem('avalive_sequencer_overlay');
         localStorage.removeItem('avalive_user_locked_media');
+        localStorage.removeItem('avalive_active_video_src');
+        localStorage.removeItem('aidol_is_script_live_running');
         localStorage.removeItem('avalive_current_pinned_product');
+        localStorage.setItem('aidol_user_paused_script', 'true');
       } catch (err) {}
 
       // Dừng toàn bộ âm thanh voice/script kịch bản
@@ -753,51 +787,49 @@ export default function DesktopAppUI() {
         }
       } catch (e) {}
 
-      // Reset cấu hình Multi-Avatar về trạng thái ban đầu sạch sẽ
+      // Reset cấu hình Multi-Avatar về trạng thái tắt sạch sẽ
       try {
-        setMultiAvatarConfig(getMultiAvatarConfig());
-      } catch (e) {
-        setMultiAvatarConfig({ enabled: false, activeCount: 1, layout: 'auto', avatars: [] });
-      }
+        setMultiAvatarConfig({ enabled: false, activeCount: 0, layout: 'auto', avatars: [] });
+      } catch (e) {}
 
-      // Trả lại giao diện Sân Khấu Chính ban đầu với video/nhân vật đã chọn (nếu có)
-      const customMatch = (customCharacters && Array.isArray(customCharacters) && selectedCharacter) 
-        ? customCharacters.find(c => c.id === selectedCharacter && (c.url || c.mediaUrl)) 
-        : null;
-      const defaultChar = customMatch || (selectedCharacter && CHARACTERS[selectedCharacter] ? CHARACTERS[selectedCharacter] : null);
-      const charUrl = defaultChar?.url || defaultChar?.mediaUrl || '';
-
-      setIsStageExplicitlyCleared(!charUrl);
+      // ⚡ DỪNG & TẮT SẠCH SÂN KHẤU CHÍNH 0MS — TUYỆT ĐỐI KHÔNG TỰ Ý MỞ LẠI KHI ĐÃ BẤM TẮT
       if (desktopVideoRef.current) {
-        if (charUrl && (!defaultChar?.type || defaultChar.type === 'video')) {
-          desktopVideoRef.current.src = charUrl;
-          desktopVideoRef.current.currentTime = 0;
-          desktopVideoRef.current.dataset.userPaused = 'false';
-          desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
-        } else {
+        try {
           desktopVideoRef.current.pause();
           desktopVideoRef.current.removeAttribute('src');
           desktopVideoRef.current.src = '';
           desktopVideoRef.current.srcObject = null;
-        }
+          desktopVideoRef.current.load();
+        } catch (e) {}
       }
 
-      // Broadcast và sync Master Live State sang Window Capture & Live Link để trả lại giao diện sạch
+      // Broadcast và sync Master Live State sang Window Capture & Live Link: TẮT HOÀN TOÀN
       syncMasterLiveState({
         stage: 'idol',
         isMasterSynced: false,
         isSynced: false,
-        clearMedia: false,
-        mediaUrl: charUrl || null,
-        mainMediaUrl: charUrl || null,
+        clearMedia: true,
+        clearStage: true,
+        mediaUrl: null,
+        mainMediaUrl: null,
         secondaryMediaUrl: null,
         overlayImage: null,
         overlayText: null,
         syncedAvatars: [],
-        multiAvatarConfig: { enabled: false, activeCount: 1, avatars: [] },
+        multiAvatarConfig: { enabled: false, activeCount: 0, avatars: [] },
         stepTitle: '',
         actionType: '',
-        isPlaying: !!charUrl
+        isPlaying: false,
+        videoPlaybackEvent: 'pause'
+      }, socketRef.current);
+
+      sendVideoControl({
+        action: 'pause',
+        isPlaying: false,
+        clearMedia: true,
+        clearStage: true,
+        mediaUrl: null,
+        timestamp: Date.now()
       }, socketRef.current);
 
       try {
@@ -805,14 +837,16 @@ export default function DesktopAppUI() {
         bcClear.postMessage({
           type: 'CLEAR_STAGE',
           source: 'sequencer_disconnect',
-          mediaUrl: charUrl || null,
+          clearMedia: true,
+          clearStage: true,
           clearOverlays: true,
-          clearMedia: false,
+          isMasterSynced: false,
+          isPlaying: false,
           timestamp: Date.now()
         });
         setTimeout(() => bcClear.close(), 100);
       } catch (e) {}
-      showToast('📴 Đã ngắt đồng bộ — Sân Khấu Chính đã trả lại giao diện bình thường', 'info');
+      showToast('📴 Đã tắt & ngắt kết nối Sân Khấu Chính hoàn toàn 100%', 'info');
     };
 
     // ↩️ KHI UNDO/REDO TỪ SÂN KHẤU PHỤ → CẬP NHẬT VIDEO Ở SÂN KHẤU CHÍNH
@@ -5754,12 +5788,17 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         type: 'video'
       } : null;
 
-      // 🛡️ NẾU SÂN KHẤU VỪA ĐƯỢC TẮT/NGẮT ĐỒNG BỘ: GIỮ MÀN HÌNH ĐEN SẠCH SẼ, TUYỆT ĐỐI KHÔNG KHÔI PHỤC VIDEO CŨ
-      if (isStageExplicitlyCleared && !userLockedMediaUrl) {
+      // 🛡️ NẾU SÂN KHẤU VỪA ĐƯỢC TẮT/NGẮT ĐỒNG BỘ: GIỮ TRẠNG THÁI TẮT SẠCH SẼ 100%, TUYỆT ĐỐI KHÔNG TỰ Ý MỞ LẠI
+      if (isStageExplicitlyCleared || (!isMasterStageSynced && !userLockedMediaUrl && !selectedCharacter)) {
         return (
-          <div className="w-full h-full bg-black flex flex-col items-center justify-center text-gray-500 text-xs">
-            <span className="text-2xl mb-2">⏹️</span>
-            <span>Sân Khấu Đã Tắt • Sẵn Sàng Bắt Đầu</span>
+          <div className="relative w-full h-full flex flex-col items-center justify-center bg-[#07080d] text-center p-6 select-none">
+            <div className="w-16 h-16 rounded-2xl bg-red-950/40 border border-red-500/30 flex items-center justify-center mb-3 text-red-400 text-3xl shadow-lg">
+              📴
+            </div>
+            <h4 className="text-white font-black text-sm tracking-wide uppercase">SÂN KHẤU CHÍNH ĐÃ TẮT / NGẮT KẾT NỐI</h4>
+            <p className="text-gray-400 text-xs mt-1 max-w-xs leading-relaxed">
+              Toàn bộ dữ liệu phát đã được ngắt kết nối. Bấm nút "Đồng bộ ra Sân Khấu Chính" ở tab Live Idol Avatar để bắt đầu phát lại.
+            </p>
           </div>
         );
       }

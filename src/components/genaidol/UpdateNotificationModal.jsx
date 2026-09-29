@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.0.9';
+export const APP_VERSION = '5.1.0';
 export const RELEASE_DATE = '29/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '🚀 Bản Cập Nhật v5.0.9 - Xóa Sạch 100% Video & Hình Ảnh Chạy Ẩn Nền, Tối Ưu Siêu Nhẹ',
-    description: '1. Xóa sạch dữ liệu chạy ẩn/nền: Toàn bộ video và hình ảnh nền chạy ẩn được dọn dẹp sạch sẽ 100%, không lưu lại ngầm trên máy giúp phần mềm siêu nhẹ và không quá tải. 2. Sân khấu chính hiển thị chuẩn xác: Chỉ khi người dùng tải lên video/hình ảnh mới thì mới hiển thị, không tự ý khôi phục video cũ. 3. Xóa vĩnh viễn: Khi bấm xóa video/nhân vật là xóa triệt để khỏi bộ nhớ và ổ đĩa lập tức.'
+    title: '🚀 Bản Cập Nhật v5.1.0 - Ngắt Kết Nối & Tắt Sạch Toàn Bộ Sân Khấu Chính 0ms',
+    description: '1. Ngắt kết nối tuyệt đối: Khi streamer bấm tắt/dừng "Đồng bộ ra Sân Khấu Chính", toàn bộ Sân Khấu Chính lập tức tắt, ngắt kết nối 0ms và xóa sạch toàn bộ video, overlays, voice kịch bản. 2. Không tự ý mở lại: Tuyệt đối không tự ý hồi sinh hay chạy dữ liệu ngầm khi đã tắt; chỉ khi streamer bấm BẬT ĐỒNG BỘ LẠI thì mới phát lại bình thường. 3. Sân khấu phụ bảo toàn 100% video và cấu hình hiện tại.'
   }
 ];
 
