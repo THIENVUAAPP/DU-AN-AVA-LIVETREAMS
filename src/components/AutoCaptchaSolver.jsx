@@ -93,19 +93,31 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
     }
   }, [captchaConfig]);
 
-  // Sync pinned product changes across the app
+  // Sync pinned product & TikTok Shop catalog changes across the app
   useEffect(() => {
     const handlePinUpdate = (e) => {
       if (e.detail?.product) {
         setCurrentPinned(e.detail.product);
       }
     };
+
+    const handleTiktokSync = (e) => {
+      if (e.detail?.products && Array.isArray(e.detail.products)) {
+        setProductsList(e.detail.products);
+        if (e.detail.products.length > 0) {
+          setCurrentPinned(e.detail.products[0]);
+        }
+      }
+    };
+
     window.addEventListener('avalive:pin_product_updated', handlePinUpdate);
     window.addEventListener('avalive_product_pinned', handlePinUpdate);
+    window.addEventListener('avalive:tiktok_shop_synced', handleTiktokSync);
 
     return () => {
       window.removeEventListener('avalive:pin_product_updated', handlePinUpdate);
       window.removeEventListener('avalive_product_pinned', handlePinUpdate);
+      window.removeEventListener('avalive:tiktok_shop_synced', handleTiktokSync);
     };
   }, []);
   
@@ -251,12 +263,16 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
     }
 
     setIsSyncingTikTokShop(true);
-    addLog(`Đang gửi yêu cầu đồng bộ TikTok Shop từ: ${tiktokShopUrl}...`, 'info');
+    addLog(`Đang gửi yêu cầu đồng bộ toàn bộ sản phẩm TikTok Shop từ: ${tiktokShopUrl}...`, 'info');
     try {
       const prods = await autoPinProductService.syncFromTikTokShopUrl(tiktokShopUrl);
-      setProductsList(autoPinProductService.getAllProducts());
-      addLog(`✅ Đồng bộ thành công ${prods.length || 5} sản phẩm từ TikTok Shop (shop.tiktok.com)!`, 'success');
-      toast.success(`✅ Đã đồng bộ thành công ${prods.length || 5} sản phẩm TikTok Shop!`);
+      const allProds = (prods && prods.length > 0) ? prods : autoPinProductService.getAllProducts();
+      setProductsList(allProds);
+      if (allProds.length > 0) {
+        setCurrentPinned(allProds[0]);
+      }
+      addLog(`✅ Đồng bộ thành công ${allProds.length} sản phẩm từ TikTok Shop (shop.tiktok.com)!`, 'success');
+      toast.success(`✅ Đã đồng bộ thành công ${allProds.length} sản phẩm TikTok Shop và kích hoạt Ghim tự động 24/7!`);
     } catch (err) {
       toast.error('Lỗi khi đồng bộ TikTok Shop. Đang dùng danh mục tiêu chuẩn.');
     } finally {
