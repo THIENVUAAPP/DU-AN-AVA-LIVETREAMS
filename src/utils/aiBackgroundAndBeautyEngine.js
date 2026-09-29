@@ -217,17 +217,38 @@ function processUltraSmoothMatting(srcCanvas, mediaPipeMaskCanvas, width, height
     } catch (e) {}
   }
 
-  // 1. Phân tích và lấy mẫu màu nền từ 4 đường biên ngoài cùng (Perimeter Sampling)
+  // 1. Phân tích và lấy mẫu màu nền từ 4 đường biên ngoài cùng (Multi-Perimeter Sampling)
+  const bgClusters = [];
+  const addBgClusterSample = (r, g, b) => {
+    if (typeof r !== 'number' || isNaN(r)) return;
+    for (let c = 0; c < bgClusters.length; c++) {
+      const cl = bgClusters[c];
+      const dist = Math.abs(r - cl.r) + Math.abs(g - cl.g) + Math.abs(b - cl.b);
+      if (dist < 32) {
+        cl.r = (cl.r * cl.count + r) / (cl.count + 1);
+        cl.g = (cl.g * cl.count + g) / (cl.count + 1);
+        cl.b = (cl.b * cl.count + b) / (cl.count + 1);
+        cl.count++;
+        return;
+      }
+    }
+    if (bgClusters.length < 36) {
+      bgClusters.push({ r, g, b, count: 1 });
+    }
+  };
+
   let sumR = 0, sumG = 0, sumB = 0, sampleCount = 0;
   for (let x = 0; x < width; x += Math.max(1, Math.floor(width / 60))) {
     for (const d of [0, 1, 2, Math.max(0, height - 3), Math.max(0, height - 2), Math.max(0, height - 1)]) {
       const idx = (d * width + x) * 4;
+      addBgClusterSample(sD[idx], sD[idx + 1], sD[idx + 2]);
       sumR += sD[idx]; sumG += sD[idx + 1]; sumB += sD[idx + 2]; sampleCount++;
     }
   }
   for (let y = 0; y < height; y += Math.max(1, Math.floor(height / 60))) {
     for (const d of [0, 1, 2, Math.max(0, width - 3), Math.max(0, width - 2), Math.max(0, width - 1)]) {
       const idx = (y * width + d) * 4;
+      addBgClusterSample(sD[idx], sD[idx + 1], sD[idx + 2]);
       sumR += sD[idx]; sumG += sD[idx + 1]; sumB += sD[idx + 2]; sampleCount++;
     }
   }
@@ -241,6 +262,8 @@ function processUltraSmoothMatting(srcCanvas, mediaPipeMaskCanvas, width, height
   const isGreenBg = targetCol === 'green' || (!targetCol && bgG > bgR * 1.10 && bgG > bgB * 1.05 && bgG > 35);
   const isBlueBg = targetCol === 'blue' || (!targetCol && bgB > bgR * 1.10 && bgB > bgG * 1.05 && bgB > 35);
   const isRedBg = targetCol === 'red' || (!targetCol && bgR > bgG * 1.25 && bgR > bgB * 1.25 && bgR > 80);
+  const isWhiteBg = targetCol === 'white' || (!targetCol && bgR > 205 && bgG > 205 && bgB > 205);
+  const isBlackBg = targetCol === 'black' || (!targetCol && Math.max(bgR, bgG, bgB) < 42);
 
   const screenDiff = isGreenBg
     ? Math.max(30, bgG - Math.max(bgR, bgB))
@@ -250,7 +273,7 @@ function processUltraSmoothMatting(srcCanvas, mediaPipeMaskCanvas, width, height
 
   const finalAlpha = new Uint8Array(width * height);
 
-  // 2. TÁCH NỀN VỚI THUẬT TOÁN HOLLYWOOD KEYLIGHT SIÊU CHUẨN XÁC
+  // 2. TÁCH NỀN VỚI THUẬT TOÁN ĐA NỀN TẢNG (CHROMA KEY + UNIVERSAL MATTING)
   for (let y = 0; y < height; y++) {
     for (let x = 0; x < width; x++) {
       const pos = y * width + x;
@@ -267,26 +290,23 @@ function processUltraSmoothMatting(srcCanvas, mediaPipeMaskCanvas, width, height
         continue;
       }
 
+      // Nhận diện da người chính xác (bảo vệ 100% da mặt & cơ thể trên mọi loại phông nền)
+      const isSkin = (r > 80 && g > 45 && b > 30 && r > g && r > b && (r - b) >= 6);
+
       if (isGreenBg) {
         const maxRB = Math.max(r, b);
         const greenExcess = g - maxRB;
 
-        // Nhận diện da người chính xác (bảo vệ 100% da mặt & cơ thể)
-        const isSkin = (r > 80 && g > 45 && b > 30 && r > g && r > b && (r - b) >= 6);
-
         if (isSkin) {
           finalAlpha[pos] = 255;
-          // Khử ánh xanh phản chiếu lên da (Skin Spill Despill)
           if (r - g < 14 && g > b) {
             sD[idx + 1] = Math.round(r * 0.86 + b * 0.14);
           }
         } else if (greenExcess > 0) {
-          // Hollywood Keylight Continuous Alpha Keying
           const clipBlack = screenDiff * 0.28;
           if (greenExcess >= clipBlack) {
             finalAlpha[pos] = 0; // Tách sạch 100% nền xanh
           } else {
-            // Vùng biên tóc tơ / voan mỏng: làm mượt Alpha & Despill
             const norm = greenExcess / clipBlack;
             finalAlpha[pos] = Math.max(0, Math.min(255, Math.round((1.0 - norm) * 255)));
             sD[idx + 1] = maxRB;
@@ -295,7 +315,6 @@ function processUltraSmoothMatting(srcCanvas, mediaPipeMaskCanvas, width, height
           finalAlpha[pos] = 255;
         }
 
-        // Khử toàn bộ ám xanh trên tóc và quần áo (Global Multi-Color Despill)
         if (sD[idx + 1] > Math.max(sD[idx], sD[idx + 2])) {
           sD[idx + 1] = Math.max(sD[idx], sD[idx + 2]);
         }
@@ -335,9 +354,48 @@ function processUltraSmoothMatting(srcCanvas, mediaPipeMaskCanvas, width, height
         } else {
           finalAlpha[pos] = 255;
         }
+      } else if (isWhiteBg) {
+        // Tách Phông Trắng / Sáng
+        const minRGB = Math.min(r, g, b);
+        if (minRGB > 220) {
+          finalAlpha[pos] = 0;
+        } else if (minRGB > 195) {
+          const a = (220 - minRGB) / 25;
+          finalAlpha[pos] = Math.max(0, Math.min(255, Math.round(a * 255)));
+        } else {
+          finalAlpha[pos] = 255;
+        }
+      } else if (isBlackBg) {
+        // Tách Phông Đen / Tối
+        const maxRGB = Math.max(r, g, b);
+        if (maxRGB < 30) {
+          finalAlpha[pos] = 0;
+        } else if (maxRGB < 55) {
+          const a = (maxRGB - 30) / 25;
+          finalAlpha[pos] = Math.max(0, Math.min(255, Math.round(a * 255)));
+        } else {
+          finalAlpha[pos] = 255;
+        }
       } else {
-        // Nền tối màu / khác
-        finalAlpha[pos] = mD ? mD[idx] : 255;
+        // Tách Phông Phòng / Studio / Phong cảnh bất kỳ
+        if (isSkin) {
+          finalAlpha[pos] = 255;
+        } else {
+          let minBgDist = 999;
+          for (let c = 0; c < bgClusters.length; c++) {
+            const sample = bgClusters[c];
+            const d = Math.sqrt(Math.pow(r - sample.r, 2) + Math.pow(g - sample.g, 2) + Math.pow(b - sample.b, 2));
+            if (d < minBgDist) minBgDist = d;
+          }
+          if (minBgDist < 30) {
+            finalAlpha[pos] = 0;
+          } else if (minBgDist < 48) {
+            const a = (minBgDist - 30) / 18;
+            finalAlpha[pos] = Math.max(0, Math.min(255, Math.round(a * 255)));
+          } else {
+            finalAlpha[pos] = 255;
+          }
+        }
       }
     }
   }

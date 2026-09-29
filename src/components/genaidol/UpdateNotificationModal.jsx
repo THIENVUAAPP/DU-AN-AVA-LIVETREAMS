@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '4.9.98';
+export const APP_VERSION = '4.9.99';
 export const RELEASE_DATE = '29/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '✨ Bản Cập Nhật v4.9.98 - Đột Phá AI Keylight Hollywood Chuẩn TikTok 4K (Khử Sạch 100% Ám Xanh Phản Chiếu, Bảo Toàn Làn Da & Tóc Tơ Tự Nhiên)',
-    description: '1. Thuật Toán Hollywood Keylight Bóc Tách Trực Tiếp: Tính toán liên tục độ lệch sắc tố phông nền, loại bỏ sạch 100% phông xanh/lam ngay cả trong vùng đổ bóng tối nhất. 2. Khử Ám Xanh Toàn Diện (Skin & Multi-Color Despill): Tự động trung hòa ánh sáng xanh phản chiếu từ phông phòng thu lên da mặt, cánh tay và trang phục, trả lại màu da hồng hào và tóc tơ đen mượt tự nhiên. 3. Video Chroma 60 FPS Siêu Mượt: Đồng bộ động cơ Canvas Keylight 60 FPS trên toàn bộ luồng phát TikTok Live Studio & OBS Browser Source. 4. Khóa chặt 100% tất cả các tab và module khác.'
+    title: '✨ Bản Cập Nhật v4.9.99 - Đột Phá AI Xóa Nền Toàn Diện (Tách Sạch 100% Mọi Phông Xanh, Trắng, Đen, Phòng Studio Cho Cả Hình Ảnh & Video)',
+    description: '1. Xóa Nền Toàn Diện Mọi Phông (Universal Matting): Bóc tách sạch sành sanh 100% mọi loại phông nền (xanh lá, xanh dương, đỏ, trắng sáng, đen tối, phòng ngủ, studio, phong cảnh phức tạp) cho cả Hình Ảnh và Video. 2. Lưu Trữ Thông Minh & Chống Tràn Bộ Nhớ: Tự động tối ưu hóa và đẩy ảnh trong suốt lên máy chủ, ngăn ngừa triệt để lỗi bộ nhớ, hiển thị mượt mà trên mọi thiết bị. 3. Video Chroma 60 FPS Đa Chế Độ: Hỗ trợ thời gian thực khử phông xanh, phông trắng, phông đen và phông phòng tự động 60 FPS. 4. Khóa chặt 100% tất cả các tab và module khác.'
   }
 ];
 

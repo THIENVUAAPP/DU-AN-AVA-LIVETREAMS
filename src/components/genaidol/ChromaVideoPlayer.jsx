@@ -136,6 +136,53 @@ const ChromaVideoPlayer = ({
               }
             }
           }
+        } else if (chromaMode === 'white') {
+          for (let i = 0; i < len; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            const minRGB = Math.min(r, g, b);
+            if (minRGB > 220) {
+              data[i + 3] = 0;
+            } else if (minRGB > 190) {
+              const a = (220 - minRGB) / 30;
+              data[i + 3] = Math.max(0, Math.min(255, Math.round(a * 255)));
+            }
+          }
+        } else if (chromaMode === 'black') {
+          for (let i = 0; i < len; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            const maxRGB = Math.max(r, g, b);
+            if (maxRGB < 32) {
+              data[i + 3] = 0;
+            } else if (maxRGB < 60) {
+              const a = (maxRGB - 32) / 28;
+              data[i + 3] = Math.max(0, Math.min(255, Math.round(a * 255)));
+            }
+          }
+        } else if (chromaMode === 'room' || chromaMode === 'ambient') {
+          // Dynamic Corner Background Keying
+          const cornerR = (data[0] + data[(vw - 1) * 4] + data[(vh - 1) * vw * 4]) / 3;
+          const cornerG = (data[1] + data[(vw - 1) * 4 + 1] + data[(vh - 1) * vw * 4 + 1]) / 3;
+          const cornerB = (data[2] + data[(vw - 1) * 4 + 2] + data[(vh - 1) * vw * 4 + 2]) / 3;
+
+          for (let i = 0; i < len; i += 4) {
+            const r = data[i];
+            const g = data[i + 1];
+            const b = data[i + 2];
+            const isSkin = (r > 80 && g > 45 && b > 30 && r > g && r > b && (r - b) >= 6);
+            if (isSkin) continue;
+
+            const dist = Math.sqrt(Math.pow(r - cornerR, 2) + Math.pow(g - cornerG, 2) + Math.pow(b - cornerB, 2));
+            if (dist < 32) {
+              data[i + 3] = 0;
+            } else if (dist < 50) {
+              const a = (dist - 32) / 18;
+              data[i + 3] = Math.max(0, Math.min(255, Math.round(a * 255)));
+            }
+          }
         }
         ctx.putImageData(frame, 0, 0);
       }

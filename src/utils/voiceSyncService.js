@@ -7184,6 +7184,25 @@ export const removeImageBackgroundCanvas = async (imgSrc, mode = 'auto', toleran
         targetColor: mode === 'auto' ? null : mode
       });
       if (aiResult && typeof aiResult === 'string' && aiResult.startsWith('data:image')) {
+        // Tải ảnh trong suốt lên Backend để lấy URL gọn nhẹ, tránh lỗi QuotaExceededError của localStorage
+        try {
+          const blobRes = await fetch(aiResult);
+          const blob = await blobRes.blob();
+          const formData = new FormData();
+          formData.append('file', blob, `transparent_${Date.now()}.png`);
+          const uploadRes = await fetch('/api/upload-media', {
+            method: 'POST',
+            body: formData
+          });
+          if (uploadRes.ok) {
+            const upData = await uploadRes.json();
+            if (upData && upData.url) {
+              return upData.url;
+            }
+          }
+        } catch (upErr) {
+          console.warn('[removeImageBackgroundCanvas] Upload to server fallback:', upErr);
+        }
         return aiResult;
       }
     }
