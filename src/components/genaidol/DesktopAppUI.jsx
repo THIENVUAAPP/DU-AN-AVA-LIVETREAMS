@@ -6379,25 +6379,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       );
     };
 
-    if (isConnected && flvUrl) {
-      return (
-        <div className="relative w-full h-full flex flex-col bg-black">
-          <div className="relative w-full h-full flex items-center justify-center">
-            {/* Video trực tiếp 60fps - Hardware Accelerated */}
-            <video
-              ref={flvVideoRef}
-              className="w-full h-full object-contain select-none"
-              style={{ background: 'black' }}
-              controls={false}
-              autoPlay
-              muted={isLiveAudioMuted}
-              playsInline
-            />
-    </div>
-    </div>
-      );
-    }
-
     return renderMainCharacter();
   };
 
@@ -7149,19 +7130,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-[#EE4D2D] text-white shadow-xs">MỚI</span>
                 </button>
 
-                {/* 4. RESTREAM ĐA NỀN TẢNG & MULTI-ACCOUNT */}
-                <button 
-                  onClick={() => { setActiveSettingsModal('multistream'); setIsSettingsDropdownOpen(false); }}
-                  className={`w-full text-left px-3 py-2 mb-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-blue-950/60 to-purple-900/40 hover:from-blue-600 hover:to-purple-600 text-blue-200 hover:text-white border border-blue-700/60 shadow-md' : 'bg-blue-50 hover:bg-blue-500 text-blue-800 hover:text-white border border-blue-200'}`}
-                >
-                  <div className="flex items-center gap-2.5">
-                    <Share2 size={16} className="text-[#3B82F6] shrink-0" />
-                    <span>KẾT NỐI ĐA NỀN TẢNG (MULTISTREAM 4K)</span>
-                  </div>
-                  <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-[#3B82F6] text-white shadow-xs">PRO</span>
-                </button>
-
-                {/* 5. VƯỢT CAPTCHA */}
+                {/* 4. VƯỢT CAPTCHA */}
                 <button 
                   onClick={() => { setActiveSettingsModal('captcha'); setIsSettingsDropdownOpen(false); }}
                   className={`w-full text-left px-3 py-2 mb-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-emerald-900/50 to-teal-800/30 hover:from-emerald-600 hover:to-teal-500 text-emerald-200 hover:text-white border border-emerald-700/60 shadow-lg' : 'bg-emerald-50 hover:bg-emerald-500 text-emerald-800 hover:text-white'}`}

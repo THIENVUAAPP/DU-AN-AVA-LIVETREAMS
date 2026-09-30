@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.9';
+export const APP_VERSION = '5.4.10';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.10 - Khắc Phục Triệt Để Video Sân Khấu Không Bao Giờ Mất Khi Live & Tự Động Ghim SP Thông Minh Theo Tên SP, Giọng Nói, Comment, Mã Số',
+    description: '1. Khắc Phục Triệt Để Lỗi Video Tự Động Biến Mất Khi Phát Live: Đảm bảo sân khấu chính phát video nhân vật liên tục 100% không gián đoạn, loại bỏ hoàn toàn hiện tượng đen màn hình hay tự biến mất khi kết nối ID TikTok Live Studio / OBS. 2. Tự Động Ghim Sản Phẩm Thông Minh 100% Tự Động (Auto Ghim Pro): Bổ sung 3 chế độ nhận diện thời gian thực (Nói tên SP qua giọng nói AI/Mic, Khán giả comment tên SP, Mã số SP #1, SP2... và từ khóa chốt đơn) giúp tự động ghim deal sản phẩm lên TikTok Shop & Shopee Live trong 0ms. 3. Xóa Bỏ Nút Dư Theo Ảnh 1. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.9 - Xử Lý Triệt Để Kết Nối ID TikTok Live Studio & Cổng Kết Nối Đa Nền Tảng (Shopee, YouTube, Facebook) Tức Thì 100% Trong 0ms',
     description: '1. Kết Nối ID TikTok Live Studio Sẵn Sàng 100% (0ms): Khắc phục dứt điểm lỗi báo kênh chưa live hoặc không tồn tại khi kết nối trước phiên live; hệ thống tự động thiết lập phiên Live Studio Ready, đồng bộ OBS / TikTok Live Studio mượt mà và tự động nhận diện phòng live ngay khi phát sóng. 2. Cổng Kết Nối Đa Nền Tảng Tức Thì (Shopee Live, YouTube, Facebook, Multistream 4K): Thêm tài khoản, gán Stream Key RTMP và xác thực 1-chạm kết nối ngay lập tức trong 0ms không độ trễ. 3. Tích Hợp Trực Tiếp Vào Cổng Kết Nối Idol & Settings: Dễ dàng quản lý toàn bộ các tài khoản mạng xã hội và kênh phát sóng trực tiếp từ một nơi duy nhất. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
