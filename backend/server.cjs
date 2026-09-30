@@ -1461,38 +1461,24 @@ app.get([
       }
 
       function resolveSellerBuyUrl(prod) {
-        if (!prod) return 'https://www.tiktok.com/@havata.official';
-        const idOrCode = String(prod.id || prod.code || prod.sku || '').toLowerCase();
-        const title = String(prod.name || prod.productName || prod.title || '').toLowerCase();
-        if (idOrCode === '1' || title.includes('bra') || title.includes('havata') || title.includes('áo bra')) return 'https://www.tiktok.com/@havata.official';
-        if (idOrCode === '2' || title.includes('quấn cổ chân') || title.includes('combo') || title.includes('eirafit')) return 'https://www.tiktok.com/@eirafit.review';
-        if (idOrCode === '3' || title.includes('tạ tay') || title.includes('40kg') || title.includes('gympro')) return 'https://www.tiktok.com/@gympro.vietnam';
-        if (idOrCode === '4' || title.includes('mini band') || title.includes('kháng lực') || title.includes('powerband')) return 'https://www.tiktok.com/@powerband.sport';
-        if (idOrCode === '5' || title.includes('bình nước') || title.includes('2l') || title.includes('hydrasport')) return 'https://www.tiktok.com/@hydrasport.vn';
-        if (idOrCode === '6' || title.includes('thảm yoga') || title.includes('thảm tập') || title.includes('zenyoga')) return 'https://www.tiktok.com/@zenyoga.master';
-        if (idOrCode === '7' || title.includes('con lăn') || title.includes('bụng') || title.includes('fitabcore')) return 'https://www.tiktok.com/@fitabcore.official';
-        if (prod.sellerHandle && typeof prod.sellerHandle === 'string' && prod.sellerHandle.trim()) {
-          const h = prod.sellerHandle.trim();
-          return 'https://www.tiktok.com/' + (h.startsWith('@') ? h : '@' + h);
-        }
+        if (!prod) return 'https://www.tiktok.com/search?q=' + encodeURIComponent('sản phẩm tiktok shop chính hãng');
+        
         const isClean = function(u) {
           return u && typeof u === 'string' && (u.startsWith('http://') || u.startsWith('https://')) && !u.includes('shop.tiktok.com') && !u.includes('/view/product/');
         };
-        if (isClean(prod.sellerStoreUrl)) return prod.sellerStoreUrl;
+        if (isClean(prod.affiliateUrl)) return prod.affiliateUrl;
         if (isClean(prod.buyUrl)) return prod.buyUrl;
         if (isClean(prod.productUrl)) return prod.productUrl;
+        if (isClean(prod.sellerStoreUrl)) return prod.sellerStoreUrl;
         if (isClean(prod.storeUrl)) return prod.storeUrl;
-        if (prod.sellerName && typeof prod.sellerName === 'string') {
-          const s = prod.sellerName.toLowerCase();
-          if (s.includes('havata')) return 'https://www.tiktok.com/@havata.official';
-          if (s.includes('eirafit')) return 'https://www.tiktok.com/@eirafit.review';
-          if (s.includes('gympro')) return 'https://www.tiktok.com/@gympro.vietnam';
-          if (s.includes('powerband')) return 'https://www.tiktok.com/@powerband.sport';
-          if (s.includes('hydrasport')) return 'https://www.tiktok.com/@hydrasport.vn';
-          if (s.includes('zenyoga')) return 'https://www.tiktok.com/@zenyoga.master';
-          if (s.includes('fitabcore')) return 'https://www.tiktok.com/@fitabcore.official';
+
+        if (prod.sellerHandle && typeof prod.sellerHandle === 'string' && prod.sellerHandle.trim() && !prod.sellerHandle.includes('powerband') && !prod.sellerHandle.includes('eirafit') && !prod.sellerHandle.includes('hydrasport') && !prod.sellerHandle.includes('zenyoga') && !prod.sellerHandle.includes('fitabcore') && !prod.sellerHandle.includes('gympro')) {
+          const h = prod.sellerHandle.trim();
+          return 'https://www.tiktok.com/' + (h.startsWith('@') ? h : '@' + h);
         }
-        return 'https://www.tiktok.com/@havata.official';
+
+        const searchKeyword = prod.name || prod.productName || prod.title || 'sản phẩm tiktok shop';
+        return 'https://www.tiktok.com/search?q=' + encodeURIComponent(searchKeyword);
       }
 
       function getSellerName(prod) {
@@ -3132,38 +3118,24 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       }
 
       function resolveSellerBuyUrl2(prod) {
-        if (!prod) return 'https://www.tiktok.com/@havata.official';
-        const idOrCode = String(prod.id || prod.code || prod.sku || '').toLowerCase();
-        const title = String(prod.name || prod.productName || prod.title || '').toLowerCase();
-        if (idOrCode === '1' || title.includes('bra') || title.includes('havata') || title.includes('áo bra')) return 'https://www.tiktok.com/@havata.official';
-        if (idOrCode === '2' || title.includes('quấn cổ chân') || title.includes('combo') || title.includes('eirafit')) return 'https://www.tiktok.com/@eirafit.review';
-        if (idOrCode === '3' || title.includes('tạ tay') || title.includes('40kg') || title.includes('gympro')) return 'https://www.tiktok.com/@gympro.vietnam';
-        if (idOrCode === '4' || title.includes('mini band') || title.includes('kháng lực') || title.includes('powerband')) return 'https://www.tiktok.com/@powerband.sport';
-        if (idOrCode === '5' || title.includes('bình nước') || title.includes('2l') || title.includes('hydrasport')) return 'https://www.tiktok.com/@hydrasport.vn';
-        if (idOrCode === '6' || title.includes('thảm yoga') || title.includes('thảm tập') || title.includes('zenyoga')) return 'https://www.tiktok.com/@zenyoga.master';
-        if (idOrCode === '7' || title.includes('con lăn') || title.includes('bụng') || title.includes('fitabcore')) return 'https://www.tiktok.com/@fitabcore.official';
-        if (prod.sellerHandle && typeof prod.sellerHandle === 'string' && prod.sellerHandle.trim()) {
-          const h = prod.sellerHandle.trim();
-          return 'https://www.tiktok.com/' + (h.startsWith('@') ? h : '@' + h);
-        }
+        if (!prod) return 'https://www.tiktok.com/search?q=' + encodeURIComponent('sản phẩm tiktok shop chính hãng');
+        
         const isClean = function(u) {
           return u && typeof u === 'string' && (u.startsWith('http://') || u.startsWith('https://')) && !u.includes('shop.tiktok.com') && !u.includes('/view/product/');
         };
-        if (isClean(prod.sellerStoreUrl)) return prod.sellerStoreUrl;
+        if (isClean(prod.affiliateUrl)) return prod.affiliateUrl;
         if (isClean(prod.buyUrl)) return prod.buyUrl;
         if (isClean(prod.productUrl)) return prod.productUrl;
+        if (isClean(prod.sellerStoreUrl)) return prod.sellerStoreUrl;
         if (isClean(prod.storeUrl)) return prod.storeUrl;
-        if (prod.sellerName && typeof prod.sellerName === 'string') {
-          const s = prod.sellerName.toLowerCase();
-          if (s.includes('havata')) return 'https://www.tiktok.com/@havata.official';
-          if (s.includes('eirafit')) return 'https://www.tiktok.com/@eirafit.review';
-          if (s.includes('gympro')) return 'https://www.tiktok.com/@gympro.vietnam';
-          if (s.includes('powerband')) return 'https://www.tiktok.com/@powerband.sport';
-          if (s.includes('hydrasport')) return 'https://www.tiktok.com/@hydrasport.vn';
-          if (s.includes('zenyoga')) return 'https://www.tiktok.com/@zenyoga.master';
-          if (s.includes('fitabcore')) return 'https://www.tiktok.com/@fitabcore.official';
+
+        if (prod.sellerHandle && typeof prod.sellerHandle === 'string' && prod.sellerHandle.trim() && !prod.sellerHandle.includes('powerband') && !prod.sellerHandle.includes('eirafit') && !prod.sellerHandle.includes('hydrasport') && !prod.sellerHandle.includes('zenyoga') && !prod.sellerHandle.includes('fitabcore') && !prod.sellerHandle.includes('gympro')) {
+          const h = prod.sellerHandle.trim();
+          return 'https://www.tiktok.com/' + (h.startsWith('@') ? h : '@' + h);
         }
-        return 'https://www.tiktok.com/@havata.official';
+
+        const searchKeyword = prod.name || prod.productName || prod.title || 'sản phẩm tiktok shop';
+        return 'https://www.tiktok.com/search?q=' + encodeURIComponent(searchKeyword);
       }
 
       function getSellerName2(prod) {
@@ -6111,11 +6083,10 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
         keywords: 'mã 1;mã 01;áo bra;bra;áo tập;havata;yếm;chốt 1;sp1;mua 1',
         stock: '32Tr',
         sellerName: 'HAVATA Official Store',
-        sellerHandle: '@havata.official',
-        sellerStoreUrl: 'https://www.tiktok.com/@havata.official',
-        buyUrl: 'https://www.tiktok.com/@havata.official',
-        productUrl: 'https://www.tiktok.com/@havata.official',
-        storeUrl: 'https://www.tiktok.com/@havata.official'
+        sellerStoreUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Áo bra có mút cổ yếm HAVATA cao cấp'),
+        buyUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Áo bra có mút cổ yếm HAVATA cao cấp'),
+        productUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Áo bra có mút cổ yếm HAVATA cao cấp'),
+        storeUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Áo bra có mút cổ yếm HAVATA cao cấp')
       },
       {
         id: 2,
@@ -6128,11 +6099,10 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
         keywords: 'mã 2;mã 02;combo;quấn cổ chân;dây kháng lực;tập mông;chốt 2;sp2;mua 2',
         stock: '1,5K',
         sellerName: 'EiraFit Gymwear & Accessories',
-        sellerHandle: '@eirafit.review',
-        sellerStoreUrl: 'https://www.tiktok.com/@eirafit.review',
-        buyUrl: 'https://www.tiktok.com/@eirafit.review',
-        productUrl: 'https://www.tiktok.com/@eirafit.review',
-        storeUrl: 'https://www.tiktok.com/@eirafit.review'
+        sellerStoreUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Quấn Cổ Chân Dây Kháng Lực EiraFit'),
+        buyUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Quấn Cổ Chân Dây Kháng Lực EiraFit'),
+        productUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Quấn Cổ Chân Dây Kháng Lực EiraFit'),
+        storeUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Quấn Cổ Chân Dây Kháng Lực EiraFit')
       },
       {
         id: 3,
@@ -6145,11 +6115,10 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
         keywords: 'mã 3;mã 03;bộ tạ;tạ tay;40kg;tạ gym;tập tại nhà;chốt 3;sp3;mua 3',
         stock: '283',
         sellerName: 'GymPro Vietnam Official',
-        sellerHandle: '@gympro.vietnam',
-        sellerStoreUrl: 'https://www.tiktok.com/@gympro.vietnam',
-        buyUrl: 'https://www.tiktok.com/@gympro.vietnam',
-        productUrl: 'https://www.tiktok.com/@gympro.vietnam',
-        storeUrl: 'https://www.tiktok.com/@gympro.vietnam'
+        sellerStoreUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Bộ Tạ Tay Nhựa PVC 40KG GymPro'),
+        buyUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Bộ Tạ Tay Nhựa PVC 40KG GymPro'),
+        productUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Bộ Tạ Tay Nhựa PVC 40KG GymPro'),
+        storeUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Bộ Tạ Tay Nhựa PVC 40KG GymPro')
       },
       {
         id: 4,
@@ -6162,11 +6131,10 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
         keywords: 'mã 4;mã 04;dây cao su;mini band;kháng lực;dây tập;chốt 4;sp4;mua 4',
         stock: '999',
         sellerName: 'PowerBand Sport Store',
-        sellerHandle: '@powerband.sport',
-        sellerStoreUrl: 'https://www.tiktok.com/@powerband.sport',
-        buyUrl: 'https://www.tiktok.com/@powerband.sport',
-        productUrl: 'https://www.tiktok.com/@powerband.sport',
-        storeUrl: 'https://www.tiktok.com/@powerband.sport'
+        sellerStoreUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Dây Cao Su Tập Kháng Lực Mini Band'),
+        buyUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Dây Cao Su Tập Kháng Lực Mini Band'),
+        productUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Dây Cao Su Tập Kháng Lực Mini Band'),
+        storeUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Dây Cao Su Tập Kháng Lực Mini Band')
       },
       {
         id: 5,
@@ -6179,11 +6147,10 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
         keywords: 'mã 5;mã 05;bình nước;2 lít;bình thể thao;chốt 5;sp5;mua 5',
         stock: '500',
         sellerName: 'HydraSport Vietnam',
-        sellerHandle: '@hydrasport.vn',
-        sellerStoreUrl: 'https://www.tiktok.com/@hydrasport.vn',
-        buyUrl: 'https://www.tiktok.com/@hydrasport.vn',
-        productUrl: 'https://www.tiktok.com/@hydrasport.vn',
-        storeUrl: 'https://www.tiktok.com/@hydrasport.vn'
+        sellerStoreUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Bình Nước Thể Thao 2L Tập Gym'),
+        buyUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Bình Nước Thể Thao 2L Tập Gym'),
+        productUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Bình Nước Thể Thao 2L Tập Gym'),
+        storeUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Bình Nước Thể Thao 2L Tập Gym')
       },
       {
         id: 6,
@@ -6196,11 +6163,10 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
         keywords: 'mã 6;mã 06;thảm yoga;thảm tập;định tuyến;yoga;chốt 6;sp6;mua 6',
         stock: '340',
         sellerName: 'ZenYoga Master Shop',
-        sellerHandle: '@zenyoga.master',
-        sellerStoreUrl: 'https://www.tiktok.com/@zenyoga.master',
-        buyUrl: 'https://www.tiktok.com/@zenyoga.master',
-        productUrl: 'https://www.tiktok.com/@zenyoga.master',
-        storeUrl: 'https://www.tiktok.com/@zenyoga.master'
+        sellerStoreUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Thảm Tập Yoga Định Tuyến TPE 6mm'),
+        buyUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Thảm Tập Yoga Định Tuyến TPE 6mm'),
+        productUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Thảm Tập Yoga Định Tuyến TPE 6mm'),
+        storeUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Thảm Tập Yoga Định Tuyến TPE 6mm')
       },
       {
         id: 7,
@@ -6213,11 +6179,10 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
         keywords: 'mã 7;mã 07;con lăn;con lăn bụng;tập cơ bụng;chốt 7;sp7;mua 7',
         stock: '210',
         sellerName: 'FitAbCore Official Store',
-        sellerHandle: '@fitabcore.official',
-        sellerStoreUrl: 'https://www.tiktok.com/@fitabcore.official',
-        buyUrl: 'https://www.tiktok.com/@fitabcore.official',
-        productUrl: 'https://www.tiktok.com/@fitabcore.official',
-        storeUrl: 'https://www.tiktok.com/@fitabcore.official'
+        sellerStoreUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Con Lăn Tập Cơ Bụng 4 Bánh Tự Động Hồi Về'),
+        buyUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Con Lăn Tập Cơ Bụng 4 Bánh Tự Động Hồi Về'),
+        productUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Con Lăn Tập Cơ Bụng 4 Bánh Tự Động Hồi Về'),
+        storeUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Con Lăn Tập Cơ Bụng 4 Bánh Tự Động Hồi Về')
       }
     ];
     products = defaultTikTokShopCatalog;

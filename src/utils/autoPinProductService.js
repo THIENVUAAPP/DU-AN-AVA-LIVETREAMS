@@ -18,11 +18,10 @@ export const REAL_TIKTOK_SHOP_CATALOG = [
     keywords: 'mã 1;mã 01;áo bra;bra;áo tập;havata;yếm;chốt 1;sp1;mua 1',
     stock: '32Tr',
     sellerName: 'HAVATA Official Store',
-    sellerHandle: '@havata.official',
-    sellerStoreUrl: 'https://www.tiktok.com/@havata.official',
-    buyUrl: 'https://www.tiktok.com/@havata.official',
-    productUrl: 'https://www.tiktok.com/@havata.official',
-    storeUrl: 'https://www.tiktok.com/@havata.official'
+    sellerStoreUrl: 'https://www.tiktok.com/search?q=HAVATA+Official+Store',
+    buyUrl: 'https://www.tiktok.com/search?q=%C3%81o+bra+c%E1%BB%95+y%E1%BA%BFm+HAVATA+cao+c%E1%BA%A5p',
+    productUrl: 'https://www.tiktok.com/search?q=%C3%81o+bra+c%E1%BB%95+y%E1%BA%BFm+HAVATA+cao+c%E1%BA%A5p',
+    storeUrl: 'https://www.tiktok.com/search?q=HAVATA+Official+Store'
   },
   {
     id: 2,
@@ -35,11 +34,10 @@ export const REAL_TIKTOK_SHOP_CATALOG = [
     keywords: 'mã 2;mã 02;combo;quấn cổ chân;dây kháng lực;tập mông;chốt 2;sp2;mua 2',
     stock: '1,5K',
     sellerName: 'EiraFit Gymwear & Accessories',
-    sellerHandle: '@eirafit.review',
-    sellerStoreUrl: 'https://www.tiktok.com/@eirafit.review',
-    buyUrl: 'https://www.tiktok.com/@eirafit.review',
-    productUrl: 'https://www.tiktok.com/@eirafit.review',
-    storeUrl: 'https://www.tiktok.com/@eirafit.review'
+    sellerStoreUrl: 'https://www.tiktok.com/search?q=EiraFit+Gymwear',
+    buyUrl: 'https://www.tiktok.com/search?q=Qu%E1%BA%A5n+C%E1%BB%95+Ch%C3%A2n+D%C3%A2y+Kh%C3%A1ng+L%E1%BB%B1c+EiraFit',
+    productUrl: 'https://www.tiktok.com/search?q=Qu%E1%BA%A5n+C%E1%BB%95+Ch%C3%A2n+D%C3%A2y+Kh%C3%A1ng+L%E1%BB%B1c+EiraFit',
+    storeUrl: 'https://www.tiktok.com/search?q=EiraFit+Gymwear'
   },
   {
     id: 3,
@@ -52,11 +50,10 @@ export const REAL_TIKTOK_SHOP_CATALOG = [
     keywords: 'mã 3;mã 03;bộ tạ;tạ tay;40kg;tạ gym;tập tại nhà;chốt 3;sp3;mua 3',
     stock: '283',
     sellerName: 'GymPro Vietnam Official',
-    sellerHandle: '@gympro.vietnam',
-    sellerStoreUrl: 'https://www.tiktok.com/@gympro.vietnam',
-    buyUrl: 'https://www.tiktok.com/@gympro.vietnam',
-    productUrl: 'https://www.tiktok.com/@gympro.vietnam',
-    storeUrl: 'https://www.tiktok.com/@gympro.vietnam'
+    sellerStoreUrl: 'https://www.tiktok.com/search?q=GymPro+Vietnam',
+    buyUrl: 'https://www.tiktok.com/search?q=B%E1%BB%99+T%E1%BA%A1+Tay+Nh%E1%BB%B1a+PVC+40KG+GymPro',
+    productUrl: 'https://www.tiktok.com/search?q=B%E1%BB%99+T%E1%BA%A1+Tay+Nh%E1%BB%B1a+PVC+40KG+GymPro',
+    storeUrl: 'https://www.tiktok.com/search?q=GymPro+Vietnam'
   },
   {
     id: 4,
@@ -69,11 +66,10 @@ export const REAL_TIKTOK_SHOP_CATALOG = [
     keywords: 'mã 4;mã 04;dây cao su;mini band;kháng lực;dây tập;chốt 4;sp4;mua 4',
     stock: '999',
     sellerName: 'PowerBand Sport Store',
-    sellerHandle: '@powerband.sport',
-    sellerStoreUrl: 'https://www.tiktok.com/@powerband.sport',
-    buyUrl: 'https://www.tiktok.com/@powerband.sport',
-    productUrl: 'https://www.tiktok.com/@powerband.sport',
-    storeUrl: 'https://www.tiktok.com/@powerband.sport'
+    sellerStoreUrl: 'https://www.tiktok.com/search?q=PowerBand+Sport',
+    buyUrl: 'https://www.tiktok.com/search?q=D%C3%A2y+Cao+Su+T%E1%BA%ADp+Kh%C3%A1ng+L%E1%BB%B1c+Mini+Band',
+    productUrl: 'https://www.tiktok.com/search?q=D%C3%A2y+Cao+Su+T%E1%BA%ADp+Kh%C3%A1ng+L%E1%BB%B1c+Mini+Band',
+    storeUrl: 'https://www.tiktok.com/search?q=PowerBand+Sport'
   },
   {
     id: 5,
@@ -86,11 +82,10 @@ export const REAL_TIKTOK_SHOP_CATALOG = [
     keywords: 'mã 5;mã 05;bình nước;2 lít;bình thể thao;chốt 5;sp5;mua 5',
     stock: '500',
     sellerName: 'HydraSport Vietnam',
-    sellerHandle: '@hydrasport.vn',
-    sellerStoreUrl: 'https://www.tiktok.com/@hydrasport.vn',
-    buyUrl: 'https://www.tiktok.com/@hydrasport.vn',
-    productUrl: 'https://www.tiktok.com/@hydrasport.vn',
-    storeUrl: 'https://www.tiktok.com/@hydrasport.vn'
+    sellerStoreUrl: 'https://www.tiktok.com/search?q=HydraSport+Vietnam',
+    buyUrl: 'https://www.tiktok.com/search?q=B%C3%ACnh+N%C6%B0%E1%BB%9Bc+Th%E1%BB%83+Thao+T%E1%BA%ADp+Gym+2L',
+    productUrl: 'https://www.tiktok.com/search?q=B%C3%ACnh+N%C6%B0%E1%BB%9Bc+Th%E1%BB%83+Thao+T%E1%BA%ADp+Gym+2L',
+    storeUrl: 'https://www.tiktok.com/search?q=HydraSport+Vietnam'
   },
   {
     id: 6,
@@ -103,11 +98,10 @@ export const REAL_TIKTOK_SHOP_CATALOG = [
     keywords: 'mã 6;mã 06;thảm yoga;thảm tập;định tuyến;yoga;chốt 6;sp6;mua 6',
     stock: '340',
     sellerName: 'ZenYoga Master Shop',
-    sellerHandle: '@zenyoga.master',
-    sellerStoreUrl: 'https://www.tiktok.com/@zenyoga.master',
-    buyUrl: 'https://www.tiktok.com/@zenyoga.master',
-    productUrl: 'https://www.tiktok.com/@zenyoga.master',
-    storeUrl: 'https://www.tiktok.com/@zenyoga.master'
+    sellerStoreUrl: 'https://www.tiktok.com/search?q=ZenYoga+Master',
+    buyUrl: 'https://www.tiktok.com/search?q=Th%E1%BA%A3m+T%E1%BA%ADp+Yoga+%C4%90%E1%BB%8Bnh+Tuy%E1%BA%BFn+TPE+6mm',
+    productUrl: 'https://www.tiktok.com/search?q=Th%E1%BA%A3m+T%E1%BA%ADp+Yoga+%C4%90%E1%BB%8Bnh+Tuy%E1%BA%BFn+TPE+6mm',
+    storeUrl: 'https://www.tiktok.com/search?q=ZenYoga+Master'
   },
   {
     id: 7,
@@ -120,11 +114,10 @@ export const REAL_TIKTOK_SHOP_CATALOG = [
     keywords: 'mã 7;mã 07;con lăn;con lăn bụng;tập cơ bụng;chốt 7;sp7;mua 7',
     stock: '210',
     sellerName: 'FitAbCore Official Store',
-    sellerHandle: '@fitabcore.official',
-    sellerStoreUrl: 'https://www.tiktok.com/@fitabcore.official',
-    buyUrl: 'https://www.tiktok.com/@fitabcore.official',
-    productUrl: 'https://www.tiktok.com/@fitabcore.official',
-    storeUrl: 'https://www.tiktok.com/@fitabcore.official'
+    sellerStoreUrl: 'https://www.tiktok.com/search?q=FitAbCore+Official',
+    buyUrl: 'https://www.tiktok.com/search?q=Con+L%C4%83n+T%E1%BA%ADp+C%C6%A1+B%E1%BB%A5ng+4+B%C3%A1nh',
+    productUrl: 'https://www.tiktok.com/search?q=Con+L%C4%83n+T%E1%BA%ADp+C%C6%A1+B%E1%BB%A5ng+4+B%C3%A1nh',
+    storeUrl: 'https://www.tiktok.com/search?q=FitAbCore+Official'
   }
 ];
 
@@ -133,77 +126,32 @@ export const REAL_TIKTOK_SHOP_CATALOG = [
  * Đảm bảo người mua hàng bấm vào là mở trực tiếp trang gian hàng/sản phẩm của seller để xem thông tin, chọn phân loại (size/màu) và mua hàng.
  */
 export function resolveSellerProductBuyUrl(prod, platform = 'tiktok') {
-  if (!prod) return 'https://www.tiktok.com/@havata.official';
+  if (!prod) return 'https://www.tiktok.com/search?q=san+pham+tiktok+shop';
 
   // 1. Kiểm tra các URL tiếp thị liên kết / URL Seller người dùng tự cấu hình
-  const isCleanSellerUrl = (u) => {
+  const isCleanDirectLink = (u) => {
     if (!u || typeof u !== 'string') return false;
     const s = u.toLowerCase().trim();
     return (s.startsWith('http://') || s.startsWith('https://')) &&
            !s.includes('/streamer/live/product/dashboard') &&
            !s.includes('seller-vn.tiktok.com/homepage') &&
-           !s.includes('/vn/pdp/172948291038198');
+           !s.includes('/vn/pdp/172948291038198') &&
+           !s.includes('@powerband.sport') &&
+           !s.includes('@fitabcore.official') &&
+           !s.includes('@zenyoga.master') &&
+           !s.includes('@hydrasport.vn') &&
+           !s.includes('@gympro.vietnam') &&
+           !s.includes('@eirafit.review') &&
+           !s.includes('@havata.official');
   };
 
-  if (isCleanSellerUrl(prod.affiliateUrl)) return prod.affiliateUrl.trim();
-  if (isCleanSellerUrl(prod.buyUrl)) return prod.buyUrl.trim();
-  if (isCleanSellerUrl(prod.productUrl)) return prod.productUrl.trim();
-  if (isCleanSellerUrl(prod.sellerStoreUrl)) return prod.sellerStoreUrl.trim();
-  if (isCleanSellerUrl(prod.storeUrl)) return prod.storeUrl.trim();
+  if (isCleanDirectLink(prod.affiliateUrl)) return prod.affiliateUrl.trim();
+  if (isCleanDirectLink(prod.buyUrl)) return prod.buyUrl.trim();
+  if (isCleanDirectLink(prod.productUrl)) return prod.productUrl.trim();
+  if (isCleanDirectLink(prod.sellerStoreUrl)) return prod.sellerStoreUrl.trim();
+  if (isCleanDirectLink(prod.storeUrl)) return prod.storeUrl.trim();
 
-  // 2. Nếu có sellerHandle hợp lệ
-  if (prod.sellerHandle && typeof prod.sellerHandle === 'string') {
-    const handle = prod.sellerHandle.trim().replace(/^@/, '');
-    if (handle) {
-      return `https://www.tiktok.com/@${handle}`;
-    }
-  }
-
-  // 3. Phân giải theo từng mã sản phẩm / từ khóa seller thật trong danh mục TikTok Shop
-  const idOrCode = String(prod.id || prod.code || prod.sku || '').toLowerCase();
-  const title = String(prod.name || prod.productName || prod.title || '').toLowerCase();
-
-  if (idOrCode === '1' || title.includes('bra') || title.includes('havata') || title.includes('áo bra')) {
-    return 'https://www.tiktok.com/@havata.official';
-  }
-  if (idOrCode === '2' || title.includes('quấn cổ chân') || title.includes('combo') || title.includes('eirafit')) {
-    return 'https://www.tiktok.com/@eirafit.review';
-  }
-  if (idOrCode === '3' || title.includes('tạ tay') || title.includes('40kg') || title.includes('gympro')) {
-    return 'https://www.tiktok.com/@gympro.vietnam';
-  }
-  if (idOrCode === '4' || title.includes('mini band') || title.includes('kháng lực') || title.includes('powerband')) {
-    return 'https://www.tiktok.com/@powerband.sport';
-  }
-  if (idOrCode === '5' || title.includes('bình nước') || title.includes('2l') || title.includes('hydrasport')) {
-    return 'https://www.tiktok.com/@hydrasport.vn';
-  }
-  if (idOrCode === '6' || title.includes('thảm yoga') || title.includes('thảm tập') || title.includes('zenyoga')) {
-    return 'https://www.tiktok.com/@zenyoga.master';
-  }
-  if (idOrCode === '7' || title.includes('con lăn') || title.includes('bụng') || title.includes('fitabcore')) {
-    return 'https://www.tiktok.com/@fitabcore.official';
-  }
-
-  // 4. Phân giải theo sellerName nếu có
-  if (prod.sellerName && typeof prod.sellerName === 'string') {
-    const sName = prod.sellerName.toLowerCase();
-    if (sName.includes('havata')) return 'https://www.tiktok.com/@havata.official';
-    if (sName.includes('eirafit')) return 'https://www.tiktok.com/@eirafit.review';
-    if (sName.includes('gympro')) return 'https://www.tiktok.com/@gympro.vietnam';
-    if (sName.includes('powerband')) return 'https://www.tiktok.com/@powerband.sport';
-    if (sName.includes('hydrasport')) return 'https://www.tiktok.com/@hydrasport.vn';
-    if (sName.includes('zenyoga')) return 'https://www.tiktok.com/@zenyoga.master';
-    if (sName.includes('fitabcore')) return 'https://www.tiktok.com/@fitabcore.official';
-    
-    // Nếu có tên shop tự nhập
-    const cleanHandle = prod.sellerName.replace(/[^a-zA-Z0-9._]/g, '').toLowerCase();
-    if (cleanHandle && cleanHandle.length > 2) {
-      return `https://www.tiktok.com/@${cleanHandle}`;
-    }
-  }
-
-  // 5. Nếu livestream trên Shopee
+  // 2. Nếu livestream trên Shopee
   const isShopee = String(platform || '').toLowerCase().includes('shopee') || 
                    String(prod.sync || '').toLowerCase().includes('shopee') ||
                    String(prod.platform || '').toLowerCase().includes('shopee');
@@ -212,9 +160,12 @@ export function resolveSellerProductBuyUrl(prod, platform = 'tiktok') {
     return `https://shopee.vn/search?keyword=${q}`;
   }
 
-  // 6. Fallback tìm kiếm trực tiếp sản phẩm trên TikTok
-  const qName = encodeURIComponent(prod.name || prod.productName || 'havata official');
-  return `https://www.tiktok.com/search?q=${qName}`;
+  // 3. Phân giải tự động sang trang tìm kiếm & mua sản phẩm Seller trên TikTok (Đảm bảo 100% không bao giờ 404)
+  const pName = prod.name || prod.productName || prod.title || '';
+  const sName = prod.sellerName || prod.shopName || '';
+  const searchKeyword = (pName.length > 5 ? pName : `${pName} ${sName}`).trim();
+  
+  return `https://www.tiktok.com/search?q=${encodeURIComponent(searchKeyword || 'san pham tiktok shop')}`;
 }
 
 /**
