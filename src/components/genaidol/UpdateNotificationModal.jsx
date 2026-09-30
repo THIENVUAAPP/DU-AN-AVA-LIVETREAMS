@@ -2,17 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.2.3';
+export const APP_VERSION = '5.2.4';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v5.2.3 - Tự Động Hóa Ghim Sản Phẩm 24/7 Thay Thế Hoàn Toàn Thao Tác Thủ Công Trên TikTok Shop & TikTok Live Studio',
-    description: '1. Chế độ Tự Động Ghim Sản Phẩm (Auto Pin 24/7) chạy ngầm xuyên suốt: Khi Streamer liên kết sản phẩm từ shop.tiktok.com, hệ thống tự động ghim sản phẩm vào đúng vị trí ghim của TikTok Live Studio mà streamer không cần phải thao tác bấm thủ công. 2. Tự động luân phiên và thông minh nhận diện ghim sản phẩm khi AI nói, video clip sản phẩm phát hoặc khán giả hỏi trong bình luận.'
+    title: '⚡ Bản Cập Nhật v5.2.4 - Chuyển Hướng Trực Tiếp 100% Đến Trang Bán Hàng TikTok Shop Seller Thật Của Đơn Vị Bán',
+    description: '1. Đồng bộ sản phẩm từ shop.tiktok.com và tiếp thị liên kết: Khi khách hàng/người xem bấm vào bất kỳ sản phẩm nào hiển thị hoặc ghim trên phiên live, hệ thống lập tức mở trực tiếp trang sản phẩm & thanh toán thật trên TikTok Shop của đơn vị Seller bán hàng. 2. Loại bỏ toàn bộ giao diện giả lập thông tin biến thể để đảm bảo người dùng xem thông tin gốc chính xác 100% từ TikTok Shop của Seller.'
   },
   {
-    title: '🛒 Bản Cập Nhật v5.2.2 - Tích Hợp Bảng Chọn Biến Thể & Giỏ Hàng Mua Nhanh Trực Tiếp Trên Livestream',
-    description: '1. Khách hàng bấm vào bất kỳ sản phẩm nào được ghim trên phiên live lập tức mở ngay Giỏ Hàng & Bảng Chọn Biến Thể Sản Phẩm (Màu sắc, Kích cỡ/Size, Quy cách/Combo, Tăng giảm số lượng) với giá cập nhật theo thời gian thực. 2. Bấm "Mua Trên TikTok" hoặc "Mua Trên Shopee" sẽ chuyển thẳng người mua đến đúng trang thanh toán của tài khoản cá nhân với biến thể đã chọn.'
+    title: '⚡ Bản Cập Nhật v5.2.3 - Tự Động Hóa Ghim Sản Phẩm 24/7 Thay Thế Hoàn Toàn Thao Tác Thủ Công Trên TikTok Shop & TikTok Live Studio',
+    description: '1. Chế độ Tự Động Ghim Sản Phẩm (Auto Pin 24/7) chạy ngầm xuyên suốt: Khi Streamer liên kết sản phẩm từ shop.tiktok.com, hệ thống tự động ghim sản phẩm vào đúng vị trí ghim của TikTok Live Studio mà streamer không cần phải thao tác bấm thủ công. 2. Tự động luân phiên và thông minh nhận diện ghim sản phẩm khi AI nói, video clip sản phẩm phát hoặc khán giả hỏi trong bình luận.'
   },
   {
     title: '🛍️ Bản Cập Nhật v5.2.1 - Khắc Phục Triệt Để Lỗi 404 & Chuyển Hướng Trực Tiếp Đến Đúng Trang Mua Hàng TikTok Shop / Shopee Của Seller',

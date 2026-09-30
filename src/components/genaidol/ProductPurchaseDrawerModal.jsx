@@ -1,40 +1,9 @@
-import React, { useState, useEffect } from 'react';
-import { X, ShoppingBag, Zap, Check, Plus, Minus, ShieldCheck, Tag, ExternalLink } from 'lucide-react';
-import { getProductVariants, resolveSellerProductBuyUrl, getProductSellerName, formatVietnamesePrice, parsePriceToNumber } from '../../utils/autoPinProductService';
+import React from 'react';
 
-export default function ProductPurchaseDrawerModal({ product, isOpen, onClose, defaultPlatform = 'tiktok' }) {
-  const [selectedColor, setSelectedColor] = useState('');
-  const [selectedSize, setSelectedSize] = useState('');
-  const [selectedType, setSelectedType] = useState('');
-  const [quantity, setQuantity] = useState(1);
-
-  useEffect(() => {
-    if (product) {
-      const variants = getProductVariants(product);
-      setSelectedColor(variants.colors && variants.colors.length > 0 ? variants.colors[0] : '');
-      setSelectedSize(variants.sizes && variants.sizes.length > 0 ? variants.sizes[0] : '');
-      setSelectedType(variants.types && variants.types.length > 0 ? variants.types[0] : '');
-      setQuantity(1);
-    }
-  }, [product]);
-
-  if (!isOpen || !product) return null;
-
-  const variants = getProductVariants(product);
-  const sellerName = getProductSellerName(product);
-  const unitPrice = variants.unitPrice || parsePriceToNumber(product.price);
-  const totalPrice = unitPrice * quantity;
-
-  const handleCheckout = (platform = 'tiktok') => {
-    const variantInfo = {
-      color: selectedColor,
-      size: selectedSize,
-      type: selectedType,
-      quantity
-    };
-    const targetUrl = resolveSellerProductBuyUrl(product, platform, variantInfo);
-    window.open(targetUrl, '_blank', 'noopener,noreferrer');
-  };
+export default function ProductPurchaseDrawerModal() {
+  return null;
+}
+/*
 
   return (
     <div 
@@ -252,3 +221,5 @@ export default function ProductPurchaseDrawerModal({ product, isOpen, onClose, d
     </div>
   );
 }
+*/
+

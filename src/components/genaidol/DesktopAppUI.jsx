@@ -43,7 +43,6 @@ import { saveCharacterToIDB, loadAllCharactersFromIDB, deleteCharacterFromIDB, d
 import { generateFileSignature, registerFileInRAM } from '../../utils/mediaDeduplication';
 import { SUPPORTED_LANGUAGES, getCurrentLanguage, setCurrentLanguage, t } from '../../utils/i18n';
 import UpdateNotificationModal, { APP_VERSION } from './UpdateNotificationModal';
-import ProductPurchaseDrawerModal from './ProductPurchaseDrawerModal';
 import { resolveSellerProductBuyUrl, getProductSellerName } from '../../utils/autoPinProductService';
 import { bootstrapDefaultPresets } from '../../utils/defaultPresetsBootstrap';
 import { fastStreamUpload } from '../../utils/fastStreamService';
@@ -1933,7 +1932,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       return null;
     }
   });
-  const [activeCheckoutModalProduct, setActiveCheckoutModalProduct] = useState(null);
 
   // 🎭 OVERLAY ĐA LỚP TỪ SEQUENCER (HÌNH ẢNH / BANNER / TIÊU ĐỀ KHUYẾN MÃI)
   const [flowSequencerOverlay, setFlowSequencerOverlay] = useState(() => {
@@ -6529,17 +6527,20 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 return (
                   <div className="absolute bottom-4 left-4 z-40 max-w-[290px] sm:max-w-[350px] pointer-events-auto transition-all animate-bounce-subtle">
                     <div 
-                      onClick={() => setActiveCheckoutModalProduct(livePinnedProduct)}
+                      onClick={() => {
+                        const targetUrl = resolveSellerProductBuyUrl(livePinnedProduct);
+                        window.open(targetUrl, '_blank', 'noopener,noreferrer');
+                      }}
                       className="bg-slate-950/95 backdrop-blur-md border border-rose-500/80 hover:border-rose-400 rounded-2xl p-2.5 shadow-[0_10px_25px_rgba(244,63,94,0.45)] text-white space-y-1.5 transition-all cursor-pointer group"
                     >
                       {/* Header TikTok Shop */}
                       <div className="flex items-center justify-between border-b border-white/10 pb-1">
                         <span 
                           className="text-[9px] font-black text-rose-400 flex items-center gap-1 uppercase tracking-wider group-hover:text-pink-300 truncate max-w-[160px]"
-                          title={`Bấm để mở giỏ hàng & chọn size/màu của ${sellerName}`}
+                          title={`Bấm để mở trang sản phẩm TikTok Shop của ${sellerName}`}
                         >
                           <span>🏪 {sellerName}</span>
-                          <span className="text-gray-400">⚡ Mở Giỏ Hàng</span>
+                          <span className="text-gray-400">⚡ Mua Ngay</span>
                         </span>
                         {livePinnedProduct.triggerSource && (
                           <span className="text-[8px] font-bold text-amber-300 bg-amber-500/20 px-1.5 py-0.2 rounded border border-amber-500/30 truncate max-w-[130px]">
@@ -6553,7 +6554,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       <div className="flex items-center gap-2.5">
                         <div 
                           className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-white/20 bg-black group-hover:scale-105 transition-transform shadow-md"
-                          title={`Bấm để mở giỏ hàng & chọn size/màu của ${sellerName}`}
+                          title={`Bấm để mở trang sản phẩm TikTok Shop của ${sellerName}`}
                         >
                           <img src={livePinnedProduct.image} alt={livePinnedProduct.name} className="w-full h-full object-cover" />
                           <span className="absolute top-0 left-0 bg-rose-600 text-white text-[7px] font-black px-1 py-0.2 rounded-br uppercase tracking-wider">
@@ -6576,7 +6577,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                           <div className="text-[8px] text-amber-300 font-bold flex items-center justify-between gap-1 mt-0.5">
                             <span>🔥 {livePinnedProduct.badge || 'DEAL TIKTOK SHOP'}</span>
                             <span className="text-cyan-300 font-bold group-hover:underline">
-                              ⚡ Chọn Mua ↗
+                              ⚡ Mua Ngay ↗
                             </span>
                           </div>
                         </div>
@@ -8902,11 +8903,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       )}
 
       {renderGmailLoginModal()}
-      <ProductPurchaseDrawerModal 
-        product={activeCheckoutModalProduct} 
-        isOpen={!!activeCheckoutModalProduct} 
-        onClose={() => setActiveCheckoutModalProduct(null)} 
-      />
       <UpdateNotificationModal 
         isOpen={showUpdateModal} 
         onClose={() => {
