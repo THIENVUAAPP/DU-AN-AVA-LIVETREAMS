@@ -41,10 +41,6 @@ export default function CameraStudioWindow({
     return { width: 350, height: 210 };
   });
 
-  const isResizingRef = useRef(false);
-  const resizeHandleRef = useRef(null);
-  const resizeStartRef = useRef({ x: 0, y: 0, w: 350, h: 210 });
-  
   // Tọa độ riêng biệt cho Bảng Điều Khiển Suite (có thể kéo thả độc lập)
   const [panelPos, setPanelPos] = useState(() => {
     try {
@@ -433,7 +429,13 @@ export default function CameraStudioWindow({
     };
   }, [phoneCamSession]);
 
-  // ↔️ Co giãn 8 hướng trực tiếp trên màn hình camera (8-Way Resize Handles)
+  // ✂️ Chế độ Tay Nắm: 'crop' (Cắt Khung Linh Hoạt) hoặc 'resize' (Đổi Kích Thước)
+  const [handleMode, setHandleMode] = useState('crop');
+  const isResizingRef = useRef(false);
+  const resizeHandleRef = useRef(null);
+  const resizeStartRef = useRef({ x: 0, y: 0, w: 0, h: 0, crop: {} });
+
+  // ↔️ / ✂️ Kéo thả 8 hướng trực tiếp trên màn hình camera (Cắt Khung Đa Góc & Co Giãn)
   const handleResizeMouseDown = (e, handle) => {
     e.stopPropagation();
     e.preventDefault();
@@ -443,7 +445,8 @@ export default function CameraStudioWindow({
       x: e.clientX,
       y: e.clientY,
       w: cameraDimensions.width,
-      h: cameraDimensions.height
+      h: cameraDimensions.height,
+      crop: { ...cropConfig }
     };
   };
 
@@ -453,18 +456,52 @@ export default function CameraStudioWindow({
         const dx = e.clientX - resizeStartRef.current.x;
         const dy = e.clientY - resizeStartRef.current.y;
         const handle = resizeHandleRef.current;
-        let newW = resizeStartRef.current.w;
-        let newH = resizeStartRef.current.h;
+        const start = resizeStartRef.current;
 
-        if (handle.includes('e')) newW += dx;
-        if (handle.includes('w')) newW -= dx;
-        if (handle.includes('s')) newH += dy;
-        if (handle.includes('n')) newH -= dy;
+        if (handleMode === 'crop') {
+          // ✂️ Chế độ Cắt Khung Linh Hoạt (Direct Interactive Crop)
+          const camW = Math.max(100, start.w || 350);
+          const camH = Math.max(80, start.h || 210);
+          let newCrop = { ...start.crop };
 
-        setCameraDimensions({
-          width: Math.max(140, Math.min(1200, newW)),
-          height: Math.max(90, Math.min(900, newH))
-        });
+          if (handle === 'n') {
+            newCrop.cropTop = Math.max(0, Math.min(70, (start.crop.cropTop || 0) + Math.round((dy / camH) * 100)));
+          } else if (handle === 's') {
+            newCrop.cropBottom = Math.max(0, Math.min(70, (start.crop.cropBottom || 0) - Math.round((dy / camH) * 100)));
+          } else if (handle === 'w') {
+            newCrop.cropLeft = Math.max(0, Math.min(70, (start.crop.cropLeft || 0) + Math.round((dx / camW) * 100)));
+          } else if (handle === 'e') {
+            newCrop.cropRight = Math.max(0, Math.min(70, (start.crop.cropRight || 0) - Math.round((dx / camW) * 100)));
+          } else if (handle === 'nw') {
+            newCrop.cropTop = Math.max(0, Math.min(70, (start.crop.cropTop || 0) + Math.round((dy / camH) * 100)));
+            newCrop.cropLeft = Math.max(0, Math.min(70, (start.crop.cropLeft || 0) + Math.round((dx / camW) * 100)));
+          } else if (handle === 'ne') {
+            newCrop.cropTop = Math.max(0, Math.min(70, (start.crop.cropTop || 0) + Math.round((dy / camH) * 100)));
+            newCrop.cropRight = Math.max(0, Math.min(70, (start.crop.cropRight || 0) - Math.round((dx / camW) * 100)));
+          } else if (handle === 'sw') {
+            newCrop.cropBottom = Math.max(0, Math.min(70, (start.crop.cropBottom || 0) - Math.round((dy / camH) * 100)));
+            newCrop.cropLeft = Math.max(0, Math.min(70, (start.crop.cropLeft || 0) + Math.round((dx / camW) * 100)));
+          } else if (handle === 'se') {
+            newCrop.cropBottom = Math.max(0, Math.min(70, (start.crop.cropBottom || 0) - Math.round((dy / camH) * 100)));
+            newCrop.cropRight = Math.max(0, Math.min(70, (start.crop.cropRight || 0) - Math.round((dx / camW) * 100)));
+          }
+
+          setCropConfig(newCrop);
+        } else {
+          // 📐 Chế độ Thay Đổi Kích Thước (Resize Dimensions)
+          let newW = start.w;
+          let newH = start.h;
+
+          if (handle.includes('e')) newW += dx;
+          if (handle.includes('w')) newW -= dx;
+          if (handle.includes('s')) newH += dy;
+          if (handle.includes('n')) newH -= dy;
+
+          setCameraDimensions({
+            width: Math.max(140, Math.min(1200, newW)),
+            height: Math.max(90, Math.min(900, newH))
+          });
+        }
       }
 
       if (isDraggingPanel) {
@@ -490,7 +527,7 @@ export default function CameraStudioWindow({
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDraggingPanel, pushHistorySnapshot]);
+  }, [isDraggingPanel, handleMode, pushHistorySnapshot]);
 
   // Kéo thả Panel Điều Khiển Suite độc lập
   const handlePanelMouseDown = (e) => {
@@ -567,6 +604,7 @@ export default function CameraStudioWindow({
   const segmentationRef = useRef(null);
   const segMaskRef = useRef(null);
   const segReadyRef = useRef(false);
+  const isSegSendingRef = useRef(false);
 
   useEffect(() => {
     let destroyed = false;
@@ -592,7 +630,7 @@ export default function CameraStudioWindow({
         const seg = new window.SelfieSegmentation({
           locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
         });
-        seg.setOptions({ modelSelection: 1, selfieMode: false });
+        seg.setOptions({ modelSelection: 0, selfieMode: false });
 
         const maskCanvas = document.createElement('canvas');
         maskCanvas.width = 192;
@@ -600,6 +638,7 @@ export default function CameraStudioWindow({
         segMaskRef.current = maskCanvas;
 
         seg.onResults((results) => {
+          isSegSendingRef.current = false;
           if (destroyed) return;
           try {
             const mc = segMaskRef.current;
@@ -712,13 +751,16 @@ export default function CameraStudioWindow({
 
         // === BƯỚC 2: Gửi nguồn (khung hình thực tế) tới MediaPipe segmentation ===
         const mode = bgRemovalConfig.mode;
-        if (mode !== 'none' && segReadyRef.current && segmentationRef.current) {
-          segFrameCount++;
-          if (segFrameCount % 2 === 0) {
+        if ((mode === 'ai_person' || mode === 'desk_product') && segReadyRef.current && segmentationRef.current) {
+          if (!isSegSendingRef.current) {
+            isSegSendingRef.current = true;
             try {
-              // Gửi tmpCanvas để AI bám theo chính xác 100% vị trí thực tế của người trên khung hình
-              segmentationRef.current.send({ image: tmpCanvas }).catch(() => {});
-            } catch (e) {}
+              segmentationRef.current.send({ image: sourceElement }).catch(() => {
+                isSegSendingRef.current = false;
+              });
+            } catch (e) {
+              isSegSendingRef.current = false;
+            }
           }
         }
 
@@ -1118,6 +1160,23 @@ export default function CameraStudioWindow({
 
           {/* Nút Điều Khiển Tinh Tế Trực Tiếp Trên Khung Camera (Hiện khi hover chuột) */}
           <div className="absolute top-2 right-2 z-30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-black/85 backdrop-blur-md p-1 rounded-xl border border-white/20 shadow-xl" onMouseDown={(e) => e.stopPropagation()}>
+            {/* Nút Chuyển Đổi Kéo Cắt Khung vs Kéo Kích Thước */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setHandleMode(prev => prev === 'crop' ? 'resize' : 'crop');
+              }}
+              className={`px-2 py-1 rounded-lg text-[9px] font-black flex items-center gap-1 transition-all cursor-pointer ${
+                handleMode === 'crop'
+                  ? 'bg-amber-400 text-slate-950 shadow-md ring-1 ring-amber-300'
+                  : 'bg-indigo-600 text-white'
+              }`}
+              title={handleMode === 'crop' ? 'Kéo 8 góc/cạnh để Cắt Khung Camera Linh Hoạt' : 'Kéo 8 góc/cạnh để Đổi Kích Thước Khung'}
+            >
+              <span>{handleMode === 'crop' ? '✂️ CẮT KHUNG' : '📐 CO GIÃN'}</span>
+            </button>
+
             {/* Nút Xem Nhanh Camera Gốc */}
             <button
               type="button"

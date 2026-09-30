@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.3';
+export const APP_VERSION = '5.4.4';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.4 - Kéo Thả Cắt Khung Camera 8 Hướng Trực Quan, Tăng Tốc AI Tracking 60 FPS & Hoạt Động Ngay Lập Tức Toàn Bộ Chức Năng',
+    description: '1. Kéo Thả Cắt Khung Trực Quan (Interactive Direct Crop): Kéo 8 điểm điều khiển (4 góc, 4 cạnh) trực tiếp trên camera để cắt gọn khung hình theo mọi góc độ mà không làm méo hay co giãn hình ảnh. 2. Tăng Tốc AI MediaPipe Tracking 60 FPS: Loại bỏ hoàn toàn độ trễ hay vệt đục nền khi nhân vật di chuyển; xóa phông bám sát cử chỉ tay, mặt, cơ thể streamer theo thời gian thực. 3. Đảm Bảo 100% Chức Năng Hoạt Động Tức Thì: Tất cả các công cụ (Xóa nền, Cọ vẽ, Cắt góc, D-Pad 8 hướng, Đa góc zoom/xoay/nghiêng 3D, Mã QR điện thoại) ăn ngay lập tức và áp dụng sắc nét trên luồng camera.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.3 - Khắc Phục Triệt Để Chế Độ Xem Camera Gốc Full Khung Hình, Nâng Cấp Tách Nền AI Giữ Bàn Ghế & SP, Sửa Bộ Nạp File Video Máy Tính',
     description: '1. Khắc Phục Triệt Để Chế Độ Xem Camera Gốc: Xử lý dứt điểm hiện tượng xem camera gốc bị co nhỏ góc 1/4, hiển thị 100% toàn màn hình sắc nét và mượt mà 60 FPS. 2. Tách Nền AI Real-Time Kết Hợp Giữ Vật Thể Linh Hoạt: Bám sát cử động nhân vật không để lại vệt tĩnh, tích hợp tùy chọn giữ nguyên bàn live, ghế ngồi, máy tính và sản phẩm theo ý muốn. 3. Sửa Lỗi Bộ Nạp Clip & Video Nhân Vật (UniversalMediaPicker): Khôi phục cơ chế đọc và nạp file video mượt mà trên cả Windows và macOS. 4. Đồng Bộ Ngắt Sân Khấu Chính Chuẩn Xác: Tắt đồng bộ Live Idol Avatar ngay lập tức dọn sạch sân khấu chính và không tự ý bật lại.'
