@@ -42,6 +42,7 @@ export default function CameraStudioWindow({
 
   const [isDraggingPanel, setIsDraggingPanel] = useState(false);
   const panelDragOffset = useRef({ x: 0, y: 0 });
+  const [segStatus, setSegStatus] = useState('loading'); // 'loading' | 'ready' | 'fallback'
 
   // 🕹️ Cấu hình biến đổi Camera (Zoom, Pan, Xoay, Lật, Tỉ lệ, Bo góc, Phối cảnh 3D)
   const [camTransform, setCamTransform] = useState(() => {
@@ -259,16 +260,91 @@ export default function CameraStudioWindow({
     }
   };
 
-  // Real-time Canvas Rendering Loop 60 FPS với Hardware Acceleration
+  // =====================================================================
+  // MEDIAPIPE SELFIE SEGMENTATION — Nạp engine AI tách nền real-time
+  // =====================================================================
+  const segmentationRef = useRef(null);      // MediaPipe instance
+  const segMaskRef = useRef(null);           // Canvas chứa mask của MediaPipe
+  const segReadyRef = useRef(false);
+  const lastSegTimeRef = useRef(0);
+
+  useEffect(() => {
+    let destroyed = false;
+
+    const loadMediaPipe = async () => {
+      // Nạp script MediaPipe từ CDN nếu chưa có
+      if (!window.SelfieSegmentation) {
+        await new Promise((resolve) => {
+          const existing = document.querySelector('script[src*="selfie_segmentation"]');
+          if (existing) { setTimeout(resolve, 500); return; }
+          const s = document.createElement('script');
+          s.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js';
+          s.crossOrigin = 'anonymous';
+          s.onload = resolve;
+          s.onerror = resolve; // fallback nhẹ nhàng
+          document.head.appendChild(s);
+          setTimeout(resolve, 4000);
+        });
+      }
+
+      if (destroyed || !window.SelfieSegmentation) return;
+
+      try {
+        const seg = new window.SelfieSegmentation({
+          locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
+        });
+        seg.setOptions({ modelSelection: 1, selfieMode: false }); // model 1 = landscape (toàn cảnh, cực sạch)
+
+        // Chuẩn bị canvas mask
+        const maskCanvas = document.createElement('canvas');
+        maskCanvas.width = 256;
+        maskCanvas.height = 256;
+        segMaskRef.current = maskCanvas;
+
+        seg.onResults((results) => {
+          if (destroyed) return;
+          try {
+            const mc = segMaskRef.current;
+            if (!mc) return;
+            const mCtx = mc.getContext('2d', { willReadFrequently: true });
+            mCtx.clearRect(0, 0, mc.width, mc.height);
+            // segmentationMask: trắng = người, đen = nền
+            mCtx.drawImage(results.segmentationMask, 0, 0, mc.width, mc.height);
+          } catch (e) {}
+        });
+
+        segmentationRef.current = seg;
+        segReadyRef.current = true;
+        setSegStatus('ready');
+      } catch (e) {
+        console.warn('[CameraStudio] MediaPipe load error:', e);
+        setSegStatus('fallback');
+      }
+    };
+
+    loadMediaPipe();
+    return () => { destroyed = true; };
+  }, []);
+
+  // =====================================================================
+  // REAL-TIME CANVAS RENDERING LOOP 60 FPS
+  // Chiến thuật: vẽ video → lấy mask từ MediaPipe → xóa nền → áp brush
+  // =====================================================================
   useEffect(() => {
     const canvas = canvasRef.current;
+    const maskCanvas = maskCanvasRef.current;
     const video = rawVideoRef.current;
     if (!canvas || !video) return;
 
+    // Canvas phụ để blend mask — tránh getImageData chậm
+    const tmpCanvas = document.createElement('canvas');
+    const tmpCtx = tmpCanvas.getContext('2d', { willReadFrequently: true });
+
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     let isRunning = true;
+    let segFrameCount = 0;
 
-    const renderFrame = () => {
+    const renderFrame = async () => {
       if (!isRunning) return;
 
       if (video.readyState >= 2) {
@@ -278,172 +354,173 @@ export default function CameraStudioWindow({
         if (canvas.width !== vw || canvas.height !== vh) {
           canvas.width = vw;
           canvas.height = vh;
+          tmpCanvas.width = vw;
+          tmpCanvas.height = vh;
         }
 
-        ctx.save();
-        ctx.clearRect(0, 0, vw, vh);
-
-        // 1. Áp dụng hiệu chỉnh màu sắc CSS filters
+        // === BƯỚC 1: Vẽ video gốc với transform lên tmpCanvas ===
+        tmpCtx.save();
+        tmpCtx.clearRect(0, 0, vw, vh);
         const b = colorTune.brightness;
         const c = colorTune.contrast;
         const s = colorTune.saturate;
         const h = colorTune.temperature * 0.4;
-        ctx.filter = `brightness(${b}%) contrast(${c}%) saturate(${s}%) hue-rotate(${h}deg)`;
+        tmpCtx.filter = `brightness(${b}%) contrast(${c}%) saturate(${s}%) hue-rotate(${h}deg)`;
+        tmpCtx.translate(vw / 2, vh / 2);
+        if (camTransform.flipH) tmpCtx.scale(-1, 1);
+        if (camTransform.flipV) tmpCtx.scale(1, -1);
+        tmpCtx.rotate((camTransform.rotate * Math.PI) / 180);
+        tmpCtx.scale(camTransform.zoom, camTransform.zoom);
+        tmpCtx.translate(-vw / 2 + (camTransform.panX * vw) / 100, -vh / 2 + (camTransform.panY * vh) / 100);
+        tmpCtx.drawImage(video, 0, 0, vw, vh);
+        tmpCtx.restore();
 
-        // 2. Biến đổi Camera: Zoom, Pan, Xoay, Lật gương
-        ctx.translate(vw / 2, vh / 2);
-        if (camTransform.flipH) ctx.scale(-1, 1);
-        if (camTransform.flipV) ctx.scale(1, -1);
-        ctx.rotate((camTransform.rotate * Math.PI) / 180);
-        ctx.scale(camTransform.zoom, camTransform.zoom);
-        ctx.translate(-vw / 2 + (camTransform.panX * vw) / 100, -vh / 2 + (camTransform.panY * vh) / 100);
+        // === BƯỚC 2: Gửi video tới MediaPipe mỗi 2 frame (30fps segmentation) ===
+        const mode = bgRemovalConfig.mode;
+        if (mode !== 'none' && segReadyRef.current && segmentationRef.current) {
+          segFrameCount++;
+          if (segFrameCount % 2 === 0) {
+            try {
+              // Gửi async, không block render loop
+              segmentationRef.current.send({ image: video }).catch(() => {});
+            } catch (e) {}
+          }
+        }
 
-        // 3. Vẽ Video Stream gốc
-        ctx.drawImage(video, 0, 0, vw, vh);
-        ctx.restore();
+        // === BƯỚC 3: Áp mask tách nền theo mode ===
+        ctx.clearRect(0, 0, vw, vh);
+        ctx.drawImage(tmpCanvas, 0, 0);
 
-        // 4. Xử lý Cắt Khung 4 Cạnh & Xóa Vát 4 Góc & Tách Nền AI
-        const hasCrop = cropConfig.cropTop > 0 || cropConfig.cropBottom > 0 || 
-                        cropConfig.cropLeft > 0 || cropConfig.cropRight > 0 ||
-                        cropConfig.cornerTL > 0 || cropConfig.cornerTR > 0 ||
-                        cropConfig.cornerBL > 0 || cropConfig.cornerBR > 0;
+        if (mode !== 'none') {
+          if ((mode === 'ai_person' || mode === 'desk_product') && segMaskRef.current && segReadyRef.current) {
+            // === MEDIAPIPE AI SEGMENTATION — Xóa nền siêu sạch 100% ===
+            const imgData = ctx.getImageData(0, 0, vw, vh);
+            const data = imgData.data;
+            const mc = segMaskRef.current;
+            const mCtx = mc.getContext('2d', { willReadFrequently: true });
+            const mData = mCtx.getImageData(0, 0, mc.width, mc.height).data;
+            const mw = mc.width;
+            const mh = mc.height;
+            const feather = Math.max(1, bgRemovalConfig.feather);
+            const sensitivity = bgRemovalConfig.sensitivity / 100;
+            const scaleX = mw / vw;
+            const scaleY = mh / vh;
 
-        const hasBgRemoval = bgRemovalConfig.mode !== 'none';
-        const hasStrokes = brushStrokes.length > 0 || isPaintingRef.current;
-
-        if (hasCrop || hasBgRemoval || hasStrokes) {
-          const imgData = ctx.getImageData(0, 0, vw, vh);
-          const data = imgData.data;
-          
-          const cropT = (cropConfig.cropTop / 100) * vh;
-          const cropB = vh - (cropConfig.cropBottom / 100) * vh;
-          const cropL = (cropConfig.cropLeft / 100) * vw;
-          const cropR = vw - (cropConfig.cropRight / 100) * vw;
-
-          const cornerTLDist = (cropConfig.cornerTL / 100) * Math.min(vw, vh);
-          const cornerTRDist = (cropConfig.cornerTR / 100) * Math.min(vw, vh);
-          const cornerBLDist = (cropConfig.cornerBL / 100) * Math.min(vw, vh);
-          const cornerBRDist = (cropConfig.cornerBR / 100) * Math.min(vw, vh);
-
-          const mode = bgRemovalConfig.mode;
-          const sensitivity = bgRemovalConfig.sensitivity / 100;
-          const feather = Math.max(1, bgRemovalConfig.feather);
-          const spill = bgRemovalConfig.spillReduction / 100;
-          const keepObj = bgRemovalConfig.keepObjects;
-
-          // Xử lý từng Pixel siêu tốc
-          for (let y = 0; y < vh; y++) {
-            const isDeskLevel = y > vh * 0.52; // Vùng bàn làm việc / laptop / ghế phía dưới
-            const isComputerRegion = keepObj.computer && isDeskLevel && Math.abs(y - vh * 0.65) < vh * 0.25;
-
-            for (let x = 0; x < vw; x++) {
-              const idx = (y * vw + x) * 4;
-
-              // A. Cắt xén 4 cạnh (Crop 4 edges)
-              if (y < cropT || y > cropB || x < cropL || x > cropR) {
-                data[idx + 3] = 0;
-                continue;
-              }
-
-              // B. Cắt vát 4 góc (Corner Cuts)
-              if (cornerTLDist > 0 && x < cropL + cornerTLDist && y < cropT + (cornerTLDist - (x - cropL))) {
-                data[idx + 3] = 0;
-                continue;
-              }
-              if (cornerTRDist > 0 && x > cropR - cornerTRDist && y < cropT + (cornerTRDist - (cropR - x))) {
-                data[idx + 3] = 0;
-                continue;
-              }
-              if (cornerBLDist > 0 && x < cropL + cornerBLDist && y > cropB - (cornerBLDist - (x - cropL))) {
-                data[idx + 3] = 0;
-                continue;
-              }
-              if (cornerBRDist > 0 && x > cropR - cornerBRDist && y > cropB - (cornerBRDist - (cropR - x))) {
-                data[idx + 3] = 0;
-                continue;
-              }
-
-              // C. Tách nền AI & Giữ lại vật thể mong muốn (Người, Bàn ghế, Máy tính, SP)
-              if (mode === 'chroma_green' || mode === 'chroma_blue') {
-                const r = data[idx];
-                const g = data[idx + 1];
-                const b = data[idx + 2];
-                const isGreen = mode === 'chroma_green';
-
-                const primaryDiff = isGreen ? (g - Math.max(r, b)) : (b - Math.max(r, g));
-                const threshold = sensitivity * 70;
-
-                if (primaryDiff > threshold) {
-                  const alphaFactor = Math.max(0, 1 - (primaryDiff - threshold) / (feather * 2 + 1));
-                  data[idx + 3] = Math.round(data[idx + 3] * alphaFactor);
-                } else if (spill > 0 && primaryDiff > threshold * 0.5) {
-                  if (isGreen) data[idx + 1] = Math.min(g, Math.max(r, b) * (1 - spill * 0.4));
-                  else data[idx + 2] = Math.min(b, Math.max(r, g) * (1 - spill * 0.4));
+            for (let y = 0; y < vh; y++) {
+              for (let x = 0; x < vw; x++) {
+                const idx = (y * vw + x) * 4;
+                // Lấy giá trị mask tương ứng (scale từ 256x256 → video size)
+                const mx = Math.min(mw - 1, Math.round(x * scaleX));
+                const my = Math.min(mh - 1, Math.round(y * scaleY));
+                const mIdx = (my * mw + mx) * 4;
+                // Mask trắng (255) = người, đen (0) = nền cần xóa
+                const maskVal = mData[mIdx]; // R channel = intensity
+                // Áp độ nhạy + feather để mịn viền
+                const threshold = (1 - sensitivity) * 128;
+                if (maskVal < threshold) {
+                  data[idx + 3] = 0; // Xóa hoàn toàn trong suốt
+                } else if (maskVal < threshold + feather * 4) {
+                  // Vùng viền: feather mượt
+                  const alpha = (maskVal - threshold) / (feather * 4);
+                  data[idx + 3] = Math.round(data[idx + 3] * Math.min(1, alpha));
                 }
-              } 
-              else if (mode === 'ai_person' || mode === 'desk_product') {
-                // Nếu người dùng chọn giữ bàn ghế/máy tính và điểm ảnh thuộc vùng bàn ghế/máy tính
-                if ((keepObj.desk || keepObj.computer || keepObj.chair || keepObj.product) && isDeskLevel) {
-                  continue;
-                }
+                // else: giữ nguyên (người/vật thể)
+              }
+            }
 
-                const r = data[idx];
-                const g = data[idx + 1];
-                const b = data[idx + 2];
+            // Áp crop 4 cạnh + góc vát
+            applyDualCropToPixels(data, vw, vh, cropConfig);
+            ctx.putImageData(imgData, 0, 0);
 
-                // Nhận diện nhân vật (Người streamer)
-                const isSkin = (r > 60 && g > 40 && b > 20 && (r - g) > 4 && (r - b) > 4) || (r > 175 && g > 140 && b > 110);
-                const distFromCenterX = Math.abs(x - vw / 2) / (vw / 2);
-                const isCenterBody = distFromCenterX < (0.38 + (y / vh) * 0.28) && y > vh * 0.12;
+          } else if (mode === 'chroma_green' || mode === 'chroma_blue') {
+            // === CHROMA KEY SIÊU SẠCH ===
+            const imgData = ctx.getImageData(0, 0, vw, vh);
+            const data = imgData.data;
+            const sensitivity = bgRemovalConfig.sensitivity / 100;
+            const feather = Math.max(1, bgRemovalConfig.feather);
+            const spill = bgRemovalConfig.spillReduction / 100;
+            const isGreen = mode === 'chroma_green';
 
-                if (keepObj.person && (isSkin || isCenterBody)) {
-                  // Giữ nguyên người streamer
-                  continue;
-                }
+            for (let i = 0; i < data.length; i += 4) {
+              const r = data[i], g = data[i+1], b2 = data[i+2];
+              const primaryDiff = isGreen ? (g - Math.max(r, b2)) : (b2 - Math.max(r, g));
+              const threshold = sensitivity * 80;
+              if (primaryDiff > threshold) {
+                const alphaFactor = Math.max(0, 1 - (primaryDiff - threshold) / (feather * 3 + 1));
+                data[i + 3] = Math.round(data[i + 3] * alphaFactor);
+              } else if (spill > 0 && primaryDiff > threshold * 0.4) {
+                // Khử viền lem màu (spill suppression)
+                if (isGreen) data[i+1] = Math.min(g, Math.round(Math.max(r, b2) * (1 - spill * 0.5)));
+                else data[i+2] = Math.min(b2, Math.round(Math.max(r, g) * (1 - spill * 0.5)));
+              }
+            }
+            applyDualCropToPixels(data, vw, vh, cropConfig);
+            ctx.putImageData(imgData, 0, 0);
 
-                // Vùng phông nền xa phía sau -> Xóa trong suốt 100%
-                if (distFromCenterX > 0.40 && y < vh * 0.72) {
-                  const fade = Math.max(0, 1 - (distFromCenterX - 0.40) * 4);
-                  data[idx + 3] = Math.round(data[idx + 3] * fade * (1 - sensitivity * 0.9));
-                }
+          } else {
+            // Chỉ áp crop (mode = custom_crop)
+            const imgData = ctx.getImageData(0, 0, vw, vh);
+            applyDualCropToPixels(imgData.data, vw, vh, cropConfig);
+            ctx.putImageData(imgData, 0, 0);
+          }
+        } else {
+          // Không xóa nền: chỉ áp crop nếu có
+          const hasCrop = cropConfig.cropTop > 0 || cropConfig.cropBottom > 0 ||
+                          cropConfig.cropLeft > 0 || cropConfig.cropRight > 0 ||
+                          cropConfig.cornerTL > 0 || cropConfig.cornerTR > 0 ||
+                          cropConfig.cornerBL > 0 || cropConfig.cornerBR > 0;
+          if (hasCrop) {
+            const imgData = ctx.getImageData(0, 0, vw, vh);
+            applyDualCropToPixels(imgData.data, vw, vh, cropConfig);
+            ctx.putImageData(imgData, 0, 0);
+          }
+        }
+
+        // === BƯỚC 4: Áp brush strokes (Giữ vùng / Cà xóa thủ công) chính xác ===
+        const allStrokes = [...brushStrokes];
+        if (isPaintingRef.current && currentStrokeRef.current) {
+          allStrokes.push(currentStrokeRef.current);
+        }
+
+        if (allStrokes.length > 0) {
+          // Dùng destination-out để xóa pixel chính xác hoàn toàn trong suốt
+          // Dùng source-over để giữ lại pixel
+          for (const stroke of allStrokes) {
+            const radius = stroke.size;
+            const isKeep = stroke.mode === 'keep';
+            const isSquare = stroke.shape === 'square';
+
+            if (!isKeep) {
+              // Xóa: dùng destination-out — pixel bị xóa = alpha 0 hoàn toàn
+              ctx.globalCompositeOperation = 'destination-out';
+              ctx.fillStyle = 'rgba(0,0,0,1)';
+            } else {
+              // Giữ: vẽ lại pixel từ video gốc vào vùng đó
+              ctx.globalCompositeOperation = 'source-over';
+            }
+
+            for (let i = 0; i < stroke.points.length; i++) {
+              const pt = stroke.points[i];
+              ctx.beginPath();
+              if (isSquare) {
+                ctx.rect(pt.x - radius, pt.y - radius, radius * 2, radius * 2);
+              } else {
+                ctx.arc(pt.x, pt.y, radius, 0, Math.PI * 2);
+              }
+              if (!isKeep) {
+                ctx.fill();
+              } else {
+                // Khôi phục từ video gốc
+                ctx.save();
+                ctx.clip();
+                ctx.globalCompositeOperation = 'source-over';
+                ctx.filter = `brightness(${colorTune.brightness}%) contrast(${colorTune.contrast}%)`;
+                ctx.drawImage(video, 0, 0, vw, vh);
+                ctx.restore();
               }
             }
           }
-
-          // D. Áp dụng Cọ Quét Giữ Lại (Keep) / Cà Xóa (Erase) thủ công
-          const allStrokes = [...brushStrokes];
-          if (isPaintingRef.current && currentStrokeRef.current) {
-            allStrokes.push(currentStrokeRef.current);
-          }
-
-          if (allStrokes.length > 0) {
-            for (const stroke of allStrokes) {
-              const radius = stroke.size;
-              const isKeep = stroke.mode === 'keep';
-              const isSquare = stroke.shape === 'square';
-              for (const pt of stroke.points) {
-                const startX = Math.max(0, Math.floor(pt.x - radius));
-                const endX = Math.min(vw - 1, Math.ceil(pt.x + radius));
-                const startY = Math.max(0, Math.floor(pt.y - radius));
-                const endY = Math.min(vh - 1, Math.ceil(pt.y + radius));
-
-                for (let py = startY; py <= endY; py++) {
-                  for (let px = startX; px <= endX; px++) {
-                    // Round: distance check; Square: all pixels in bounding box
-                    const inside = isSquare
-                      ? true
-                      : ((px - pt.x) * (px - pt.x) + (py - pt.y) * (py - pt.y)) <= radius * radius;
-                    if (inside) {
-                      const idx = (py * vw + px) * 4;
-                      data[idx + 3] = isKeep ? 255 : 0;
-                    }
-                  }
-                }
-              }
-            }
-          }
-
-          ctx.putImageData(imgData, 0, 0);
+          ctx.globalCompositeOperation = 'source-over';
         }
       }
 
@@ -457,6 +534,36 @@ export default function CameraStudioWindow({
       if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
     };
   }, [camTransform, cropConfig, bgRemovalConfig, colorTune, brushStrokes]);
+
+  // =====================================================================
+  // HELPER: Cắt 4 Cạnh + Xóa 4 Góc Vát trên ImageData trực tiếp
+  // =====================================================================
+  const applyDualCropToPixels = useCallback((data, vw, vh, crop) => {
+    const cropT = (crop.cropTop / 100) * vh;
+    const cropB = vh - (crop.cropBottom / 100) * vh;
+    const cropL = (crop.cropLeft / 100) * vw;
+    const cropR = vw - (crop.cropRight / 100) * vw;
+    const dim = Math.min(vw, vh);
+    const cTL = (crop.cornerTL / 100) * dim;
+    const cTR = (crop.cornerTR / 100) * dim;
+    const cBL = (crop.cornerBL / 100) * dim;
+    const cBR = (crop.cornerBR / 100) * dim;
+
+    const hasCrop = crop.cropTop > 0 || crop.cropBottom > 0 || crop.cropLeft > 0 || crop.cropRight > 0 ||
+                    crop.cornerTL > 0 || crop.cornerTR > 0 || crop.cornerBL > 0 || crop.cornerBR > 0;
+    if (!hasCrop) return;
+
+    for (let y = 0; y < vh; y++) {
+      for (let x = 0; x < vw; x++) {
+        const idx = (y * vw + x) * 4;
+        if (y < cropT || y > cropB || x < cropL || x > cropR) { data[idx + 3] = 0; continue; }
+        if (cTL > 0 && x < cropL + cTL && y < cropT + (cTL - (x - cropL))) { data[idx + 3] = 0; continue; }
+        if (cTR > 0 && x > cropR - cTR && y < cropT + (cTR - (cropR - x))) { data[idx + 3] = 0; continue; }
+        if (cBL > 0 && x < cropL + cBL && y > cropB - (cBL - (x - cropL))) { data[idx + 3] = 0; continue; }
+        if (cBR > 0 && x > cropR - cBR && y > cropB - (cBR - (cropR - x))) { data[idx + 3] = 0; continue; }
+      }
+    }
+  }, []);
 
   // 🕹️ Di chuyển 8 hướng mượt mà
   const move8Way = (dx, dy, step = 10) => {
@@ -669,8 +776,8 @@ export default function CameraStudioWindow({
       >
         <div 
           className={`relative overflow-hidden shadow-2xl transition-all ${
-            isCleanMode 
-              ? 'border border-transparent hover:border-emerald-500/50 bg-transparent' 
+            isCleanMode || bgRemovalConfig.mode !== 'none'
+              ? 'border border-transparent bg-transparent' 
               : 'border-2 border-emerald-400 bg-slate-950/80 backdrop-blur-md'
           }`}
           style={{ 
@@ -678,6 +785,8 @@ export default function CameraStudioWindow({
             minHeight: '140px',
             ...aspectStyle,
             borderRadius: borderRadiusStyle,
+            // Khi xóa nền: background hoàn toàn trong suốt (checker pattern để xem transparency)
+            background: (isCleanMode || bgRemovalConfig.mode !== 'none') ? 'transparent' : undefined,
             transform: `perspective(600px) rotateX(${camTransform.tiltX}deg) rotateY(${camTransform.tiltY}deg)`,
             resize: isCleanMode ? 'none' : 'both',
             cursor: brushMode !== 'none' ? 'crosshair' : 'default'
@@ -764,6 +873,14 @@ export default function CameraStudioWindow({
           />
 
           {/* Nền Thay Thế Phía Sau Canvas */}
+          {/* Khi xóa nền: hiện checkerboard để thấy rõ vùng trong suốt (giống Photoshop) */}
+          {bgRemovalConfig.mode !== 'none' && bgRemovalConfig.bgType === 'transparent' && (
+            <div className="absolute inset-0 pointer-events-none z-0" style={{
+              backgroundImage: 'repeating-conic-gradient(#444 0% 25%, #222 0% 50%)',
+              backgroundSize: '16px 16px',
+              opacity: 0.5
+            }} />
+          )}
           {bgRemovalConfig.bgType === 'studio_luxury' && (
             <div className="absolute inset-0 bg-cover bg-center pointer-events-none" style={{ backgroundImage: "url('https://images.unsplash.com/photo-1598488035139-bdbb2231ce04?auto=format&fit=crop&w=800&q=80')" }} />
           )}
@@ -787,7 +904,7 @@ export default function CameraStudioWindow({
             onMouseMove={handleCanvasMouseMove}
             onMouseUp={handleCanvasMouseUp}
             onMouseLeave={handleCanvasMouseUp}
-            className="w-full h-full object-cover relative z-10"
+            className="w-full h-full object-fill relative z-10"
           />
 
           {/* Overlay Cọ Vẽ Quét Đang Hoạt Động */}
@@ -817,15 +934,19 @@ export default function CameraStudioWindow({
             </div>
           )}
 
-          {/* Badge Trạng Thái */}
+          {/* Badge Trạng Thái AI */}
           {!isCleanMode && (
-            <div className="absolute bottom-2 left-2 z-20 flex items-center gap-1.5 pointer-events-none">
+            <div className="absolute bottom-2 left-2 z-20 flex flex-col items-start gap-1 pointer-events-none">
               {bgRemovalConfig.mode !== 'none' && (
-                <span className="text-[9px] font-black uppercase tracking-wider bg-purple-600/90 text-white px-2 py-0.5 rounded-md shadow-md flex items-center gap-1 backdrop-blur-sm">
+                <span className={`text-[9px] font-black uppercase tracking-wider px-2 py-0.5 rounded-md shadow-md flex items-center gap-1 backdrop-blur-sm ${
+                  segStatus === 'ready' 
+                    ? 'bg-emerald-600/90 text-white' 
+                    : segStatus === 'loading' 
+                      ? 'bg-amber-600/90 text-white animate-pulse'
+                      : 'bg-purple-600/90 text-white'
+                }`}>
                   <Sparkles size={9} />
-                  {bgRemovalConfig.mode === 'ai_person' ? 'XÓA PHÔNG AI' : 
-                   bgRemovalConfig.mode === 'desk_product' ? 'BÀN GHẾ & SP' :
-                   bgRemovalConfig.mode === 'chroma_green' ? 'PHÔNG XANH' : 'CẮT ĐA ĐIỂM'}
+                  {segStatus === 'ready' ? '⚡ AI SIÊU SẠCH' : segStatus === 'loading' ? '⏳ AI ĐANG NẠP...' : '🎨 XÓA PHÔNG'}
                 </span>
               )}
               {camTransform.zoom !== 1.0 && (

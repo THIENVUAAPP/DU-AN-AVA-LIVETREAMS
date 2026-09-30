@@ -2,13 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.3.5';
+export const APP_VERSION = '5.3.6';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '⚡ Bản Cập Nhật v5.3.6 - Tích Hợp AI MediaPipe Siêu Sạch, Cọ Xóa Cực Chính Xác, Canvas Trong Suốt 100%',
+    description: '1. Tích hợp MediaPipe SelfieSegmentation thực sự (Model Landscape): Xóa nền bằng AI neural network thật sự thay vì heuristic pixel cũ — xóa siêu sạch 100% mọi loại phông nền, chỉ giữ lại người/vật thể theo đúng ý muốn. 2. Cọ Xóa Chính Xác Tuyệt Đối (destination-out compositing): Bấm vào đâu xóa đến đó, xóa thành trong suốt alpha=0 hoàn toàn, không còn màu đen hay viền. 3. Canvas 100% Trong Suốt: Khi bật xóa nền, toàn bộ khung viền, nền đen, background camera bị xóa hoàn toàn — chỉ còn nhân vật nổi trên nền trong suốt checkerboard (giống Photoshop). 4. Badge AI: Hiển thị trạng thái ⏳ Đang nạp AI → ⚡ AI Siêu Sạch khi MediaPipe sẵn sàng.'
+  },
+  {
     title: '⚡ Bản Cập Nhật v5.3.5 - Sửa Lỗi Bảng Điều Khiển Camera Suite Không Hiển Thị & Bổ Sung Cọ Vuông',
-    description: '1. Sửa lỗi nghiêm trọng: Bảng Điều Khiển Camera Suite (bảng cài đặt camera) không hiển thị khi bật camera — đã fix vị trí khởi tạo luôn neo vào bên phải màn hình, không bao giờ bị ra ngoài màn hình. 2. Bổ sung Cọ Vuông (Square Brush) bên cạnh Cọ Tròn: Tùy chọn hình dạng đầu cọ Tròn ⬤ hoặc Vuông ■, có preview đầu cọ trực tiếp trong tab Cọ Quét. 3. Kéo thả Panel độc lập — đã xác thực vị trí lưu trong localStorage, không để panel bay ra ngoài màn hình sau khi di chuyển.'
+    description: '1. Sửa lỗi nghiêm trọng: Bảng Điều Khiển Camera Suite không hiển thị khi bật camera. 2. Bổ sung Cọ Vuông (Square Brush) bên cạnh Cọ Tròn.'
   },
   {
     title: '⚡ Bản Cập Nhật v5.3.4 - Tách Rời Bảng Điều Khiển Camera Suite, Cọ Quét Giữ Vùng & Cà Xóa Nền AI, Kết Nối Camera Điện Thoại QR 4K',
