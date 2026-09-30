@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.3.9';
+export const APP_VERSION = '5.4.0';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.0 - Co Giãn 8 Hướng Siêu Mượt, Thanh Canh Cọ Ngang Dọc Thẳng Lối, Bóng Mờ Nền Gốc & Xóa Phông Siêu Linh Hoạt',
+    description: '1. Co Giãn 8 Hướng (8-Way Resize Handles): Tích hợp trực tiếp 8 điểm điều khiển (4 góc + 4 cạnh) trên khung camera giúp kéo thả tùy biến kích thước camera siêu mượt 60FPS. 2. Thanh Canh Cọ Ngang Dọc Ngay Hàng Thẳng Lối: Trang bị chế độ khóa trục ngang (↔️), khóa trục dọc (↕️) và lưới thước canh tỉ lệ (Grid Guides) giúp quét cọ xóa nền siêu chuẩn xác. 3. Xem Trước Nền Gốc Mờ (Ghost Overlay): Bật/tắt bóng mờ nền gốc để dễ dàng quan sát phông nền và bảo vệ sản phẩm livestream khi thao tác. 4. Xóa Phông Đa Kiểu Siêu Linh Hoạt: 1-chạm kết hợp nhiều kiểu xóa phông cùng lúc (AI Người, Bàn & Sản Phẩm, Khóa Màu Nền, Cắt Cạnh & Vát Góc).'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.3.9 - Xóa Phông Nền Siêu Sạch Siêu Cao Cấp, Bảo Vệ Sản Phẩm Livestream, Cọ Vuông Đa Góc & Nút Khôi Phục Camera Gốc 1-Click',
     description: '1. Xóa Phông Nền Siêu Sạch & Tách Bất Kỳ Thể Loại Nền Nào: Tích hợp công nghệ MediaPipe Selfie Segmentation cao cấp kết hợp thuật toán bảo vệ sản phẩm livestream (chai, lọ, hộp, túi mỹ phẩm, bàn ghế) chống đục thủng hay xóa lẹm. 2. Thanh Cọ Xóa Vuông Vức Đa Góc: Trang bị các kích thước chuẩn vuông vức (15px, 30px, 50px, 80px, 120px) giúp cắt xóa nền theo khối hộp vuông vức sắc lẹm hoặc cọ giữ lại sản phẩm. 3. Nút Khôi Phục Camera Gốc Ban Đầu (1-Click): Đưa toàn bộ cài đặt camera về trạng thái ban đầu chỉ với 1 cú chạm. 4. Cắt Xén Đa Hướng & Di Chuyển Siêu Mượt 60FPS: Tối ưu tải cực nhanh, lướt êm ái không độ trễ.'
