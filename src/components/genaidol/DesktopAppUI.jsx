@@ -1308,6 +1308,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
   const [toast, setToast] = useState(null);
   
+  const [isDraggingOverStage, setIsDraggingOverStage] = useState(false);
+  const [isDraggingOverSlots, setIsDraggingOverSlots] = useState(false);
   const [customCharacters, setCustomCharacters] = useState(() => {
     try {
       const saved = localStorage.getItem('avalive_custom_characters');
@@ -4718,10 +4720,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     document.body.removeChild(link);
   };
 
-  const handleFileUpload = async (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      // 🔓 Người dùng tải media trực tiếp trên Sân Khấu Chính -> Tắt đồng bộ từ Sequencer để Sân Khấu Chính phát độc lập tức thì
+  // ⚡ HÀM NẠP TẬP TIN VIDEO / HÌNH ẢNH MẠNH MẼ CHO CẢ WINDOWS & MAC (1-CLICK & DRAG-DROP)
+  const processSingleFile = async (file, { autoSelect = true } = {}) => {
+    if (!file) return null;
+
+    // 🔓 Tắt đồng bộ từ sequencer để Sân Khấu Chính phát độc lập tức thì
+    if (autoSelect) {
       setIsMasterStageSynced(false);
       setFlowSequencerOverlay(null);
       setUserLockedMediaUrl(null);
@@ -4735,62 +4739,68 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         localStorage.removeItem('avalive_master_sync_active');
         localStorage.removeItem('avalive_sequencer_overlay');
         localStorage.removeItem('avalive_user_locked_media');
+        localStorage.setItem('avalive_user_paused', 'false');
       } catch (_) {}
+    }
 
-      const rawName = file.name.replace(/\.[^/.]+$/, "") || "Idol Live AI Pro";
-      const charName = rawName.length > 20 ? rawName.substring(0, 18) + "…" : rawName;
-      const isVideo = (file.type && file.type.startsWith('video/')) || 
-        /\.(mp4|webm|mov|mkv|avi|m4v|flv|wmv|ts|3gp|m2ts|mts|ogv)$/i.test(file.name) ||
-        /video|nhép|lipsync|livestream/i.test(file.name) ||
-        (!file.type?.startsWith('image/') && !/\.(png|jpg|jpeg|webp|gif|svg)$/i.test(file.name));
-      const localUrl = URL.createObjectURL(file);
-      const fileSig = generateFileSignature(file);
+    const rawName = file.name ? file.name.replace(/\.[^/.]+$/, "") : "Idol Live AI Pro";
+    const charName = rawName.length > 20 ? rawName.substring(0, 18) + "…" : rawName;
+    
+    // Kiểm tra định dạng Video đa nền tảng (cực chuẩn trên cả Windows và macOS)
+    const isVideo = (file.type && file.type.startsWith('video/')) || 
+      /\.(mp4|webm|mov|mkv|avi|m4v|flv|wmv|ts|3gp|m2ts|mts|ogv)$/i.test(file.name || '') ||
+      /video|nhép|lipsync|livestream/i.test(file.name || '') ||
+      (!file.type?.startsWith('image/') && !/\.(png|jpg|jpeg|webp|gif|svg|bmp|avif)$/i.test(file.name || ''));
 
-      if (isVideo) {
-        // 🛡️ BƯỚC 0: KIỂM TRA TRÙNG LẶP TRONG CUSTOM CHARACTERS HOẶC INDEXEDDB
-        const existingChar = customCharacters.find(c => 
-          (c.fileSignature && c.fileSignature === fileSig) ||
-          (c.fileSize && Number(c.fileSize) === file.size && file.size > 50000 && c.name === charName) ||
-          (c.name === charName && Number(c.fileSize || 0) === file.size)
-        );
-        const existingIDB = !existingChar ? await findExistingAidolByFile(file) : null;
-        const matchedChar = existingChar || existingIDB;
+    const localUrl = URL.createObjectURL(file);
+    const fileSig = typeof generateFileSignature === 'function' ? generateFileSignature(file) : `${file.name}_${file.size}_${file.lastModified}`;
 
-        if (matchedChar) {
-          const targetId = matchedChar.id || `custom_${Date.now()}`;
-          let targetMediaUrl = (matchedChar.mediaUrl && !matchedChar.mediaUrl.startsWith('blob:')) ? matchedChar.mediaUrl : '';
+    if (isVideo) {
+      // 🛡️ BƯỚC 0: KIỂM TRA TRÙNG LẶP TRONG CUSTOM CHARACTERS HOẶC INDEXEDDB
+      const existingChar = (customCharacters || []).find(c => 
+        (c.fileSignature && c.fileSignature === fileSig) ||
+        (c.fileSize && Number(c.fileSize) === file.size && file.size > 50000 && c.name === charName) ||
+        (c.name === charName && Number(c.fileSize || 0) === file.size)
+      );
+      const existingIDB = !existingChar ? await findExistingAidolByFile(file) : null;
+      const matchedChar = existingChar || existingIDB;
 
-          const restoredChar = {
-            ...matchedChar,
-            id: targetId,
-            name: charName,
-            url: localUrl,
-            mediaUrl: targetMediaUrl || localUrl,
-            type: 'video',
-            fileData: file,
-            fileBlob: file,
-            fileSize: file.size,
-            fileSignature: fileSig
-          };
+      if (matchedChar) {
+        const targetId = matchedChar.id || `custom_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+        let targetMediaUrl = (matchedChar.mediaUrl && !matchedChar.mediaUrl.startsWith('blob:')) ? matchedChar.mediaUrl : '';
 
-          // Lưu tham chiếu Blob và signature vào RAM Cache
-          registerFileInRAM(file, targetId);
-          if (typeof window !== 'undefined') {
-            window.__activeMediaBlob = file;
-            window.__activeMediaBlobUrl = localUrl;
-            window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
-            window.__activeMediaBlobMap.set(targetId, file);
-            window.__activeMediaBlobMap.set(localUrl, file);
-            if (targetMediaUrl) window.__activeMediaBlobMap.set(targetMediaUrl, file);
-          }
+        const restoredChar = {
+          ...matchedChar,
+          id: targetId,
+          name: charName,
+          url: localUrl,
+          mediaUrl: targetMediaUrl || localUrl,
+          type: 'video',
+          fileData: file,
+          fileBlob: file,
+          fileSize: file.size,
+          fileSignature: fileSig
+        };
 
-          setCustomCharacters(prev => {
-            const exists = (prev || []).some(c => c.id === targetId);
-            const next = exists ? (prev || []).map(c => c.id === targetId ? restoredChar : c) : [...(prev || []), restoredChar];
-            try { localStorage.setItem('avalive_custom_characters', JSON.stringify(next)); } catch (e) {}
-            return next;
-          });
+        // Lưu tham chiếu Blob và signature vào RAM Cache
+        registerFileInRAM(file, targetId);
+        if (typeof window !== 'undefined') {
+          window.__activeMediaBlob = file;
+          window.__activeMediaBlobUrl = localUrl;
+          window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+          window.__activeMediaBlobMap.set(targetId, file);
+          window.__activeMediaBlobMap.set(localUrl, file);
+          if (targetMediaUrl) window.__activeMediaBlobMap.set(targetMediaUrl, file);
+        }
 
+        setCustomCharacters(prev => {
+          const exists = (prev || []).some(c => c.id === targetId);
+          const next = exists ? (prev || []).map(c => c.id === targetId ? restoredChar : c) : [...(prev || []), restoredChar];
+          try { localStorage.setItem('avalive_custom_characters', JSON.stringify(next)); } catch (e) {}
+          return next;
+        });
+
+        if (autoSelect) {
           setSelectedCharacter(targetId);
           try { localStorage.setItem('avalive_selected_char', targetId); } catch (e) {}
           setIsVideoPlaying(true);
@@ -4823,14 +4833,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             });
             setTimeout(() => bc.close(), 100);
           } catch (err) {}
+        }
 
-          // Đảm bảo LUÔN CÓ SERVER URL ĐỂ PHỤC VỤ OBS & TIKTOK LIVE STUDIO
-          const onMatchedServerReady = (srvUrl) => {
-            if (!srvUrl) return;
+        // Đảm bảo LUÔN CÓ SERVER URL ĐỂ PHỤC VỤ OBS & TIKTOK LIVE STUDIO
+        const onMatchedServerReady = (srvUrl) => {
+          if (!srvUrl) return;
+          if (autoSelect) {
             setUserLockedMediaUrl(srvUrl);
             try { localStorage.setItem('avalive_user_locked_media', srvUrl); } catch (e) {}
-            setCustomCharacters(prev => prev.map(c => c.id === targetId ? { ...c, mediaUrl: srvUrl } : c));
-            saveCharacterToIDB({ ...matchedChar, id: targetId, mediaUrl: srvUrl, fileData: file }).catch(() => {});
+          }
+          setCustomCharacters(prev => prev.map(c => c.id === targetId ? { ...c, mediaUrl: srvUrl } : c));
+          saveCharacterToIDB({ ...matchedChar, id: targetId, mediaUrl: srvUrl, fileData: file }).catch(() => {});
+          if (autoSelect) {
             try {
               const bc = new BroadcastChannel('avalive_master_live_stream');
               bc.postMessage({
@@ -4867,49 +4881,62 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               force: true,
               timestamp: Date.now()
             }, socketRef.current);
-          };
-
-          if (targetMediaUrl) {
-            onMatchedServerReady(targetMediaUrl);
-          } else {
-            uploadMediaToServer(file, file.name).then(srvUrl => {
-              if (srvUrl) onMatchedServerReady(srvUrl);
-            }).catch(() => {
-              fastStreamUpload(file, { onInit: ({ fileUrl }) => onMatchedServerReady(fileUrl) }).catch(() => {});
-            });
           }
-
-          showToast(`⚡ Video "${charName}" đã sẵn sàng và đồng bộ lên Sân Khấu Chính!`, 'success');
-          return;
-        }
-
-        // ⚡ 1. NẾU LÀ VIDEO MỚI: HIỂN THỊ VÀ PHÁT TỨC THÌ 0MS TRÊN MÀN HÌNH & GIAO DIỆN
-        const newCharId = `custom_${Date.now()}`;
-        const tempChar = {
-          id: newCharId,
-          name: charName,
-          url: localUrl,
-          mediaUrl: localUrl,
-          type: 'video',
-          fileData: file,
-          fileBlob: file,
-          fileSize: file.size,
-          fileSignature: fileSig
         };
 
-        registerFileInRAM(file, newCharId);
-        setActiveMedia(file, newCharId, { name: charName, mediaUrl: localUrl, id: newCharId }).catch(() => {});
-        setActiveMedia(file, 'current_active', { name: charName, mediaUrl: localUrl, id: newCharId }).catch(() => {});
-        if (typeof window !== 'undefined') {
-          window.__activeMediaBlob = file;
-          window.__activeMediaBlobUrl = localUrl;
-          window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
-          window.__activeMediaBlobMap.set(newCharId, file);
-          window.__activeMediaBlobMap.set(localUrl, file);
+        if (targetMediaUrl) {
+          onMatchedServerReady(targetMediaUrl);
+        } else {
+          uploadMediaToServer(file, file.name).then(srvUrl => {
+            if (srvUrl) onMatchedServerReady(srvUrl);
+          }).catch(() => {
+            fastStreamUpload(file, { onInit: ({ fileUrl }) => onMatchedServerReady(fileUrl) }).catch(() => {});
+          });
         }
 
+        if (autoSelect) {
+          showToast(`⚡ Video "${charName}" đã sẵn sàng và phát ngay trên Sân Khấu Chính!`, 'success');
+        }
+        return restoredChar;
+      }
+
+      // ⚡ 1. NẾU LÀ VIDEO MỚI: HIỂN THỊ VÀ PHÁT TỨC THÌ 0MS TRÊN MÀN HÌNH & GIAO DIỆN
+      const newCharId = `custom_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+      const tempChar = {
+        id: newCharId,
+        name: charName,
+        url: localUrl,
+        mediaUrl: localUrl,
+        type: 'video',
+        fileData: file,
+        fileBlob: file,
+        fileSize: file.size,
+        fileSignature: fileSig
+      };
+
+      registerFileInRAM(file, newCharId);
+      setActiveMedia(file, newCharId, { name: charName, mediaUrl: localUrl, id: newCharId }).catch(() => {});
+      if (typeof window !== 'undefined') {
+        window.__activeMediaBlob = file;
+        window.__activeMediaBlobUrl = localUrl;
+        window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+        window.__activeMediaBlobMap.set(newCharId, file);
+        window.__activeMediaBlobMap.set(localUrl, file);
+      }
+
+      try {
+        await saveCharacterToIDB(tempChar);
+      } catch (e) {}
+
+      setCustomCharacters(prev => {
+        const next = [...prev, tempChar];
+        try { localStorage.setItem('avalive_custom_characters', JSON.stringify(next)); } catch (e) {}
+        return next;
+      });
+
+      if (autoSelect) {
+        setActiveMedia(file, 'current_active', { name: charName, mediaUrl: localUrl, id: newCharId }).catch(() => {});
         try {
-          await saveCharacterToIDB(tempChar);
           localStorage.setItem('avalive_selected_char', newCharId);
           localStorage.removeItem('avalive_master_sync_active');
           localStorage.removeItem('avalive_sequencer_overlay');
@@ -4917,11 +4944,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
         setIsMasterStageSynced(false);
         setFlowSequencerOverlay(null);
-        setCustomCharacters(prev => {
-          const next = [...prev, tempChar];
-          try { localStorage.setItem('avalive_custom_characters', JSON.stringify(next)); } catch (e) {}
-          return next;
-        });
         setSelectedCharacter(newCharId);
         setIsVideoPlaying(true);
         lastPlaybackTimeRef.current = 0;
@@ -4958,35 +4980,39 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         } catch (err) {}
 
         showToast(`⚡ Đã phát ngay video "${charName}" trên sân khấu chính!`, 'success');
+      }
 
-        // 🚀 2. TỰ ĐỘNG ĐẨY FILE VÀO THƯ MỤC UPLOADS CỦA SERVER ĐỒNG BỘ OBS & TIKTOK LIVE STUDIO TRONG NỀN
-        const applyServerVideo = (serverUrl) => {
-          if (!serverUrl) return;
-          const updatedChar = {
-            id: newCharId,
-            name: charName,
-            url: localUrl,
-            mediaUrl: serverUrl,
-            type: 'video',
-            fileData: file
-          };
+      // 🚀 2. TỰ ĐỘNG ĐẨY FILE VÀO THƯ MỤC UPLOADS CỦA SERVER ĐỒNG BỘ OBS & TIKTOK LIVE STUDIO TRONG NỀN
+      const applyServerVideo = (serverUrl) => {
+        if (!serverUrl) return;
+        const updatedChar = {
+          id: newCharId,
+          name: charName,
+          url: localUrl,
+          mediaUrl: serverUrl,
+          type: 'video',
+          fileData: file
+        };
+        if (autoSelect) {
           setUserLockedMediaUrl(serverUrl);
           try { localStorage.setItem('avalive_user_locked_media', serverUrl); } catch (e) {}
+        }
 
-          setCustomCharacters(prev => {
-            const updatedList = prev.map(c => c.id === newCharId ? updatedChar : c);
-            try { localStorage.setItem('avalive_custom_characters', JSON.stringify(updatedList)); } catch (e) {}
-            return updatedList;
-          });
+        setCustomCharacters(prev => {
+          const updatedList = prev.map(c => c.id === newCharId ? updatedChar : c);
+          try { localStorage.setItem('avalive_custom_characters', JSON.stringify(updatedList)); } catch (e) {}
+          return updatedList;
+        });
 
-          saveCharacterToIDB({
-            id: newCharId,
-            name: charName,
-            type: 'video',
-            fileData: file,
-            mediaUrl: serverUrl
-          }).catch(() => {});
+        saveCharacterToIDB({
+          id: newCharId,
+          name: charName,
+          type: 'video',
+          fileData: file,
+          mediaUrl: serverUrl
+        }).catch(() => {});
 
+        if (autoSelect) {
           try {
             const bc = new BroadcastChannel('avalive_master_live_stream');
             bc.postMessage({
@@ -5030,42 +5056,61 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               }, socketRef.current);
             }
           } catch (e) {}
-        };
+        }
+      };
 
-        uploadMediaToServer(file, file.name).then(srv => {
-          if (srv) applyServerVideo(srv);
-        }).catch(() => {
-          fastStreamUpload(file, { onInit: ({ fileUrl }) => applyServerVideo(fileUrl) }).catch(() => {});
-        });
-      } else {
-        // 🖼️ ẢNH BÌNH THƯỜNG: NẠP VÀ HIỂN THỊ TỨC THÌ 100% NGUYÊN BẢN
-        const newCharId = `custom_${Date.now()}`;
-        const tempChar = {
-          id: newCharId,
-          name: charName,
-          url: localUrl,
-          mediaUrl: localUrl,
-          type: 'image',
-          fileData: file,
-          fileBlob: file,
-          fileSize: file.size,
-          fileSignature: fileSig
-        };
+      uploadMediaToServer(file, file.name).then(srv => {
+        if (srv) applyServerVideo(srv);
+      }).catch(() => {
+        fastStreamUpload(file, { onInit: ({ fileUrl }) => applyServerVideo(fileUrl) }).catch(() => {});
+      });
 
-        registerFileInRAM(file, newCharId);
-        setActiveMedia(file, newCharId, { name: charName, mediaUrl: localUrl, id: newCharId }).catch(() => {});
+      return tempChar;
+    } else {
+      // 🖼️ ẢNH BÌNH THƯỜNG: NẠP VÀ HIỂN THỊ TỨC THÌ 100% NGUYÊN BẢN
+      const newCharId = `custom_${Date.now()}_${Math.random().toString(36).substring(2, 6)}`;
+      const tempChar = {
+        id: newCharId,
+        name: charName,
+        url: localUrl,
+        mediaUrl: localUrl,
+        type: 'image',
+        fileData: file,
+        fileBlob: file,
+        fileSize: file.size,
+        fileSignature: fileSig
+      };
+
+      registerFileInRAM(file, newCharId);
+      setActiveMedia(file, newCharId, { name: charName, mediaUrl: localUrl, id: newCharId }).catch(() => {});
+      if (typeof window !== 'undefined') {
+        window.__activeMediaBlob = file;
+        window.__activeMediaBlobUrl = localUrl;
+        window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+        window.__activeMediaBlobMap.set(newCharId, file);
+        window.__activeMediaBlobMap.set(localUrl, file);
+      }
+
+      try {
+        await saveCharacterToIDB(tempChar);
+      } catch (e) {}
+
+      setCustomCharacters(prev => {
+        const next = [...prev, tempChar];
+        try { localStorage.setItem('avalive_custom_characters', JSON.stringify(next)); } catch (e) {}
+        return next;
+      });
+
+      if (autoSelect) {
         setActiveMedia(file, 'current_active', { name: charName, mediaUrl: localUrl, id: newCharId }).catch(() => {});
-
         try {
-          await saveCharacterToIDB(tempChar);
           localStorage.setItem('avalive_selected_char', newCharId);
+          localStorage.removeItem('avalive_master_sync_active');
+          localStorage.removeItem('avalive_sequencer_overlay');
         } catch (e) {}
 
-        setCustomCharacters(prev => {
-          const next = [...prev, tempChar];
-          try { localStorage.setItem('avalive_custom_characters', JSON.stringify(next)); } catch (e) {}
-          return next;
-        });
+        setIsMasterStageSynced(false);
+        setFlowSequencerOverlay(null);
         setSelectedCharacter(newCharId);
         showToast(`🖼️ Đã nạp ảnh "${charName}" nguyên bản lên sân khấu chính!`, 'success');
 
@@ -5104,31 +5149,48 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             }, socketRef.current);
           }
         } catch (e) {}
-
-        fastStreamUpload(file, {
-          onInit: ({ fileUrl }) => {
-            const updatedChar = { ...tempChar, url: localUrl, mediaUrl: fileUrl };
-            setCustomCharacters(prev => {
-              const updatedList = prev.map(c => c.id === newCharId ? updatedChar : c);
-              try { localStorage.setItem('avalive_custom_characters', JSON.stringify(updatedList)); } catch (e) {}
-              return updatedList;
-            });
-            if (socketRef && socketRef.current) {
-              syncMasterLiveState({
-                stage: 'idol',
-                mediaUrl: fileUrl,
-                selectedCharacter: newCharId,
-                characterName: charName,
-                isVideo: false,
-                isPlaying: true,
-                clearMedia: false,
-                aspectRatio: globalAspectRatio || '9:16',
-                updatedAt: Date.now()
-              }, socketRef.current);
-            }
-          }
-        }).catch(() => {});
       }
+
+      fastStreamUpload(file, {
+        onInit: ({ fileUrl }) => {
+          const updatedChar = { ...tempChar, url: localUrl, mediaUrl: fileUrl };
+          setCustomCharacters(prev => {
+            const updatedList = prev.map(c => c.id === newCharId ? updatedChar : c);
+            try { localStorage.setItem('avalive_custom_characters', JSON.stringify(updatedList)); } catch (e) {}
+            return updatedList;
+          });
+          if (autoSelect && socketRef && socketRef.current) {
+            syncMasterLiveState({
+              stage: 'idol',
+              mediaUrl: fileUrl,
+              selectedCharacter: newCharId,
+              characterName: charName,
+              isVideo: false,
+              isPlaying: true,
+              clearMedia: false,
+              aspectRatio: globalAspectRatio || '9:16',
+              updatedAt: Date.now()
+            }, socketRef.current);
+          }
+        }
+      }).catch(() => {});
+
+      return tempChar;
+    }
+  };
+
+  const processBatchFiles = async (files) => {
+    if (!files || files.length === 0) return;
+    const fileList = Array.from(files);
+    for (let i = 0; i < fileList.length; i++) {
+      await processSingleFile(fileList[i], { autoSelect: i === 0 });
+    }
+  };
+
+  const handleFileUpload = async (e) => {
+    const files = e.target.files;
+    if (files && files.length > 0) {
+      await processBatchFiles(files);
     }
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
@@ -6380,7 +6442,33 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             className={`w-full h-full flex items-center justify-center p-2 sm:p-3 overflow-hidden ${isDarkMode ? 'bg-[#05070c]' : 'bg-slate-200'}`}
           >
             <div 
+              onDragOver={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                if (!isDraggingOverStage) setIsDraggingOverStage(true);
+              }}
+              onDragEnter={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDraggingOverStage(true);
+              }}
+              onDragLeave={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDraggingOverStage(false);
+              }}
+              onDrop={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                setIsDraggingOverStage(false);
+                const files = e.dataTransfer?.files;
+                if (files && files.length > 0) {
+                  processBatchFiles(files);
+                }
+              }}
               className={`relative flex flex-col overflow-hidden transition-all duration-300 ${
+                isDraggingOverStage ? 'ring-4 ring-cyan-400 ring-offset-2 ring-offset-black scale-[1.01]' : ''
+              } ${
                 globalAspectRatio === '9:16'
                   ? 'h-full max-h-full aspect-[9/16] w-auto max-w-full mx-auto rounded-2xl md:rounded-3xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-black'
                   : 'w-full max-w-[1200px] h-auto max-h-full aspect-[16/9] rounded-2xl border border-white/10 shadow-[0_0_50px_rgba(0,0,0,0.85)] bg-black'
@@ -6388,6 +6476,17 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             >
               <SvgChromaFilters />
               {renderAiIdolLiveStage()}
+
+              {/* OVERLAY KHI KÉO THẢ TẬP TIN VÀO SÂN KHẤU */}
+              {isDraggingOverStage && (
+                <div className="absolute inset-0 z-50 bg-cyan-950/85 backdrop-blur-sm flex flex-col items-center justify-center text-center p-6 border-2 border-dashed border-cyan-400 rounded-2xl pointer-events-none">
+                  <div className="w-16 h-16 rounded-full bg-cyan-500/20 border border-cyan-400 flex items-center justify-center text-cyan-300 text-3xl mb-3 shadow-[0_0_30px_rgba(6,182,212,0.6)] animate-bounce">
+                    📥
+                  </div>
+                  <h3 className="text-white font-black text-lg tracking-wide uppercase">THẢ VIDEO / ẢNH VÀO ĐÂY</h3>
+                  <p className="text-cyan-200 text-xs mt-1 max-w-xs font-semibold">Tập tin sẽ được nạp và phát ngay lập tức trên Sân Khấu Chính!</p>
+                </div>
+              )}
 
               {/* LỚP 1.5: VIDEO PHỤ PIP (PICTURE-IN-PICTURE) XẾP CHỒNG TỪ SEQUENCER (ẢNH 4) */}
               {flowSequencerOverlay?.secondaryMediaUrl && (() => {
@@ -7196,15 +7295,43 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         {/* Middle: Controls */}
         <div className="flex items-center justify-center gap-2 shrink-0">
           
-          {/* 3 Ô NHÂN VẬT / VIDEO TẢI LÊN (CỐ ĐỊNH 3 Ô THEO YÊU CẦU) */}
-          <div className="flex items-center gap-1.5 border-r border-gray-500/30 pr-2">
+          {/* 3 Ô NHÂN VẬT / VIDEO TẢI LÊN (HỖ TRỢ 1-CLICK & KÉO THẢ DRAG & DROP) */}
+          <div 
+            onDragOver={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              if (!isDraggingOverSlots) setIsDraggingOverSlots(true);
+            }}
+            onDragEnter={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsDraggingOverSlots(true);
+            }}
+            onDragLeave={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsDraggingOverSlots(false);
+            }}
+            onDrop={(e) => {
+              e.preventDefault();
+              e.stopPropagation();
+              setIsDraggingOverSlots(false);
+              const files = e.dataTransfer?.files;
+              if (files && files.length > 0) {
+                processBatchFiles(files);
+              }
+            }}
+            className={`flex items-center gap-1.5 border-r border-gray-500/30 pr-2 transition-all rounded-lg p-0.5 ${
+              isDraggingOverSlots ? 'bg-cyan-500/20 ring-2 ring-cyan-400' : ''
+            }`}
+          >
             <span className="text-xs font-medium text-gray-400">{t('characters', currentLang)}</span>
             <div className="flex items-center gap-1.5 py-0.5">
               {/* Ô Nhân Vật (Linh hoạt số lượng 3, 5, 10...) */}
               {Array.from({ length: Math.max(3, (customCharacters || []).length + 1) }).map((_, index) => {
                 const charItem = (customCharacters && customCharacters[index]) ? customCharacters[index] : null;
 
-                // Nếu ô trống, hiển thị nút bấm để tải lên
+                // Nếu ô trống, hiển thị nút bấm để tải lên hoặc thả file trực tiếp vào ô
                 if (!charItem) {
                   return (
                     <button
@@ -7215,8 +7342,20 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                           fileInputRef.current.click();
                         }
                       }}
+                      onDragOver={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                      }}
+                      onDrop={(e) => {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        const files = e.dataTransfer?.files;
+                        if (files && files.length > 0) {
+                          processBatchFiles(files);
+                        }
+                      }}
                       className="w-10 h-10 rounded-lg border-2 border-dashed border-gray-600 hover:border-cyan-400 hover:bg-cyan-500/10 flex flex-col items-center justify-center text-gray-400 hover:text-cyan-300 transition-all duration-200 cursor-pointer shrink-0 group"
-                      title={`Ô ${index + 1} (Trống) — Bấm để tải video/ảnh nhân vật lên`}
+                      title={`Ô ${index + 1} (Trống) — Bấm hoặc kéo thả video/ảnh nhân vật vào đây`}
                     >
                       <Plus size={16} className="group-hover:scale-125 transition-transform" />
                     </button>
@@ -7228,6 +7367,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 return (
                   <div
                     key={charItem.id || index}
+                    onDragOver={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                    }}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      e.stopPropagation();
+                      const files = e.dataTransfer?.files;
+                      if (files && files.length > 0) {
+                        processBatchFiles(files);
+                      }
+                    }}
                     onClick={() => {
                       // 🔓 Tắt đồng bộ từ sequencer để hiển thị nhân vật độc lập tức thì trên sân khấu chính
                       setIsMasterStageSynced(false);
@@ -7236,6 +7387,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       try {
                         localStorage.removeItem('avalive_master_sync_active');
                         localStorage.removeItem('avalive_sequencer_overlay');
+                        localStorage.setItem('avalive_user_paused', 'false');
                       } catch (e) {}
 
                       let serverUrl = (charItem.mediaUrl && !charItem.mediaUrl.startsWith('blob:')) 
@@ -7271,6 +7423,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                         localStorage.setItem('avalive_selected_char', charItem.id); 
                         localStorage.removeItem('avalive_master_sync_active');
                         localStorage.removeItem('avalive_sequencer_overlay');
+                        localStorage.setItem('avalive_user_paused', 'false');
                       } catch (e) {}
                       setIsGameBattleActive(false);
                       setIsGameBanDoActive(false);
@@ -7321,151 +7474,77 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                           try { window.speechSynthesis.cancel(); } catch (e) {}
                         }
 
-                        const isMasterLiveCurrentlyRunning = isMasterLiveRunningRef.current || isMasterLiveRunning || (typeof localStorage !== 'undefined' && localStorage.getItem('avalive_master_live_running') === 'true');
-
-                        if (!isMasterLiveCurrentlyRunning) {
-                          // 🛑 TRẠNG THÁI TẮT: Sân khấu chính giữ nguyên trạng thái Tắt, KHÔNG tự động phát video hay kích hoạt lại
-                          if (desktopVideoRef.current) {
-                            desktopVideoRef.current.src = cleanUrl;
-                            desktopVideoRef.current.currentTime = 0;
-                            desktopVideoRef.current.dataset.userPaused = 'true';
-                            try { desktopVideoRef.current.pause(); } catch(e) {}
-                          }
-                          setIsVideoPlaying(false);
-
-                          try {
-                            const bc = new BroadcastChannel('avalive_master_live_stream');
-                            bc.postMessage({
-                              type: 'GLOBAL_MEDIA_CHANGE',
-                              mediaUrl: broadcastUrl || cleanUrl,
-                              characterId: charItem.id,
-                              characterName: charItem.name || 'AI Idol',
-                              isVideo: isVid,
-                              isPlaying: false,
-                              currentTime: 0,
-                              force: true,
-                              source: 'desktop',
-                              timestamp: Date.now()
-                            });
-                            bc.postMessage({
-                              type: 'GLOBAL_PLAYBACK_CHANGE',
-                              isPlaying: false,
-                              currentTime: 0,
-                              force: true,
-                              source: 'desktop',
-                              timestamp: Date.now()
-                            });
-                            setTimeout(() => bc.close(), 100);
-                          } catch (e) {}
-
-                          sendVideoControl({
-                            action: 'pause',
-                            currentTime: 0,
-                            force: true,
-                            isPlaying: false,
-                            mediaUrl: broadcastUrl,
-                            timestamp: Date.now()
-                          }, socketRef.current);
-
-                          syncMasterLiveState({
-                            stage: 'idol',
-                            selectedCharacter: charItem.id,
-                            characterName: charItem.name || 'AI Idol',
-                            mediaUrl: broadcastUrl || cleanUrl || undefined,
-                            clearMedia: false,
-                            isVideo: isVid,
-                            videoPlaybackEvent: 'pause',
-                            videoCurrentTime: 0,
-                            isPlaying: false,
-                            aspectRatio: globalAspectRatio || '9:16',
-                            secondaryMediaUrl: flowSequencerOverlay?.secondaryMediaUrl || null,
-                            secondaryMediaTransform: flowSequencerOverlay?.secondaryMediaTransform || null,
-                            secondaryMediaChromaKey: flowSequencerOverlay?.secondaryMediaChromaKey || null,
-                            overlayImage: flowSequencerOverlay?.overlayImage || null,
-                            overlayImageTransform: flowSequencerOverlay?.overlayImageTransform || null,
-                            overlayImageChromaKey: flowSequencerOverlay?.overlayImageChromaKey || null,
-                            overlayText: flowSequencerOverlay?.overlayText || null,
-                            overlayTextTransform: flowSequencerOverlay?.overlayTextTransform || null,
-                            overlayTextColor: flowSequencerOverlay?.overlayTextColor || null,
-                            overlayTextFontSize: flowSequencerOverlay?.overlayTextFontSize || null,
-                            extraImageLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers || flowSequencerOverlay.extraImageLayers)) || (multiAvatarConfig?.extraImageLayers) || [],
-                            multiAvatarExtraLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers || flowSequencerOverlay.extraImageLayers)) || (multiAvatarConfig?.extraImageLayers) || [],
-                            multiAvatarConfig: multiAvatarConfig || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig() : null) || null,
-                            syncedAvatars: (flowSequencerOverlay?.syncedAvatars) || (multiAvatarConfig?.avatars) || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.avatars : null) || []
-                          }, socketRef.current);
-                          showToast(`👤 Đã chọn nhân vật "${charItem.name || 'Nhân Vật'}" (Đang giữ trạng thái Tắt Sân Khấu)`, 'info');
-                        } else {
-                          // ▶️ TRẠNG THÁI BẬT: Sân khấu chính đang live, cho phép phát mượt mà
-                          if (desktopVideoRef.current) {
-                            desktopVideoRef.current.src = cleanUrl;
-                            desktopVideoRef.current.currentTime = 0;
-                            desktopVideoRef.current.dataset.userPaused = 'false';
-                            desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
-                          }
-                          setIsVideoPlaying(true);
-
-                          try {
-                            const bc = new BroadcastChannel('avalive_master_live_stream');
-                            bc.postMessage({
-                              type: 'GLOBAL_MEDIA_CHANGE',
-                              mediaUrl: broadcastUrl || cleanUrl,
-                              characterId: charItem.id,
-                              characterName: charItem.name || 'AI Idol',
-                              isVideo: isVid,
-                              isPlaying: true,
-                              currentTime: 0,
-                              force: true,
-                              source: 'desktop',
-                              timestamp: Date.now()
-                            });
-                            bc.postMessage({
-                              type: 'GLOBAL_PLAYBACK_CHANGE',
-                              isPlaying: true,
-                              currentTime: 0,
-                              force: true,
-                              source: 'desktop',
-                              timestamp: Date.now()
-                            });
-                            setTimeout(() => bc.close(), 100);
-                          } catch (e) {}
-
-                          sendVideoControl({
-                            action: 'play',
-                            currentTime: 0,
-                            force: true,
-                            isPlaying: true,
-                            mediaUrl: broadcastUrl,
-                            timestamp: Date.now()
-                          }, socketRef.current);
-
-                          syncMasterLiveState({
-                            stage: 'idol',
-                            selectedCharacter: charItem.id,
-                            characterName: charItem.name || 'AI Idol',
-                            mediaUrl: broadcastUrl || cleanUrl || undefined,
-                            clearMedia: false,
-                            isVideo: isVid,
-                            videoPlaybackEvent: 'play',
-                            videoCurrentTime: 0,
-                            isPlaying: true,
-                            aspectRatio: globalAspectRatio || '9:16',
-                            secondaryMediaUrl: flowSequencerOverlay?.secondaryMediaUrl || null,
-                            secondaryMediaTransform: flowSequencerOverlay?.secondaryMediaTransform || null,
-                            secondaryMediaChromaKey: flowSequencerOverlay?.secondaryMediaChromaKey || null,
-                            overlayImage: flowSequencerOverlay?.overlayImage || null,
-                            overlayImageTransform: flowSequencerOverlay?.overlayImageTransform || null,
-                            overlayImageChromaKey: flowSequencerOverlay?.overlayImageChromaKey || null,
-                            overlayText: flowSequencerOverlay?.overlayText || null,
-                            overlayTextTransform: flowSequencerOverlay?.overlayTextTransform || null,
-                            overlayTextColor: flowSequencerOverlay?.overlayTextColor || null,
-                            overlayTextFontSize: flowSequencerOverlay?.overlayTextFontSize || null,
-                            extraImageLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers || flowSequencerOverlay.extraImageLayers)) || (multiAvatarConfig?.extraImageLayers) || [],
-                            multiAvatarExtraLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers || flowSequencerOverlay.extraImageLayers)) || (multiAvatarConfig?.extraImageLayers) || [],
-                            multiAvatarConfig: multiAvatarConfig || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig() : null) || null,
-                            syncedAvatars: (flowSequencerOverlay?.syncedAvatars) || (multiAvatarConfig?.avatars) || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.avatars : null) || []
-                          }, socketRef.current);
-                          showToast(`🎬 Đã phát video "${charItem.name || 'Nhân Vật'}" đồng bộ lên TikTok Live Studio!`, 'success');
+                        // ⚡ BẤM PHÁT LÀ LÊN LIỀN TỨC THÌ 0MS TRÊN SÂN KHẤU CHÍNH
+                        if (desktopVideoRef.current) {
+                          desktopVideoRef.current.src = cleanUrl;
+                          desktopVideoRef.current.currentTime = 0;
+                          desktopVideoRef.current.dataset.userPaused = 'false';
+                          desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
                         }
+                        setIsVideoPlaying(true);
+
+                        try {
+                          const bc = new BroadcastChannel('avalive_master_live_stream');
+                          bc.postMessage({
+                            type: 'GLOBAL_MEDIA_CHANGE',
+                            mediaUrl: broadcastUrl || cleanUrl,
+                            characterId: charItem.id,
+                            characterName: charItem.name || 'AI Idol',
+                            isVideo: isVid,
+                            isPlaying: true,
+                            currentTime: 0,
+                            force: true,
+                            source: 'desktop',
+                            timestamp: Date.now()
+                          });
+                          bc.postMessage({
+                            type: 'GLOBAL_PLAYBACK_CHANGE',
+                            isPlaying: true,
+                            currentTime: 0,
+                            force: true,
+                            source: 'desktop',
+                            timestamp: Date.now()
+                          });
+                          setTimeout(() => bc.close(), 100);
+                        } catch (e) {}
+
+                        sendVideoControl({
+                          action: 'play',
+                          currentTime: 0,
+                          force: true,
+                          isPlaying: true,
+                          mediaUrl: broadcastUrl || cleanUrl,
+                          timestamp: Date.now()
+                        }, socketRef.current);
+
+                        syncMasterLiveState({
+                          stage: 'idol',
+                          selectedCharacter: charItem.id,
+                          characterName: charItem.name || 'AI Idol',
+                          mediaUrl: broadcastUrl || cleanUrl || undefined,
+                          clearMedia: false,
+                          isVideo: isVid,
+                          videoPlaybackEvent: 'play',
+                          videoCurrentTime: 0,
+                          isPlaying: true,
+                          aspectRatio: globalAspectRatio || '9:16',
+                          secondaryMediaUrl: flowSequencerOverlay?.secondaryMediaUrl || null,
+                          secondaryMediaTransform: flowSequencerOverlay?.secondaryMediaTransform || null,
+                          secondaryMediaChromaKey: flowSequencerOverlay?.secondaryMediaChromaKey || null,
+                          overlayImage: flowSequencerOverlay?.overlayImage || null,
+                          overlayImageTransform: flowSequencerOverlay?.overlayImageTransform || null,
+                          overlayImageChromaKey: flowSequencerOverlay?.overlayImageChromaKey || null,
+                          overlayText: flowSequencerOverlay?.overlayText || null,
+                          overlayTextTransform: flowSequencerOverlay?.overlayTextTransform || null,
+                          overlayTextColor: flowSequencerOverlay?.overlayTextColor || null,
+                          overlayTextFontSize: flowSequencerOverlay?.overlayTextFontSize || null,
+                          extraImageLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers || flowSequencerOverlay.extraImageLayers)) || (multiAvatarConfig?.extraImageLayers) || [],
+                          multiAvatarExtraLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers || flowSequencerOverlay.extraImageLayers)) || (multiAvatarConfig?.extraImageLayers) || [],
+                          multiAvatarConfig: multiAvatarConfig || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig() : null) || null,
+                          syncedAvatars: (flowSequencerOverlay?.syncedAvatars) || (multiAvatarConfig?.avatars) || (typeof getMultiAvatarConfig === 'function' ? getMultiAvatarConfig()?.avatars : null) || []
+                        }, socketRef.current);
+
+                        showToast(`🎬 Đã phát video "${charItem.name || 'Nhân Vật'}" lên Sân Khấu Chính!`, 'success');
                       }
                     }}
                     className={`w-10 h-10 rounded-lg overflow-hidden cursor-pointer flex-shrink-0 relative group transition-all ${
@@ -7473,7 +7552,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                         ? 'border-2 border-cyan-400 shadow-md shadow-cyan-500/60 ring-2 ring-cyan-400/50 scale-105' 
                         : 'border border-gray-600 opacity-70 hover:opacity-100 hover:border-gray-400'
                     }`}
-                    title={`Ô ${index + 1}: ${charItem.name || 'Video Nhân Vật'}${isSelected ? ' (Đang phát Live)' : ''}`}
+                    title={`Ô ${index + 1}: ${charItem.name || 'Video Nhân Vật'}${isSelected ? ' (Đang phát Live)' : ''} — Bấm hoặc thả file để cập nhật`}
                   >
                     {isSelected && (
                       <div className="absolute top-0.5 left-0.5 px-1 py-0.2 bg-cyan-500 text-[7px] font-extrabold text-black rounded z-20 shadow-sm leading-tight uppercase">
@@ -7540,8 +7619,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               <input 
                 type="file" 
                 ref={fileInputRef} 
+                multiple
                 style={{ display: 'none' }} 
-                accept="video/*,image/*,.mp4,.webm,.mov,.mkv,.avi,.m4v,.flv,.wmv,.ts,.3gp,.m2ts,.mts" 
+                accept="video/*,image/*,.mp4,.webm,.mov,.mkv,.avi,.m4v,.flv,.wmv,.ts,.3gp,.m2ts,.mts,.png,.jpg,.jpeg,.webp,.gif,.svg,.bmp" 
                 onChange={handleFileUpload} 
               />
             </div>

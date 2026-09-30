@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.6';
+export const APP_VERSION = '5.4.7';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.7 - Xử Lý Triệt Để Ô Tải Video, Hình Ảnh Nhân Vật 1-Click Lên Sân Khấu Chính & Kéo Thả Drag-and-Drop Siêu Mượt Trên Windows và Mac',
+    description: '1. Nạp và Phát Ngay Lập Tức Trong 0ms (1-Click Instant Load & Play): Bấm chọn hoặc tải video/ảnh nhân vật là phát ngay tức thì lên Sân Khấu Chính, không bao giờ bị đứng hình hay chập chờn. 2. Hỗ Trợ Kéo Thả Drag & Drop Đa Nền Tảng (Windows & Mac): Kéo thả trực tiếp một hoặc nhiều file video/ảnh vào khung Sân Khấu Chính hoặc các ô nhân vật bên dưới với hiệu ứng viền neon phản hồi trực quan. 3. Tương Thích Định Dạng Đa Dạng (MP4, MKV, MOV, WebM, PNG, JPG, WebP...): Nhận diện định dạng thông minh kể cả khi hệ thống Windows trả về MIME type rỗng. 4. Lưu Trữ Bền Vững (Preserved Storage): Dữ liệu video và nhân vật được lưu trữ an toàn trong RAM & IndexedDB, giữ nguyên trạng thái cho đến khi người dùng chủ động xóa. 5. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.6 - Tách Nền AI TikTok Siêu Mịn 60 FPS, Khung Camera 100% Trống Trơn Không Viền & Bảng Điều Khiển Suite Độc Lập',
     description: '1. Khung Camera 100% Trống Trơn Thuần Khiết: Loại bỏ hoàn toàn toàn bộ các nút bấm và mắt kéo trên khung camera; toàn bộ quyền điều khiển chuyển sang Bảng Điều Khiển Suite riêng biệt. 2. Tách Nền AI TikTok Siêu Sạch Siêu Mịn 60 FPS: Nâng cấp MediaPipe Landscape AI kết hợp thuật toán làm mịn viền Hermite Smoothstep và loại bỏ triệt để các khối vuông cắt lẹm, bám sát cử động xoay người, vung tay của streamer theo thời gian thực. 3. Bảng Điều Khiển Camera Suite Tách Rời Trực Quan: Đầy đủ 6 Tab chuyên sâu (Xóa Nền, Cọ Thẳng/Vuông, Cắt Góc, D-Pad 8 Hướng, Đa Góc 3D, Mã QR Điện Thoại) hoạt động real-time mượt mà 100%.'
