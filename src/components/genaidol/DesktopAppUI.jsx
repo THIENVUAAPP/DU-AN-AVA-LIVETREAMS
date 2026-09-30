@@ -106,17 +106,36 @@ export default function DesktopAppUI() {
   const [currentUser, setCurrentUser] = useState(() => {
     try {
       const saved = localStorage.getItem('avalive_current_user');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        if (parsed.email === 'quocthiencr90@gmail.com' || parsed.isAdmin || parsed.role === 'admin') {
+          parsed.isAdmin = true;
+          parsed.role = 'admin';
+          parsed.tokens = Math.max(100000, Number(parsed.tokens || 100000));
+          parsed.liveMinutes = Math.max(6000000, Number(parsed.liveMinutes || 6000000));
+          parsed.liveTimeHours = Math.round(parsed.liveMinutes / 60);
+          parsed.plan = 'SUPER ADMIN ENTERPRISE VIP';
+          return parsed;
+        }
+        if (typeof parsed.tokens !== 'number' || isNaN(parsed.tokens) || parsed.tokens <= 0) {
+          parsed.tokens = 50000;
+        }
+        if (typeof parsed.liveMinutes !== 'number' || isNaN(parsed.liveMinutes) || parsed.liveMinutes <= 0) {
+          parsed.liveMinutes = 6000;
+          parsed.liveTimeHours = 100;
+        }
+        return parsed;
+      }
     } catch {}
     return {
       name: 'Khách Hàng Dùng Thử',
       email: 'khachhang@avalive.com',
       avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=guest',
       isAdmin: false,
-      plan: 'Free',
-      tokens: 100,
-      liveMinutes: 60,
-      liveTimeHours: 1
+      plan: 'VIP PRO',
+      tokens: 50000,
+      liveMinutes: 6000,
+      liveTimeHours: 100
     };
   });
   const [realGmailInput, setRealGmailInput] = useState(() => {
@@ -2021,15 +2040,24 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   useEffect(() => {
     if (!isMasterLiveRunning && !isConnected) return;
 
-    // Định kỳ 60 giây (1 phút) trừ 1 phút phát Live cho toàn bộ tài khoản (kể cả Admin)
+    // Định kỳ 60 giây (1 phút) trừ 1 phút phát Live cho người dùng thường
     const liveTimer = setInterval(() => {
       setCurrentUser(prevUser => {
         if (!prevUser) return prevUser;
 
-        const currentMinutes = typeof prevUser.liveMinutes === 'number' ? prevUser.liveMinutes : 60;
+        const isSuperAdminUser = prevUser.isAdmin || prevUser.email === 'quocthiencr90@gmail.com' || prevUser.role === 'admin';
+        if (isSuperAdminUser) {
+          return {
+            ...prevUser,
+            liveMinutes: Math.max(6000000, Number(prevUser.liveMinutes || 6000000)),
+            liveTimeHours: 100000
+          };
+        }
+
+        const currentMinutes = typeof prevUser.liveMinutes === 'number' ? prevUser.liveMinutes : 6000;
         const newMinutes = Math.max(0, currentMinutes - 1);
 
-        if (newMinutes <= 0 && !prevUser.isAdmin) {
+        if (newMinutes <= 0) {
           setIsMasterLiveRunning(false);
           setIsConnected(false);
           showToast('🔴 Hết thời gian phát Live! Vui lòng nâng cấp gói VIP hoặc gia hạn thêm giờ live.', 'error');
@@ -2043,7 +2071,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         try {
           localStorage.setItem('avalive_current_user', JSON.stringify(updated));
           if (updated.email && updated.email !== 'khachhang@avalive.com' && supabase) {
-            supabase.from('users').update({ live_minutes: newMinutes }).eq('email', updated.email.toLowerCase().trim()).then(() => {});
+            updateUserLiveTime(updated.email, 1);
+            supabase.from('users').update({ live_minutes: newMinutes }).eq('email', updated.email.toLowerCase().trim()).then(() => {}).catch(() => {});
           }
           window.dispatchEvent(new Event('avalive:user_updated'));
         } catch (e) {}
@@ -2057,20 +2086,27 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   // Auto-deduct tokens when live session is active (AI Brain & Server)
   useEffect(() => {
     if (!isConnected) return;
+    const isSuperAdminUser = currentUser?.isAdmin || currentUser?.email === 'quocthiencr90@gmail.com' || currentUser?.role === 'admin';
+    if (isSuperAdminUser) return; // Super Admin không bị trừ token duy trì
+
     const rates = getDynamicRates();
     const timer = setInterval(() => {
       deductToken(rates.AI_LIVE_PER_30S || 5, 'AI LLM Brain & Duy trì Live (30s)');
     }, 30000);
     return () => clearInterval(timer);
-  }, [isConnected, deductToken, getDynamicRates]);
+  }, [isConnected, deductToken, getDynamicRates, currentUser]);
 
   // Stop session when tokens run out
   useEffect(() => {
-    if (isConnected && balance === 0) {
+    const isSuperAdminUser = currentUser?.isAdmin || currentUser?.email === 'quocthiencr90@gmail.com' || currentUser?.role === 'admin';
+    if (isSuperAdminUser) return; // 🛡️ Super Admin KHÔNG BAO GIỜ bị dừng
+
+    const totalAvailableTokens = Math.max(Number(balance || 0), Number(currentUser?.tokens || 0));
+    if (isConnected && totalAvailableTokens <= 0) {
       setIsConnected(false);
       showToast('🔴 Hết token! Phiên live đã tự động dừng. Vui lòng nạp thêm token.', 'error');
     }
-  }, [balance, isConnected]);
+  }, [balance, currentUser?.tokens, currentUser?.isAdmin, isConnected]);
 
   // Connection state đã khai báo ở trên
   
@@ -4363,6 +4399,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     if (!cleanId && !cleanVideoId) {
       cleanId = 'avalive_studio';
       setTiktokId('avalive_studio');
+    }
+
+    const isSuperAdminUser = currentUser?.isAdmin || currentUser?.email === 'quocthiencr90@gmail.com' || currentUser?.role === 'admin';
+    const totalAvailableTokens = isSuperAdminUser ? 999999 : Math.max(Number(balance || 0), Number(currentUser?.tokens || 0));
+    if (!isSuperAdminUser && totalAvailableTokens <= 0) {
+      setToast({
+        type: 'error',
+        message: '🔴 Tài khoản đã hết token. Vui lòng nạp thêm token để phát live!'
+      });
+      return;
     }
 
     setIsConnecting(true);

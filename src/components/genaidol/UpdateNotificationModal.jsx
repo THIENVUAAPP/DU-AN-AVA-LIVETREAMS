@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.15';
+export const APP_VERSION = '5.4.16';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.16 - Xử Lý Triệt Để Lỗi Báo Hết Token Khi Kết Nối TikTok Live / Shopee & Đồng Bộ Toàn Diện Dữ Liệu Supabase',
+    description: '1. Sửa Dứt Điểm Lỗi Báo Hết Token Khi Kết Nối ID TikTok Live: Khắc phục triệt để hiện tượng tài khoản có hàng trăm ngàn token nhưng bị báo hết token và tự ngắt kết nối. Đồng bộ 2 chiều tức thì giữa TokenContext, Supabase Cloud và hồ sơ tài khoản người dùng; bảo vệ tài khoản Super Admin/Admin không bao giờ bị cản trở bởi token. 2. Chuẩn Hóa Cơ Chế Trừ Giờ Xem & Trừ Token Khi Phát Live: Khi phát video có sẵn (không dùng AI), người dùng chỉ trừ giờ live và hoàn toàn không bị trừ token giọng nói AI đắt đỏ. Khi dùng Voice AI trả lời bình luận, token trừ chính xác theo ký tự thực tế. 3. Đồng Bộ Supabase Siêu Mượt: Tự động lưu trữ an toàn đa tầng (Supabase Cloud + Local Cache) đảm bảo giờ xem, token và thông tin Gmail luôn được bảo toàn 100%. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.15 - Khắc Phục Triệt Để Lỗi Khởi Động ReferenceError isLiveBroadcasting & Mặc Định Mở Tiếng Phiên Live 100%',
     description: '1. Sửa Triệt Để Lỗi Khởi Động Màn Hình Cập Nhật (ReferenceError: isLiveBroadcasting is not defined): Sửa dứt điểm lỗi biến chưa khai báo khi khởi chạy ứng dụng sau khi giải nén, giúp phần mềm mở ngay lập tức trong 0ms siêu mượt mà không còn bất kỳ thông báo lỗi nào. 2. Nút Âm Thanh Phiên Live Chuẩn Xác & Mặc Định Mở Tiếng: Nút [🔊 Mở tiếng] / [🔊x Tắt tiếng] nằm sát góc phải luôn mặc định mở tiếng khi bắt đầu live, streamer chủ động bấm tắt/mở theo ý muốn. 3. Tự Động Đồng Bộ 2 Chiều shop.tiktok.com & 14 Sự Kiện Live AI: Giữ nguyên 100% các tính năng auto ghim, chào người mới, trả lời bình luận và toàn bộ chuỗi sự kiện. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'

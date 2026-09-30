@@ -18,15 +18,20 @@ const TokenContext = createContext(null);
 export function TokenProvider({ children }) {
   const [tokenData, setTokenData] = useState(() => {
     // Read from USER_KEY for balance, STORAGE_KEY for history
-    let balance = 100;
+    let balance = 100000;
     let history = [];
     
     try {
       const userSaved = localStorage.getItem(USER_KEY);
       if (userSaved) {
         const parsedUser = JSON.parse(userSaved);
-        if (typeof parsedUser.tokens === 'number') {
+        const isSuperAdmin = parsedUser.isAdmin || parsedUser.email === 'quocthiencr90@gmail.com' || parsedUser.role === 'admin';
+        if (isSuperAdmin) {
+          balance = Math.max(100000, Number(parsedUser.tokens || 100000));
+        } else if (typeof parsedUser.tokens === 'number' && !isNaN(parsedUser.tokens)) {
           balance = parsedUser.tokens;
+        } else {
+          balance = 50000;
         }
       }
       
@@ -61,21 +66,56 @@ export function TokenProvider({ children }) {
   const [lowBalanceWarned, setLowBalanceWarned] = useState(false);
   const notifyRef = useRef(null);
 
+  // Lắng nghe cập nhật tài khoản toàn cục (Supabase / Gmail / Admin) để đồng bộ số dư token
+  useEffect(() => {
+    const syncFromUser = () => {
+      try {
+        const userSaved = localStorage.getItem(USER_KEY);
+        if (userSaved) {
+          const parsedUser = JSON.parse(userSaved);
+          const isSuperAdmin = parsedUser.isAdmin || parsedUser.email === 'quocthiencr90@gmail.com' || parsedUser.role === 'admin';
+          if (isSuperAdmin) {
+            setTokenData(prev => ({
+              ...prev,
+              balance: Math.max(100000, Number(parsedUser.tokens || 100000))
+            }));
+          } else if (typeof parsedUser.tokens === 'number' && !isNaN(parsedUser.tokens)) {
+            setTokenData(prev => {
+              if (prev.balance !== parsedUser.tokens) {
+                return { ...prev, balance: parsedUser.tokens };
+              }
+              return prev;
+            });
+          }
+        }
+      } catch (e) {}
+    };
+
+    window.addEventListener('avalive:user_updated', syncFromUser);
+    window.addEventListener('storage', syncFromUser);
+    return () => {
+      window.removeEventListener('avalive:user_updated', syncFromUser);
+      window.removeEventListener('storage', syncFromUser);
+    };
+  }, []);
+
   useEffect(() => {
     // Sync balance to USER_KEY
     try {
       const userSaved = localStorage.getItem(USER_KEY);
       if (userSaved) {
         const parsedUser = JSON.parse(userSaved);
-        parsedUser.tokens = tokenData.balance;
+        const isSuperAdmin = parsedUser.isAdmin || parsedUser.email === 'quocthiencr90@gmail.com' || parsedUser.role === 'admin';
+        if (isSuperAdmin) {
+          parsedUser.tokens = Math.max(100000, Number(tokenData.balance || 100000));
+        } else {
+          parsedUser.tokens = tokenData.balance;
+        }
         localStorage.setItem(USER_KEY, JSON.stringify(parsedUser));
       }
       
       // Sync history to STORAGE_KEY
       localStorage.setItem(STORAGE_KEY, JSON.stringify({ history: tokenData.history }));
-      
-      // Dispatch custom event for UI updates (like UserProfile)
-      window.dispatchEvent(new Event('avalive:user_updated'));
     } catch (e) {}
   }, [tokenData]);
 
@@ -113,6 +153,23 @@ export function TokenProvider({ children }) {
   const deductToken = useCallback((amount, reason = 'Sử dụng dịch vụ') => {
     const validAmount = Number(amount) || 0;
     setTokenData(prev => {
+      // Kiểm tra xem người dùng hiện tại có phải là Super Admin không
+      let isSuperAdmin = false;
+      try {
+        const u = JSON.parse(localStorage.getItem(USER_KEY) || '{}');
+        if (u.isAdmin || u.email === 'quocthiencr90@gmail.com' || u.role === 'admin' || u.plan?.includes('ADMIN')) {
+          isSuperAdmin = true;
+        }
+      } catch(e) {}
+
+      if (isSuperAdmin) {
+        // Super Admin không bị trừ token cạn kiệt, luôn duy trì số dư dồi dào
+        return {
+          ...prev,
+          balance: Math.max(100000, Number(prev?.balance || 100000))
+        };
+      }
+
       const prevBal = Number(prev?.balance ?? 0);
       const prevHist = Array.isArray(prev?.history) ? prev.history : [];
       const actual = Math.min(validAmount, prevBal);

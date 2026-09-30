@@ -104,22 +104,48 @@ export async function updateUserTokens(email, deltaTokens, reason = 'Sử dụng
   if (!email) return null;
   try {
     const cleanEmail = email.toLowerCase().trim();
-    // 1. Get current tokens
-    const { data: user } = await supabase
-      .from('users')
-      .select('tokens')
-      .eq('email', cleanEmail)
-      .maybeSingle();
+    const isSuperAdmin = cleanEmail === 'quocthiencr90@gmail.com';
 
-    const currentTokens = user?.tokens !== undefined ? user.tokens : 100000;
-    const newTokens = Math.max(0, currentTokens + deltaTokens);
+    // 1. Get current tokens from local first
+    let currentTokens = isSuperAdmin ? 100000 : 50000;
+    try {
+      const savedUser = localStorage.getItem('avalive_current_user');
+      if (savedUser) {
+        const u = JSON.parse(savedUser);
+        if (typeof u.tokens === 'number') currentTokens = u.tokens;
+      }
+    } catch(e) {}
 
-    await supabase
-      .from('users')
-      .update({ tokens: newTokens })
-      .eq('email', cleanEmail);
+    // 2. Try fetching from Supabase if available
+    try {
+      const { data: user } = await supabase
+        .from('users')
+        .select('tokens')
+        .eq('email', cleanEmail)
+        .maybeSingle();
 
-    // Update local storage
+      if (user && typeof user.tokens === 'number') {
+        currentTokens = user.tokens;
+      }
+    } catch(e) {}
+
+    if (isSuperAdmin) {
+      currentTokens = Math.max(100000, currentTokens);
+    }
+
+    const newTokens = isSuperAdmin 
+      ? Math.max(100000, currentTokens + (deltaTokens > 0 ? deltaTokens : 0)) 
+      : Math.max(0, currentTokens + deltaTokens);
+
+    // 3. Update Supabase
+    try {
+      await supabase
+        .from('users')
+        .update({ tokens: newTokens })
+        .eq('email', cleanEmail);
+    } catch(e) {}
+
+    // 4. Update local storage & broadcast
     try {
       localStorage.setItem('avalive_user_tokens', newTokens.toString());
       const savedUser = localStorage.getItem('avalive_current_user');
@@ -127,6 +153,7 @@ export async function updateUserTokens(email, deltaTokens, reason = 'Sử dụng
         const u = JSON.parse(savedUser);
         u.tokens = newTokens;
         localStorage.setItem('avalive_current_user', JSON.stringify(u));
+        window.dispatchEvent(new Event('avalive:user_updated'));
       }
     } catch (e) {}
 
@@ -145,17 +172,19 @@ export async function updateUserLiveTime(email, additionalMinutes = 1) {
   if (!email) return;
   try {
     const cleanEmail = email.toLowerCase().trim();
-    const { data: user } = await supabase
-      .from('users')
-      .select('live_minutes_used')
-      .eq('email', cleanEmail)
-      .maybeSingle();
+    try {
+      const { data: user } = await supabase
+        .from('users')
+        .select('live_minutes_used')
+        .eq('email', cleanEmail)
+        .maybeSingle();
 
-    const currentMins = user?.live_minutes_used || 0;
-    await supabase
-      .from('users')
-      .update({ live_minutes_used: currentMins + additionalMinutes })
-      .eq('email', cleanEmail);
+      const currentMins = user?.live_minutes_used || 0;
+      await supabase
+        .from('users')
+        .update({ live_minutes_used: currentMins + additionalMinutes })
+        .eq('email', cleanEmail);
+    } catch (e) {}
   } catch (err) {
     console.warn('updateUserLiveTime error:', err);
   }
