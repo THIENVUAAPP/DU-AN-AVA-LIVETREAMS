@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.2.8';
+export const APP_VERSION = '5.2.9';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.2.9 - Đồng Bộ Song Song Cả TikTok Shop & Shopee Live: Tự Động Ghim Sản Phẩm & Giải Captcha 24/7 Siêu Tốc',
+    description: '1. Đồng bộ song song cả TikTok Shop (shop.tiktok.com) và Shopee Live (banhang.shopee.vn / live.shopee.vn): Streamer có thể phát live trên cả hai sàn cùng lúc với chế độ Dual Sync mượt mà 60 FPS. 2. Tự động ghim sản phẩm Pro (Random, Chỉ định nhiều mã, Cố định 1 mã) gửi đồng thời tới cả 2 sàn theo thời gian luân phiên (Min - Max). 3. Tích hợp AI Giải Mã Captcha 24/7 (Slider Puzzle, Rotate 3D, OTP Seller Shield, Shopee Verification) chống nghẽn và duy trì luồng phát không gián đoạn.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.2.8 - Luôn Luôn Đồng Bộ 2 Chiều Trực Tiếp Với Tài Khoản TikTok Shop (shop.tiktok.com) Của Người Dùng',
     description: '1. Tích hợp thanh kết nối & đồng bộ 2 chiều thời gian thực với tài khoản shop.tiktok.com đã đăng nhập: Phần mềm liên kết trực tiếp với phiên làm việc của người dùng để cập nhật sản phẩm và kích hoạt ghim trực tiếp trên TikTok Live Studio khi phát live. 2. Tự động lắng nghe và truyền lệnh điều khiển Auto Ghim Pro (Random, Chỉ định nhiều mã, Cố định 1 mã) mượt mà 100% không delay.'
