@@ -1313,8 +1313,8 @@ app.get([
     </div>
     
     <!-- LỚP 6: SẢN PHẨM GHIM LIVESTREAM (TIKTOK SHOP / LIVE COMMERCE PINNED PRODUCT) -->
-    <div id="pinnedProductContainer" style="position: absolute; bottom: 20px; left: 14px; right: 14px; z-index: 40; pointer-events: none; display: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
-      <div id="pinnedProductCard" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 16px; background: rgba(15, 23, 42, 0.92); border: 1.5px solid rgba(244, 63, 94, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(244, 63, 94, 0.35);">
+    <div id="pinnedProductContainer" style="position: absolute; bottom: 20px; left: 14px; right: 14px; z-index: 40; pointer-events: auto; cursor: pointer; display: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);" onclick="window.handleOpenPinnedProduct(event)">
+      <div id="pinnedProductCard" title="Bấm để mở trang sản phẩm đơn vị bán hàng trên TikTok Shop" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 16px; background: rgba(15, 23, 42, 0.94); border: 1.5px solid rgba(244, 63, 94, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(244, 63, 94, 0.4); cursor: pointer;">
         <img id="pinnedProductImg" src="" alt="Product" style="width: 54px; height: 54px; border-radius: 10px; object-fit: cover; flex-shrink: 0; border: 1px solid rgba(255, 255, 255, 0.2);" />
         <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
           <div style="display: flex; align-items: center; gap: 6px;">
@@ -1326,6 +1326,9 @@ app.get([
             <span id="pinnedProductPrice" style="font-size: 15px; font-weight: 900; color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);">0 đ</span>
             <span id="pinnedProductOldPrice" style="font-size: 11px; color: #94a3b8; text-decoration: line-through; display: none;"></span>
           </div>
+        </div>
+        <div style="flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 6px 10px; border-radius: 10px; background: linear-gradient(135deg, #f43f5e, #e11d48); color: #fff; font-size: 11px; font-weight: 800; box-shadow: 0 2px 8px rgba(244,63,94,0.4); white-space: nowrap;">
+          <span>Xem Shop ↗</span>
         </div>
       </div>
     </div>
@@ -1454,6 +1457,18 @@ app.get([
           btnFitToggle.style.background = currentFit === 'cover' ? 'rgba(168, 85, 247, 0.4)' : 'rgba(255, 255, 255, 0.15)';
           btnFitToggle.style.borderColor = currentFit === 'cover' ? '#a855f7' : 'rgba(255, 255, 255, 0.35)';
         }
+      }
+
+      window.handleOpenPinnedProduct = function(e) {
+        if (e) {
+          try { e.preventDefault(); } catch(err) {}
+          try { e.stopPropagation(); } catch(err) {}
+        }
+        const prod = window.__currentPinnedProduct;
+        const targetUrl = (prod && (prod.productUrl || prod.sellerCenterUrl || prod.storeUrl || prod.url)) || 'https://shop.tiktok.com/streamer/live/product/dashboard';
+        window.open(targetUrl, '_blank', 'noopener,noreferrer');
+      };
+
       function getChromaClass(chroma) {
         if (!chroma || !chroma.enabled) return '';
         const m = (chroma.mode || 'auto').toLowerCase();
@@ -2312,6 +2327,7 @@ app.get([
         // 7. Đồng bộ Sản Phẩm Ghim TikTok Shop / Live Commerce
         const prodContainer = document.getElementById('pinnedProductContainer');
         const prod = data.livePinnedProduct || data.pinnedProduct;
+        window.__currentPinnedProduct = prod;
         if (prodContainer) {
           if (prod && (prod.title || prod.name || prod.productName)) {
             const prodImg = document.getElementById('pinnedProductImg');
@@ -2918,8 +2934,8 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
     </div>
 
     <!-- LỚP 6: SẢN PHẨM GHIM LIVESTREAM (TIKTOK SHOP / LIVE COMMERCE PINNED PRODUCT) -->
-    <div id="pinnedProductContainer" style="position: absolute; bottom: 20px; left: 14px; right: 14px; z-index: 40; pointer-events: none; display: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);">
-      <div id="pinnedProductCard" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 16px; background: rgba(15, 23, 42, 0.92); border: 1.5px solid rgba(244, 63, 94, 0.6); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(244, 63, 94, 0.35);">
+    <div id="pinnedProductContainer" style="position: absolute; bottom: 20px; left: 14px; right: 14px; z-index: 40; pointer-events: auto; cursor: pointer; display: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);" onclick="window.handleOpenPinnedProduct(event)">
+      <div id="pinnedProductCard" title="Bấm để mở trang sản phẩm đơn vị bán hàng trên TikTok Shop" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 16px; background: rgba(15, 23, 42, 0.94); border: 1.5px solid rgba(244, 63, 94, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(244, 63, 94, 0.4); cursor: pointer;">
         <img id="pinnedProductImg" src="" alt="Product" style="width: 54px; height: 54px; border-radius: 10px; object-fit: cover; flex-shrink: 0; border: 1px solid rgba(255, 255, 255, 0.2);" />
         <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
           <div style="display: flex; align-items: center; gap: 6px;">
@@ -2931,6 +2947,9 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
             <span id="pinnedProductPrice" style="font-size: 15px; font-weight: 900; color: #fbbf24; text-shadow: 0 0 10px rgba(251, 191, 36, 0.5);">0 đ</span>
             <span id="pinnedProductOldPrice" style="font-size: 11px; color: #94a3b8; text-decoration: line-through; display: none;"></span>
           </div>
+        </div>
+        <div style="flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 6px 10px; border-radius: 10px; background: linear-gradient(135deg, #f43f5e, #e11d48); color: #fff; font-size: 11px; font-weight: 800; box-shadow: 0 2px 8px rgba(244,63,94,0.4); white-space: nowrap;">
+          <span>Xem Shop ↗</span>
         </div>
       </div>
     </div>
@@ -3053,6 +3072,16 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           btnFitToggle.style.borderColor = currentFit === 'cover' ? '#a855f7' : 'rgba(255, 255, 255, 0.35)';
         }
       }
+
+      window.handleOpenPinnedProduct = function(e) {
+        if (e) {
+          try { e.preventDefault(); } catch(err) {}
+          try { e.stopPropagation(); } catch(err) {}
+        }
+        const prod = window.__currentPinnedProduct;
+        const targetUrl = (prod && (prod.productUrl || prod.sellerCenterUrl || prod.storeUrl || prod.url)) || 'https://shop.tiktok.com/streamer/live/product/dashboard';
+        window.open(targetUrl, '_blank', 'noopener,noreferrer');
+      };
 
       function safePlay() {
         if (isStreamUserPaused) return;
@@ -3895,6 +3924,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         // 7. Đồng bộ Sản Phẩm Ghim TikTok Shop / Live Commerce
         const prodContainer = document.getElementById('pinnedProductContainer');
         const prod = data.livePinnedProduct || data.pinnedProduct;
+        window.__currentPinnedProduct = prod;
         if (prodContainer) {
           if (prod && (prod.title || prod.name || prod.productName)) {
             const prodImg = document.getElementById('pinnedProductImg');

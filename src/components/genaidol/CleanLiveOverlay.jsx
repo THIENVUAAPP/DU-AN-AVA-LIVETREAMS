@@ -3372,16 +3372,20 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           const displayPrice = typeof rawPrice === 'number' ? rawPrice.toLocaleString('vi-VN') + ' đ' : (rawPrice || '');
           const rawOldPrice = prod.oldPrice || prod.originalPrice || prod.marketPrice;
           const displayOldPrice = typeof rawOldPrice === 'number' ? rawOldPrice.toLocaleString('vi-VN') + ' đ' : (rawOldPrice || '');
-          const imgSrc = prod.image || prod.imageUrl || prod.thumbnail || '';
+          const targetStoreUrl = prod.productUrl || prod.storeUrl || prod.sellerCenterUrl || 'https://shop.tiktok.com/streamer/live/product/dashboard';
 
           return (
-            <div className="absolute bottom-6 left-6 z-50 pointer-events-auto max-w-[360px] transition-all transform animate-bounce-subtle">
-              <div className="bg-slate-950/95 backdrop-blur-md border-2 border-red-500/90 rounded-2xl p-3 flex items-center gap-3.5 shadow-[0_10px_35px_rgba(239,68,68,0.6)] text-white relative overflow-hidden">
+            <div 
+              onClick={() => window.open(targetStoreUrl, '_blank')}
+              className="absolute bottom-6 left-6 z-50 pointer-events-auto max-w-[360px] transition-all transform animate-bounce-subtle cursor-pointer group"
+              title="Bấm để chuyển trực tiếp đến trang bán hàng của đơn vị bán"
+            >
+              <div className="bg-slate-950/95 backdrop-blur-md border-2 border-red-500/90 group-hover:border-red-400 rounded-2xl p-3 flex items-center gap-3.5 shadow-[0_10px_35px_rgba(239,68,68,0.6)] text-white relative overflow-hidden transition-all group-hover:scale-[1.02]">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/10 rounded-full blur-xl pointer-events-none"></div>
                 
                 <div className="relative w-16 h-16 rounded-xl overflow-hidden shrink-0 border border-white/30 bg-black shadow-inner">
                   {imgSrc ? (
-                    <img src={imgSrc} alt={prod.name || prod.title} className="w-full h-full object-cover" />
+                    <img src={imgSrc} alt={prod.name || prod.title} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
                   ) : (
                     <div className="w-full h-full flex items-center justify-center text-xl bg-slate-900">📦</div>
                   )}
@@ -3394,14 +3398,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 <div className="min-w-0 flex-1 text-left">
                   <div className="flex items-center gap-1.5">
                     <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded bg-gradient-to-r from-pink-500 to-red-500 text-white shadow-2xs">
-                      🎵 TikTok Shop
+                      🎵 Đơn Vị Bán Hàng
                     </span>
                     <span className="text-[9px] text-amber-300 font-extrabold truncate">
                       🔥 {prod.badge || prod.dealBadge || 'DEAL ĐỘC QUYỀN'}
                     </span>
                   </div>
 
-                  <h4 className="text-xs font-black text-white truncate mt-1 drop-shadow-sm">{prod.name || prod.title || 'Sản phẩm đang ghim'}</h4>
+                  <h4 className="text-xs font-black text-white truncate mt-1 drop-shadow-sm group-hover:text-pink-300 transition-colors">{prod.name || prod.title || 'Sản phẩm đang ghim'}</h4>
 
                   <div className="flex items-baseline gap-2 mt-0.5">
                     <span className="text-sm font-black text-red-400 font-mono tracking-tight">{displayPrice}</span>
@@ -3411,6 +3415,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     {prod.stock && (
                       <span className="text-[9px] text-emerald-400 font-bold ml-auto font-mono">Còn: {prod.stock}</span>
                     )}
+                  </div>
+
+                  <div className="text-[9px] text-cyan-300 group-hover:text-cyan-200 underline font-bold mt-0.5 flex items-center gap-1">
+                    <span>Xem tại Shop Đơn Vị Bán</span>
+                    <span>↗</span>
                   </div>
                 </div>
               </div>
