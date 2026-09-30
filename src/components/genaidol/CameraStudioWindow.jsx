@@ -29,6 +29,8 @@ export default function CameraStudioWindow({
   const [showGhostOverlay, setShowGhostOverlay] = useState(false); // Hiển thị nền mờ để dễ canh chỉnh
   const [showGridGuides, setShowGridGuides] = useState(false); // Hiển thị lưới thước canh ngang dọc
   const [brushAxisLock, setBrushAxisLock] = useState('free'); // 'free' | 'horizontal' | 'vertical' | 'box_rect'
+  const [compareMode, setCompareMode] = useState('off'); // 'off' | 'original' | 'split'
+  const [compareSplitPos, setCompareSplitPos] = useState(50); // 0 -> 100 (%)
 
   // Kích thước co giãn 8 hướng của Khung Camera (Width & Height)
   const [cameraDimensions, setCameraDimensions] = useState(() => {
@@ -253,12 +255,12 @@ export default function CameraStudioWindow({
     });
     setBgRemovalConfig({
       mode: 'none',
-      sensitivity: 55,
-      feather: 10,
+      sensitivity: 58,
+      feather: 8,
       spillReduction: 60,
       bgType: 'transparent',
       bgColor: '#00ff00',
-      protectProduct: true,
+      protectProduct: false,
       hybridChroma: false,
       keepObjects: {
         person: true,
@@ -279,7 +281,17 @@ export default function CameraStudioWindow({
     setCameraDimensions({ width: 350, height: 210 });
     setBrushStrokes([]);
     setBrushMode('none');
+    setCompareMode('off');
+    setShowGhostOverlay(false);
+    setShowGridGuides(false);
     handleConfirmAction();
+  };
+
+  // 🧹 Xóa sạch tất cả các nét cọ vẽ (Clear all brush strokes)
+  const handleClearAllBrushes = () => {
+    setBrushStrokes([]);
+    setBrushMode('none');
+    pushHistorySnapshot();
   };
 
   // ✨ AUTO TÙY CHỈNH THÔNG MINH (AI AUTO OPTIMIZE)
@@ -667,24 +679,33 @@ export default function CameraStudioWindow({
         tmpCtx.drawImage(sourceElement, 0, 0, vw, vh);
         tmpCtx.restore();
 
-        // === BƯỚC 2: Gửi nguồn tới MediaPipe segmentation ===
+        // 📷 NẾU ĐANG Ở CHẾ ĐỘ XEM CAMERA GỐC HOÀN TOÀN (TRƯỚC XÓA)
+        if (compareMode === 'original') {
+          ctx.clearRect(0, 0, vw, vh);
+          ctx.drawImage(tmpCanvas, 0, 0);
+          animFrameIdRef.current = requestAnimationFrame(renderFrame);
+          return;
+        }
+
+        // === BƯỚC 2: Gửi nguồn (khung hình thực tế) tới MediaPipe segmentation ===
         const mode = bgRemovalConfig.mode;
         if (mode !== 'none' && segReadyRef.current && segmentationRef.current) {
           segFrameCount++;
           if (segFrameCount % 2 === 0) {
             try {
-              segmentationRef.current.send({ image: sourceElement }).catch(() => {});
+              // Gửi tmpCanvas để AI bám theo chính xác 100% vị trí thực tế của người trên khung hình
+              segmentationRef.current.send({ image: tmpCanvas }).catch(() => {});
             } catch (e) {}
           }
         }
 
-        // === BƯỚC 3: Áp mask tách nền trong suốt 100% & Bảo vệ sản phẩm ===
+        // === BƯỚC 3: Áp mask tách nền trong suốt 100% (Real-time dynamic tracking) ===
         ctx.clearRect(0, 0, vw, vh);
 
-        // Chế độ xem trước bóng mờ (Ghost Overlay) để dễ canh chỉnh
+        // Chế độ xem trước bóng mờ (Ghost Overlay) để dễ quan sát nền và sản phẩm
         if (showGhostOverlay && mode !== 'none') {
           ctx.save();
-          ctx.globalAlpha = 0.25;
+          ctx.globalAlpha = 0.28;
           ctx.drawImage(tmpCanvas, 0, 0);
           ctx.restore();
         }
@@ -702,29 +723,37 @@ export default function CameraStudioWindow({
             const mh = mc.height;
             const feather = Math.max(1, bgRemovalConfig.feather);
             const sensitivity = bgRemovalConfig.sensitivity / 100;
-            const scaleX = mw / vw;
-            const scaleY = mh / vh;
-            const isProtectProduct = bgRemovalConfig.protectProduct || bgRemovalConfig.keepObjects.product;
+            const scaleX = (mw - 1) / Math.max(1, vw - 1);
+            const scaleY = (mh - 1) / Math.max(1, vh - 1);
+            const threshold = (1 - sensitivity) * 165;
+            const featherRange = feather * 4.5;
 
+            // Xóa phông bám theo nhân vật theo thời gian thực (Dynamic real-time tracking)
             for (let y = 0; y < vh; y++) {
-              const isDeskOrProductLevel = y > vh * 0.48; // Vùng sản phẩm cầm tay và bàn livestream
+              const gy = y * scaleY;
+              const gyi = Math.floor(gy);
+              const fy = gy - gyi;
+              const gyi1 = Math.min(mh - 1, gyi + 1);
+
               for (let x = 0; x < vw; x++) {
                 const idx = (y * vw + x) * 4;
-                const mx = Math.min(mw - 1, Math.round(x * scaleX));
-                const my = Math.min(mh - 1, Math.round(y * scaleY));
-                const mIdx = (my * mw + mx) * 4;
-                const maskVal = mData[mIdx];
-                const threshold = (1 - sensitivity) * 128;
+                const gx = x * scaleX;
+                const gxi = Math.floor(gx);
+                const fx = gx - gxi;
+                const gxi1 = Math.min(mw - 1, gxi + 1);
 
-                if (isProtectProduct && isDeskOrProductLevel && maskVal > threshold * 0.35) {
-                  continue;
-                }
+                // Song tuyến tính (Bilinear smoothing) giúp viền siêu mịn màng không răng cưa
+                const v00 = mData[(gyi * mw + gxi) * 4];
+                const v10 = mData[(gyi * mw + gxi1) * 4];
+                const v01 = mData[(gyi1 * mw + gxi) * 4];
+                const v11 = mData[(gyi1 * mw + gxi1) * 4];
+                const maskVal = (v00 * (1 - fx) + v10 * fx) * (1 - fy) + (v01 * (1 - fx) + v11 * fx) * fy;
 
                 if (maskVal < threshold) {
-                  data[idx + 3] = 0;
-                } else if (maskVal < threshold + feather * 4) {
-                  const alpha = (maskVal - threshold) / (feather * 4);
-                  data[idx + 3] = Math.round(data[idx + 3] * Math.min(1, alpha));
+                  data[idx + 3] = 0; // Nền trong suốt 100%
+                } else if (maskVal < threshold + featherRange) {
+                  const alpha = (maskVal - threshold) / featherRange;
+                  data[idx + 3] = Math.round(data[idx + 3] * Math.min(1, Math.max(0, alpha)));
                 }
               }
             }
@@ -771,7 +800,7 @@ export default function CameraStudioWindow({
           }
         }
 
-        // === BƯỚC 4: Áp brush strokes vuông vức đa góc với destination-out ===
+        // === BƯỚC 4: Áp brush strokes với destination-out / source-over ===
         const allStrokes = [...brushStrokes];
         if (isPaintingRef.current && currentStrokeRef.current) {
           allStrokes.push(currentStrokeRef.current);
@@ -805,13 +834,41 @@ export default function CameraStudioWindow({
                 ctx.save();
                 ctx.clip();
                 ctx.globalCompositeOperation = 'source-over';
-                ctx.filter = `brightness(${colorTune.brightness}%) contrast(${colorTune.contrast}%)`;
-                ctx.drawImage(sourceElement, 0, 0, vw, vh);
+                ctx.drawImage(tmpCanvas, 0, 0, vw, vh);
                 ctx.restore();
               }
             }
           }
           ctx.globalCompositeOperation = 'source-over';
+        }
+
+        // === BƯỚC 5: Chế độ Chia đôi So Sánh (Split Before & After) ===
+        if (compareMode === 'split') {
+          const splitX = Math.round((vw * compareSplitPos) / 100);
+          ctx.save();
+          // Vẽ nửa trái là Camera Gốc
+          ctx.beginPath();
+          ctx.rect(0, 0, splitX, vh);
+          ctx.clip();
+          ctx.drawImage(tmpCanvas, 0, 0);
+          ctx.restore();
+
+          // Vẽ đường phân chia và nhãn
+          ctx.save();
+          ctx.strokeStyle = '#06b6d4';
+          ctx.lineWidth = 3;
+          ctx.beginPath();
+          ctx.moveTo(splitX, 0);
+          ctx.lineTo(splitX, vh);
+          ctx.stroke();
+
+          // Nhãn Trước / Sau
+          ctx.font = 'bold 12px sans-serif';
+          ctx.fillStyle = '#06b6d4';
+          ctx.fillText('📷 TRƯỚC (GỐC)', Math.max(10, splitX - 110), 22);
+          ctx.fillStyle = '#10b981';
+          ctx.fillText('✨ SAU (XÓA PHÔNG)', Math.min(vw - 140, splitX + 10), 22);
+          ctx.restore();
         }
       }
 
@@ -824,7 +881,7 @@ export default function CameraStudioWindow({
       isRunning = false;
       if (animFrameIdRef.current) cancelAnimationFrame(animFrameIdRef.current);
     };
-  }, [camTransform, cropConfig, bgRemovalConfig, colorTune, brushStrokes, videoSource, showGhostOverlay, applyDualCropToPixels]);
+  }, [camTransform, cropConfig, bgRemovalConfig, colorTune, brushStrokes, videoSource, showGhostOverlay, compareMode, compareSplitPos, applyDualCropToPixels]);
 
   // 🕹️ Di chuyển 8 hướng mượt mà với bước nhảy tùy chọn
   const move8Way = (dx, dy) => {
@@ -1005,8 +1062,58 @@ export default function CameraStudioWindow({
             className="w-full h-full object-fill relative z-10"
           />
 
-          {/* Nút Điều Khiển Nhỏ Tinh Tế (Chỉ hiện khi hover chuột vào camera) */}
-          <div className="absolute top-2 right-2 z-30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-black/70 backdrop-blur-md p-1 rounded-xl border border-white/20 shadow-lg">
+          {/* Nút Điều Khiển Tinh Tế Trực Tiếp Trên Khung Camera (Hiện khi hover chuột) */}
+          <div className="absolute top-2 right-2 z-30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-black/85 backdrop-blur-md p-1 rounded-xl border border-white/20 shadow-xl" onMouseDown={(e) => e.stopPropagation()}>
+            {/* Nút Xem Nhanh Camera Gốc */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setCompareMode(prev => prev === 'original' ? 'off' : 'original');
+              }}
+              className={`px-2 py-1 rounded-lg text-[9px] font-black flex items-center gap-1 transition-all cursor-pointer ${
+                compareMode === 'original'
+                  ? 'bg-cyan-400 text-slate-950 shadow-md ring-1 ring-cyan-300'
+                  : 'bg-white/10 hover:bg-white/20 text-cyan-300'
+              }`}
+              title="1-Click Xem Camera Gốc Trước Xóa"
+            >
+              <Eye size={11} />
+              <span>{compareMode === 'original' ? 'ĐANG XEM GỐC' : 'GỐC'}</span>
+            </button>
+
+            {/* Nút Chia Đôi So Sánh */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                setCompareMode(prev => prev === 'split' ? 'off' : 'split');
+              }}
+              className={`px-2 py-1 rounded-lg text-[9px] font-black flex items-center gap-1 transition-all cursor-pointer ${
+                compareMode === 'split'
+                  ? 'bg-emerald-400 text-slate-950 shadow-md ring-1 ring-emerald-300'
+                  : 'bg-white/10 hover:bg-white/20 text-emerald-300'
+              }`}
+              title="Chia Đôi So Sánh Trước và Sau Xóa"
+            >
+              <SplitSquareVertical size={11} />
+              <span>SO SÁNH</span>
+            </button>
+
+            {/* Nút Khôi Phục Camera Gốc */}
+            <button
+              type="button"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleResetToOriginalCamera();
+              }}
+              className="p-1 rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-black transition-all cursor-pointer"
+              title="↺ 1-Click Khôi Phục Toàn Diện Camera Gốc Ban Đầu"
+            >
+              <RotateCcw size={12} />
+            </button>
+
+            {/* Nút Mở Bảng Cài Đặt Suite */}
             <button
               type="button"
               onClick={(e) => {
@@ -1018,6 +1125,8 @@ export default function CameraStudioWindow({
             >
               <Sliders size={12} />
             </button>
+
+            {/* Nút Đóng Camera */}
             <button
               type="button"
               onClick={(e) => {
@@ -1150,6 +1259,72 @@ export default function CameraStudioWindow({
             <CheckCheck size={14} />
             <span>{autoConfirmed ? '✓ ĐÃ XÁC NHẬN & LƯU ÁP DỤNG THÀNH CÔNG!' : 'XÁC NHẬN ÁP DỤNG CÀI ĐẶT'}</span>
           </button>
+
+          {/* 🌟 BỘ ĐIỀU KHIỂN SO SÁNH TRƯỚC / SAU & KHÔI PHỤC CAMERA GỐC */}
+          <div className="bg-gradient-to-r from-cyan-950/80 via-slate-900 to-emerald-950/80 p-2.5 rounded-2xl border border-cyan-500/40 space-y-2 shadow-md">
+            <div className="flex items-center justify-between text-[10px]">
+              <span className="font-black text-cyan-300 flex items-center gap-1.5 uppercase">
+                <Eye size={13} className="text-cyan-400" />
+                So Sánh Trước & Sau Xóa Phông:
+              </span>
+              <span className="text-[9px] px-2 py-0.5 rounded-md font-bold bg-black/50 text-cyan-300 border border-cyan-500/30">
+                {compareMode === 'original' ? '📷 ĐANG XEM GỐC' : compareMode === 'split' ? '🌓 ĐANG CHIA ĐÔI' : '✨ ĐÃ XÓA PHÔNG'}
+              </span>
+            </div>
+
+            <div className="grid grid-cols-3 gap-1">
+              <button
+                type="button"
+                onClick={() => setCompareMode('original')}
+                className={`py-1.5 px-1 rounded-xl text-[9px] font-black border transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                  compareMode === 'original'
+                    ? 'bg-cyan-500 text-slate-950 border-cyan-300 shadow-md ring-1 ring-cyan-200'
+                    : 'bg-white/5 border-white/10 text-cyan-300 hover:bg-white/10'
+                }`}
+                title="Xem toàn bộ Camera Gốc trước khi xóa phông (nguyên bản 100%)"
+              >
+                <Eye size={11} /> Camera Gốc
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCompareMode('off')}
+                className={`py-1.5 px-1 rounded-xl text-[9px] font-black border transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                  compareMode === 'off'
+                    ? 'bg-emerald-500 text-slate-950 border-emerald-300 shadow-md ring-1 ring-emerald-200'
+                    : 'bg-white/5 border-white/10 text-emerald-300 hover:bg-white/10'
+                }`}
+                title="Xem kết quả sau khi đã xóa phông AI"
+              >
+                <Sparkles size={11} /> Sau Xóa Nền
+              </button>
+
+              <button
+                type="button"
+                onClick={() => setCompareMode(prev => prev === 'split' ? 'off' : 'split')}
+                className={`py-1.5 px-1 rounded-xl text-[9px] font-black border transition-all flex items-center justify-center gap-1 cursor-pointer ${
+                  compareMode === 'split'
+                    ? 'bg-amber-500 text-slate-950 border-amber-300 shadow-md ring-1 ring-amber-200'
+                    : 'bg-white/5 border-white/10 text-amber-300 hover:bg-white/10'
+                }`}
+                title="Chia đôi màn hình 50/50 để so sánh trực tiếp trước và sau xóa"
+              >
+                <SplitSquareVertical size={11} /> Chia Đôi 50/50
+              </button>
+            </div>
+
+            {compareMode === 'split' && (
+              <div className="flex items-center justify-between pt-1 text-[9px] bg-black/40 p-1.5 rounded-xl border border-white/10">
+                <span className="text-gray-300 font-bold">Vạch Chia So Sánh: {compareSplitPos}%</span>
+                <input
+                  type="range" min="10" max="90"
+                  value={compareSplitPos}
+                  onChange={(e) => setCompareSplitPos(Number(e.target.value))}
+                  className="w-32 accent-cyan-400 h-1 bg-gray-700 rounded-lg cursor-pointer"
+                />
+              </div>
+            )}
+          </div>
 
           {/* 🌟 NÚT CHỌN NGUỒN CAMERA: MÁY TÍNH vs ĐIỆN THOẠI */}
           <div className="grid grid-cols-2 gap-2 bg-black/60 p-1.5 rounded-2xl border border-white/10">

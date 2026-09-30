@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.0';
+export const APP_VERSION = '5.4.1';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.1 - Xóa Phông AI Bám Chuyển Động Nhân Vật Real-Time, Bộ So Sánh Trước / Sau & Khôi Phục Toàn Diện Camera Gốc',
+    description: '1. Xóa Phông Bám Theo Chuyển Động Nhân Vật 100% Real-time: Loại bỏ hoàn toàn tình trạng phông tĩnh hay để lại lỗ hổng khi streamer di chuyển/xoay người. MediaPipe AI tự động theo dõi từng cử chỉ, dáng người và tay cầm sản phẩm siêu mượt 60 FPS. 2. Bộ So Sánh Trước / Sau (Before & After Comparison): Tích hợp 3 chế độ xem trực tiếp (Xem Camera Gốc, Xem Đã Xóa Phông, Chia Đôi 50/50) với thanh trượt vạch chia siêu trực quan. 3. Nút Khôi Phục Camera Gốc 1-Click: Phục hồi camera về trạng thái nguyên bản 100% chỉ trong 1 chạm. 4. Nút Dọn Cọ Nhanh (🧹 Xóa Hết Nét): Dọn sạch nét cọ tức thì, giao diện trực quan và dễ sử dụng nhất.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.0 - Co Giãn 8 Hướng Siêu Mượt, Thanh Canh Cọ Ngang Dọc Thẳng Lối, Bóng Mờ Nền Gốc & Xóa Phông Siêu Linh Hoạt',
     description: '1. Co Giãn 8 Hướng (8-Way Resize Handles): Tích hợp trực tiếp 8 điểm điều khiển (4 góc + 4 cạnh) trên khung camera giúp kéo thả tùy biến kích thước camera siêu mượt 60FPS. 2. Thanh Canh Cọ Ngang Dọc Ngay Hàng Thẳng Lối: Trang bị chế độ khóa trục ngang (↔️), khóa trục dọc (↕️) và lưới thước canh tỉ lệ (Grid Guides) giúp quét cọ xóa nền siêu chuẩn xác. 3. Xem Trước Nền Gốc Mờ (Ghost Overlay): Bật/tắt bóng mờ nền gốc để dễ dàng quan sát phông nền và bảo vệ sản phẩm livestream khi thao tác. 4. Xóa Phông Đa Kiểu Siêu Linh Hoạt: 1-chạm kết hợp nhiều kiểu xóa phông cùng lúc (AI Người, Bàn & Sản Phẩm, Khóa Màu Nền, Cắt Cạnh & Vát Góc).'
