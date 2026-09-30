@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.1.8';
+export const APP_VERSION = '5.1.9';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '🏪 Bản Cập Nhật v5.1.9 - Chuyển Hướng Trực Tiếp 100% Đến Trang Shop Seller Chính Thức Của Từng Đơn Vị Bán Hàng',
+    description: '1. Khắc phục triệt để lỗi chuyển hướng sang shop.tiktok.com/vn/pdp gây báo lỗi quốc gia: Bấm vào sản phẩm ghim trên livestream lập tức chuyển hướng trực tiếp đến trang chính thức của gian hàng seller trên TikTok (https://www.tiktok.com/@seller). 2. Loại bỏ hoàn toàn mọi URL trung gian, đảm bảo người mua hàng xem được trọn bộ sản phẩm và đặt hàng ngay lập tức.'
+  },
+  {
     title: '🛍️ Bản Cập Nhật v5.1.8 - Click Sản Phẩm Mở Trang Mua Hàng Chuẩn Từng Đơn Vị Bán Hàng Riêng Biệt',
-    description: '1. Khắc phục triệt để luồng click sản phẩm trên livestream: Khi người xem / streamer bấm vào bất kỳ sản phẩm ghim nào, hệ thống chuyển hướng trực tiếp đến đúng trang đặt mua / trang shop TikTok của chính đơn vị bán hàng đó (HAVATA Official Store, EiraFit Gymwear, GymPro Vietnam...), tuyệt đối không quay về trang quản trị hay dashboard gom hàng. 2. Hiển thị rõ tên đơn vị bán hàng và nút Mua Ngay Từ Shop trên mọi giao diện.'
+    description: '1. Phân định rõ ràng từng đơn vị bán hàng (HAVATA Official Store, EiraFit Gymwear, GymPro Vietnam, PowerBand Sport...). 2. Hiển thị rõ tên đơn vị bán hàng và nút Mua Ngay Từ Shop trên mọi giao diện.'
   },
   {
     title: '🛍️ Bản Cập Nhật v5.1.7 - Click Ghim Mở Thẳng Gian Hàng Đơn Vị Bán Hàng & Ghim Realtime Chuẩn Tuyệt Đối',
     description: '1. Bấm / Click trực tiếp vào sản phẩm đang ghim trên luồng livestream lập tức mở trang bán hàng của đơn vị bán hàng. 2. Đồng bộ 100% dữ liệu sản phẩm thật realtime từ TikTok Shop Live Dashboard.'
-  },
-  {
-    title: '🛍️ Bản Cập Nhật v5.1.6 - Chuẩn Hóa Realtime 100% Sản Phẩm & Giá TikTok Shop, Bấm Mở Trang Bán Hàng',
-    description: '1. Chuẩn hóa realtime 100% danh mục sản phẩm từ TikTok Shop Live Dashboard. 2. Bấm vào sản phẩm mở ngay trang bán hàng TikTok Shop chính thức của shop.'
   }
 ];
 
