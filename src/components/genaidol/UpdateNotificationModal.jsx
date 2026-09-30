@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.11';
+export const APP_VERSION = '5.4.12';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.12 - Kích Hoạt Toàn Diện Bộ Não AI & Chuỗi 14 Sự Kiện Live TikTok/Shopee, Tách Biệt Loa Máy Tính & Nâng Cấp Auto Ghim shop.tiktok.com Real-Time',
+    description: '1. Kích Hoạt 100% Bộ Não AI & Chuỗi 14 Tác Vụ Sự Kiện Live: Đảm bảo ngay khi kết nối ID TikTok Live Studio / Shopee Live, Bộ Não AI tự động chào hỏi người mới theo chuỗi tuần tự vòng tròn không trùng lặp, tự động đọc và trả lời bình luận, cảm ơn quà tặng, theo dõi, chia sẻ và chốt đơn theo đúng cấu hình cài đặt. 2. Phân Tách Tuyệt Đối Nút Loa Máy Tính (Ảnh 1): Bấm Tắt/Mở loa máy tính trên giao diện chỉ kiểm soát âm thanh của máy cá nhân để chống ồn, trong khi luồng phát Livestream TikTok Live Studio và OBS vẫn giữ nguyên 100% âm thanh chất lượng cao. 3. Cầu Nối Tự Động Auto Ghim shop.tiktok.com & Shopee Live: Tích hợp WebSocket + REST Bridge thời gian thực giúp tự động ghim đúng sản phẩm trên trang quản lý TikTok Shop (shop.tiktok.com) và Shopee Live ngay khi streamer nói tên sản phẩm, khách comment hoặc theo chu kỳ cài đặt. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.11 - Khắc Phục Triệt Để Lỗi Màn Hình Đen Khi Kết Nối Live TikTok Studio & Shopee, Phát Sân Khấu Liên Tục 100% Siêu Mượt',
     description: '1. Sửa Triệt Để Lỗi Màn Hình Đen Khi Kết Nối Live: Loại bỏ hoàn toàn xung đột chuyển luồng idle/stream khiến sân khấu bị biến thành màn hình đen khi bấm Kết Nối ID TikTok Live Studio hoặc Shopee Live. Video/nhân vật trên sân khấu luôn phát liên tục 100%, sắc nét 60 FPS không bao giờ bị đứng hình hay ngắt quãng. 2. Đồng Bộ Đa Nền Tảng Tức Thì Trong 0ms: Kết nối mượt mà với TikTok Live Studio, Shopee Live RTMP và các nền tảng phát trực tiếp. 3. Bảo Vệ Tuyệt Đối Sân Khấu Phát Trực Tiếp: Đảm bảo video được nạp sẵn luôn là nguồn phát ưu tiên số 1 xuyên suốt toàn bộ phiên live. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'

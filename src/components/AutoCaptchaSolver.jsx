@@ -519,23 +519,66 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
   const handleCopyTikTokScript = () => {
     const script = `// AVA LIVE PRO - AUTO GHIM TIKTOK SHOP (shop.tiktok.com)
 (function autoPinTikTokShopBridge() {
-  console.log("%c[AVA AUTO GHIM] Đã kết nối với TikTok Shop Streamer!", "background: #ff2e4d; color: #fff; padding: 4px 8px; border-radius: 6px; font-weight: bold;");
-  function triggerPin(code) {
-    const buttons = Array.from(document.querySelectorAll("button, div[role=\"button\"], a")).filter(el => {
-      const txt = (el.innerText || "").toLowerCase();
-      return txt.includes("ghim") || txt.includes("pin");
+  console.log("%c[AVA AUTO GHIM PRO] 🚀 Đã kết nối với TikTok Shop Streamer / Seller Center!", "background: #ff2e4d; color: #fff; padding: 4px 8px; border-radius: 6px; font-weight: bold;");
+  
+  let lastPinnedId = null;
+  let lastPinnedTime = 0;
+
+  function clickPinButton(code, name) {
+    const now = Date.now();
+    if (lastPinnedId === code && now - lastPinnedTime < 3000) return;
+    lastPinnedId = code;
+    lastPinnedTime = now;
+
+    // 1. Tìm theo nút Ghim / Pin
+    const allButtons = Array.from(document.querySelectorAll("button, div[role='button'], a, span"));
+    const pinButtons = allButtons.filter(el => {
+      const txt = (el.innerText || "").toLowerCase().trim();
+      return (txt === "ghim" || txt === "pin" || txt.includes("ghim sản phẩm") || txt.includes("pin product") || txt.includes("ghim lên live"));
     });
-    if (buttons.length > 0) {
+
+    if (pinButtons.length > 0) {
       const idx = (parseInt(code, 10) || 1) - 1;
-      (buttons[idx] || buttons[0]).click();
-      console.log("%c[AVA AUTO GHIM] ✅ ĐÃ GHIM MÃ #" + (code || 1) + " TRÊN TIKTOK SHOP!", "color: #10b981; font-weight: bold;");
+      const targetBtn = pinButtons[idx] || pinButtons[0];
+      targetBtn.click();
+      console.log("%c[AVA AUTO GHIM] ✅ ĐÃ GHIM SẢN PHẨM #" + (code || 1) + " (" + (name || "") + ") TRÊN TIKTOK SHOP!", "color: #10b981; font-weight: bold; font-size: 13px;");
+    } else if (name) {
+      const productRows = Array.from(document.querySelectorAll("tr, div[class*='product-item'], div[class*='item-card'], div[class*='table-row']"));
+      for (const row of productRows) {
+        if (row.innerText && row.innerText.toLowerCase().includes(name.toLowerCase())) {
+          const btn = row.querySelector("button, div[role='button'], a");
+          if (btn) {
+            btn.click();
+            console.log("%c[AVA AUTO GHIM] ✅ ĐÃ GHIM THEO TÊN: " + name, "color: #10b981; font-weight: bold;");
+            break;
+          }
+        }
+      }
     }
   }
+
+  // 1. Lắng nghe qua Message Event
   window.addEventListener("message", (e) => {
-    if (e.data && e.data.type === "AVALIVE_PIN_PRODUCT" && (e.data.platform === "all" || e.data.platform === "tiktok")) {
-      triggerPin(e.data.code);
+    if (e.data && (e.data.type === "AVALIVE_PIN_PRODUCT" || e.data.type === "PIN_PRODUCT_UPDATE")) {
+      const code = e.data.code || e.data.product?.id || 1;
+      const name = e.data.name || e.data.product?.name || "";
+      clickPinButton(code, name);
     }
   });
+
+  // 2. Lắng nghe Realtime qua Backend REST Bridge (localhost:3001)
+  const bridgeUrl = "http://localhost:3001/api/tiktok-shop/pinned";
+  setInterval(async () => {
+    try {
+      const res = await fetch(bridgeUrl);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.pinnedProduct && data.pinnedProduct.pinnedAt && (Date.now() - data.pinnedProduct.pinnedAt < 5000)) {
+          clickPinButton(data.pinnedProduct.id, data.pinnedProduct.name);
+        }
+      }
+    } catch (err) {}
+  }, 1000);
 })();`;
     navigator.clipboard.writeText(script).then(() => {
       setCopiedScript("tiktok");
@@ -548,23 +591,51 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
   const handleCopyShopeeScript = () => {
     const script = `// AVA LIVE PRO - AUTO GHIM SHOPEE LIVE (banhang.shopee.vn / live.shopee.vn)
 (function autoPinShopeeLiveBridge() {
-  console.log("%c[AVA AUTO GHIM] Đã kết nối với Shopee Live Studio!", "background: #ea580c; color: #fff; padding: 4px 8px; border-radius: 6px; font-weight: bold;");
-  function triggerPinShopee(code) {
-    const buttons = Array.from(document.querySelectorAll("button, div[role=\"button\"], a, .shopee-button")).filter(el => {
-      const txt = (el.innerText || "").toLowerCase();
-      return txt.includes("hiển thị") || txt.includes("ghim") || txt.includes("pin") || txt.includes("giới thiệu");
+  console.log("%c[AVA AUTO GHIM PRO] 🚀 Đã kết nối với Shopee Live Studio!", "background: #ea580c; color: #fff; padding: 4px 8px; border-radius: 6px; font-weight: bold;");
+  
+  let lastPinnedId = null;
+  let lastPinnedTime = 0;
+
+  function clickPinShopee(code, name) {
+    const now = Date.now();
+    if (lastPinnedId === code && now - lastPinnedTime < 3000) return;
+    lastPinnedId = code;
+    lastPinnedTime = now;
+
+    const allButtons = Array.from(document.querySelectorAll("button, div[role='button'], a, .shopee-button, span"));
+    const pinButtons = allButtons.filter(el => {
+      const txt = (el.innerText || "").toLowerCase().trim();
+      return txt === "hiển thị" || txt === "ghim" || txt === "pin" || txt.includes("giới thiệu") || txt.includes("ghim sp");
     });
-    if (buttons.length > 0) {
+
+    if (pinButtons.length > 0) {
       const idx = (parseInt(code, 10) || 1) - 1;
-      (buttons[idx] || buttons[0]).click();
-      console.log("%c[AVA AUTO GHIM] ✅ ĐÃ GHIM MÃ #" + (code || 1) + " TRÊN SHOPEE LIVE!", "color: #10b981; font-weight: bold;");
+      const targetBtn = pinButtons[idx] || pinButtons[0];
+      targetBtn.click();
+      console.log("%c[AVA AUTO GHIM] ✅ ĐÃ GHIM SẢN PHẨM #" + (code || 1) + " (" + (name || "") + ") TRÊN SHOPEE LIVE!", "color: #10b981; font-weight: bold; font-size: 13px;");
     }
   }
+
   window.addEventListener("message", (e) => {
-    if (e.data && e.data.type === "AVALIVE_PIN_PRODUCT" && (e.data.platform === "all" || e.data.platform === "shopee")) {
-      triggerPinShopee(e.data.code);
+    if (e.data && (e.data.type === "AVALIVE_PIN_PRODUCT" || e.data.type === "PIN_PRODUCT_UPDATE")) {
+      const code = e.data.code || e.data.product?.id || 1;
+      const name = e.data.name || e.data.product?.name || "";
+      clickPinShopee(code, name);
     }
   });
+
+  const bridgeUrl = "http://localhost:3001/api/tiktok-shop/pinned";
+  setInterval(async () => {
+    try {
+      const res = await fetch(bridgeUrl);
+      if (res.ok) {
+        const data = await res.json();
+        if (data && data.pinnedProduct && data.pinnedProduct.pinnedAt && (Date.now() - data.pinnedProduct.pinnedAt < 5000)) {
+          clickPinShopee(data.pinnedProduct.id, data.pinnedProduct.name);
+        }
+      }
+    } catch (err) {}
+  }, 1000);
 })();`;
     navigator.clipboard.writeText(script).then(() => {
       setCopiedScript("shopee");

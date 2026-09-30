@@ -374,14 +374,8 @@ function fillTemplate(template, vars = {}) {
   // Hàm kích hoạt xử lý sự kiện Live từ TikTok / Chat / Giả lập (Hỗ trợ AI Brain Bất Đồng Bộ)
   const handleLiveEvent = async (type, payload = {}) => {
     const isTestMode = payload?.isTest === true;
-    const isScriptStoppedByUser = typeof localStorage !== 'undefined' && (
-      localStorage.getItem('aidol_user_paused_script') === 'true' ||
-      localStorage.getItem('aidol_is_script_live_running') === 'false' ||
-      localStorage.getItem('avalive_user_paused') === 'true' ||
-      localStorage.getItem('avalive_master_live_running') === 'false' ||
-      (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
-    );
-    if (!isTestMode && isScriptStoppedByUser && (type === 'IDLE' || type === 'TALKING' || type === 'AI_TALK' || type === 'APOLOGY' || type === 'WELCOME' || type === 'CALL_TO_ACTION')) {
+    const isExplicitlyPaused = typeof localStorage !== 'undefined' && localStorage.getItem('avalive_user_paused') === 'true';
+    if (!isTestMode && isExplicitlyPaused) {
       if (idleTimerRef.current) {
         clearTimeout(idleTimerRef.current);
         idleTimerRef.current = null;
@@ -414,16 +408,7 @@ function fillTemplate(template, vars = {}) {
                   type === 'APOLOGY' ? 'apology' : 
                   type === 'CALL_TO_ACTION' ? 'call_to_action' : '';
 
-    // 🛡️ BẢO VỆ TUYỆT ĐỐI: CHỈ THỰC THI SỰ KIỆN & ĐỌC BÌNH LUẬN KHI PHIÊN LIVE ĐANG PHÁT HOẶC TEST THỦ CÔNG
-    // Tuyệt đối không tự ý đọc bình luận, chào hỏi hay chốt đơn khi chưa mở Live hoặc khi đã Tắt/Tạm dừng
-    const isUserPaused = typeof localStorage !== 'undefined' && (
-      localStorage.getItem('avalive_user_paused') === 'true' || 
-      localStorage.getItem('avalive_window_capture_paused') === 'true' ||
-      localStorage.getItem('avalive_master_live_running') === 'false'
-    );
-    if (isUserPaused && !isTestMode) {
-      return;
-    }
+    const currentEvConfig = (evKey && configs[evKey]) ? configs[evKey] : {};
 
     const isLiveBroadcasting = isConnected === true || 
       (typeof window !== 'undefined' && (
@@ -437,8 +422,7 @@ function fillTemplate(template, vars = {}) {
       return;
     }
 
-    // 🛡️ CHẶN 100% BÌNH LUẬN VÀ SỰ KIỆN XEN VÀO KHI ĐANG CHẠY THỬ KỊCH BẢN (SCRIPT PREVIEW / TESTER)
-    // Đảm bảo kịch bản chạy thử được đọc liên tục, trọn vẹn, không ngắt quãng
+    // 🛡️ CHẶN BÌNH LUẬN VÀ SỰ KIỆN XEN VÀO KHI ĐANG CHẠY THỬ KỊCH BẢN (SCRIPT PREVIEW / TESTER)
     const isScriptTestingActive = typeof window !== 'undefined' && (
       window.__isScriptTestingRunning === true || 
       localStorage.getItem('avalive_script_testing_active') === 'true'
@@ -447,7 +431,7 @@ function fillTemplate(template, vars = {}) {
       return;
     }
 
-    // Nếu sự kiện bị tắt và không phải đang test thủ công, không xử lý
+    // Nếu sự kiện bị tắt trong cấu hình và không phải đang test thủ công, không xử lý
     if (currentEvConfig.active === false && !isTestMode) {
       return;
     }

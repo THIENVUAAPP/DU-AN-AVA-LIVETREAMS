@@ -4131,7 +4131,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           if (parsedConf?.welcome?.active === false) return;
         } catch (e) {}
       }
-      const author = data.username || data.nickname || '';
+      const author = (data.username || data.nickname || '').trim();
       if (!author || author === 'Khách mới' || author === 'Khán Giả') return;
       const key = author.toLowerCase().trim();
       
@@ -4143,11 +4143,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         greetedUsernamesRef.current.delete(first);
       }
       
-      // Chống dồn dập: Giãn cách lời chào tối thiểu 6 giây
+      // Tự động kích hoạt câu chào riêng biệt theo chuỗi tuần tự không trùng lặp
       const now = Date.now();
-      if (now - lastAiGreetingTime.current > 6000) {
+      const timeSinceLastGreet = now - lastAiGreetingTime.current;
+      if (timeSinceLastGreet > 3500) {
         lastAiGreetingTime.current = now;
         handleLiveEventRef.current?.('VIEWER_JOIN', { name: author });
+      } else {
+        const delay = 3500 - timeSinceLastGreet;
+        setTimeout(() => {
+          lastAiGreetingTime.current = Date.now();
+          handleLiveEventRef.current?.('VIEWER_JOIN', { name: author });
+        }, delay);
       }
     });
 
