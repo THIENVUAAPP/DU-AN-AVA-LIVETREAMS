@@ -14,6 +14,7 @@ import AiRealtimeLipSyncAvatar from './AiRealtimeLipSyncAvatar';
 import ChromaVideoPlayer from './ChromaVideoPlayer';
 // Clean Live Overlay - Ultra HD OBS Window Capture
 import bandoAudio from './game/bandoAudioEngine';
+import { resolveSellerProductBuyUrl, getProductSellerName } from '../../utils/autoPinProductService';
 
 /**
  * ⚡ CỬA SỔ MASTER OVERLAY 1 LINK DUY NHẤT TOÀN NĂNG — CHO TIKTOK LIVE STUDIO & OBS STUDIO
@@ -3364,7 +3365,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         )}
             </>
           )}
-        {/* OVERLAY SẢN PHẨM ĐANG GHIM TỰ ĐỘNG BỞI AI (CHUẨN TIKTOK SHOP shop.tiktok.com / LIVESTREAM STUDIO) */}
+        {/* OVERLAY SẢN PHẨM ĐANG GHIM TỰ ĐỘNG BỞI AI (CHUYỂN THẲNG ĐẾN TRANG MUA HÀNG CỦA ĐƠN VỊ BÁN HÀNG) */}
         {Boolean(masterState?.livePinnedProduct || masterState?.pinnedProduct || pinnedProduct) && (() => {
           const prod = masterState?.livePinnedProduct || masterState?.pinnedProduct || pinnedProduct;
           if (!prod) return null;
@@ -3372,13 +3373,15 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           const displayPrice = typeof rawPrice === 'number' ? rawPrice.toLocaleString('vi-VN') + ' đ' : (rawPrice || '');
           const rawOldPrice = prod.oldPrice || prod.originalPrice || prod.marketPrice;
           const displayOldPrice = typeof rawOldPrice === 'number' ? rawOldPrice.toLocaleString('vi-VN') + ' đ' : (rawOldPrice || '');
-          const targetStoreUrl = prod.productUrl || prod.storeUrl || prod.sellerCenterUrl || 'https://shop.tiktok.com/streamer/live/product/dashboard';
+          const targetStoreUrl = resolveSellerProductBuyUrl(prod);
+          const sellerName = getProductSellerName(prod);
+          const imgSrc = prod.image || prod.imageUrl || prod.thumbnail || prod.img || '';
 
           return (
             <div 
-              onClick={() => window.open(targetStoreUrl, '_blank')}
-              className="absolute bottom-6 left-6 z-50 pointer-events-auto max-w-[360px] transition-all transform animate-bounce-subtle cursor-pointer group"
-              title="Bấm để chuyển trực tiếp đến trang bán hàng của đơn vị bán"
+              onClick={() => window.open(targetStoreUrl, '_blank', 'noopener,noreferrer')}
+              className="absolute bottom-6 left-6 z-50 pointer-events-auto max-w-[370px] transition-all transform animate-bounce-subtle cursor-pointer group"
+              title={`Bấm để mở trang đặt mua sản phẩm từ ${sellerName}`}
             >
               <div className="bg-slate-950/95 backdrop-blur-md border-2 border-red-500/90 group-hover:border-red-400 rounded-2xl p-3 flex items-center gap-3.5 shadow-[0_10px_35px_rgba(239,68,68,0.6)] text-white relative overflow-hidden transition-all group-hover:scale-[1.02]">
                 <div className="absolute top-0 right-0 w-24 h-24 bg-red-500/10 rounded-full blur-xl pointer-events-none"></div>
@@ -3397,8 +3400,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
                 <div className="min-w-0 flex-1 text-left">
                   <div className="flex items-center gap-1.5">
-                    <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded bg-gradient-to-r from-pink-500 to-red-500 text-white shadow-2xs">
-                      🎵 Đơn Vị Bán Hàng
+                    <span className="text-[9px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded bg-gradient-to-r from-pink-500 to-red-500 text-white shadow-2xs truncate max-w-[140px]">
+                      🏪 {sellerName}
                     </span>
                     <span className="text-[9px] text-amber-300 font-extrabold truncate">
                       🔥 {prod.badge || prod.dealBadge || 'DEAL ĐỘC QUYỀN'}
@@ -3418,7 +3421,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   </div>
 
                   <div className="text-[9px] text-cyan-300 group-hover:text-cyan-200 underline font-bold mt-0.5 flex items-center gap-1">
-                    <span>Xem tại Shop Đơn Vị Bán</span>
+                    <span>⚡ Mua Ngay Từ Shop Đơn Vị Bán</span>
                     <span>↗</span>
                   </div>
                 </div>

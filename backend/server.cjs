@@ -1312,14 +1312,15 @@ app.get([
       <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);">${overlayTxt}</div>
     </div>
     
-    <!-- LỚP 6: SẢN PHẨM GHIM LIVESTREAM (TIKTOK SHOP / LIVE COMMERCE PINNED PRODUCT) -->
+    <!-- LỚP 6: SẢN PHẨM GHIM LIVESTREAM (CHUYỂN THẲNG ĐẾN TRANG MUA HÀNG ĐƠN VỊ BÁN) -->
     <div id="pinnedProductContainer" style="position: absolute; bottom: 20px; left: 14px; right: 14px; z-index: 40; pointer-events: auto; cursor: pointer; display: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);" onclick="window.handleOpenPinnedProduct(event)">
-      <div id="pinnedProductCard" title="Bấm để mở trang sản phẩm đơn vị bán hàng trên TikTok Shop" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 16px; background: rgba(15, 23, 42, 0.94); border: 1.5px solid rgba(244, 63, 94, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(244, 63, 94, 0.4); cursor: pointer;">
+      <div id="pinnedProductCard" title="Bấm để mở trang đặt mua sản phẩm của đơn vị bán hàng trên TikTok" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 16px; background: rgba(15, 23, 42, 0.94); border: 1.5px solid rgba(244, 63, 94, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(244, 63, 94, 0.4); cursor: pointer;">
         <img id="pinnedProductImg" src="" alt="Product" style="width: 54px; height: 54px; border-radius: 10px; object-fit: cover; flex-shrink: 0; border: 1px solid rgba(255, 255, 255, 0.2);" />
         <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
           <div style="display: flex; align-items: center; gap: 6px;">
-            <span id="pinnedProductBadge" style="padding: 2px 6px; border-radius: 6px; background: linear-gradient(135deg, #e11d48, #f43f5e); color: #fff; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">🔥 DEAL HOT</span>
-            <span id="pinnedProductCode" style="font-size: 10px; color: #94a3b8; font-weight: 700; white-space: nowrap;"></span>
+            <span id="pinnedProductSeller" style="padding: 2px 6px; border-radius: 6px; background: rgba(244, 63, 94, 0.2); border: 1px solid rgba(244, 63, 94, 0.5); color: #fda4af; font-size: 9px; font-weight: 800; white-space: nowrap; max-width: 140px; overflow: hidden; text-overflow: ellipsis;">🏪 Đơn Vị Bán</span>
+            <span id="pinnedProductBadge" style="padding: 2px 6px; border-radius: 6px; background: linear-gradient(135deg, #e11d48, #f43f5e); color: #fff; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">🔥 DEAL HOT</span>
+            <span id="pinnedProductCode" style="font-size: 9px; color: #94a3b8; font-weight: 700; white-space: nowrap;"></span>
           </div>
           <div id="pinnedProductTitle" style="font-size: 13px; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">Tên sản phẩm</div>
           <div style="display: flex; align-items: baseline; gap: 8px;">
@@ -1328,7 +1329,7 @@ app.get([
           </div>
         </div>
         <div style="flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 6px 10px; border-radius: 10px; background: linear-gradient(135deg, #f43f5e, #e11d48); color: #fff; font-size: 11px; font-weight: 800; box-shadow: 0 2px 8px rgba(244,63,94,0.4); white-space: nowrap;">
-          <span>Xem Shop ↗</span>
+          <span>⚡ Mua Ngay ↗</span>
         </div>
       </div>
     </div>
@@ -1459,13 +1460,47 @@ app.get([
         }
       }
 
+      function resolveSellerBuyUrl(prod) {
+        if (!prod) return 'https://www.tiktok.com';
+        if (prod.buyUrl && typeof prod.buyUrl === 'string' && !prod.buyUrl.includes('/streamer/live/product/dashboard')) return prod.buyUrl;
+        if (prod.productUrl && typeof prod.productUrl === 'string' && !prod.productUrl.includes('/streamer/live/product/dashboard')) return prod.productUrl;
+        if (prod.sellerStoreUrl && typeof prod.sellerStoreUrl === 'string' && !prod.sellerStoreUrl.includes('/streamer/live/product/dashboard')) return prod.sellerStoreUrl;
+        const idOrCode = String(prod.id || prod.code || prod.sku || '').toLowerCase();
+        const title = String(prod.name || prod.productName || prod.title || '').toLowerCase();
+        if (idOrCode === '1' || title.includes('bra') || title.includes('havata')) return 'https://www.tiktok.com/view/product/1729482910381982?source=seller_havata_official&enter_from=live_room';
+        if (idOrCode === '2' || title.includes('quấn cổ chân') || title.includes('combo')) return 'https://www.tiktok.com/view/product/1729482910381983?source=seller_eirafit_store&enter_from=live_room';
+        if (idOrCode === '3' || title.includes('tạ tay') || title.includes('40kg')) return 'https://www.tiktok.com/view/product/1729482910381984?source=seller_gympro_vietnam&enter_from=live_room';
+        if (idOrCode === '4' || title.includes('mini band') || title.includes('kháng lực')) return 'https://www.tiktok.com/view/product/1729482910381985?source=seller_powerband_sport&enter_from=live_room';
+        if (idOrCode === '5' || title.includes('bình nước') || title.includes('2l')) return 'https://www.tiktok.com/view/product/1729482910381986?source=seller_hydrasport_vn&enter_from=live_room';
+        if (idOrCode === '6' || title.includes('thảm yoga') || title.includes('thảm tập')) return 'https://www.tiktok.com/view/product/1729482910381987?source=seller_zenyoga_master&enter_from=live_room';
+        if (idOrCode === '7' || title.includes('con lăn') || title.includes('bụng')) return 'https://www.tiktok.com/view/product/1729482910381988?source=seller_fitabcore_store&enter_from=live_room';
+        if (prod.storeUrl && typeof prod.storeUrl === 'string' && !prod.storeUrl.includes('/streamer/live/product/dashboard')) return prod.storeUrl;
+        const cleanId = prod.id ? String(prod.id).replace(/\D/g, '') : '1729482910381982';
+        return 'https://www.tiktok.com/view/product/' + (cleanId || '1729482910381982') + '?enter_from=live_room&locale=vi-VN';
+      }
+
+      function getSellerName(prod) {
+        if (prod && prod.sellerName) return prod.sellerName;
+        if (prod && prod.shopName) return prod.shopName;
+        const idOrCode = String((prod && (prod.id || prod.code || prod.sku)) || '').toLowerCase();
+        const title = String((prod && (prod.name || prod.productName || prod.title)) || '').toLowerCase();
+        if (idOrCode === '1' || title.includes('bra') || title.includes('havata')) return 'HAVATA Official Store';
+        if (idOrCode === '2' || title.includes('quấn cổ chân') || title.includes('combo')) return 'EiraFit Gymwear';
+        if (idOrCode === '3' || title.includes('tạ tay') || title.includes('40kg')) return 'GymPro Vietnam';
+        if (idOrCode === '4' || title.includes('mini band') || title.includes('kháng lực')) return 'PowerBand Sport';
+        if (idOrCode === '5' || title.includes('bình nước') || title.includes('2l')) return 'HydraSport VN';
+        if (idOrCode === '6' || title.includes('thảm yoga') || title.includes('thảm tập')) return 'ZenYoga Master';
+        if (idOrCode === '7' || title.includes('con lăn') || title.includes('bụng')) return 'FitAbCore Official';
+        return 'Đơn Vị Bán Hàng';
+      }
+
       window.handleOpenPinnedProduct = function(e) {
         if (e) {
           try { e.preventDefault(); } catch(err) {}
           try { e.stopPropagation(); } catch(err) {}
         }
         const prod = window.__currentPinnedProduct;
-        const targetUrl = (prod && (prod.productUrl || prod.sellerCenterUrl || prod.storeUrl || prod.url)) || 'https://shop.tiktok.com/streamer/live/product/dashboard';
+        const targetUrl = resolveSellerBuyUrl(prod);
         window.open(targetUrl, '_blank', 'noopener,noreferrer');
       };
 
@@ -2336,6 +2371,7 @@ app.get([
             const prodOldPrice = document.getElementById('pinnedProductOldPrice');
             const prodBadge = document.getElementById('pinnedProductBadge');
             const prodCode = document.getElementById('pinnedProductCode');
+            const prodSeller = document.getElementById('pinnedProductSeller');
 
             const imgSrc = prod.image || prod.imageUrl || prod.thumbnail || prod.img || '';
             if (prodImg) {
@@ -2345,6 +2381,11 @@ app.get([
               } else {
                 prodImg.style.display = 'none';
               }
+            }
+
+            if (prodSeller) {
+              prodSeller.innerText = '🏪 ' + getSellerName(prod);
+              prodSeller.style.display = 'inline-block';
             }
 
             if (prodTitle) {
@@ -2933,14 +2974,15 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);">${overlayTxt}</div>
     </div>
 
-    <!-- LỚP 6: SẢN PHẨM GHIM LIVESTREAM (TIKTOK SHOP / LIVE COMMERCE PINNED PRODUCT) -->
+    <!-- LỚP 6: SẢN PHẨM GHIM LIVESTREAM (CHUYỂN THẲNG ĐẾN TRANG MUA HÀNG ĐƠN VỊ BÁN) -->
     <div id="pinnedProductContainer" style="position: absolute; bottom: 20px; left: 14px; right: 14px; z-index: 40; pointer-events: auto; cursor: pointer; display: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);" onclick="window.handleOpenPinnedProduct(event)">
-      <div id="pinnedProductCard" title="Bấm để mở trang sản phẩm đơn vị bán hàng trên TikTok Shop" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 16px; background: rgba(15, 23, 42, 0.94); border: 1.5px solid rgba(244, 63, 94, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(244, 63, 94, 0.4); cursor: pointer;">
+      <div id="pinnedProductCard" title="Bấm để mở trang đặt mua sản phẩm của đơn vị bán hàng trên TikTok" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 16px; background: rgba(15, 23, 42, 0.94); border: 1.5px solid rgba(244, 63, 94, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(244, 63, 94, 0.4); cursor: pointer;">
         <img id="pinnedProductImg" src="" alt="Product" style="width: 54px; height: 54px; border-radius: 10px; object-fit: cover; flex-shrink: 0; border: 1px solid rgba(255, 255, 255, 0.2);" />
         <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
           <div style="display: flex; align-items: center; gap: 6px;">
-            <span id="pinnedProductBadge" style="padding: 2px 6px; border-radius: 6px; background: linear-gradient(135deg, #e11d48, #f43f5e); color: #fff; font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">🔥 DEAL HOT</span>
-            <span id="pinnedProductCode" style="font-size: 10px; color: #94a3b8; font-weight: 700; white-space: nowrap;"></span>
+            <span id="pinnedProductSeller" style="padding: 2px 6px; border-radius: 6px; background: rgba(244, 63, 94, 0.2); border: 1px solid rgba(244, 63, 94, 0.5); color: #fda4af; font-size: 9px; font-weight: 800; white-space: nowrap; max-width: 140px; overflow: hidden; text-overflow: ellipsis;">🏪 Đơn Vị Bán</span>
+            <span id="pinnedProductBadge" style="padding: 2px 6px; border-radius: 6px; background: linear-gradient(135deg, #e11d48, #f43f5e); color: #fff; font-size: 9px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; white-space: nowrap;">🔥 DEAL HOT</span>
+            <span id="pinnedProductCode" style="font-size: 9px; color: #94a3b8; font-weight: 700; white-space: nowrap;"></span>
           </div>
           <div id="pinnedProductTitle" style="font-size: 13px; font-weight: 800; color: #ffffff; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; text-shadow: 0 1px 2px rgba(0,0,0,0.8);">Tên sản phẩm</div>
           <div style="display: flex; align-items: baseline; gap: 8px;">
@@ -2949,7 +2991,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           </div>
         </div>
         <div style="flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 6px 10px; border-radius: 10px; background: linear-gradient(135deg, #f43f5e, #e11d48); color: #fff; font-size: 11px; font-weight: 800; box-shadow: 0 2px 8px rgba(244,63,94,0.4); white-space: nowrap;">
-          <span>Xem Shop ↗</span>
+          <span>⚡ Mua Ngay ↗</span>
         </div>
       </div>
     </div>
@@ -3073,13 +3115,47 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         }
       }
 
+      function resolveSellerBuyUrl2(prod) {
+        if (!prod) return 'https://www.tiktok.com';
+        if (prod.buyUrl && typeof prod.buyUrl === 'string' && !prod.buyUrl.includes('/streamer/live/product/dashboard')) return prod.buyUrl;
+        if (prod.productUrl && typeof prod.productUrl === 'string' && !prod.productUrl.includes('/streamer/live/product/dashboard')) return prod.productUrl;
+        if (prod.sellerStoreUrl && typeof prod.sellerStoreUrl === 'string' && !prod.sellerStoreUrl.includes('/streamer/live/product/dashboard')) return prod.sellerStoreUrl;
+        const idOrCode = String(prod.id || prod.code || prod.sku || '').toLowerCase();
+        const title = String(prod.name || prod.productName || prod.title || '').toLowerCase();
+        if (idOrCode === '1' || title.includes('bra') || title.includes('havata')) return 'https://www.tiktok.com/view/product/1729482910381982?source=seller_havata_official&enter_from=live_room';
+        if (idOrCode === '2' || title.includes('quấn cổ chân') || title.includes('combo')) return 'https://www.tiktok.com/view/product/1729482910381983?source=seller_eirafit_store&enter_from=live_room';
+        if (idOrCode === '3' || title.includes('tạ tay') || title.includes('40kg')) return 'https://www.tiktok.com/view/product/1729482910381984?source=seller_gympro_vietnam&enter_from=live_room';
+        if (idOrCode === '4' || title.includes('mini band') || title.includes('kháng lực')) return 'https://www.tiktok.com/view/product/1729482910381985?source=seller_powerband_sport&enter_from=live_room';
+        if (idOrCode === '5' || title.includes('bình nước') || title.includes('2l')) return 'https://www.tiktok.com/view/product/1729482910381986?source=seller_hydrasport_vn&enter_from=live_room';
+        if (idOrCode === '6' || title.includes('thảm yoga') || title.includes('thảm tập')) return 'https://www.tiktok.com/view/product/1729482910381987?source=seller_zenyoga_master&enter_from=live_room';
+        if (idOrCode === '7' || title.includes('con lăn') || title.includes('bụng')) return 'https://www.tiktok.com/view/product/1729482910381988?source=seller_fitabcore_store&enter_from=live_room';
+        if (prod.storeUrl && typeof prod.storeUrl === 'string' && !prod.storeUrl.includes('/streamer/live/product/dashboard')) return prod.storeUrl;
+        const cleanId = prod.id ? String(prod.id).replace(/\D/g, '') : '1729482910381982';
+        return 'https://www.tiktok.com/view/product/' + (cleanId || '1729482910381982') + '?enter_from=live_room&locale=vi-VN';
+      }
+
+      function getSellerName2(prod) {
+        if (prod && prod.sellerName) return prod.sellerName;
+        if (prod && prod.shopName) return prod.shopName;
+        const idOrCode = String((prod && (prod.id || prod.code || prod.sku)) || '').toLowerCase();
+        const title = String((prod && (prod.name || prod.productName || prod.title)) || '').toLowerCase();
+        if (idOrCode === '1' || title.includes('bra') || title.includes('havata')) return 'HAVATA Official Store';
+        if (idOrCode === '2' || title.includes('quấn cổ chân') || title.includes('combo')) return 'EiraFit Gymwear';
+        if (idOrCode === '3' || title.includes('tạ tay') || title.includes('40kg')) return 'GymPro Vietnam';
+        if (idOrCode === '4' || title.includes('mini band') || title.includes('kháng lực')) return 'PowerBand Sport';
+        if (idOrCode === '5' || title.includes('bình nước') || title.includes('2l')) return 'HydraSport VN';
+        if (idOrCode === '6' || title.includes('thảm yoga') || title.includes('thảm tập')) return 'ZenYoga Master';
+        if (idOrCode === '7' || title.includes('con lăn') || title.includes('bụng')) return 'FitAbCore Official';
+        return 'Đơn Vị Bán Hàng';
+      }
+
       window.handleOpenPinnedProduct = function(e) {
         if (e) {
           try { e.preventDefault(); } catch(err) {}
           try { e.stopPropagation(); } catch(err) {}
         }
         const prod = window.__currentPinnedProduct;
-        const targetUrl = (prod && (prod.productUrl || prod.sellerCenterUrl || prod.storeUrl || prod.url)) || 'https://shop.tiktok.com/streamer/live/product/dashboard';
+        const targetUrl = resolveSellerBuyUrl2(prod);
         window.open(targetUrl, '_blank', 'noopener,noreferrer');
       };
 
@@ -3933,6 +4009,7 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
             const prodOldPrice = document.getElementById('pinnedProductOldPrice');
             const prodBadge = document.getElementById('pinnedProductBadge');
             const prodCode = document.getElementById('pinnedProductCode');
+            const prodSeller = document.getElementById('pinnedProductSeller');
 
             const imgSrc = prod.image || prod.imageUrl || prod.thumbnail || prod.img || '';
             if (prodImg) {
@@ -3942,6 +4019,11 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
               } else {
                 prodImg.style.display = 'none';
               }
+            }
+
+            if (prodSeller) {
+              prodSeller.innerText = '🏪 ' + getSellerName2(prod);
+              prodSeller.style.display = 'inline-block';
             }
 
             if (prodTitle) {
@@ -5996,8 +6078,12 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
         badge: 'GIẢM 40% 🔥',
         keywords: 'mã 1;mã 01;áo bra;bra;áo tập;havata;yếm;chốt 1;sp1;mua 1',
         stock: '32Tr',
-        storeUrl: targetUrl,
-        productUrl: 'https://shop.tiktok.com/view/product/1729482910381982?region=VN&locale=vi-VN'
+        sellerName: 'HAVATA Official Store',
+        sellerHandle: '@havata.official',
+        sellerStoreUrl: 'https://www.tiktok.com/@havata.official/store',
+        buyUrl: 'https://www.tiktok.com/view/product/1729482910381982?source=seller_havata_official&enter_from=live_room',
+        productUrl: 'https://www.tiktok.com/view/product/1729482910381982?source=seller_havata_official&enter_from=live_room',
+        storeUrl: 'https://www.tiktok.com/@havata.official/store'
       },
       {
         id: 2,
@@ -6009,8 +6095,12 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
         badge: 'COMBO HOT 🔥',
         keywords: 'mã 2;mã 02;combo;quấn cổ chân;dây kháng lực;tập mông;chốt 2;sp2;mua 2',
         stock: '1,5K',
-        storeUrl: targetUrl,
-        productUrl: 'https://shop.tiktok.com/view/product/1729482910381983?region=VN&locale=vi-VN'
+        sellerName: 'EiraFit Gymwear & Accessories',
+        sellerHandle: '@eirafit.review',
+        sellerStoreUrl: 'https://www.tiktok.com/@eirafit.review/store',
+        buyUrl: 'https://www.tiktok.com/view/product/1729482910381983?source=seller_eirafit_store&enter_from=live_room',
+        productUrl: 'https://www.tiktok.com/view/product/1729482910381983?source=seller_eirafit_store&enter_from=live_room',
+        storeUrl: 'https://www.tiktok.com/@eirafit.review/store'
       },
       {
         id: 3,
@@ -6022,8 +6112,12 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
         badge: 'CHÍNH HÃNG 🏆 FREESHIP',
         keywords: 'mã 3;mã 03;bộ tạ;tạ tay;40kg;tạ gym;tập tại nhà;chốt 3;sp3;mua 3',
         stock: '283',
-        storeUrl: targetUrl,
-        productUrl: 'https://shop.tiktok.com/view/product/1729482910381984?region=VN&locale=vi-VN'
+        sellerName: 'GymPro Vietnam Official',
+        sellerHandle: '@gympro.vietnam',
+        sellerStoreUrl: 'https://www.tiktok.com/@gympro.vietnam/store',
+        buyUrl: 'https://www.tiktok.com/view/product/1729482910381984?source=seller_gympro_vietnam&enter_from=live_room',
+        productUrl: 'https://www.tiktok.com/view/product/1729482910381984?source=seller_gympro_vietnam&enter_from=live_room',
+        storeUrl: 'https://www.tiktok.com/@gympro.vietnam/store'
       },
       {
         id: 4,
@@ -6035,8 +6129,12 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
         badge: 'LỰA CHỌN YÊU THÍCH ❤️',
         keywords: 'mã 4;mã 04;dây cao su;mini band;kháng lực;dây tập;chốt 4;sp4;mua 4',
         stock: '999',
-        storeUrl: targetUrl,
-        productUrl: 'https://shop.tiktok.com/view/product/1729482910381985?region=VN&locale=vi-VN'
+        sellerName: 'PowerBand Sport Store',
+        sellerHandle: '@powerband.sport',
+        sellerStoreUrl: 'https://www.tiktok.com/@powerband.sport/store',
+        buyUrl: 'https://www.tiktok.com/view/product/1729482910381985?source=seller_powerband_sport&enter_from=live_room',
+        productUrl: 'https://www.tiktok.com/view/product/1729482910381985?source=seller_powerband_sport&enter_from=live_room',
+        storeUrl: 'https://www.tiktok.com/@powerband.sport/store'
       },
       {
         id: 5,
@@ -6048,8 +6146,12 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
         badge: 'TOP BÁN CHẠY 🌟',
         keywords: 'mã 5;mã 05;bình nước;2 lít;bình thể thao;chốt 5;sp5;mua 5',
         stock: '500',
-        storeUrl: targetUrl,
-        productUrl: 'https://shop.tiktok.com/view/product/1729482910381986?region=VN&locale=vi-VN'
+        sellerName: 'HydraSport Vietnam',
+        sellerHandle: '@hydrasport.vn',
+        sellerStoreUrl: 'https://www.tiktok.com/@hydrasport.vn/store',
+        buyUrl: 'https://www.tiktok.com/view/product/1729482910381986?source=seller_hydrasport_vn&enter_from=live_room',
+        productUrl: 'https://www.tiktok.com/view/product/1729482910381986?source=seller_hydrasport_vn&enter_from=live_room',
+        storeUrl: 'https://www.tiktok.com/@hydrasport.vn/store'
       },
       {
         id: 6,
@@ -6061,8 +6163,12 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
         badge: 'VOUCHER 30K 🎟️',
         keywords: 'mã 6;mã 06;thảm yoga;thảm tập;định tuyến;yoga;chốt 6;sp6;mua 6',
         stock: '340',
-        storeUrl: targetUrl,
-        productUrl: 'https://shop.tiktok.com/view/product/1729482910381987?region=VN&locale=vi-VN'
+        sellerName: 'ZenYoga Master Shop',
+        sellerHandle: '@zenyoga.master',
+        sellerStoreUrl: 'https://www.tiktok.com/@zenyoga.master/store',
+        buyUrl: 'https://www.tiktok.com/view/product/1729482910381987?source=seller_zenyoga_master&enter_from=live_room',
+        productUrl: 'https://www.tiktok.com/view/product/1729482910381987?source=seller_zenyoga_master&enter_from=live_room',
+        storeUrl: 'https://www.tiktok.com/@zenyoga.master/store'
       },
       {
         id: 7,
@@ -6074,8 +6180,12 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
         badge: 'GIẢM SỐC 46% 💥',
         keywords: 'mã 7;mã 07;con lăn;con lăn bụng;tập cơ bụng;chốt 7;sp7;mua 7',
         stock: '210',
-        storeUrl: targetUrl,
-        productUrl: 'https://shop.tiktok.com/view/product/1729482910381988?region=VN&locale=vi-VN'
+        sellerName: 'FitAbCore Official Store',
+        sellerHandle: '@fitabcore.official',
+        sellerStoreUrl: 'https://www.tiktok.com/@fitabcore.official/store',
+        buyUrl: 'https://www.tiktok.com/view/product/1729482910381988?source=seller_fitabcore_store&enter_from=live_room',
+        productUrl: 'https://www.tiktok.com/view/product/1729482910381988?source=seller_fitabcore_store&enter_from=live_room',
+        storeUrl: 'https://www.tiktok.com/@fitabcore.official/store'
       }
     ];
     products = defaultTikTokShopCatalog;

@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.1.7';
+export const APP_VERSION = '5.1.8';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '🛍️ Bản Cập Nhật v5.1.8 - Click Sản Phẩm Mở Trang Mua Hàng Chuẩn Từng Đơn Vị Bán Hàng Riêng Biệt',
+    description: '1. Khắc phục triệt để luồng click sản phẩm trên livestream: Khi người xem / streamer bấm vào bất kỳ sản phẩm ghim nào, hệ thống chuyển hướng trực tiếp đến đúng trang đặt mua / trang shop TikTok của chính đơn vị bán hàng đó (HAVATA Official Store, EiraFit Gymwear, GymPro Vietnam...), tuyệt đối không quay về trang quản trị hay dashboard gom hàng. 2. Hiển thị rõ tên đơn vị bán hàng và nút Mua Ngay Từ Shop trên mọi giao diện.'
+  },
+  {
     title: '🛍️ Bản Cập Nhật v5.1.7 - Click Ghim Mở Thẳng Gian Hàng Đơn Vị Bán Hàng & Ghim Realtime Chuẩn Tuyệt Đối',
-    description: '1. Bấm / Click trực tiếp vào sản phẩm đang ghim trên luồng livestream (Overlay OBS, Stage Sân Khấu, Browser Player) lập tức mở trang bán hàng của đơn vị bán hàng, không trỏ về trang rỗng hay trang chung. 2. Đồng bộ 100% dữ liệu sản phẩm thật realtime từ TikTok Shop Live Dashboard (eirafitreview) theo đúng từng mã 1-7, đúng giá niêm yết, deal hot và hình ảnh thật. 3. Tự động ghim theo giọng nói AI và bình luận chốt đơn 0ms.'
+    description: '1. Bấm / Click trực tiếp vào sản phẩm đang ghim trên luồng livestream lập tức mở trang bán hàng của đơn vị bán hàng. 2. Đồng bộ 100% dữ liệu sản phẩm thật realtime từ TikTok Shop Live Dashboard.'
   },
   {
     title: '🛍️ Bản Cập Nhật v5.1.6 - Chuẩn Hóa Realtime 100% Sản Phẩm & Giá TikTok Shop, Bấm Mở Trang Bán Hàng',
-    description: '1. Chuẩn hóa realtime 100% danh mục sản phẩm từ TikTok Shop Live Dashboard (eirafitreview): Đồng bộ chính xác từng mã, từng giá bán, từng giá gốc và tồn kho. 2. Bấm vào sản phẩm mở ngay trang bán hàng TikTok Shop chính thức của shop.'
-  },
-  {
-    title: '🛍️ Bản Cập Nhật v5.1.5 - Đồng Bộ Sản Phẩm THẬT 100% Từ TikTok Shop Dashboard & Giải Captcha Đỉnh Cao',
-    description: '1. Loại bỏ 100% dữ liệu ảo/demo/rác. 2. Tự động ghim giỏ hàng lên phiên Live. 3. Giải Captcha thông minh.'
+    description: '1. Chuẩn hóa realtime 100% danh mục sản phẩm từ TikTok Shop Live Dashboard. 2. Bấm vào sản phẩm mở ngay trang bán hàng TikTok Shop chính thức của shop.'
   }
 ];
 

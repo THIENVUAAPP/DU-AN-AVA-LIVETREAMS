@@ -43,6 +43,7 @@ import { saveCharacterToIDB, loadAllCharactersFromIDB, deleteCharacterFromIDB, d
 import { generateFileSignature, registerFileInRAM } from '../../utils/mediaDeduplication';
 import { SUPPORTED_LANGUAGES, getCurrentLanguage, setCurrentLanguage, t } from '../../utils/i18n';
 import UpdateNotificationModal, { APP_VERSION } from './UpdateNotificationModal';
+import { resolveSellerProductBuyUrl, getProductSellerName } from '../../utils/autoPinProductService';
 import { bootstrapDefaultPresets } from '../../utils/defaultPresetsBootstrap';
 import { fastStreamUpload } from '../../utils/fastStreamService';
 import { setActiveMedia, removeActiveMedia, clearActiveMedia } from '../../utils/activeMediaStore';
@@ -6519,78 +6520,82 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 );
               })()}
 
-              {/* OVERLAY SẢN PHẨM ĐANG GHIM TỰ ĐỘNG TỪ TIKTOK SHOP (shop.tiktok.com) */}
-              {livePinnedProduct && (
-                <div className="absolute bottom-4 left-4 z-40 max-w-[290px] sm:max-w-[340px] pointer-events-auto transition-all animate-bounce-subtle">
-                  <div className="bg-slate-950/95 backdrop-blur-md border border-rose-500/80 hover:border-rose-400 rounded-2xl p-2.5 shadow-[0_10px_25px_rgba(244,63,94,0.45)] text-white space-y-1.5 transition-all">
-                    {/* Header TikTok Shop */}
-                    <div className="flex items-center justify-between border-b border-white/10 pb-1">
-                      <span 
-                        onClick={() => window.open(livePinnedProduct.productUrl || livePinnedProduct.storeUrl || livePinnedProduct.sellerCenterUrl || 'https://shop.tiktok.com/streamer/live/product/dashboard', '_blank')}
-                        className="text-[9px] font-black text-rose-400 flex items-center gap-1 uppercase tracking-wider cursor-pointer hover:underline"
-                        title="Bấm để mở trang bán hàng của đơn vị bán"
-                      >
-                        <span>🎵 ĐƠN VỊ BÁN HÀNG</span>
-                        <span className="text-gray-400">↗</span>
-                      </span>
-                      {livePinnedProduct.triggerSource && (
-                        <span className="text-[8px] font-bold text-amber-300 bg-amber-500/20 px-1.5 py-0.2 rounded border border-amber-500/30 truncate max-w-[140px]">
-                          {livePinnedProduct.triggerSource.includes('comment') ? '💬 Khách hỏi' :
-                           livePinnedProduct.triggerSource.includes('video') ? '🎬 Theo video' :
-                           livePinnedProduct.triggerSource.includes('sequencer') ? '⚡ Kịch bản Live' : '🔥 Auto Pin'}
-                        </span>
-                      )}
-                    </div>
+              {/* OVERLAY SẢN PHẨM ĐANG GHIM TỰ ĐỘNG (CHUYỂN THẲNG ĐẾN TRANG MUA HÀNG ĐƠN VỊ BÁN) */}
+              {livePinnedProduct && (() => {
+                const buyerStoreUrl = resolveSellerProductBuyUrl(livePinnedProduct);
+                const sellerName = getProductSellerName(livePinnedProduct);
 
-                    <div className="flex items-center gap-2.5">
-                      <div 
-                        onClick={() => window.open(livePinnedProduct.productUrl || livePinnedProduct.storeUrl || livePinnedProduct.sellerCenterUrl || 'https://shop.tiktok.com/streamer/live/product/dashboard', '_blank')}
-                        className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-white/20 bg-black cursor-pointer group"
-                        title="Bấm để mở trang bán hàng của đơn vị bán"
-                      >
-                        <img src={livePinnedProduct.image} alt={livePinnedProduct.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
-                        <span className="absolute top-0 left-0 bg-rose-600 text-white text-[7px] font-black px-1 py-0.2 rounded-br uppercase tracking-wider">
-                          {livePinnedProduct.id ? `MÃ #${livePinnedProduct.id}` : '📌 GHIM'}
-                        </span>
-                      </div>
-                      <div className="min-w-0 flex-1 text-left">
-                        <h4 
-                          onClick={() => window.open(livePinnedProduct.productUrl || livePinnedProduct.storeUrl || livePinnedProduct.sellerCenterUrl || 'https://shop.tiktok.com/streamer/live/product/dashboard', '_blank')}
-                          className="text-[11px] font-black text-white truncate cursor-pointer hover:text-pink-300 transition-colors"
-                          title="Bấm để mở trang bán hàng của đơn vị bán"
+                return (
+                  <div className="absolute bottom-4 left-4 z-40 max-w-[290px] sm:max-w-[350px] pointer-events-auto transition-all animate-bounce-subtle">
+                    <div className="bg-slate-950/95 backdrop-blur-md border border-rose-500/80 hover:border-rose-400 rounded-2xl p-2.5 shadow-[0_10px_25px_rgba(244,63,94,0.45)] text-white space-y-1.5 transition-all">
+                      {/* Header TikTok Shop */}
+                      <div className="flex items-center justify-between border-b border-white/10 pb-1">
+                        <span 
+                          onClick={() => window.open(buyerStoreUrl, '_blank', 'noopener,noreferrer')}
+                          className="text-[9px] font-black text-rose-400 flex items-center gap-1 uppercase tracking-wider cursor-pointer hover:underline truncate max-w-[160px]"
+                          title={`Bấm để mở trang bán hàng của ${sellerName}`}
                         >
-                          {livePinnedProduct.name}
-                        </h4>
-                        <div className="flex items-baseline gap-1.5 mt-0.5">
-                          <span className="text-xs font-black text-rose-400 font-mono">{livePinnedProduct.price}</span>
-                          {livePinnedProduct.oldPrice && (
-                            <span className="text-[9px] text-gray-400 line-through font-mono">{livePinnedProduct.oldPrice}</span>
-                          )}
-                        </div>
-                        <div className="text-[8px] text-amber-300 font-bold flex items-center justify-between gap-1 mt-0.5">
-                          <span>🔥 {livePinnedProduct.badge || 'DEAL TIKTOK SHOP'}</span>
-                          <span 
-                            onClick={() => window.open(livePinnedProduct.productUrl || livePinnedProduct.storeUrl || livePinnedProduct.sellerCenterUrl || 'https://shop.tiktok.com/streamer/live/product/dashboard', '_blank')}
-                            className="text-cyan-300 hover:underline cursor-pointer font-bold"
-                          >
-                            Xem Shop ↗
+                          <span>🏪 {sellerName}</span>
+                          <span className="text-gray-400">↗</span>
+                        </span>
+                        {livePinnedProduct.triggerSource && (
+                          <span className="text-[8px] font-bold text-amber-300 bg-amber-500/20 px-1.5 py-0.2 rounded border border-amber-500/30 truncate max-w-[130px]">
+                            {livePinnedProduct.triggerSource.includes('comment') ? '💬 Khách hỏi' :
+                             livePinnedProduct.triggerSource.includes('video') ? '🎬 Theo video' :
+                             livePinnedProduct.triggerSource.includes('sequencer') ? '⚡ Kịch bản Live' : '🔥 Auto Pin'}
+                          </span>
+                        )}
+                      </div>
+
+                      <div className="flex items-center gap-2.5">
+                        <div 
+                          onClick={() => window.open(buyerStoreUrl, '_blank', 'noopener,noreferrer')}
+                          className="relative w-12 h-12 rounded-xl overflow-hidden shrink-0 border border-white/20 bg-black cursor-pointer group"
+                          title={`Bấm để mở trang bán hàng của ${sellerName}`}
+                        >
+                          <img src={livePinnedProduct.image} alt={livePinnedProduct.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                          <span className="absolute top-0 left-0 bg-rose-600 text-white text-[7px] font-black px-1 py-0.2 rounded-br uppercase tracking-wider">
+                            {livePinnedProduct.id ? `MÃ #${livePinnedProduct.id}` : '📌 GHIM'}
                           </span>
                         </div>
+                        <div className="min-w-0 flex-1 text-left">
+                          <h4 
+                            onClick={() => window.open(buyerStoreUrl, '_blank', 'noopener,noreferrer')}
+                            className="text-[11px] font-black text-white truncate cursor-pointer hover:text-pink-300 transition-colors"
+                            title={`Bấm để mở trang bán hàng của ${sellerName}`}
+                          >
+                            {livePinnedProduct.name}
+                          </h4>
+                          <div className="flex items-baseline gap-1.5 mt-0.5">
+                            <span className="text-xs font-black text-rose-400 font-mono">{livePinnedProduct.price}</span>
+                            {livePinnedProduct.oldPrice && (
+                              <span className="text-[9px] text-gray-400 line-through font-mono">{livePinnedProduct.oldPrice}</span>
+                            )}
+                          </div>
+                          <div className="text-[8px] text-amber-300 font-bold flex items-center justify-between gap-1 mt-0.5">
+                            <span>🔥 {livePinnedProduct.badge || 'DEAL TIKTOK SHOP'}</span>
+                            <span 
+                              onClick={() => window.open(buyerStoreUrl, '_blank', 'noopener,noreferrer')}
+                              className="text-cyan-300 hover:underline cursor-pointer font-bold"
+                            >
+                              ⚡ Mua Ngay ↗
+                            </span>
+                          </div>
+                        </div>
+                        <button
+                          onClick={() => {
+                            setLivePinnedProduct(null);
+                            localStorage.removeItem('avalive_current_pinned_product');
+                          }}
+                          className="text-gray-400 hover:text-white p-1 rounded-md text-xs cursor-pointer self-start"
+                        >
+                          ✕
+                        </button>
                       </div>
-                      <button
-                        onClick={() => {
-                          setLivePinnedProduct(null);
-                          localStorage.removeItem('avalive_current_pinned_product');
-                        }}
-                        className="text-gray-400 hover:text-white p-1 rounded-md text-xs cursor-pointer self-start"
-                        title="Bỏ ghim"
-                      >
-                        ✕
-                      </button>
                     </div>
                   </div>
-                </div>
-              )}
+                );
+              })()}
             </div>
           </div>
         )}
