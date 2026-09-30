@@ -3,7 +3,7 @@ import { supabase } from "../lib/supabaseClient";
 import { 
   ShieldCheck, Cpu, Terminal, Zap, CheckCircle2, Scan, Activity, ArrowLeft,
   Globe, ShoppingBag, Plus, Trash2, Pin, RefreshCw, Sparkles, ExternalLink,
-  Sliders, MessageSquare, Volume2, Video, Check, GripVertical, ChevronDown,
+  Sliders, MessageSquare, Volume2, Video, Check, GripVertical, ChevronDown, ChevronUp,
   HelpCircle, Copy, CheckCheck, Play, Square, Target, AlertTriangle, X, Link,
   Radio, Wifi, Shield, Layers
 } from "lucide-react";
@@ -74,6 +74,14 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
     responseTime: 12,
     historyLogs: getInitialHistoryLogs()
   }));
+
+  const [isHistoryExpanded, setIsHistoryExpanded] = useState(() => {
+    try {
+      return localStorage.getItem("avalive_captcha_history_expanded") === "true";
+    } catch (e) {
+      return false;
+    }
+  });
 
   const [captchaConfig, setCaptchaConfig] = useState(() => {
     try {
@@ -1103,44 +1111,103 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
                 <div ref={logsEndRef} />
               </div>
 
-              {/* HISTORY TABLE */}
-              <div className="bg-[#141419] border border-white/5 rounded-2xl overflow-hidden">
-                 <div className="p-5 border-b border-white/5 flex items-center justify-between">
-                   <h4 className="text-sm font-black text-white flex items-center gap-2">
-                     <Activity className="w-4 h-4 text-purple-400" /> Lịch Sử Giải Mã Real-time
-                   </h4>
+              {/* HISTORY TABLE WITH COLLAPSIBLE TOGGLE */}
+              <div className="bg-[#141419] border border-white/5 rounded-2xl overflow-hidden transition-all duration-300">
+                 <div 
+                   onClick={() => {
+                     const next = !isHistoryExpanded;
+                     setIsHistoryExpanded(next);
+                     try { localStorage.setItem("avalive_captcha_history_expanded", String(next)); } catch (e) {}
+                   }}
+                   className="p-4 sm:p-5 border-b border-white/5 flex items-center justify-between cursor-pointer hover:bg-white/[0.02] transition-colors select-none"
+                 >
+                   <div className="flex items-center gap-2.5">
+                     <Activity className="w-4 h-4 text-purple-400" />
+                     <h4 className="text-sm font-black text-white flex items-center gap-2">
+                       Lịch Sử Giải Mã Real-time
+                     </h4>
+                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-mono font-bold">
+                       {captchaStats.historyLogs.length} bản ghi
+                     </span>
+                   </div>
+
+                   <div className="flex items-center gap-2">
+                     <button 
+                       type="button"
+                       className="text-xs text-gray-300 hover:text-white flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 font-bold transition-all cursor-pointer shadow-sm active:scale-95"
+                     >
+                       {isHistoryExpanded ? (
+                         <>
+                           <ChevronUp className="w-3.5 h-3.5 text-cyan-400" />
+                           <span>Thu Gọn</span>
+                         </>
+                       ) : (
+                         <>
+                           <ChevronDown className="w-3.5 h-3.5 text-cyan-400" />
+                           <span>Mở Rộng Xem Chi Tiết</span>
+                         </>
+                       )}
+                     </button>
+                   </div>
                  </div>
-                 <div className="overflow-x-auto">
-                   <table className="w-full text-left text-xs">
-                      <thead className="bg-[#1A1A24] text-[10px] uppercase tracking-wider text-gray-500">
-                         <tr>
-                           <th className="px-5 py-3 font-black">Thời Gian</th>
-                           <th className="px-5 py-3 font-black">Nền Tảng</th>
-                           <th className="px-5 py-3 font-black">Loại Captcha</th>
-                           <th className="px-5 py-3 font-black">Tốc Độ</th>
-                           <th className="px-5 py-3 font-black text-right">Trạng Thái</th>
-                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-white/5 font-mono text-gray-300">
-                         {captchaStats.historyLogs.map((log, i) => (
-                            <tr key={i} className="hover:bg-white/5 transition-colors">
-                               <td className="px-5 py-3">{log.time}</td>
-                               <td className="px-5 py-3 font-bold text-white">{log.p}</td>
-                               <td className="px-5 py-3">{log.type}</td>
-                               <td className="px-5 py-3 text-cyan-400">{log.speed}</td>
-                               <td className="px-5 py-3 text-right">
-                                  <span className={`px-2 py-1 rounded text-[10px] font-black ${
-                                    log.status === "SUCCESS" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : 
-                                    "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                                  }`}>
-                                     {log.status}
-                                  </span>
-                               </td>
-                            </tr>
-                         ))}
-                      </tbody>
-                   </table>
-                 </div>
+
+                 {!isHistoryExpanded ? (
+                   /* COMPACT VIEW KHI THU GỌN */
+                   <div 
+                     onClick={() => {
+                       setIsHistoryExpanded(true);
+                       try { localStorage.setItem("avalive_captcha_history_expanded", "true"); } catch (e) {}
+                     }}
+                     className="p-3.5 px-5 bg-black/30 flex items-center justify-between text-xs cursor-pointer hover:bg-black/40 transition-colors"
+                   >
+                     {captchaStats.historyLogs.length > 0 ? (
+                       <div className="flex items-center gap-2 text-gray-300 flex-wrap">
+                         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                         <span className="font-mono text-gray-400">[{captchaStats.historyLogs[0]?.time}]</span>
+                         <span className="text-white font-bold">{captchaStats.historyLogs[0]?.p}:</span>
+                         <span className="text-gray-300">{captchaStats.historyLogs[0]?.type}</span>
+                         <span className="text-cyan-400 font-mono font-bold">({captchaStats.historyLogs[0]?.speed})</span>
+                         <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">SUCCESS</span>
+                       </div>
+                     ) : (
+                       <span className="text-gray-400">Đang lắng nghe phiên giải mã real-time...</span>
+                     )}
+                     <span className="text-[11px] text-cyan-400 font-bold hover:underline shrink-0 ml-2">Nhấn để mở rộng</span>
+                   </div>
+                 ) : (
+                   /* FULL TABLE VIEW KHI MỞ RỘNG */
+                   <div className="overflow-x-auto">
+                     <table className="w-full text-left text-xs">
+                        <thead className="bg-[#1A1A24] text-[10px] uppercase tracking-wider text-gray-500">
+                           <tr>
+                             <th className="px-5 py-3 font-black">Thời Gian</th>
+                             <th className="px-5 py-3 font-black">Nền Tảng</th>
+                             <th className="px-5 py-3 font-black">Loại Captcha</th>
+                             <th className="px-5 py-3 font-black">Tốc Độ</th>
+                             <th className="px-5 py-3 font-black text-right">Trạng Thái</th>
+                           </tr>
+                        </thead>
+                        <tbody className="divide-y divide-white/5 font-mono text-gray-300">
+                           {captchaStats.historyLogs.map((log, i) => (
+                              <tr key={i} className="hover:bg-white/5 transition-colors">
+                                 <td className="px-5 py-3">{log.time}</td>
+                                 <td className="px-5 py-3 font-bold text-white">{log.p}</td>
+                                 <td className="px-5 py-3">{log.type}</td>
+                                 <td className="px-5 py-3 text-cyan-400">{log.speed}</td>
+                                 <td className="px-5 py-3 text-right">
+                                    <span className={`px-2 py-1 rounded text-[10px] font-black ${
+                                      log.status === "SUCCESS" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : 
+                                      "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                    }`}>
+                                       {log.status}
+                                    </span>
+                                 </td>
+                              </tr>
+                           ))}
+                        </tbody>
+                     </table>
+                   </div>
+                 )}
               </div>
 
             </div>

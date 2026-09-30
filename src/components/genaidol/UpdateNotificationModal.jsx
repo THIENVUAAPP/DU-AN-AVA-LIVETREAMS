@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.3.0';
+export const APP_VERSION = '5.3.1';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.3.1 - Nâng Cấp Nút Thu Gọn / Mở Rộng Lịch Sử Giải Mã Real-time Gọn Gàng & Tối Ưu Trải Nghiệm Streamer',
+    description: '1. Tích hợp nút bấm Thu Gọn / Mở Rộng thông minh cho bảng "Lịch Sử Giải Mã Real-time": Mặc định thu gọn tinh gọn không chiếm diện tích, hiển thị thanh trạng thái tóm tắt sự kiện mới nhất. Khi cần có thể mở rộng xem chi tiết 1 click. 2. Bảo lưu trạng thái đóng/mở theo thói quen người dùng.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.3.0 - Đột Phá AI Giải Captcha Siêu Tốc & Đồng Bộ Real-time 100% Theo Thời Gian Thực',
     description: '1. Cập nhật Real-time 100% theo thời gian thực trên phiên livestream TikTok Live Studio, TikTok Shop và Shopee Live: Tự động phát hiện và giải mã captcha siêu tốc chỉ trong 10ms - 15ms khi vừa xuất hiện. 2. Luồng Terminal trực tiếp (tail -f /var/log/bypass.log) & Bảng Lịch Sử Giải Mã Real-time chuẩn xác từng giây với đồng hồ hệ thống. 3. Tối ưu hóa bảng Cấu Hình Chiến Thuật AI và Radar trạng thái Hoạt Động Ổn Định 100% Computing.'
