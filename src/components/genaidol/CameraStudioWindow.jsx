@@ -7,7 +7,7 @@ import {
   Wand2, Focus, ShieldCheck, Zap, QrCode, Paintbrush, Eraser, Trash2, Undo, Redo,
   Laptop, Armchair, Box, CheckCircle2, Copy, ExternalLink, Link2, Wifi, Power,
   CheckCheck, FastForward, Play, Activity, RotateCcw, Shield, Crop, SplitSquareVertical,
-  AlignJustify, AlignHorizontalJustifyCenter, AlignVerticalJustifyCenter, Hash
+  AlignJustify, AlignHorizontalJustifyCenter, AlignVerticalJustifyCenter, Hash, Scale
 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 
@@ -20,28 +20,28 @@ export default function CameraStudioWindow({
   isDragging,
   onDragStart
 }) {
-  // 1. TÁCH RIÊNG 2 CỬA SỔ: Khung Camera độc lập & Bảng điều khiển Suite độc lập
+  // 1. TÁCH RIÊNG 2 CỬA SỔ: Khung Camera 100% Trống Trơn & Bảng Điều Khiển Suite Độc Lập
   const [showControls, setShowControls] = useState(true);
   const [activeTab, setActiveTab] = useState('bg'); // 'bg' | 'brush' | 'crop' | 'move8' | 'angles' | 'phone_qr'
   const [videoSource, setVideoSource] = useState('computer'); // 'computer' | 'phone'
   const [moveSpeedStep, setMoveSpeedStep] = useState(20); // 10 | 20 | 35 (%)
   const [autoConfirmed, setAutoConfirmed] = useState(false);
-  const [showGhostOverlay, setShowGhostOverlay] = useState(false); // Hiển thị nền mờ để dễ canh chỉnh
+  const [showGhostOverlay, setShowGhostOverlay] = useState(false); // Hiển thị nền mờ để dễ quan sát
   const [showGridGuides, setShowGridGuides] = useState(false); // Hiển thị lưới thước canh ngang dọc
-  const [brushAxisLock, setBrushAxisLock] = useState('free'); // 'free' | 'horizontal' | 'vertical' | 'box_rect'
+  const [brushAxisLock, setBrushAxisLock] = useState('free'); // 'free' | 'horizontal' | 'vertical'
   const [compareMode, setCompareMode] = useState('off'); // 'off' | 'original' | 'split'
   const [compareSplitPos, setCompareSplitPos] = useState(50); // 0 -> 100 (%)
 
-  // Kích thước co giãn 8 hướng của Khung Camera (Width & Height)
+  // Kích thước co giãn của Khung Camera (Width & Height) điều khiển trực tiếp từ bảng cài đặt
   const [cameraDimensions, setCameraDimensions] = useState(() => {
     try {
       const saved = localStorage.getItem('avalive_studio_cam_dims_v1');
       if (saved) return JSON.parse(saved);
     } catch (e) {}
-    return { width: 350, height: 210 };
+    return { width: 360, height: 220 };
   });
 
-  // Tọa độ riêng biệt cho Bảng Điều Khiển Suite (có thể kéo thả độc lập)
+  // Tọa độ riêng biệt cho Bảng Điều Khiển Suite (kéo thả độc lập)
   const [panelPos, setPanelPos] = useState(() => {
     try {
       const saved = localStorage.getItem('avalive_studio_panel_pos');
@@ -79,7 +79,7 @@ export default function CameraStudioWindow({
     };
   });
 
-  // ✂️ Cấu hình Cắt Camera / Cắt Góc / Cắt Khung Đa Chiều (Crop 4 cạnh & 4 góc)
+  // ✂️ Cấu hình Cắt Camera / Cắt Góc (Crop 4 cạnh & 4 góc)
   const [cropConfig, setCropConfig] = useState(() => {
     try {
       const saved = localStorage.getItem('avalive_studio_crop_config_v2');
@@ -98,7 +98,7 @@ export default function CameraStudioWindow({
     };
   });
 
-  // 🧹 Cấu hình Xóa Phông Nền AI Siêu Sạch & Bảo Vệ Sản Phẩm
+  // 🧹 Cấu hình Xóa Phông Nền AI TikTok Siêu Sạch Siêu Mịn
   const [bgRemovalConfig, setBgRemovalConfig] = useState(() => {
     try {
       const saved = localStorage.getItem('avalive_studio_bg_config_v3');
@@ -106,25 +106,25 @@ export default function CameraStudioWindow({
     } catch (e) {}
     return {
       mode: 'ai_person',
-      sensitivity: 58,
-      feather: 10,
-      spillReduction: 65,
+      sensitivity: 52, // 52% cân bằng hoàn hảo
+      feather: 12, // Viền siêu mịn màng không gãy khúc
+      spillReduction: 60,
       bgType: 'transparent',
       bgColor: '#00ff00',
-      protectProduct: true,
-      hybridChroma: false, // Kết hợp cả AI + Phông xanh
+      protectProduct: false,
+      hybridChroma: false,
       keepObjects: {
         person: true,
-        product: true,
-        computer: true,
-        desk: true,
-        chair: true,
+        product: false,
+        computer: false,
+        desk: false,
+        chair: false,
         shelf: false
       }
     };
   });
 
-  // 🖌️ Cọ Quét Vuông Vức Đa Góc & Cọ Xóa Nền Chuẩn Kích Thước Ngay Hàng Thẳng Lối
+  // 🖌️ Cọ Quét Vuông Vức & Tròn Chuẩn Kích Thước Ngay Hàng Thẳng Lối
   const [brushMode, setBrushMode] = useState('none'); // 'none' | 'keep' | 'erase'
   const [brushSize, setBrushSize] = useState(35); // 15 | 30 | 50 | 80 | 120px
   const [brushShape, setBrushShape] = useState('square'); // 'square' | 'round'
@@ -140,11 +140,11 @@ export default function CameraStudioWindow({
       if (saved) return JSON.parse(saved);
     } catch (e) {}
     return {
-      brightness: 100,
-      contrast: 100,
-      saturate: 105,
+      brightness: 102,
+      contrast: 102,
+      saturate: 104,
       temperature: 0,
-      skinSmooth: 30
+      skinSmooth: 20
     };
   });
 
@@ -251,8 +251,8 @@ export default function CameraStudioWindow({
     };
     const defaultBgConfig = {
       mode: 'none',
-      sensitivity: 58,
-      feather: 8,
+      sensitivity: 52,
+      feather: 12,
       spillReduction: 60,
       bgType: 'transparent',
       bgColor: '#00ff00',
@@ -260,10 +260,10 @@ export default function CameraStudioWindow({
       hybridChroma: false,
       keepObjects: {
         person: true,
-        product: true,
-        computer: true,
-        desk: true,
-        chair: true,
+        product: false,
+        computer: false,
+        desk: false,
+        chair: false,
         shelf: false
       }
     };
@@ -274,7 +274,7 @@ export default function CameraStudioWindow({
       temperature: 0,
       skinSmooth: 0
     };
-    const defaultDims = { width: 350, height: 210 };
+    const defaultDims = { width: 360, height: 220 };
 
     setCamTransform(defaultTransform);
     setCropConfig(defaultCrop);
@@ -289,7 +289,6 @@ export default function CameraStudioWindow({
     setHistory([]);
     setHistoryIndex(-1);
 
-    // Ghi đè trực tiếp các giá trị nguyên bản vào localStorage
     try {
       localStorage.setItem('avalive_studio_cam_transform_v3', JSON.stringify(defaultTransform));
       localStorage.setItem('avalive_studio_crop_config_v2', JSON.stringify(defaultCrop));
@@ -306,7 +305,7 @@ export default function CameraStudioWindow({
     setTimeout(() => setAutoConfirmed(false), 2500);
   };
 
-  // 🧹 Xóa sạch tất cả các nét cọ vẽ (Clear all brush strokes)
+  // 🧹 Xóa sạch tất cả các nét cọ vẽ
   const handleClearAllBrushes = () => {
     setBrushStrokes([]);
     setBrushMode('none');
@@ -317,9 +316,9 @@ export default function CameraStudioWindow({
   const handleAutoOptimize = () => {
     setCamTransform(prev => ({
       ...prev,
-      zoom: 1.15,
+      zoom: 1.12,
       panX: 0,
-      panY: -5,
+      panY: -4,
       tiltX: 0,
       tiltY: 0,
       rotate: 0,
@@ -327,18 +326,18 @@ export default function CameraStudioWindow({
       borderRadius: 12
     }));
     setColorTune({
-      brightness: 108,
-      contrast: 105,
-      saturate: 110,
-      temperature: 2,
-      skinSmooth: 40
+      brightness: 106,
+      contrast: 104,
+      saturate: 108,
+      temperature: 1,
+      skinSmooth: 25
     });
     setBgRemovalConfig(prev => ({
       ...prev,
       mode: 'ai_person',
-      sensitivity: 58,
-      feather: 10,
-      protectProduct: true
+      sensitivity: 52,
+      feather: 14,
+      protectProduct: false
     }));
     handleConfirmAction();
   };
@@ -429,81 +428,17 @@ export default function CameraStudioWindow({
     };
   }, [phoneCamSession]);
 
-  // ✂️ Chế độ Tay Nắm: 'crop' (Cắt Khung Linh Hoạt) hoặc 'resize' (Đổi Kích Thước)
-  const [handleMode, setHandleMode] = useState('crop');
-  const isResizingRef = useRef(false);
-  const resizeHandleRef = useRef(null);
-  const resizeStartRef = useRef({ x: 0, y: 0, w: 0, h: 0, crop: {} });
-
-  // ↔️ / ✂️ Kéo thả 8 hướng trực tiếp trên màn hình camera (Cắt Khung Đa Góc & Co Giãn)
-  const handleResizeMouseDown = (e, handle) => {
-    e.stopPropagation();
-    e.preventDefault();
-    isResizingRef.current = true;
-    resizeHandleRef.current = handle;
-    resizeStartRef.current = {
-      x: e.clientX,
-      y: e.clientY,
-      w: cameraDimensions.width,
-      h: cameraDimensions.height,
-      crop: { ...cropConfig }
+  // Kéo thả Panel Điều Khiển Suite độc lập
+  const handlePanelMouseDown = (e) => {
+    setIsDraggingPanel(true);
+    panelDragOffset.current = {
+      x: e.clientX - panelPos.x,
+      y: e.clientY - panelPos.y
     };
   };
 
   useEffect(() => {
     const handleMouseMove = (e) => {
-      if (isResizingRef.current && resizeHandleRef.current) {
-        const dx = e.clientX - resizeStartRef.current.x;
-        const dy = e.clientY - resizeStartRef.current.y;
-        const handle = resizeHandleRef.current;
-        const start = resizeStartRef.current;
-
-        if (handleMode === 'crop') {
-          // ✂️ Chế độ Cắt Khung Linh Hoạt (Direct Interactive Crop)
-          const camW = Math.max(100, start.w || 350);
-          const camH = Math.max(80, start.h || 210);
-          let newCrop = { ...start.crop };
-
-          if (handle === 'n') {
-            newCrop.cropTop = Math.max(0, Math.min(70, (start.crop.cropTop || 0) + Math.round((dy / camH) * 100)));
-          } else if (handle === 's') {
-            newCrop.cropBottom = Math.max(0, Math.min(70, (start.crop.cropBottom || 0) - Math.round((dy / camH) * 100)));
-          } else if (handle === 'w') {
-            newCrop.cropLeft = Math.max(0, Math.min(70, (start.crop.cropLeft || 0) + Math.round((dx / camW) * 100)));
-          } else if (handle === 'e') {
-            newCrop.cropRight = Math.max(0, Math.min(70, (start.crop.cropRight || 0) - Math.round((dx / camW) * 100)));
-          } else if (handle === 'nw') {
-            newCrop.cropTop = Math.max(0, Math.min(70, (start.crop.cropTop || 0) + Math.round((dy / camH) * 100)));
-            newCrop.cropLeft = Math.max(0, Math.min(70, (start.crop.cropLeft || 0) + Math.round((dx / camW) * 100)));
-          } else if (handle === 'ne') {
-            newCrop.cropTop = Math.max(0, Math.min(70, (start.crop.cropTop || 0) + Math.round((dy / camH) * 100)));
-            newCrop.cropRight = Math.max(0, Math.min(70, (start.crop.cropRight || 0) - Math.round((dx / camW) * 100)));
-          } else if (handle === 'sw') {
-            newCrop.cropBottom = Math.max(0, Math.min(70, (start.crop.cropBottom || 0) - Math.round((dy / camH) * 100)));
-            newCrop.cropLeft = Math.max(0, Math.min(70, (start.crop.cropLeft || 0) + Math.round((dx / camW) * 100)));
-          } else if (handle === 'se') {
-            newCrop.cropBottom = Math.max(0, Math.min(70, (start.crop.cropBottom || 0) - Math.round((dy / camH) * 100)));
-            newCrop.cropRight = Math.max(0, Math.min(70, (start.crop.cropRight || 0) - Math.round((dx / camW) * 100)));
-          }
-
-          setCropConfig(newCrop);
-        } else {
-          // 📐 Chế độ Thay Đổi Kích Thước (Resize Dimensions)
-          let newW = start.w;
-          let newH = start.h;
-
-          if (handle.includes('e')) newW += dx;
-          if (handle.includes('w')) newW -= dx;
-          if (handle.includes('s')) newH += dy;
-          if (handle.includes('n')) newH -= dy;
-
-          setCameraDimensions({
-            width: Math.max(140, Math.min(1200, newW)),
-            height: Math.max(90, Math.min(900, newH))
-          });
-        }
-      }
-
       if (isDraggingPanel) {
         setPanelPos({
           x: Math.max(10, Math.min(window.innerWidth - 380, e.clientX - panelDragOffset.current.x)),
@@ -513,11 +448,6 @@ export default function CameraStudioWindow({
     };
 
     const handleMouseUp = () => {
-      if (isResizingRef.current) {
-        isResizingRef.current = false;
-        resizeHandleRef.current = null;
-        pushHistorySnapshot();
-      }
       if (isDraggingPanel) setIsDraggingPanel(false);
     };
 
@@ -527,16 +457,7 @@ export default function CameraStudioWindow({
       window.removeEventListener('mousemove', handleMouseMove);
       window.removeEventListener('mouseup', handleMouseUp);
     };
-  }, [isDraggingPanel, handleMode, pushHistorySnapshot]);
-
-  // Kéo thả Panel Điều Khiển Suite độc lập
-  const handlePanelMouseDown = (e) => {
-    setIsDraggingPanel(true);
-    panelDragOffset.current = {
-      x: e.clientX - panelPos.x,
-      y: e.clientY - panelPos.y
-    };
-  };
+  }, [isDraggingPanel]);
 
   // Xử lý Cọ Vẽ Quét Vuông Vức / Khóa Trục Ngang Dọc trên Canvas
   const handleCanvasMouseDown = (e) => {
@@ -577,7 +498,6 @@ export default function CameraStudioWindow({
       y: (e.clientY - rect.top) * scaleY
     };
 
-    // Khóa trục ngang hoặc dọc để quét ngay hàng thẳng lối
     const startPt = boxStartPointRef.current;
     if (brushAxisLock === 'horizontal' && startPt) {
       pt.y = startPt.y;
@@ -599,7 +519,7 @@ export default function CameraStudioWindow({
   };
 
   // =====================================================================
-  // MEDIAPIPE SELFIE SEGMENTATION — Nạp engine AI tách nền siêu mượt 60 FPS
+  // MEDIAPIPE SELFIE SEGMENTATION — AI Tách Nền Siêu Sạch Mịn 60 FPS
   // =====================================================================
   const segmentationRef = useRef(null);
   const segMaskRef = useRef(null);
@@ -630,11 +550,12 @@ export default function CameraStudioWindow({
         const seg = new window.SelfieSegmentation({
           locateFile: (file) => `https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/${file}`
         });
-        seg.setOptions({ modelSelection: 0, selfieMode: false });
+        // modelSelection: 1 là Landscape model cực kỳ nhanh, chính xác và mượt mà cho livestream
+        seg.setOptions({ modelSelection: 1, selfieMode: false });
 
         const maskCanvas = document.createElement('canvas');
-        maskCanvas.width = 192;
-        maskCanvas.height = 192;
+        maskCanvas.width = 384;
+        maskCanvas.height = 288;
         segMaskRef.current = maskCanvas;
 
         seg.onResults((results) => {
@@ -693,7 +614,7 @@ export default function CameraStudioWindow({
   }, []);
 
   // =====================================================================
-  // REAL-TIME CANVAS RENDERING LOOP 60 FPS SIÊU SẠCH & BẢO VỆ SẢN PHẨM
+  // REAL-TIME CANVAS RENDERING LOOP 60 FPS TIKTOK ULTRA-CLEAN & SIÊU MỊN
   // =====================================================================
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -704,7 +625,6 @@ export default function CameraStudioWindow({
     const tmpCtx = tmpCanvas.getContext('2d', { willReadFrequently: true });
     const ctx = canvas.getContext('2d', { willReadFrequently: true });
     let isRunning = true;
-    let segFrameCount = 0;
 
     const renderFrame = () => {
       if (!isRunning) return;
@@ -749,7 +669,7 @@ export default function CameraStudioWindow({
           return;
         }
 
-        // === BƯỚC 2: Gửi nguồn (khung hình thực tế) tới MediaPipe segmentation ===
+        // === BƯỚC 2: Gửi khung hình thực tế tới MediaPipe AI tracking ===
         const mode = bgRemovalConfig.mode;
         if ((mode === 'ai_person' || mode === 'desk_product') && segReadyRef.current && segmentationRef.current) {
           if (!isSegSendingRef.current) {
@@ -764,10 +684,10 @@ export default function CameraStudioWindow({
           }
         }
 
-        // === BƯỚC 3: Áp mask tách nền trong suốt 100% (Real-time dynamic tracking) ===
+        // === BƯỚC 3: Áp mask tách nền trong suốt 100% siêu mịn TikTok style ===
         ctx.clearRect(0, 0, vw, vh);
 
-        // Chế độ xem trước bóng mờ (Ghost Overlay) để dễ quan sát nền và sản phẩm
+        // Chế độ xem trước bóng mờ (Ghost Overlay)
         if (showGhostOverlay && mode !== 'none') {
           ctx.save();
           ctx.globalAlpha = 0.28;
@@ -786,29 +706,25 @@ export default function CameraStudioWindow({
             const mData = mCtx.getImageData(0, 0, mc.width, mc.height).data;
             const mw = mc.width;
             const mh = mc.height;
-            const feather = Math.max(1, bgRemovalConfig.feather);
-            const sensitivity = bgRemovalConfig.sensitivity / 100;
+            const feather = Math.max(2, bgRemovalConfig.feather);
+            const sensitivity = (bgRemovalConfig.sensitivity || 52) / 100;
             const scaleX = (mw - 1) / Math.max(1, vw - 1);
             const scaleY = (mh - 1) / Math.max(1, vh - 1);
-            const threshold = (1 - sensitivity) * 165;
-            const featherRange = feather * 4.5;
 
-            // Cấu hình vùng giữ lại theo ý người dùng (Keep Objects)
-            const keepDesk = bgRemovalConfig.keepObjects?.desk || mode === 'desk_product';
-            const keepProduct = bgRemovalConfig.protectProduct || bgRemovalConfig.keepObjects?.product;
-            const keepComputer = bgRemovalConfig.keepObjects?.computer;
-            const keepChair = bgRemovalConfig.keepObjects?.chair;
-            const keepShelf = bgRemovalConfig.keepObjects?.shelf;
+            // Ngưỡng phân tách mịn màng mượt mà
+            const baseThreshold = (1 - sensitivity) * 160;
+            const featherRange = feather * 5.0;
 
-            // Xóa phông bám theo nhân vật theo thời gian thực (Dynamic real-time tracking)
+            const isDeskProductMode = mode === 'desk_product';
+
             for (let y = 0; y < vh; y++) {
               const gy = y * scaleY;
               const gyi = Math.floor(gy);
               const fy = gy - gyi;
               const gyi1 = Math.min(mh - 1, gyi + 1);
 
-              const isDeskZone = keepDesk && y > vh * 0.72;
-              const isShelfZone = keepShelf && y < vh * 0.35;
+              // Giữ bàn ghế mượt mà dưới đáy màn hình (smooth gradient)
+              const deskBlend = isDeskProductMode && y > vh * 0.78 ? Math.min(1, (y - vh * 0.78) / (vh * 0.15)) : 0;
 
               for (let x = 0; x < vw; x++) {
                 const idx = (y * vw + x) * 4;
@@ -817,7 +733,7 @@ export default function CameraStudioWindow({
                 const fx = gx - gxi;
                 const gxi1 = Math.min(mw - 1, gxi + 1);
 
-                // Song tuyến tính (Bilinear smoothing) giúp viền siêu mịn màng không răng cưa
+                // Song tuyến tính (Bilinear smoothing) 4 điểm cực mượt
                 const idx00 = (gyi * mw + gxi) * 4;
                 const v00 = Math.max(mData[idx00], mData[idx00 + 1], mData[idx00 + 2], mData[idx00 + 3]);
 
@@ -832,24 +748,17 @@ export default function CameraStudioWindow({
 
                 let maskVal = (v00 * (1 - fx) + v10 * fx) * (1 - fy) + (v01 * (1 - fx) + v11 * fx) * fy;
 
-                // Giữ lại bàn ghế, sản phẩm, máy tính khi được tích chọn
-                if (isDeskZone) {
-                  maskVal = Math.max(maskVal, 255);
-                } else if (keepProduct && (x > vw * 0.22 && x < vw * 0.78 && y > vh * 0.40 && y < vh * 0.95)) {
-                  if (maskVal > 15) maskVal = Math.max(maskVal, 255);
-                } else if (keepComputer && (y > vh * 0.55 && ((x > vw * 0.05 && x < vw * 0.42) || (x > vw * 0.58 && x < vw * 0.95)))) {
-                  if (maskVal > 20) maskVal = Math.max(maskVal, 255);
-                } else if (keepChair && (y > vh * 0.30 && y < vh * 0.85 && (x > vw * 0.15 && x < vw * 0.85))) {
-                  if (maskVal > 30) maskVal = Math.min(255, maskVal * 1.5);
-                } else if (isShelfZone && (x < vw * 0.30 || x > vw * 0.70)) {
-                  if (maskVal > 25) maskVal = Math.max(maskVal, 255);
+                if (deskBlend > 0) {
+                  maskVal = maskVal * (1 - deskBlend) + 255 * deskBlend;
                 }
 
-                if (maskVal < threshold) {
-                  data[idx + 3] = 0; // Nền trong suốt 100%
-                } else if (maskVal < threshold + featherRange) {
-                  const alpha = (maskVal - threshold) / featherRange;
-                  data[idx + 3] = Math.round(data[idx + 3] * Math.min(1, Math.max(0, alpha)));
+                if (maskVal < baseThreshold) {
+                  data[idx + 3] = 0; // 100% Trong Suốt Thuần Khiết
+                } else if (maskVal < baseThreshold + featherRange) {
+                  // Đường cong làm mịn viền mượt mà (Hermite smoothstep)
+                  const t = (maskVal - baseThreshold) / featherRange;
+                  const smoothAlpha = t * t * (3 - 2 * t);
+                  data[idx + 3] = Math.round(data[idx + 3] * Math.min(1, Math.max(0, smoothAlpha)));
                 }
               }
             }
@@ -942,14 +851,13 @@ export default function CameraStudioWindow({
         if (compareMode === 'split') {
           const splitX = Math.round((vw * compareSplitPos) / 100);
           ctx.save();
-          // Vẽ nửa trái là Camera Gốc
           ctx.beginPath();
           ctx.rect(0, 0, splitX, vh);
           ctx.clip();
           ctx.drawImage(sourceElement, 0, 0, vw, vh);
           ctx.restore();
 
-          // Vẽ đường phân chia và nhãn
+          // Đường phân chia
           ctx.save();
           ctx.strokeStyle = '#06b6d4';
           ctx.lineWidth = 3;
@@ -979,105 +887,13 @@ export default function CameraStudioWindow({
     };
   }, [camTransform, cropConfig, bgRemovalConfig, colorTune, brushStrokes, videoSource, showGhostOverlay, compareMode, compareSplitPos, applyDualCropToPixels]);
 
-  // 🕹️ Di chuyển 8 hướng mượt mà với bước nhảy tùy chọn
+  // 🕹️ Di chuyển 8 hướng mượt mà
   const move8Way = (dx, dy) => {
     setCamTransform(prev => ({
       ...prev,
       panX: Math.max(-150, Math.min(150, prev.panX + dx * moveSpeedStep)),
       panY: Math.max(-150, Math.min(150, prev.panY + dy * moveSpeedStep))
     }));
-  };
-
-  // Khôi phục cài đặt gốc
-  const resetTransform = () => {
-    handleResetToOriginalCamera();
-  };
-
-  // Áp dụng Preset Ghép nhanh vào Video AI
-  const applyPresetLayout = (presetId) => {
-    switch (presetId) {
-      case 'desk_screen':
-        setCamTransform(prev => ({
-          ...prev,
-          zoom: 1.2,
-          panX: 15,
-          panY: -10,
-          tiltX: 6,
-          tiltY: -12,
-          rotate: -2,
-          aspectRatio: 'custom',
-          borderRadius: 8
-        }));
-        setCropConfig(prev => ({ ...prev, cornerTL: 8, cornerTR: 8, cropBottom: 10 }));
-        setBgRemovalConfig(prev => ({ ...prev, mode: 'desk_product' }));
-        break;
-
-      case 'vertical_screen':
-        setCamTransform(prev => ({
-          ...prev,
-          zoom: 1.0,
-          panX: 0,
-          panY: 0,
-          tiltX: 0,
-          tiltY: 8,
-          rotate: 0,
-          aspectRatio: '9/16',
-          borderRadius: 16
-        }));
-        setCropConfig(prev => ({ ...prev, cornerTL: 12, cornerTR: 12, cornerBL: 12, cornerBR: 12 }));
-        setBgRemovalConfig(prev => ({ ...prev, mode: 'ai_person' }));
-        break;
-
-      case 'floating_pip_circle':
-        setCamTransform(prev => ({
-          ...prev,
-          zoom: 1.3,
-          panX: 0,
-          panY: -5,
-          tiltX: 0,
-          tiltY: 0,
-          rotate: 0,
-          aspectRatio: 'circle',
-          borderRadius: 9999
-        }));
-        setBgRemovalConfig(prev => ({ ...prev, mode: 'ai_person' }));
-        break;
-
-      case 'tiktok_portrait_full':
-        setCamTransform(prev => ({
-          ...prev,
-          zoom: 1.0,
-          panX: 0,
-          panY: 0,
-          tiltX: 0,
-          tiltY: 0,
-          rotate: 0,
-          aspectRatio: '9/16',
-          borderRadius: 0
-        }));
-        setBgRemovalConfig(prev => ({ ...prev, mode: 'ai_person' }));
-        break;
-
-      case 'product_macro':
-        setCamTransform(prev => ({
-          ...prev,
-          zoom: 2.0,
-          panX: 0,
-          panY: 15,
-          tiltX: 0,
-          tiltY: 0,
-          rotate: 0,
-          aspectRatio: '1/1',
-          borderRadius: 16
-        }));
-        setBgRemovalConfig(prev => ({ ...prev, mode: 'desk_product' }));
-        break;
-
-      default:
-        resetTransform();
-        break;
-    }
-    handleConfirmAction();
   };
 
   const copyPhoneCamUrl = () => {
@@ -1089,7 +905,6 @@ export default function CameraStudioWindow({
 
   if (!isWebcamActive) return null;
 
-  // Tính toán kích thước hiển thị khung camera
   let borderRadiusStyle = `${camTransform.borderRadius}px`;
   if (camTransform.aspectRatio === 'circle') borderRadiusStyle = '9999px';
 
@@ -1099,16 +914,19 @@ export default function CameraStudioWindow({
   return (
     <>
       {/* ========================================================================= */}
-      {/* 1. KHUNG CAMERA ĐỘC LẬP — CO GIÃN 8 HƯỚNG, 100% TRONG SUỐT THUẦN KHIẾT   */}
+      {/* 1. KHUNG CAMERA ĐỘC LẬP — 100% TRỐNG TRƠN, KHÔNG CÓ VIỀN, KHÔNG CÓ TÁC VỤ */}
       {/* ========================================================================= */}
       <div 
         ref={cameraContainerRef}
-        className="absolute z-40 select-none group transition-all duration-75"
+        className="absolute z-40 select-none transition-all duration-75"
         style={{ 
           left: position.x, 
           top: position.y,
           width: `${cameraDimensions.width}px`,
           height: `${cameraDimensions.height}px`
+        }}
+        onClick={() => {
+          if (!showControls) setShowControls(true);
         }}
       >
         <div 
@@ -1124,7 +942,7 @@ export default function CameraStudioWindow({
             }
           }}
         >
-          {/* Lưới Thước Canh Tỉ Lệ (Grid Lines) */}
+          {/* Lưới Thước Canh Tỉ Lệ (Grid Lines) chỉ hiện khi bật tùy chọn trong tab Cọ Vẽ */}
           {showGridGuides && (
             <div className="absolute inset-0 z-20 pointer-events-none grid grid-cols-3 grid-rows-3 border border-cyan-400/30">
               <div className="border-r border-b border-cyan-400/20" />
@@ -1157,119 +975,7 @@ export default function CameraStudioWindow({
             onMouseLeave={handleCanvasMouseUp}
             className="w-full h-full object-cover block relative z-10"
           />
-
-          {/* Nút Điều Khiển Tinh Tế Trực Tiếp Trên Khung Camera (Hiện khi hover chuột) */}
-          <div className="absolute top-2 right-2 z-30 opacity-0 group-hover:opacity-100 transition-opacity flex items-center gap-1 bg-black/85 backdrop-blur-md p-1 rounded-xl border border-white/20 shadow-xl" onMouseDown={(e) => e.stopPropagation()}>
-            {/* Nút Chuyển Đổi Kéo Cắt Khung vs Kéo Kích Thước */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setHandleMode(prev => prev === 'crop' ? 'resize' : 'crop');
-              }}
-              className={`px-2 py-1 rounded-lg text-[9px] font-black flex items-center gap-1 transition-all cursor-pointer ${
-                handleMode === 'crop'
-                  ? 'bg-amber-400 text-slate-950 shadow-md ring-1 ring-amber-300'
-                  : 'bg-indigo-600 text-white'
-              }`}
-              title={handleMode === 'crop' ? 'Kéo 8 góc/cạnh để Cắt Khung Camera Linh Hoạt' : 'Kéo 8 góc/cạnh để Đổi Kích Thước Khung'}
-            >
-              <span>{handleMode === 'crop' ? '✂️ CẮT KHUNG' : '📐 CO GIÃN'}</span>
-            </button>
-
-            {/* Nút Xem Nhanh Camera Gốc */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setCompareMode(prev => prev === 'original' ? 'off' : 'original');
-              }}
-              className={`px-2 py-1 rounded-lg text-[9px] font-black flex items-center gap-1 transition-all cursor-pointer ${
-                compareMode === 'original'
-                  ? 'bg-cyan-400 text-slate-950 shadow-md ring-1 ring-cyan-300'
-                  : 'bg-white/10 hover:bg-white/20 text-cyan-300'
-              }`}
-              title="1-Click Xem Camera Gốc Trước Xóa"
-            >
-              <Eye size={11} />
-              <span>{compareMode === 'original' ? 'ĐANG XEM GỐC' : 'GỐC'}</span>
-            </button>
-
-            {/* Nút Chia Đôi So Sánh */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setCompareMode(prev => prev === 'split' ? 'off' : 'split');
-              }}
-              className={`px-2 py-1 rounded-lg text-[9px] font-black flex items-center gap-1 transition-all cursor-pointer ${
-                compareMode === 'split'
-                  ? 'bg-emerald-400 text-slate-950 shadow-md ring-1 ring-emerald-300'
-                  : 'bg-white/10 hover:bg-white/20 text-emerald-300'
-              }`}
-              title="Chia Đôi So Sánh Trước và Sau Xóa"
-            >
-              <SplitSquareVertical size={11} />
-              <span>SO SÁNH</span>
-            </button>
-
-            {/* Nút Khôi Phục Camera Gốc */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                handleResetToOriginalCamera();
-              }}
-              className="p-1 rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-black transition-all cursor-pointer"
-              title="↺ 1-Click Khôi Phục Toàn Diện Camera Gốc Ban Đầu"
-            >
-              <RotateCcw size={12} />
-            </button>
-
-            {/* Nút Mở Bảng Cài Đặt Suite */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                setShowControls(prev => !prev);
-              }}
-              className="p-1 rounded-lg bg-emerald-500/30 hover:bg-emerald-500 text-emerald-300 hover:text-black transition-all cursor-pointer"
-              title="Mở Bảng Cài Đặt Camera Suite"
-            >
-              <Sliders size={12} />
-            </button>
-
-            {/* Nút Đóng Camera */}
-            <button
-              type="button"
-              onClick={(e) => {
-                e.stopPropagation();
-                onClose();
-              }}
-              className="p-1 rounded-lg bg-rose-500/30 hover:bg-rose-500 text-rose-300 hover:text-white transition-all cursor-pointer"
-              title="Đóng Camera"
-            >
-              <X size={12} />
-            </button>
-          </div>
-
         </div>
-
-        {/* 🌟 8-WAY RESIZE HANDLES (MẮT CO GIÃN 8 HƯỚNG TRỰC QUAN) */}
-        <div className="opacity-0 group-hover:opacity-100 transition-opacity">
-          {/* 4 Góc */}
-          <div onMouseDown={(e) => handleResizeMouseDown(e, 'nw')} className="absolute -top-1 -left-1 w-3 h-3 bg-emerald-400 border border-black rounded-sm cursor-nw-resize z-30 shadow-md" />
-          <div onMouseDown={(e) => handleResizeMouseDown(e, 'ne')} className="absolute -top-1 -right-1 w-3 h-3 bg-emerald-400 border border-black rounded-sm cursor-ne-resize z-30 shadow-md" />
-          <div onMouseDown={(e) => handleResizeMouseDown(e, 'sw')} className="absolute -bottom-1 -left-1 w-3 h-3 bg-emerald-400 border border-black rounded-sm cursor-sw-resize z-30 shadow-md" />
-          <div onMouseDown={(e) => handleResizeMouseDown(e, 'se')} className="absolute -bottom-1 -right-1 w-3 h-3 bg-emerald-400 border border-black rounded-sm cursor-se-resize z-30 shadow-md" />
-          
-          {/* 4 Cạnh */}
-          <div onMouseDown={(e) => handleResizeMouseDown(e, 'n')} className="absolute -top-1 left-1/2 -translate-x-1/2 w-5 h-2 bg-emerald-400/80 border border-black rounded-sm cursor-n-resize z-30" />
-          <div onMouseDown={(e) => handleResizeMouseDown(e, 's')} className="absolute -bottom-1 left-1/2 -translate-x-1/2 w-5 h-2 bg-emerald-400/80 border border-black rounded-sm cursor-s-resize z-30" />
-          <div onMouseDown={(e) => handleResizeMouseDown(e, 'w')} className="absolute top-1/2 -left-1 -translate-y-1/2 w-2 h-5 bg-emerald-400/80 border border-black rounded-sm cursor-w-resize z-30" />
-          <div onMouseDown={(e) => handleResizeMouseDown(e, 'e')} className="absolute top-1/2 -right-1 -translate-y-1/2 w-2 h-5 bg-emerald-400/80 border border-black rounded-sm cursor-e-resize z-30" />
-        </div>
-
       </div>
 
       {/* ========================================================================= */}
@@ -1277,7 +983,7 @@ export default function CameraStudioWindow({
       {/* ========================================================================= */}
       {showControls && (
         <div 
-          className="fixed z-50 select-none w-[405px] bg-slate-950/98 border border-emerald-500/60 rounded-3xl p-4 text-white shadow-[0_0_50px_rgba(16,185,129,0.25)] backdrop-blur-2xl animate-in fade-in slide-in-from-top-2 space-y-3"
+          className="fixed z-50 select-none w-[415px] bg-slate-950/98 border border-emerald-500/60 rounded-3xl p-4 text-white shadow-[0_0_50px_rgba(16,185,129,0.25)] backdrop-blur-2xl animate-in fade-in slide-in-from-top-2 space-y-3"
           style={{ 
             left: panelPos.x, 
             top: panelPos.y 
@@ -1297,7 +1003,7 @@ export default function CameraStudioWindow({
                   STUDIO CAMERA SUITE
                   <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">PRO 60FPS</span>
                 </h4>
-                <p className="text-[9px] text-gray-400">Co giãn 8 hướng • Xóa phông linh hoạt</p>
+                <p className="text-[9px] text-gray-400">Xóa phông TikTok • Tùy biến real-time</p>
               </div>
             </div>
 
@@ -1328,7 +1034,7 @@ export default function CameraStudioWindow({
               type="button"
               onClick={handleAutoOptimize}
               className="py-1.5 px-2 bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-[10px] rounded-xl flex items-center justify-center gap-1 shadow-md active:scale-95 transition-all cursor-pointer col-span-2"
-              title="Tự động nhận diện góc đẹp, zoom chuẩn và cân bằng màu sắc cho livestream"
+              title="Tự động tối ưu xóa phông, nhận diện góc đẹp và cân bằng màu sắc cho livestream"
             >
               <Wand2 size={12} className="animate-spin" />
               <span>AUTO TÙY CHỈNH AI</span>
@@ -1373,7 +1079,7 @@ export default function CameraStudioWindow({
             <span>{autoConfirmed ? '✓ ĐÃ XÁC NHẬN & LƯU ÁP DỤNG THÀNH CÔNG!' : 'XÁC NHẬN ÁP DỤNG CÀI ĐẶT'}</span>
           </button>
 
-          {/* 🌟 BỘ ĐIỀU KHIỂN SO SÁNH TRƯỚC / SAU & KHÔI PHỤC CAMERA GỐC */}
+          {/* 🌟 BỘ ĐIỀU KHIỂN SO SÁNH TRƯỚC / SAU */}
           <div className="bg-gradient-to-r from-cyan-950/80 via-slate-900 to-emerald-950/80 p-2.5 rounded-2xl border border-cyan-500/40 space-y-2 shadow-md">
             <div className="flex items-center justify-between text-[10px]">
               <span className="font-black text-cyan-300 flex items-center gap-1.5 uppercase">
@@ -1394,7 +1100,7 @@ export default function CameraStudioWindow({
                     ? 'bg-cyan-500 text-slate-950 border-cyan-300 shadow-md ring-1 ring-cyan-200'
                     : 'bg-white/5 border-white/10 text-cyan-300 hover:bg-white/10'
                 }`}
-                title="Xem toàn bộ Camera Gốc trước khi xóa phông (nguyên bản 100%)"
+                title="Xem toàn bộ Camera Gốc trước khi xóa phông"
               >
                 <Eye size={11} /> Camera Gốc
               </button>
@@ -1478,7 +1184,7 @@ export default function CameraStudioWindow({
             </button>
           </div>
 
-          {/* THANH 6 TABS CHỨC NĂNG NỔI BẬT */}
+          {/* THANH 6 TABS CHỨC NĂNG */}
           <div className="grid grid-cols-6 gap-1 bg-white/5 p-1 rounded-2xl border border-white/10">
             {[
               { id: 'bg', label: 'Xóa Nền', icon: Sparkles },
@@ -1509,7 +1215,7 @@ export default function CameraStudioWindow({
           </div>
 
           {/* ========================================================================= */}
-          {/* TAB 1: XÓA PHÔNG NỀN AI (1-CHẠM KẾT HỢP ĐA KIỂU & BẢO VỆ SẢN PHẨM)         */}
+          {/* TAB 1: XÓA PHÔNG NỀN AI (TIKTOK STYLE SIÊU SẠCH SIÊU MỊN 60 FPS)           */}
           {/* ========================================================================= */}
           {activeTab === 'bg' && (
             <div className="space-y-2.5 animate-in fade-in">
@@ -1536,14 +1242,14 @@ export default function CameraStudioWindow({
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-[10px] uppercase font-black text-gray-400 tracking-wider">Chế Độ Xóa Nền AI Siêu Sạch:</label>
                   <span className="text-[9px] px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-400 font-bold border border-emerald-500/40">
-                    {segStatus === 'ready' ? '⚡ AI MEDIAPIPE SẴN SÀNG' : '⏳ ĐANG TẢI AI'}
+                    {segStatus === 'ready' ? '⚡ AI TIKTOK SẴN SÀNG' : '⏳ ĐANG TẢI AI'}
                   </span>
                 </div>
 
                 <div className="grid grid-cols-2 gap-1.5">
                   {[
-                    { id: 'ai_person', label: '🪄 AI Tách Đa Phông', desc: 'Xóa mọi loại phòng' },
-                    { id: 'desk_product', label: '🪑 Giữ Bàn Ghế & SP', desc: 'Livestream bán hàng' },
+                    { id: 'ai_person', label: '🪄 AI Tách Đa Phông', desc: 'Xóa mọi loại phòng 60FPS' },
+                    { id: 'desk_product', label: '🪑 Giữ Bàn Ghế & SP', desc: 'Mịn màng không đục khoét' },
                     { id: 'chroma_green', label: '🟢 Phông Xanh Lá', desc: 'Chroma Key 60FPS' },
                     { id: 'chroma_blue', label: '🔵 Phông Xanh Dương', desc: 'Blue Screen Key' },
                     { id: 'none', label: '📷 Nền Gốc (Tắt)', desc: 'Không xóa nền' }
@@ -1574,66 +1280,10 @@ export default function CameraStudioWindow({
                 </div>
               </div>
 
-              {/* TÙY CHỌN BẢO VỆ SẢN PHẨM & STREAMER */}
-              <div className="bg-black/50 p-2.5 rounded-2xl border border-white/10 space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-[10px] font-black uppercase text-cyan-300 flex items-center gap-1">
-                    <ShieldCheck size={12} className="text-cyan-400" /> Bảo Vệ Sản Phẩm Livestream:
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setBgRemovalConfig(prev => ({ ...prev, protectProduct: !prev.protectProduct }));
-                      pushHistorySnapshot();
-                    }}
-                    className={`px-2 py-0.5 rounded-lg text-[9px] font-bold border transition-all cursor-pointer ${
-                      bgRemovalConfig.protectProduct
-                        ? 'bg-cyan-500 border-cyan-300 text-slate-950 font-black'
-                        : 'bg-white/10 border-white/15 text-gray-400'
-                    }`}
-                  >
-                    {bgRemovalConfig.protectProduct ? '✓ ĐANG BẬT BẢO VỆ SP' : 'TẮT BẢO VỆ'}
-                  </button>
-                </div>
-
-                <div className="grid grid-cols-3 gap-1.5 text-[10px]">
-                  {[
-                    { key: 'product', label: 'Sản Phẩm Live' },
-                    { key: 'person', label: 'Streamer' },
-                    { key: 'computer', label: 'Máy Tính' },
-                    { key: 'desk', label: 'Bàn Live' },
-                    { key: 'chair', label: 'Ghế Ngồi' },
-                    { key: 'shelf', label: 'Kệ Hàng' }
-                  ].map(obj => {
-                    const active = bgRemovalConfig.keepObjects[obj.key];
-                    return (
-                      <button
-                        key={obj.key}
-                        type="button"
-                        onClick={() => {
-                          setBgRemovalConfig(prev => ({
-                            ...prev,
-                            keepObjects: { ...prev.keepObjects, [obj.key]: !active }
-                          }));
-                          pushHistorySnapshot();
-                        }}
-                        className={`py-1 px-1.5 rounded-lg border text-center font-bold transition-all cursor-pointer ${
-                          active 
-                            ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300' 
-                            : 'bg-white/5 border-white/10 text-gray-400'
-                        }`}
-                      >
-                        {active ? '✓ ' : ''}{obj.label}
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-
-              {/* Độ nhạy & Làm mịn viền */}
-              <div className="space-y-1.5 bg-white/5 p-2 rounded-2xl border border-white/10">
+              {/* Tùy chỉnh Độ Mịn Viền (Feather) & Độ Nhạy */}
+              <div className="space-y-1.5 bg-white/5 p-2.5 rounded-2xl border border-white/10">
                 <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-gray-300 font-bold">Độ Nhạy Tách Nền: {bgRemovalConfig.sensitivity}%</span>
+                  <span className="text-gray-300 font-bold">Độ Nhạy Tách Nền AI: {bgRemovalConfig.sensitivity}%</span>
                   <input 
                     type="range" min="10" max="95" 
                     value={bgRemovalConfig.sensitivity}
@@ -1642,13 +1292,67 @@ export default function CameraStudioWindow({
                   />
                 </div>
                 <div className="flex items-center justify-between text-[10px]">
-                  <span className="text-gray-300 font-bold">Khử Viền Tràn Màu: {bgRemovalConfig.spillReduction}%</span>
+                  <span className="text-gray-300 font-bold">Độ Mịn Màng Viền (Feather): {bgRemovalConfig.feather}px</span>
+                  <input 
+                    type="range" min="2" max="25" 
+                    value={bgRemovalConfig.feather}
+                    onChange={(e) => setBgRemovalConfig(prev => ({ ...prev, feather: Number(e.target.value) }))}
+                    className="w-32 accent-cyan-400 h-1.5 bg-gray-700 rounded-lg cursor-pointer"
+                  />
+                </div>
+                <div className="flex items-center justify-between text-[10px]">
+                  <span className="text-gray-300 font-bold">Khử Viền Tràn Màu (Spill): {bgRemovalConfig.spillReduction}%</span>
                   <input 
                     type="range" min="0" max="100" 
                     value={bgRemovalConfig.spillReduction}
                     onChange={(e) => setBgRemovalConfig(prev => ({ ...prev, spillReduction: Number(e.target.value) }))}
                     className="w-32 accent-teal-400 h-1.5 bg-gray-700 rounded-lg cursor-pointer"
                   />
+                </div>
+              </div>
+
+              {/* Cân Bằng Ánh Sáng & Tông Màu Live */}
+              <div className="space-y-1.5 bg-white/5 p-2.5 rounded-2xl border border-white/10">
+                <span className="text-[10px] font-black uppercase text-amber-300 flex items-center gap-1">
+                  <Sun size={12} className="text-amber-400" /> Cân Bằng Ánh Sáng & Tông Màu Khớp Video:
+                </span>
+                <div className="grid grid-cols-2 gap-2 text-[10px]">
+                  <div>
+                    <div className="flex justify-between text-gray-400"><span>Độ Sáng:</span><span className="font-bold text-amber-300">{colorTune.brightness}%</span></div>
+                    <input 
+                      type="range" min="60" max="150" 
+                      value={colorTune.brightness}
+                      onChange={(e) => setColorTune(prev => ({ ...prev, brightness: Number(e.target.value) }))}
+                      className="w-full accent-amber-400 h-1 bg-gray-700 rounded-lg cursor-pointer"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-gray-400"><span>Tương Phản:</span><span className="font-bold text-amber-300">{colorTune.contrast}%</span></div>
+                    <input 
+                      type="range" min="60" max="150" 
+                      value={colorTune.contrast}
+                      onChange={(e) => setColorTune(prev => ({ ...prev, contrast: Number(e.target.value) }))}
+                      className="w-full accent-amber-400 h-1 bg-gray-700 rounded-lg cursor-pointer"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-gray-400"><span>Độ Rực Màu:</span><span className="font-bold text-teal-300">{colorTune.saturate}%</span></div>
+                    <input 
+                      type="range" min="50" max="180" 
+                      value={colorTune.saturate}
+                      onChange={(e) => setColorTune(prev => ({ ...prev, saturate: Number(e.target.value) }))}
+                      className="w-full accent-teal-400 h-1 bg-gray-700 rounded-lg cursor-pointer"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-gray-400"><span>Tông Màu (Ấm/Lạnh):</span><span className="font-bold text-teal-300">{colorTune.temperature}</span></div>
+                    <input 
+                      type="range" min="-30" max="30" 
+                      value={colorTune.temperature}
+                      onChange={(e) => setColorTune(prev => ({ ...prev, temperature: Number(e.target.value) }))}
+                      className="w-full accent-teal-400 h-1 bg-gray-700 rounded-lg cursor-pointer"
+                    />
+                  </div>
                 </div>
               </div>
             </div>
@@ -1774,11 +1478,11 @@ export default function CameraStudioWindow({
                   </div>
                   <div className="grid grid-cols-5 gap-1 pt-0.5">
                     {[
-                      { s: 15, label: '15px Nhỏ' },
-                      { s: 30, label: '30px Vừa' },
-                      { s: 50, label: '50px Lớn' },
-                      { s: 80, label: '80px To' },
-                      { s: 120, label: '120px Khối' }
+                      { s: 15, label: '15px' },
+                      { s: 30, label: '30px' },
+                      { s: 50, label: '50px' },
+                      { s: 80, label: '80px' },
+                      { s: 120, label: '120px' }
                     ].map(bs => (
                       <button
                         key={bs.s}
@@ -1817,10 +1521,7 @@ export default function CameraStudioWindow({
                   </button>
                   <button
                     type="button"
-                    onClick={() => {
-                      setBrushStrokes([]);
-                      pushHistorySnapshot();
-                    }}
+                    onClick={handleClearAllBrushes}
                     disabled={brushStrokes.length === 0}
                     className="flex-1 py-1.5 bg-rose-600/30 hover:bg-rose-600 disabled:opacity-40 text-rose-200 hover:text-white rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
                   >
@@ -1924,12 +1625,60 @@ export default function CameraStudioWindow({
           )}
 
           {/* ========================================================================= */}
-          {/* TAB 4: ĐIỀU HƯỚNG 8 HƯỚNG D-PAD SIÊU MƯỢT                                  */}
+          {/* TAB 4: ĐIỀU HƯỚNG 8 HƯỚNG D-PAD & KÍCH THƯỚC KHUNG CAMERA                  */}
           {/* ========================================================================= */}
           {activeTab === 'move8' && (
             <div className="space-y-2.5 animate-in fade-in">
+              {/* Tùy Chỉnh Kích Thước Camera (Width & Height) Trực Tiếp Từ Panel */}
+              <div className="bg-black/50 p-2.5 rounded-2xl border border-white/10 space-y-2">
+                <span className="text-[10px] font-black uppercase text-emerald-300 flex items-center gap-1">
+                  <Scale size={12} className="text-emerald-400" /> Kích Thước Khung Camera (Width & Height):
+                </span>
+                
+                <div className="grid grid-cols-2 gap-2 text-[10px]">
+                  <div>
+                    <div className="flex justify-between text-gray-400"><span>Chiều Rộng:</span><span className="font-bold text-emerald-400">{cameraDimensions.width}px</span></div>
+                    <input 
+                      type="range" min="160" max="1000" step="10"
+                      value={cameraDimensions.width}
+                      onChange={(e) => setCameraDimensions(prev => ({ ...prev, width: Number(e.target.value) }))}
+                      className="w-full accent-emerald-400 h-1.5 bg-gray-700 rounded-lg cursor-pointer"
+                    />
+                  </div>
+                  <div>
+                    <div className="flex justify-between text-gray-400"><span>Chiều Cao:</span><span className="font-bold text-emerald-400">{cameraDimensions.height}px</span></div>
+                    <input 
+                      type="range" min="120" max="800" step="10"
+                      value={cameraDimensions.height}
+                      onChange={(e) => setCameraDimensions(prev => ({ ...prev, height: Number(e.target.value) }))}
+                      className="w-full accent-emerald-400 h-1.5 bg-gray-700 rounded-lg cursor-pointer"
+                    />
+                  </div>
+                </div>
+
+                {/* Các Kích Thước Chuẩn Phổ Biến */}
+                <div className="grid grid-cols-4 gap-1 pt-1">
+                  {[
+                    { label: 'Chuẩn 360', w: 360, h: 220 },
+                    { label: 'HD 480', w: 480, h: 270 },
+                    { label: 'Lớn 640', w: 640, h: 360 },
+                    { label: 'Dọc 9:16', w: 240, h: 420 }
+                  ].map(dim => (
+                    <button
+                      key={dim.label}
+                      type="button"
+                      onClick={() => setCameraDimensions({ width: dim.w, height: dim.h })}
+                      className="py-1 px-1 rounded-lg bg-white/5 hover:bg-emerald-500/20 border border-white/10 text-[9px] font-bold text-gray-300 hover:text-white transition-all cursor-pointer text-center"
+                    >
+                      {dim.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
+              {/* Tốc độ bước nhảy */}
               <div className="flex items-center justify-between px-1">
-                <span className="text-[10px] text-gray-300 font-bold">Tốc Độ Bước Nhảy:</span>
+                <span className="text-[10px] text-gray-300 font-bold">Tốc Độ Bước Nhảy D-Pad:</span>
                 <div className="flex gap-1">
                   {[
                     { s: 10, label: '1x (10%)' },
@@ -1952,6 +1701,7 @@ export default function CameraStudioWindow({
                 </div>
               </div>
 
+              {/* Bàn phím D-Pad 8 hướng */}
               <div className="flex flex-col items-center justify-center gap-1.5 bg-black/50 p-3 rounded-2xl border border-white/10">
                 <div className="flex items-center gap-1.5">
                   <button type="button" onClick={() => move8Way(-1, -1)} className="w-12 h-10 rounded-xl bg-white/10 hover:bg-emerald-500 hover:text-black font-black text-sm flex items-center justify-center active:scale-90 cursor-pointer">↖️</button>
@@ -2033,7 +1783,7 @@ export default function CameraStudioWindow({
                 </div>
               </div>
 
-              {/* Lật gương & Tỉ lệ khung */}
+              {/* Lật gương & Bo tròn góc */}
               <div className="grid grid-cols-2 gap-2">
                 <button
                   type="button"
@@ -2055,10 +1805,21 @@ export default function CameraStudioWindow({
                 </button>
               </div>
 
+              {/* Bo Tròn Góc */}
+              <div className="bg-black/50 p-2 rounded-xl border border-white/10 flex items-center justify-between text-[10px]">
+                <span className="text-gray-300 font-bold">Bo Góc Khung: {camTransform.borderRadius}px</span>
+                <input 
+                  type="range" min="0" max="50" 
+                  value={camTransform.borderRadius}
+                  onChange={(e) => setCamTransform(prev => ({ ...prev, borderRadius: Number(e.target.value) }))}
+                  className="w-32 accent-indigo-400 h-1 bg-gray-700 rounded-lg cursor-pointer"
+                />
+              </div>
+
               <div className="grid grid-cols-4 gap-1">
                 {[
-                  { r: 'custom', label: 'Tự Do 8 Hướng' },
-                  { r: '16/9', label: '16:9 Ngang' },
+                  { r: 'custom', label: 'Tự Do' },
+                  { r: '16/9', label: '16:9' },
                   { r: '9/16', label: '9:16 Dọc' },
                   { r: 'circle', label: 'Tròn PiP' }
                 ].map(aspect => (

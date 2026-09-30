@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.5';
+export const APP_VERSION = '5.4.6';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.6 - Tách Nền AI TikTok Siêu Mịn 60 FPS, Khung Camera 100% Trống Trơn Không Viền & Bảng Điều Khiển Suite Độc Lập',
+    description: '1. Khung Camera 100% Trống Trơn Thuần Khiết: Loại bỏ hoàn toàn toàn bộ các nút bấm và mắt kéo trên khung camera; toàn bộ quyền điều khiển chuyển sang Bảng Điều Khiển Suite riêng biệt. 2. Tách Nền AI TikTok Siêu Sạch Siêu Mịn 60 FPS: Nâng cấp MediaPipe Landscape AI kết hợp thuật toán làm mịn viền Hermite Smoothstep và loại bỏ triệt để các khối vuông cắt lẹm, bám sát cử động xoay người, vung tay của streamer theo thời gian thực. 3. Bảng Điều Khiển Camera Suite Tách Rời Trực Quan: Đầy đủ 6 Tab chuyên sâu (Xóa Nền, Cọ Thẳng/Vuông, Cắt Góc, D-Pad 8 Hướng, Đa Góc 3D, Mã QR Điện Thoại) hoạt động real-time mượt mà 100%.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.5 - Xử Lý Triệt Để Nạp File Video/Ảnh & Nhân Vật 100% Hoạt Động Ngay Lập Tức Trên Windows & Mac',
     description: '1. Nâng Cấp Triệt Để Ô Tải Video, Hình Ảnh & Nhân Vật: Tương thích toàn diện trên cả Windows và macOS; hỗ trợ cơ chế nhận diện đuôi mở rộng thông minh kể cả khi Windows trả về MIME rỗng. 2. Hỗ Trợ Kéo Thả (Drag & Drop) Trực Quan: Thả file trực tiếp vào ô tải nhân vật và media với hiệu ứng phát sáng neon; xử lý nạp file tức thì trong 1 mili-giây. 3. Bộ Nhớ Đệm Kép RAM & Blob Cache: Lưu trữ an toàn trong RAM và đồng bộ nền về backend không độ trễ, loại bỏ hoàn toàn hiện tượng video lúc tải được lúc không. 4. Đảm Bảo Khóa Toàn Bộ Tab Code: Bảo toàn 100% tất cả các module và tính năng khác.'
