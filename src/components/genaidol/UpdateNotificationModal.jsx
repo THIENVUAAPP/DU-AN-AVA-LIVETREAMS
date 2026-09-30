@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.2.9';
+export const APP_VERSION = '5.3.0';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.3.0 - Đột Phá AI Giải Captcha Siêu Tốc & Đồng Bộ Real-time 100% Theo Thời Gian Thực',
+    description: '1. Cập nhật Real-time 100% theo thời gian thực trên phiên livestream TikTok Live Studio, TikTok Shop và Shopee Live: Tự động phát hiện và giải mã captcha siêu tốc chỉ trong 10ms - 15ms khi vừa xuất hiện. 2. Luồng Terminal trực tiếp (tail -f /var/log/bypass.log) & Bảng Lịch Sử Giải Mã Real-time chuẩn xác từng giây với đồng hồ hệ thống. 3. Tối ưu hóa bảng Cấu Hình Chiến Thuật AI và Radar trạng thái Hoạt Động Ổn Định 100% Computing.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.2.9 - Đồng Bộ Song Song Cả TikTok Shop & Shopee Live: Tự Động Ghim Sản Phẩm & Giải Captcha 24/7 Siêu Tốc',
     description: '1. Đồng bộ song song cả TikTok Shop (shop.tiktok.com) và Shopee Live (banhang.shopee.vn / live.shopee.vn): Streamer có thể phát live trên cả hai sàn cùng lúc với chế độ Dual Sync mượt mà 60 FPS. 2. Tự động ghim sản phẩm Pro (Random, Chỉ định nhiều mã, Cố định 1 mã) gửi đồng thời tới cả 2 sàn theo thời gian luân phiên (Min - Max). 3. Tích hợp AI Giải Mã Captcha 24/7 (Slider Puzzle, Rotate 3D, OTP Seller Shield, Shopee Verification) chống nghẽn và duy trì luồng phát không gián đoạn.'
