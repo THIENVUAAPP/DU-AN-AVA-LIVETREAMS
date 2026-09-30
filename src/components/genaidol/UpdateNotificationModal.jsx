@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.7';
+export const APP_VERSION = '5.4.8';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.8 - Xử Lý Triệt Để Màn Hình Sân Khấu Bị Khóa, Tải & Kích Hoạt Video Nhân Vật Lên Sân Khấu Chính 100% Trong 0ms',
+    description: '1. Xử Lý Triệt Để Lỗi Màn Hình Đã Ngắt Kết Nối: Loại bỏ hoàn toàn điều kiện chặn hiển thị sai khiến sân khấu bị đen/khóa ngắt kết nối; tự động nạp và phát video nhân vật đã chọn hoặc vừa tải lên tức thì trong 0ms. 2. Tự Động Kích Hoạt Nhân Vật Khởi Động: Khi mở phần mềm hoặc có danh sách nhân vật, hệ thống tự động nhận diện và hiển thị nhân vật đầu tiên mượt mà lên sân khấu chính. 3. Mở Khóa Phát Video Preview Sân Khấu: Video preview hoạt động 100% không phụ thuộc nút Live, cho phép xem trước chuyển động sắc nét. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.7 - Xử Lý Triệt Để Ô Tải Video, Hình Ảnh Nhân Vật 1-Click Lên Sân Khấu Chính & Kéo Thả Drag-and-Drop Siêu Mượt Trên Windows và Mac',
     description: '1. Nạp và Phát Ngay Lập Tức Trong 0ms (1-Click Instant Load & Play): Bấm chọn hoặc tải video/ảnh nhân vật là phát ngay tức thì lên Sân Khấu Chính, không bao giờ bị đứng hình hay chập chờn. 2. Hỗ Trợ Kéo Thả Drag & Drop Đa Nền Tảng (Windows & Mac): Kéo thả trực tiếp một hoặc nhiều file video/ảnh vào khung Sân Khấu Chính hoặc các ô nhân vật bên dưới với hiệu ứng viền neon phản hồi trực quan. 3. Tương Thích Định Dạng Đa Dạng (MP4, MKV, MOV, WebM, PNG, JPG, WebP...): Nhận diện định dạng thông minh kể cả khi hệ thống Windows trả về MIME type rỗng. 4. Lưu Trữ Bền Vững (Preserved Storage): Dữ liệu video và nhân vật được lưu trữ an toàn trong RAM & IndexedDB, giữ nguyên trạng thái cho đến khi người dùng chủ động xóa. 5. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'

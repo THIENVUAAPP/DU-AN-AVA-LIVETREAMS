@@ -473,7 +473,12 @@ export default function DesktopAppUI() {
   const [isLiveAudioMuted, setIsLiveAudioMuted] = useState(true);
   const [selectedCharacter, setSelectedCharacter] = useState(() => {
     if (typeof window !== 'undefined') {
-      return localStorage.getItem('avalive_selected_char') || '';
+      const saved = localStorage.getItem('avalive_selected_char');
+      if (saved) return saved;
+      try {
+        const custom = JSON.parse(localStorage.getItem('avalive_custom_characters') || '[]');
+        if (custom && custom.length > 0 && custom[0].id) return custom[0].id;
+      } catch (e) {}
     }
     return '';
   });
@@ -1742,8 +1747,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       });
       setCustomCharacters(loadedChars);
 
-      if (selectedCharacter && loadedChars.some(item => item.id === selectedCharacter)) {
-        const activeChar = loadedChars.find(item => item.id === selectedCharacter);
+      if (loadedChars.length > 0) {
+        setIsStageExplicitlyCleared(false);
+        const targetId = (selectedCharacter && loadedChars.some(item => item.id === selectedCharacter))
+          ? selectedCharacter
+          : loadedChars[0].id;
+        if (!selectedCharacter || selectedCharacter !== targetId) {
+          setSelectedCharacter(targetId);
+          try { localStorage.setItem('avalive_selected_char', targetId); } catch(e) {}
+        }
+        const activeChar = loadedChars.find(item => item.id === targetId) || loadedChars[0];
         if (activeChar && activeChar.url) {
           setUserLockedMediaUrl(activeChar.url);
           if (desktopVideoRef.current && desktopVideoRef.current.src !== activeChar.url) {
@@ -3108,7 +3121,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             if (event.data.source === 'desktop') return;
             const shouldPlay = !!event.data.isPlaying;
             if (shouldPlay) {
-              const isPausedByUser = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
+              const isPausedByUser = typeof localStorage !== 'undefined' && localStorage.getItem('avalive_user_paused') === 'true';
               if (isPausedByUser) {
                 return; // KHÓA CHẶT: Tuyệt đối không tự động bật lại khi streamer đã bấm TẮT TẤT CẢ
               }
@@ -4726,6 +4739,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
     // 🔓 Tắt đồng bộ từ sequencer để Sân Khấu Chính phát độc lập tức thì
     if (autoSelect) {
+      setIsStageExplicitlyCleared(false);
       setIsMasterStageSynced(false);
       setFlowSequencerOverlay(null);
       setUserLockedMediaUrl(null);
@@ -5827,8 +5841,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         );
       }
       
-      const customMatch = (customCharacters && Array.isArray(customCharacters)) 
-        ? customCharacters.find(c => c.id === selectedCharacter) 
+      let customMatch = (customCharacters && Array.isArray(customCharacters)) 
+        ? (customCharacters.find(c => c.id === selectedCharacter) || (customCharacters.length > 0 ? customCharacters[0] : null)) 
         : null;
 
       // 🎬 KHI ĐANG ĐỒNG BỘ TỪ SEQUENCER (PHÁT LIVE): CHỈ KÍCH HOẠT NẾU NGƯỜI DÙNG KHÔNG CHỌN NHÂN VẬT RIÊNG
@@ -5852,26 +5866,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         type: 'video'
       } : null;
 
-      // 🛡️ NẾU SÂN KHẤU VỪA ĐƯỢC TẮT/NGẮT ĐỒNG BỘ: GIỮ TRẠNG THÁI TẮT SẠCH SẼ 100%, TUYỆT ĐỐI KHÔNG TỰ Ý MỞ LẠI
-      if (isStageExplicitlyCleared || (!isMasterStageSynced && !userLockedMediaUrl && !selectedCharacter)) {
-        return (
-          <div className="relative w-full h-full flex flex-col items-center justify-center bg-[#07080d] text-center p-6 select-none">
-            <div className="w-16 h-16 rounded-2xl bg-red-950/40 border border-red-500/30 flex items-center justify-center mb-3 text-red-400 text-3xl shadow-lg">
-              📴
-            </div>
-            <h4 className="text-white font-black text-sm tracking-wide uppercase">SÂN KHẤU CHÍNH ĐÃ TẮT / NGẮT KẾT NỐI</h4>
-            <p className="text-gray-400 text-xs mt-1 max-w-xs leading-relaxed">
-              Toàn bộ dữ liệu phát đã được ngắt kết nối. Bấm nút "Đồng bộ ra Sân Khấu Chính" ở tab Live Idol Avatar để bắt đầu phát lại.
-            </p>
-          </div>
-        );
-      }
-
       // 🛡️ ƯU TIÊN TUYỆT ĐỐI NHÂN VẬT/VIDEO NGƯỜI DÙNG CHỦ ĐỘNG TẢI LÊN HOẶC ĐANG CHỌN (KHÔNG CHẠY ẨN/CHẠY NỀN)
       let selected = customMatch || 
         (selectedCharacter && CHARACTERS[selectedCharacter]?.url ? { id: selectedCharacter, ...CHARACTERS[selectedCharacter] } : null) || 
         sequencerLockedMedia ||
-        (userLockedMediaUrl && isMasterStageSynced ? { id: 'locked_video', name: 'Video Đang Phát', url: userLockedMediaUrl, mediaUrl: userLockedMediaUrl, type: 'video' } : null);
+        (userLockedMediaUrl && isMasterStageSynced ? { id: 'locked_video', name: 'Video Đang Phát', url: userLockedMediaUrl, mediaUrl: userLockedMediaUrl, type: 'video' } : null) ||
+        eventIdleMedia;
 
       if (selected) {
         let resolvedUrl = selected.url || selected.mediaUrl;
@@ -5935,8 +5935,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             disableRemotePlayback
             muted={liveAudioMuted || isLocalSpeakerMuted}
             onLoadedData={(e) => {
-              const isPausedByUser = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
-              if (isPausedByUser || e.currentTarget.dataset.userPaused === 'true') {
+              const isPausedByUser = (typeof localStorage !== 'undefined' && localStorage.getItem('avalive_user_paused') === 'true') && e.currentTarget.dataset.userPaused === 'true';
+              if (isPausedByUser) {
                 try { e.currentTarget.pause(); } catch (err) {}
                 return;
               }
@@ -5956,8 +5956,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   try {
                     const freshUrl = URL.createObjectURL(blob);
                     e.currentTarget.src = freshUrl;
-                    const isPausedByUser = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
-                    if (!isPausedByUser && e.currentTarget.dataset.userPaused !== 'true') {
+                    const isPausedByUser = (typeof localStorage !== 'undefined' && localStorage.getItem('avalive_user_paused') === 'true') && e.currentTarget.dataset.userPaused === 'true';
+                    if (!isPausedByUser) {
                       e.currentTarget.play().then(() => setIsVideoPlaying(true)).catch(() => {});
                     }
                     return;
@@ -6020,8 +6020,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               disableRemotePlayback
               playsInline 
               onLoadedData={(e) => {
-                const isPausedByUser = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
-                if (isPausedByUser || e.currentTarget.dataset.userPaused === 'true') {
+                const isPausedByUser = (typeof localStorage !== 'undefined' && localStorage.getItem('avalive_user_paused') === 'true') && e.currentTarget.dataset.userPaused === 'true';
+                if (isPausedByUser) {
                   try { e.currentTarget.pause(); } catch (err) {}
                   return;
                 }
@@ -6039,7 +6039,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   try {
                     const freshUrl = URL.createObjectURL(charMatch.fileData);
                     e.currentTarget.src = freshUrl;
-                    const isPausedByUser = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
+                    const isPausedByUser = (typeof localStorage !== 'undefined' && localStorage.getItem('avalive_user_paused') === 'true') && e.currentTarget.dataset.userPaused === 'true';
                     if (!isPausedByUser) {
                       e.currentTarget.play().then(() => setIsVideoPlaying(true)).catch(() => {});
                     }
@@ -6054,7 +6054,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                         const freshUrl = URL.createObjectURL(found.fileData);
                         if (desktopVideoRef.current) {
                           desktopVideoRef.current.src = freshUrl;
-                          const isPausedByUser = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
+                          const isPausedByUser = (typeof localStorage !== 'undefined' && localStorage.getItem('avalive_user_paused') === 'true') && desktopVideoRef.current.dataset.userPaused === 'true';
                           if (!isPausedByUser) {
                             desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
                           }
@@ -6127,8 +6127,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                     v.currentTime = lastPlaybackTimeRef.current;
                   } catch (err) {}
                 }
-                const isPausedByUser = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
-                const isManualPaused = isPausedByUser || v.dataset.userPaused === 'true';
+                const isManualPaused = (typeof localStorage !== 'undefined' && localStorage.getItem('avalive_user_paused') === 'true') && v.dataset.userPaused === 'true';
                 if (!isManualPaused) {
                   v.dataset.userPaused = 'false';
                   v.play().then(() => setIsVideoPlaying(true)).catch(() => {
@@ -6142,25 +6141,24 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               }} 
               onCanPlay={(e) => {
                 const v = e.currentTarget;
-                const isPausedByUser = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
-                if (v.paused && !isPausedByUser && v.dataset.userPaused !== 'true') {
+                const isManualPaused = (typeof localStorage !== 'undefined' && localStorage.getItem('avalive_user_paused') === 'true') && v.dataset.userPaused === 'true';
+                if (v.paused && !isManualPaused) {
                   v.play().then(() => setIsVideoPlaying(true)).catch(() => {});
                 }
               }}
               onCanPlayThrough={(e) => {
                 const v = e.currentTarget;
-                const isPausedByUser = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
-                if (v.paused && !isPausedByUser && v.dataset.userPaused !== 'true') {
+                const isManualPaused = (typeof localStorage !== 'undefined' && localStorage.getItem('avalive_user_paused') === 'true') && v.dataset.userPaused === 'true';
+                if (v.paused && !isManualPaused) {
                   v.play().then(() => setIsVideoPlaying(true)).catch(() => {});
                 }
               }}
               onWaiting={(e) => {
                 const v = e.currentTarget;
-                const isPausedByUser = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
-                if (v && !isPausedByUser && v.dataset.userPaused !== 'true') {
+                const isManualPaused = (typeof localStorage !== 'undefined' && localStorage.getItem('avalive_user_paused') === 'true') && v.dataset.userPaused === 'true';
+                if (v && !isManualPaused) {
                   const resumePlay = () => {
-                    const isStillPaused = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
-                    if (!isStillPaused && v.dataset.userPaused !== 'true' && v.readyState >= 3) {
+                    if (v.dataset.userPaused !== 'true' && v.readyState >= 3) {
                       v.play().then(() => setIsVideoPlaying(true)).catch(() => {});
                     }
                   };
@@ -6169,11 +6167,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               }}
               onStalled={(e) => {
                 const v = e.currentTarget;
-                const isPausedByUser = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
-                if (v && !isPausedByUser && v.dataset.userPaused !== 'true') {
+                const isManualPaused = (typeof localStorage !== 'undefined' && localStorage.getItem('avalive_user_paused') === 'true') && v.dataset.userPaused === 'true';
+                if (v && !isManualPaused) {
                   setTimeout(() => {
-                    const isStillPaused = (typeof localStorage !== 'undefined' && (localStorage.getItem('avalive_user_paused') === 'true' || localStorage.getItem('avalive_master_live_running') === 'false')) || !isMasterLiveRunningRef.current;
-                    if (!isStillPaused && v.dataset.userPaused !== 'true' && v.readyState >= 2) {
+                    if (v.dataset.userPaused !== 'true' && v.readyState >= 2) {
                       v.play().then(() => setIsVideoPlaying(true)).catch(() => {});
                     }
                   }, 500);
@@ -6461,6 +6458,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 e.preventDefault();
                 e.stopPropagation();
                 setIsDraggingOverStage(false);
+                setIsStageExplicitlyCleared(false);
                 const files = e.dataTransfer?.files;
                 if (files && files.length > 0) {
                   processBatchFiles(files);
@@ -7349,6 +7347,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       onDrop={(e) => {
                         e.preventDefault();
                         e.stopPropagation();
+                        setIsStageExplicitlyCleared(false);
                         const files = e.dataTransfer?.files;
                         if (files && files.length > 0) {
                           processBatchFiles(files);
@@ -7374,6 +7373,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                     onDrop={(e) => {
                       e.preventDefault();
                       e.stopPropagation();
+                      setIsStageExplicitlyCleared(false);
                       const files = e.dataTransfer?.files;
                       if (files && files.length > 0) {
                         processBatchFiles(files);
@@ -7381,6 +7381,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                     }}
                     onClick={() => {
                       // 🔓 Tắt đồng bộ từ sequencer để hiển thị nhân vật độc lập tức thì trên sân khấu chính
+                      setIsStageExplicitlyCleared(false);
                       setIsMasterStageSynced(false);
                       setFlowSequencerOverlay(null);
                       setMultiAvatarConfig(prev => ({ ...prev, _syncedFromSequencer: false, fromSequencer: false, enabled: false }));
