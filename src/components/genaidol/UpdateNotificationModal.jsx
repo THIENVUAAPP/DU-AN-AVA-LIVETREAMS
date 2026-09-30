@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.3.2';
+export const APP_VERSION = '5.3.3';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.3.3 - Nâng Cấp Camera Studio Pro: Xóa Phông AI, Cắt Khung 4 Chiều, Xóa Góc & Ghép Vào Mọi Vị Trí Video AI',
+    description: '1. Tích hợp công cụ Cắt Camera Đa Chiều & Xóa Góc (Crop 4 Sides & Corner Eraser): Cắt Trên, Dưới, Trái, Phải và vát 4 góc bất kỳ để bỏ góc thừa, tùy cơ ứng biến gắn khít vào màn hình máy tính, bàn ghế, góc phòng của video AI. 2. Tách nền AI siêu sạch & Chroma Key Pro (Phông xanh lá/dương) với tính năng khử viền tràn màu (Spill Suppression) và độ mượt viền (Feather). 3. Presets vị trí ghép nhanh 1-Click: Màn hình máy tính bàn AI, Màn hình phụ dọc 9:16, Người ngồi bàn làm việc, Avatar nổi tròn PiP, Streamer TikTok dọc toàn thân. 4. Chế độ Clean Mode (Không Viền): Ẩn toàn bộ viền app và thanh công cụ khi phát live để luồng camera hòa trộn 100% tự nhiên không lộ khung.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.3.2 - Tối Ưu Hóa Giao Diện Tinh Gọn Vừa Khung Màn Hình (Không Cần Cuộn Trang)',
     description: '1. Tái cấu trúc toàn diện bố cục bảng điều khiển Captcha AI & Auto Ghim: Gom gọn gàng toàn bộ các khối chức năng (Auto Ghim, Đồng Bộ TikTok/Shopee, Chiến Thuật AI, Radar Ổn Định, Terminal Monitor, Lịch Sử Real-time) vừa khít 1 màn hình duy nhất, loại bỏ hoàn toàn cảm giác dài và phải cuộn trang. 2. Tối ưu kích thước chữ, khoảng cách padding và thanh trạng thái tinh tế, hiện đại, đẳng cấp.'

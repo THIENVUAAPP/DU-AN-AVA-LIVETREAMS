@@ -12,7 +12,7 @@
   "isAudioMuted": false,
   "isDarkMode": true,
   "clearMedia": false,
-  "updatedAt": 1790742653321,
+  "updatedAt": 1790743599383,
   "isUserExplicitMediaLocked": false,
   "selectedCharacter": "",
   "videoCurrentTime": 0,
@@ -32,7 +32,7 @@
   "syncedAvatars": [],
   "tunnelUrl": "https://travis-drawings-trim-menus.trycloudflare.com",
   "multiAvatarConfig": {
-    "enabled": true,
+    "enabled": false,
     "activeCount": 0,
     "layoutMode": "custom_canvas",
     "backgroundUrl": "",
@@ -58,8 +58,9 @@
     "extraImageLayers": [],
     "avatars": [],
     "activeSpeakerId": "avatar_1",
-    "fromSequencer": true,
-    "syncedAt": 1790681827135
+    "fromSequencer": false,
+    "syncedAt": 1790681827135,
+    "_syncedFromSequencer": false
   },
   "mainMediaUrl": "",
   "mainMediaTransform": {
@@ -79,7 +80,7 @@
   "avatarSpeaker": "avatar_1",
   "overlayTextStyle": "fire_sale",
   "overlayTextFontFamily": "be_vietnam",
-  "overlayTextFontSize": 20,
+  "overlayTextFontSize": null,
   "overlayTextTransform": null,
   "isMediaPinned": true,
   "fit": "cover",
@@ -89,17 +90,9 @@
     "mode": "green",
     "color": "#00ff00"
   },
-  "secondaryMediaChromaKey": {
-    "enabled": false,
-    "mode": "green",
-    "color": "#00ff00"
-  },
-  "overlayImageChromaKey": {
-    "enabled": false,
-    "mode": "green",
-    "color": "#00ff00"
-  },
-  "overlayTextColor": "#ffffff",
+  "secondaryMediaChromaKey": null,
+  "overlayImageChromaKey": null,
+  "overlayTextColor": null,
   "title": null,
   "extraImageLayers": [],
   "isVideoPlaying": false,
@@ -119,17 +112,17 @@
   "backgroundChromaKey": null,
   "livePinnedProduct": null,
   "pinnedProduct": {
-    "id": 7,
-    "name": "Con Lăn Tập Cơ Bụng 4 Bánh Tự Động Hồi Về Có Đệm Quỳ Êm Ái",
-    "productName": "Con Lăn Tập Cơ Bụng 4 Bánh Tự Động Hồi Về Có Đệm Quỳ Êm Ái",
-    "price": "189.000 ₫",
-    "oldPrice": "350.000 ₫",
-    "image": "https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=500&q=80",
-    "badge": "GIẢM SỐC 46% 💥",
-    "stock": "210",
-    "keywords": "mã 7;mã 07;con lăn;con lăn bụng;tập cơ bụng;chốt 7;sp7;mua 7",
-    "storeUrl": "https://www.tiktok.com/search?q=Con+L%C4%83n+T%E1%BA%ADp+C%C6%A1+B%E1%BB%A5ng+4+B%C3%A1nh",
-    "pinnedAt": 1790742653321,
+    "id": 2,
+    "name": "[ COMBO] Quấn Cổ Chân + Dây Kháng Lực Tập Mông Đùi Săn Chắc Chuyên Nghiệp",
+    "productName": "[ COMBO] Quấn Cổ Chân + Dây Kháng Lực Tập Mông Đùi Săn Chắc Chuyên Nghiệp",
+    "price": "42.000 ₫",
+    "oldPrice": "85.000 ₫",
+    "image": "https://images.unsplash.com/photo-1598289431512-b97b0917affc?auto=format&fit=crop&w=500&q=80",
+    "badge": "COMBO HOT 🔥",
+    "stock": "1,5K",
+    "keywords": "mã 2;mã 02;combo;quấn cổ chân;dây kháng lực;tập mông;chốt 2;sp2;mua 2",
+    "storeUrl": "https://www.tiktok.com/search?q=Qu%E1%BA%A5n+C%E1%BB%95+Ch%C3%A2n+D%C3%A2y+Kh%C3%A1ng+L%E1%BB%B1c+EiraFit",
+    "pinnedAt": 1790743599383,
     "triggerSource": "interval_auto_rotation"
   },
   "activeSpeakerId": null,
