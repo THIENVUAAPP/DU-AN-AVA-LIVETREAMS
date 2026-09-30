@@ -230,7 +230,7 @@ export default function CameraStudioWindow({
 
   // ↺ NÚT KHÔI PHỤC CAMERA GỐC BAN ĐẦU (1-CLICK ORIGINAL CAMERA RESET)
   const handleResetToOriginalCamera = () => {
-    setCamTransform({
+    const defaultTransform = {
       panX: 0,
       panY: 0,
       zoom: 1.0,
@@ -241,8 +241,8 @@ export default function CameraStudioWindow({
       flipV: false,
       aspectRatio: '16/9',
       borderRadius: 0
-    });
-    setCropConfig({
+    };
+    const defaultCrop = {
       cropTop: 0,
       cropBottom: 0,
       cropLeft: 0,
@@ -252,8 +252,8 @@ export default function CameraStudioWindow({
       cornerBL: 0,
       cornerBR: 0,
       feather: 4
-    });
-    setBgRemovalConfig({
+    };
+    const defaultBgConfig = {
       mode: 'none',
       sensitivity: 58,
       feather: 8,
@@ -270,21 +270,44 @@ export default function CameraStudioWindow({
         chair: true,
         shelf: false
       }
-    });
-    setColorTune({
+    };
+    const defaultColor = {
       brightness: 100,
       contrast: 100,
       saturate: 100,
       temperature: 0,
       skinSmooth: 0
-    });
-    setCameraDimensions({ width: 350, height: 210 });
+    };
+    const defaultDims = { width: 350, height: 210 };
+
+    setCamTransform(defaultTransform);
+    setCropConfig(defaultCrop);
+    setBgRemovalConfig(defaultBgConfig);
+    setColorTune(defaultColor);
+    setCameraDimensions(defaultDims);
     setBrushStrokes([]);
     setBrushMode('none');
     setCompareMode('off');
     setShowGhostOverlay(false);
     setShowGridGuides(false);
-    handleConfirmAction();
+    setHistory([]);
+    setHistoryIndex(-1);
+
+    // Ghi đè trực tiếp các giá trị nguyên bản vào localStorage
+    try {
+      localStorage.setItem('avalive_studio_cam_transform_v3', JSON.stringify(defaultTransform));
+      localStorage.setItem('avalive_studio_crop_config_v2', JSON.stringify(defaultCrop));
+      localStorage.setItem('avalive_studio_bg_config_v3', JSON.stringify(defaultBgConfig));
+      localStorage.setItem('avalive_studio_color_tune_v2', JSON.stringify(defaultColor));
+      localStorage.setItem('avalive_studio_cam_dims_v1', JSON.stringify(defaultDims));
+    } catch (e) {}
+
+    if (onPositionChange) {
+      onPositionChange({ x: 500, y: 80 });
+    }
+
+    setAutoConfirmed(true);
+    setTimeout(() => setAutoConfirmed(false), 2500);
   };
 
   // 🧹 Xóa sạch tất cả các nét cọ vẽ (Clear all brush strokes)
@@ -480,7 +503,7 @@ export default function CameraStudioWindow({
 
   // Xử lý Cọ Vẽ Quét Vuông Vức / Khóa Trục Ngang Dọc trên Canvas
   const handleCanvasMouseDown = (e) => {
-    if (brushMode === 'none') {
+    if (brushMode === 'none' || activeTab !== 'brush') {
       if (onDragStart) onDragStart(e);
       return;
     }
@@ -743,10 +766,18 @@ export default function CameraStudioWindow({
                 const gxi1 = Math.min(mw - 1, gxi + 1);
 
                 // Song tuyến tính (Bilinear smoothing) giúp viền siêu mịn màng không răng cưa
-                const v00 = mData[(gyi * mw + gxi) * 4];
-                const v10 = mData[(gyi * mw + gxi1) * 4];
-                const v01 = mData[(gyi1 * mw + gxi) * 4];
-                const v11 = mData[(gyi1 * mw + gxi1) * 4];
+                const idx00 = (gyi * mw + gxi) * 4;
+                const v00 = Math.max(mData[idx00], mData[idx00 + 1], mData[idx00 + 2], mData[idx00 + 3]);
+
+                const idx10 = (gyi * mw + gxi1) * 4;
+                const v10 = Math.max(mData[idx10], mData[idx10 + 1], mData[idx10 + 2], mData[idx10 + 3]);
+
+                const idx01 = (gyi1 * mw + gxi) * 4;
+                const v01 = Math.max(mData[idx01], mData[idx01 + 1], mData[idx01 + 2], mData[idx01 + 3]);
+
+                const idx11 = (gyi1 * mw + gxi1) * 4;
+                const v11 = Math.max(mData[idx11], mData[idx11 + 1], mData[idx11 + 2], mData[idx11 + 3]);
+
                 const maskVal = (v00 * (1 - fx) + v10 * fx) * (1 - fy) + (v01 * (1 - fx) + v11 * fx) * fy;
 
                 if (maskVal < threshold) {

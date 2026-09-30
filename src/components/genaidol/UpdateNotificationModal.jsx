@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.1';
+export const APP_VERSION = '5.4.2';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.2 - Xử Lý Triệt Để Tách Nền AI Đa Kênh Màu, Khôi Phục Toàn Diện Camera Gốc & Khóa Cọ Vẽ An Toàn 100%',
+    description: '1. Xử Lý Triệt Để Xóa Phông AI (Multi-Channel Max Sampling): Quét toàn bộ 4 kênh màu RGBA của mặt nạ AI, giải quyết dứt điểm hiện tượng mặt nạ bị đảo ngược hay đục lỗ người khi streamer di chuyển. 2. Khôi Phục Camera Gốc Triệt Để: Nút "↺ Camera Gốc" ghi đè trực tiếp mọi thông số mặc định, xóa sạch toàn bộ nét cọ cũ, trả lại luồng camera nguyên bản 100% không tì vết. 3. Khóa Cọ Vẽ An Toàn: Tự động khóa nét cọ khi không ở tab cọ vẽ, không bao giờ vô tình để lại vệt cọ làm thủng hình ảnh khi kéo thả camera.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.1 - Xóa Phông AI Bám Chuyển Động Nhân Vật Real-Time, Bộ So Sánh Trước / Sau & Khôi Phục Toàn Diện Camera Gốc',
     description: '1. Xóa Phông Bám Theo Chuyển Động Nhân Vật 100% Real-time: Loại bỏ hoàn toàn tình trạng phông tĩnh hay để lại lỗ hổng khi streamer di chuyển/xoay người. MediaPipe AI tự động theo dõi từng cử chỉ, dáng người và tay cầm sản phẩm siêu mượt 60 FPS. 2. Bộ So Sánh Trước / Sau (Before & After Comparison): Tích hợp 3 chế độ xem trực tiếp (Xem Camera Gốc, Xem Đã Xóa Phông, Chia Đôi 50/50) với thanh trượt vạch chia siêu trực quan. 3. Nút Khôi Phục Camera Gốc 1-Click: Phục hồi camera về trạng thái nguyên bản 100% chỉ trong 1 chạm. 4. Nút Dọn Cọ Nhanh (🧹 Xóa Hết Nét): Dọn sạch nét cọ tức thì, giao diện trực quan và dễ sử dụng nhất.'
