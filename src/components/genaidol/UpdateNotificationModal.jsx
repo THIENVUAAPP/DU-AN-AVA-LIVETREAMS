@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.3.1';
+export const APP_VERSION = '5.3.2';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.3.2 - Tối Ưu Hóa Giao Diện Tinh Gọn Vừa Khung Màn Hình (Không Cần Cuộn Trang)',
+    description: '1. Tái cấu trúc toàn diện bố cục bảng điều khiển Captcha AI & Auto Ghim: Gom gọn gàng toàn bộ các khối chức năng (Auto Ghim, Đồng Bộ TikTok/Shopee, Chiến Thuật AI, Radar Ổn Định, Terminal Monitor, Lịch Sử Real-time) vừa khít 1 màn hình duy nhất, loại bỏ hoàn toàn cảm giác dài và phải cuộn trang. 2. Tối ưu kích thước chữ, khoảng cách padding và thanh trạng thái tinh tế, hiện đại, đẳng cấp.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.3.1 - Nâng Cấp Nút Thu Gọn / Mở Rộng Lịch Sử Giải Mã Real-time Gọn Gàng & Tối Ưu Trải Nghiệm Streamer',
     description: '1. Tích hợp nút bấm Thu Gọn / Mở Rộng thông minh cho bảng "Lịch Sử Giải Mã Real-time": Mặc định thu gọn tinh gọn không chiếm diện tích, hiển thị thanh trạng thái tóm tắt sự kiện mới nhất. Khi cần có thể mở rộng xem chi tiết 1 click. 2. Bảo lưu trạng thái đóng/mở theo thói quen người dùng.'

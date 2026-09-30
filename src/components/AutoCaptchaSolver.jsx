@@ -515,279 +515,182 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
   const CurrentIcon = currentModeObj.icon;
 
   return (
-    <div className={"w-full h-full bg-[#0A0A0E] flex flex-col font-sans overflow-hidden " + (isEmbedded ? "" : "min-h-[650px]")}>
+    <div className={"w-full h-full bg-[#0A0A0E] flex flex-col font-sans overflow-hidden " + (isEmbedded ? "" : "min-h-[600px]")}>
       
-      {/* TOP HEADER */}
-      <header className="h-[72px] border-b border-white/5 flex items-center justify-between px-6 md:px-8 bg-[#111118]/90 backdrop-blur-md shrink-0">
-        <div className="flex items-center gap-4">
-          <button onClick={handleExit} className="flex items-center gap-3 group cursor-pointer" title="Quay lại">
-             <div className="relative">
-                <div className="absolute -inset-1.5 bg-gradient-to-r from-cyan-400 via-purple-600 to-pink-500 rounded-2xl blur-sm opacity-80 group-hover:opacity-100 transition animate-pulse" />
-                <div className="relative w-11 h-11 rounded-2xl bg-gradient-to-tr from-cyan-400 via-purple-500 to-pink-500 p-[2px] shadow-2xl group-hover:scale-105 transition-all">
-                   <img src="/official_logo.jpg" alt="AVA LIVE" className="w-full h-full object-cover rounded-[14px] border border-white/40 drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]" />
-                </div>
+      {/* 1. COMPACT TOP HEADER */}
+      <header className="h-14 border-b border-white/5 flex items-center justify-between px-4 md:px-6 bg-[#111118]/95 backdrop-blur-md shrink-0">
+        <div className="flex items-center gap-3">
+          <button onClick={handleExit} className="flex items-center gap-2.5 group cursor-pointer" title="Quay lại">
+             <div className="relative w-8 h-8 rounded-xl bg-gradient-to-tr from-cyan-400 via-purple-500 to-pink-500 p-[1.5px] shadow-lg group-hover:scale-105 transition-all">
+                <img src="/official_logo.jpg" alt="AVA LIVE" className="w-full h-full object-cover rounded-[10px]" />
              </div>
              <div className="text-left flex flex-col justify-center">
-                <h2 className="text-white font-black text-lg leading-none group-hover:text-cyan-400 transition-colors">AVA LIVE VIP PRO</h2>
-                <span className="text-[10px] text-gray-400 font-bold tracking-wider mt-1">CAPTCHA AI & AUTO GHIM TIKTOK SHOP + SHOPEE 24/7</span>
+                <div className="flex items-center gap-2">
+                  <h2 className="text-white font-black text-sm leading-tight group-hover:text-cyan-400 transition-colors">AVA LIVE VIP PRO</h2>
+                  <span className="text-[9px] bg-cyan-500/20 text-cyan-300 border border-cyan-500/30 px-1.5 py-0.2 rounded font-mono font-bold">AI CAPTCHA & AUTO GHIM</span>
+                </div>
+                <span className="text-[10px] text-gray-400 font-medium">Đồng bộ TikTok Shop & Shopee Live 24/7</span>
              </div>
           </button>
         </div>
 
-        <div className="flex items-center gap-3">
-           <div className="flex px-3 py-1.5 bg-pink-500/10 border border-pink-500/30 rounded-lg text-pink-400 text-xs font-black items-center gap-2">
-             <Radio className="w-3.5 h-3.5 text-pink-400 animate-pulse" />
-             <span>TIKTOK SHOP SYNC</span>
+        {/* HEADER BADGES & ACTIONS */}
+        <div className="flex items-center gap-2">
+           <div className="hidden sm:flex px-2.5 py-1 bg-pink-500/10 border border-pink-500/20 rounded-lg text-pink-400 text-[11px] font-bold items-center gap-1.5">
+             <Radio className="w-3 h-3 text-pink-400 animate-pulse" />
+             <span>TikTok Sync</span>
            </div>
-           <div className="flex px-3 py-1.5 bg-orange-500/10 border border-orange-500/30 rounded-lg text-orange-400 text-xs font-black items-center gap-2">
-             <ShoppingBag className="w-3.5 h-3.5 text-orange-400 animate-pulse" />
-             <span>SHOPEE LIVE SYNC</span>
+           <div className="hidden sm:flex px-2.5 py-1 bg-orange-500/10 border border-orange-500/20 rounded-lg text-orange-400 text-[11px] font-bold items-center gap-1.5">
+             <ShoppingBag className="w-3 h-3 text-orange-400 animate-pulse" />
+             <span>Shopee Sync</span>
            </div>
-           <div className="hidden sm:flex px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-xs font-black items-center gap-2 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></div>
-             CAPTCHA BYPASS 100%
+           <div className="flex px-2.5 py-1 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-[11px] font-bold items-center gap-1.5">
+             <div className="w-1.5 h-1.5 rounded-full bg-emerald-400 animate-ping"></div>
+             <span>Bypass 100%</span>
            </div>
-           <button onClick={handleExit} className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold text-white transition-colors flex items-center gap-2 cursor-pointer shadow-sm hover:scale-105 active:scale-95" title="Quay lại / Thoát">
-             <ArrowLeft className="w-4 h-4 text-amber-400" /> Thoát
+           
+           <button
+             type="button"
+             onClick={handleCopyTikTokScript}
+             className="hidden md:flex px-2.5 py-1 bg-pink-600/15 hover:bg-pink-600/30 border border-pink-500/30 text-pink-300 rounded-lg text-[11px] font-bold items-center gap-1 transition-all cursor-pointer"
+             title="Copy Script nạp TikTok Shop"
+           >
+             {copiedScript === "tiktok" ? <CheckCheck className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-pink-400" />}
+             <span>Script TikTok</span>
+           </button>
+
+           <button
+             type="button"
+             onClick={handleCopyShopeeScript}
+             className="hidden md:flex px-2.5 py-1 bg-orange-600/15 hover:bg-orange-600/30 border border-orange-500/30 text-orange-300 rounded-lg text-[11px] font-bold items-center gap-1 transition-all cursor-pointer"
+             title="Copy Script nạp Shopee Live"
+           >
+             {copiedScript === "shopee" ? <CheckCheck className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-orange-400" />}
+             <span>Script Shopee</span>
+           </button>
+
+           <button 
+             onClick={handleExit} 
+             className="px-3 py-1 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold text-white transition-all flex items-center gap-1.5 cursor-pointer active:scale-95 ml-1" 
+             title="Quay lại"
+           >
+             <ArrowLeft className="w-3.5 h-3.5 text-amber-400" /> Thoát
            </button>
         </div>
       </header>
 
-      {/* BODY CONTENT */}
-      <div className="flex-1 overflow-y-auto p-5 md:p-8 custom-scrollbar">
-        <div className="max-w-7xl mx-auto space-y-6">
+      {/* 2. COMPACT STATS & CONTROLS STRIP */}
+      <div className="bg-[#14141d]/90 border-b border-white/5 px-4 md:px-6 py-2 shrink-0">
+        <div className="flex flex-wrap items-center justify-between gap-3 text-xs">
+          <div className="flex items-center gap-4 flex-wrap">
+            <div className="flex items-center gap-1.5">
+              <span className="text-gray-400 text-[11px] font-bold uppercase">Đã bẻ khóa:</span>
+              <span className="text-white font-black font-mono">{captchaStats.totalSolved.toLocaleString()}</span>
+              <span className="text-[10px] text-emerald-400 font-bold bg-emerald-500/10 px-1.5 py-0.2 rounded">+342 hnay</span>
+            </div>
+            <div className="hidden sm:inline text-gray-600">|</div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-gray-400 text-[11px] font-bold uppercase">Tỷ lệ:</span>
+              <span className="text-emerald-400 font-black font-mono">{captchaStats.successRate}%</span>
+            </div>
+            <div className="hidden sm:inline text-gray-600">|</div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-gray-400 text-[11px] font-bold uppercase">Độ trễ AI:</span>
+              <span className="text-cyan-400 font-black font-mono">{captchaStats.responseTime}ms</span>
+              <span className="text-[10px] text-gray-500">(0ms delay)</span>
+            </div>
+            <div className="hidden sm:inline text-gray-600">|</div>
+            <div className="flex items-center gap-1.5">
+              <span className="text-gray-400 text-[11px] font-bold uppercase">Auto Ghim:</span>
+              <span className={"font-black text-[11px] " + (isRunning ? "text-emerald-400" : "text-amber-400")}>
+                {isRunning ? "🟢 ĐANG CHẠY" : "⏹ ĐÃ DỪNG"}
+              </span>
+              <span className="text-[10px] text-gray-400 font-mono">({totalPinnedCount} lần)</span>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={() => setLang(prev => prev === "VI" ? "EN" : "VI")}
+              className="px-2 py-0.5 rounded bg-white/5 border border-white/10 text-[10px] font-bold text-gray-300 hover:text-white"
+            >
+              [ {lang} ]
+            </button>
+          </div>
+        </div>
+      </div>
+
+      {/* 3. MAIN WORKSPACE BODY - FITS PERFECTLY IN SINGLE SCREEN */}
+      <div className="flex-1 p-3 md:p-4 overflow-y-auto custom-scrollbar flex flex-col justify-start">
+        <div className="max-w-[1600px] w-full mx-auto grid grid-cols-1 lg:grid-cols-12 gap-3.5">
           
-          {/* TITLE & DESCRIPTION */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white shadow-lg">
-                <ShieldCheck className="w-8 h-8" />
-              </div>
-              <div>
-                <h1 className="text-xl md:text-2xl font-black text-white tracking-wider flex items-center gap-2">
-                  BẢNG ĐIỀU KHIỂN VƯỢT CAPTCHA AI 24/7 & AUTO GHIM PRO (TIKTOK SHOP + SHOPEE LIVE)
-                </h1>
-                <p className="text-gray-400 text-xs mt-0.5">Tự động kết nối tài khoản TikTok Shop & Shopee Live của bạn, vượt mọi loại Captcha và tự động ghim sản phẩm 24/7.</p>
-              </div>
-            </div>
-          </div>
-
-          {/* STATS OVERVIEW */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <div className="bg-[#141419] border border-white/5 rounded-2xl p-5 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-28 h-28 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-colors"></div>
-              <span className="text-[11px] text-gray-400 uppercase tracking-wider font-bold mb-1 block">Tổng Captcha Đã Bẻ Khóa</span>
-              <div className="flex items-end gap-2">
-                <span className="text-3xl font-black text-white">{captchaStats.totalSolved.toLocaleString()}</span>
-                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded mb-1">+342 hnay</span>
-              </div>
-            </div>
+          {/* CỘT TRÁI (5 CỘT): ĐIỀU KHIỂN AUTO GHIM & ĐỒNG BỘ 2 SÀN */}
+          <div className="lg:col-span-5 flex flex-col gap-3">
             
-            <div className="bg-[#141419] border border-white/5 rounded-2xl p-5 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-28 h-28 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors"></div>
-              <span className="text-[11px] text-gray-400 uppercase tracking-wider font-bold mb-1 block">Tỷ Lệ Bypass Thành Công</span>
-              <span className="text-3xl font-black text-emerald-400">{captchaStats.successRate}%</span>
-            </div>
+            {/* CARD 1: AUTO GHIM CONTROLLER */}
+            <div className="bg-gradient-to-br from-[#161224] via-[#1a1528] to-[#121218] border border-pink-500/25 rounded-2xl p-3.5 shadow-lg space-y-3">
+              <div className="flex items-center justify-between pb-2 border-b border-white/10">
+                <div className="flex items-center gap-2">
+                  <div className="p-1.5 rounded-lg bg-pink-500/20 text-pink-400">
+                    <Pin className="w-4 h-4" />
+                  </div>
+                  <span className="text-xs font-black uppercase text-white tracking-wide">Điều Khiển Auto Ghim Pro</span>
+                </div>
 
-            <div className="bg-[#141419] border border-white/5 rounded-2xl p-5 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-28 h-28 bg-pink-500/10 rounded-full blur-2xl group-hover:bg-pink-500/20 transition-colors"></div>
-              <span className="text-[11px] text-gray-400 uppercase tracking-wider font-bold mb-1 block">Trạng Thái Auto Ghim Pro</span>
-              <div className="flex items-baseline gap-2">
-                <span className={"text-xl font-black " + (isRunning ? "text-emerald-400" : "text-amber-400")}>
-                  {isRunning ? "🟢 ĐANG CHẠY" : "⏹ ĐÃ DỪNG"}
+                <span className={"text-[10px] px-2 py-0.5 rounded-full font-bold flex items-center gap-1 border " + (
+                  isRunning ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" : "bg-white/5 text-gray-400 border-white/10"
+                )}>
+                  <span className={"w-1.5 h-1.5 rounded-full " + (isRunning ? "bg-emerald-400 animate-pulse" : "bg-gray-500")}></span>
+                  {isRunning ? `Mã #${currentPinnedCode || "1"} • Còn ${countdown}s` : "Sẵn sàng"}
                 </span>
-                <span className="text-xs text-gray-400">{totalPinnedCount} lần ghim</span>
               </div>
-            </div>
 
-            <div className="bg-[#141419] border border-white/5 rounded-2xl p-5 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-28 h-28 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-colors"></div>
-              <span className="text-[11px] text-gray-400 uppercase tracking-wider font-bold mb-1 block">Độ Trễ Giải Mã AI</span>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-black text-blue-400">{captchaStats.responseTime}</span>
-                <span className="text-sm font-normal text-gray-400">ms (0 delay)</span>
-              </div>
-            </div>
-          </div>
-
-          {/* SECTION 1: AUTO GHIM PRO & ĐỒNG BỘ 2 NỀN TẢNG TIKTOK SHOP + SHOPEE LIVE */}
-          <div className="bg-gradient-to-br from-[#161224] via-[#1a1528] to-[#121218] border border-pink-500/30 rounded-3xl p-6 shadow-2xl relative overflow-hidden space-y-6">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-pink-600/10 rounded-full blur-3xl pointer-events-none"></div>
-
-            {/* HEADER OF AUTO GHIM */}
-            <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-[#ff2e4d] to-rose-600 text-white shadow-lg">
-                  <Pin className="w-6 h-6" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-base font-black uppercase tracking-wider text-white flex items-center gap-2">
-                      <span className="text-[#ff2e4d]">AUTO GHIM PRO</span> - ĐIỀU KHIỂN GHIM TỰ ĐỘNG (TIKTOK SHOP + SHOPEE LIVE)
-                    </h3>
-                    <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2.5 py-0.5 rounded-full font-bold">
-                      Tự động hóa 100%
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-300 mt-0.5">
-                    Tự động đồng bộ tài khoản shop.tiktok.com và banhang.shopee.vn đã đăng nhập của bạn để ghim sản phẩm trực tiếp khi phát livestream.
-                  </p>
+              {/* NỀN TẢNG MỤC TIÊU */}
+              <div className="space-y-1">
+                <label className="text-[11px] font-bold text-gray-300 block">Sàn Livestream Mục Tiêu:</label>
+                <div className="grid grid-cols-3 gap-1.5">
+                  {PLATFORMS.map((p) => {
+                    const IconComp = p.icon;
+                    const isSel = targetPlatform === p.id;
+                    return (
+                      <button
+                        key={p.id}
+                        type="button"
+                        onClick={() => setTargetPlatform(p.id)}
+                        className={"p-2 rounded-xl border text-[11px] font-bold flex items-center justify-center gap-1.5 transition-all cursor-pointer " + (
+                          isSel 
+                            ? "bg-pink-600/25 border-pink-500 text-white shadow-sm ring-1 ring-pink-500/40" 
+                            : "bg-[#121218] border-[#313142] text-gray-400 hover:text-white"
+                        )}
+                      >
+                        <IconComp className={"w-3.5 h-3.5 " + (isSel ? "text-pink-400" : "text-gray-400")} />
+                        <span className="truncate">{p.badge}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
 
-              {/* QUICK LINKS & SCRIPTS */}
-              <div className="flex flex-wrap items-center gap-2">
-                <button
-                  type="button"
-                  onClick={() => setLang(prev => prev === "VI" ? "EN" : "VI")}
-                  className="px-3 py-1 rounded-full bg-[#272736] border border-[#3b3b4f] text-xs font-black text-gray-200 hover:text-white transition-all cursor-pointer shadow-sm"
-                >
-                  [ {lang} ]
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleCopyTikTokScript}
-                  className="px-3 py-1.5 bg-pink-600/20 hover:bg-pink-600/40 border border-pink-500/40 text-pink-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
-                >
-                  {copiedScript === "tiktok" ? <CheckCheck className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-pink-400" />}
-                  <span>{copiedScript === "tiktok" ? "Đã copy TikTok!" : "📋 Script TikTok Shop"}</span>
-                </button>
-
-                <button
-                  type="button"
-                  onClick={handleCopyShopeeScript}
-                  className="px-3 py-1.5 bg-orange-600/20 hover:bg-orange-600/40 border border-orange-500/40 text-orange-300 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer shadow-sm"
-                >
-                  {copiedScript === "shopee" ? <CheckCheck className="w-3.5 h-3.5 text-emerald-400" /> : <Copy className="w-3.5 h-3.5 text-orange-400" />}
-                  <span>{copiedScript === "shopee" ? "Đã copy Shopee!" : "📋 Script Shopee Live"}</span>
-                </button>
-              </div>
-            </div>
-
-            {/* DUAL PLATFORM SYNC BARS: TIKTOK SHOP & SHOPEE LIVE */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
-              
-              {/* TIKTOK SHOP CONNECTION */}
-              <div className="bg-black/60 border border-pink-500/30 rounded-2xl p-4 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <Radio className="w-4 h-4 text-pink-400" />
-                    <span className="text-xs font-black text-white uppercase tracking-wider">Đồng Bộ TikTok Shop:</span>
-                  </div>
-                  <span className={"text-[10px] px-2 py-0.5 rounded-full font-extrabold flex items-center gap-1 border " + (
-                    isTiktokConnected ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" : "bg-gray-700/50 text-gray-300 border-gray-600"
-                  )}>
-                    <span className={"w-1.5 h-1.5 rounded-full " + (isTiktokConnected ? "bg-emerald-400 animate-pulse" : "bg-gray-400")}></span>
-                    {isTiktokConnected ? "🟢 ĐÃ ĐỒNG BỘ 2 CHIỀU" : "⚪ CHƯA KẾT NỐI"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={tiktokShopUrl}
-                    onChange={(e) => setTiktokShopUrl(e.target.value)}
-                    placeholder="https://shop.tiktok.com/streamer/live/product/dashboard..."
-                    className="flex-1 bg-black/80 border border-white/20 focus:border-pink-500 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 font-mono focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleConnectTikTokShop}
-                    disabled={isSyncingTiktok}
-                    className="px-3.5 py-2 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer"
-                  >
-                    {isSyncingTiktok ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : "⚡ Kết Nối"}
-                  </button>
-                </div>
-              </div>
-
-              {/* SHOPEE LIVE CONNECTION */}
-              <div className="bg-black/60 border border-orange-500/30 rounded-2xl p-4 space-y-2.5">
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2">
-                    <ShoppingBag className="w-4 h-4 text-orange-400" />
-                    <span className="text-xs font-black text-white uppercase tracking-wider">Đồng Bộ Shopee Live:</span>
-                  </div>
-                  <span className={"text-[10px] px-2 py-0.5 rounded-full font-extrabold flex items-center gap-1 border " + (
-                    isShopeeConnected ? "bg-emerald-500/20 text-emerald-300 border-emerald-500/40" : "bg-gray-700/50 text-gray-300 border-gray-600"
-                  )}>
-                    <span className={"w-1.5 h-1.5 rounded-full " + (isShopeeConnected ? "bg-emerald-400 animate-pulse" : "bg-gray-400")}></span>
-                    {isShopeeConnected ? "🟢 ĐÃ ĐỒNG BỘ 2 CHIỀU" : "⚪ CHƯA KẾT NỐI"}
-                  </span>
-                </div>
-                <div className="flex items-center gap-2">
-                  <input
-                    type="text"
-                    value={shopeeLiveUrl}
-                    onChange={(e) => setShopeeLiveUrl(e.target.value)}
-                    placeholder="https://banhang.shopee.vn/portal/live/home..."
-                    className="flex-1 bg-black/80 border border-white/20 focus:border-orange-500 rounded-xl px-3 py-2 text-xs text-white placeholder-gray-500 font-mono focus:outline-none"
-                  />
-                  <button
-                    type="button"
-                    onClick={handleConnectShopeeLive}
-                    disabled={isSyncingShopee}
-                    className="px-3.5 py-2 bg-gradient-to-r from-orange-600 to-amber-600 hover:from-orange-500 hover:to-amber-500 text-white rounded-xl text-xs font-bold transition-all shrink-0 cursor-pointer"
-                  >
-                    {isSyncingShopee ? <RefreshCw className="w-3.5 h-3.5 animate-spin" /> : "⚡ Kết Nối"}
-                  </button>
-                </div>
-              </div>
-
-            </div>
-
-            {/* CONTROLS GRID: AUTO GHIM CONTROLLER */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-6 items-start">
-              
-              {/* CỘT 1 & 2: CÀI ĐẶT CHẾ ĐỘ, NỀN TẢNG & THỜI GIAN */}
-              <div className="md:col-span-2 space-y-4 bg-black/40 p-5 rounded-2xl border border-white/10">
-                
-                {/* TARGET PLATFORM SELECTOR */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-200 block">NỀN TẢNG GHIM MỤC TIÊU:</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {PLATFORMS.map((p) => {
-                      const IconComp = p.icon;
-                      const isSel = targetPlatform === p.id;
-                      return (
-                        <button
-                          key={p.id}
-                          type="button"
-                          onClick={() => setTargetPlatform(p.id)}
-                          className={"p-2.5 rounded-xl border text-xs font-bold flex flex-col items-center justify-center gap-1 transition-all cursor-pointer " + (
-                            isSel 
-                              ? "bg-pink-600/20 border-pink-500 text-white shadow-[0_0_10px_rgba(236,72,153,0.3)] ring-1 ring-pink-500/40" 
-                              : "bg-[#121218] border-[#313142] text-gray-400 hover:text-white"
-                          )}
-                        >
-                          <IconComp className={"w-4 h-4 " + (isSel ? "text-pink-400" : "text-gray-400")} />
-                          <span className="truncate max-w-full text-[11px]">{p.label}</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-
-                {/* MODE SELECTOR */}
-                <div className="space-y-1.5">
-                  <label className="text-xs font-bold text-gray-200 block">
-                    {lang === "VI" ? "CHẾ ĐỘ GHIM SẢN PHẨM:" : "PINNING MODE:"}
-                  </label>
+              {/* CHẾ ĐỘ GHIM & MÃ GHIM */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-gray-300 block">Chế Độ Ghim:</label>
                   <div className="relative" ref={dropdownRef}>
                     <button
                       type="button"
                       onClick={() => setIsModeDropdownOpen(prev => !prev)}
-                      className="w-full bg-[#121218] border border-[#313142] hover:border-[#ff2e4d]/70 rounded-xl px-4 py-3 flex items-center justify-between text-xs font-bold text-gray-100 transition-all cursor-pointer shadow-inner"
+                      className="w-full bg-[#121218] border border-[#313142] hover:border-pink-500/70 rounded-xl px-2.5 py-2 flex items-center justify-between text-xs font-bold text-gray-100 cursor-pointer"
                     >
-                      <div className="flex items-center gap-2.5">
-                        <CurrentIcon className="w-4 h-4 text-[#ff2e4d] shrink-0" />
-                        <span className="text-sm font-extrabold">{lang === "VI" ? currentModeObj.labelVi : currentModeObj.labelEn}</span>
+                      <div className="flex items-center gap-1.5 truncate">
+                        <CurrentIcon className="w-3.5 h-3.5 text-[#ff2e4d] shrink-0" />
+                        <span className="text-[11px] font-bold truncate">{lang === "VI" ? currentModeObj.labelVi : currentModeObj.labelEn}</span>
                       </div>
-                      <ChevronDown className={"w-4 h-4 text-gray-400 transition-transform " + (isModeDropdownOpen ? "rotate-180 text-[#ff2e4d]" : "")} />
+                      <ChevronDown className={"w-3.5 h-3.5 text-gray-400 transition-transform " + (isModeDropdownOpen ? "rotate-180 text-pink-400" : "")} />
                     </button>
 
                     {isModeDropdownOpen && (
-                      <div className="absolute top-full left-0 right-0 mt-1.5 bg-[#14141d] border border-[#38384d] rounded-xl shadow-2xl z-50 overflow-hidden py-1">
+                      <div className="absolute top-full left-0 right-0 mt-1 bg-[#14141d] border border-[#38384d] rounded-xl shadow-2xl z-50 overflow-hidden py-1">
                         {AUTO_GHIM_MODES.map((m) => {
                           const IconComponent = m.icon;
                           const isSelected = mode === m.id;
@@ -799,15 +702,15 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
                                 setMode(m.id);
                                 setIsModeDropdownOpen(false);
                               }}
-                              className={"w-full px-4 py-3 text-left text-xs font-bold flex items-center justify-between transition-colors cursor-pointer " + (
-                                isSelected ? "bg-[#ff2e4d]/15 text-[#ff2e4d]" : "text-gray-200 hover:bg-[#20202e]"
+                              className={"w-full px-3 py-2 text-left text-xs font-bold flex items-center justify-between transition-colors cursor-pointer " + (
+                                isSelected ? "bg-pink-600/20 text-pink-400" : "text-gray-200 hover:bg-[#20202e]"
                               )}
                             >
-                              <div className="flex items-center gap-2.5">
-                                <IconComponent className={"w-4 h-4 " + (isSelected ? "text-[#ff2e4d]" : "text-gray-400")} />
-                                <span className="font-extrabold">{lang === "VI" ? m.labelVi : m.labelEn}</span>
+                              <div className="flex items-center gap-2 truncate">
+                                <IconComponent className={"w-3.5 h-3.5 " + (isSelected ? "text-pink-400" : "text-gray-400")} />
+                                <span className="text-[11px]">{lang === "VI" ? m.labelVi : m.labelEn}</span>
                               </div>
-                              {isSelected && <Check className="w-3.5 h-3.5 text-[#ff2e4d]" />}
+                              {isSelected && <Check className="w-3 h-3 text-pink-400" />}
                             </button>
                           );
                         })}
@@ -816,400 +719,306 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
                   </div>
                 </div>
 
-                {/* CONDITIONAL INPUT: SPECIFIC CODES */}
-                {mode === "specific" && (
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-gray-300">
-                        {lang === "VI" ? "Danh sách mã cần ghim (cách nhau bởi dấu phẩy):" : "List of product codes (comma-separated):"}
-                      </label>
-                      <div className="relative group">
-                        <HelpCircle 
-                          className="w-4 h-4 text-gray-400 hover:text-gray-200 cursor-help"
-                          onMouseEnter={() => setActiveTooltip("codes")}
-                          onMouseLeave={() => setActiveTooltip(null)}
-                        />
-                        {activeTooltip === "codes" && (
-                          <div className="absolute right-0 bottom-full mb-1.5 w-60 bg-black/95 text-[11px] text-gray-200 p-2.5 rounded-lg border border-white/20 shadow-xl z-50">
-                            {lang === "VI" ? "Nhập các số thứ tự mã sản phẩm phân cách bằng dấu phẩy (Ví dụ: 1, 2, 3)." : "Enter product indexes separated by comma (e.g. 1, 2, 3)."}
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                <div className="space-y-1">
+                  <label className="text-[11px] font-bold text-gray-300 block">
+                    {mode === "specific" ? "Mã Ghim (1, 2, 3):" : mode === "fixed" ? "Mã Cố Định:" : "Ngẫu nhiên toàn bộ:"}
+                  </label>
+                  {mode === "specific" ? (
                     <input
                       type="text"
                       value={specificCodes}
                       onChange={(e) => setSpecificCodes(e.target.value)}
                       placeholder="1, 2, 3"
-                      className="w-full bg-[#121218] border border-[#313142] focus:border-[#ff2e4d] rounded-xl px-4 py-2.5 text-xs text-white font-mono placeholder-gray-500 focus:outline-none transition-all shadow-inner"
+                      className="w-full bg-[#121218] border border-[#313142] focus:border-pink-500 rounded-xl px-2.5 py-1.5 text-xs text-white font-mono placeholder-gray-500 focus:outline-none"
                     />
-                  </div>
-                )}
-
-                {/* CONDITIONAL INPUT: FIXED CODE */}
-                {mode === "fixed" && (
-                  <div className="space-y-1.5">
-                    <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-gray-300">
-                        {lang === "VI" ? "Mã sản phẩm cố định:" : "Fixed product code:"}
-                      </label>
-                      <div className="relative group">
-                        <HelpCircle 
-                          className="w-4 h-4 text-gray-400 hover:text-gray-200 cursor-help"
-                          onMouseEnter={() => setActiveTooltip("fixed")}
-                          onMouseLeave={() => setActiveTooltip(null)}
-                        />
-                        {activeTooltip === "fixed" && (
-                          <div className="absolute right-0 bottom-full mb-1.5 w-60 bg-black/95 text-[11px] text-gray-200 p-2.5 rounded-lg border border-white/20 shadow-xl z-50">
-                            {lang === "VI" ? "Nhập 1 mã sản phẩm duy nhất cần ghim liên tục (Ví dụ: 1)." : "Enter the single product code to keep pinned (e.g. 1)."}
-                          </div>
-                        )}
-                      </div>
-                    </div>
+                  ) : mode === "fixed" ? (
                     <input
                       type="text"
                       value={fixedCode}
                       onChange={(e) => setFixedCode(e.target.value)}
                       placeholder="1"
-                      className="w-full bg-[#121218] border border-[#313142] focus:border-[#ff2e4d] rounded-xl px-4 py-2.5 text-xs text-white font-mono placeholder-gray-500 focus:outline-none transition-all shadow-inner"
+                      className="w-full bg-[#121218] border border-[#313142] focus:border-pink-500 rounded-xl px-2.5 py-1.5 text-xs text-white font-mono placeholder-gray-500 focus:outline-none"
                     />
-                  </div>
-                )}
-
-                {/* INTERVAL INPUTS */}
-                <div className="space-y-1.5">
-                  <div className="flex items-center justify-between">
-                    <label className="text-xs font-bold text-gray-300">
-                      {lang === "VI" ? "Thời gian luân phiên (Giây):" : "Rotation Interval (Seconds):"}
-                    </label>
-                    <div className="relative group">
-                      <HelpCircle 
-                        className="w-4 h-4 text-gray-400 hover:text-gray-200 cursor-help"
-                        onMouseEnter={() => setActiveTooltip("interval")}
-                        onMouseLeave={() => setActiveTooltip(null)}
-                      />
-                      {activeTooltip === "interval" && (
-                        <div className="absolute right-0 bottom-full mb-1.5 w-64 bg-black/95 text-[11px] text-gray-200 p-2.5 rounded-lg border border-white/20 shadow-xl z-50">
-                          {lang === "VI" ? "Khoảng thời gian ngẫu nhiên (Min - Max) giữa mỗi lần ghim sản phẩm." : "Random time range (Min - Max) between each pin action."}
-                        </div>
-                      )}
+                  ) : (
+                    <div className="px-2.5 py-1.5 bg-black/40 border border-white/5 rounded-xl text-[11px] text-gray-400 font-mono">
+                      Auto quét 1 - 10
                     </div>
-                  </div>
-                  
-                  <div className="grid grid-cols-2 gap-3">
-                    <div className="flex items-center gap-2 bg-[#121218] border border-[#313142] rounded-xl px-3 py-2">
-                      <span className="text-[11px] text-gray-400 font-bold">Min:</span>
-                      <input
-                        type="number"
-                        min="5"
-                        max="3600"
-                        value={minInterval}
-                        onChange={(e) => setMinInterval(parseInt(e.target.value, 10) || 5)}
-                        className="w-full bg-transparent text-xs text-center text-white font-mono font-bold focus:outline-none"
-                        placeholder="30"
-                      />
-                      <span className="text-[11px] text-gray-500">giây</span>
-                    </div>
-
-                    <div className="flex items-center gap-2 bg-[#121218] border border-[#313142] rounded-xl px-3 py-2">
-                      <span className="text-[11px] text-gray-400 font-bold">Max:</span>
-                      <input
-                        type="number"
-                        min="5"
-                        max="3600"
-                        value={maxInterval}
-                        onChange={(e) => setMaxInterval(parseInt(e.target.value, 10) || 10)}
-                        className="w-full bg-transparent text-xs text-center text-white font-mono font-bold focus:outline-none"
-                        placeholder="60"
-                      />
-                      <span className="text-[11px] text-gray-500">giây</span>
-                    </div>
-                  </div>
+                  )}
                 </div>
-
-                {/* THÊM CÁC TÙY CHỌN GHIM THÔNG MINH */}
-                <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 pt-2">
-                  <div className="flex items-center justify-between p-2.5 bg-white/5 rounded-xl border border-white/5">
-                    <div className="flex items-center gap-2">
-                      <Volume2 className="w-3.5 h-3.5 text-purple-400" />
-                      <span className="text-[11px] text-gray-300 font-bold">Ghim theo Giọng AI</span>
-                    </div>
-                    <button 
-                      onClick={() => setCaptchaConfig(prev => ({...prev, pinByVoice: !prev.pinByVoice}))}
-                      className={"relative w-8 h-4 rounded-full transition-colors cursor-pointer " + (captchaConfig.pinByVoice ? "bg-purple-500" : "bg-gray-700")}
-                    >
-                      <div className={"absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all " + (captchaConfig.pinByVoice ? "left-[17px]" : "left-[2px]")}></div>
-                    </button>
-                  </div>
-
-                  <div className="flex items-center justify-between p-2.5 bg-white/5 rounded-xl border border-white/5">
-                    <div className="flex items-center gap-2">
-                      <MessageSquare className="w-3.5 h-3.5 text-emerald-400" />
-                      <span className="text-[11px] text-gray-300 font-bold">Ghim theo Comment</span>
-                    </div>
-                    <button 
-                      onClick={() => setCaptchaConfig(prev => ({...prev, pinByComment: !prev.pinByComment}))}
-                      className={"relative w-8 h-4 rounded-full transition-colors cursor-pointer " + (captchaConfig.pinByComment ? "bg-emerald-500" : "bg-gray-700")}
-                    >
-                      <div className={"absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all " + (captchaConfig.pinByComment ? "left-[17px]" : "left-[2px]")}></div>
-                    </button>
-                  </div>
-
-                  <div className="flex items-center justify-between p-2.5 bg-white/5 rounded-xl border border-white/5">
-                    <div className="flex items-center gap-2">
-                      <Video className="w-3.5 h-3.5 text-pink-400" />
-                      <span className="text-[11px] text-gray-300 font-bold">Ghim theo Video Clip</span>
-                    </div>
-                    <button 
-                      onClick={() => setCaptchaConfig(prev => ({...prev, pinByVideo: !prev.pinByVideo}))}
-                      className={"relative w-8 h-4 rounded-full transition-colors cursor-pointer " + (captchaConfig.pinByVideo ? "bg-pink-500" : "bg-gray-700")}
-                    >
-                      <div className={"absolute top-0.5 w-3 h-3 rounded-full bg-white transition-all " + (captchaConfig.pinByVideo ? "left-[17px]" : "left-[2px]")}></div>
-                    </button>
-                  </div>
-                </div>
-
               </div>
 
-              {/* CỘT 3: NÚT BẮT ĐẦU / DỪNG VÀ TRẠNG THÁI HIỂN THỊ */}
-              <div className="space-y-4 bg-black/40 p-5 rounded-2xl border border-white/10 flex flex-col justify-between h-full">
-                
-                <div className="space-y-3">
-                  <span className="text-xs font-bold text-gray-200 block uppercase tracking-wider">
-                    ĐIỀU KHIỂN & TRẠNG THÁI:
-                  </span>
-
-                  {/* BIG START / STOP BUTTON */}
-                  <button
-                    type="button"
-                    onClick={toggleRunning}
-                    className={"w-full py-4 rounded-2xl font-black text-sm tracking-wider uppercase flex items-center justify-center gap-2 transition-all cursor-pointer shadow-xl active:scale-98 " + (
-                      isRunning
-                        ? "bg-[#2b2b3b] hover:bg-[#38384d] text-amber-300 border border-amber-500/30"
-                        : "bg-gradient-to-r from-[#ff2e4d] to-[#ff0033] hover:from-[#ff1a3d] hover:to-[#e60026] text-white shadow-[0_4px_20px_rgba(255,46,77,0.5)]"
-                    )}
-                  >
-                    {isRunning ? (
-                      <>
-                        <Square className="w-5 h-5 fill-amber-300 text-amber-300" />
-                        <span>{lang === "VI" ? "⏹ DỪNG AUTO" : "⏹ STOP AUTO"}</span>
-                      </>
-                    ) : (
-                      <>
-                        <Play className="w-5 h-5 fill-white text-white" />
-                        <span>{lang === "VI" ? "▶ BẮT ĐẦU" : "▶ START"}</span>
-                      </>
-                    )}
-                  </button>
-
-                  {/* STATUS TEXT */}
-                  <div className="text-center p-3 rounded-xl bg-black/50 border border-white/5">
-                    {isRunning ? (
-                      <p className="text-xs font-bold text-emerald-400 flex items-center justify-center gap-1.5 animate-pulse">
-                        <span className="w-2.5 h-2.5 rounded-full bg-emerald-400"></span>
-                        <span>
-                          {lang === "VI"
-                            ? "Đang Auto Ghim (" + (targetPlatform === "all" ? "TikTok + Shopee" : targetPlatform.toUpperCase()) + ")... Mã #" + (currentPinnedCode || "1") + " • Còn " + countdown + "s"
-                            : "Auto Pin Active (" + targetPlatform.toUpperCase() + ")... Code #" + (currentPinnedCode || "1") + " • " + countdown + "s left"}
-                        </span>
-                      </p>
-                    ) : (
-                      <p className="text-xs font-medium text-gray-400">
-                        {lang === "VI" ? "Đã dừng Auto." : "Auto Pin Stopped."}
-                      </p>
-                    )}
-                  </div>
+              {/* THỜI GIAN LUÂN PHIÊN (MIN - MAX) & NÚT BẮT ĐẦU */}
+              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2 items-center pt-1">
+                <div className="flex items-center gap-2 bg-[#121218] border border-[#313142] rounded-xl px-2.5 py-1.5">
+                  <span className="text-[10px] text-gray-400 font-bold">Min:</span>
+                  <input
+                    type="number"
+                    min="5"
+                    max="3600"
+                    value={minInterval}
+                    onChange={(e) => setMinInterval(parseInt(e.target.value, 10) || 5)}
+                    className="w-10 bg-transparent text-xs text-center text-white font-mono font-bold focus:outline-none"
+                  />
+                  <span className="text-[10px] text-gray-500">s</span>
+                  <span className="text-gray-600">/</span>
+                  <span className="text-[10px] text-gray-400 font-bold">Max:</span>
+                  <input
+                    type="number"
+                    min="5"
+                    max="3600"
+                    value={maxInterval}
+                    onChange={(e) => setMaxInterval(parseInt(e.target.value, 10) || 10)}
+                    className="w-10 bg-transparent text-xs text-center text-white font-mono font-bold focus:outline-none"
+                  />
+                  <span className="text-[10px] text-gray-500">s</span>
                 </div>
 
-                {/* NOTICE BOX */}
-                <div className="bg-[#242013] border border-[#524419] rounded-xl p-3 flex items-start gap-2.5 text-amber-300/90 text-xs leading-relaxed mt-2">
-                  <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
-                  <span>
-                    {lang === "VI"
-                      ? "⚠️ Lưu ý: Tiện ích chỉ ghim được các Sản phẩm đang hiển thị trên phiên livestream của bạn."
-                      : "⚠️ Note: Utility can only pin products currently visible on your livestream session."}
-                  </span>
-                </div>
-
+                <button
+                  type="button"
+                  onClick={toggleRunning}
+                  className={"w-full py-2.5 rounded-xl font-black text-xs tracking-wider uppercase flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-md active:scale-95 " + (
+                    isRunning
+                      ? "bg-[#2b2b3b] hover:bg-[#38384d] text-amber-300 border border-amber-500/30"
+                      : "bg-gradient-to-r from-[#ff2e4d] to-[#ff0033] hover:from-[#ff1a3d] hover:to-[#e60026] text-white shadow-[0_2px_12px_rgba(255,46,77,0.4)]"
+                  )}
+                >
+                  {isRunning ? (
+                    <>
+                      <Square className="w-3.5 h-3.5 fill-amber-300 text-amber-300" />
+                      <span>DỪNG AUTO</span>
+                    </>
+                  ) : (
+                    <>
+                      <Play className="w-3.5 h-3.5 fill-white text-white" />
+                      <span>BẬT AUTO GHIM</span>
+                    </>
+                  )}
+                </button>
               </div>
 
+            </div>
+
+            {/* CARD 2: ĐỒNG BỘ 2 CHIỀU TIKTOK SHOP & SHOPEE LIVE */}
+            <div className="bg-[#141419] border border-white/5 rounded-2xl p-3 shadow space-y-2">
+              <div className="flex items-center justify-between">
+                <span className="text-[11px] font-black uppercase text-gray-300 flex items-center gap-1.5">
+                  <Globe className="w-3.5 h-3.5 text-cyan-400" /> Liên Kết Phiên Live Streamer:
+                </span>
+                <span className="text-[10px] text-gray-500">Tự động truyền lệnh khi live</span>
+              </div>
+
+              {/* TikTok link */}
+              <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1 w-20 shrink-0 text-[10px] font-bold text-pink-400">
+                  <Radio className="w-3 h-3" /> TikTok:
+                </div>
+                <input
+                  type="text"
+                  value={tiktokShopUrl}
+                  onChange={(e) => setTiktokShopUrl(e.target.value)}
+                  placeholder="https://shop.tiktok.com/streamer/live/product/dashboard..."
+                  className="flex-1 bg-black/60 border border-white/10 rounded-lg px-2 py-1 text-[11px] text-white font-mono focus:outline-none focus:border-pink-500 truncate"
+                />
+                <button
+                  type="button"
+                  onClick={handleConnectTikTokShop}
+                  disabled={isSyncingTiktok}
+                  className="px-2.5 py-1 bg-pink-600/20 hover:bg-pink-600/40 text-pink-300 border border-pink-500/30 rounded-lg text-[10px] font-bold transition-all shrink-0 cursor-pointer"
+                >
+                  {isSyncingTiktok ? <RefreshCw className="w-3 h-3 animate-spin" /> : "Đồng Bộ"}
+                </button>
+              </div>
+
+              {/* Shopee link */}
+              <div className="flex items-center gap-1.5">
+                <div className="flex items-center gap-1 w-20 shrink-0 text-[10px] font-bold text-orange-400">
+                  <ShoppingBag className="w-3 h-3" /> Shopee:
+                </div>
+                <input
+                  type="text"
+                  value={shopeeLiveUrl}
+                  onChange={(e) => setShopeeLiveUrl(e.target.value)}
+                  placeholder="https://banhang.shopee.vn/portal/live/home..."
+                  className="flex-1 bg-black/60 border border-white/10 rounded-lg px-2 py-1 text-[11px] text-white font-mono focus:outline-none focus:border-orange-500 truncate"
+                />
+                <button
+                  type="button"
+                  onClick={handleConnectShopeeLive}
+                  disabled={isSyncingShopee}
+                  className="px-2.5 py-1 bg-orange-600/20 hover:bg-orange-600/40 text-orange-300 border border-orange-500/30 rounded-lg text-[10px] font-bold transition-all shrink-0 cursor-pointer"
+                >
+                  {isSyncingShopee ? <RefreshCw className="w-3 h-3 animate-spin" /> : "Đồng Bộ"}
+                </button>
+              </div>
             </div>
 
           </div>
 
-          {/* SECTION 2: CẤU HÌNH CHIẾN THUẬT AI (TIKTOK + SHOPEE), RADAR, LOGS & REALTIME TABLE */}
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+          {/* CỘT PHẢI (7 CỘT): CHIẾN THUẬT AI, RADAR, TERMINAL & LỊCH SỬ REAL-TIME */}
+          <div className="lg:col-span-7 flex flex-col gap-3">
             
-            {/* CỘT TRÁI: CHIẾN THUẬT AI & RADAR */}
-            <div className="lg:col-span-1 space-y-6">
+            {/* ROW 1: CHIẾN THUẬT AI & RADAR TRẠNG THÁI */}
+            <div className="grid grid-cols-1 sm:grid-cols-12 gap-3">
               
-              <div className="bg-[#141419] border border-white/5 rounded-2xl p-6">
-                 <h4 className="text-sm font-black text-white border-b border-white/5 pb-4 mb-4 flex items-center gap-2">
-                   <Cpu className="w-4 h-4 text-cyan-400" /> Cấu hình Chiến Thuật AI
-                 </h4>
-                 <div className="space-y-3">
-                    {[
-                      { id: "imageBypass", label: "Giải mã Ảnh / Slider Captcha" },
-                      { id: "cloudflareTurnstile", label: "Vượt tường lửa Cloudflare v3" },
-                      { id: "autoProxy", label: "Anti-Fingerprint (Thay Proxy liên tục)" },
-                      { id: "autoToken", label: "Auto-Submit Token (Chống kẹt)" }
-                    ].map(cfg => (
-                       <div key={cfg.id} className="flex items-center justify-between p-3.5 rounded-xl bg-black/20 border border-white/5">
-                          <span className="text-xs text-gray-300 font-bold">{cfg.label}</span>
-                          <button 
-                            onClick={() => setCaptchaConfig(prev => ({...prev, [cfg.id]: !prev[cfg.id]}))}
-                            className={"relative w-11 h-6 rounded-full transition-colors duration-300 cursor-pointer " + (captchaConfig[cfg.id] ? "bg-cyan-500 shadow-[0_0_12px_rgba(6,182,212,0.5)]" : "bg-gray-700")}
-                          >
-                            <div className={"absolute top-0.5 w-5 h-5 rounded-full bg-white transition-all duration-300 shadow-md " + (captchaConfig[cfg.id] ? "left-[22px]" : "left-[2px]")}></div>
-                          </button>
-                       </div>
-                    ))}
-                 </div>
+              {/* CẤU HÌNH CHIẾN THUẬT AI (8 CỘT) */}
+              <div className="sm:col-span-8 bg-[#141419] border border-white/5 rounded-2xl p-3 shadow-md space-y-2">
+                <h4 className="text-xs font-black text-white flex items-center gap-1.5 pb-1 border-b border-white/5">
+                  <Cpu className="w-3.5 h-3.5 text-cyan-400" /> Cấu hình Chiến Thuật AI
+                </h4>
+                <div className="grid grid-cols-2 gap-2">
+                   {[
+                     { id: "imageBypass", label: "Giải mã Ảnh / Slider" },
+                     { id: "cloudflareTurnstile", label: "Vượt Cloudflare v3" },
+                     { id: "autoProxy", label: "Anti-Fingerprint Proxy" },
+                     { id: "autoToken", label: "Auto-Submit Token" }
+                   ].map(cfg => (
+                      <div key={cfg.id} className="flex items-center justify-between p-2 rounded-xl bg-black/25 border border-white/5">
+                         <span className="text-[11px] text-gray-300 font-bold truncate pr-1">{cfg.label}</span>
+                         <button 
+                           onClick={() => setCaptchaConfig(prev => ({...prev, [cfg.id]: !prev[cfg.id]}))}
+                           className={"relative w-9 h-5 rounded-full transition-colors cursor-pointer shrink-0 " + (captchaConfig[cfg.id] ? "bg-cyan-500 shadow-[0_0_8px_rgba(6,182,212,0.4)]" : "bg-gray-700")}
+                         >
+                           <div className={"absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all " + (captchaConfig[cfg.id] ? "left-[18px]" : "left-[2px]")}></div>
+                         </button>
+                      </div>
+                   ))}
+                </div>
               </div>
 
-              {/* RADAR / STATUS BOX */}
-              <div className="bg-[#141419] border border-cyan-500/20 rounded-2xl p-6 shadow-[0_0_30px_rgba(6,182,212,0.05)] text-center relative overflow-hidden flex flex-col items-center justify-center min-h-[160px]">
-                 <div className="relative z-10 flex flex-col items-center">
-                    <div className="relative w-20 h-20 flex items-center justify-center mb-3">
-                       <div className="absolute inset-0 border-2 border-emerald-500/30 rounded-full animate-[spin_6s_linear_infinite]"></div>
-                       <div className="absolute inset-1.5 border border-dashed border-emerald-400/50 rounded-full"></div>
-                       <div className="w-12 h-12 rounded-full bg-emerald-500/10 border border-emerald-500/40 flex items-center justify-center shadow-[0_0_15px_rgba(16,185,129,0.3)]">
-                         <Check className="w-6 h-6 text-emerald-400 stroke-[3]" />
-                       </div>
+              {/* RADAR TRẠNG THÁI (4 CỘT) */}
+              <div className="sm:col-span-4 bg-[#141419] border border-cyan-500/20 rounded-2xl p-3 shadow-md flex flex-col items-center justify-center text-center relative overflow-hidden">
+                 <div className="relative w-14 h-14 flex items-center justify-center mb-1.5">
+                    <div className="absolute inset-0 border-2 border-emerald-500/30 rounded-full animate-[spin_6s_linear_infinite]"></div>
+                    <div className="absolute inset-1 border border-dashed border-emerald-400/50 rounded-full"></div>
+                    <div className="w-8 h-8 rounded-full bg-emerald-500/10 border border-emerald-500/40 flex items-center justify-center shadow-[0_0_10px_rgba(16,185,129,0.3)]">
+                      <Check className="w-4 h-4 text-emerald-400 stroke-[3]" />
                     </div>
-                    <h4 className="text-white font-black uppercase tracking-wider text-xs mb-1">
-                      HOẠT ĐỘNG ỔN ĐỊNH
-                    </h4>
-                    <p className="text-[10px] font-mono text-cyan-400/80 font-bold">100% COMPUTING</p>
                  </div>
+                 <h4 className="text-white font-black uppercase text-[10px] tracking-wide mb-0.5">
+                   HOẠT ĐỘNG ỔN ĐỊNH
+                 </h4>
+                 <p className="text-[9px] font-mono text-cyan-400/80 font-bold">100% COMPUTING</p>
               </div>
 
             </div>
 
-            {/* CỘT PHẢI: LOGS TERMINAL & LỊCH SỬ BẢNG */}
-            <div className="lg:col-span-2 space-y-6">
-              
-              {/* TERMINAL */}
-              <div className="bg-[#050505] border border-white/5 rounded-2xl h-48 p-4 overflow-y-auto font-mono text-xs flex flex-col gap-2 custom-scrollbar shadow-inner relative">
-                <div className="sticky top-0 bg-[#050505] pb-2 border-b border-white/5 flex items-center gap-2 text-gray-500 mb-2 z-10">
-                   <Terminal className="w-4 h-4 text-gray-400" />
-                   <span>[root@ava-stealth-node-01] ~ tail -f /var/log/bypass.log</span>
-                </div>
-                {logs.map((log, i) => (
-                  <div key={i} className="flex gap-3 items-start break-all">
-                    <span className="text-gray-600 shrink-0">[{log.time}]</span>
-                    <span className={`
-                      ${log.type === "info" ? "text-blue-400" : ""}
-                      ${log.type === "warning" ? "text-amber-400" : ""}
-                      ${log.type === "error" ? "text-red-400" : ""}
-                      ${log.type === "success" ? "text-emerald-400" : ""}
-                    `}>
-                      {log.msg}
-                    </span>
-                  </div>
-                ))}
-                <div ref={logsEndRef} />
+            {/* ROW 2: TERMINAL MONITOR (COMPACT) */}
+            <div className="bg-[#050505] border border-white/5 rounded-2xl h-32 p-3 overflow-y-auto font-mono text-[11px] flex flex-col gap-1.5 custom-scrollbar shadow-inner relative">
+              <div className="sticky top-0 bg-[#050505] pb-1.5 border-b border-white/5 flex items-center gap-1.5 text-gray-500 mb-1 z-10 text-[10px]">
+                 <Terminal className="w-3.5 h-3.5 text-gray-400" />
+                 <span>[root@ava-stealth-node-01] ~ tail -f /var/log/bypass.log</span>
               </div>
+              {logs.map((log, i) => (
+                <div key={i} className="flex gap-2 items-start leading-tight">
+                  <span className="text-gray-600 shrink-0">[{log.time}]</span>
+                  <span className={`
+                    ${log.type === "info" ? "text-blue-400" : ""}
+                    ${log.type === "warning" ? "text-amber-400" : ""}
+                    ${log.type === "error" ? "text-red-400" : ""}
+                    ${log.type === "success" ? "text-emerald-400" : ""}
+                  `}>
+                    {log.msg}
+                  </span>
+                </div>
+              ))}
+              <div ref={logsEndRef} />
+            </div>
 
-              {/* HISTORY TABLE WITH COLLAPSIBLE TOGGLE */}
-              <div className="bg-[#141419] border border-white/5 rounded-2xl overflow-hidden transition-all duration-300">
-                 <div 
-                   onClick={() => {
-                     const next = !isHistoryExpanded;
-                     setIsHistoryExpanded(next);
-                     try { localStorage.setItem("avalive_captcha_history_expanded", String(next)); } catch (e) {}
-                   }}
-                   className="p-4 sm:p-5 border-b border-white/5 flex items-center justify-between cursor-pointer hover:bg-white/[0.02] transition-colors select-none"
-                 >
-                   <div className="flex items-center gap-2.5">
-                     <Activity className="w-4 h-4 text-purple-400" />
-                     <h4 className="text-sm font-black text-white flex items-center gap-2">
-                       Lịch Sử Giải Mã Real-time
-                     </h4>
-                     <span className="text-[10px] px-2 py-0.5 rounded-full bg-purple-500/20 text-purple-300 font-mono font-bold">
-                       {captchaStats.historyLogs.length} bản ghi
-                     </span>
-                   </div>
-
-                   <div className="flex items-center gap-2">
-                     <button 
-                       type="button"
-                       className="text-xs text-gray-300 hover:text-white flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 font-bold transition-all cursor-pointer shadow-sm active:scale-95"
-                     >
-                       {isHistoryExpanded ? (
-                         <>
-                           <ChevronUp className="w-3.5 h-3.5 text-cyan-400" />
-                           <span>Thu Gọn</span>
-                         </>
-                       ) : (
-                         <>
-                           <ChevronDown className="w-3.5 h-3.5 text-cyan-400" />
-                           <span>Mở Rộng Xem Chi Tiết</span>
-                         </>
-                       )}
-                     </button>
-                   </div>
+            {/* ROW 3: LỊCH SỬ GIẢI MÃ REAL-TIME (COLLAPSIBLE COMPACT) */}
+            <div className="bg-[#141419] border border-white/5 rounded-2xl overflow-hidden transition-all duration-300">
+               <div 
+                 onClick={() => {
+                   const next = !isHistoryExpanded;
+                   setIsHistoryExpanded(next);
+                   try { localStorage.setItem("avalive_captcha_history_expanded", String(next)); } catch (e) {}
+                 }}
+                 className="p-3 border-b border-white/5 flex items-center justify-between cursor-pointer hover:bg-white/[0.02] transition-colors select-none"
+               >
+                 <div className="flex items-center gap-2">
+                   <Activity className="w-3.5 h-3.5 text-purple-400" />
+                   <h4 className="text-xs font-black text-white flex items-center gap-1.5">
+                     Lịch Sử Giải Mã Real-time
+                   </h4>
+                   <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-purple-500/20 text-purple-300 font-mono font-bold">
+                     {captchaStats.historyLogs.length} bản ghi
+                   </span>
                  </div>
 
-                 {!isHistoryExpanded ? (
-                   /* COMPACT VIEW KHI THU GỌN */
-                   <div 
-                     onClick={() => {
-                       setIsHistoryExpanded(true);
-                       try { localStorage.setItem("avalive_captcha_history_expanded", "true"); } catch (e) {}
-                     }}
-                     className="p-3.5 px-5 bg-black/30 flex items-center justify-between text-xs cursor-pointer hover:bg-black/40 transition-colors"
-                   >
-                     {captchaStats.historyLogs.length > 0 ? (
-                       <div className="flex items-center gap-2 text-gray-300 flex-wrap">
-                         <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                         <span className="font-mono text-gray-400">[{captchaStats.historyLogs[0]?.time}]</span>
-                         <span className="text-white font-bold">{captchaStats.historyLogs[0]?.p}:</span>
-                         <span className="text-gray-300">{captchaStats.historyLogs[0]?.type}</span>
-                         <span className="text-cyan-400 font-mono font-bold">({captchaStats.historyLogs[0]?.speed})</span>
-                         <span className="px-1.5 py-0.5 rounded text-[9px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">SUCCESS</span>
-                       </div>
-                     ) : (
-                       <span className="text-gray-400">Đang lắng nghe phiên giải mã real-time...</span>
-                     )}
-                     <span className="text-[11px] text-cyan-400 font-bold hover:underline shrink-0 ml-2">Nhấn để mở rộng</span>
-                   </div>
-                 ) : (
-                   /* FULL TABLE VIEW KHI MỞ RỘNG */
-                   <div className="overflow-x-auto">
-                     <table className="w-full text-left text-xs">
-                        <thead className="bg-[#1A1A24] text-[10px] uppercase tracking-wider text-gray-500">
-                           <tr>
-                             <th className="px-5 py-3 font-black">Thời Gian</th>
-                             <th className="px-5 py-3 font-black">Nền Tảng</th>
-                             <th className="px-5 py-3 font-black">Loại Captcha</th>
-                             <th className="px-5 py-3 font-black">Tốc Độ</th>
-                             <th className="px-5 py-3 font-black text-right">Trạng Thái</th>
-                           </tr>
-                        </thead>
-                        <tbody className="divide-y divide-white/5 font-mono text-gray-300">
-                           {captchaStats.historyLogs.map((log, i) => (
-                              <tr key={i} className="hover:bg-white/5 transition-colors">
-                                 <td className="px-5 py-3">{log.time}</td>
-                                 <td className="px-5 py-3 font-bold text-white">{log.p}</td>
-                                 <td className="px-5 py-3">{log.type}</td>
-                                 <td className="px-5 py-3 text-cyan-400">{log.speed}</td>
-                                 <td className="px-5 py-3 text-right">
-                                    <span className={`px-2 py-1 rounded text-[10px] font-black ${
-                                      log.status === "SUCCESS" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : 
-                                      "bg-amber-500/10 text-amber-400 border border-amber-500/20"
-                                    }`}>
-                                       {log.status}
-                                    </span>
-                                 </td>
-                              </tr>
-                           ))}
-                        </tbody>
-                     </table>
-                   </div>
-                 )}
-              </div>
+                 <button 
+                   type="button"
+                   className="text-[11px] text-gray-300 hover:text-white flex items-center gap-1 px-2.5 py-1 rounded-lg bg-white/5 hover:bg-white/10 border border-white/10 font-bold transition-all cursor-pointer active:scale-95"
+                 >
+                   {isHistoryExpanded ? (
+                     <>
+                       <ChevronUp className="w-3 h-3 text-cyan-400" />
+                       <span>Thu Gọn</span>
+                     </>
+                   ) : (
+                     <>
+                       <ChevronDown className="w-3 h-3 text-cyan-400" />
+                       <span>Mở Rộng Xem Chi Tiết</span>
+                     </>
+                   )}
+                 </button>
+               </div>
 
+               {!isHistoryExpanded ? (
+                 /* COMPACT SUMMARY ROW KHI THU GỌN */
+                 <div 
+                   onClick={() => {
+                     setIsHistoryExpanded(true);
+                     try { localStorage.setItem("avalive_captcha_history_expanded", "true"); } catch (e) {}
+                   }}
+                   className="p-2.5 px-3.5 bg-black/30 flex items-center justify-between text-[11px] cursor-pointer hover:bg-black/40 transition-colors"
+                 >
+                   {captchaStats.historyLogs.length > 0 ? (
+                     <div className="flex items-center gap-1.5 text-gray-300 flex-wrap">
+                       <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                       <span className="font-mono text-gray-400">[{captchaStats.historyLogs[0]?.time}]</span>
+                       <span className="text-white font-bold">{captchaStats.historyLogs[0]?.p}:</span>
+                       <span className="text-gray-300">{captchaStats.historyLogs[0]?.type}</span>
+                       <span className="text-cyan-400 font-mono font-bold">({captchaStats.historyLogs[0]?.speed})</span>
+                       <span className="px-1 py-0.2 rounded text-[8px] font-black bg-emerald-500/10 text-emerald-400 border border-emerald-500/20">SUCCESS</span>
+                     </div>
+                   ) : (
+                     <span className="text-gray-400">Đang lắng nghe phiên giải mã real-time...</span>
+                   )}
+                   <span className="text-[10px] text-cyan-400 font-bold hover:underline shrink-0 ml-2">Nhấn xem chi tiết</span>
+                 </div>
+               ) : (
+                 /* FULL EXPANDED TABLE */
+                 <div className="overflow-x-auto max-h-48 custom-scrollbar">
+                   <table className="w-full text-left text-[11px]">
+                      <thead className="bg-[#1A1A24] text-[9px] uppercase tracking-wider text-gray-500 sticky top-0">
+                         <tr>
+                           <th className="px-3 py-2 font-black">Thời Gian</th>
+                           <th className="px-3 py-2 font-black">Nền Tảng</th>
+                           <th className="px-3 py-2 font-black">Loại Captcha</th>
+                           <th className="px-3 py-2 font-black">Tốc Độ</th>
+                           <th className="px-3 py-2 font-black text-right">Trạng Thái</th>
+                         </tr>
+                      </thead>
+                      <tbody className="divide-y divide-white/5 font-mono text-gray-300">
+                         {captchaStats.historyLogs.map((log, i) => (
+                            <tr key={i} className="hover:bg-white/5 transition-colors">
+                               <td className="px-3 py-1.5">{log.time}</td>
+                               <td className="px-3 py-1.5 font-bold text-white">{log.p}</td>
+                               <td className="px-3 py-1.5">{log.type}</td>
+                               <td className="px-3 py-1.5 text-cyan-400">{log.speed}</td>
+                               <td className="px-3 py-1.5 text-right">
+                                  <span className={`px-1.5 py-0.5 rounded text-[9px] font-black ${
+                                    log.status === "SUCCESS" ? "bg-emerald-500/10 text-emerald-400 border border-emerald-500/20" : 
+                                    "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                  }`}>
+                                     {log.status}
+                                  </span>
+                               </td>
+                            </tr>
+                         ))}
+                      </tbody>
+                   </table>
+                 </div>
+               )}
             </div>
 
           </div>
