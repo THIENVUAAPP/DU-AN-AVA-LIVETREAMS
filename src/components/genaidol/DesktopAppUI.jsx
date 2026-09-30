@@ -4215,15 +4215,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     // Ưu tiên video nhân vật đang chọn -> video khóa người dùng -> các nguồn phản hồi
     const serverCharMedia = (char.mediaUrl && !char.mediaUrl.startsWith('blob:')) ? char.mediaUrl : ((char.url && !char.url.startsWith('blob:')) ? char.url : null);
     const lockedServerMedia = (userLockedMediaUrl && !userLockedMediaUrl.startsWith('blob:')) ? userLockedMediaUrl : null;
-    let currentMedia = quickResponseActiveVideo?.url || lipSyncVideoUrl || (activeVideoItem?.mediaUrl) || serverCharMedia || lockedServerMedia || char.mediaUrl || userLockedMediaUrl || char.url || '';
+    let currentMedia = quickResponseActiveVideo?.url || lipSyncVideoUrl || (isProcessingEvent && activeVideoItem?.mediaUrl ? activeVideoItem.mediaUrl : null) || serverCharMedia || lockedServerMedia || char.mediaUrl || userLockedMediaUrl || char.url || '';
     let isVid = !!userLockedMediaUrl || char.type === 'video' || (typeof currentMedia === 'string' && (currentMedia.endsWith('.mp4') || currentMedia.includes('/uploads/') || currentMedia.startsWith('http') || currentMedia.startsWith('blob:')));
     let streamFlvUrl = null;
 
-    if (isConnected && flvUrl) {
-      currentMedia = flvUrl;
-      streamFlvUrl = flvUrl;
-      isVid = true;
-    } else if (quickResponseActiveVideo?.url) {
+    if (quickResponseActiveVideo?.url) {
       currentMedia = quickResponseActiveVideo.url;
       isVid = true;
     } else if (lipSyncVideoUrl) {
@@ -5913,7 +5909,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }
 
       // Ưu tiên activeVideoItem khi đang có sự kiện video hoặc phát từ kho live / substage
-      if (activeVideoItem && activeVideoItem.mediaUrl) {
+      if (isProcessingEvent && activeVideoItem && activeVideoItem.mediaUrl) {
         return (
           <video 
             key={activeVideoItem.id || activeVideoItem.mediaUrl || 'event_video_player'}
@@ -5949,22 +5945,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               handleVideoEnded();
             }}
             onError={(e) => {
-              console.warn('Lỗi tải video sự kiện / substage, recovering...', e);
-              // Thử tìm trong Blob map nếu link server bị ngắt
-              if (typeof window !== 'undefined' && window.__activeMediaBlobMap) {
-                const blob = window.__activeMediaBlobMap.get(activeVideoItem.mediaUrl) || window.__activeMediaBlobMap.get(activeVideoItem.name) || window.__activeMediaBlobMap.get('latest');
-                if (blob instanceof Blob || blob instanceof File) {
-                  try {
-                    const freshUrl = URL.createObjectURL(blob);
-                    e.currentTarget.src = freshUrl;
-                    const isPausedByUser = (typeof localStorage !== 'undefined' && localStorage.getItem('avalive_user_paused') === 'true') && e.currentTarget.dataset.userPaused === 'true';
-                    if (!isPausedByUser) {
-                      e.currentTarget.play().then(() => setIsVideoPlaying(true)).catch(() => {});
-                    }
-                    return;
-                  } catch (recErr) {}
-                }
-              }
+              console.warn('Lỗi tải video sự kiện / substage, recovering directly to main stage...', e);
+              setActiveVideoItem(null);
               handleVideoEnded();
             }}
             playsInline 
@@ -7806,7 +7788,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             ref={audioPlayerRef} 
             isLive={isConnected || showSimulator} 
             isScriptRunning={isScriptLiveRunning}
-            currentVideoUrl={(isScriptLiveRunning || isConnected || showSimulator) && activeVideoItem ? activeVideoItem.mediaUrl : null}
+            currentVideoUrl={(isProcessingEvent && activeVideoItem) ? activeVideoItem.mediaUrl : null}
             onActionTriggered={(e) => {
               if (e.type === 'LIPSYNC_READY') handleActionVideoReady(e.videoUrl, true);
               if (e.type === 'LIPSYNC_ENDED' || e.type === 'SPEECH_ENDED') {

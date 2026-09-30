@@ -85,27 +85,9 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack 
     };
   }, []);
 
-  // Xử lý khi bắt đầu kết nối Live
+  // Xử lý khi bắt đầu kết nối Live (Bảo toàn 100% video/sân khấu của người dùng, không bao giờ tự ý đổi video)
   useEffect(() => {
     if (isConnected) {
-      const configs = getSavedEventConfigs();
-      const customIdleVid = configs.idle?.videoFile || configs.idle?.videoUrl || configs.idle?.supportVideoFile || (typeof localStorage !== 'undefined' ? (localStorage.getItem('aidol_idle_media_url') || localStorage.getItem('avalive_user_locked_media')) : null);
-      if (customIdleVid) {
-        setActiveVideoItem({
-          id: 'custom_idle_video',
-          name: 'Video Chờ Mặc Định',
-          mediaUrl: customIdleVid,
-          url: customIdleVid,
-          type: 'video'
-        });
-      } else {
-        // Tìm video 'story' / 'idle' (chế độ chờ)
-        const storyItems = liveMedia.filter(i => (i.category === 'story' || i.category === 'idle') && i.type === 'video');
-        if (storyItems.length > 0) {
-          // Chọn random hoặc video đầu tiên
-          setActiveVideoItem(storyItems[Math.floor(Math.random() * storyItems.length)]);
-        }
-      }
       resetIdleTimer();
     } else {
       clearTimeout(idleTimerRef.current);
@@ -113,7 +95,7 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack 
       setLipSyncVideoUrl(null);
     }
     return () => clearTimeout(idleTimerRef.current);
-  }, [isConnected, liveMedia]);
+  }, [isConnected]);
 
   // Vòng lặp Idle (tự động tương tác)
   const resetIdleTimer = useCallback(() => {
@@ -1015,9 +997,6 @@ function fillTemplate(template, vars = {}) {
 
   const handleVideoEnded = () => {
     setIsProcessingEvent(false);
-    const configs = getSavedEventConfigs();
-    const idleVid = configs.idle?.videoFile || configs.idle?.videoUrl || configs.idle?.supportVideoFile || (typeof localStorage !== 'undefined' ? (localStorage.getItem('aidol_idle_media_url') || localStorage.getItem('avalive_user_locked_media')) : null);
-    let nextMedia = null;
     if (lipSyncVideoUrl) {
       setLipSyncVideoUrl(null); // Trở về video nền
       if (typeof window !== 'undefined') {
@@ -1032,26 +1011,16 @@ function fillTemplate(template, vars = {}) {
       }
     } else if (previousVideoItem) {
       setActiveVideoItem(previousVideoItem);
-      nextMedia = previousVideoItem.mediaUrl || previousVideoItem.url;
       setPreviousVideoItem(null);
-    } else if (idleVid) {
-      setActiveVideoItem({
-        id: 'idle_bg_video',
-        name: 'Video Chờ (Idle Studio)',
-        mediaUrl: idleVid,
-        url: idleVid,
-        type: 'video'
-      });
-      nextMedia = idleVid;
     } else {
-      // Về mặc định video gốc mà người dùng đã chọn
+      // Về mặc định video gốc mà người dùng đã chọn trên sân khấu
       setActiveVideoItem(null);
     }
 
     // ⚡ Đồng bộ phục hồi video nền sang Sân Khấu Chính, Window Capture OBS & Đường Link Online
     syncMasterLiveState({
       stage: 'idol',
-      mediaUrl: nextMedia || null,
+      mediaUrl: null,
       isVideo: true,
       videoPlaybackEvent: 'play',
       isPlaying: true,

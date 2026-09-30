@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.10';
+export const APP_VERSION = '5.4.11';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.11 - Khắc Phục Triệt Để Lỗi Màn Hình Đen Khi Kết Nối Live TikTok Studio & Shopee, Phát Sân Khấu Liên Tục 100% Siêu Mượt',
+    description: '1. Sửa Triệt Để Lỗi Màn Hình Đen Khi Kết Nối Live: Loại bỏ hoàn toàn xung đột chuyển luồng idle/stream khiến sân khấu bị biến thành màn hình đen khi bấm Kết Nối ID TikTok Live Studio hoặc Shopee Live. Video/nhân vật trên sân khấu luôn phát liên tục 100%, sắc nét 60 FPS không bao giờ bị đứng hình hay ngắt quãng. 2. Đồng Bộ Đa Nền Tảng Tức Thì Trong 0ms: Kết nối mượt mà với TikTok Live Studio, Shopee Live RTMP và các nền tảng phát trực tiếp. 3. Bảo Vệ Tuyệt Đối Sân Khấu Phát Trực Tiếp: Đảm bảo video được nạp sẵn luôn là nguồn phát ưu tiên số 1 xuyên suốt toàn bộ phiên live. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.10 - Khắc Phục Triệt Để Video Sân Khấu Không Bao Giờ Mất Khi Live & Tự Động Ghim SP Thông Minh Theo Tên SP, Giọng Nói, Comment, Mã Số',
     description: '1. Khắc Phục Triệt Để Lỗi Video Tự Động Biến Mất Khi Phát Live: Đảm bảo sân khấu chính phát video nhân vật liên tục 100% không gián đoạn, loại bỏ hoàn toàn hiện tượng đen màn hình hay tự biến mất khi kết nối ID TikTok Live Studio / OBS. 2. Tự Động Ghim Sản Phẩm Thông Minh 100% Tự Động (Auto Ghim Pro): Bổ sung 3 chế độ nhận diện thời gian thực (Nói tên SP qua giọng nói AI/Mic, Khán giả comment tên SP, Mã số SP #1, SP2... và từ khóa chốt đơn) giúp tự động ghim deal sản phẩm lên TikTok Shop & Shopee Live trong 0ms. 3. Xóa Bỏ Nút Dư Theo Ảnh 1. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
