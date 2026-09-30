@@ -568,8 +568,12 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
             {currentPinned && (
               <div className="bg-gradient-to-r from-pink-950/80 via-purple-950/80 to-slate-900 border border-pink-500/40 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-lg animate-pulse">
                 <div className="flex items-center gap-3">
-                  <div className="relative w-14 h-14 rounded-xl overflow-hidden border border-pink-400/50 shrink-0 bg-black">
-                    <img src={currentPinned.image || currentPinned.imageUrl} alt={currentPinned.name} className="w-full h-full object-cover" />
+                  <div 
+                    onClick={() => window.open(currentPinned.productUrl || currentPinned.storeUrl || 'https://shop.tiktok.com/streamer/live/product/dashboard', '_blank')}
+                    className="relative w-14 h-14 rounded-xl overflow-hidden border border-pink-400/50 shrink-0 bg-black cursor-pointer group"
+                    title="Bấm để mở trang sản phẩm TikTok Shop"
+                  >
+                    <img src={currentPinned.image || currentPinned.imageUrl} alt={currentPinned.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
                     <span className="absolute top-0 left-0 bg-pink-600 text-[9px] font-black text-white px-1 rounded-br">PIN</span>
                   </div>
                   <div>
@@ -579,16 +583,39 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
                       </span>
                       <span className="text-xs font-bold text-amber-300">{currentPinned.badge || 'HOT DEAL'}</span>
                     </div>
-                    <h4 className="text-sm font-bold text-white mt-1 line-clamp-1">{currentPinned.name || currentPinned.productName}</h4>
+                    <h4 
+                      onClick={() => window.open(currentPinned.productUrl || currentPinned.storeUrl || 'https://shop.tiktok.com/streamer/live/product/dashboard', '_blank')}
+                      className="text-sm font-bold text-white mt-1 line-clamp-1 cursor-pointer hover:text-pink-300 transition-colors"
+                      title="Bấm để mở trang sản phẩm TikTok Shop"
+                    >
+                      {currentPinned.name || currentPinned.productName}
+                    </h4>
                     <div className="flex items-center gap-3 text-xs mt-0.5">
                       <span className="text-pink-400 font-black">{currentPinned.price || currentPinned.priceInfo}</span>
                       {currentPinned.oldPrice && <span className="text-gray-400 line-through text-[11px]">{currentPinned.oldPrice}</span>}
                       <span className="text-[11px] text-gray-400">Nguồn: {currentPinned.triggerSource || 'Tự động 24/7'}</span>
+                      <a 
+                        href={currentPinned.productUrl || currentPinned.storeUrl || 'https://shop.tiktok.com/streamer/live/product/dashboard'} 
+                        target="_blank" 
+                        rel="noopener noreferrer"
+                        className="text-[11px] text-cyan-300 hover:text-cyan-200 underline font-bold flex items-center gap-1 ml-1"
+                      >
+                        Xem Shop <ExternalLink className="w-3 h-3" />
+                      </a>
                     </div>
                   </div>
                 </div>
 
                 <div className="flex items-center gap-2">
+                  <a
+                    href={currentPinned.productUrl || currentPinned.storeUrl || 'https://shop.tiktok.com/streamer/live/product/dashboard'}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="px-3 py-1.5 bg-pink-600 hover:bg-pink-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-sm cursor-pointer"
+                  >
+                    <span>Mở TikTok Shop</span>
+                    <ExternalLink className="w-3.5 h-3.5" />
+                  </a>
                   <button
                     onClick={() => {
                       autoPinProductService.pinProduct(null);
@@ -616,6 +643,7 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[380px] overflow-y-auto pr-1 custom-scrollbar">
                 {productsList.map((prod, idx) => {
                   const isPinned = currentPinned && (currentPinned.id === prod.id || currentPinned.name === prod.name);
+                  const pUrl = prod.productUrl || prod.storeUrl || 'https://shop.tiktok.com/streamer/live/product/dashboard';
                   return (
                     <div 
                       key={prod.id || idx}
@@ -626,11 +654,15 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
                       }`}
                     >
                       <div className="flex items-start gap-3">
-                        <div className="w-14 h-14 rounded-xl overflow-hidden bg-black/50 border border-white/10 shrink-0 relative">
+                        <div 
+                          onClick={() => window.open(pUrl, '_blank')}
+                          className="w-14 h-14 rounded-xl overflow-hidden bg-black/50 border border-white/10 shrink-0 relative cursor-pointer group"
+                          title="Bấm để mở trang sản phẩm TikTok Shop"
+                        >
                           <img 
                             src={prod.image || prod.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80'} 
                             alt={prod.name} 
-                            className="w-full h-full object-cover" 
+                            className="w-full h-full object-cover group-hover:scale-110 transition-transform" 
                           />
                           <span className="absolute bottom-0 left-0 right-0 bg-black/80 text-[9px] text-white text-center font-bold">
                             Mã #{idx + 1}
@@ -649,23 +681,38 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
                               <Trash2 className="w-3.5 h-3.5" />
                             </button>
                           </div>
-                          <h5 className="text-xs font-bold text-white mt-1 line-clamp-1" title={prod.name}>
+                          <h5 
+                            onClick={() => window.open(pUrl, '_blank')}
+                            className="text-xs font-bold text-white mt-1 line-clamp-1 cursor-pointer hover:text-pink-300 transition-colors" 
+                            title="Bấm để mở trang sản phẩm TikTok Shop"
+                          >
                             {prod.name}
                           </h5>
                           <div className="flex items-center gap-2 mt-0.5">
                             <span className="text-xs font-black text-emerald-400">{prod.price}</span>
                             {prod.oldPrice && <span className="text-[10px] text-gray-500 line-through">{prod.oldPrice}</span>}
                           </div>
-                          {prod.keywords && (
-                            <p className="text-[10px] text-gray-400 truncate mt-1">
-                              🔑 Từ khóa: <span className="text-gray-300">{prod.keywords}</span>
-                            </p>
-                          )}
+                          <div className="flex items-center justify-between mt-1">
+                            <a
+                              href={pUrl}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="text-[10px] text-pink-400 hover:text-pink-300 underline font-semibold flex items-center gap-0.5"
+                              title="Mở liên kết TikTok Shop của nhà bán hàng"
+                            >
+                              Xem trên Shop <ExternalLink className="w-2.5 h-2.5" />
+                            </a>
+                            <span className="text-[10px] text-gray-400">Còn: {prod.stock || 99}</span>
+                          </div>
                         </div>
                       </div>
 
                       <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5">
-                        <span className="text-[10px] text-gray-400">Tồn kho: {prod.stock || 99}</span>
+                        {prod.keywords ? (
+                          <p className="text-[10px] text-gray-400 truncate max-w-[140px]" title={prod.keywords}>
+                            🔑 <span className="text-gray-300">{prod.keywords}</span>
+                          </p>
+                        ) : <span />}
                         <button
                           type="button"
                           onClick={() => handlePinProduct(prod)}

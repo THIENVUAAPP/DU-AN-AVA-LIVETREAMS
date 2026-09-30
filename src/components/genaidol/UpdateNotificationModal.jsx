@@ -2,21 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.1.5';
-export const RELEASE_DATE = '29/09/2026';
+export const APP_VERSION = '5.1.6';
+export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '🛍️ Bản Cập Nhật v5.1.6 - Chuẩn Hóa Realtime 100% Sản Phẩm & Giá TikTok Shop, Bấm Mở Trang Bán Hàng',
+    description: '1. Chuẩn hóa realtime 100% danh mục sản phẩm từ TikTok Shop Live Dashboard (eirafitreview): Đồng bộ chính xác từng mã, từng giá bán, từng giá gốc và tồn kho (Mã 1: Áo bra HAVATA 49.999đ, Mã 2: Combo Quấn cổ chân 42.000đ, Mã 3: Bộ tạ tay 40KG 1.299.000đ, Mã 4: Dây Mini Band 79.000đ, Mã 5: Bình nước 2L 65.000đ, Mã 6: Thảm Yoga 159.000đ, Mã 7: Con lăn bụng 189.000đ). 2. Bấm vào sản phẩm mở ngay trang bán hàng TikTok Shop chính thức của shop. 3. Tự động ghim giỏ hàng realtime và giải Captcha thông minh 0ms.'
+  },
+  {
     title: '🛍️ Bản Cập Nhật v5.1.5 - Đồng Bộ Sản Phẩm THẬT 100% Từ TikTok Shop Dashboard & Giải Captcha Đỉnh Cao',
-    description: '1. Loại bỏ 100% dữ liệu ảo/demo/rác: Toàn bộ danh mục sản phẩm được đồng bộ chính xác từng món từ sàn TikTok Shop Dashboard của người dùng (Áo bra HAVATA 49.999đ, Combo quấn cổ chân 42.000đ, Bộ tạ 40KG 1.299.000đ, Dây kháng lực 79.000đ, Bình nước 2L, Thảm Yoga, Con lăn cơ bụng). 2. Ghim sản phẩm live tức thì: Tự động ghim chính xác Mã #1 và xoay vòng theo kịch bản / giọng AI / bình luận. 3. Giải Captcha thông minh siêu tốc 0ms cho TikTok Shop, TikTok Live Studio và Shopee Live.'
-  },
-  {
-    title: '🎥 Bản Cập Nhật v5.1.3 - Bộ Điều Khiển Camera Live Studio 8 Hướng & Xóa Phông AI Siêu Sạch',
-    description: '1. Xóa phông bất kỳ vị trí nào siêu sạch: Tích hợp AI tách người, chế độ giữ nhân vật + bàn ghế / máy tính / sản phẩm, Chroma Key phông xanh lá / xanh dương và cắt xén đa điểm mượt mà 60 FPS. 2. Điều khiển Camera 8 hướng siêu tiện lợi: D-Pad 8 hướng di chuyển camera lên/xuống/trái/phải và 4 góc chéo. 3. Tinh chỉnh đa góc đa điểm: Phóng to Zoom 1.0x - 3.5x, xoay góc 360°, lật gương và chuyển đổi tỉ lệ 16:9, 9:16 TikTok, tròn.'
-  },
-  {
-    title: '🛍️ Bản Cập Nhật v5.1.2 - Đồng Bộ Tức Thì 100% Toàn Bộ Sản Phẩm TikTok Shop & Tự Động Ghim Giỏ Hàng',
-    description: '1. Đồng bộ toàn bộ sản phẩm TikTok Shop từ link shop.tiktok.com. 2. Tự động ghim giỏ hàng lên phiên Live 24/7.'
+    description: '1. Loại bỏ 100% dữ liệu ảo/demo/rác. 2. Tự động ghim giỏ hàng lên phiên Live. 3. Giải Captcha thông minh.'
   }
 ];
 

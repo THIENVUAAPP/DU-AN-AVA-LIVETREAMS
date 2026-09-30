@@ -5963,10 +5963,11 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
         price: '49.999 ₫',
         oldPrice: '83.332 ₫',
         image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=500&q=80',
-        badge: 'HOT DEAL TIKTOK 🔥',
+        badge: 'GIẢM 40% 🔥',
         keywords: 'mã 1;mã 01;áo bra;bra;áo tập;havata;yếm;chốt 1;sp1;mua 1',
         stock: '32Tr',
-        storeUrl: targetUrl
+        storeUrl: targetUrl,
+        productUrl: 'https://shop.tiktok.com/view/product/1729482910381982?region=VN&locale=vi-VN'
       },
       {
         id: 2,
@@ -5975,10 +5976,11 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
         price: '42.000 ₫',
         oldPrice: '85.000 ₫',
         image: 'https://images.unsplash.com/photo-1598289431512-b97b0917affc?auto=format&fit=crop&w=500&q=80',
-        badge: 'FLASH SALE ⚡ GIẢM 50%',
+        badge: 'COMBO HOT 🔥',
         keywords: 'mã 2;mã 02;combo;quấn cổ chân;dây kháng lực;tập mông;chốt 2;sp2;mua 2',
         stock: '1,5K',
-        storeUrl: targetUrl
+        storeUrl: targetUrl,
+        productUrl: 'https://shop.tiktok.com/view/product/1729482910381983?region=VN&locale=vi-VN'
       },
       {
         id: 3,
@@ -5990,7 +5992,8 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
         badge: 'CHÍNH HÃNG 🏆 FREESHIP',
         keywords: 'mã 3;mã 03;bộ tạ;tạ tay;40kg;tạ gym;tập tại nhà;chốt 3;sp3;mua 3',
         stock: '283',
-        storeUrl: targetUrl
+        storeUrl: targetUrl,
+        productUrl: 'https://shop.tiktok.com/view/product/1729482910381984?region=VN&locale=vi-VN'
       },
       {
         id: 4,
@@ -6002,7 +6005,8 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
         badge: 'LỰA CHỌN YÊU THÍCH ❤️',
         keywords: 'mã 4;mã 04;dây cao su;mini band;kháng lực;dây tập;chốt 4;sp4;mua 4',
         stock: '999',
-        storeUrl: targetUrl
+        storeUrl: targetUrl,
+        productUrl: 'https://shop.tiktok.com/view/product/1729482910381985?region=VN&locale=vi-VN'
       },
       {
         id: 5,
@@ -6011,10 +6015,11 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
         price: '65.000 ₫',
         oldPrice: '130.000 ₫',
         image: 'https://images.unsplash.com/photo-1523362628745-0c100150b504?auto=format&fit=crop&w=500&q=80',
-        badge: 'TIKTOK TOP SELLER 🌟',
+        badge: 'TOP BÁN CHẠY 🌟',
         keywords: 'mã 5;mã 05;bình nước;2 lít;bình thể thao;chốt 5;sp5;mua 5',
         stock: '500',
-        storeUrl: targetUrl
+        storeUrl: targetUrl,
+        productUrl: 'https://shop.tiktok.com/view/product/1729482910381986?region=VN&locale=vi-VN'
       },
       {
         id: 6,
@@ -6026,7 +6031,8 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
         badge: 'VOUCHER 30K 🎟️',
         keywords: 'mã 6;mã 06;thảm yoga;thảm tập;định tuyến;yoga;chốt 6;sp6;mua 6',
         stock: '340',
-        storeUrl: targetUrl
+        storeUrl: targetUrl,
+        productUrl: 'https://shop.tiktok.com/view/product/1729482910381987?region=VN&locale=vi-VN'
       },
       {
         id: 7,
@@ -6038,7 +6044,8 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
         badge: 'GIẢM SỐC 46% 💥',
         keywords: 'mã 7;mã 07;con lăn;con lăn bụng;tập cơ bụng;chốt 7;sp7;mua 7',
         stock: '210',
-        storeUrl: targetUrl
+        storeUrl: targetUrl,
+        productUrl: 'https://shop.tiktok.com/view/product/1729482910381988?region=VN&locale=vi-VN'
       }
     ];
     products = defaultTikTokShopCatalog;
