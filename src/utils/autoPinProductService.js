@@ -541,6 +541,27 @@ class AutoPinProductService {
   }
 
   /**
+   * Ghim sản phẩm theo Mã ID số hoặc Thứ tự (1, 2, 3...) cho widget Auto Ghim Pro
+   */
+  pinProductByCode(codeOrIndex, triggerSource = 'Auto Ghim Pro (shop.tiktok.com)') {
+    const products = this.getAllProducts();
+    if (!products || products.length === 0) return null;
+    const num = parseInt(codeOrIndex, 10);
+    let target = null;
+    if (!isNaN(num)) {
+      target = products.find(p => p.id === num || String(p.id) === String(num)) || products[num - 1] || products[0];
+    } else {
+      const query = String(codeOrIndex || '').toLowerCase().trim();
+      target = products.find(p => p.name && p.name.toLowerCase().includes(query)) || products[0];
+    }
+    if (target) {
+      this.pinProduct(target, triggerSource);
+      return target;
+    }
+    return null;
+  }
+
+  /**
    * Lấy danh sách tất cả sản phẩm hiện có từ cấu hình TikTok Shop URL hoặc Workspace
    */
   getAllProducts() {

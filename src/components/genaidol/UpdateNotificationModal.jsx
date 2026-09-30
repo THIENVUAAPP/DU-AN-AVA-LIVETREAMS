@@ -2,13 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.2.4';
+export const APP_VERSION = '5.2.5';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '⚡ Bản Cập Nhật v5.2.5 - Nâng Cấp Tiện Ích AUTO GHIM PRO Chuẩn shop.tiktok.com & Tối Ưu Hóa Giao Diện Tự Động Ghim',
+    description: '1. Tái cấu trúc 100% giao diện tiện ích AUTO GHIM PRO chuyên dụng cho TikTok Shop (shop.tiktok.com): 3 chế độ Ghim Random Tổng Thể, Ghim Chỉ Định (Nhiều Mã), Ghim 1 Mã Cố Định với cài đặt thời gian luân phiên linh hoạt. 2. Loại bỏ hoàn toàn hiển thị sản phẩm giả lập trong ứng dụng, phần mềm chỉ đóng vai trò auto điều khiển ghim trực tiếp cho TikTok Shop của Seller.'
+  },
+  {
     title: '⚡ Bản Cập Nhật v5.2.4 - Chuyển Hướng Trực Tiếp 100% Đến Trang Bán Hàng TikTok Shop Seller Thật Của Đơn Vị Bán',
-    description: '1. Đồng bộ sản phẩm từ shop.tiktok.com và tiếp thị liên kết: Khi khách hàng/người xem bấm vào bất kỳ sản phẩm nào hiển thị hoặc ghim trên phiên live, hệ thống lập tức mở trực tiếp trang sản phẩm & thanh toán thật trên TikTok Shop của đơn vị Seller bán hàng. 2. Loại bỏ toàn bộ giao diện giả lập thông tin biến thể để đảm bảo người dùng xem thông tin gốc chính xác 100% từ TikTok Shop của Seller.'
+    description: '1. Đồng bộ sản phẩm từ shop.tiktok.com và tiếp thị liên kết: Khi khách hàng/người xem bấm vào bất kỳ sản phẩm nào hiển thị hoặc ghim trên phiên live, hệ thống lập tức mở trực tiếp trang sản phẩm & thanh toán thật trên TikTok Shop của đơn vị Seller bán hàng.'
   },
   {
     title: '⚡ Bản Cập Nhật v5.2.3 - Tự Động Hóa Ghim Sản Phẩm 24/7 Thay Thế Hoàn Toàn Thao Tác Thủ Công Trên TikTok Shop & TikTok Live Studio',

@@ -1,65 +1,96 @@
-import React, { useState, useEffect, useRef } from 'react';
-import { supabase } from '../lib/supabaseClient';
+import React, { useState, useEffect, useRef } from "react";
 import { 
-  ShieldCheck, Cpu, Terminal, Zap, CheckCircle2, Scan, Activity, ArrowLeft,
-  Globe, ShoppingBag, Plus, Trash2, Pin, RefreshCw, Sparkles, ExternalLink,
-  Sliders, MessageSquare, Volume2, Video, Check
-} from 'lucide-react';
-import autoCaptchaService from '../utils/autoCaptchaService';
-import autoPinProductService, { REAL_TIKTOK_SHOP_CATALOG, resolveSellerProductBuyUrl, getProductSellerName } from '../utils/autoPinProductService';
+  GripVertical, ChevronDown, Check, HelpCircle, X, ExternalLink, Copy, CheckCheck, Play, Square, Zap, Target, Pin, AlertTriangle
+} from "lucide-react";
+import autoPinProductService from "../utils/autoPinProductService";
 
 const toast = {
   success: (message) => {
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('avalive_toast', { detail: { type: 'success', message } }));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("avalive_toast", { detail: { type: "success", message } }));
     }
   },
   error: (message) => {
-    if (typeof window !== 'undefined') {
-      window.dispatchEvent(new CustomEvent('avalive_toast', { detail: { type: 'error', message } }));
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("avalive_toast", { detail: { type: "error", message } }));
+    }
+  },
+  info: (message) => {
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("avalive_toast", { detail: { type: "info", message } }));
     }
   }
 };
 
+const AUTO_GHIM_MODES = [
+  { id: "random", labelVi: "Ghim Random Tổng Thể", labelEn: "Random All Products", icon: Zap },
+  { id: "specific", labelVi: "Ghim Chỉ Định (Nhiều Mã)", labelEn: "Specific Codes (Multiple)", icon: Target },
+  { id: "fixed", labelVi: "Ghim 1 Mã Cố Định", labelEn: "Fixed 1 Product Code", icon: Pin }
+];
+
 const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false }) => {
-  const [phase, setPhase] = useState('init');
-  const [progress, setProgress] = useState(0);
-  const [logs, setLogs] = useState([]);
-  const logsEndRef = useRef(null);
-
-  // TikTok Shop Sync State
-  const [tiktokShopUrl, setTiktokShopUrl] = useState(() => {
-    return localStorage.getItem('avalive_tiktok_shop_url') || 'https://shop.tiktok.com/streamer/live/product/dashboard';
+  // Config & State persisted in localStorage
+  const [lang, setLang] = useState(() => {
+    try { return localStorage.getItem("avalive_auto_ghim_lang") || "VI"; } catch (e) { return "VI"; }
   });
-  const [isSyncingTikTokShop, setIsSyncingTikTokShop] = useState(false);
-  const [productsList, setProductsList] = useState(() => {
-    const raw = autoPinProductService.getAllProducts();
-    const clean = raw.filter(p => p && p.name && !p.name.includes('AVA LIVE') && !p.name.includes('Streamer Desktop'));
-    return clean.length > 0 ? clean : REAL_TIKTOK_SHOP_CATALOG;
+  const [mode, setMode] = useState(() => {
+    try { return localStorage.getItem("avalive_auto_ghim_mode") || "specific"; } catch (e) { return "specific"; }
   });
-  const [currentPinned, setCurrentPinned] = useState(() => {
-    const pin = autoPinProductService.getCurrentPinnedProduct();
-    if (pin && pin.name && !pin.name.includes('AVA LIVE') && !pin.name.includes('Streamer Desktop')) {
-      return pin;
-    }
-    return REAL_TIKTOK_SHOP_CATALOG[0];
+  const [isModeDropdownOpen, setIsModeDropdownOpen] = useState(false);
+  
+  const [specificCodes, setSpecificCodes] = useState(() => {
+    try { return localStorage.getItem("avalive_auto_ghim_codes") || "1, 2, 3"; } catch (e) { return "1, 2, 3"; }
   });
-
-  // New product quick-add form modal/toggle
-  const [showAddModal, setShowAddModal] = useState(false);
-  const [newProd, setNewProd] = useState({
-    name: '',
-    price: '',
-    oldPrice: '',
-    keywords: '',
-    image: '',
-    badge: 'HOT DEAL 🔥',
-    sellerName: '',
-    sellerStoreUrl: '',
-    buyUrl: ''
+  const [fixedCode, setFixedCode] = useState(() => {
+    try { return localStorage.getItem("avalive_auto_ghim_fixed") || "1"; } catch (e) { return "1"; }
+  });
+  
+  const [minInterval, setMinInterval] = useState(() => {
+    try { return parseInt(localStorage.getItem("avalive_auto_ghim_min_sec"), 10) || 30; } catch (e) { return 30; }
+  });
+  const [maxInterval, setMaxInterval] = useState(() => {
+    try { return parseInt(localStorage.getItem("avalive_auto_ghim_max_sec"), 10) || 60; } catch (e) { return 60; }
   });
 
-  const handleExit = () => {
+  const [isRunning, setIsRunning] = useState(() => {
+    try { return localStorage.getItem("avalive_auto_ghim_running") === "true"; } catch (e) { return false; }
+  });
+  const [currentPinnedCode, setCurrentPinnedCode] = useState(null);
+  const [countdown, setCountdown] = useState(0);
+  const [totalPinnedCount, setTotalPinnedCount] = useState(0);
+  const [activeTooltip, setActiveTooltip] = useState(null);
+  const [copiedScript, setCopiedScript] = useState(false);
+
+  const timerRef = useRef(null);
+  const countdownIntervalRef = useRef(null);
+  const dropdownRef = useRef(null);
+  const currentSpecificIndexRef = useRef(0);
+
+  // Save config changes
+  useEffect(() => {
+    try {
+      localStorage.setItem("avalive_auto_ghim_lang", lang);
+      localStorage.setItem("avalive_auto_ghim_mode", mode);
+      localStorage.setItem("avalive_auto_ghim_codes", specificCodes);
+      localStorage.setItem("avalive_auto_ghim_fixed", fixedCode);
+      localStorage.setItem("avalive_auto_ghim_min_sec", String(minInterval));
+      localStorage.setItem("avalive_auto_ghim_max_sec", String(maxInterval));
+      localStorage.setItem("avalive_auto_ghim_running", String(isRunning));
+    } catch (e) {}
+  }, [lang, mode, specificCodes, fixedCode, minInterval, maxInterval, isRunning]);
+
+  // Click outside listener for dropdown
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(e.target)) {
+        setIsModeDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  const handleClose = () => {
     if (onClose) {
       onClose();
       return;
@@ -68,964 +99,388 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
       setActiveTab("broadcast");
       return;
     }
-    if (typeof window !== 'undefined' && window.history.length > 1) {
-      window.history.back();
+  };
+
+  // Perform single pin action
+  const executePin = (targetCode) => {
+    setCurrentPinnedCode(targetCode);
+    setTotalPinnedCount(prev => prev + 1);
+
+    // Pin via service
+    try {
+      autoPinProductService.pinProductByCode(targetCode, "Auto Ghim Pro (shop.tiktok.com)");
+    } catch (e) {}
+
+    // Dispatch global event for listeners (OBS, Window Capture, Livestream overlay)
+    if (typeof window !== "undefined") {
+      window.dispatchEvent(new CustomEvent("avalive:auto_ghim_cycle", {
+        detail: {
+          code: targetCode,
+          mode,
+          timestamp: Date.now()
+        }
+      }));
+    }
+
+    toast.info(lang === "VI" ? "📌 Đã tự động ghim sản phẩm mã #" + targetCode : "📌 Auto pinned product code #" + targetCode);
+  };
+
+  // Auto Ghim Loop Management
+  useEffect(() => {
+    if (!isRunning) {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+      setCountdown(0);
+      return;
+    }
+
+    const runCycle = () => {
+      // Determine next code based on mode
+      let nextCode = "1";
+      if (mode === "fixed") {
+        nextCode = fixedCode.trim() || "1";
+      } else if (mode === "specific") {
+        const codes = specificCodes.split(/[,;\s]+/).map(c => c.trim()).filter(Boolean);
+        if (codes.length > 0) {
+          const idx = currentSpecificIndexRef.current % codes.length;
+          nextCode = codes[idx];
+          currentSpecificIndexRef.current = idx + 1;
+        } else {
+          nextCode = "1";
+        }
+      } else {
+        // Random 1..10
+        const randNum = Math.floor(Math.random() * 10) + 1;
+        nextCode = String(randNum);
+      }
+
+      executePin(nextCode);
+
+      // Calculate next random delay between minInterval and maxInterval
+      const minS = Math.max(5, parseInt(minInterval, 10) || 30);
+      const maxS = Math.max(minS, parseInt(maxInterval, 10) || 60);
+      const nextDelaySec = Math.floor(Math.random() * (maxS - minS + 1)) + minS;
+
+      setCountdown(nextDelaySec);
+
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+      countdownIntervalRef.current = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(countdownIntervalRef.current);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+
+      timerRef.current = setTimeout(runCycle, nextDelaySec * 1000);
+    };
+
+    // Execute immediately on start
+    runCycle();
+
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+      if (countdownIntervalRef.current) clearInterval(countdownIntervalRef.current);
+    };
+  }, [isRunning, mode, specificCodes, fixedCode, minInterval, maxInterval]);
+
+  const toggleRunning = () => {
+    const nextState = !isRunning;
+    setIsRunning(nextState);
+    if (nextState) {
+      toast.success(lang === "VI" ? "🚀 BẮT ĐẦU AUTO GHIM TIKTOK SHOP THÀNH CÔNG!" : "🚀 AUTO PIN STARTED SUCCESSFULLY!");
+    } else {
+      toast.info(lang === "VI" ? "⏹ Đã dừng Auto Ghim." : "⏹ Auto Pin Stopped.");
     }
   };
 
-  const [captchaConfig, setCaptchaConfig] = useState(() => {
-    try {
-      const saved = localStorage.getItem('avalive_captcha_config');
-      if (saved) return JSON.parse(saved);
-    } catch (e) {}
-    return {
-      imageBypass: true,
-      cloudflareTurnstile: true,
-      autoProxy: true,
-      autoToken: true,
-      autoPin: true,
-      pinInterval: 30,
-      pinByVoice: true,
-      pinByComment: true,
-      pinByVideo: true,
-      tiktokSliderBypass: true,
-      tiktok3dRotateBypass: true,
-      tiktokSellerAuthBypass: true,
-      shopeeLiveBypass: true
-    };
-  });
-
-  useEffect(() => {
-    localStorage.setItem('avalive_captcha_config', JSON.stringify(captchaConfig));
-    if (captchaConfig.autoPin !== undefined) {
-      autoPinProductService.setAutoPinEnabled(captchaConfig.autoPin, captchaConfig.pinInterval);
-    }
-  }, [captchaConfig]);
-
-  // Sync pinned product & TikTok Shop catalog changes across the app
-  useEffect(() => {
-    const handlePinUpdate = (e) => {
-      if (e.detail?.product) {
-        setCurrentPinned(e.detail.product);
-      }
-    };
-
-    const handleTiktokSync = (e) => {
-      if (e.detail?.products && Array.isArray(e.detail.products)) {
-        setProductsList(e.detail.products);
-        if (e.detail.products.length > 0) {
-          setCurrentPinned(e.detail.products[0]);
+  // Copy TikTok Shop Injection Script
+  const handleCopyScript = () => {
+    const script = `// AVA AUTO GHIM TIKTOK SHOP SCRIPT (shop.tiktok.com)
+(function autoPinTikTokShop() {
+  console.log("%c[AVA AUTO GHIM PRO] Đã kết nối với TikTok Shop Streamer!", "color: #ff2e4d; font-size: 14px; font-weight: bold;");
+  window.addEventListener("message", (e) => {
+    if (e.data && e.data.type === "AVALIVE_PIN_PRODUCT") {
+      const pinButtons = document.querySelectorAll("button, div[role=\"button\"]");
+      for (const btn of pinButtons) {
+        if (btn.innerText && (btn.innerText.includes("Ghim") || btn.innerText.includes("Pin"))) {
+          btn.click();
+          break;
         }
       }
-    };
-
-    window.addEventListener('avalive:pin_product_updated', handlePinUpdate);
-    window.addEventListener('avalive_product_pinned', handlePinUpdate);
-    window.addEventListener('avalive:tiktok_shop_synced', handleTiktokSync);
-
-    return () => {
-      window.removeEventListener('avalive:pin_product_updated', handlePinUpdate);
-      window.removeEventListener('avalive_product_pinned', handlePinUpdate);
-      window.removeEventListener('avalive:tiktok_shop_synced', handleTiktokSync);
-    };
-  }, []);
-  
-  const [captchaStats, setCaptchaStats] = useState({
-    totalSolved: 0,
-    successRate: 100,
-    responseTime: 0,
-    historyLogs: []
+    }
   });
-
-  const fetchLogs = async () => {
-    try {
-      if (!supabase) return;
-      const { data, error } = await supabase.from('captcha_logs').select('*').order('created_at', { ascending: false }).limit(10);
-      if (error) {
-        console.log("Captcha logs table notice (using live simulator fallback):", error.message);
-        return;
-      }
-      if (data && data.length > 0) {
-        setCaptchaStats(prev => ({
-          ...prev,
-          historyLogs: data.map(log => ({
-            time: new Date(log.created_at).toLocaleTimeString('vi-VN'),
-            p: log.platform || 'TikTok Live',
-            type: log.captcha_type || 'Slider Puzzle',
-            speed: (log.speed_ms || 12) + 'ms',
-            status: log.status || 'SUCCESS'
-          }))
-        }));
-      }
-    } catch (e) {
-      console.warn("Could not fetch captcha logs (offline/fallback mode):", e.message);
-    }
+})();`;
+    navigator.clipboard.writeText(script).then(() => {
+      setCopiedScript(true);
+      toast.success(lang === "VI" ? "📋 Đã copy Script Auto Ghim! Dán vào Console của tab shop.tiktok.com." : "📋 Copied Auto Pin Script for shop.tiktok.com!");
+      setTimeout(() => setCopiedScript(false), 3000);
+    });
   };
 
-  useEffect(() => {
-    fetchLogs();
-    
-    // Subscribe to realtime updates if available
-    let channel = null;
-    try {
-      if (supabase && typeof supabase.channel === 'function') {
-        channel = supabase.channel('captcha_realtime')
-          .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'captcha_logs' }, payload => {
-             const log = payload.new;
-             if (!log) return;
-             setCaptchaStats(prev => ({
-               ...prev,
-               totalSolved: prev.totalSolved + 1,
-               historyLogs: [
-                 {
-                   time: new Date(log.created_at || Date.now()).toLocaleTimeString('vi-VN'),
-                   p: log.platform || 'TikTok Live',
-                   type: log.captcha_type || 'Slider Puzzle',
-                   speed: (log.speed_ms || 12) + 'ms',
-                   status: log.status || 'SUCCESS'
-                 },
-                 ...prev.historyLogs
-               ].slice(0, 10)
-             }));
-          })
-          .subscribe();
-      }
-    } catch (err) {
-      console.warn("Supabase realtime channel skipped:", err);
-    }
-      
-    // Real-time live activity simulator interval to keep UI dynamic 24/7
-    const liveTicker = setInterval(() => {
-      const platforms = ['TikTok Shop (shop.tiktok.com)', 'TikTok Live Studio', 'TikTok Live', 'Shopee Live', 'Facebook Live'];
-      const types = ['Slider Puzzle (Bypass 0ms)', '3D Rotate Puzzle', 'Turnstile v3 Stealth', 'TikTok Seller Auth Challenge', 'reCAPTCHA Enterprise'];
-      const randP = platforms[Math.floor(Math.random() * platforms.length)];
-      const randT = types[Math.floor(Math.random() * types.length)];
-      const randSpeed = Math.floor(8 + Math.random() * 12) + 'ms';
-      const nowTime = new Date().toLocaleTimeString('vi-VN');
-
-      setCaptchaStats(prev => ({
-        ...prev,
-        totalSolved: prev.totalSolved + 1,
-        historyLogs: [
-          { time: nowTime, p: randP, type: randT, speed: randSpeed, status: 'SUCCESS' },
-          ...prev.historyLogs
-        ].slice(0, 10)
-      }));
-    }, 8000);
-
-    return () => {
-      clearInterval(liveTicker);
-      if (channel && supabase && typeof supabase.removeChannel === 'function') {
-        try { supabase.removeChannel(channel); } catch (e) {}
-      }
-    };
-  }, []);
-
-  useEffect(() => {
-    if (logsEndRef.current) {
-      logsEndRef.current.scrollIntoView({ behavior: "smooth" });
-    }
-  }, [logs]);
-
-  const addLog = (msg, type = 'info') => {
-    setLogs(prev => [...prev, { time: new Date().toISOString().substring(11, 23), msg, type }]);
-  };
-
-  useEffect(() => {
-    let isMounted = true;
-    const runSequence = async () => {
-      setPhase('init');
-      addLog("Initializing AVA Stealth Auto Captcha & TikTok Shop Pin Engine v4.9.27...", 'info');
-      addLog("Connecting to Anti-Detect Proxy Nodes...", 'info');
-      await new Promise(r => setTimeout(r, 400));
-      if (!isMounted) return;
-
-      setPhase('analyzing');
-      addLog("Scanning TikTok Shop & TikTok Live DOM for WAF Challenges...", 'warning');
-      addLog("[TikTok] Detected Slider Puzzle & 3D Rotate Challenge...", 'warning');
-      
-      for (let i = 0; i <= 100; i += 5) {
-        setProgress(i);
-        await new Promise(r => setTimeout(r, 20));
-      }
-      if (!isMounted) return;
-
-      setPhase('solving');
-      addLog("Injecting AI Bypass Payload v4.9 (TikTok + Shopee + Turnstile)...", 'info');
-      addLog("Solving [TikTok] Slider Puzzle (Calculated X-Offset: 124px, 0ms)...", 'success');
-      await new Promise(r => setTimeout(r, 300));
-      if (!isMounted) return;
-      
-      setPhase('success');
-      addLog("Bypass Complete 100%. Live stream session & TikTok Shop sync token secured.", 'success');
-      if (onSolved) onSolved();
-    };
-    runSequence();
-
-    // Tự động kiểm tra và làm sạch danh sách nếu chứa sản phẩm demo cũ
-    try {
-      const current = autoPinProductService.getAllProducts();
-      const clean = current.filter(p => p && p.name && !p.name.includes('AVA LIVE') && !p.name.includes('Streamer Desktop'));
-      const finalProds = clean.length > 0 ? clean : REAL_TIKTOK_SHOP_CATALOG;
-      setProductsList(finalProds);
-      setCurrentPinned(finalProds[0]);
-    } catch (e) {}
-
-    return () => { isMounted = false; };
-  }, []);
-
-  // Handle Sync TikTok Shop
-  const handleSyncTikTokShop = async () => {
-    if (!tiktokShopUrl.trim()) {
-      toast.error('Vui lòng nhập đường dẫn TikTok Shop (shop.tiktok.com)!');
-      return;
-    }
-
-    setIsSyncingTikTokShop(true);
-    addLog(`Đang gửi yêu cầu đồng bộ toàn bộ sản phẩm TikTok Shop từ: ${tiktokShopUrl}...`, 'info');
-    try {
-      const prods = await autoPinProductService.syncFromTikTokShopUrl(tiktokShopUrl);
-      const cleanProds = (prods && prods.length > 0)
-        ? prods.filter(p => p && p.name && !p.name.includes('AVA LIVE') && !p.name.includes('Streamer Desktop'))
-        : REAL_TIKTOK_SHOP_CATALOG;
-      const allProds = cleanProds.length > 0 ? cleanProds : REAL_TIKTOK_SHOP_CATALOG;
-      setProductsList(allProds);
-      if (allProds.length > 0) {
-        setCurrentPinned(allProds[0]);
-        autoPinProductService.pinProduct(allProds[0], 'Đồng Bộ TikTok Shop Thật 24/7');
-      }
-      addLog(`✅ Đồng bộ thành công ${allProds.length} sản phẩm thật từ TikTok Shop Dashboard!`, 'success');
-      toast.success(`✅ Đã đồng bộ thành công ${allProds.length} sản phẩm TikTok Shop thật và kích hoạt Ghim tự động 24/7!`);
-    } catch (err) {
-      const fallback = REAL_TIKTOK_SHOP_CATALOG;
-      setProductsList(fallback);
-      setCurrentPinned(fallback[0]);
-      toast.success(`✅ Đã đồng bộ thành công ${fallback.length} sản phẩm TikTok Shop thật!`);
-    } finally {
-      setIsSyncingTikTokShop(false);
-    }
-  };
-
-  // Handle Pin Product Manual
-  const handlePinProduct = (product) => {
-    autoPinProductService.pinProduct(product, 'Thao tác thủ công Bảng điều khiển');
-    setCurrentPinned(product);
-    toast.success(`📌 Đã ghim sản phẩm: ${product.name}`);
-  };
-
-  // Handle Add New Product
-  const handleAddNewProduct = (e) => {
-    e.preventDefault();
-    if (!newProd.name.trim()) {
-      toast.error('Vui lòng nhập tên sản phẩm!');
-      return;
-    }
-
-    const sellerShopLink = newProd.sellerStoreUrl.trim() || newProd.buyUrl.trim() || (newProd.sellerName ? `https://www.tiktok.com/@${newProd.sellerName.replace(/[^a-zA-Z0-9._]/g, '').toLowerCase()}` : 'https://www.tiktok.com/@havata.official');
-
-    const created = {
-      id: Date.now(),
-      name: newProd.name.trim(),
-      productName: newProd.name.trim(),
-      price: newProd.price.trim() || 'Giá Ưu Đãi',
-      oldPrice: newProd.oldPrice.trim() || '',
-      keywords: newProd.keywords.trim() || newProd.name.trim(),
-      image: newProd.image.trim() || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80',
-      badge: newProd.badge || 'HOT DEAL 🔥',
-      stock: 99,
-      sellerName: newProd.sellerName.trim() || 'Gian Hàng TikTok Shop',
-      sellerStoreUrl: sellerShopLink,
-      buyUrl: sellerShopLink,
-      productUrl: sellerShopLink,
-      storeUrl: sellerShopLink
-    };
-
-    const updated = [created, ...productsList];
-    setProductsList(updated);
-    localStorage.setItem('avalive_tiktok_shop_products', JSON.stringify(updated));
-    setShowAddModal(false);
-    setNewProd({ name: '', price: '', oldPrice: '', keywords: '', image: '', badge: 'HOT DEAL 🔥', sellerName: '', sellerStoreUrl: '', buyUrl: '' });
-    toast.success('🎉 Đã thêm sản phẩm mới của Seller vào danh mục TikTok Shop!');
-  };
-
-  // Handle Delete Product
-  const handleDeleteProduct = (id) => {
-    const updated = productsList.filter(p => p.id !== id);
-    setProductsList(updated);
-    localStorage.setItem('avalive_tiktok_shop_products', JSON.stringify(updated));
-    toast.success('🗑️ Đã xóa sản phẩm khỏi danh mục.');
-  };
+  const currentModeObj = AUTO_GHIM_MODES.find(m => m.id === mode) || AUTO_GHIM_MODES[1];
+  const CurrentIcon = currentModeObj.icon;
 
   return (
-    <div className={`w-full h-full bg-[#0A0A0E] flex flex-col font-sans overflow-hidden ${isEmbedded ? '' : 'min-h-[600px]'}`}>
-      
-      <header className="h-[72px] border-b border-white/5 flex items-center justify-between px-8 bg-[#111118]/80 backdrop-blur-md shrink-0">
-        <div className="flex items-center gap-6">
-          <button onClick={handleExit} className="flex items-center gap-3 group cursor-pointer" title="Quay lại">
-             <div className="relative">
-                <div className="absolute -inset-1.5 bg-gradient-to-r from-cyan-400 via-purple-600 to-pink-500 rounded-2xl blur-sm opacity-80 group-hover:opacity-100 transition animate-pulse" />
-                <div className="relative w-12 h-12 rounded-2xl bg-gradient-to-tr from-cyan-400 via-purple-500 to-pink-500 p-[2px] shadow-2xl group-hover:scale-105 transition-all">
-                   <img src="/official_logo.jpg" alt="AVA LIVE" className="w-full h-full object-cover rounded-[14px] border border-white/40 drop-shadow-[0_0_10px_rgba(6,182,212,0.8)]" />
+    <div className={"w-full flex items-center justify-center font-sans select-none " + (isEmbedded ? "p-0" : "p-3")}>
+      {/* CARD CONTAINER - EXACT MATCH PHOTO 1 */}
+      <div className="w-full max-w-[390px] bg-[#1a1a24] text-white rounded-[22px] border border-[#2e2e3d] shadow-[0_15px_40px_rgba(0,0,0,0.8)] overflow-hidden relative p-4 space-y-4">
+        
+        {/* HEADER */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-2">
+            <GripVertical className="w-4 h-4 text-gray-400 cursor-grab opacity-75" />
+            <h3 className="text-[#ff2e4d] font-black text-base tracking-wider uppercase drop-shadow-[0_0_8px_rgba(255,46,77,0.4)]">
+              AUTO GHIM PRO
+            </h3>
+          </div>
+
+          <div className="flex items-center gap-2">
+            {/* LANGUAGE SWITCHER */}
+            <button
+              type="button"
+              onClick={() => setLang(prev => prev === "VI" ? "EN" : "VI")}
+              className="px-2.5 py-0.5 rounded-full bg-[#272736] border border-[#3b3b4f] text-[11px] font-black text-gray-200 hover:text-white hover:border-[#ff2e4d]/60 transition-all cursor-pointer shadow-sm"
+              title="Change Language"
+            >
+              [ {lang} ]
+            </button>
+
+            {/* CLOSE BUTTON */}
+            <button
+              type="button"
+              onClick={handleClose}
+              className="w-6 h-6 rounded-full bg-[#272736] hover:bg-[#ff2e4d] hover:text-white text-gray-400 flex items-center justify-center transition-all cursor-pointer text-xs font-bold"
+              title="Đóng / Close"
+            >
+              ✕
+            </button>
+          </div>
+        </div>
+
+        {/* MODE SELECTOR DROPDOWN */}
+        <div className="relative" ref={dropdownRef}>
+          <button
+            type="button"
+            onClick={() => setIsModeDropdownOpen(prev => !prev)}
+            className="w-full bg-[#121218] border border-[#313142] hover:border-[#ff2e4d]/70 rounded-xl px-3.5 py-2.5 flex items-center justify-between text-xs font-bold text-gray-100 transition-all cursor-pointer shadow-inner"
+          >
+            <div className="flex items-center gap-2 truncate">
+              <CurrentIcon className="w-4 h-4 text-[#ff2e4d] shrink-0" />
+              <span className="truncate">{lang === "VI" ? currentModeObj.labelVi : currentModeObj.labelEn}</span>
+            </div>
+            <ChevronDown className={"w-4 h-4 text-gray-400 transition-transform " + (isModeDropdownOpen ? "rotate-180 text-[#ff2e4d]" : "")} />
+          </button>
+
+          {isModeDropdownOpen && (
+            <div className="absolute top-full left-0 right-0 mt-1.5 bg-[#14141d] border border-[#38384d] rounded-xl shadow-2xl z-50 overflow-hidden py-1">
+              {AUTO_GHIM_MODES.map((m) => {
+                const IconComponent = m.icon;
+                const isSelected = mode === m.id;
+                return (
+                  <button
+                    key={m.id}
+                    type="button"
+                    onClick={() => {
+                      setMode(m.id);
+                      setIsModeDropdownOpen(false);
+                    }}
+                    className={"w-full px-3.5 py-2.5 text-left text-xs font-bold flex items-center justify-between transition-colors cursor-pointer " + (
+                      isSelected ? "bg-[#ff2e4d]/15 text-[#ff2e4d]" : "text-gray-200 hover:bg-[#20202e]"
+                    )}
+                  >
+                    <div className="flex items-center gap-2.5">
+                      <IconComponent className={"w-4 h-4 " + (isSelected ? "text-[#ff2e4d]" : "text-gray-400")} />
+                      <span>{lang === "VI" ? m.labelVi : m.labelEn}</span>
+                    </div>
+                    {isSelected && <Check className="w-3.5 h-3.5 text-[#ff2e4d]" />}
+                  </button>
+                );
+              })}
+            </div>
+          )}
+        </div>
+
+        {/* CONDITIONAL INPUT: SPECIFIC CODES (NHIỀU MÃ) */}
+        {mode === "specific" && (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-bold text-gray-300">
+                {lang === "VI" ? "Danh sách mã cần ghim (cách nhau bởi dấu phẩy):" : "List of product codes (comma-separated):"}
+              </label>
+              <div className="relative group">
+                <HelpCircle 
+                  className="w-3.5 h-3.5 text-gray-400 hover:text-gray-200 cursor-help"
+                  onMouseEnter={() => setActiveTooltip("codes")}
+                  onMouseLeave={() => setActiveTooltip(null)}
+                />
+                {activeTooltip === "codes" && (
+                  <div className="absolute right-0 bottom-full mb-1.5 w-52 bg-black/95 text-[10px] text-gray-200 p-2 rounded-lg border border-white/20 shadow-xl z-50">
+                    {lang === "VI" ? "Nhập số thứ tự hoặc mã sản phẩm phân cách bằng dấu phẩy (Ví dụ: 1, 2, 3)." : "Enter product indexes or codes separated by comma (e.g. 1, 2, 3)."}
+                  </div>
+                )}
+              </div>
+            </div>
+            <input
+              type="text"
+              value={specificCodes}
+              onChange={(e) => setSpecificCodes(e.target.value)}
+              placeholder="1, 2, 3"
+              className="w-full bg-[#121218] border border-[#313142] focus:border-[#ff2e4d] rounded-xl px-3.5 py-2 text-xs text-white font-mono placeholder-gray-500 focus:outline-none transition-all shadow-inner"
+            />
+          </div>
+        )}
+
+        {/* CONDITIONAL INPUT: FIXED CODE (1 MÃ CỐ ĐỊNH) */}
+        {mode === "fixed" && (
+          <div className="space-y-1.5">
+            <div className="flex items-center justify-between">
+              <label className="text-[11px] font-bold text-gray-300">
+                {lang === "VI" ? "Mã sản phẩm cố định:" : "Fixed product code:"}
+              </label>
+              <div className="relative group">
+                <HelpCircle 
+                  className="w-3.5 h-3.5 text-gray-400 hover:text-gray-200 cursor-help"
+                  onMouseEnter={() => setActiveTooltip("fixed")}
+                  onMouseLeave={() => setActiveTooltip(null)}
+                />
+                {activeTooltip === "fixed" && (
+                  <div className="absolute right-0 bottom-full mb-1.5 w-52 bg-black/95 text-[10px] text-gray-200 p-2 rounded-lg border border-white/20 shadow-xl z-50">
+                    {lang === "VI" ? "Nhập mã sản phẩm duy nhất cần ghim liên tục (Ví dụ: 1)." : "Enter the single product code to keep pinned (e.g. 1)."}
+                  </div>
+                )}
+              </div>
+            </div>
+            <input
+              type="text"
+              value={fixedCode}
+              onChange={(e) => setFixedCode(e.target.value)}
+              placeholder="1"
+              className="w-full bg-[#121218] border border-[#313142] focus:border-[#ff2e4d] rounded-xl px-3.5 py-2 text-xs text-white font-mono placeholder-gray-500 focus:outline-none transition-all shadow-inner"
+            />
+          </div>
+        )}
+
+        {/* INTERVAL INPUTS (THỜI GIAN LUÂN PHIÊN GIÂY) */}
+        <div className="space-y-1.5">
+          <div className="flex items-center justify-between">
+            <label className="text-[11px] font-bold text-gray-300">
+              {lang === "VI" ? "Thời gian luân phiên (Giây):" : "Rotation Interval (Seconds):"}
+            </label>
+            <div className="relative group">
+              <HelpCircle 
+                className="w-3.5 h-3.5 text-gray-400 hover:text-gray-200 cursor-help"
+                onMouseEnter={() => setActiveTooltip("interval")}
+                onMouseLeave={() => setActiveTooltip(null)}
+              />
+              {activeTooltip === "interval" && (
+                <div className="absolute right-0 bottom-full mb-1.5 w-52 bg-black/95 text-[10px] text-gray-200 p-2 rounded-lg border border-white/20 shadow-xl z-50">
+                  {lang === "VI" ? "Khoảng thời gian ngẫu nhiên (Min - Max) giữa mỗi lần ghim sản phẩm." : "Random time range (Min - Max) between each pin action."}
                 </div>
-             </div>
-             <div className="text-left flex flex-col justify-center">
-               <h2 className="text-white font-black text-xl leading-none group-hover:text-cyan-400 transition-colors">AVA LIVE VIP PRO</h2>
-               <span className="text-[10px] text-gray-400 font-bold tracking-wider mt-1">CAPTCHA AI & TIKTOK SHOP ENGINE 24/7</span>
-             </div>
+              )}
+            </div>
+          </div>
+          
+          <div className="grid grid-cols-2 gap-2">
+            <input
+              type="number"
+              min="5"
+              max="3600"
+              value={minInterval}
+              onChange={(e) => setMinInterval(parseInt(e.target.value, 10) || 5)}
+              className="w-full bg-[#121218] border border-[#313142] focus:border-[#ff2e4d] rounded-xl px-3 py-2 text-xs text-center text-white font-mono font-bold focus:outline-none transition-all shadow-inner"
+              placeholder="30"
+            />
+            <input
+              type="number"
+              min="5"
+              max="3600"
+              value={maxInterval}
+              onChange={(e) => setMaxInterval(parseInt(e.target.value, 10) || 10)}
+              className="w-full bg-[#121218] border border-[#313142] focus:border-[#ff2e4d] rounded-xl px-3 py-2 text-xs text-center text-white font-mono font-bold focus:outline-none transition-all shadow-inner"
+              placeholder="60"
+            />
+          </div>
+        </div>
+
+        {/* BIG START / STOP BUTTON */}
+        <button
+          type="button"
+          onClick={toggleRunning}
+          className={"w-full py-3 rounded-xl font-black text-sm tracking-wider uppercase flex items-center justify-center gap-2 transition-all cursor-pointer shadow-lg active:scale-98 " + (
+            isRunning
+              ? "bg-[#2b2b3b] hover:bg-[#38384d] text-amber-300 border border-amber-500/30"
+              : "bg-gradient-to-r from-[#ff2e4d] to-[#ff0033] hover:from-[#ff1a3d] hover:to-[#e60026] text-white shadow-[0_4px_15px_rgba(255,46,77,0.4)]"
+          )}
+        >
+          {isRunning ? (
+            <>
+              <Square className="w-4 h-4 fill-amber-300 text-amber-300" />
+              <span>{lang === "VI" ? "⏹ DỪNG AUTO" : "⏹ STOP AUTO"}</span>
+            </>
+          ) : (
+            <>
+              <Play className="w-4 h-4 fill-white text-white" />
+              <span>{lang === "VI" ? "▶ BẮT ĐẦU" : "▶ START"}</span>
+            </>
+          )}
+        </button>
+
+        {/* STATUS TEXT */}
+        <div className="text-center">
+          {isRunning ? (
+            <p className="text-[11px] font-bold text-emerald-400 flex items-center justify-center gap-1.5 animate-pulse">
+              <span className="w-2 h-2 rounded-full bg-emerald-400"></span>
+              <span>
+                {lang === "VI"
+                  ? "Đang Auto Ghim TikTok Shop... (Mã #" + (currentPinnedCode || "1") + " • Còn " + countdown + "s • " + totalPinnedCount + " lần)"
+                  : "Auto Pin Active... (Code #" + (currentPinnedCode || "1") + " • " + countdown + "s left • " + totalPinnedCount + " pins)"}
+              </span>
+            </p>
+          ) : (
+            <p className="text-[11px] font-medium text-gray-400">
+              {lang === "VI" ? "Đã dừng Auto." : "Auto Pin Stopped."}
+            </p>
+          )}
+        </div>
+
+        {/* NOTICE BOX */}
+        <div className="bg-[#242013] border border-[#524419] rounded-xl p-2.5 flex items-start gap-2 text-amber-300/90 text-[10px] leading-relaxed">
+          <AlertTriangle className="w-4 h-4 text-amber-400 shrink-0 mt-0.5" />
+          <span>
+            {lang === "VI"
+              ? "⚠️ Lưu ý: Tiện ích chỉ ghim được các Sản phẩm đang hiển thị trên màn hình."
+              : "⚠️ Note: Utility can only pin products currently visible on screen."}
+          </span>
+        </div>
+
+        {/* QUICK LINK & SCRIPT ACTIONS */}
+        <div className="pt-1 flex items-center justify-between gap-2 border-t border-[#2a2a38]">
+          <a
+            href="https://shop.tiktok.com"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="text-[10px] font-bold text-gray-400 hover:text-white flex items-center gap-1 transition-colors"
+            title="Mở shop.tiktok.com"
+          >
+            <ExternalLink className="w-3 h-3 text-[#ff2e4d]" />
+            <span>shop.tiktok.com</span>
+          </a>
+
+          <button
+            type="button"
+            onClick={handleCopyScript}
+            className="text-[10px] font-bold text-gray-400 hover:text-white flex items-center gap-1 transition-colors cursor-pointer"
+            title="Copy Script Auto Ghim cho shop.tiktok.com"
+          >
+            {copiedScript ? <CheckCheck className="w-3 h-3 text-emerald-400" /> : <Copy className="w-3 h-3 text-cyan-400" />}
+            <span>{copiedScript ? (lang === "VI" ? "Đã copy Script!" : "Copied!") : (lang === "VI" ? "Copy Script Ghim" : "Copy Script")}</span>
           </button>
         </div>
-        <div className="flex items-center gap-4">
-           <div className="px-3 py-1.5 bg-pink-500/10 border border-pink-500/30 rounded-lg text-pink-400 text-xs font-black flex items-center gap-2">
-             <Globe className="w-3.5 h-3.5 text-pink-400" />
-             TIKTOK SHOP SYNC ACTIVE
-           </div>
-           <div className="px-3 py-1.5 bg-emerald-500/10 border border-emerald-500/30 rounded-lg text-emerald-400 text-xs font-black flex items-center gap-2 shadow-[0_0_10px_rgba(16,185,129,0.2)]">
-             <div className="w-2 h-2 rounded-full bg-emerald-400 animate-ping"></div>
-             CAPTCHA BYPASS 100%
-           </div>
-           <button onClick={handleExit} className="px-4 py-2 bg-white/10 hover:bg-white/20 rounded-lg text-xs font-bold text-white transition-colors flex items-center gap-2 cursor-pointer shadow-sm hover:scale-105 active:scale-95" title="Quay lại / Thoát">
-             <ArrowLeft className="w-4 h-4 text-amber-400" /> Thoát
-           </button>
-        </div>
-      </header>
 
-      <div className="flex-1 overflow-y-auto p-6 md:p-8 custom-scrollbar">
-        <div className="max-w-7xl mx-auto space-y-6">
-          
-          {/* TITLE & INTRO */}
-          <div className="flex flex-wrap items-center justify-between gap-4">
-            <div className="flex items-center gap-3">
-              <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-cyan-500 to-blue-600 text-white shadow-lg">
-                <ShieldCheck className="w-8 h-8" />
-              </div>
-              <div>
-                <h1 className="text-2xl font-black text-white tracking-wider flex items-center gap-2">
-                  BẢNG ĐIỀU KHIỂN VƯỢT CAPTCHA AI 24/7 & ĐỒNG BỘ GIỎ HÀNG TIKTOK SHOP
-                </h1>
-                <p className="text-gray-400 text-xs mt-0.5">Tự động vượt mọi Captcha TikTok / Shopee và Ghim giỏ hàng TikTok Shop theo chu kỳ, giọng nói AI hoặc bình luận khán giả.</p>
-              </div>
-            </div>
-          </div>
-
-          {/* STATS OVERVIEW CARDS */}
-          <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
-            <div className="bg-[#141419] border border-white/5 rounded-2xl p-5 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-28 h-28 bg-cyan-500/10 rounded-full blur-2xl group-hover:bg-cyan-500/20 transition-colors"></div>
-              <span className="text-[11px] text-gray-400 uppercase tracking-wider font-bold mb-1 block">Tổng Captcha Đã Bẻ Khóa</span>
-              <div className="flex items-end gap-2">
-                <span className="text-3xl font-black text-white">{captchaStats.totalSolved.toLocaleString()}</span>
-                <span className="text-[10px] font-bold text-emerald-400 bg-emerald-500/10 px-2 py-0.5 rounded mb-1">+342 hnay</span>
-              </div>
-            </div>
-            
-            <div className="bg-[#141419] border border-white/5 rounded-2xl p-5 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-28 h-28 bg-emerald-500/10 rounded-full blur-2xl group-hover:bg-emerald-500/20 transition-colors"></div>
-              <span className="text-[11px] text-gray-400 uppercase tracking-wider font-bold mb-1 block">Tỷ Lệ Bypass Thành Công</span>
-              <span className="text-3xl font-black text-emerald-400">{captchaStats.successRate}%</span>
-            </div>
-
-            <div className="bg-[#141419] border border-white/5 rounded-2xl p-5 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-28 h-28 bg-pink-500/10 rounded-full blur-2xl group-hover:bg-pink-500/20 transition-colors"></div>
-              <span className="text-[11px] text-gray-400 uppercase tracking-wider font-bold mb-1 block">Sản Phẩm TikTok Shop</span>
-              <div className="flex items-baseline gap-2">
-                <span className="text-3xl font-black text-pink-400">{productsList.length}</span>
-                <span className="text-xs text-gray-400">sản phẩm sẵn sàng</span>
-              </div>
-            </div>
-
-            <div className="bg-[#141419] border border-white/5 rounded-2xl p-5 relative overflow-hidden group">
-              <div className="absolute top-0 right-0 w-28 h-28 bg-blue-500/10 rounded-full blur-2xl group-hover:bg-blue-500/20 transition-colors"></div>
-              <span className="text-[11px] text-gray-400 uppercase tracking-wider font-bold mb-1 block">Độ Trễ Giải Mã AI</span>
-              <div className="flex items-baseline gap-1">
-                <span className="text-3xl font-black text-blue-400">{captchaStats.responseTime}</span>
-                <span className="text-sm font-normal text-gray-400">ms (0 delay)</span>
-              </div>
-            </div>
-          </div>
-
-          {/* SECTION 1: ĐỒNG BỘ TIKTOK SHOP & TỰ ĐỘNG GHIM SẢN PHẨM 24/7 (ẢNH 1 TÍCH HỢP VÀO ẢNH 2) */}
-          <div className="bg-gradient-to-r from-slate-900 via-[#161224] to-[#1e1028] border border-pink-500/30 rounded-3xl p-6 shadow-2xl relative overflow-hidden space-y-6">
-            <div className="absolute top-0 right-0 w-96 h-96 bg-pink-600/10 rounded-full blur-3xl pointer-events-none"></div>
-
-            {/* BAR HEADER & SYNC CONTROLS */}
-            <div className="flex flex-wrap items-center justify-between gap-4 pb-4 border-b border-white/10">
-              <div className="flex items-center gap-3">
-                <div className="p-2.5 rounded-2xl bg-gradient-to-tr from-pink-600 to-rose-600 text-white shadow-lg">
-                  <Globe className="w-6 h-6" />
-                </div>
-                <div>
-                  <div className="flex items-center gap-2">
-                    <h3 className="text-base font-black uppercase tracking-wider text-white">
-                      ĐỒNG BỘ TIKTOK SHOP (shop.tiktok.com) & TỰ ĐỘNG GHIM GIỎ HÀNG 24/7
-                    </h3>
-                    <span className="text-[10px] bg-emerald-500/20 text-emerald-300 border border-emerald-500/40 px-2.5 py-0.5 rounded-full font-bold flex items-center gap-1">
-                      <CheckCircle2 className="w-3 h-3" /> Vượt Captcha 24/7 (0ms)
-                    </span>
-                  </div>
-                  <p className="text-xs text-gray-300 mt-0.5">
-                    Tự động lấy giỏ hàng từ TikTok Shop, ghim liên tục lên TikTok Live Studio, OBS Window Capture và sân khấu Live Stream.
-                  </p>
-                </div>
-              </div>
-
-              {/* ACTION BUTTONS & TOGGLES */}
-              <div className="flex flex-wrap items-center gap-3">
-                <button
-                  type="button"
-                  onClick={() => setShowAddModal(true)}
-                  className="px-3.5 py-2 bg-white/10 hover:bg-white/20 text-white rounded-xl text-xs font-bold flex items-center gap-1.5 cursor-pointer transition-all border border-white/20 shadow-sm"
-                >
-                  <Plus className="w-4 h-4 text-emerald-400" /> Thêm Sản Phẩm
-                </button>
-
-                <label className="flex items-center gap-2 text-xs font-bold cursor-pointer text-white bg-white/10 px-3 py-2 rounded-xl border border-white/20 hover:bg-white/20 transition-all">
-                  <input 
-                    type="checkbox" 
-                    checked={captchaConfig.autoPin} 
-                    onChange={(e) => {
-                      setCaptchaConfig(prev => ({ ...prev, autoPin: e.target.checked }));
-                      toast.success(e.target.checked ? '✅ Đã BẬT Tự Động Ghim Giỏ Hàng 24/7!' : '⏸️ Đã TẮT Tự Động Ghim.');
-                    }}
-                    className="w-4 h-4 text-pink-500 rounded cursor-pointer accent-pink-500"
-                  />
-                  <span>Tự Động Ghim: {captchaConfig.autoPin ? <b className="text-emerald-400">BẬT</b> : <b className="text-red-400">TẮT</b>}</span>
-                </label>
-              </div>
-            </div>
-
-            {/* INPUT URL TIKTOK SHOP & NÚT ĐỒNG BỘ */}
-            <div className="flex flex-wrap md:flex-nowrap items-center gap-3">
-              <div className="relative flex-1 w-full">
-                <input 
-                  type="text" 
-                  value={tiktokShopUrl} 
-                  onChange={(e) => setTiktokShopUrl(e.target.value)} 
-                  placeholder="Nhập URL TikTok Shop (https://shop.tiktok.com/... hoặc TikTok Seller Center)..."
-                  className="w-full bg-black/60 border border-white/20 rounded-xl px-4 py-2.5 text-xs text-white placeholder-gray-400 focus:outline-none focus:border-pink-500 font-mono shadow-inner"
-                />
-              </div>
-              <button
-                type="button"
-                onClick={handleSyncTikTokShop}
-                disabled={isSyncingTikTokShop}
-                className="w-full md:w-auto px-5 py-2.5 bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 hover:from-pink-700 hover:to-purple-700 text-white rounded-xl text-xs font-black flex items-center justify-center gap-2 cursor-pointer shadow-lg hover:scale-105 active:scale-95 transition-all shrink-0 disabled:opacity-50"
-              >
-                {isSyncingTikTokShop ? <RefreshCw className="w-4 h-4 animate-spin" /> : <Zap className="w-4 h-4 text-amber-300" />}
-                <span>{isSyncingTikTokShop ? 'Đang Quét & Đồng Bộ...' : '⚡ Đồng Bộ TikTok Shop'}</span>
-              </button>
-            </div>
-
-            {/* AUTO-PIN RULES & TRIGGERS */}
-            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-3 bg-black/40 p-4 rounded-2xl border border-white/10">
-              <div className="flex items-center justify-between p-2.5 bg-white/5 rounded-xl">
-                <div className="flex items-center gap-2">
-                  <Sliders className="w-4 h-4 text-cyan-400" />
-                  <span className="text-xs text-gray-200 font-bold">Chu kỳ đổi mã</span>
-                </div>
-                <div className="flex items-center gap-1">
-                  <input 
-                    type="number" min="5" max="300" 
-                    value={captchaConfig.pinInterval || 30}
-                    onChange={(e) => setCaptchaConfig(prev => ({...prev, pinInterval: parseInt(e.target.value) || 30}))}
-                    className="w-14 bg-black/60 border border-white/20 rounded px-1.5 py-1 text-xs text-white text-center font-bold focus:outline-none focus:border-cyan-500"
-                  />
-                  <span className="text-[11px] text-gray-400">giây</span>
-                </div>
-              </div>
-
-              <div className="flex items-center justify-between p-2.5 bg-white/5 rounded-xl">
-                <div className="flex items-center gap-2">
-                  <Volume2 className="w-4 h-4 text-purple-400" />
-                  <span className="text-xs text-gray-200 font-bold">Ghim theo Giọng AI</span>
-                </div>
-                <button 
-                  onClick={() => setCaptchaConfig(prev => ({...prev, pinByVoice: !prev.pinByVoice}))}
-                  className={`relative w-9 h-5 rounded-full transition-colors cursor-pointer ${captchaConfig.pinByVoice ? 'bg-purple-500' : 'bg-gray-700'}`}
-                >
-                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${captchaConfig.pinByVoice ? 'left-[18px]' : 'left-[2px]'}`}></div>
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between p-2.5 bg-white/5 rounded-xl">
-                <div className="flex items-center gap-2">
-                  <MessageSquare className="w-4 h-4 text-emerald-400" />
-                  <span className="text-xs text-gray-200 font-bold">Ghim theo Bình Luận</span>
-                </div>
-                <button 
-                  onClick={() => setCaptchaConfig(prev => ({...prev, pinByComment: !prev.pinByComment}))}
-                  className={`relative w-9 h-5 rounded-full transition-colors cursor-pointer ${captchaConfig.pinByComment ? 'bg-emerald-500' : 'bg-gray-700'}`}
-                >
-                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${captchaConfig.pinByComment ? 'left-[18px]' : 'left-[2px]'}`}></div>
-                </button>
-              </div>
-
-              <div className="flex items-center justify-between p-2.5 bg-white/5 rounded-xl">
-                <div className="flex items-center gap-2">
-                  <Video className="w-4 h-4 text-pink-400" />
-                  <span className="text-xs text-gray-200 font-bold">Ghim theo Video Clip</span>
-                </div>
-                <button 
-                  onClick={() => setCaptchaConfig(prev => ({...prev, pinByVideo: !prev.pinByVideo}))}
-                  className={`relative w-9 h-5 rounded-full transition-colors cursor-pointer ${captchaConfig.pinByVideo ? 'bg-pink-500' : 'bg-gray-700'}`}
-                >
-                  <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all ${captchaConfig.pinByVideo ? 'left-[18px]' : 'left-[2px]'}`}></div>
-                </button>
-              </div>
-            </div>
-
-            {/* LIVE CURRENT PINNED PRODUCT BANNER */}
-            {currentPinned && (() => {
-              const currentBuyerUrl = resolveSellerProductBuyUrl(currentPinned);
-              const currentSeller = getProductSellerName(currentPinned);
-              return (
-                <div className="bg-gradient-to-r from-pink-950/80 via-purple-950/80 to-slate-900 border border-pink-500/40 rounded-2xl p-4 flex flex-wrap items-center justify-between gap-4 shadow-lg animate-pulse">
-                  <div className="flex items-center gap-3">
-                    <div 
-                      onClick={() => window.open(currentBuyerUrl, '_blank', 'noopener,noreferrer')}
-                      className="relative w-14 h-14 rounded-xl overflow-hidden border border-pink-400/50 shrink-0 bg-black cursor-pointer group"
-                      title={`Bấm để mở trang đặt mua sản phẩm từ ${currentSeller}`}
-                    >
-                      <img src={currentPinned.image || currentPinned.imageUrl} alt={currentPinned.name} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
-                      <span className="absolute top-0 left-0 bg-pink-600 text-[9px] font-black text-white px-1 rounded-br">PIN</span>
-                    </div>
-                    <div>
-                      <div className="flex items-center gap-2">
-                        <span className="text-[10px] uppercase font-black tracking-wider bg-pink-500 text-white px-2 py-0.5 rounded-full">
-                          ĐANG GHIM TRỰC TIẾP TRÊN PHIÊN LIVE
-                        </span>
-                        <span className="text-[10px] font-extrabold text-pink-300 bg-black/40 px-2 py-0.5 rounded-full border border-pink-400/30">
-                          🏪 {currentSeller}
-                        </span>
-                        <span className="text-xs font-bold text-amber-300">{currentPinned.badge || 'HOT DEAL'}</span>
-                      </div>
-                      <h4 
-                        onClick={() => window.open(currentBuyerUrl, '_blank', 'noopener,noreferrer')}
-                        className="text-sm font-bold text-white mt-1 line-clamp-1 cursor-pointer hover:text-pink-300 transition-colors"
-                        title={`Bấm để mở trang đặt mua sản phẩm từ ${currentSeller}`}
-                      >
-                        {currentPinned.name || currentPinned.productName}
-                      </h4>
-                      <div className="flex items-center gap-3 text-xs mt-0.5">
-                        <span className="text-pink-400 font-black">{currentPinned.price || currentPinned.priceInfo}</span>
-                        {currentPinned.oldPrice && <span className="text-gray-400 line-through text-[11px]">{currentPinned.oldPrice}</span>}
-                        <span className="text-[11px] text-gray-400">Nguồn: {currentPinned.triggerSource || 'Tự động 24/7'}</span>
-                        <a 
-                          href={currentBuyerUrl} 
-                          target="_blank" 
-                          rel="noopener noreferrer"
-                          className="text-[11px] text-cyan-300 hover:text-cyan-200 underline font-bold flex items-center gap-1 ml-1"
-                        >
-                          ⚡ Mua Ngay Từ Shop <ExternalLink className="w-3 h-3" />
-                        </a>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="flex items-center gap-2">
-                    <a
-                      href={currentBuyerUrl}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="px-3 py-1.5 bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-500 hover:to-rose-500 text-white rounded-xl text-xs font-bold transition-all flex items-center gap-1 shadow-sm cursor-pointer"
-                    >
-                      <span>⚡ Mua Ngay ({currentSeller.split(' ')[0]})</span>
-                      <ExternalLink className="w-3.5 h-3.5" />
-                    </a>
-                    <button
-                      onClick={() => {
-                        autoPinProductService.pinProduct(null);
-                        setCurrentPinned(null);
-                        toast.success('Đã hủy ghim sản phẩm.');
-                      }}
-                      className="px-3 py-1.5 bg-white/10 hover:bg-red-500/20 text-gray-300 hover:text-red-400 border border-white/20 rounded-xl text-xs font-bold transition-all cursor-pointer"
-                    >
-                      Hủy Ghim
-                    </button>
-                  </div>
-                </div>
-              );
-            })()}
-
-            {/* DANH SÁCH SẢN PHẨM TIKTOK SHOP ĐÃ ĐỒNG BỘ */}
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <h4 className="text-xs font-black text-white uppercase tracking-wider flex items-center gap-2">
-                  <ShoppingBag className="w-4 h-4 text-pink-400" />
-                  <span>DANH SÁCH SẢN PHẨM TIKTOK SHOP ĐÃ ĐỒNG BỘ ({productsList.length})</span>
-                </h4>
-                <span className="text-[11px] text-gray-400 font-mono">Đồng bộ OBS Window Capture & TikTok Live Studio 0ms</span>
-              </div>
-
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3 max-h-[380px] overflow-y-auto pr-1 custom-scrollbar">
-                {productsList.map((prod, idx) => {
-                  const isPinned = currentPinned && (currentPinned.id === prod.id || currentPinned.name === prod.name);
-                  const pUrl = resolveSellerProductBuyUrl(prod);
-                  const pSeller = getProductSellerName(prod);
-                  return (
-                    <div 
-                      key={prod.id || idx}
-                      className={`p-3.5 rounded-2xl border transition-all flex flex-col justify-between gap-3 ${
-                        isPinned 
-                          ? 'bg-pink-950/40 border-pink-500 shadow-[0_0_15px_rgba(236,72,153,0.3)] ring-1 ring-pink-500/50' 
-                          : 'bg-[#111118]/80 border-white/10 hover:border-white/20'
-                      }`}
-                    >
-                      <div className="flex items-start gap-3">
-                        <div 
-                          onClick={() => window.open(pUrl, '_blank', 'noopener,noreferrer')}
-                          className="w-14 h-14 rounded-xl overflow-hidden bg-black/50 border border-white/10 shrink-0 relative cursor-pointer group"
-                          title={`Bấm để mở trang mua hàng của ${pSeller}`}
-                        >
-                          <img 
-                            src={prod.image || prod.imageUrl || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80'} 
-                            alt={prod.name} 
-                            className="w-full h-full object-cover group-hover:scale-110 transition-transform" 
-                          />
-                          <span className="absolute bottom-0 left-0 right-0 bg-black/80 text-[9px] text-white text-center font-bold">
-                            Mã #{idx + 1}
-                          </span>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <div className="flex items-center justify-between gap-1">
-                            <span className="text-[9px] bg-pink-500/20 text-pink-300 font-bold px-1.5 py-0.5 rounded truncate max-w-[130px]" title={pSeller}>
-                              🏪 {pSeller}
-                            </span>
-                            <button
-                              onClick={() => handleDeleteProduct(prod.id)}
-                              className="text-gray-500 hover:text-red-400 transition-colors p-1 cursor-pointer"
-                              title="Xóa"
-                            >
-                              <Trash2 className="w-3.5 h-3.5" />
-                            </button>
-                          </div>
-                          <h5 
-                            onClick={() => window.open(pUrl, '_blank', 'noopener,noreferrer')}
-                            className="text-xs font-bold text-white mt-1 line-clamp-1 cursor-pointer hover:text-pink-300 transition-colors" 
-                            title={`Bấm để mở trang mua hàng của ${pSeller}`}
-                          >
-                            {prod.name}
-                          </h5>
-                          <div className="flex items-center gap-2 mt-0.5">
-                            <span className="text-xs font-black text-emerald-400">{prod.price}</span>
-                            {prod.oldPrice && <span className="text-[10px] text-gray-500 line-through">{prod.oldPrice}</span>}
-                          </div>
-                          <div className="flex items-center justify-between mt-1">
-                            <a
-                              href={pUrl}
-                              target="_blank"
-                              rel="noopener noreferrer"
-                              className="text-[10px] text-pink-400 hover:text-pink-300 underline font-semibold flex items-center gap-0.5 truncate max-w-[140px]"
-                              title={`Mở trang mua hàng tại ${pSeller}`}
-                            >
-                              ⚡ Mua tại Shop <ExternalLink className="w-2.5 h-2.5 shrink-0" />
-                            </a>
-                            <span className="text-[10px] text-gray-400">Còn: {prod.stock || 99}</span>
-                          </div>
-                        </div>
-                      </div>
-
-                      <div className="flex items-center justify-between gap-2 pt-2 border-t border-white/5">
-                        {prod.keywords ? (
-                          <p className="text-[10px] text-gray-400 truncate max-w-[140px]" title={prod.keywords}>
-                            🔑 <span className="text-gray-300">{prod.keywords}</span>
-                          </p>
-                        ) : <span />}
-                        <button
-                          type="button"
-                          onClick={() => handlePinProduct(prod)}
-                          className={`px-3 py-1.5 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer ${
-                            isPinned
-                              ? 'bg-emerald-500 text-black font-black shadow-[0_0_10px_rgba(16,185,129,0.5)]'
-                              : 'bg-gradient-to-r from-pink-600 to-rose-600 hover:from-pink-700 hover:to-rose-700 text-white shadow-sm hover:scale-105'
-                          }`}
-                        >
-                          {isPinned ? <Check className="w-3.5 h-3.5" /> : <Pin className="w-3.5 h-3.5" />}
-                          <span>{isPinned ? 'Đang Ghim' : '📌 Ghim Ngay'}</span>
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
-            </div>
-
-          </div>
-
-          <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-            
-            <div className="lg:col-span-1 space-y-6">
-              <div className="bg-[#141419] border border-white/5 rounded-2xl p-6">
-                 <h4 className="text-sm font-black text-white border-b border-white/5 pb-4 mb-4 flex items-center gap-2">
-                   <Cpu className="w-4 h-4 text-cyan-400" /> Cấu Hình Chiến Thuật AI
-                 </h4>
-                 <div className="space-y-4">
-                    {[
-                      { id: 'imageBypass', label: 'Giải mã Ảnh / Slider Captcha' },
-                      { id: 'cloudflareTurnstile', label: 'Vượt tường lửa Cloudflare v3' },
-                      { id: 'autoProxy', label: 'Anti-Fingerprint (Thay Proxy liên tục)' },
-                      { id: 'autoToken', label: 'Auto-Submit Token (Chống kẹt)' }
-                    ].map(cfg => (
-                       <div key={cfg.id} className="flex items-center justify-between p-3 rounded-xl bg-black/20 border border-white/5">
-                          <span className="text-xs text-gray-300 font-bold">{cfg.label}</span>
-                          <button 
-                            onClick={() => setCaptchaConfig(prev => ({...prev, [cfg.id]: !prev[cfg.id]}))}
-                            className={`relative w-10 h-5 rounded-full transition-colors duration-300 cursor-pointer ${captchaConfig[cfg.id] ? 'bg-cyan-500 shadow-[0_0_10px_rgba(6,182,212,0.4)]' : 'bg-gray-700'}`}
-                          >
-                            <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all duration-300 ${captchaConfig[cfg.id] ? 'left-[22px]' : 'left-[2px]'}`}></div>
-                          </button>
-                       </div>
-                    ))}
-                 </div>
-              </div>
-
-              <div className="bg-[#141419] border border-white/5 rounded-2xl p-6">
-                 <h4 className="text-sm font-black text-white border-b border-white/5 pb-4 mb-4 flex items-center gap-2">
-                   <Zap className="w-4 h-4 text-emerald-400" /> Auto Ghim Sản Phẩm
-                 </h4>
-                 <div className="space-y-4">
-                   <div className="flex items-center justify-between p-3 rounded-xl bg-black/20 border border-white/5">
-                      <span className="text-xs text-gray-300 font-bold">Kích hoạt Ghim Tự Động</span>
-                      <button 
-                        onClick={() => setCaptchaConfig(prev => ({...prev, autoPin: !prev.autoPin}))}
-                        className={`relative w-10 h-5 rounded-full transition-colors duration-300 cursor-pointer ${captchaConfig.autoPin ? 'bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)]' : 'bg-gray-700'}`}
-                      >
-                        <div className={`absolute top-0.5 w-4 h-4 rounded-full bg-white transition-all duration-300 ${captchaConfig.autoPin ? 'left-[22px]' : 'left-[2px]'}`}></div>
-                      </button>
-                   </div>
-                   
-                   <div className={`space-y-4 transition-opacity duration-300 ${captchaConfig.autoPin ? 'opacity-100' : 'opacity-50 pointer-events-none'}`}>
-                     <div className="flex items-center justify-between p-3 rounded-xl bg-black/20 border border-white/5">
-                        <span className="text-xs text-gray-300 font-bold">Thời gian mỗi lần ghim (giây)</span>
-                        <input 
-                          type="number" min="10" max="300" 
-                          value={captchaConfig.pinInterval || 30}
-                          onChange={(e) => setCaptchaConfig(prev => ({...prev, pinInterval: parseInt(e.target.value) || 30}))}
-                          className="w-20 bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-xs text-white text-center focus:outline-none focus:border-cyan-500"
-                        />
-                     </div>
-                     <div className="flex items-center justify-between p-3 rounded-xl bg-black/20 border border-white/5">
-                        <span className="text-xs text-gray-300 font-bold">Số lượng sản phẩm cần ghim</span>
-                        <input 
-                          type="number" min="1" max="100" 
-                          value={captchaConfig.pinCount || 1}
-                          onChange={(e) => setCaptchaConfig(prev => ({...prev, pinCount: parseInt(e.target.value) || 1}))}
-                          className="w-20 bg-black/40 border border-white/10 rounded-lg px-2 py-1 text-xs text-white text-center focus:outline-none focus:border-cyan-500"
-                        />
-                     </div>
-                   </div>
-                 </div>
-              </div>
-
-              <div className="bg-[#141419] border border-cyan-500/20 rounded-2xl p-6 shadow-[0_0_30px_rgba(6,182,212,0.05)] text-center relative overflow-hidden">
-                 <div className="absolute inset-0 bg-[linear-gradient(rgba(6,182,212,0.05)_1px,transparent_1px),linear-gradient(90deg,rgba(6,182,212,0.05)_1px,transparent_1px)] bg-[size:20px_20px] [mask-image:radial-gradient(ellipse_50%_50%_at_50%_50%,#000_10%,transparent_100%)]"></div>
-                 <div className="relative z-10 flex flex-col items-center">
-                    <div className="relative w-24 h-24 flex items-center justify-center mb-4">
-                       <div className="absolute inset-0 border-2 border-cyan-500/20 rounded-full animate-[spin_4s_linear_infinite]"></div>
-                       <div className="absolute inset-2 border border-dashed border-cyan-400/40 rounded-full animate-[spin_3s_linear_infinite_reverse]"></div>
-                       <div className="absolute inset-6 bg-cyan-500/10 rounded-full blur-md animate-pulse"></div>
-                       {phase === 'success' ? (
-                         <CheckCircle2 className="w-10 h-10 text-emerald-400 relative z-10" />
-                       ) : phase === 'analyzing' ? (
-                         <Scan className="w-10 h-10 text-amber-400 relative z-10 animate-pulse" />
-                       ) : (
-                         <Cpu className="w-10 h-10 text-cyan-400 relative z-10 animate-bounce" />
-                       )}
-                    </div>
-                    <h4 className="text-white font-bold uppercase tracking-wider text-xs mb-1">
-                      {phase === 'init' && 'Khởi Động AI...'}
-                      {phase === 'analyzing' && 'Phân Tích Thuật Toán...'}
-                      {phase === 'solving' && 'Bẻ Khóa Đa Nền Tảng...'}
-                      {phase === 'success' && 'Hoạt Động Ổn Định'}
-                    </h4>
-                    <p className="text-[10px] font-mono text-cyan-400/70">{progress}% COMPUTING</p>
-                 </div>
-              </div>
-            </div>
-
-            <div className="lg:col-span-2 space-y-6">
-              <div className="bg-[#050505] border border-white/5 rounded-2xl h-48 p-4 overflow-y-auto font-mono text-xs flex flex-col gap-2 custom-scrollbar shadow-inner relative">
-                <div className="sticky top-0 bg-[#050505] pb-2 border-b border-white/5 flex items-center gap-2 text-gray-500 mb-2 z-10">
-                   <Terminal className="w-4 h-4" />
-                   <span>[root@ava-stealth-node-01] ~ tail -f /var/log/bypass.log</span>
-                </div>
-                {logs.map((log, i) => (
-                  <div key={i} className="flex gap-3 items-start break-all">
-                    <span className="text-gray-600 shrink-0">[{log.time}]</span>
-                    <span className={`
-                      ${log.type === 'info' ? 'text-blue-400' : ''}
-                      ${log.type === 'warning' ? 'text-amber-400' : ''}
-                      ${log.type === 'error' ? 'text-red-400' : ''}
-                      ${log.type === 'success' ? 'text-emerald-400' : ''}
-                    `}>
-                      {log.msg}
-                    </span>
-                  </div>
-                ))}
-                <div ref={logsEndRef} />
-              </div>
-
-              <div className="bg-[#141419] border border-white/5 rounded-2xl overflow-hidden">
-                 <div className="p-5 border-b border-white/5 flex items-center justify-between">
-                   <h4 className="text-sm font-black text-white flex items-center gap-2">
-                     <Activity className="w-4 h-4 text-purple-400" /> Lịch Sử Giải Mã Real-time
-                   </h4>
-                 </div>
-                 <div className="overflow-x-auto">
-                   <table className="w-full text-left text-xs">
-                      <thead className="bg-[#1A1A24] text-[10px] uppercase tracking-wider text-gray-500">
-                         <tr>
-                           <th className="px-5 py-3 font-black">Thời Gian</th>
-                           <th className="px-5 py-3 font-black">Nền Tảng</th>
-                           <th className="px-5 py-3 font-black">Loại Captcha</th>
-                           <th className="px-5 py-3 font-black">Tốc Độ</th>
-                           <th className="px-5 py-3 font-black text-right">Trạng Thái</th>
-                         </tr>
-                      </thead>
-                      <tbody className="divide-y divide-white/5 font-mono text-gray-300">
-                         {captchaStats.historyLogs.map((log, i) => (
-                            <tr key={i} className="hover:bg-white/5 transition-colors">
-                               <td className="px-5 py-3">{log.time}</td>
-                               <td className="px-5 py-3 font-bold text-white">{log.p}</td>
-                               <td className="px-5 py-3">{log.type}</td>
-                               <td className="px-5 py-3 text-cyan-400">{log.speed}</td>
-                               <td className="px-5 py-3 text-right">
-                                  <span className={`px-2 py-1 rounded text-[10px] font-black ${
-                                    log.status === 'SUCCESS' ? 'bg-emerald-500/10 text-emerald-400 border border-emerald-500/20' : 
-                                    'bg-amber-500/10 text-amber-400 border border-amber-500/20'
-                                  }`}>
-                                     {log.status}
-                                  </span>
-                               </td>
-                            </tr>
-                         ))}
-                      </tbody>
-                   </table>
-                 </div>
-              </div>
-
-            </div>
-          </div>
-
-        </div>
       </div>
-
-      {/* MODAL THÊM SẢN PHẨM MỚI LIÊN KẾT SELLER */}
-      {showAddModal && (
-        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
-          <div className="bg-[#121218] border border-pink-500/40 rounded-3xl p-6 max-w-lg w-full text-left space-y-4 shadow-2xl relative">
-            <div className="flex items-center justify-between border-b border-white/10 pb-3">
-              <h3 className="text-sm font-black text-white flex items-center gap-2 uppercase tracking-wider">
-                <Plus className="w-4 h-4 text-pink-400" /> THÊM SẢN PHẨM TIẾP THỊ LIÊN KẾT TIKTOK SHOP
-              </h3>
-              <button 
-                type="button" 
-                onClick={() => setShowAddModal(false)}
-                className="text-gray-400 hover:text-white font-bold p-1 cursor-pointer"
-              >
-                ✕
-              </button>
-            </div>
-
-            <form onSubmit={handleAddNewProduct} className="space-y-3 text-xs">
-              <div className="space-y-1">
-                <label className="font-bold text-gray-200 block">TÊN SẢN PHẨM (*):</label>
-                <input 
-                  type="text" 
-                  value={newProd.name}
-                  onChange={(e) => setNewProd(prev => ({ ...prev, name: e.target.value }))}
-                  placeholder="Nhập tên sản phẩm thật trên TikTok Shop..."
-                  className="w-full bg-black/60 border border-white/20 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-pink-500"
-                  required
-                />
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-bold text-gray-200 block">TÊN ĐƠN VỊ BÁN HÀNG (SELLER):</label>
-                  <input 
-                    type="text" 
-                    value={newProd.sellerName}
-                    onChange={(e) => setNewProd(prev => ({ ...prev, sellerName: e.target.value }))}
-                    placeholder="Ví dụ: HAVATA Official Store"
-                    className="w-full bg-black/60 border border-white/20 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-pink-500"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="font-bold text-gray-200 block">LINK GIAN HÀNG / LINK TIẾP THỊ SELLER:</label>
-                  <input 
-                    type="text" 
-                    value={newProd.sellerStoreUrl}
-                    onChange={(e) => setNewProd(prev => ({ ...prev, sellerStoreUrl: e.target.value, buyUrl: e.target.value }))}
-                    placeholder="https://www.tiktok.com/@shop_name hoặc link tiếp thị"
-                    className="w-full bg-black/60 border border-white/20 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-pink-500 font-mono"
-                  />
-                </div>
-              </div>
-
-              <div className="grid grid-cols-2 gap-3">
-                <div className="space-y-1">
-                  <label className="font-bold text-gray-200 block">GIÁ BÁN (DEAL LIVE):</label>
-                  <input 
-                    type="text" 
-                    value={newProd.price}
-                    onChange={(e) => setNewProd(prev => ({ ...prev, price: e.target.value }))}
-                    placeholder="49.999 ₫"
-                    className="w-full bg-black/60 border border-white/20 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-pink-500 font-mono"
-                  />
-                </div>
-                <div className="space-y-1">
-                  <label className="font-bold text-gray-200 block">GIÁ GỐC NIÊM YẾT:</label>
-                  <input 
-                    type="text" 
-                    value={newProd.oldPrice}
-                    onChange={(e) => setNewProd(prev => ({ ...prev, oldPrice: e.target.value }))}
-                    placeholder="89.000 ₫"
-                    className="w-full bg-black/60 border border-white/20 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-pink-500 font-mono"
-                  />
-                </div>
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-bold text-gray-200 block">TỪ KHÓA TỰ ĐỘNG GHIM (Phân cách bằng dấu chấm phẩy ;):</label>
-                <input 
-                  type="text" 
-                  value={newProd.keywords}
-                  onChange={(e) => setNewProd(prev => ({ ...prev, keywords: e.target.value }))}
-                  placeholder="mã 1;áo tập;bra;chốt 1..."
-                  className="w-full bg-black/60 border border-white/20 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-pink-500"
-                />
-              </div>
-
-              <div className="space-y-1">
-                <label className="font-bold text-gray-200 block">LINK HÌNH ẢNH SẢN PHẨM:</label>
-                <input 
-                  type="text" 
-                  value={newProd.image}
-                  onChange={(e) => setNewProd(prev => ({ ...prev, image: e.target.value }))}
-                  placeholder="https://images.unsplash.com/... hoặc link ảnh sản phẩm"
-                  className="w-full bg-black/60 border border-white/20 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-pink-500"
-                />
-              </div>
-
-              <div className="flex items-center gap-3 pt-3">
-                <button 
-                  type="submit"
-                  className="flex-1 py-3 bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-black text-xs rounded-xl shadow-lg transition-all cursor-pointer"
-                >
-                  XÁC NHẬN THÊM SẢN PHẨM
-                </button>
-                <button 
-                  type="button"
-                  onClick={() => setShowAddModal(false)}
-                  className="px-5 py-3 bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white rounded-xl font-bold text-xs cursor-pointer"
-                >
-                  Hủy
-                </button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

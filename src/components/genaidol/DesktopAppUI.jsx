@@ -8423,25 +8423,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             if (e.target === e.currentTarget) setActiveSettingsModal(null);
           }}
         >
-          <div className="w-full max-w-5xl h-[92vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl bg-[#0b0f19] border border-emerald-500/30 relative">
-            <div className="flex items-center justify-between px-5 py-3 border-b border-emerald-500/20 bg-emerald-950/40">
-              <div className="flex items-center gap-2 text-emerald-400 font-black text-sm">
-                <Shield size={18} className="text-emerald-400 animate-pulse" />
-                <span>HỆ THỐNG VƯỢT CAPTCHA TỰ ĐỘNG 24/7 (AI CAPTCHA SOLVER)</span>
-    </div>
-              <button 
-                onClick={() => setActiveSettingsModal(null)}
-                className="p-1.5 rounded-lg bg-white/10 text-white/70 hover:bg-white/20 hover:text-white transition-colors cursor-pointer"
-                title="Đóng"
-              >
-                <X size={18} />
-              </button>
-    </div>
-            <div className="flex-1 overflow-y-auto">
-              <AutoCaptchaSolver onClose={() => setActiveSettingsModal(null)} />
-    </div>
-    </div>
-    </div>
+          <div className="w-auto flex flex-col rounded-3xl overflow-hidden shadow-2xl relative">
+            <AutoCaptchaSolver onClose={() => setActiveSettingsModal(null)} />
+          </div>
+        </div>
       )}
 
       {/* Idol Connect Modal (TikTok Live) */}
