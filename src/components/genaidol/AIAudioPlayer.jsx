@@ -521,14 +521,17 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
   const playItem = async (item, isScriptItem = true) => {
     if (!item || !item.text) return;
-    const isScriptPaused = typeof localStorage !== 'undefined' && (
-      localStorage.getItem('aidol_is_script_live_running') === 'false' ||
-      localStorage.getItem('aidol_user_paused_script') === 'true' ||
-      (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
-    );
-    if (!item.isTest && (isScriptPaused || !isPlayingRef.current)) {
-      isBusyRef.current = false;
-      return;
+    // Chỉ kiểm tra tạm dừng kịch bản đối với các câu thoại kịch bản nền (isScriptItem === true)
+    if (isScriptItem) {
+      const isScriptPaused = typeof localStorage !== 'undefined' && (
+        localStorage.getItem('aidol_is_script_live_running') === 'false' ||
+        localStorage.getItem('aidol_user_paused_script') === 'true' ||
+        (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
+      );
+      if (!item.isTest && (isScriptPaused || !isPlayingRef.current)) {
+        isBusyRef.current = false;
+        return;
+      }
     }
     if (isBusyRef.current) return;
     isBusyRef.current = true;
@@ -876,19 +879,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       prefetchAllScriptItems(scriptItems);
     },
     enqueueItem: (text, action, isImmediate = false, options = {}) => {
-      // 🛡️ CHẶN 100% KHI NGƯỜI DÙNG ĐÃ TẮT / TẠM DỪNG LIVE HOẶC SCRIPT
-      const isUserPaused = typeof localStorage !== 'undefined' && (
+      // 🛡️ CHẶN KHI NGƯỜI DÙNG ĐÃ CHỦ ĐỘNG BẤM TẠM DỪNG TOÀN BỘ PHẦN MỀM
+      const isExplicitlyPaused = typeof localStorage !== 'undefined' && (
         localStorage.getItem('avalive_user_paused') === 'true' || 
-        localStorage.getItem('avalive_window_capture_paused') === 'true' ||
-        localStorage.getItem('avalive_master_live_running') === 'false' ||
-        localStorage.getItem('aidol_user_paused_script') === 'true' ||
-        localStorage.getItem('aidol_is_script_live_running') === 'false'
+        localStorage.getItem('avalive_window_capture_paused') === 'true'
       );
-      if (isUserPaused && !options?.isTest) {
+      if (isExplicitlyPaused && !options?.isTest) {
         return;
       }
 
-      // 🛡️ CHẶN 100% BÌNH LUẬN XEN VÀO KHI ĐANG PHÁT CHẠY THỬ KỊCH BẢN (TESTER MODE)
+      // 🛡️ CHẶN BÌNH LUẬN XEN VÀO KHI ĐANG PHÁT CHẠY THỬ KỊCH BẢN (TESTER MODE)
       const isScriptTestingActive = typeof window !== 'undefined' && (
         window.__isScriptTestingRunning === true || 
         localStorage.getItem('avalive_script_testing_active') === 'true'
@@ -897,11 +897,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         return;
       }
 
-      // 🛡️ BẢO VỆ TUYỆT ĐỐI KHI ĐANG PHÁT KỊCH BẢN BÁN HÀNG (Script Live):
-      // Tuyệt đối không cho phép sự kiện IDLE hoặc APOLOGY chen ngang làm gián đoạn kịch bản 30-40 giây
+      // 🛡️ BẢO VỆ KHI ĐANG PHÁT KỊCH BẢN BÁN HÀNG: Không cho phép sự kiện IDLE hoặc APOLOGY chen ngang kịch bản
       const isLiveScriptActive = isScriptRunning || (typeof window !== 'undefined' && window.__isScriptLiveRunning) || (typeof localStorage !== 'undefined' && localStorage.getItem('aidol_is_script_live_running') === 'true');
       if (isLiveScriptActive && (action === 'IDLE' || action === 'APOLOGY')) {
-        console.log('[AIAudioPlayer] Đang phát kịch bản, chặn triệt để sự kiện IDLE/APOLOGY chen ngang');
+        console.log('[AIAudioPlayer] Đang phát kịch bản, chặn sự kiện IDLE/APOLOGY chen ngang');
         return;
       }
 
@@ -912,13 +911,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         const found = ALL_SYSTEM_VOICES.find(v => v.id === options.voiceId);
         if (found) voiceObj = found;
         else voiceObj = { id: options.voiceId, lang: 'vi-VN', gender: 'Female' };
-      }
-
-      // Khi đang chạy thử kịch bản mà KHÔNG kết nối live thật (isScriptRunning && !isLive):
-      // Chặn 100% bình luận / sự kiện phụ chen ngang để kịch bản đọc liền mạch từ đầu đến cuối tuần hoàn
-      if (isScriptRunning && !isLive && !options?.isTest) {
-        console.log('[AIAudioPlayer] Đang chạy thử kịch bản, chặn sự kiện phụ:', text);
-        return;
       }
 
       const newItem = { id: `dyn_${Date.now()}`, type: 'dynamic', text, action, voiceChannel, voiceObj, isTest: !!options?.isTest };

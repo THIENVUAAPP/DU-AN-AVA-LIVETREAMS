@@ -2,13 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.12';
+export const APP_VERSION = '5.4.13';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '⚡ Bản Cập Nhật v5.4.13 - Kích Hoạt Triệt Để Bộ Não AI & 14 Sự Kiện Live TikTok Studio/Shopee, Tự Động Ghim shop.tiktok.com & Nút Loa Máy Độc Lập',
+    description: '1. Kích Hoạt Triệt Để Toàn Bộ 14 Tác Vụ Sự Kiện & Bộ Não AI: Đảm bảo ngay khi kết nối ID TikTok Live Studio hoặc Shopee Live, Bộ Não AI tự động chào hỏi người mới xoay vòng tuần tự, trả lời mọi bình luận của khán giả qua giọng đọc AI 100%, cảm ơn quà tặng, theo dõi, chia sẻ, chốt đơn theo cấu hình mà không bị chặn bởi bất kỳ điều kiện nào. 2. Tự Động Ghim Sản Phẩm shop.tiktok.com & Shopee Live: Nhận diện giọng nói AI, bình luận khán giả và timer để tự động ghim sản phẩm lên giao diện quản trị người bán shop.tiktok.com và phiên live theo thời gian thực. 3. Độc Lập Tuyệt Đối Nút Tắt/Mở Loa Máy Tính: Nút Loa Máy chỉ kiểm soát loa nghe trên máy cá nhân của streamer (chống ồn), trong khi phiên phát sóng lên TikTok Live Studio, OBS và link online HTTPS vẫn giữ nguyên 100% âm thanh sống động. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
+  },
+  {
     title: '⚡ Bản Cập Nhật v5.4.12 - Kích Hoạt Toàn Diện Bộ Não AI & Chuỗi 14 Sự Kiện Live TikTok/Shopee, Tách Biệt Loa Máy Tính & Nâng Cấp Auto Ghim shop.tiktok.com Real-Time',
-    description: '1. Kích Hoạt 100% Bộ Não AI & Chuỗi 14 Tác Vụ Sự Kiện Live: Đảm bảo ngay khi kết nối ID TikTok Live Studio / Shopee Live, Bộ Não AI tự động chào hỏi người mới theo chuỗi tuần tự vòng tròn không trùng lặp, tự động đọc và trả lời bình luận, cảm ơn quà tặng, theo dõi, chia sẻ và chốt đơn theo đúng cấu hình cài đặt. 2. Phân Tách Tuyệt Đối Nút Loa Máy Tính (Ảnh 1): Bấm Tắt/Mở loa máy tính trên giao diện chỉ kiểm soát âm thanh của máy cá nhân để chống ồn, trong khi luồng phát Livestream TikTok Live Studio và OBS vẫn giữ nguyên 100% âm thanh chất lượng cao. 3. Cầu Nối Tự Động Auto Ghim shop.tiktok.com & Shopee Live: Tích hợp WebSocket + REST Bridge thời gian thực giúp tự động ghim đúng sản phẩm trên trang quản lý TikTok Shop (shop.tiktok.com) và Shopee Live ngay khi streamer nói tên sản phẩm, khách comment hoặc theo chu kỳ cài đặt. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
+    description: '1. Kích Hoạt 100% Bộ Não AI & Chuỗi 14 Tác Vụ Sự Kiện Live: Đảm bảo ngay khi kết nối ID TikTok Live Studio / Shopee Live, Bộ Não AI tự động chào hỏi người mới theo chuỗi tuần tự vòng tròn không trùng lặp, tự động đọc và trả lời bình luận, cảm ơn quà tặng, theo dõi, chia sẻ và chốt đơn theo đúng cấu hình cài đặt. 2. Phân Tách Tuyệt Đối Nút Loa Máy Tính: Bấm Tắt/Mở loa máy tính trên giao diện chỉ kiểm soát âm thanh của máy cá nhân để chống ồn, trong khi luồng phát Livestream TikTok Live Studio và OBS vẫn giữ nguyên 100% âm thanh chất lượng cao. 3. Cầu Nối Tự Động Auto Ghim shop.tiktok.com & Shopee Live: Tích hợp WebSocket + REST Bridge thời gian thực giúp tự động ghim đúng sản phẩm trên trang quản lý TikTok Shop (shop.tiktok.com) và Shopee Live ngay khi streamer nói tên sản phẩm, khách comment hoặc theo chu kỳ cài đặt. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
   },
   {
     title: '⚡ Bản Cập Nhật v5.4.11 - Khắc Phục Triệt Để Lỗi Màn Hình Đen Khi Kết Nối Live TikTok Studio & Shopee, Phát Sân Khấu Liên Tục 100% Siêu Mượt',

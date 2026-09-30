@@ -1912,7 +1912,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     setActiveVideoItem,
     setViewerHistory
   } = useLiveCoordinator({
-    isConnected: isConnected || isScriptLiveRunning || isGlobalDemoRunning || isMasterLiveRunning, // Chỉ kích hoạt khi Live thực tế, Kịch bản Live hoặc Demo được người dùng chủ động bật
+    isConnected: true, // Luôn sẵn sàng xử lý sự kiện khi có tín hiệu từ TikTok / Giả lập / Live
     activeBrainPack: 'talk', // mặc định
     onVoiceReply: ({ text, action, baseVideoItem, preRecordedCat, voiceId, voiceChannel, isTest }) => {
       unlockAllAudio();
@@ -2919,7 +2919,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         sendVideoControl({
           action: 'play',
           isPlaying: true,
-          isMuted: isCurrentMuted,
+          isMuted: liveAudioMuted,
           currentTime: vid ? vid.currentTime : 0,
           mediaUrl: vid ? (vid.currentSrc || vid.src) : null,
           timestamp: Date.now()
@@ -3100,7 +3100,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   blobUrl: blobUrl,
                   fileBlob: blob,
                   force: true,
-                  isMuted: isLocalSpeakerMuted,
+                  isMuted: liveAudioMuted,
                   timestamp: Date.now()
                 });
               } catch (e) {}
@@ -6313,19 +6313,19 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 <span>{isVideoPlaying ? 'TẠM DỪNG' : 'TIẾP TỤC'}</span>
               </button>
 
-              {/* Nút 2: Mở / Tắt Âm Thanh Toàn Diện (Đồng Bộ Cả Live & Loa Máy) */}
+              {/* Nút 2: Tắt / Mở Loa Máy Tính (Độc Lập 100%, Phiên Live Vẫn Có Tiếng 100%) */}
               <button
                 type="button"
                 onClick={handleToggleLocalSpeakerMute}
                 className={`pointer-events-auto flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold shadow-2xl border backdrop-blur-md transition-all cursor-pointer active:scale-95 select-none ${
                   !isLocalSpeakerMuted
-                    ? 'bg-black/70 hover:bg-black/90 text-cyan-300 border-cyan-400/30'
+                    ? 'bg-black/70 hover:bg-black/90 text-emerald-300 border-emerald-400/30'
                     : 'bg-rose-950/85 hover:bg-rose-900 text-rose-300 border-rose-500/50'
                 }`}
-                title={isLocalSpeakerMuted ? "Âm thanh đang TẮT (Live & Máy) — Bấm để BẬT tiếng toàn bộ" : "Âm thanh đang BẬT (Live & Máy) — Bấm để TẮT tiếng toàn bộ"}
+                title={isLocalSpeakerMuted ? "Loa máy tính: ĐÃ TẮT (Phiên Live & OBS vẫn có tiếng 100%) — Bấm để Mở lại loa máy" : "Loa máy tính: ĐANG MỞ — Bấm để Tắt loa máy tính (chống ồn)"}
               >
-                {!isLocalSpeakerMuted ? <Volume2 size={13} className="text-cyan-400 animate-pulse" /> : <VolumeX size={13} className="text-rose-400" />}
-                <span>{!isLocalSpeakerMuted ? 'TIẾNG: ĐANG BẬT' : 'TIẾNG: ĐÃ TẮT'}</span>
+                {!isLocalSpeakerMuted ? <Volume2 size={13} className="text-emerald-400 animate-pulse" /> : <VolumeX size={13} className="text-rose-400" />}
+                <span>{!isLocalSpeakerMuted ? 'LOA MÁY: ĐANG MỞ' : 'LOA MÁY: ĐÃ TẮT'}</span>
               </button>
             </div>
           </div>

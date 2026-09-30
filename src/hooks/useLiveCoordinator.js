@@ -410,19 +410,7 @@ function fillTemplate(template, vars = {}) {
 
     const currentEvConfig = (evKey && configs[evKey]) ? configs[evKey] : {};
 
-    const isLiveBroadcasting = isConnected === true || 
-      (typeof window !== 'undefined' && (
-        window.__isLiveBroadcasting === true ||
-        localStorage.getItem('avalive_is_live') === 'true' ||
-        localStorage.getItem('avalive_live_active') === 'true' ||
-        sessionStorage.getItem('avalive_is_live') === 'true'
-      ));
-
-    if (!isLiveBroadcasting && !isTestMode) {
-      return;
-    }
-
-    // 🛡️ CHẶN BÌNH LUẬN VÀ SỰ KIỆN XEN VÀO KHI ĐANG CHẠY THỬ KỊCH BẢN (SCRIPT PREVIEW / TESTER)
+    // 🛡️ CHẶN SỰ KIỆN XEN VÀO KHI ĐANG CHẠY THỬ KỊCH BẢN (SCRIPT PREVIEW / TESTER)
     const isScriptTestingActive = typeof window !== 'undefined' && (
       window.__isScriptTestingRunning === true || 
       localStorage.getItem('avalive_script_testing_active') === 'true'
@@ -464,8 +452,8 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // ⏱️ A2. KIỂM TRA GIÃN CÁCH TRẢ LỜI BÌNH LUẬN (10s – 120s)
-        const cooldownSec = Math.max(10, Math.min(120, parseInt(commentConfig.commentReplyCooldown) || 15));
+        // ⏱️ A2. KIỂM TRA GIÃN CÁCH TRẢ LỜI BÌNH LUẬN
+        const cooldownSec = Math.max(1, parseInt(commentConfig.waitBetweenEvents ?? commentConfig.commentReplyCooldown) || 2);
         const now = Date.now();
         if (!isTestMode && (now - lastCommentReplyTimeRef.current < cooldownSec * 1000)) {
           console.log(`⏱️ [AvaLive AI] Đang trong khoảng giãn cách (${cooldownSec}s), bỏ qua dồn dập.`);
@@ -913,12 +901,8 @@ function fillTemplate(template, vars = {}) {
       const isCommentVoiceDisabled = evKey === 'comment' && (currentEvConfig.speakVoice === false || currentEvConfig.commentResponseFormat === 'text_only');
       const isCommentTextDisabled = evKey === 'comment' && (currentEvConfig.sendChatText === false || currentEvConfig.commentResponseFormat === 'voice_only');
 
-      // 🛡️ SÀNG LỌC BÌNH LUẬN: Bình luận sáo rỗng ("hi", "123", "chấm"...) chỉ trả lời bằng chữ, KHÔNG dừng giọng đọc kịch bản AI
-      const isCommentType = type === 'COMMENT';
-      const isCommentMeaningful = isCommentType ? isMeaningfulCommercialOrEngagingComment(payload?.text || payload?.comment || '') : true;
-
       // Nếu video là loại có sẵn Voice (Pre-recorded), không phát Voice AI đè lên
-      const shouldSpeakVoice = !isPreRecorded && !isCommentVoiceDisabled && (isTestMode || (isCommentType ? isCommentMeaningful : true)) && ((currentEvConfig.useVoice !== false) || isTestMode);
+      const shouldSpeakVoice = !isPreRecorded && !isCommentVoiceDisabled && ((currentEvConfig.useVoice !== false) || isTestMode);
       const shouldSendChat = !isCommentTextDisabled;
       const targetVoiceRole = isTestMode ? 'idol' : (currentEvConfig.ttsVoiceRole || (evKey === 'comment' ? 'comment' : evKey === 'checkout' ? 'manager' : 'idol'));
       const effectiveVoice = resolveEffectiveVoice(targetVoiceRole, isTestMode ? null : currentEvConfig.voiceId, currentEvConfig.avatarId);
