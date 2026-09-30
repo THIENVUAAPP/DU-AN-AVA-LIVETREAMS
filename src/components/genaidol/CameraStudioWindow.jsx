@@ -24,12 +24,20 @@ export default function CameraStudioWindow({
   const [isInteractiveCrop, setIsInteractiveCrop] = useState(false); // Bật chế độ khung cắt trực quan
   
   // Tọa độ riêng biệt cho Bảng Điều Khiển Suite (có thể kéo thả độc lập)
+  // Luôn neo sát bên phải màn hình để không bao giờ bị ra ngoài màn hình
   const [panelPos, setPanelPos] = useState(() => {
     try {
       const saved = localStorage.getItem('avalive_studio_panel_pos');
-      if (saved) return JSON.parse(saved);
+      if (saved) {
+        const parsed = JSON.parse(saved);
+        // Validate saved position is still on screen
+        if (parsed.x < window.innerWidth - 50 && parsed.x > 0 && parsed.y > 0 && parsed.y < window.innerHeight - 50) {
+          return parsed;
+        }
+      }
     } catch (e) {}
-    return { x: Math.max(20, position.x + 360), y: Math.max(40, position.y) };
+    // Default: neo vào bên phải màn hình, cách mép phải 20px
+    return { x: Math.max(20, window.innerWidth - 400), y: 60 };
   });
 
   const [isDraggingPanel, setIsDraggingPanel] = useState(false);
@@ -102,7 +110,8 @@ export default function CameraStudioWindow({
   // 🖌️ Cọ Quét Giữ Lại / Cà Xóa Vùng Thủ Công (Brush Mask Engine)
   const [brushMode, setBrushMode] = useState('none'); // 'none' | 'keep' | 'erase'
   const [brushSize, setBrushSize] = useState(25); // 5 to 80px
-  const [brushStrokes, setBrushStrokes] = useState([]); // [{ mode: 'keep'|'erase', points: [{x,y}], size }]
+  const [brushShape, setBrushShape] = useState('round'); // 'round' | 'square'
+  const [brushStrokes, setBrushStrokes] = useState([]); // [{ mode: 'keep'|'erase', shape: 'round'|'square', points: [{x,y}], size }]
   const isPaintingRef = useRef(false);
   const currentStrokeRef = useRef(null);
 
@@ -222,6 +231,7 @@ export default function CameraStudioWindow({
     isPaintingRef.current = true;
     currentStrokeRef.current = {
       mode: brushMode,
+      shape: brushShape,
       size: brushSize * scaleX,
       points: [pt]
     };
@@ -410,6 +420,7 @@ export default function CameraStudioWindow({
             for (const stroke of allStrokes) {
               const radius = stroke.size;
               const isKeep = stroke.mode === 'keep';
+              const isSquare = stroke.shape === 'square';
               for (const pt of stroke.points) {
                 const startX = Math.max(0, Math.floor(pt.x - radius));
                 const endX = Math.min(vw - 1, Math.ceil(pt.x + radius));
@@ -418,8 +429,11 @@ export default function CameraStudioWindow({
 
                 for (let py = startY; py <= endY; py++) {
                   for (let px = startX; px <= endX; px++) {
-                    const d2 = (px - pt.x) * (px - pt.x) + (py - pt.y) * (py - pt.y);
-                    if (d2 <= radius * radius) {
+                    // Round: distance check; Square: all pixels in bounding box
+                    const inside = isSquare
+                      ? true
+                      : ((px - pt.x) * (px - pt.x) + (py - pt.y) * (py - pt.y)) <= radius * radius;
+                    if (inside) {
                       const idx = (py * vw + px) * 4;
                       data[idx + 3] = isKeep ? 255 : 0;
                     }
@@ -1082,6 +1096,45 @@ export default function CameraStudioWindow({
                   onChange={(e) => setBrushSize(Number(e.target.value))}
                   className="w-full accent-yellow-400 h-1.5 bg-gray-700 rounded-lg cursor-pointer"
                 />
+              </div>
+
+              {/* Hình dạng đầu cọ: Tròn | Vuông */}
+              <div className="bg-black/40 p-2.5 rounded-xl border border-white/10 space-y-1.5">
+                <span className="text-[10px] uppercase font-bold text-gray-400 block">Hình Dạng Đầu Cọ:</span>
+                <div className="grid grid-cols-2 gap-2">
+                  <button
+                    type="button"
+                    onClick={() => setBrushShape('round')}
+                    className={`p-2 rounded-xl border flex items-center justify-center gap-2 font-bold text-xs transition-all cursor-pointer ${
+                      brushShape === 'round'
+                        ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg ring-1 ring-indigo-300'
+                        : 'bg-white/5 border-white/10 text-gray-300 hover:bg-indigo-500/20'
+                    }`}
+                  >
+                    <Circle size={14} className="text-indigo-300" />
+                    <span>⬤ Cọ Tròn</span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setBrushShape('square')}
+                    className={`p-2 rounded-xl border flex items-center justify-center gap-2 font-bold text-xs transition-all cursor-pointer ${
+                      brushShape === 'square'
+                        ? 'bg-orange-600 border-orange-400 text-white shadow-lg ring-1 ring-orange-300'
+                        : 'bg-white/5 border-white/10 text-gray-300 hover:bg-orange-500/20'
+                    }`}
+                  >
+                    <Square size={14} className="text-orange-300" />
+                    <span>■ Cọ Vuông</span>
+                  </button>
+                </div>
+                {/* Preview đầu cọ */}
+                <div className="flex justify-center pt-1">
+                  <div
+                    className={`bg-purple-400/70 border-2 border-purple-300 transition-all ${brushShape === 'round' ? 'rounded-full' : 'rounded-none'}`}
+                    style={{ width: Math.min(brushSize, 48), height: Math.min(brushSize, 48) }}
+                    title="Preview kích thước đầu cọ"
+                  />
+                </div>
               </div>
 
               {/* Hoàn tác / Xóa toàn bộ nét vẽ */}

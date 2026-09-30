@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.3.4';
+export const APP_VERSION = '5.3.5';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.3.5 - Sửa Lỗi Bảng Điều Khiển Camera Suite Không Hiển Thị & Bổ Sung Cọ Vuông',
+    description: '1. Sửa lỗi nghiêm trọng: Bảng Điều Khiển Camera Suite (bảng cài đặt camera) không hiển thị khi bật camera — đã fix vị trí khởi tạo luôn neo vào bên phải màn hình, không bao giờ bị ra ngoài màn hình. 2. Bổ sung Cọ Vuông (Square Brush) bên cạnh Cọ Tròn: Tùy chọn hình dạng đầu cọ Tròn ⬤ hoặc Vuông ■, có preview đầu cọ trực tiếp trong tab Cọ Quét. 3. Kéo thả Panel độc lập — đã xác thực vị trí lưu trong localStorage, không để panel bay ra ngoài màn hình sau khi di chuyển.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.3.4 - Tách Rời Bảng Điều Khiển Camera Suite, Cọ Quét Giữ Vùng & Cà Xóa Nền AI, Kết Nối Camera Điện Thoại QR 4K',
     description: '1. Tách riêng độc lập Khung Camera và Bảng Điều Khiển Suite: Người dùng có thể kéo thả camera và bảng cài đặt riêng biệt đến bất kỳ góc nào trên màn hình, không bị dính liền. 2. Tách phông nền trong suốt 100% siêu sạch: Tích hợp AI tách đa phông nền (bất kỳ phòng/nhà nào) cùng tùy chọn Giữ lại vật thể (Người streamer, Máy tính/Laptop, Bàn làm việc, Ghế ngồi, Sản phẩm cầm tay, Kệ tủ). 3. Công cụ Cọ Quét Giữ Vùng (Màu Xanh) & Cà Xóa Phông (Màu Đỏ): Vẽ trực tiếp lên màn hình camera để cà xóa hoặc giữ lại bất kỳ chi tiết nào. 4. Kết Nối Camera Điện Thoại Qua Mã QR: Quét mã QR bằng iPhone / Android để sử dụng camera điện thoại 4K 60FPS không dây siêu mượt.'
