@@ -14,6 +14,7 @@ import flvjs from 'flv.js';
 import Hls from 'hls.js';
 import WorkspaceTacVu from './WorkspaceTacVu';
 import IdolConnectModal from './IdolConnectModal';
+import MultistreamStudio from '../MultistreamStudio';
 import LivestreamFlowSequencer from './LivestreamFlowSequencer';
 import GeneralSettings from './GeneralSettings';
 import ThanhToanCoin from './ThanhToanCoin';
@@ -7148,7 +7149,19 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-[#EE4D2D] text-white shadow-xs">MỚI</span>
                 </button>
 
-                {/* 4. VƯỢT CAPTCHA */}
+                {/* 4. RESTREAM ĐA NỀN TẢNG & MULTI-ACCOUNT */}
+                <button 
+                  onClick={() => { setActiveSettingsModal('multistream'); setIsSettingsDropdownOpen(false); }}
+                  className={`w-full text-left px-3 py-2 mb-1.5 rounded-xl text-xs font-bold transition-all flex items-center justify-between gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-blue-950/60 to-purple-900/40 hover:from-blue-600 hover:to-purple-600 text-blue-200 hover:text-white border border-blue-700/60 shadow-md' : 'bg-blue-50 hover:bg-blue-500 text-blue-800 hover:text-white border border-blue-200'}`}
+                >
+                  <div className="flex items-center gap-2.5">
+                    <Share2 size={16} className="text-[#3B82F6] shrink-0" />
+                    <span>KẾT NỐI ĐA NỀN TẢNG (MULTISTREAM 4K)</span>
+                  </div>
+                  <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-[#3B82F6] text-white shadow-xs">PRO</span>
+                </button>
+
+                {/* 5. VƯỢT CAPTCHA */}
                 <button 
                   onClick={() => { setActiveSettingsModal('captcha'); setIsSettingsDropdownOpen(false); }}
                   className={`w-full text-left px-3 py-2 mb-2 rounded-xl text-xs font-bold transition-all flex items-center gap-2.5 ${isDarkMode ? 'bg-gradient-to-r from-emerald-900/50 to-teal-800/30 hover:from-emerald-600 hover:to-teal-500 text-emerald-200 hover:text-white border border-emerald-700/60 shadow-lg' : 'bg-emerald-50 hover:bg-emerald-500 text-emerald-800 hover:text-white'}`}
@@ -8459,6 +8472,43 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         onClose={() => setActiveSettingsModal(null)}
         isDarkMode={isDarkMode}
       />
+
+      {/* 🌐 Multistream & Multi-Platform Modal */}
+      {activeSettingsModal === 'multistream' && (
+        <div 
+          className="fixed inset-0 z-[9999] flex items-center justify-center bg-black/85 backdrop-blur-md p-2 md:p-4 animate-in fade-in zoom-in duration-200"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setActiveSettingsModal(null);
+          }}
+        >
+          <div className={`w-[98vw] max-w-[1720px] h-[96vh] max-h-[96vh] flex flex-col rounded-2xl overflow-hidden shadow-2xl border ${isDarkMode ? 'bg-[#12131a] border-blue-900/50' : 'bg-white border-gray-300'}`}>
+            <div className={`flex items-center justify-between px-6 py-3.5 border-b shrink-0 ${isDarkMode ? 'bg-gradient-to-r from-blue-950/80 via-[#181926] to-[#12131a] border-blue-900/40' : 'bg-gradient-to-r from-blue-50 to-white border-blue-200'}`}>
+              <div className="flex items-center gap-3">
+                <div className="p-2.5 rounded-xl bg-blue-600/20 border border-blue-500/40 text-blue-400">
+                  <Share2 size={22} className="animate-pulse" />
+                </div>
+                <div>
+                  <h2 className="text-base md:text-lg font-black tracking-tight text-white flex items-center gap-2">
+                    CỔNG KẾT NỐI ĐA NỀN TẢNG & MULTI-STREAMING 4K
+                  </h2>
+                  <p className="text-[11px] text-blue-300/80">
+                    Kết nối tài khoản & phát sóng đồng thời lên TikTok Live, Facebook Fanpage, YouTube Channel, Shopee Live
+                  </p>
+                </div>
+              </div>
+              <button 
+                onClick={() => setActiveSettingsModal(null)}
+                className={`p-2 rounded-xl transition-colors cursor-pointer ${isDarkMode ? 'hover:bg-white/10 text-gray-400 hover:text-white' : 'hover:bg-gray-100 text-gray-600 hover:text-black'}`}
+              >
+                <X size={22} />
+              </button>
+            </div>
+            <div className="flex-1 overflow-auto p-4">
+              <MultistreamStudio isLive={isMasterLiveRunning} setIsLive={setIsMasterLiveRunning} currentUser={currentUser} />
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* 👥 MultiAvatarStudioModal (Studio 2–4 Avatar) */}
       <MultiAvatarStudioModal

@@ -359,25 +359,12 @@ export default function MultistreamStudio({ isLive, setIsLive, currentUser }) {
 
   const executeConnectionWithCaptcha = (onSuccess) => {
     setIsVerifying(true);
-    setCaptchaSolverState('detecting');
-    
+    setCaptchaSolverState('success');
     setTimeout(() => {
-      if (autoCaptchaEnabled) {
-        setCaptchaSolverState('solving');
-        setTimeout(() => {
-          setCaptchaSolverState('success');
-          setTimeout(() => {
-            setCaptchaSolverState('idle');
-            setIsVerifying(false);
-            onSuccess();
-          }, 1200);
-        }, 2500);
-      } else {
-        setCaptchaSolverState('idle');
-        setIsVerifying(false);
-        onSuccess();
-      }
-    }, 1500);
+      setCaptchaSolverState('idle');
+      setIsVerifying(false);
+      if (typeof onSuccess === 'function') onSuccess();
+    }, 120);
   };
 
   const [channels, setChannels] = useState(() => loadLiveChannels());

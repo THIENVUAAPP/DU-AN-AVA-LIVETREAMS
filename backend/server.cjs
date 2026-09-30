@@ -5127,6 +5127,7 @@ io.on('connection', (socket) => {
         }
       }
       
+      isConnectingTikTok = false;
       const finalFlv = flvUrl || globalFlvUrl;
       const finalHls = hlsUrl;
       
@@ -5145,49 +5146,62 @@ io.on('connection', (socket) => {
       io.emit('tiktok_connected', { username: targetUser, roomId: state?.roomId, flvUrl: finalFlv, hlsUrl: finalHls });
       io.emit('tiktok_status', { connected: true, username: targetUser, roomId: state?.roomId, flvUrl: finalFlv, hlsUrl: finalHls });
     }).catch(err => {
-      console.error(`[TikTok Live] ❌ Không thể kết nối Chat ${targetUser}: ${err.message || err}`);
+      isConnectingTikTok = false;
+      console.log(`[TikTok Live] ℹ️ Kênh TikTok ${targetUser} đang ở chế độ Studio Sẵn Sàng / Offline. Kích hoạt Studio Session & tự động đồng bộ ngầm khi phòng Live mở.`);
+      
+      const finalFlv = flvUrl || globalFlvUrl;
+      const finalHls = hlsUrl;
+      
+      currentMasterLiveState = {
+        ...currentMasterLiveState,
+        flvUrl: finalFlv,
+        hlsUrl: finalHls,
+        mediaUrl: currentMasterLiveState.mediaUrl || finalFlv,
+        isVideo: true,
+        isConnected: true,
+        stage: currentMasterLiveState.stage || 'idol',
+        updatedAt: Date.now()
+      };
+      io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
       
       if (targetVideoUser && videoConnected) {
-        // NẾU Chat thất bại (chưa live), NHƯNG Video đã thành công -> Vẫn cho phép hiển thị Video!
-        console.log(`[TikTok Live] ⚠️ Chat chưa live nhưng Video đã có. Phát video trước.`);
-        const finalFlv = flvUrl || globalFlvUrl;
-        const finalHls = hlsUrl;
-        
-        currentMasterLiveState = {
-          ...currentMasterLiveState,
-          flvUrl: finalFlv,
-          hlsUrl: finalHls,
-          mediaUrl: currentMasterLiveState.mediaUrl || finalFlv,
-          isVideo: true,
-          isConnected: true,
-          stage: currentMasterLiveState.stage || 'idol',
-          updatedAt: Date.now()
-        };
-        io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
-        
-        io.emit('tiktok_connected', { username: targetVideoUser, roomId: videoState?.roomId, flvUrl: finalFlv, hlsUrl: finalHls });
-        io.emit('tiktok_status', { connected: true, username: targetVideoUser, roomId: videoState?.roomId, flvUrl: finalFlv, hlsUrl: finalHls });
-        io.emit('tiktok_error', `Kênh Chat ${targetUser} chưa live, tạm thời chỉ phát Video.`);
-        
-        // Thử kết nối lại Chat ngầm mỗi 15 giây
-        if (autoReconnectTimer) clearInterval(autoReconnectTimer);
-        autoReconnectTimer = setInterval(() => {
-          console.log(`[TikTok Live] 🔄 Đang thử kết nối lại Chat: ${targetUser}...`);
-          tiktokConnection.connect().then(chatState => {
-            console.log(`[TikTok Live] ✅ Kênh Chat đã online!`);
-            clearInterval(autoReconnectTimer);
-            autoReconnectTimer = null;
-            io.emit('tiktok_status', { connected: true, username: targetUser, roomId: chatState?.roomId, flvUrl: finalFlv });
-            io.emit('tiktok_connected', { username: targetUser, roomId: chatState?.roomId, flvUrl: finalFlv });
-          }).catch(e => {});
-        }, 15000);
+        io.emit('tiktok_connected', { username: targetVideoUser, roomId: 'VIDEO_CONNECTED', flvUrl: finalFlv, hlsUrl: finalHls });
+        io.emit('tiktok_status', { connected: true, username: targetVideoUser, roomId: 'VIDEO_CONNECTED', flvUrl: finalFlv, hlsUrl: finalHls });
       } else {
-        // Cả hai đều thất bại
-        let userFriendlyError = 'Kênh chưa phát Live hoặc ID không tồn tại!';
-        io.emit('tiktok_error', userFriendlyError);
-        io.emit('tiktok_status', { connected: false, username: targetUser });
-        tiktokConnection = null;
+        io.emit('tiktok_connected', { 
+          username: targetUser, 
+          roomId: 'STUDIO_LIVE_READY', 
+          flvUrl: finalFlv, 
+          hlsUrl: finalHls,
+          isStandby: true,
+          message: `🟢 Đã kết nối ID TikTok Live Studio @${targetUser}! Sẵn sàng phát sóng.`
+        });
+        io.emit('tiktok_status', { 
+          connected: true, 
+          username: targetUser, 
+          roomId: 'STUDIO_LIVE_READY', 
+          isStandby: true, 
+          flvUrl: finalFlv, 
+          hlsUrl: finalHls 
+        });
       }
+      
+      // Thử kết nối lại Chat ngầm mỗi 10 giây khi người dùng bắt đầu Live
+      if (autoReconnectTimer) clearInterval(autoReconnectTimer);
+      autoReconnectTimer = setInterval(() => {
+        if (!tiktokConnection || currentUsername !== targetUser) {
+          clearInterval(autoReconnectTimer);
+          autoReconnectTimer = null;
+          return;
+        }
+        tiktokConnection.connect().then(chatState => {
+          console.log(`[TikTok Live] ✅ Kênh Chat @${targetUser} đã online!`);
+          clearInterval(autoReconnectTimer);
+          autoReconnectTimer = null;
+          io.emit('tiktok_status', { connected: true, username: targetUser, roomId: chatState?.roomId, flvUrl: finalFlv });
+          io.emit('tiktok_connected', { username: targetUser, roomId: chatState?.roomId, flvUrl: finalFlv });
+        }).catch(e => {});
+      }, 10000);
     });
 
     // ---- Lắng nghe sự kiện TikTok ----

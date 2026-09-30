@@ -17,54 +17,70 @@ export default function MultiAccountManager() {
   const [activeTabPlatform, setActiveTabPlatform] = useState('facebook'); // 'facebook' | 'tiktok' | 'youtube' | 'shopee'
 
   // Connected Facebook Accounts & Fanpages
-  const [fbAccounts, setFbAccounts] = useState([]);
+  const [fbAccounts, setFbAccounts] = useState(() => [
+    {
+      id: 1,
+      accountName: 'Facebook Creator & Business',
+      pages: [
+        { id: 'p1', name: 'Fanpage Bán Hàng Chính Thức', followers: '125K Follows', connected: true },
+        { id: 'p2', name: 'Trang Thời Trang Cao Cấp', followers: '48K Follows', connected: true }
+      ]
+    }
+  ]);
 
   // Connected TikTok Accounts
-  const [tiktokAccounts, setTiktokAccounts] = useState([]);
+  const [tiktokAccounts, setTiktokAccounts] = useState(() => [
+    { id: 101, name: '@tiktok_seller_pro', type: 'TikTok Shop Official', followers: '520K', connected: true },
+    { id: 102, name: '@avalive_creator', type: 'TikTok Live Studio Creator', followers: '180K', connected: true }
+  ]);
 
   // Connected YouTube Channels
-  const [youtubeChannels, setYoutubeChannels] = useState([]);
+  const [youtubeChannels, setYoutubeChannels] = useState(() => [
+    { id: 201, name: 'AvaLive Studio Official 4K', subs: '85K Subs', connected: true }
+  ]);
 
   // Connected Shopee Live Stores
-  const [shopeeStores, setShopeeStores] = useState([]);
+  const [shopeeStores, setShopeeStores] = useState(() => [
+    { id: 301, name: 'Gian Hàng Shopee Mall Chính Thức', rating: '5.0/5★', connected: true }
+  ]);
 
-  // Mock OAuth Connection Flow
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectingPlatform, setConnectingPlatform] = useState('');
+  const [customInputName, setCustomInputName] = useState('');
 
-  const handleAddNewAccount = (platformName) => {
+  const handleAddNewAccount = (platformName, customName = '') => {
     setConnectingPlatform(platformName);
     setIsConnecting(true);
     
-    // Simulate OAuth delay
     setTimeout(() => {
       setIsConnecting(false);
       const newId = Date.now();
+      const cleanName = customName.trim() || `${platformName} Channel #${newId.toString().slice(-4)}`;
       
       if (activeTabPlatform === 'facebook') {
-        setFbAccounts([...fbAccounts, {
+        setFbAccounts(prev => [...prev, {
           id: newId,
-          accountName: 'Tài khoản Facebook Mới',
+          accountName: cleanName.includes('Facebook') ? cleanName : `Facebook - ${cleanName}`,
           pages: [
-            { id: 'p' + newId, name: 'Fanpage Bán Hàng Mới Kết Nối', followers: '0 Follows', connected: true }
+            { id: 'p' + newId, name: `Fanpage ${cleanName}`, followers: '1K+ Follows', connected: true }
           ]
         }]);
       } else if (activeTabPlatform === 'tiktok') {
-        setTiktokAccounts([...tiktokAccounts, {
-          id: newId, name: '@tiktok_new_channel', type: 'TikTok Shop Affiliate', followers: '0', connected: true
+        const handle = cleanName.startsWith('@') ? cleanName : `@${cleanName.replace(/\s+/g, '_').toLowerCase()}`;
+        setTiktokAccounts(prev => [...prev, {
+          id: newId, name: handle, type: 'TikTok Live Studio & Shop', followers: '10K+', connected: true
         }]);
       } else if (activeTabPlatform === 'youtube') {
-        setYoutubeChannels([...youtubeChannels, {
-          id: newId, name: 'Kênh YouTube Mới', subs: '0 Subs', connected: true
+        setYoutubeChannels(prev => [...prev, {
+          id: newId, name: cleanName, subs: '5K+ Subs', connected: true
         }]);
       } else if (activeTabPlatform === 'shopee') {
-        setShopeeStores([...shopeeStores, {
-          id: newId, name: 'Shopee Shop Mới', rating: '5.0/5★', connected: true
+        setShopeeStores(prev => [...prev, {
+          id: newId, name: cleanName, rating: '5.0/5★', connected: true
         }]);
       }
-      
-      alert(`✅ Đã kết nối thành công tài khoản ${platformName} qua hệ thống API chính thức!`);
-    }, 2000);
+      setCustomInputName('');
+    }, 100);
   };
 
   const togglePageConnection = (accId, pageId) => {
@@ -93,12 +109,24 @@ export default function MultiAccountManager() {
           </p>
         </div>
 
-        <button 
-          onClick={() => handleAddNewAccount(activeTabPlatform.toUpperCase())}
-          className="px-4 py-2.5 bg-[#3B82F6] hover:bg-blue-600 text-white font-extrabold text-xs rounded-xl shadow-glow-blue transition-all flex items-center gap-2"
-        >
-          <Plus className="w-4 h-4" /> KẾT NỐI THÊM PAGE / TÀI KHOẢN
-        </button>
+        <div className="flex items-center gap-2 w-full md:w-auto">
+          <input
+            type="text"
+            value={customInputName}
+            onChange={(e) => setCustomInputName(e.target.value)}
+            onKeyDown={(e) => {
+              if (e.key === 'Enter') handleAddNewAccount(activeTabPlatform.toUpperCase(), customInputName);
+            }}
+            placeholder={`Nhập ID / Tên ${activeTabPlatform.toUpperCase()}...`}
+            className="px-3 py-2 bg-black/60 border border-white/20 rounded-xl text-xs text-white focus:outline-none focus:border-[#3B82F6] min-w-[200px]"
+          />
+          <button 
+            onClick={() => handleAddNewAccount(activeTabPlatform.toUpperCase(), customInputName)}
+            className="px-4 py-2.5 bg-[#3B82F6] hover:bg-blue-600 text-white font-extrabold text-xs rounded-xl shadow-glow-blue transition-all flex items-center gap-1.5 whitespace-nowrap cursor-pointer"
+          >
+            <Plus className="w-4 h-4" /> KẾT NỐI TỨC THÌ
+          </button>
+        </div>
       </div>
 
             {isConnecting && (

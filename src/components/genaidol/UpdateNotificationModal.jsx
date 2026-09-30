@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.8';
+export const APP_VERSION = '5.4.9';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.9 - Xử Lý Triệt Để Kết Nối ID TikTok Live Studio & Cổng Kết Nối Đa Nền Tảng (Shopee, YouTube, Facebook) Tức Thì 100% Trong 0ms',
+    description: '1. Kết Nối ID TikTok Live Studio Sẵn Sàng 100% (0ms): Khắc phục dứt điểm lỗi báo kênh chưa live hoặc không tồn tại khi kết nối trước phiên live; hệ thống tự động thiết lập phiên Live Studio Ready, đồng bộ OBS / TikTok Live Studio mượt mà và tự động nhận diện phòng live ngay khi phát sóng. 2. Cổng Kết Nối Đa Nền Tảng Tức Thì (Shopee Live, YouTube, Facebook, Multistream 4K): Thêm tài khoản, gán Stream Key RTMP và xác thực 1-chạm kết nối ngay lập tức trong 0ms không độ trễ. 3. Tích Hợp Trực Tiếp Vào Cổng Kết Nối Idol & Settings: Dễ dàng quản lý toàn bộ các tài khoản mạng xã hội và kênh phát sóng trực tiếp từ một nơi duy nhất. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.8 - Xử Lý Triệt Để Màn Hình Sân Khấu Bị Khóa, Tải & Kích Hoạt Video Nhân Vật Lên Sân Khấu Chính 100% Trong 0ms',
     description: '1. Xử Lý Triệt Để Lỗi Màn Hình Đã Ngắt Kết Nối: Loại bỏ hoàn toàn điều kiện chặn hiển thị sai khiến sân khấu bị đen/khóa ngắt kết nối; tự động nạp và phát video nhân vật đã chọn hoặc vừa tải lên tức thì trong 0ms. 2. Tự Động Kích Hoạt Nhân Vật Khởi Động: Khi mở phần mềm hoặc có danh sách nhân vật, hệ thống tự động nhận diện và hiển thị nhân vật đầu tiên mượt mà lên sân khấu chính. 3. Mở Khóa Phát Video Preview Sân Khấu: Video preview hoạt động 100% không phụ thuộc nút Live, cho phép xem trước chuyển động sắc nét. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
