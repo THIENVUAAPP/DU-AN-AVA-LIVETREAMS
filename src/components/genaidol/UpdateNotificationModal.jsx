@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.2';
+export const APP_VERSION = '5.4.3';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.3 - Khắc Phục Triệt Để Chế Độ Xem Camera Gốc Full Khung Hình, Nâng Cấp Tách Nền AI Giữ Bàn Ghế & SP, Sửa Bộ Nạp File Video Máy Tính',
+    description: '1. Khắc Phục Triệt Để Chế Độ Xem Camera Gốc: Xử lý dứt điểm hiện tượng xem camera gốc bị co nhỏ góc 1/4, hiển thị 100% toàn màn hình sắc nét và mượt mà 60 FPS. 2. Tách Nền AI Real-Time Kết Hợp Giữ Vật Thể Linh Hoạt: Bám sát cử động nhân vật không để lại vệt tĩnh, tích hợp tùy chọn giữ nguyên bàn live, ghế ngồi, máy tính và sản phẩm theo ý muốn. 3. Sửa Lỗi Bộ Nạp Clip & Video Nhân Vật (UniversalMediaPicker): Khôi phục cơ chế đọc và nạp file video mượt mà trên cả Windows và macOS. 4. Đồng Bộ Ngắt Sân Khấu Chính Chuẩn Xác: Tắt đồng bộ Live Idol Avatar ngay lập tức dọn sạch sân khấu chính và không tự ý bật lại.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.2 - Xử Lý Triệt Để Tách Nền AI Đa Kênh Màu, Khôi Phục Toàn Diện Camera Gốc & Khóa Cọ Vẽ An Toàn 100%',
     description: '1. Xử Lý Triệt Để Xóa Phông AI (Multi-Channel Max Sampling): Quét toàn bộ 4 kênh màu RGBA của mặt nạ AI, giải quyết dứt điểm hiện tượng mặt nạ bị đảo ngược hay đục lỗ người khi streamer di chuyển. 2. Khôi Phục Camera Gốc Triệt Để: Nút "↺ Camera Gốc" ghi đè trực tiếp mọi thông số mặc định, xóa sạch toàn bộ nét cọ cũ, trả lại luồng camera nguyên bản 100% không tì vết. 3. Khóa Cọ Vẽ An Toàn: Tự động khóa nét cọ khi không ở tab cọ vẽ, không bao giờ vô tình để lại vệt cọ làm thủng hình ảnh khi kéo thả camera.'

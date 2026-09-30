@@ -2,6 +2,7 @@ import React, { useState, useRef, useEffect } from 'react';
 import { Video, FolderOpen, Sparkles, X, ChevronDown, Play, Eye, CheckCircle2, Film } from 'lucide-react';
 import { uploadMediaToServer, deleteServerMedia } from '../../utils/mediaUploadService';
 import { fastStreamUpload } from '../../utils/fastStreamService';
+import { registerFileInRAM } from '../../utils/mediaDeduplication';
 const toast = {
   success: (message) => {
     if (typeof window !== 'undefined') {

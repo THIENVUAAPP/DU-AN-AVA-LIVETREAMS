@@ -705,7 +705,7 @@ export default function CameraStudioWindow({
         // 📷 NẾU ĐANG Ở CHẾ ĐỘ XEM CAMERA GỐC HOÀN TOÀN (TRƯỚC XÓA)
         if (compareMode === 'original') {
           ctx.clearRect(0, 0, vw, vh);
-          ctx.drawImage(tmpCanvas, 0, 0);
+          ctx.drawImage(sourceElement, 0, 0, vw, vh);
           animFrameIdRef.current = requestAnimationFrame(renderFrame);
           return;
         }
@@ -751,12 +751,22 @@ export default function CameraStudioWindow({
             const threshold = (1 - sensitivity) * 165;
             const featherRange = feather * 4.5;
 
+            // Cấu hình vùng giữ lại theo ý người dùng (Keep Objects)
+            const keepDesk = bgRemovalConfig.keepObjects?.desk || mode === 'desk_product';
+            const keepProduct = bgRemovalConfig.protectProduct || bgRemovalConfig.keepObjects?.product;
+            const keepComputer = bgRemovalConfig.keepObjects?.computer;
+            const keepChair = bgRemovalConfig.keepObjects?.chair;
+            const keepShelf = bgRemovalConfig.keepObjects?.shelf;
+
             // Xóa phông bám theo nhân vật theo thời gian thực (Dynamic real-time tracking)
             for (let y = 0; y < vh; y++) {
               const gy = y * scaleY;
               const gyi = Math.floor(gy);
               const fy = gy - gyi;
               const gyi1 = Math.min(mh - 1, gyi + 1);
+
+              const isDeskZone = keepDesk && y > vh * 0.72;
+              const isShelfZone = keepShelf && y < vh * 0.35;
 
               for (let x = 0; x < vw; x++) {
                 const idx = (y * vw + x) * 4;
@@ -778,7 +788,20 @@ export default function CameraStudioWindow({
                 const idx11 = (gyi1 * mw + gxi1) * 4;
                 const v11 = Math.max(mData[idx11], mData[idx11 + 1], mData[idx11 + 2], mData[idx11 + 3]);
 
-                const maskVal = (v00 * (1 - fx) + v10 * fx) * (1 - fy) + (v01 * (1 - fx) + v11 * fx) * fy;
+                let maskVal = (v00 * (1 - fx) + v10 * fx) * (1 - fy) + (v01 * (1 - fx) + v11 * fx) * fy;
+
+                // Giữ lại bàn ghế, sản phẩm, máy tính khi được tích chọn
+                if (isDeskZone) {
+                  maskVal = Math.max(maskVal, 255);
+                } else if (keepProduct && (x > vw * 0.22 && x < vw * 0.78 && y > vh * 0.40 && y < vh * 0.95)) {
+                  if (maskVal > 15) maskVal = Math.max(maskVal, 255);
+                } else if (keepComputer && (y > vh * 0.55 && ((x > vw * 0.05 && x < vw * 0.42) || (x > vw * 0.58 && x < vw * 0.95)))) {
+                  if (maskVal > 20) maskVal = Math.max(maskVal, 255);
+                } else if (keepChair && (y > vh * 0.30 && y < vh * 0.85 && (x > vw * 0.15 && x < vw * 0.85))) {
+                  if (maskVal > 30) maskVal = Math.min(255, maskVal * 1.5);
+                } else if (isShelfZone && (x < vw * 0.30 || x > vw * 0.70)) {
+                  if (maskVal > 25) maskVal = Math.max(maskVal, 255);
+                }
 
                 if (maskVal < threshold) {
                   data[idx + 3] = 0; // Nền trong suốt 100%
@@ -881,7 +904,7 @@ export default function CameraStudioWindow({
           ctx.beginPath();
           ctx.rect(0, 0, splitX, vh);
           ctx.clip();
-          ctx.drawImage(tmpCanvas, 0, 0);
+          ctx.drawImage(sourceElement, 0, 0, vw, vh);
           ctx.restore();
 
           // Vẽ đường phân chia và nhãn
@@ -1090,7 +1113,7 @@ export default function CameraStudioWindow({
             onMouseMove={handleCanvasMouseMove}
             onMouseUp={handleCanvasMouseUp}
             onMouseLeave={handleCanvasMouseUp}
-            className="w-full h-full object-fill relative z-10"
+            className="w-full h-full object-cover block relative z-10"
           />
 
           {/* Nút Điều Khiển Tinh Tế Trực Tiếp Trên Khung Camera (Hiện khi hover chuột) */}
