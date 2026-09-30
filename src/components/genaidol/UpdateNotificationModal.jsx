@@ -2,21 +2,21 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.2.2';
+export const APP_VERSION = '5.2.3';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '⚡ Bản Cập Nhật v5.2.3 - Tự Động Hóa Ghim Sản Phẩm 24/7 Thay Thế Hoàn Toàn Thao Tác Thủ Công Trên TikTok Shop & TikTok Live Studio',
+    description: '1. Chế độ Tự Động Ghim Sản Phẩm (Auto Pin 24/7) chạy ngầm xuyên suốt: Khi Streamer liên kết sản phẩm từ shop.tiktok.com, hệ thống tự động ghim sản phẩm vào đúng vị trí ghim của TikTok Live Studio mà streamer không cần phải thao tác bấm thủ công. 2. Tự động luân phiên và thông minh nhận diện ghim sản phẩm khi AI nói, video clip sản phẩm phát hoặc khán giả hỏi trong bình luận.'
+  },
+  {
     title: '🛒 Bản Cập Nhật v5.2.2 - Tích Hợp Bảng Chọn Biến Thể & Giỏ Hàng Mua Nhanh Trực Tiếp Trên Livestream',
-    description: '1. Khách hàng bấm vào bất kỳ sản phẩm nào được ghim trên phiên live lập tức mở ngay Giỏ Hàng & Bảng Chọn Biến Thể Sản Phẩm (Màu sắc, Kích cỡ/Size, Quy cách/Combo, Tăng giảm số lượng) với giá cập nhật theo thời gian thực. 2. Bấm "Mua Trên TikTok" hoặc "Mua Trên Shopee" sẽ chuyển thẳng người mua đến đúng trang thanh toán của tài khoản cá nhân với biến thể đã chọn. 3. Tự động áp dụng Voucher Live giảm 30K - 50K và Freeship Extra.'
+    description: '1. Khách hàng bấm vào bất kỳ sản phẩm nào được ghim trên phiên live lập tức mở ngay Giỏ Hàng & Bảng Chọn Biến Thể Sản Phẩm (Màu sắc, Kích cỡ/Size, Quy cách/Combo, Tăng giảm số lượng) với giá cập nhật theo thời gian thực. 2. Bấm "Mua Trên TikTok" hoặc "Mua Trên Shopee" sẽ chuyển thẳng người mua đến đúng trang thanh toán của tài khoản cá nhân với biến thể đã chọn.'
   },
   {
     title: '🛍️ Bản Cập Nhật v5.2.1 - Khắc Phục Triệt Để Lỗi 404 & Chuyển Hướng Trực Tiếp Đến Đúng Trang Mua Hàng TikTok Shop / Shopee Của Seller',
-    description: '1. Khắc phục triệt để lỗi "Không thể tìm thấy tài khoản này" (404) khi bấm vào sản phẩm ghim trên livestream: Hệ thống tự động chuyển hướng chuẩn xác 100% đến trang tìm kiếm và đặt mua trực tiếp của sản phẩm trên TikTok Shop / Shopee. 2. Đồng bộ toàn bộ sản phẩm do streamer liên kết từ shop.tiktok.com để ghim chuẩn xác trên live.'
-  },
-  {
-    title: '🛍️ Bản Cập Nhật v5.2.0 - Tối Ưu Toàn Diện Liên Kết Tiếp Thị & Gian Hàng Seller Đa Nền Tảng (TikTok Live & Shopee Live)',
-    description: '1. Khách hàng bấm vào bất kỳ sản phẩm nào trên phiên live lập tức chuyển thẳng vào trang chi tiết gian hàng của chính Seller đó để xem thông số và thanh toán tức thì bằng tài khoản người mua. 2. Cho phép Streamer chủ động tùy biến hoặc dán link tiếp thị liên kết (Affiliate Link) / link gian hàng riêng cho từng sản phẩm.'
+    description: '1. Khắc phục triệt để lỗi "Không thể tìm thấy tài khoản này" (404) khi bấm vào sản phẩm ghim trên livestream: Hệ thống tự động chuyển hướng chuẩn xác 100% đến trang tìm kiếm và đặt mua trực tiếp của sản phẩm trên TikTok Shop / Shopee.'
   }
 ];
 
