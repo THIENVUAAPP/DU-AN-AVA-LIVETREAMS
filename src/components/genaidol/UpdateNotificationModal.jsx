@@ -2,13 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.2.6';
+export const APP_VERSION = '5.2.7';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '⚡ Bản Cập Nhật v5.2.7 - Loại Bỏ Triệt Để Ghim Sản Phẩm Ảo Khỏi Phần Mềm & Đồng Bộ 100% Theo shop.tiktok.com Khi Phát Live',
+    description: '1. Loại bỏ hoàn toàn hiển thị card/popup ghim sản phẩm ảo/giả lập bên trong giao diện ứng dụng. 2. Toàn bộ cơ chế Auto Ghim chỉ tập trung gửi lệnh điều khiển chuẩn xác đến shop.tiktok.com và phiên livestream thực tế trên TikTok Live Studio khi Streamer phát live.'
+  },
+  {
     title: '⚡ Bản Cập Nhật v5.2.6 - Khôi Phục Toàn Diện Bảng Điều Khiển Vượt Captcha AI 24/7 & Tích Hợp Hệ Thống AUTO GHIM PRO',
-    description: '1. Khôi phục hoàn chỉnh Dashboard Vượt Captcha AI 24/7 bao gồm: Radar bẻ khóa AI đa nền tảng, Anti-detect Proxy, Cloudflare Turnstile bypass, Logs Terminal realtime và Lịch sử giải mã đa luồng. 2. Tích hợp trực tiếp tiện ích AUTO GHIM PRO chuẩn shop.tiktok.com với 3 chế độ Ghim Random, Ghim Chỉ Định, Ghim 1 Mã Cố Định và chu kỳ luân phiên tự động.'
+    description: '1. Khôi phục hoàn chỉnh Dashboard Vượt Captcha AI 24/7 bao gồm: Radar bẻ khóa AI đa nền tảng, Anti-detect Proxy, Cloudflare Turnstile bypass, Logs Terminal realtime và Lịch sử giải mã đa luồng. 2. Tích hợp trực tiếp tiện ích AUTO GHIM PRO chuẩn shop.tiktok.com.'
   },
   {
     title: '⚡ Bản Cập Nhật v5.2.5 - Nâng Cấp Tiện Ích AUTO GHIM PRO Chuẩn shop.tiktok.com & Tối Ưu Hóa Giao Diện Tự Động Ghim',
