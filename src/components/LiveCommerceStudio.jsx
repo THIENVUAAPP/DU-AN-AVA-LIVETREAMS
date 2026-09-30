@@ -174,6 +174,8 @@ export default function LiveCommerceStudio({ isLive }) {
   const [prodFormSync, setProdFormSync] = useState('TikTok, YouTube & Facebook');
   const [prodFormImage, setProdFormImage] = useState('https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80');
   const [prodFormBadge, setProdFormBadge] = useState('HOT DEAL');
+  const [prodFormSellerName, setProdFormSellerName] = useState('');
+  const [prodFormBuyUrl, setProdFormBuyUrl] = useState('');
 
   // Add Session Modal State
   const [addSessionModalOpen, setAddSessionModalOpen] = useState(false);
@@ -252,6 +254,8 @@ export default function LiveCommerceStudio({ isLive }) {
     setProdFormOldPrice('');
     setProdFormStock('50');
     setProdFormBadge('HOT DEAL');
+    setProdFormSellerName('HAVATA Official Store');
+    setProdFormBuyUrl('https://www.tiktok.com/@havata.official');
     setProdFormImage('https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80');
     setProductModalOpen(true);
   };
@@ -267,6 +271,8 @@ export default function LiveCommerceStudio({ isLive }) {
     setProdFormSync(prod.sync);
     setProdFormImage(prod.image);
     setProdFormBadge(prod.badge || 'HOT DEAL');
+    setProdFormSellerName(prod.sellerName || '');
+    setProdFormBuyUrl(prod.buyUrl || prod.sellerStoreUrl || prod.productUrl || '');
     setProductModalOpen(true);
   };
 
@@ -277,6 +283,8 @@ export default function LiveCommerceStudio({ isLive }) {
       alert("Vui lòng nhập tên sản phẩm và giá bán!");
       return;
     }
+
+    const sellerLink = prodFormBuyUrl.trim() || (prodFormSellerName ? `https://www.tiktok.com/@${prodFormSellerName.replace(/[^a-zA-Z0-9._]/g, '').toLowerCase()}` : 'https://www.tiktok.com/@havata.official');
 
     if (editingProductId) {
       // EDIT EXISTING PRODUCT
@@ -290,7 +298,12 @@ export default function LiveCommerceStudio({ isLive }) {
             stock: parseInt(prodFormStock) || p.stock,
             sync: prodFormSync,
             image: prodFormImage,
-            badge: prodFormBadge
+            badge: prodFormBadge,
+            sellerName: prodFormSellerName.trim() || p.sellerName || 'Gian Hàng TikTok Shop',
+            sellerStoreUrl: sellerLink,
+            buyUrl: sellerLink,
+            productUrl: sellerLink,
+            storeUrl: sellerLink
           };
         }
         return p;
@@ -308,7 +321,12 @@ export default function LiveCommerceStudio({ isLive }) {
         stock: parseInt(prodFormStock) || 50,
         sync: prodFormSync,
         image: prodFormImage,
-        badge: prodFormBadge
+        badge: prodFormBadge,
+        sellerName: prodFormSellerName.trim() || 'Gian Hàng TikTok Shop',
+        sellerStoreUrl: sellerLink,
+        buyUrl: sellerLink,
+        productUrl: sellerLink,
+        storeUrl: sellerLink
       };
 
       const updatedProducts = [newProd, ...activeSession.products];
@@ -995,6 +1013,29 @@ export default function LiveCommerceStudio({ isLive }) {
                     <option value="FLASH SALE">FLASH SALE</option>
                     <option value="MUA 1 TẶNG 1">MUA 1 TẶNG 1</option>
                   </select>
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-2">
+                <div className="space-y-1">
+                  <label className="font-bold text-gray-300 block">TÊN ĐƠN VỊ BÁN (SELLER):</label>
+                  <input 
+                    type="text" 
+                    value={prodFormSellerName}
+                    onChange={(e) => setProdFormSellerName(e.target.value)}
+                    className="w-full bg-[#121216] border border-white/10 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-[#EF4444]"
+                    placeholder="Ví dụ: HAVATA Official Store"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-gray-300 block">LINK GIAN HÀNG / TIẾP THỊ SELLER:</label>
+                  <input 
+                    type="text" 
+                    value={prodFormBuyUrl}
+                    onChange={(e) => setProdFormBuyUrl(e.target.value)}
+                    className="w-full bg-[#121216] border border-white/10 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-[#EF4444] font-mono"
+                    placeholder="https://www.tiktok.com/@shop_name hoặc link tiếp thị"
+                  />
                 </div>
               </div>
 

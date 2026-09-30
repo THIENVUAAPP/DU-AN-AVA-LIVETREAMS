@@ -53,7 +53,10 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
     oldPrice: '',
     keywords: '',
     image: '',
-    badge: 'HOT DEAL 🔥'
+    badge: 'HOT DEAL 🔥',
+    sellerName: '',
+    sellerStoreUrl: '',
+    buyUrl: ''
   });
 
   const handleExit = () => {
@@ -318,6 +321,8 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
       return;
     }
 
+    const sellerShopLink = newProd.sellerStoreUrl.trim() || newProd.buyUrl.trim() || (newProd.sellerName ? `https://www.tiktok.com/@${newProd.sellerName.replace(/[^a-zA-Z0-9._]/g, '').toLowerCase()}` : 'https://www.tiktok.com/@havata.official');
+
     const created = {
       id: Date.now(),
       name: newProd.name.trim(),
@@ -328,15 +333,19 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
       image: newProd.image.trim() || 'https://images.unsplash.com/photo-1523275335684-37898b6baf30?auto=format&fit=crop&w=400&q=80',
       badge: newProd.badge || 'HOT DEAL 🔥',
       stock: 99,
-      storeUrl: tiktokShopUrl || 'https://shop.tiktok.com'
+      sellerName: newProd.sellerName.trim() || 'Gian Hàng TikTok Shop',
+      sellerStoreUrl: sellerShopLink,
+      buyUrl: sellerShopLink,
+      productUrl: sellerShopLink,
+      storeUrl: sellerShopLink
     };
 
     const updated = [created, ...productsList];
     setProductsList(updated);
     localStorage.setItem('avalive_tiktok_shop_products', JSON.stringify(updated));
     setShowAddModal(false);
-    setNewProd({ name: '', price: '', oldPrice: '', keywords: '', image: '', badge: 'HOT DEAL 🔥' });
-    toast.success('🎉 Đã thêm sản phẩm mới vào danh mục TikTok Shop!');
+    setNewProd({ name: '', price: '', oldPrice: '', keywords: '', image: '', badge: 'HOT DEAL 🔥', sellerName: '', sellerStoreUrl: '', buyUrl: '' });
+    toast.success('🎉 Đã thêm sản phẩm mới của Seller vào danh mục TikTok Shop!');
   };
 
   // Handle Delete Product
@@ -899,6 +908,124 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
 
         </div>
       </div>
+
+      {/* MODAL THÊM SẢN PHẨM MỚI LIÊN KẾT SELLER */}
+      {showAddModal && (
+        <div className="fixed inset-0 z-50 bg-black/80 backdrop-blur-sm flex items-center justify-center p-4">
+          <div className="bg-[#121218] border border-pink-500/40 rounded-3xl p-6 max-w-lg w-full text-left space-y-4 shadow-2xl relative">
+            <div className="flex items-center justify-between border-b border-white/10 pb-3">
+              <h3 className="text-sm font-black text-white flex items-center gap-2 uppercase tracking-wider">
+                <Plus className="w-4 h-4 text-pink-400" /> THÊM SẢN PHẨM TIẾP THỊ LIÊN KẾT TIKTOK SHOP
+              </h3>
+              <button 
+                type="button" 
+                onClick={() => setShowAddModal(false)}
+                className="text-gray-400 hover:text-white font-bold p-1 cursor-pointer"
+              >
+                ✕
+              </button>
+            </div>
+
+            <form onSubmit={handleAddNewProduct} className="space-y-3 text-xs">
+              <div className="space-y-1">
+                <label className="font-bold text-gray-200 block">TÊN SẢN PHẨM (*):</label>
+                <input 
+                  type="text" 
+                  value={newProd.name}
+                  onChange={(e) => setNewProd(prev => ({ ...prev, name: e.target.value }))}
+                  placeholder="Nhập tên sản phẩm thật trên TikTok Shop..."
+                  className="w-full bg-black/60 border border-white/20 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-pink-500"
+                  required
+                />
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-gray-200 block">TÊN ĐƠN VỊ BÁN HÀNG (SELLER):</label>
+                  <input 
+                    type="text" 
+                    value={newProd.sellerName}
+                    onChange={(e) => setNewProd(prev => ({ ...prev, sellerName: e.target.value }))}
+                    placeholder="Ví dụ: HAVATA Official Store"
+                    className="w-full bg-black/60 border border-white/20 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-pink-500"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-gray-200 block">LINK GIAN HÀNG / LINK TIẾP THỊ SELLER:</label>
+                  <input 
+                    type="text" 
+                    value={newProd.sellerStoreUrl}
+                    onChange={(e) => setNewProd(prev => ({ ...prev, sellerStoreUrl: e.target.value, buyUrl: e.target.value }))}
+                    placeholder="https://www.tiktok.com/@shop_name hoặc link tiếp thị"
+                    className="w-full bg-black/60 border border-white/20 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-pink-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="grid grid-cols-2 gap-3">
+                <div className="space-y-1">
+                  <label className="font-bold text-gray-200 block">GIÁ BÁN (DEAL LIVE):</label>
+                  <input 
+                    type="text" 
+                    value={newProd.price}
+                    onChange={(e) => setNewProd(prev => ({ ...prev, price: e.target.value }))}
+                    placeholder="49.999 ₫"
+                    className="w-full bg-black/60 border border-white/20 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-pink-500 font-mono"
+                  />
+                </div>
+                <div className="space-y-1">
+                  <label className="font-bold text-gray-200 block">GIÁ GỐC NIÊM YẾT:</label>
+                  <input 
+                    type="text" 
+                    value={newProd.oldPrice}
+                    onChange={(e) => setNewProd(prev => ({ ...prev, oldPrice: e.target.value }))}
+                    placeholder="89.000 ₫"
+                    className="w-full bg-black/60 border border-white/20 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-pink-500 font-mono"
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-gray-200 block">TỪ KHÓA TỰ ĐỘNG GHIM (Phân cách bằng dấu chấm phẩy ;):</label>
+                <input 
+                  type="text" 
+                  value={newProd.keywords}
+                  onChange={(e) => setNewProd(prev => ({ ...prev, keywords: e.target.value }))}
+                  placeholder="mã 1;áo tập;bra;chốt 1..."
+                  className="w-full bg-black/60 border border-white/20 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-pink-500"
+                />
+              </div>
+
+              <div className="space-y-1">
+                <label className="font-bold text-gray-200 block">LINK HÌNH ẢNH SẢN PHẨM:</label>
+                <input 
+                  type="text" 
+                  value={newProd.image}
+                  onChange={(e) => setNewProd(prev => ({ ...prev, image: e.target.value }))}
+                  placeholder="https://images.unsplash.com/... hoặc link ảnh sản phẩm"
+                  className="w-full bg-black/60 border border-white/20 rounded-xl p-2.5 text-xs text-white focus:outline-none focus:border-pink-500"
+                />
+              </div>
+
+              <div className="flex items-center gap-3 pt-3">
+                <button 
+                  type="submit"
+                  className="flex-1 py-3 bg-gradient-to-r from-pink-600 via-rose-600 to-purple-600 hover:from-pink-500 hover:to-purple-500 text-white font-black text-xs rounded-xl shadow-lg transition-all cursor-pointer"
+                >
+                  XÁC NHẬN THÊM SẢN PHẨM
+                </button>
+                <button 
+                  type="button"
+                  onClick={() => setShowAddModal(false)}
+                  className="px-5 py-3 bg-white/10 hover:bg-white/20 text-gray-300 hover:text-white rounded-xl font-bold text-xs cursor-pointer"
+                >
+                  Hủy
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

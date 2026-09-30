@@ -129,13 +129,37 @@ export const REAL_TIKTOK_SHOP_CATALOG = [
 ];
 
 /**
- * Phân giải chính xác 100% đường link trang bán hàng của đơn vị bán hàng (Seller) trên TikTok
- * Tuyệt đối không trỏ về trang quản trị shop.tiktok.com hay link lỗi khu vực
+ * Phân giải chính xác 100% đường link trang bán hàng của đơn vị bán hàng (Seller) trên TikTok / Shopee
+ * Đảm bảo người mua hàng bấm vào là mở trực tiếp trang gian hàng/sản phẩm của seller để xem thông tin, chọn phân loại (size/màu) và mua hàng.
  */
-export function resolveSellerProductBuyUrl(prod) {
+export function resolveSellerProductBuyUrl(prod, platform = 'tiktok') {
   if (!prod) return 'https://www.tiktok.com/@havata.official';
 
-  // 1. Phân giải theo từng mã sản phẩm / từ khóa seller chuẩn
+  // 1. Kiểm tra các URL tiếp thị liên kết / URL Seller người dùng tự cấu hình
+  const isCleanSellerUrl = (u) => {
+    if (!u || typeof u !== 'string') return false;
+    const s = u.toLowerCase().trim();
+    return (s.startsWith('http://') || s.startsWith('https://')) &&
+           !s.includes('/streamer/live/product/dashboard') &&
+           !s.includes('seller-vn.tiktok.com/homepage') &&
+           !s.includes('/vn/pdp/172948291038198');
+  };
+
+  if (isCleanSellerUrl(prod.affiliateUrl)) return prod.affiliateUrl.trim();
+  if (isCleanSellerUrl(prod.buyUrl)) return prod.buyUrl.trim();
+  if (isCleanSellerUrl(prod.productUrl)) return prod.productUrl.trim();
+  if (isCleanSellerUrl(prod.sellerStoreUrl)) return prod.sellerStoreUrl.trim();
+  if (isCleanSellerUrl(prod.storeUrl)) return prod.storeUrl.trim();
+
+  // 2. Nếu có sellerHandle hợp lệ
+  if (prod.sellerHandle && typeof prod.sellerHandle === 'string') {
+    const handle = prod.sellerHandle.trim().replace(/^@/, '');
+    if (handle) {
+      return `https://www.tiktok.com/@${handle}`;
+    }
+  }
+
+  // 3. Phân giải theo từng mã sản phẩm / từ khóa seller thật trong danh mục TikTok Shop
   const idOrCode = String(prod.id || prod.code || prod.sku || '').toLowerCase();
   const title = String(prod.name || prod.productName || prod.title || '').toLowerCase();
 
@@ -161,29 +185,6 @@ export function resolveSellerProductBuyUrl(prod) {
     return 'https://www.tiktok.com/@fitabcore.official';
   }
 
-  // 2. Kiểm tra nếu sellerHandle hợp lệ
-  if (prod.sellerHandle && typeof prod.sellerHandle === 'string') {
-    const handle = prod.sellerHandle.trim();
-    if (handle) {
-      return `https://www.tiktok.com/${handle.startsWith('@') ? handle : '@' + handle}`;
-    }
-  }
-
-  // 3. Kiểm tra các URL người dùng tự cấu hình nếu là link seller thật (không chứa shop.tiktok.com hay view/product ảo)
-  const isCleanSellerUrl = (u) => {
-    if (!u || typeof u !== 'string') return false;
-    const s = u.toLowerCase();
-    return (s.startsWith('http://') || s.startsWith('https://')) &&
-           !s.includes('shop.tiktok.com') &&
-           !s.includes('/view/product/') &&
-           !s.includes('seller-vn.tiktok.com/homepage');
-  };
-
-  if (isCleanSellerUrl(prod.sellerStoreUrl)) return prod.sellerStoreUrl.trim();
-  if (isCleanSellerUrl(prod.buyUrl)) return prod.buyUrl.trim();
-  if (isCleanSellerUrl(prod.productUrl)) return prod.productUrl.trim();
-  if (isCleanSellerUrl(prod.storeUrl)) return prod.storeUrl.trim();
-
   // 4. Phân giải theo sellerName nếu có
   if (prod.sellerName && typeof prod.sellerName === 'string') {
     const sName = prod.sellerName.toLowerCase();
@@ -194,9 +195,26 @@ export function resolveSellerProductBuyUrl(prod) {
     if (sName.includes('hydrasport')) return 'https://www.tiktok.com/@hydrasport.vn';
     if (sName.includes('zenyoga')) return 'https://www.tiktok.com/@zenyoga.master';
     if (sName.includes('fitabcore')) return 'https://www.tiktok.com/@fitabcore.official';
+    
+    // Nếu có tên shop tự nhập
+    const cleanHandle = prod.sellerName.replace(/[^a-zA-Z0-9._]/g, '').toLowerCase();
+    if (cleanHandle && cleanHandle.length > 2) {
+      return `https://www.tiktok.com/@${cleanHandle}`;
+    }
   }
 
-  return 'https://www.tiktok.com/@havata.official';
+  // 5. Nếu livestream trên Shopee
+  const isShopee = String(platform || '').toLowerCase().includes('shopee') || 
+                   String(prod.sync || '').toLowerCase().includes('shopee') ||
+                   String(prod.platform || '').toLowerCase().includes('shopee');
+  if (isShopee) {
+    const q = encodeURIComponent(prod.name || prod.productName || 'san pham hot deal');
+    return `https://shopee.vn/search?keyword=${q}`;
+  }
+
+  // 6. Fallback tìm kiếm trực tiếp sản phẩm trên TikTok
+  const qName = encodeURIComponent(prod.name || prod.productName || 'havata official');
+  return `https://www.tiktok.com/search?q=${qName}`;
 }
 
 /**
