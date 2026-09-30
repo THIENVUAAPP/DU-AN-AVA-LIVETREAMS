@@ -2,13 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.2.5';
+export const APP_VERSION = '5.2.6';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '⚡ Bản Cập Nhật v5.2.6 - Khôi Phục Toàn Diện Bảng Điều Khiển Vượt Captcha AI 24/7 & Tích Hợp Hệ Thống AUTO GHIM PRO',
+    description: '1. Khôi phục hoàn chỉnh Dashboard Vượt Captcha AI 24/7 bao gồm: Radar bẻ khóa AI đa nền tảng, Anti-detect Proxy, Cloudflare Turnstile bypass, Logs Terminal realtime và Lịch sử giải mã đa luồng. 2. Tích hợp trực tiếp tiện ích AUTO GHIM PRO chuẩn shop.tiktok.com với 3 chế độ Ghim Random, Ghim Chỉ Định, Ghim 1 Mã Cố Định và chu kỳ luân phiên tự động.'
+  },
+  {
     title: '⚡ Bản Cập Nhật v5.2.5 - Nâng Cấp Tiện Ích AUTO GHIM PRO Chuẩn shop.tiktok.com & Tối Ưu Hóa Giao Diện Tự Động Ghim',
-    description: '1. Tái cấu trúc 100% giao diện tiện ích AUTO GHIM PRO chuyên dụng cho TikTok Shop (shop.tiktok.com): 3 chế độ Ghim Random Tổng Thể, Ghim Chỉ Định (Nhiều Mã), Ghim 1 Mã Cố Định với cài đặt thời gian luân phiên linh hoạt. 2. Loại bỏ hoàn toàn hiển thị sản phẩm giả lập trong ứng dụng, phần mềm chỉ đóng vai trò auto điều khiển ghim trực tiếp cho TikTok Shop của Seller.'
+    description: '1. Tái cấu trúc giao diện tiện ích AUTO GHIM PRO chuyên dụng cho TikTok Shop (shop.tiktok.com). 2. Loại bỏ hoàn toàn hiển thị sản phẩm giả lập.'
   },
   {
     title: '⚡ Bản Cập Nhật v5.2.4 - Chuyển Hướng Trực Tiếp 100% Đến Trang Bán Hàng TikTok Shop Seller Thật Của Đơn Vị Bán',

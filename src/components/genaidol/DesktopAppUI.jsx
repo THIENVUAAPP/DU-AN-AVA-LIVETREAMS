@@ -8423,7 +8423,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             if (e.target === e.currentTarget) setActiveSettingsModal(null);
           }}
         >
-          <div className="w-auto flex flex-col rounded-3xl overflow-hidden shadow-2xl relative">
+          <div className="w-full max-w-6xl h-[92vh] flex flex-col rounded-3xl overflow-hidden shadow-2xl bg-[#0a0a0e] border border-cyan-500/30 relative">
             <AutoCaptchaSolver onClose={() => setActiveSettingsModal(null)} />
           </div>
         </div>
