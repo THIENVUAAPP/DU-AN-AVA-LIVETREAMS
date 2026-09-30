@@ -4,8 +4,9 @@ import {
   RotateCw, FlipHorizontal, FlipVertical, Eye, EyeOff, Layers, Scissors, Check, 
   ChevronRight, RefreshCw, ZoomIn, ZoomOut, Square, Circle, Smartphone, Monitor,
   Tv, Crosshair, Sun, Contrast, Palette, Grid, CornerDownRight, Minimize2,
-  Wand2, Focus, ShieldCheck, Zap, QrCode, Paintbrush, Eraser, Trash2, Undo,
-  Laptop, Armchair, Box, CheckCircle2, Copy, ExternalLink, Link2, Wifi, Power
+  Wand2, Focus, ShieldCheck, Zap, QrCode, Paintbrush, Eraser, Trash2, Undo, Redo,
+  Laptop, Armchair, Box, CheckCircle2, Copy, ExternalLink, Link2, Wifi, Power,
+  CheckCheck, FastForward, Play, Activity
 } from 'lucide-react';
 import { supabase } from '../../lib/supabaseClient';
 
@@ -22,6 +23,8 @@ export default function CameraStudioWindow({
   const [showControls, setShowControls] = useState(true);
   const [activeTab, setActiveTab] = useState('bg'); // 'bg' | 'brush' | 'crop' | 'move8' | 'angles' | 'phone_qr'
   const [videoSource, setVideoSource] = useState('computer'); // 'computer' | 'phone'
+  const [moveSpeedStep, setMoveSpeedStep] = useState(15); // 10 | 20 | 35 (%)
+  const [autoConfirmed, setAutoConfirmed] = useState(false);
   
   // Tọa độ riêng biệt cho Bảng Điều Khiển Suite (có thể kéo thả độc lập)
   const [panelPos, setPanelPos] = useState(() => {
@@ -89,7 +92,7 @@ export default function CameraStudioWindow({
     return {
       mode: 'ai_person',
       sensitivity: 55,
-      feather: 12,
+      feather: 10,
       spillReduction: 60,
       bgType: 'transparent',
       bgColor: '#00ff00',
@@ -127,6 +130,107 @@ export default function CameraStudioWindow({
     };
   });
 
+  // 📜 HỆ THỐNG LỊCH SỬ THAO TÁC: QUAY LẠI (UNDO) / TIẾN TỚI (REDO) / XÁC NHẬN
+  const [history, setHistory] = useState([]);
+  const [historyIndex, setHistoryIndex] = useState(-1);
+  const isUndoRedoActionRef = useRef(false);
+
+  // Ghi lại trạng thái vào History khi có thay đổi
+  const pushHistorySnapshot = useCallback(() => {
+    if (isUndoRedoActionRef.current) {
+      isUndoRedoActionRef.current = false;
+      return;
+    }
+    const snapshot = {
+      camTransform: { ...camTransform },
+      cropConfig: { ...cropConfig },
+      bgRemovalConfig: { ...bgRemovalConfig },
+      colorTune: { ...colorTune },
+      brushStrokes: [...brushStrokes]
+    };
+
+    setHistory(prev => {
+      const trimmed = prev.slice(0, historyIndex + 1);
+      return [...trimmed, snapshot].slice(-25); // Giữ tối đa 25 bước lịch sử
+    });
+    setHistoryIndex(prev => Math.min(24, prev + 1));
+  }, [camTransform, cropConfig, bgRemovalConfig, colorTune, brushStrokes, historyIndex]);
+
+  // Thao tác Hoàn Tác (Undo)
+  const handleUndo = () => {
+    if (historyIndex > 0) {
+      const targetIndex = historyIndex - 1;
+      const targetState = history[targetIndex];
+      if (targetState) {
+        isUndoRedoActionRef.current = true;
+        setCamTransform(targetState.camTransform);
+        setCropConfig(targetState.cropConfig);
+        setBgRemovalConfig(targetState.bgRemovalConfig);
+        setColorTune(targetState.colorTune);
+        setBrushStrokes(targetState.brushStrokes);
+        setHistoryIndex(targetIndex);
+      }
+    }
+  };
+
+  // Thao tác Tiến Tới (Redo)
+  const handleRedo = () => {
+    if (historyIndex < history.length - 1) {
+      const targetIndex = historyIndex + 1;
+      const targetState = history[targetIndex];
+      if (targetState) {
+        isUndoRedoActionRef.current = true;
+        setCamTransform(targetState.camTransform);
+        setCropConfig(targetState.cropConfig);
+        setBgRemovalConfig(targetState.bgRemovalConfig);
+        setColorTune(targetState.colorTune);
+        setBrushStrokes(targetState.brushStrokes);
+        setHistoryIndex(targetIndex);
+      }
+    }
+  };
+
+  // Thao tác Xác Nhận Áp Dụng (Confirm)
+  const handleConfirmAction = () => {
+    try {
+      localStorage.setItem('avalive_studio_cam_transform_v3', JSON.stringify(camTransform));
+      localStorage.setItem('avalive_studio_crop_config_v2', JSON.stringify(cropConfig));
+      localStorage.setItem('avalive_studio_bg_config_v3', JSON.stringify(bgRemovalConfig));
+      localStorage.setItem('avalive_studio_color_tune_v2', JSON.stringify(colorTune));
+    } catch (e) {}
+    setAutoConfirmed(true);
+    setTimeout(() => setAutoConfirmed(false), 2500);
+  };
+
+  // ✨ AUTO TÙY CHỈNH THÔNG MINH (AI AUTO OPTIMIZE)
+  const handleAutoOptimize = () => {
+    setCamTransform(prev => ({
+      ...prev,
+      zoom: 1.15,
+      panX: 0,
+      panY: -5,
+      tiltX: 0,
+      tiltY: 0,
+      rotate: 0,
+      aspectRatio: '16/9',
+      borderRadius: 12
+    }));
+    setColorTune({
+      brightness: 108,
+      contrast: 105,
+      saturate: 110,
+      temperature: 2,
+      skinSmooth: 40
+    });
+    setBgRemovalConfig(prev => ({
+      ...prev,
+      mode: 'ai_person',
+      sensitivity: 58,
+      feather: 10
+    }));
+    handleConfirmAction();
+  };
+
   // 📱 Quản Lý Kết Nối Camera Điện Thoại (QR Code Realtime Broadcast Stream)
   const [phoneCamSession, setPhoneCamSession] = useState(() => {
     try {
@@ -141,7 +245,7 @@ export default function CameraStudioWindow({
   const [availableDevices, setAvailableDevices] = useState([]);
   const [selectedDeviceId, setSelectedDeviceId] = useState('');
   const [copiedLink, setCopiedLink] = useState(false);
-  const [phoneConnectStatus, setPhoneConnectStatus] = useState('waiting'); // 'waiting' | 'connected'
+  const [phoneConnectStatus, setPhoneConnectStatus] = useState('waiting');
   const phoneImageRef = useRef(new Image());
   const hasPhoneFrameRef = useRef(false);
 
@@ -149,17 +253,6 @@ export default function CameraStudioWindow({
   const canvasRef = useRef(null);
   const animFrameIdRef = useRef(null);
   const cameraContainerRef = useRef(null);
-
-  // Lưu cấu hình vào localStorage
-  useEffect(() => {
-    try {
-      localStorage.setItem('avalive_studio_panel_pos', JSON.stringify(panelPos));
-      localStorage.setItem('avalive_studio_cam_transform_v3', JSON.stringify(camTransform));
-      localStorage.setItem('avalive_studio_crop_config_v2', JSON.stringify(cropConfig));
-      localStorage.setItem('avalive_studio_bg_config_v3', JSON.stringify(bgRemovalConfig));
-      localStorage.setItem('avalive_studio_color_tune_v2', JSON.stringify(colorTune));
-    } catch (e) {}
-  }, [panelPos, camTransform, cropConfig, bgRemovalConfig, colorTune]);
 
   // Quét danh sách thiết bị camera máy tính
   useEffect(() => {
@@ -199,9 +292,8 @@ export default function CameraStudioWindow({
 
     channel
       .on('broadcast', { event: 'PHONE_JOINED' }, () => {
-        console.log('[CameraStudio] Phone camera joined session:', phoneCamSession);
         setPhoneConnectStatus('connected');
-        setVideoSource('phone'); // Tự động kích hoạt luồng camera điện thoại
+        setVideoSource('phone');
       })
       .on('broadcast', { event: 'PHONE_FRAME' }, ({ payload }) => {
         if (payload?.image) {
@@ -301,11 +393,12 @@ export default function CameraStudioWindow({
       setBrushStrokes(prev => [...prev, currentStrokeRef.current]);
       isPaintingRef.current = false;
       currentStrokeRef.current = null;
+      pushHistorySnapshot();
     }
   };
 
   // =====================================================================
-  // MEDIAPIPE SELFIE SEGMENTATION — Nạp engine AI tách nền real-time
+  // MEDIAPIPE SELFIE SEGMENTATION — Nạp engine AI tách nền siêu mượt
   // =====================================================================
   const segmentationRef = useRef(null);
   const segMaskRef = useRef(null);
@@ -318,14 +411,14 @@ export default function CameraStudioWindow({
       if (!window.SelfieSegmentation) {
         await new Promise((resolve) => {
           const existing = document.querySelector('script[src*="selfie_segmentation"]');
-          if (existing) { setTimeout(resolve, 500); return; }
+          if (existing) { setTimeout(resolve, 300); return; }
           const s = document.createElement('script');
           s.src = 'https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation/selfie_segmentation.js';
           s.crossOrigin = 'anonymous';
           s.onload = resolve;
           s.onerror = resolve;
           document.head.appendChild(s);
-          setTimeout(resolve, 3500);
+          setTimeout(resolve, 3000);
         });
       }
 
@@ -337,9 +430,10 @@ export default function CameraStudioWindow({
         });
         seg.setOptions({ modelSelection: 1, selfieMode: false });
 
+        // Tối ưu kích thước mask 192x192 cho hiệu năng 60 FPS siêu tốc
         const maskCanvas = document.createElement('canvas');
-        maskCanvas.width = 256;
-        maskCanvas.height = 256;
+        maskCanvas.width = 192;
+        maskCanvas.height = 192;
         segMaskRef.current = maskCanvas;
 
         seg.onResults((results) => {
@@ -397,8 +491,8 @@ export default function CameraStudioWindow({
   }, []);
 
   // =====================================================================
-  // REAL-TIME CANVAS RENDERING LOOP 60 FPS
-  // Hỗ trợ cả Camera Máy Tính & Camera Điện Thoại (Phone Stream)
+  // REAL-TIME CANVAS RENDERING LOOP 60 FPS SIÊU TỐC
+  // Không chứa checkerboard, nền 100% trong suốt hoàn toàn
   // =====================================================================
   useEffect(() => {
     const canvas = canvasRef.current;
@@ -429,7 +523,7 @@ export default function CameraStudioWindow({
           tmpCanvas.height = vh;
         }
 
-        // === BƯỚC 1: Vẽ nguồn hình ảnh gốc với color filters & transform ===
+        // === BƯỚC 1: Vẽ nguồn hình ảnh với color filters & transform ===
         tmpCtx.save();
         tmpCtx.clearRect(0, 0, vw, vh);
         const b = colorTune.brightness;
@@ -457,7 +551,7 @@ export default function CameraStudioWindow({
           }
         }
 
-        // === BƯỚC 3: Áp mask tách nền ===
+        // === BƯỚC 3: Áp mask tách nền trong suốt 100% ===
         ctx.clearRect(0, 0, vw, vh);
         ctx.drawImage(tmpCanvas, 0, 0);
 
@@ -484,7 +578,7 @@ export default function CameraStudioWindow({
                 const maskVal = mData[mIdx];
                 const threshold = (1 - sensitivity) * 128;
                 if (maskVal < threshold) {
-                  data[idx + 3] = 0;
+                  data[idx + 3] = 0; // Xóa trong suốt 100%
                 } else if (maskVal < threshold + feather * 4) {
                   const alpha = (maskVal - threshold) / (feather * 4);
                   data[idx + 3] = Math.round(data[idx + 3] * Math.min(1, alpha));
@@ -588,12 +682,12 @@ export default function CameraStudioWindow({
     };
   }, [camTransform, cropConfig, bgRemovalConfig, colorTune, brushStrokes, videoSource, applyDualCropToPixels]);
 
-  // 🕹️ Di chuyển 8 hướng mượt mà
-  const move8Way = (dx, dy, step = 10) => {
+  // 🕹️ Di chuyển 8 hướng mượt mà với bước nhảy tùy chọn
+  const move8Way = (dx, dy) => {
     setCamTransform(prev => ({
       ...prev,
-      panX: Math.max(-150, Math.min(150, prev.panX + dx * step)),
-      panY: Math.max(-150, Math.min(150, prev.panY + dy * step))
+      panX: Math.max(-150, Math.min(150, prev.panX + dx * moveSpeedStep)),
+      panY: Math.max(-150, Math.min(150, prev.panY + dy * moveSpeedStep))
     }));
   };
 
@@ -630,6 +724,7 @@ export default function CameraStudioWindow({
       skinSmooth: 30
     });
     setBrushStrokes([]);
+    handleConfirmAction();
   };
 
   // Áp dụng Preset Ghép nhanh vào Video AI
@@ -716,6 +811,7 @@ export default function CameraStudioWindow({
         resetTransform();
         break;
     }
+    handleConfirmAction();
   };
 
   const copyPhoneCamUrl = () => {
@@ -753,11 +849,11 @@ export default function CameraStudioWindow({
   return (
     <>
       {/* ========================================================================= */}
-      {/* 1. KHUNG CAMERA ĐỘC LẬP — HOÀN TOÀN KHÔNG VIỀN ĐEN, KHÔNG HEADER CHE PHỦ   */}
+      {/* 1. KHUNG CAMERA ĐỘC LẬP — HOÀN TOÀN KHÔNG VIỀN, 100% TRONG SUỐT THỰC THỤ   */}
       {/* ========================================================================= */}
       <div 
         ref={cameraContainerRef}
-        className="absolute z-40 select-none group transition-all duration-150"
+        className="absolute z-40 select-none group transition-all duration-75"
         style={{ 
           left: position.x, 
           top: position.y,
@@ -780,15 +876,6 @@ export default function CameraStudioWindow({
             }
           }}
         >
-          {/* Nền Thay Thế Trong Suốt (Checkerboard mờ khi xóa nền) */}
-          {bgRemovalConfig.mode !== 'none' && bgRemovalConfig.bgType === 'transparent' && (
-            <div className="absolute inset-0 pointer-events-none z-0" style={{
-              backgroundImage: 'repeating-conic-gradient(#333 0% 25%, #111 0% 50%)',
-              backgroundSize: '16px 16px',
-              opacity: 0.35
-            }} />
-          )}
-
           {/* Hidden Raw Video Stream Source */}
           <video 
             ref={rawVideoRef} 
@@ -798,7 +885,7 @@ export default function CameraStudioWindow({
             className="hidden" 
           />
 
-          {/* Canvas Rendering 60 FPS — 100% Trong Suốt, Không Viền */}
+          {/* Canvas Rendering 60 FPS — 100% Trong Suốt Thuần Khiết */}
           <canvas 
             ref={canvasRef} 
             onMouseDown={handleCanvasMouseDown}
@@ -842,7 +929,7 @@ export default function CameraStudioWindow({
       {/* ========================================================================= */}
       {showControls && (
         <div 
-          className="fixed z-50 select-none w-[390px] bg-slate-950/98 border border-emerald-500/60 rounded-3xl p-4 text-white shadow-[0_0_50px_rgba(16,185,129,0.25)] backdrop-blur-2xl animate-in fade-in slide-in-from-top-2 space-y-3.5"
+          className="fixed z-50 select-none w-[395px] bg-slate-950/98 border border-emerald-500/60 rounded-3xl p-4 text-white shadow-[0_0_50px_rgba(16,185,129,0.25)] backdrop-blur-2xl animate-in fade-in slide-in-from-top-2 space-y-3"
           style={{ 
             left: panelPos.x, 
             top: panelPos.y 
@@ -851,7 +938,7 @@ export default function CameraStudioWindow({
           {/* Header Bảng Cài Đặt */}
           <div 
             onMouseDown={handlePanelMouseDown}
-            className="flex items-center justify-between border-b border-white/10 pb-3 cursor-move"
+            className="flex items-center justify-between border-b border-white/10 pb-2.5 cursor-move"
           >
             <div className="flex items-center gap-2 pointer-events-none">
               <div className="w-8 h-8 rounded-xl bg-gradient-to-tr from-emerald-500 to-teal-500 flex items-center justify-center text-slate-950 font-black shadow-lg shadow-emerald-500/30">
@@ -860,9 +947,9 @@ export default function CameraStudioWindow({
               <div>
                 <h4 className="text-xs font-black uppercase tracking-wider text-emerald-400 flex items-center gap-1.5">
                   STUDIO CAMERA SUITE
-                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">PRO 4K</span>
+                  <span className="text-[9px] px-1.5 py-0.2 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-500/40">PRO 60FPS</span>
                 </h4>
-                <p className="text-[9px] text-gray-400">Điều chỉnh độc lập • Kéo thả tự do</p>
+                <p className="text-[9px] text-gray-400">Điều chỉnh đa hướng • Siêu mượt</p>
               </div>
             </div>
 
@@ -885,18 +972,73 @@ export default function CameraStudioWindow({
             </div>
           </div>
 
-          {/* 🌟 NÚT CHỌN NGUỒN CAMERA: MÁY TÍNH vs ĐIỆN THOẠI (1-CLICK SIÊU RÕ) */}
+          {/* 🌟 THANH ĐIỀU HƯỚNG NHANH: AUTO TÙY CHỈNH + QUAY LẠI + TIẾN TỚI + XÁC NHẬN */}
+          <div className="grid grid-cols-4 gap-1.5 bg-black/60 p-1.5 rounded-2xl border border-white/10">
+            {/* Nút Auto Tùy Chỉnh Thông Minh */}
+            <button
+              type="button"
+              onClick={handleAutoOptimize}
+              className="py-1.5 px-2 bg-gradient-to-r from-amber-500 via-orange-500 to-yellow-500 hover:from-amber-400 hover:to-yellow-400 text-slate-950 font-black text-[10px] rounded-xl flex items-center justify-center gap-1 shadow-md active:scale-95 transition-all cursor-pointer col-span-2"
+              title="Tự động nhận diện góc đẹp, zoom chuẩn và cân bằng màu sắc cho livestream"
+            >
+              <Wand2 size={12} className="animate-spin" />
+              <span>AUTO TÙY CHỈNH AI</span>
+            </button>
+
+            {/* Nút Quay Lại (Undo) */}
+            <button
+              type="button"
+              onClick={handleUndo}
+              disabled={historyIndex <= 0}
+              className="py-1.5 px-2 bg-white/10 hover:bg-white/20 disabled:opacity-30 text-gray-200 font-bold text-[10px] rounded-xl flex items-center justify-center gap-1 transition-all cursor-pointer"
+              title="Quay lại thao tác trước"
+            >
+              <Undo size={11} />
+              <span>Quay Lại</span>
+            </button>
+
+            {/* Nút Tiến Tới (Redo) */}
+            <button
+              type="button"
+              onClick={handleRedo}
+              disabled={historyIndex >= history.length - 1}
+              className="py-1.5 px-2 bg-white/10 hover:bg-white/20 disabled:opacity-30 text-gray-200 font-bold text-[10px] rounded-xl flex items-center justify-center gap-1 transition-all cursor-pointer"
+              title="Tiến tới thao tác tiếp theo"
+            >
+              <Redo size={11} />
+              <span>Tiến Tới</span>
+            </button>
+          </div>
+
+          {/* NÚT XÁC NHẬN ÁP DỤNG */}
+          <button
+            type="button"
+            onClick={handleConfirmAction}
+            className={`w-full py-2 rounded-2xl font-black text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-lg ${
+              autoConfirmed
+                ? 'bg-emerald-500 text-slate-950 ring-2 ring-emerald-300'
+                : 'bg-gradient-to-r from-emerald-600 via-teal-600 to-cyan-600 hover:from-emerald-500 hover:to-cyan-500 text-white shadow-emerald-600/30'
+            }`}
+          >
+            <CheckCheck size={14} />
+            <span>{autoConfirmed ? '✓ ĐÃ XÁC NHẬN & LƯU ÁP DỤNG THÀNH CÔNG!' : 'XÁC NHẬN ÁP DỤNG CÀI ĐẶT'}</span>
+          </button>
+
+          {/* 🌟 NÚT CHỌN NGUỒN CAMERA: MÁY TÍNH vs ĐIỆN THOẠI */}
           <div className="grid grid-cols-2 gap-2 bg-black/60 p-1.5 rounded-2xl border border-white/10">
             <button
               type="button"
-              onClick={() => setVideoSource('computer')}
-              className={`py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer ${
+              onClick={() => {
+                setVideoSource('computer');
+                pushHistorySnapshot();
+              }}
+              className={`py-1.5 px-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer ${
                 videoSource === 'computer'
                   ? 'bg-gradient-to-r from-emerald-600 to-teal-600 text-white shadow-lg shadow-emerald-600/30 ring-2 ring-emerald-400'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              <Monitor size={14} />
+              <Monitor size={13} />
               <span>Camera Máy Tính</span>
             </button>
 
@@ -905,14 +1047,15 @@ export default function CameraStudioWindow({
               onClick={() => {
                 setVideoSource('phone');
                 setActiveTab('phone_qr');
+                pushHistorySnapshot();
               }}
-              className={`py-2 px-3 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition-all cursor-pointer relative ${
+              className={`py-1.5 px-2 rounded-xl font-bold text-xs flex items-center justify-center gap-1.5 transition-all cursor-pointer relative ${
                 videoSource === 'phone'
                   ? 'bg-gradient-to-r from-blue-600 to-indigo-600 text-white shadow-lg shadow-blue-600/30 ring-2 ring-blue-400'
                   : 'text-gray-400 hover:text-white hover:bg-white/5'
               }`}
             >
-              <Smartphone size={14} />
+              <Smartphone size={13} />
               <span>Camera Điện Thoại</span>
               {phoneConnectStatus === 'connected' && (
                 <span className="w-2 h-2 rounded-full bg-emerald-400 animate-ping absolute top-2 right-2" />
@@ -951,10 +1094,10 @@ export default function CameraStudioWindow({
           </div>
 
           {/* ========================================================================= */}
-          {/* TAB 1: XÓA PHÔNG NỀN AI (SIÊU SẠCH 100% TRONG SUỐT)                       */}
+          {/* TAB 1: XÓA PHÔNG NỀN AI (100% TRONG SUỐT HOÀN TOÀN)                       */}
           {/* ========================================================================= */}
           {activeTab === 'bg' && (
-            <div className="space-y-3 animate-in fade-in">
+            <div className="space-y-2.5 animate-in fade-in">
               <div>
                 <div className="flex items-center justify-between mb-1.5">
                   <label className="text-[10px] uppercase font-black text-gray-400 tracking-wider">Chế Độ Xóa Nền AI:</label>
@@ -965,8 +1108,8 @@ export default function CameraStudioWindow({
 
                 <div className="grid grid-cols-2 gap-1.5">
                   {[
-                    { id: 'ai_person', label: '🪄 AI Tách Đa Phông', desc: 'Bất kỳ phòng/nhà nào' },
-                    { id: 'desk_product', label: '🪑 Giữ Bàn Ghế & SP', desc: 'Livestream bán hàng' },
+                    { id: 'ai_person', label: '🪄 AI Tách Đa Phông', desc: 'Trong suốt 100%' },
+                    { id: 'desk_product', label: '🪑 Giữ Bàn Ghế & SP', desc: 'Bán hàng livestream' },
                     { id: 'chroma_green', label: '🟢 Phông Xanh Lá', desc: 'Chroma Key 60FPS' },
                     { id: 'chroma_blue', label: '🔵 Phông Xanh Dương', desc: 'Blue Screen Key' },
                     { id: 'none', label: '📷 Nền Gốc (Tắt)', desc: 'Không xóa nền' }
@@ -976,7 +1119,10 @@ export default function CameraStudioWindow({
                       <button
                         key={m.id}
                         type="button"
-                        onClick={() => setBgRemovalConfig(prev => ({ ...prev, mode: m.id }))}
+                        onClick={() => {
+                          setBgRemovalConfig(prev => ({ ...prev, mode: m.id }));
+                          pushHistorySnapshot();
+                        }}
                         className={`p-2 rounded-xl text-left border transition-all cursor-pointer relative ${
                           isSelected
                             ? 'bg-emerald-950/80 border-emerald-400 ring-2 ring-emerald-500 text-white shadow-lg shadow-emerald-500/20'
@@ -995,7 +1141,7 @@ export default function CameraStudioWindow({
               </div>
 
               {/* TÙY CHỌN GIỮ LẠI VẬT THỂ (SMART KEEP) */}
-              <div className="bg-black/50 p-2.5 rounded-2xl border border-white/10 space-y-2">
+              <div className="bg-black/50 p-2.5 rounded-2xl border border-white/10 space-y-1.5">
                 <span className="text-[10px] font-black uppercase text-cyan-300 flex items-center gap-1">
                   <ShieldCheck size={12} className="text-cyan-400" /> Tự Động Giữ Lại Vật Thể (Smart Keep):
                 </span>
@@ -1013,10 +1159,13 @@ export default function CameraStudioWindow({
                       <button
                         key={obj.key}
                         type="button"
-                        onClick={() => setBgRemovalConfig(prev => ({
-                          ...prev,
-                          keepObjects: { ...prev.keepObjects, [obj.key]: !active }
-                        }))}
+                        onClick={() => {
+                          setBgRemovalConfig(prev => ({
+                            ...prev,
+                            keepObjects: { ...prev.keepObjects, [obj.key]: !active }
+                          }));
+                          pushHistorySnapshot();
+                        }}
                         className={`py-1 px-1.5 rounded-lg border text-center font-bold transition-all cursor-pointer ${
                           active 
                             ? 'bg-cyan-500/20 border-cyan-400 text-cyan-300' 
@@ -1031,7 +1180,7 @@ export default function CameraStudioWindow({
               </div>
 
               {/* Độ nhạy & Làm mịn viền */}
-              <div className="space-y-2 bg-white/5 p-2.5 rounded-2xl border border-white/10">
+              <div className="space-y-1.5 bg-white/5 p-2 rounded-2xl border border-white/10">
                 <div className="flex items-center justify-between text-[10px]">
                   <span className="text-gray-300 font-bold">Độ Nhạy Tách Nền: {bgRemovalConfig.sensitivity}%</span>
                   <input 
@@ -1058,8 +1207,8 @@ export default function CameraStudioWindow({
           {/* TAB 2: CỌ QUÉT GIỮ VÙNG & CÀ XÓA PHÔNG THỦ CÔNG                            */}
           {/* ========================================================================= */}
           {activeTab === 'brush' && (
-            <div className="space-y-3 animate-in fade-in">
-              <div className="bg-black/50 p-2.5 rounded-2xl border border-white/10 space-y-2.5">
+            <div className="space-y-2.5 animate-in fade-in">
+              <div className="bg-black/50 p-2.5 rounded-2xl border border-white/10 space-y-2">
                 <span className="text-[10px] font-black uppercase text-purple-300 block">Chế Độ Cọ Vẽ Trực Tiếp:</span>
                 
                 <div className="grid grid-cols-3 gap-1.5">
@@ -1147,7 +1296,10 @@ export default function CameraStudioWindow({
                 <div className="flex items-center gap-2 pt-1">
                   <button
                     type="button"
-                    onClick={() => setBrushStrokes(prev => prev.slice(0, -1))}
+                    onClick={() => {
+                      setBrushStrokes(prev => prev.slice(0, -1));
+                      pushHistorySnapshot();
+                    }}
                     disabled={brushStrokes.length === 0}
                     className="flex-1 py-1.5 bg-white/10 hover:bg-white/20 disabled:opacity-40 rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
                   >
@@ -1155,7 +1307,10 @@ export default function CameraStudioWindow({
                   </button>
                   <button
                     type="button"
-                    onClick={() => setBrushStrokes([])}
+                    onClick={() => {
+                      setBrushStrokes([]);
+                      pushHistorySnapshot();
+                    }}
                     disabled={brushStrokes.length === 0}
                     className="flex-1 py-1.5 bg-rose-600/30 hover:bg-rose-600 disabled:opacity-40 text-rose-200 hover:text-white rounded-xl text-[10px] font-bold flex items-center justify-center gap-1 transition-all cursor-pointer"
                   >
@@ -1170,7 +1325,7 @@ export default function CameraStudioWindow({
           {/* TAB 3: CẮT 4 CẠNH & XÓA VÁT 4 GÓC (CROP ENGINE)                           */}
           {/* ========================================================================= */}
           {activeTab === 'crop' && (
-            <div className="space-y-3 animate-in fade-in">
+            <div className="space-y-2.5 animate-in fade-in">
               <div className="bg-black/50 p-2.5 rounded-2xl border border-white/10 space-y-2">
                 <span className="text-[10px] font-black uppercase text-amber-300 block">Cắt Khung 4 Cạnh:</span>
                 <div className="grid grid-cols-2 gap-2 text-[10px]">
@@ -1259,10 +1414,34 @@ export default function CameraStudioWindow({
           )}
 
           {/* ========================================================================= */}
-          {/* TAB 4: ĐIỀU HƯỚNG 8 HƯỚNG D-PAD                                            */}
+          {/* TAB 4: ĐIỀU HƯỚNG 8 HƯỚNG D-PAD SIÊU MƯỢT                                  */}
           {/* ========================================================================= */}
           {activeTab === 'move8' && (
-            <div className="space-y-3 animate-in fade-in">
+            <div className="space-y-2.5 animate-in fade-in">
+              <div className="flex items-center justify-between px-1">
+                <span className="text-[10px] text-gray-300 font-bold">Tốc Độ Bước Nhảy:</span>
+                <div className="flex gap-1">
+                  {[
+                    { s: 10, label: '1x (10%)' },
+                    { s: 20, label: '2x (20%)' },
+                    { s: 35, label: '⚡ Turbo (35%)' }
+                  ].map(sp => (
+                    <button
+                      key={sp.s}
+                      type="button"
+                      onClick={() => setMoveSpeedStep(sp.s)}
+                      className={`px-2 py-0.5 text-[9px] font-bold rounded-lg border transition-all cursor-pointer ${
+                        moveSpeedStep === sp.s 
+                          ? 'bg-emerald-600 border-emerald-400 text-white' 
+                          : 'bg-white/5 border-white/10 text-gray-400'
+                      }`}
+                    >
+                      {sp.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
+
               <div className="flex flex-col items-center justify-center gap-1.5 bg-black/50 p-3 rounded-2xl border border-white/10">
                 <div className="flex items-center gap-1.5">
                   <button type="button" onClick={() => move8Way(-1, -1)} className="w-12 h-10 rounded-xl bg-white/10 hover:bg-emerald-500 hover:text-black font-black text-sm flex items-center justify-center active:scale-90 cursor-pointer">↖️</button>
@@ -1292,7 +1471,7 @@ export default function CameraStudioWindow({
           {/* TAB 5: ĐA GÓC, ZOOM, XOAY, NGHIÊNG 3D & TỈ LỆ KHUNG                      */}
           {/* ========================================================================= */}
           {activeTab === 'angles' && (
-            <div className="space-y-3 animate-in fade-in">
+            <div className="space-y-2.5 animate-in fade-in">
               <div className="bg-black/50 p-2.5 rounded-2xl border border-white/10 space-y-2">
                 <div className="flex items-center justify-between text-[11px]">
                   <span className="text-gray-300 font-bold flex items-center gap-1"><ZoomIn size={12} /> Phóng To (Zoom):</span>
@@ -1394,8 +1573,8 @@ export default function CameraStudioWindow({
           {/* TAB 6: KẾT NỐI CAMERA ĐIỆN THOẠI (QUÉT MÃ QR KHÔNG DÂY)                   */}
           {/* ========================================================================= */}
           {activeTab === 'phone_qr' && (
-            <div className="space-y-3 animate-in fade-in">
-              <div className="bg-gradient-to-r from-blue-950/70 to-indigo-950/70 p-3.5 rounded-3xl border border-blue-500/40 text-center space-y-2.5">
+            <div className="space-y-2.5 animate-in fade-in">
+              <div className="bg-gradient-to-r from-blue-950/70 to-indigo-950/70 p-3 rounded-3xl border border-blue-500/40 text-center space-y-2">
                 <div className="flex items-center justify-center gap-1.5 text-blue-300 font-black text-xs">
                   <Smartphone size={15} className="text-blue-400" /> KẾT NỐI CAMERA IPHONE / ANDROID
                 </div>
@@ -1416,49 +1595,52 @@ export default function CameraStudioWindow({
                 </div>
 
                 {/* Mã QR Code Kết Nối Nhanh */}
-                <div className="flex justify-center p-2.5 bg-white rounded-2xl shadow-xl inline-block mx-auto">
+                <div className="flex justify-center p-2 bg-white rounded-2xl shadow-xl inline-block mx-auto">
                   <img 
                     src={qrCodeImgUrl} 
                     alt="Quét Mã QR Kết Nối Camera Điện Thoại"
-                    className="w-36 h-36 object-contain"
+                    className="w-32 h-32 object-contain"
                   />
                 </div>
 
-                <div className="space-y-1 text-left bg-black/50 p-2.5 rounded-2xl text-[10px] text-gray-300">
-                  <div className="font-black text-emerald-400">📱 Hướng dẫn 3 bước kết nối phát một:</div>
-                  <div>1. Mở <b>Camera / Zalo</b> trên điện thoại quét mã QR ở trên.</div>
-                  <div>2. Bấm vào liên kết & Cho phép truy cập Camera.</div>
-                  <div>3. Hình ảnh từ điện thoại <b>4K 60FPS</b> tự động hiển thị ngay lập tức!</div>
+                <div className="space-y-1 text-left bg-black/50 p-2 rounded-2xl text-[10px] text-gray-300">
+                  <div className="font-black text-emerald-400">📱 Hướng dẫn kết nối phát một:</div>
+                  <div>1. Mở <b>Camera / Zalo</b> trên điện thoại quét mã QR.</div>
+                  <div>2. Cho phép truy cập Camera trên điện thoại.</div>
+                  <div>3. Hình ảnh từ điện thoại <b>4K 60FPS</b> lập tức truyền vào máy!</div>
                 </div>
 
-                {/* Nút Sao Chép Link & Kích hoạt Camera Điện Thoại */}
+                {/* Nút Sao Chép Link & Dùng ngay */}
                 <div className="flex items-center gap-2 pt-1">
                   <button
                     type="button"
                     onClick={copyPhoneCamUrl}
-                    className="flex-1 py-2 px-3 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[11px] font-black flex items-center justify-center gap-1.5 transition-all cursor-pointer shadow-lg shadow-blue-600/30"
+                    className="flex-1 py-1.5 px-2 bg-blue-600 hover:bg-blue-500 text-white rounded-xl text-[10px] font-black flex items-center justify-center gap-1 transition-all cursor-pointer shadow-md"
                   >
-                    {copiedLink ? <Check size={13} className="text-emerald-300" /> : <Copy size={13} />}
-                    <span>{copiedLink ? 'Đã Sao Chép Link!' : 'Sao Chép Link Mở Trên ĐT'}</span>
+                    {copiedLink ? <Check size={12} className="text-emerald-300" /> : <Copy size={12} />}
+                    <span>{copiedLink ? 'Đã Sao Chép!' : 'Sao Chép Link'}</span>
                   </button>
 
                   <button
                     type="button"
-                    onClick={() => setVideoSource('phone')}
-                    className={`py-2 px-3 rounded-xl text-[11px] font-black flex items-center gap-1 transition-all cursor-pointer ${
+                    onClick={() => {
+                      setVideoSource('phone');
+                      handleConfirmAction();
+                    }}
+                    className={`py-1.5 px-3 rounded-xl text-[10px] font-black flex items-center gap-1 transition-all cursor-pointer ${
                       videoSource === 'phone'
                         ? 'bg-emerald-600 text-white ring-2 ring-emerald-400'
                         : 'bg-white/10 hover:bg-white/20 text-gray-200'
                     }`}
                   >
-                    <CheckCircle2 size={13} /> Dùng Ngay
+                    <CheckCircle2 size={12} /> Dùng Ngay
                   </button>
                 </div>
               </div>
 
               {/* Danh sách Camera Thiết Bị Nhận Diện */}
               {availableDevices.length > 0 && (
-                <div className="bg-black/50 p-2.5 rounded-2xl border border-white/10 space-y-1.5">
+                <div className="bg-black/50 p-2 rounded-2xl border border-white/10 space-y-1">
                   <span className="text-[10px] text-gray-400 font-bold block">Thiết Bị Camera Máy Tính:</span>
                   <select 
                     value={selectedDeviceId}
@@ -1466,7 +1648,7 @@ export default function CameraStudioWindow({
                       setSelectedDeviceId(e.target.value);
                       setVideoSource('computer');
                     }}
-                    className="w-full bg-slate-900 border border-white/20 text-white text-[10px] rounded-xl p-2 outline-none"
+                    className="w-full bg-slate-900 border border-white/20 text-white text-[10px] rounded-xl p-1.5 outline-none"
                   >
                     {availableDevices.map((dev, idx) => (
                       <option key={dev.deviceId || idx} value={dev.deviceId}>

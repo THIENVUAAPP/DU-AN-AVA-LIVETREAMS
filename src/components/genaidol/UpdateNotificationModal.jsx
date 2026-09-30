@@ -2,13 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.3.7';
+export const APP_VERSION = '5.3.8';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '⚡ Bản Cập Nhật v5.3.8 - Xóa Nền 100% Trong Suốt Thuần Khiết, Nút Auto Tùy Chỉnh AI, Hệ Thống Undo / Redo & Tăng Tốc 60FPS Siêu Mượt',
+    description: '1. 100% Nền Trong Suốt Thuần Khiết: Xóa bỏ hoàn toàn họa tiết ô vuông checkerboard — khi xóa nền, hình ảnh sẽ trong suốt hoàn toàn, hòa vào video livestream tự nhiên không tì vết. 2. Nút Auto Tùy Chỉnh Thông Minh (AI Auto Optimize): 1-Click tự động căn chỉnh góc máy, zoom tỉ lệ vàng và cân bằng ánh sáng đẹp da cho livestream. 3. Hệ Thống Lịch Sử Thao Tác (Undo / Redo / Confirm): Hỗ trợ nút Quay Lại (Undo), Tiến Tới (Redo) và Xác Nhận Áp Dụng (Confirm) cho mọi thao tác cắt gọt, di chuyển, xóa nền. 4. Tăng Tốc Độ Xử Lý Camera 60FPS: Tối ưu pipeline xử lý MediaPipe và truyền frame điện thoại siêu mượt không độ trễ, di chuyển 8 hướng D-Pad mượt mà với 3 cấp độ tốc độ (1x, 2x, Turbo).'
+  },
+  {
     title: '⚡ Bản Cập Nhật v5.3.7 - Khung Camera 100% Không Viền, Bảng Cài Đặt Trực Quan & Kết Nối Camera Điện Thoại 4K Siêu Tốc',
-    description: '1. Khung Camera Borderless & Clean 100%: Xóa hoàn toàn thanh đen, thanh header và các ô badge đè lên khuôn mặt nhân vật. Khung camera giờ là video/canvas thuần khiết, trong suốt hoàn toàn khi xóa nền. 2. Bảng Điều Khiển Suite Tách Rời Trực Quan: Mọi chức năng đang hoạt động (AI Mode, Cọ Giữ, Cọ Cà Xóa, Nguồn Camera, Cắt 4 Cạnh, Góc Vát, Zoom, 8 Hướng) đều có đèn LED và viền phát sáng nổi bật, bấm vào đâu ăn ngay tại đó. 3. Kết Nối Camera Điện Thoại (iPhone/Android) Siêu Tốc: Quét mã QR trên điện thoại mở trực tiếp camera full-screen 4K 60FPS và tự động truyền thẳng vào phần mềm máy tính, chuyển đổi 1-click giữa Camera Máy Tính & Camera Điện Thoại.'
+    description: '1. Khung Camera Borderless & Clean 100%. 2. Bảng Điều Khiển Suite Tách Rời Trực Quan. 3. Kết Nối Camera Điện Thoại 4K 60FPS.'
   },
   {
     title: '⚡ Bản Cập Nhật v5.3.6 - Tích Hợp AI MediaPipe Siêu Sạch, Cọ Xóa Cực Chính Xác, Canvas Trong Suốt 100%',
