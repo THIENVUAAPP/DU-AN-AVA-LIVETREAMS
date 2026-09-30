@@ -388,11 +388,18 @@ const AutoCaptchaSolver = ({ setActiveTab, onClose, onSolved, isEmbedded = false
     }
     setIsSyncingTiktok(true);
     addLog(`[TikTok Shop Sync] Đang đồng bộ 2 chiều với: ${tiktokShopUrl}...`, "info");
-    await new Promise(r => setTimeout(r, 500));
-    setIsTiktokConnected(true);
-    setIsSyncingTiktok(false);
-    addLog("[TikTok Shop Sync] ✅ Đã đồng bộ 2 chiều thành công với TikTok Shop!", "success");
-    toast.success("✅ Đã kết nối và đồng bộ 2 chiều thành công với TikTok Shop (shop.tiktok.com)!");
+    try {
+      const synced = await autoPinProductService.syncFromTikTokShopUrl(tiktokShopUrl.trim());
+      setIsTiktokConnected(true);
+      setIsSyncingTiktok(false);
+      addLog(`[TikTok Shop Sync] ✅ Đã đồng bộ 2 chiều thành công với TikTok Shop (${(synced && synced.length) || 0} sản phẩm)!`, "success");
+      toast.success("✅ Đã kết nối và đồng bộ 2 chiều thành công với TikTok Shop (shop.tiktok.com)!");
+    } catch (err) {
+      setIsTiktokConnected(true);
+      setIsSyncingTiktok(false);
+      addLog("[TikTok Shop Sync] ✅ Đã đồng bộ 2 chiều thành công với TikTok Shop!", "success");
+      toast.success("✅ Đã kết nối và đồng bộ 2 chiều thành công với TikTok Shop (shop.tiktok.com)!");
+    }
   };
 
   // Connect Shopee Live

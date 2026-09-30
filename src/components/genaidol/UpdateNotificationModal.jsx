@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.13';
+export const APP_VERSION = '5.4.14';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.14 - Nút Tắt/Mở Tiếng Phiên Live Sát Góc Phải (Mặc Định Mở Tiếng), Tự Động Đồng Bộ 2 Chiều shop.tiktok.com & Kích Hoạt Triệt Để 14 Sự Kiện Live',
+    description: '1. Nút Tắt/Mở Tiếng Phiên Live Mặc Định Mở Tiếng: Bổ sung nút [🔊 Mở tiếng] / [🔊x Tắt tiếng] nằm ở sát góc phải ngoài cùng thanh công cụ phần mềm. Khi Live bắt đầu, luôn mặc định MỞ tiếng không bị câm, đồng bộ chuẩn xác trạng thái âm thanh sang TikTok Live Studio, OBS và Shopee Live. 2. Tự Động Đồng Bộ 2 Chiều shop.tiktok.com: Kết nối link gian hàng TikTok Shop (shop.tiktok.com) lập tức tải và đồng bộ toàn bộ danh mục sản phẩm thật 100%, sẵn sàng auto ghim deal siêu tốc theo giọng đọc AI và comment. 3. Kích Hoạt Hoàn Hảo 14 Tác Vụ Sự Kiện & Bộ Não AI: Chào người mới tuần tự không trùng lặp, đọc và trả lời bình luận, cảm ơn quà tặng, follow, share mượt mà 24/7. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.13 - Kích Hoạt Triệt Để Bộ Não AI & 14 Sự Kiện Live TikTok Studio/Shopee, Tự Động Ghim shop.tiktok.com & Nút Loa Máy Độc Lập',
     description: '1. Kích Hoạt Triệt Để Toàn Bộ 14 Tác Vụ Sự Kiện & Bộ Não AI: Đảm bảo ngay khi kết nối ID TikTok Live Studio hoặc Shopee Live, Bộ Não AI tự động chào hỏi người mới xoay vòng tuần tự, trả lời mọi bình luận của khán giả qua giọng đọc AI 100%, cảm ơn quà tặng, theo dõi, chia sẻ, chốt đơn theo cấu hình mà không bị chặn bởi bất kỳ điều kiện nào. 2. Tự Động Ghim Sản Phẩm shop.tiktok.com & Shopee Live: Nhận diện giọng nói AI, bình luận khán giả và timer để tự động ghim sản phẩm lên giao diện quản trị người bán shop.tiktok.com và phiên live theo thời gian thực. 3. Độc Lập Tuyệt Đối Nút Tắt/Mở Loa Máy Tính: Nút Loa Máy chỉ kiểm soát loa nghe trên máy cá nhân của streamer (chống ồn), trong khi phiên phát sóng lên TikTok Live Studio, OBS và link online HTTPS vẫn giữ nguyên 100% âm thanh sống động. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'

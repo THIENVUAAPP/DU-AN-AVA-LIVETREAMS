@@ -388,6 +388,7 @@ function fillTemplate(template, vars = {}) {
 
     const configs = getSavedEventConfigs();
     let replyText = '';
+    let shouldAction = null;
     let currentMatchedSpecialGiftSlot = null;
     let currentMatchedCheckoutProduct = null;
     let isSpecialGift = false;

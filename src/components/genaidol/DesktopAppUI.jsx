@@ -7762,22 +7762,34 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     </div>
 
           {/* Nút Âm thanh Live nằm ngoài khung video */}
-          {isConnected && flvUrl && (
+          {(isConnected || isMasterLiveRunning || isScriptLiveRunning || isLiveBroadcasting || flvUrl) && (
             <button
               onClick={() => {
                 const nextMuted = !isLiveAudioMuted;
                 setIsLiveAudioMuted(nextMuted);
                 if (flvVideoRef.current) flvVideoRef.current.muted = nextMuted;
+                try {
+                  sendVideoControl({ action: 'volume', isMuted: nextMuted });
+                } catch (e) {}
+                try {
+                  syncMasterLiveState({ isMuted: nextMuted });
+                } catch (e) {}
+                try {
+                  if (typeof BroadcastChannel !== 'undefined') {
+                    const bc = new BroadcastChannel('avalive_master_live_stream');
+                    bc.postMessage({ type: 'AUDIO_MUTE_UPDATE', isMuted: nextMuted });
+                  }
+                } catch (e) {}
               }}
-              className={`flex items-center gap-1 px-2.5 py-1 rounded text-xs font-bold transition-all shadow-md ${
+              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-md ${
                 isLiveAudioMuted 
-                  ? 'bg-red-500/20 text-red-400 border border-red-500/40 hover:bg-red-500/30' 
-                  : 'bg-emerald-500/20 text-emerald-400 border border-emerald-500/40 hover:bg-emerald-500/30'
+                  ? 'bg-[#3a1c22] text-rose-300 border border-rose-500/50 hover:bg-rose-950/80 shadow-rose-950/50' 
+                  : 'bg-[#132a22] text-emerald-300 border border-emerald-500/50 hover:bg-emerald-950/80 shadow-emerald-950/50'
               }`}
-              title={isLiveAudioMuted ? "Bật tiếng Live" : "Tắt tiếng Live"}
+              title={isLiveAudioMuted ? "Bật tiếng phiên Live (TikTok Live Studio / OBS / Shopee)" : "Tắt tiếng phiên Live (TikTok Live Studio / OBS / Shopee)"}
             >
-              {isLiveAudioMuted ? <VolumeX size={13} className="text-red-400" /> : <Volume2 size={13} className="text-emerald-400 animate-pulse" />}
-              <span>{isLiveAudioMuted ? "Tắt tiếng" : "Có tiếng"}</span>
+              {isLiveAudioMuted ? <VolumeX size={14} className="text-rose-400" /> : <Volume2 size={14} className="text-emerald-400 animate-pulse" />}
+              <span>{isLiveAudioMuted ? "Tắt tiếng" : "Mở tiếng"}</span>
             </button>
           )}
     </div>
