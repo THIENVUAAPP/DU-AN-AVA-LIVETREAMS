@@ -1312,9 +1312,9 @@ app.get([
       <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);">${overlayTxt}</div>
     </div>
     
-    <!-- LỚP 6: SẢN PHẨM GHIM LIVESTREAM (CHUYỂN THẲNG ĐẾN TRANG MUA HÀNG ĐƠN VỊ BÁN) -->
+    <!-- LỚP 6: SẢN PHẨM GHIM LIVESTREAM (BẤM ĐỂ MỞ GIỎ HÀNG & BẢNG CHỌN BIẾN THỂ) -->
     <div id="pinnedProductContainer" style="position: absolute; bottom: 20px; left: 14px; right: 14px; z-index: 40; pointer-events: auto; cursor: pointer; display: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);" onclick="window.handleOpenPinnedProduct(event)">
-      <div id="pinnedProductCard" title="Bấm để mở trang đặt mua sản phẩm của đơn vị bán hàng trên TikTok" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 16px; background: rgba(15, 23, 42, 0.94); border: 1.5px solid rgba(244, 63, 94, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(244, 63, 94, 0.4); cursor: pointer;">
+      <div id="pinnedProductCard" title="Bấm để xem chi tiết, chọn màu/size và đặt mua trực tiếp" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 16px; background: rgba(15, 23, 42, 0.94); border: 1.5px solid rgba(244, 63, 94, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(244, 63, 94, 0.4); cursor: pointer;">
         <img id="pinnedProductImg" src="" alt="Product" style="width: 54px; height: 54px; border-radius: 10px; object-fit: cover; flex-shrink: 0; border: 1px solid rgba(255, 255, 255, 0.2);" />
         <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
           <div style="display: flex; align-items: center; gap: 6px;">
@@ -1329,8 +1329,95 @@ app.get([
           </div>
         </div>
         <div style="flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 6px 10px; border-radius: 10px; background: linear-gradient(135deg, #f43f5e, #e11d48); color: #fff; font-size: 11px; font-weight: 800; box-shadow: 0 2px 8px rgba(244,63,94,0.4); white-space: nowrap;">
-          <span>⚡ Mua Ngay ↗</span>
+          <span>⚡ Chọn Mua ↗</span>
         </div>
+      </div>
+    </div>
+
+    <!-- MODAL GIỎ HÀNG & CHỌN BIẾN THỂ MUA HÀNG TRỰC TIẾP TRÊN PHIÊN LIVE -->
+    <div id="productCheckoutModal" style="position: absolute; inset: 0; z-index: 100; display: none; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); align-items: flex-end; justify-content: center;" onclick="window.closeProductModalOnBackdrop(event)">
+      <div id="productCheckoutSheet" style="width: 100%; max-width: 480px; max-height: 85vh; background: #0f172a; border-top-left-radius: 24px; border-top-right-radius: 24px; border: 1.5px solid rgba(244, 63, 94, 0.7); border-bottom: none; box-shadow: 0 -10px 40px rgba(0,0,0,0.9), 0 0 30px rgba(244,63,94,0.35); color: #fff; display: flex; flex-direction: column; overflow: hidden;" onclick="event.stopPropagation()">
+        
+        <!-- Header Sheet -->
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(30, 41, 59, 0.6);">
+          <div style="display: flex; gap: 12px; align-items: center; min-width: 0; flex: 1;">
+            <img id="modalProdImg" src="" alt="Product" style="width: 68px; height: 68px; border-radius: 12px; object-fit: cover; border: 1.5px solid rgba(244, 63, 94, 0.5); flex-shrink: 0;" />
+            <div style="min-width: 0; flex: 1;">
+              <div style="display: flex; align-items: baseline; gap: 8px;">
+                <span id="modalProdPrice" style="font-size: 20px; font-weight: 900; color: #fbbf24; font-family: monospace;">0 ₫</span>
+                <span id="modalProdOldPrice" style="font-size: 12px; color: #94a3b8; text-decoration: line-through; font-family: monospace;"></span>
+              </div>
+              <div id="modalProdStock" style="font-size: 11px; color: #34d399; font-weight: 700; margin-top: 2px;">⚡ Kho: Còn 999 sản phẩm</div>
+              <div id="modalProdSelectedSummary" style="font-size: 11px; color: #fda4af; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;">Đang chọn: Tiêu chuẩn</div>
+            </div>
+          </div>
+          <button type="button" onclick="window.closeProductModal(event)" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">✕</button>
+        </div>
+
+        <!-- Scrollable Options Body -->
+        <div style="padding: 14px 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; max-height: 48vh;">
+          <!-- Product Title & Shop Tag -->
+          <div>
+            <div id="modalProdShopBadge" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 6px; background: rgba(244, 63, 94, 0.2); border: 1px solid rgba(244, 63, 94, 0.5); color: #fda4af; font-size: 10px; font-weight: 800; margin-bottom: 6px;">
+              🏪 <span id="modalProdShopName">Gian Hàng Chính Hãng</span>
+            </div>
+            <div id="modalProdTitle" style="font-size: 13px; font-weight: 800; color: #f8fafc; line-height: 1.4;">Tên sản phẩm</div>
+          </div>
+
+          <!-- Color / Phân loại màu -->
+          <div id="modalColorSection">
+            <div style="font-size: 11px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">🎨 Chọn Màu Sắc / Phân Loại:</div>
+            <div id="modalColorOptions" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+          </div>
+
+          <!-- Size / Kích thước -->
+          <div id="modalSizeSection">
+            <div style="font-size: 11px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">📏 Chọn Kích Thước / Size:</div>
+            <div id="modalSizeOptions" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+          </div>
+
+          <!-- Type / Combo (nếu có) -->
+          <div id="modalTypeSection" style="display: none;">
+            <div style="font-size: 11px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">🎁 Chọn Quy Cách / Combo:</div>
+            <div id="modalTypeOptions" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+          </div>
+
+          <!-- Quantity Stepper -->
+          <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <div>
+              <div style="font-size: 12px; font-weight: 800; color: #fff;">Số Lượng:</div>
+              <div style="font-size: 10px; color: #94a3b8;">Áp dụng voucher đơn từ 1 món</div>
+            </div>
+            <div style="display: flex; align-items: center; border: 1.5px solid rgba(255,255,255,0.25); border-radius: 10px; overflow: hidden; background: rgba(15, 23, 42, 0.8);">
+              <button type="button" onclick="window.changeModalQuantity(-1)" style="width: 34px; height: 32px; background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 16px; font-weight: 800; cursor: pointer;">−</button>
+              <span id="modalQuantityVal" style="min-width: 38px; text-align: center; font-size: 14px; font-weight: 800; color: #fff; font-family: monospace;">1</span>
+              <button type="button" onclick="window.changeModalQuantity(1)" style="width: 34px; height: 32px; background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 16px; font-weight: 800; cursor: pointer;">+</button>
+            </div>
+          </div>
+
+          <!-- Voucher highlight tag -->
+          <div style="display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 10px; background: rgba(239, 68, 68, 0.15); border: 1px dashed #ef4444; color: #fca5a5; font-size: 11px; font-weight: 700;">
+            <span>🎟️</span>
+            <span>Đã tự động áp dụng Voucher Live -30K & Miễn Phí Vận Chuyển!</span>
+          </div>
+        </div>
+
+        <!-- Sticky Action Buttons Footer -->
+        <div style="padding: 12px 16px 18px 16px; border-top: 1px solid rgba(255,255,255,0.12); background: rgba(15, 23, 42, 0.98); display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 12px;">
+            <span style="color: #94a3b8;">Tổng thanh toán tạm tính:</span>
+            <span id="modalTotalPrice" style="font-size: 18px; font-weight: 900; color: #f43f5e; font-family: monospace;">0 ₫</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <button type="button" onclick="window.submitModalCheckout('tiktok')" style="background: linear-gradient(135deg, #f43f5e, #e11d48); border: none; padding: 12px 8px; border-radius: 14px; color: #fff; font-size: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 15px rgba(244,63,94,0.5); display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <span>⚡ Mua Trên TikTok</span>
+            </button>
+            <button type="button" onclick="window.submitModalCheckout('shopee')" style="background: linear-gradient(135deg, #ea580c, #f97316); border: none; padding: 12px 8px; border-radius: 14px; color: #fff; font-size: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 15px rgba(249,115,22,0.5); display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <span>🛍️ Mua Trên Shopee</span>
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
 
@@ -1460,7 +1547,119 @@ app.get([
         }
       }
 
-      function resolveSellerBuyUrl(prod) {
+      let activeModalProduct = null;
+      let modalSelectedColor = '';
+      let modalSelectedSize = '';
+      let modalSelectedType = '';
+      let modalQuantity = 1;
+
+      function parsePriceToNumber(priceStr) {
+        if (typeof priceStr === 'number') return priceStr;
+        if (!priceStr || typeof priceStr !== 'string') return 49999;
+        const digits = priceStr.replace(/[^0-9]/g, '');
+        return digits ? parseInt(digits, 10) : 49999;
+      }
+
+      function formatVietnamesePrice(num) {
+        return (num || 0).toLocaleString('vi-VN') + ' ₫';
+      }
+
+      function getProductVariants(prod) {
+        if (!prod) {
+          return {
+            colors: ['Đen Classic', 'Trắng Sport', 'Hồng Pastel', 'Xanh Navy'],
+            sizes: ['Size S (40-48kg)', 'Size M (49-56kg)', 'Size L (57-65kg)', 'Size XL (66-75kg)'],
+            types: ['Bản Tiêu Chuẩn', 'Combo Nâng Cấp'],
+            stock: '999',
+            unitPrice: 49999
+          };
+        }
+        if (prod.variants && typeof prod.variants === 'object') {
+          return {
+            colors: prod.variants.colors || ['Màu Mặc Định'],
+            sizes: prod.variants.sizes || ['Freesize'],
+            types: prod.variants.types || ['Bản Tiêu Chuẩn'],
+            stock: prod.stock || '500',
+            unitPrice: parsePriceToNumber(prod.price)
+          };
+        }
+        const idOrCode = String(prod.id || prod.code || prod.sku || '').toLowerCase();
+        const title = String(prod.name || prod.productName || prod.title || '').toLowerCase();
+
+        if (idOrCode === '1' || title.includes('bra') || title.includes('havata') || title.includes('áo bra') || title.includes('yếm')) {
+          return {
+            colors: ['Đen Classic', 'Hồng Pastel', 'Xanh Navy', 'Trắng Tinh Khôi', 'Xám Khói'],
+            sizes: ['Size S (40-48kg)', 'Size M (49-56kg)', 'Size L (57-65kg)', 'Size XL (66-75kg)'],
+            types: ['Áo Đơn Có Mút Cổ Yếm', 'Combo 2 Áo Siêu Tiết Kiệm (Tặng Túi Gym)'],
+            stock: '32.500',
+            unitPrice: 49999
+          };
+        }
+        if (idOrCode === '2' || title.includes('quấn cổ chân') || title.includes('combo') || title.includes('eirafit')) {
+          return {
+            colors: ['Đen Quyến Rũ', 'Hồng Barbie', 'Tím Lavender', 'Xanh Mint'],
+            sizes: ['Bộ Tiêu Chuẩn (1 Đôi)', 'Combo Full Set + Dây 35Lbs', 'Combo Pro Chuyên Nghiệp + Dây 50Lbs'],
+            types: ['Quấn Cổ Chân Đơn', 'Combo Quấn Chân + Dây Kháng Lực Mông Đùi'],
+            stock: '1.500',
+            unitPrice: 42000
+          };
+        }
+        if (idOrCode === '3' || title.includes('tạ tay') || title.includes('40kg') || title.includes('gympro')) {
+          return {
+            colors: ['Đen Phối Đỏ Sport', 'Đen Phối Vàng Gold', 'Xanh Quân Đội'],
+            sizes: ['Bộ 20KG Tháo Lắp', 'Bộ 30KG Tháo Lắp Đa Năng', 'Bộ 40KG Full Set Kèm Đòn Nối 40cm'],
+            types: ['Bản Nhựa PVC Bọc Thép', 'Bản Cao Su Chống Va Đập 2026'],
+            stock: '283',
+            unitPrice: 1299000
+          };
+        }
+        if (idOrCode === '4' || title.includes('mini band') || title.includes('kháng lực') || title.includes('powerband')) {
+          return {
+            colors: ['Hồng (Light - 15Lbs)', 'Xanh Lá (Medium - 25Lbs)', 'Tím (Heavy - 35Lbs)', 'Đen (X-Heavy - 45Lbs)', 'Set 5 Dây Full Mức'],
+            sizes: ['Bản Tiêu Chuẩn 500x50mm', 'Bản Dày Cao Cấp 600x50mm'],
+            types: ['Dây Lẻ Tùy Chọn Mức', 'Trọn Bộ 5 Dây + Túi Rút + Ebook Tập'],
+            stock: '999',
+            unitPrice: 79000
+          };
+        }
+        if (idOrCode === '5' || title.includes('bình nước') || title.includes('2l') || title.includes('hydrasport')) {
+          return {
+            colors: ['Tím - Xanh Gradient', 'Hồng - Xanh Pastel', 'Đen Nhám Sport', 'Xanh Dương - Vàng'],
+            sizes: ['Dung tích 1.5L', 'Dung tích 2.0L Siêu Lớn'],
+            types: ['Bình Kèm Ống Hút & Cọ Rửa', 'Bản Full + Bộ Sticker 3D & Dây Đeo'],
+            stock: '500',
+            unitPrice: 65000
+          };
+        }
+        if (idOrCode === '6' || title.includes('thảm yoga') || title.includes('thảm tập') || title.includes('zenyoga')) {
+          return {
+            colors: ['Hồng Cánh Sen - Tím', 'Xanh Biển - Xanh Lam', 'Xám Đậm - Đen', 'Xanh Rêu - Xanh Ngọc'],
+            sizes: ['Độ dày 6mm (183x61cm)', 'Độ dày 8mm Êm Ái (183x68cm)'],
+            types: ['Thảm Định Tuyến Chuẩn', 'Thảm Định Tuyến + Túi Đựng + Dây Buộc'],
+            stock: '340',
+            unitPrice: 159000
+          };
+        }
+        if (idOrCode === '7' || title.includes('con lăn') || title.includes('bụng') || title.includes('fitabcore')) {
+          return {
+            colors: ['Đỏ Ferrari Sport', 'Xanh Dương Dynamic', 'Cam Năng Động', 'Xám Titan'],
+            sizes: ['Bản 2 Bánh Tiêu Chuẩn', 'Bản 4 Bánh Tự Động Hồi Về Có Đệm Quỳ'],
+            types: ['Bản Cơ Bản', 'Bản Cao Cấp Kèm Giá Để Điện Thoại & Hẹn Giờ'],
+            stock: '210',
+            unitPrice: 189000
+          };
+        }
+
+        return {
+          colors: ['Màu Mặc Định', 'Màu Phiên Bản Mới'],
+          sizes: ['Size Tiêu Chuẩn', 'Size Nâng Cấp'],
+          types: ['Bản Tiêu Chuẩn'],
+          stock: prod.stock || '500',
+          unitPrice: parsePriceToNumber(prod.price) || 99000
+        };
+      }
+
+      function resolveSellerBuyUrl(prod, platform, variantInfo) {
         if (!prod) return 'https://www.tiktok.com/search?q=' + encodeURIComponent('sản phẩm tiktok shop chính hãng');
         
         const isClean = function(u) {
@@ -1472,13 +1671,72 @@ app.get([
         if (isClean(prod.sellerStoreUrl)) return prod.sellerStoreUrl;
         if (isClean(prod.storeUrl)) return prod.storeUrl;
 
-        if (prod.sellerHandle && typeof prod.sellerHandle === 'string' && prod.sellerHandle.trim() && !prod.sellerHandle.includes('powerband') && !prod.sellerHandle.includes('eirafit') && !prod.sellerHandle.includes('hydrasport') && !prod.sellerHandle.includes('zenyoga') && !prod.sellerHandle.includes('fitabcore') && !prod.sellerHandle.includes('gympro')) {
-          const h = prod.sellerHandle.trim();
-          return 'https://www.tiktok.com/' + (h.startsWith('@') ? h : '@' + h);
-        }
+        const pName = prod.name || prod.productName || prod.title || '';
+        const colorPart = variantInfo && variantInfo.color ? ' ' + variantInfo.color : '';
+        const sizePart = variantInfo && variantInfo.size ? ' ' + variantInfo.size : '';
+        const fullQuery = (pName + colorPart + sizePart).trim();
 
-        const searchKeyword = prod.name || prod.productName || prod.title || 'sản phẩm tiktok shop';
-        return 'https://www.tiktok.com/search?q=' + encodeURIComponent(searchKeyword);
+        if (platform === 'shopee') {
+          return 'https://shopee.vn/search?keyword=' + encodeURIComponent(fullQuery || 'sản phẩm hot deal');
+        }
+        return 'https://www.tiktok.com/search?q=' + encodeURIComponent(fullQuery || 'sản phẩm tiktok shop');
+      }
+
+      function renderModalVariantButtons(containerId, items, selectedValue, onSelectFnName) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '';
+        items.forEach(function(item) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          const isSel = item === selectedValue;
+          btn.style.padding = '6px 12px';
+          btn.style.borderRadius = '10px';
+          btn.style.border = isSel ? '1.5px solid #f43f5e' : '1px solid rgba(255, 255, 255, 0.2)';
+          btn.style.background = isSel ? 'linear-gradient(135deg, rgba(244, 63, 94, 0.35), rgba(225, 29, 72, 0.45))' : 'rgba(30, 41, 59, 0.8)';
+          btn.style.color = isSel ? '#ffffff' : '#cbd5e1';
+          btn.style.fontSize = '11px';
+          btn.style.fontWeight = isSel ? '800' : '600';
+          btn.style.cursor = 'pointer';
+          btn.style.transition = 'all 0.15s ease';
+          btn.style.boxShadow = isSel ? '0 0 10px rgba(244, 63, 94, 0.4)' : 'none';
+          btn.innerHTML = (isSel ? '✓ ' : '') + item;
+          btn.onclick = function(e) {
+            e.stopPropagation();
+            window[onSelectFnName](item);
+          };
+          container.appendChild(btn);
+        });
+      }
+
+      function updateModalPriceAndSummary() {
+        if (!activeModalProduct) return;
+        const variants = getProductVariants(activeModalProduct);
+        const unitP = variants.unitPrice || parsePriceToNumber(activeModalProduct.price);
+        const total = unitP * modalQuantity;
+
+        const elPrice = document.getElementById('modalProdPrice');
+        const elOldPrice = document.getElementById('modalProdOldPrice');
+        const elTotal = document.getElementById('modalTotalPrice');
+        const elSummary = document.getElementById('modalProdSelectedSummary');
+        const elQty = document.getElementById('modalQuantityVal');
+
+        if (elPrice) elPrice.innerText = formatVietnamesePrice(unitP);
+        if (elOldPrice && activeModalProduct.oldPrice) {
+          elOldPrice.innerText = activeModalProduct.oldPrice;
+          elOldPrice.style.display = 'inline';
+        }
+        if (elTotal) elTotal.innerText = formatVietnamesePrice(total);
+        if (elQty) elQty.innerText = String(modalQuantity);
+
+        if (elSummary) {
+          const parts = [];
+          if (modalSelectedColor) parts.push(modalSelectedColor);
+          if (modalSelectedSize) parts.push(modalSelectedSize);
+          if (modalSelectedType) parts.push(modalSelectedType);
+          parts.push('SL: ' + modalQuantity);
+          elSummary.innerText = 'Đang chọn: ' + parts.join(' • ');
+        }
       }
 
       function getSellerName(prod) {
@@ -1496,14 +1754,106 @@ app.get([
         return 'Đơn Vị Bán Hàng';
       }
 
+      window.openProductPurchaseModal = function(prod) {
+        if (!prod) prod = window.__currentPinnedProduct;
+        if (!prod) return;
+        activeModalProduct = prod;
+        const variants = getProductVariants(prod);
+        
+        modalSelectedColor = variants.colors && variants.colors.length > 0 ? variants.colors[0] : '';
+        modalSelectedSize = variants.sizes && variants.sizes.length > 0 ? variants.sizes[0] : '';
+        modalSelectedType = variants.types && variants.types.length > 0 ? variants.types[0] : '';
+        modalQuantity = 1;
+
+        const modal = document.getElementById('productCheckoutModal');
+        const img = document.getElementById('modalProdImg');
+        const title = document.getElementById('modalProdTitle');
+        const shop = document.getElementById('modalProdShopName');
+        const stock = document.getElementById('modalProdStock');
+
+        if (img) img.src = prod.image || 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=500&q=80';
+        if (title) title.innerText = prod.name || prod.productName || 'Sản phẩm Livestream';
+        if (shop) shop.innerText = getSellerName(prod);
+        if (stock) stock.innerText = '⚡ Kho: Còn ' + (variants.stock || prod.stock || '500') + ' sản phẩm';
+
+        renderModalVariantButtons('modalColorOptions', variants.colors || [], modalSelectedColor, 'selectModalColor');
+        renderModalVariantButtons('modalSizeOptions', variants.sizes || [], modalSelectedSize, 'selectModalSize');
+        
+        const typeSec = document.getElementById('modalTypeSection');
+        if (variants.types && variants.types.length > 1) {
+          if (typeSec) typeSec.style.display = 'block';
+          renderModalVariantButtons('modalTypeOptions', variants.types, modalSelectedType, 'selectModalType');
+        } else {
+          if (typeSec) typeSec.style.display = 'none';
+        }
+
+        updateModalPriceAndSummary();
+
+        if (modal) {
+          modal.style.display = 'flex';
+        }
+      };
+
+      window.closeProductModal = function(e) {
+        if (e) {
+          try { e.preventDefault(); } catch(err) {}
+          try { e.stopPropagation(); } catch(err) {}
+        }
+        const modal = document.getElementById('productCheckoutModal');
+        if (modal) modal.style.display = 'none';
+      };
+
+      window.closeProductModalOnBackdrop = function(e) {
+        if (e && e.target && e.target.id === 'productCheckoutModal') {
+          window.closeProductModal(e);
+        }
+      };
+
+      window.selectModalColor = function(color) {
+        modalSelectedColor = color;
+        const variants = getProductVariants(activeModalProduct);
+        renderModalVariantButtons('modalColorOptions', variants.colors || [], modalSelectedColor, 'selectModalColor');
+        updateModalPriceAndSummary();
+      };
+
+      window.selectModalSize = function(size) {
+        modalSelectedSize = size;
+        const variants = getProductVariants(activeModalProduct);
+        renderModalVariantButtons('modalSizeOptions', variants.sizes || [], modalSelectedSize, 'selectModalSize');
+        updateModalPriceAndSummary();
+      };
+
+      window.selectModalType = function(type) {
+        modalSelectedType = type;
+        const variants = getProductVariants(activeModalProduct);
+        renderModalVariantButtons('modalTypeOptions', variants.types || [], modalSelectedType, 'selectModalType');
+        updateModalPriceAndSummary();
+      };
+
+      window.changeModalQuantity = function(delta) {
+        modalQuantity = Math.max(1, Math.min(99, modalQuantity + delta));
+        updateModalPriceAndSummary();
+      };
+
+      window.submitModalCheckout = function(platform) {
+        const prod = activeModalProduct || window.__currentPinnedProduct;
+        const variantInfo = {
+          color: modalSelectedColor,
+          size: modalSelectedSize,
+          type: modalSelectedType,
+          quantity: modalQuantity
+        };
+        const targetUrl = resolveSellerBuyUrl(prod, platform, variantInfo);
+        window.open(targetUrl, '_blank', 'noopener,noreferrer');
+      };
+
       window.handleOpenPinnedProduct = function(e) {
         if (e) {
           try { e.preventDefault(); } catch(err) {}
           try { e.stopPropagation(); } catch(err) {}
         }
         const prod = window.__currentPinnedProduct;
-        const targetUrl = resolveSellerBuyUrl(prod);
-        window.open(targetUrl, '_blank', 'noopener,noreferrer');
+        window.openProductPurchaseModal(prod);
       };
 
       function getChromaClass(chroma) {
@@ -2976,9 +3326,9 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
       <div id="overlayTextContent" style="display: inline-block; padding: 6px 14px; border-radius: 16px; font-weight: 900; text-transform: uppercase; letter-spacing: 0.05em; background: rgba(2, 6, 23, 0.9); border: 1px solid #22d3ee; color: #22d3ee; font-family: 'Segoe UI', system-ui, sans-serif; font-size: 16px; box-shadow: 0 0 20px rgba(6, 182, 212, 0.6);">${overlayTxt}</div>
     </div>
 
-    <!-- LỚP 6: SẢN PHẨM GHIM LIVESTREAM (CHUYỂN THẲNG ĐẾN TRANG MUA HÀNG ĐƠN VỊ BÁN) -->
+    <!-- LỚP 6: SẢN PHẨM GHIM LIVESTREAM (BẤM ĐỂ MỞ GIỎ HÀNG & BẢNG CHỌN BIẾN THỂ) -->
     <div id="pinnedProductContainer" style="position: absolute; bottom: 20px; left: 14px; right: 14px; z-index: 40; pointer-events: auto; cursor: pointer; display: none; transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);" onclick="window.handleOpenPinnedProduct(event)">
-      <div id="pinnedProductCard" title="Bấm để mở trang đặt mua sản phẩm của đơn vị bán hàng trên TikTok" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 16px; background: rgba(15, 23, 42, 0.94); border: 1.5px solid rgba(244, 63, 94, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(244, 63, 94, 0.4); cursor: pointer;">
+      <div id="pinnedProductCard" title="Bấm để xem chi tiết, chọn màu/size và đặt mua trực tiếp" style="display: flex; align-items: center; gap: 10px; padding: 10px 14px; border-radius: 16px; background: rgba(15, 23, 42, 0.94); border: 1.5px solid rgba(244, 63, 94, 0.7); backdrop-filter: blur(16px); -webkit-backdrop-filter: blur(16px); box-shadow: 0 10px 30px rgba(0, 0, 0, 0.8), 0 0 20px rgba(244, 63, 94, 0.4); cursor: pointer;">
         <img id="pinnedProductImg" src="" alt="Product" style="width: 54px; height: 54px; border-radius: 10px; object-fit: cover; flex-shrink: 0; border: 1px solid rgba(255, 255, 255, 0.2);" />
         <div style="flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px;">
           <div style="display: flex; align-items: center; gap: 6px;">
@@ -2993,8 +3343,95 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
           </div>
         </div>
         <div style="flex-shrink: 0; display: flex; align-items: center; justify-content: center; padding: 6px 10px; border-radius: 10px; background: linear-gradient(135deg, #f43f5e, #e11d48); color: #fff; font-size: 11px; font-weight: 800; box-shadow: 0 2px 8px rgba(244,63,94,0.4); white-space: nowrap;">
-          <span>⚡ Mua Ngay ↗</span>
+          <span>⚡ Chọn Mua ↗</span>
         </div>
+      </div>
+    </div>
+
+    <!-- MODAL GIỎ HÀNG & CHỌN BIẾN THỂ MUA HÀNG TRỰC TIẾP TRÊN PHIÊN LIVE -->
+    <div id="productCheckoutModal2" style="position: absolute; inset: 0; z-index: 100; display: none; background: rgba(0, 0, 0, 0.78); backdrop-filter: blur(8px); -webkit-backdrop-filter: blur(8px); align-items: flex-end; justify-content: center;" onclick="window.closeProductModalOnBackdrop2(event)">
+      <div id="productCheckoutSheet2" style="width: 100%; max-width: 480px; max-height: 85vh; background: #0f172a; border-top-left-radius: 24px; border-top-right-radius: 24px; border: 1.5px solid rgba(244, 63, 94, 0.7); border-bottom: none; box-shadow: 0 -10px 40px rgba(0,0,0,0.9), 0 0 30px rgba(244,63,94,0.35); color: #fff; display: flex; flex-direction: column; overflow: hidden;" onclick="event.stopPropagation()">
+        
+        <!-- Header Sheet -->
+        <div style="display: flex; align-items: flex-start; justify-content: space-between; padding: 14px 16px; border-bottom: 1px solid rgba(255,255,255,0.1); background: rgba(30, 41, 59, 0.6);">
+          <div style="display: flex; gap: 12px; align-items: center; min-width: 0; flex: 1;">
+            <img id="modalProdImg2" src="" alt="Product" style="width: 68px; height: 68px; border-radius: 12px; object-fit: cover; border: 1.5px solid rgba(244, 63, 94, 0.5); flex-shrink: 0;" />
+            <div style="min-width: 0; flex: 1;">
+              <div style="display: flex; align-items: baseline; gap: 8px;">
+                <span id="modalProdPrice2" style="font-size: 20px; font-weight: 900; color: #fbbf24; font-family: monospace;">0 ₫</span>
+                <span id="modalProdOldPrice2" style="font-size: 12px; color: #94a3b8; text-decoration: line-through; font-family: monospace;"></span>
+              </div>
+              <div id="modalProdStock2" style="font-size: 11px; color: #34d399; font-weight: 700; margin-top: 2px;">⚡ Kho: Còn 999 sản phẩm</div>
+              <div id="modalProdSelectedSummary2" style="font-size: 11px; color: #fda4af; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; margin-top: 2px;">Đang chọn: Tiêu chuẩn</div>
+            </div>
+          </div>
+          <button type="button" onclick="window.closeProductModal2(event)" style="background: rgba(255,255,255,0.1); border: 1px solid rgba(255,255,255,0.2); color: #fff; width: 32px; height: 32px; border-radius: 50%; font-size: 16px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0;">✕</button>
+        </div>
+
+        <!-- Scrollable Options Body -->
+        <div style="padding: 14px 16px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; max-height: 48vh;">
+          <!-- Product Title & Shop Tag -->
+          <div>
+            <div id="modalProdShopBadge2" style="display: inline-flex; align-items: center; gap: 4px; padding: 2px 8px; border-radius: 6px; background: rgba(244, 63, 94, 0.2); border: 1px solid rgba(244, 63, 94, 0.5); color: #fda4af; font-size: 10px; font-weight: 800; margin-bottom: 6px;">
+              🏪 <span id="modalProdShopName2">Gian Hàng Chính Hãng</span>
+            </div>
+            <div id="modalProdTitle2" style="font-size: 13px; font-weight: 800; color: #f8fafc; line-height: 1.4;">Tên sản phẩm</div>
+          </div>
+
+          <!-- Color / Phân loại màu -->
+          <div id="modalColorSection2">
+            <div style="font-size: 11px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">🎨 Chọn Màu Sắc / Phân Loại:</div>
+            <div id="modalColorOptions2" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+          </div>
+
+          <!-- Size / Kích thước -->
+          <div id="modalSizeSection2">
+            <div style="font-size: 11px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">📏 Chọn Kích Thước / Size:</div>
+            <div id="modalSizeOptions2" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+          </div>
+
+          <!-- Type / Combo (nếu có) -->
+          <div id="modalTypeSection2" style="display: none;">
+            <div style="font-size: 11px; font-weight: 800; color: #cbd5e1; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 8px;">🎁 Chọn Quy Cách / Combo:</div>
+            <div id="modalTypeOptions2" style="display: flex; flex-wrap: wrap; gap: 8px;"></div>
+          </div>
+
+          <!-- Quantity Stepper -->
+          <div style="display: flex; align-items: center; justify-content: space-between; padding-top: 8px; border-top: 1px solid rgba(255,255,255,0.1);">
+            <div>
+              <div style="font-size: 12px; font-weight: 800; color: #fff;">Số Lượng:</div>
+              <div style="font-size: 10px; color: #94a3b8;">Áp dụng voucher đơn từ 1 món</div>
+            </div>
+            <div style="display: flex; align-items: center; border: 1.5px solid rgba(255,255,255,0.25); border-radius: 10px; overflow: hidden; background: rgba(15, 23, 42, 0.8);">
+              <button type="button" onclick="window.changeModalQuantity2(-1)" style="width: 34px; height: 32px; background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 16px; font-weight: 800; cursor: pointer;">−</button>
+              <span id="modalQuantityVal2" style="min-width: 38px; text-align: center; font-size: 14px; font-weight: 800; color: #fff; font-family: monospace;">1</span>
+              <button type="button" onclick="window.changeModalQuantity2(1)" style="width: 34px; height: 32px; background: rgba(255,255,255,0.1); border: none; color: #fff; font-size: 16px; font-weight: 800; cursor: pointer;">+</button>
+            </div>
+          </div>
+
+          <!-- Voucher highlight tag -->
+          <div style="display: flex; align-items: center; gap: 6px; padding: 8px 12px; border-radius: 10px; background: rgba(239, 68, 68, 0.15); border: 1px dashed #ef4444; color: #fca5a5; font-size: 11px; font-weight: 700;">
+            <span>🎟️</span>
+            <span>Đã tự động áp dụng Voucher Live -30K & Miễn Phí Vận Chuyển!</span>
+          </div>
+        </div>
+
+        <!-- Sticky Action Buttons Footer -->
+        <div style="padding: 12px 16px 18px 16px; border-top: 1px solid rgba(255,255,255,0.12); background: rgba(15, 23, 42, 0.98); display: flex; flex-direction: column; gap: 8px;">
+          <div style="display: flex; justify-content: space-between; align-items: baseline; font-size: 12px;">
+            <span style="color: #94a3b8;">Tổng thanh toán tạm tính:</span>
+            <span id="modalTotalPrice2" style="font-size: 18px; font-weight: 900; color: #f43f5e; font-family: monospace;">0 ₫</span>
+          </div>
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+            <button type="button" onclick="window.submitModalCheckout2('tiktok')" style="background: linear-gradient(135deg, #f43f5e, #e11d48); border: none; padding: 12px 8px; border-radius: 14px; color: #fff; font-size: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 15px rgba(244,63,94,0.5); display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <span>⚡ Mua Trên TikTok</span>
+            </button>
+            <button type="button" onclick="window.submitModalCheckout2('shopee')" style="background: linear-gradient(135deg, #ea580c, #f97316); border: none; padding: 12px 8px; border-radius: 14px; color: #fff; font-size: 12px; font-weight: 900; cursor: pointer; box-shadow: 0 4px 15px rgba(249,115,22,0.5); display: flex; align-items: center; justify-content: center; gap: 6px;">
+              <span>🛍️ Mua Trên Shopee</span>
+            </button>
+          </div>
+        </div>
+
       </div>
     </div>
     <div id="badge" style="display: none !important;">🔴 4K 60 FPS TRỰC TIẾP v4.9.85</div>
@@ -3117,7 +3554,119 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         }
       }
 
-      function resolveSellerBuyUrl2(prod) {
+      let activeModalProduct2 = null;
+      let modalSelectedColor2 = '';
+      let modalSelectedSize2 = '';
+      let modalSelectedType2 = '';
+      let modalQuantity2 = 1;
+
+      function parsePriceToNumber2(priceStr) {
+        if (typeof priceStr === 'number') return priceStr;
+        if (!priceStr || typeof priceStr !== 'string') return 49999;
+        const digits = priceStr.replace(/[^0-9]/g, '');
+        return digits ? parseInt(digits, 10) : 49999;
+      }
+
+      function formatVietnamesePrice2(num) {
+        return (num || 0).toLocaleString('vi-VN') + ' ₫';
+      }
+
+      function getProductVariants2(prod) {
+        if (!prod) {
+          return {
+            colors: ['Đen Classic', 'Trắng Sport', 'Hồng Pastel', 'Xanh Navy'],
+            sizes: ['Size S (40-48kg)', 'Size M (49-56kg)', 'Size L (57-65kg)', 'Size XL (66-75kg)'],
+            types: ['Bản Tiêu Chuẩn', 'Combo Nâng Cấp'],
+            stock: '999',
+            unitPrice: 49999
+          };
+        }
+        if (prod.variants && typeof prod.variants === 'object') {
+          return {
+            colors: prod.variants.colors || ['Màu Mặc Định'],
+            sizes: prod.variants.sizes || ['Freesize'],
+            types: prod.variants.types || ['Bản Tiêu Chuẩn'],
+            stock: prod.stock || '500',
+            unitPrice: parsePriceToNumber2(prod.price)
+          };
+        }
+        const idOrCode = String(prod.id || prod.code || prod.sku || '').toLowerCase();
+        const title = String(prod.name || prod.productName || prod.title || '').toLowerCase();
+
+        if (idOrCode === '1' || title.includes('bra') || title.includes('havata') || title.includes('áo bra') || title.includes('yếm')) {
+          return {
+            colors: ['Đen Classic', 'Hồng Pastel', 'Xanh Navy', 'Trắng Tinh Khôi', 'Xám Khói'],
+            sizes: ['Size S (40-48kg)', 'Size M (49-56kg)', 'Size L (57-65kg)', 'Size XL (66-75kg)'],
+            types: ['Áo Đơn Có Mút Cổ Yếm', 'Combo 2 Áo Siêu Tiết Kiệm (Tặng Túi Gym)'],
+            stock: '32.500',
+            unitPrice: 49999
+          };
+        }
+        if (idOrCode === '2' || title.includes('quấn cổ chân') || title.includes('combo') || title.includes('eirafit')) {
+          return {
+            colors: ['Đen Quyến Rũ', 'Hồng Barbie', 'Tím Lavender', 'Xanh Mint'],
+            sizes: ['Bộ Tiêu Chuẩn (1 Đôi)', 'Combo Full Set + Dây 35Lbs', 'Combo Pro Chuyên Nghiệp + Dây 50Lbs'],
+            types: ['Quấn Cổ Chân Đơn', 'Combo Quấn Chân + Dây Kháng Lực Mông Đùi'],
+            stock: '1.500',
+            unitPrice: 42000
+          };
+        }
+        if (idOrCode === '3' || title.includes('tạ tay') || title.includes('40kg') || title.includes('gympro')) {
+          return {
+            colors: ['Đen Phối Đỏ Sport', 'Đen Phối Vàng Gold', 'Xanh Quân Đội'],
+            sizes: ['Bộ 20KG Tháo Lắp', 'Bộ 30KG Tháo Lắp Đa Năng', 'Bộ 40KG Full Set Kèm Đòn Nối 40cm'],
+            types: ['Bản Nhựa PVC Bọc Thép', 'Bản Cao Su Chống Va Đập 2026'],
+            stock: '283',
+            unitPrice: 1299000
+          };
+        }
+        if (idOrCode === '4' || title.includes('mini band') || title.includes('kháng lực') || title.includes('powerband')) {
+          return {
+            colors: ['Hồng (Light - 15Lbs)', 'Xanh Lá (Medium - 25Lbs)', 'Tím (Heavy - 35Lbs)', 'Đen (X-Heavy - 45Lbs)', 'Set 5 Dây Full Mức'],
+            sizes: ['Bản Tiêu Chuẩn 500x50mm', 'Bản Dày Cao Cấp 600x50mm'],
+            types: ['Dây Lẻ Tùy Chọn Mức', 'Trọn Bộ 5 Dây + Túi Rút + Ebook Tập'],
+            stock: '999',
+            unitPrice: 79000
+          };
+        }
+        if (idOrCode === '5' || title.includes('bình nước') || title.includes('2l') || title.includes('hydrasport')) {
+          return {
+            colors: ['Tím - Xanh Gradient', 'Hồng - Xanh Pastel', 'Đen Nhám Sport', 'Xanh Dương - Vàng'],
+            sizes: ['Dung tích 1.5L', 'Dung tích 2.0L Siêu Lớn'],
+            types: ['Bình Kèm Ống Hút & Cọ Rửa', 'Bản Full + Bộ Sticker 3D & Dây Đeo'],
+            stock: '500',
+            unitPrice: 65000
+          };
+        }
+        if (idOrCode === '6' || title.includes('thảm yoga') || title.includes('thảm tập') || title.includes('zenyoga')) {
+          return {
+            colors: ['Hồng Cánh Sen - Tím', 'Xanh Biển - Xanh Lam', 'Xám Đậm - Đen', 'Xanh Rêu - Xanh Ngọc'],
+            sizes: ['Độ dày 6mm (183x61cm)', 'Độ dày 8mm Êm Ái (183x68cm)'],
+            types: ['Thảm Định Tuyến Chuẩn', 'Thảm Định Tuyến + Túi Đựng + Dây Buộc'],
+            stock: '340',
+            unitPrice: 159000
+          };
+        }
+        if (idOrCode === '7' || title.includes('con lăn') || title.includes('bụng') || title.includes('fitabcore')) {
+          return {
+            colors: ['Đỏ Ferrari Sport', 'Xanh Dương Dynamic', 'Cam Năng Động', 'Xám Titan'],
+            sizes: ['Bản 2 Bánh Tiêu Chuẩn', 'Bản 4 Bánh Tự Động Hồi Về Có Đệm Quỳ'],
+            types: ['Bản Cơ Bản', 'Bản Cao Cấp Kèm Giá Để Điện Thoại & Hẹn Giờ'],
+            stock: '210',
+            unitPrice: 189000
+          };
+        }
+
+        return {
+          colors: ['Màu Mặc Định', 'Màu Phiên Bản Mới'],
+          sizes: ['Size Tiêu Chuẩn', 'Size Nâng Cấp'],
+          types: ['Bản Tiêu Chuẩn'],
+          stock: prod.stock || '500',
+          unitPrice: parsePriceToNumber2(prod.price) || 99000
+        };
+      }
+
+      function resolveSellerBuyUrl2(prod, platform, variantInfo) {
         if (!prod) return 'https://www.tiktok.com/search?q=' + encodeURIComponent('sản phẩm tiktok shop chính hãng');
         
         const isClean = function(u) {
@@ -3129,13 +3678,72 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         if (isClean(prod.sellerStoreUrl)) return prod.sellerStoreUrl;
         if (isClean(prod.storeUrl)) return prod.storeUrl;
 
-        if (prod.sellerHandle && typeof prod.sellerHandle === 'string' && prod.sellerHandle.trim() && !prod.sellerHandle.includes('powerband') && !prod.sellerHandle.includes('eirafit') && !prod.sellerHandle.includes('hydrasport') && !prod.sellerHandle.includes('zenyoga') && !prod.sellerHandle.includes('fitabcore') && !prod.sellerHandle.includes('gympro')) {
-          const h = prod.sellerHandle.trim();
-          return 'https://www.tiktok.com/' + (h.startsWith('@') ? h : '@' + h);
-        }
+        const pName = prod.name || prod.productName || prod.title || '';
+        const colorPart = variantInfo && variantInfo.color ? ' ' + variantInfo.color : '';
+        const sizePart = variantInfo && variantInfo.size ? ' ' + variantInfo.size : '';
+        const fullQuery = (pName + colorPart + sizePart).trim();
 
-        const searchKeyword = prod.name || prod.productName || prod.title || 'sản phẩm tiktok shop';
-        return 'https://www.tiktok.com/search?q=' + encodeURIComponent(searchKeyword);
+        if (platform === 'shopee') {
+          return 'https://shopee.vn/search?keyword=' + encodeURIComponent(fullQuery || 'sản phẩm hot deal');
+        }
+        return 'https://www.tiktok.com/search?q=' + encodeURIComponent(fullQuery || 'sản phẩm tiktok shop');
+      }
+
+      function renderModalVariantButtons2(containerId, items, selectedValue, onSelectFnName) {
+        const container = document.getElementById(containerId);
+        if (!container) return;
+        container.innerHTML = '';
+        items.forEach(function(item) {
+          const btn = document.createElement('button');
+          btn.type = 'button';
+          const isSel = item === selectedValue;
+          btn.style.padding = '6px 12px';
+          btn.style.borderRadius = '10px';
+          btn.style.border = isSel ? '1.5px solid #f43f5e' : '1px solid rgba(255, 255, 255, 0.2)';
+          btn.style.background = isSel ? 'linear-gradient(135deg, rgba(244, 63, 94, 0.35), rgba(225, 29, 72, 0.45))' : 'rgba(30, 41, 59, 0.8)';
+          btn.style.color = isSel ? '#ffffff' : '#cbd5e1';
+          btn.style.fontSize = '11px';
+          btn.style.fontWeight = isSel ? '800' : '600';
+          btn.style.cursor = 'pointer';
+          btn.style.transition = 'all 0.15s ease';
+          btn.style.boxShadow = isSel ? '0 0 10px rgba(244, 63, 94, 0.4)' : 'none';
+          btn.innerHTML = (isSel ? '✓ ' : '') + item;
+          btn.onclick = function(e) {
+            e.stopPropagation();
+            window[onSelectFnName](item);
+          };
+          container.appendChild(btn);
+        });
+      }
+
+      function updateModalPriceAndSummary2() {
+        if (!activeModalProduct2) return;
+        const variants = getProductVariants2(activeModalProduct2);
+        const unitP = variants.unitPrice || parsePriceToNumber2(activeModalProduct2.price);
+        const total = unitP * modalQuantity2;
+
+        const elPrice = document.getElementById('modalProdPrice2');
+        const elOldPrice = document.getElementById('modalProdOldPrice2');
+        const elTotal = document.getElementById('modalTotalPrice2');
+        const elSummary = document.getElementById('modalProdSelectedSummary2');
+        const elQty = document.getElementById('modalQuantityVal2');
+
+        if (elPrice) elPrice.innerText = formatVietnamesePrice2(unitP);
+        if (elOldPrice && activeModalProduct2.oldPrice) {
+          elOldPrice.innerText = activeModalProduct2.oldPrice;
+          elOldPrice.style.display = 'inline';
+        }
+        if (elTotal) elTotal.innerText = formatVietnamesePrice2(total);
+        if (elQty) elQty.innerText = String(modalQuantity2);
+
+        if (elSummary) {
+          const parts = [];
+          if (modalSelectedColor2) parts.push(modalSelectedColor2);
+          if (modalSelectedSize2) parts.push(modalSelectedSize2);
+          if (modalSelectedType2) parts.push(modalSelectedType2);
+          parts.push('SL: ' + modalQuantity2);
+          elSummary.innerText = 'Đang chọn: ' + parts.join(' • ');
+        }
       }
 
       function getSellerName2(prod) {
@@ -3153,14 +3761,106 @@ app.get(['/window-capture', '/window_capture'], (req, res) => {
         return 'Đơn Vị Bán Hàng';
       }
 
+      window.openProductPurchaseModal2 = function(prod) {
+        if (!prod) prod = window.__currentPinnedProduct;
+        if (!prod) return;
+        activeModalProduct2 = prod;
+        const variants = getProductVariants2(prod);
+        
+        modalSelectedColor2 = variants.colors && variants.colors.length > 0 ? variants.colors[0] : '';
+        modalSelectedSize2 = variants.sizes && variants.sizes.length > 0 ? variants.sizes[0] : '';
+        modalSelectedType2 = variants.types && variants.types.length > 0 ? variants.types[0] : '';
+        modalQuantity2 = 1;
+
+        const modal = document.getElementById('productCheckoutModal2');
+        const img = document.getElementById('modalProdImg2');
+        const title = document.getElementById('modalProdTitle2');
+        const shop = document.getElementById('modalProdShopName2');
+        const stock = document.getElementById('modalProdStock2');
+
+        if (img) img.src = prod.image || 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=500&q=80';
+        if (title) title.innerText = prod.name || prod.productName || 'Sản phẩm Livestream';
+        if (shop) shop.innerText = getSellerName2(prod);
+        if (stock) stock.innerText = '⚡ Kho: Còn ' + (variants.stock || prod.stock || '500') + ' sản phẩm';
+
+        renderModalVariantButtons2('modalColorOptions2', variants.colors || [], modalSelectedColor2, 'selectModalColor2');
+        renderModalVariantButtons2('modalSizeOptions2', variants.sizes || [], modalSelectedSize2, 'selectModalSize2');
+        
+        const typeSec = document.getElementById('modalTypeSection2');
+        if (variants.types && variants.types.length > 1) {
+          if (typeSec) typeSec.style.display = 'block';
+          renderModalVariantButtons2('modalTypeOptions2', variants.types, modalSelectedType2, 'selectModalType2');
+        } else {
+          if (typeSec) typeSec.style.display = 'none';
+        }
+
+        updateModalPriceAndSummary2();
+
+        if (modal) {
+          modal.style.display = 'flex';
+        }
+      };
+
+      window.closeProductModal2 = function(e) {
+        if (e) {
+          try { e.preventDefault(); } catch(err) {}
+          try { e.stopPropagation(); } catch(err) {}
+        }
+        const modal = document.getElementById('productCheckoutModal2');
+        if (modal) modal.style.display = 'none';
+      };
+
+      window.closeProductModalOnBackdrop2 = function(e) {
+        if (e && e.target && e.target.id === 'productCheckoutModal2') {
+          window.closeProductModal2(e);
+        }
+      };
+
+      window.selectModalColor2 = function(color) {
+        modalSelectedColor2 = color;
+        const variants = getProductVariants2(activeModalProduct2);
+        renderModalVariantButtons2('modalColorOptions2', variants.colors || [], modalSelectedColor2, 'selectModalColor2');
+        updateModalPriceAndSummary2();
+      };
+
+      window.selectModalSize2 = function(size) {
+        modalSelectedSize2 = size;
+        const variants = getProductVariants2(activeModalProduct2);
+        renderModalVariantButtons2('modalSizeOptions2', variants.sizes || [], modalSelectedSize2, 'selectModalSize2');
+        updateModalPriceAndSummary2();
+      };
+
+      window.selectModalType2 = function(type) {
+        modalSelectedType2 = type;
+        const variants = getProductVariants2(activeModalProduct2);
+        renderModalVariantButtons2('modalTypeOptions2', variants.types || [], modalSelectedType2, 'selectModalType2');
+        updateModalPriceAndSummary2();
+      };
+
+      window.changeModalQuantity2 = function(delta) {
+        modalQuantity2 = Math.max(1, Math.min(99, modalQuantity2 + delta));
+        updateModalPriceAndSummary2();
+      };
+
+      window.submitModalCheckout2 = function(platform) {
+        const prod = activeModalProduct2 || window.__currentPinnedProduct;
+        const variantInfo = {
+          color: modalSelectedColor2,
+          size: modalSelectedSize2,
+          type: modalSelectedType2,
+          quantity: modalQuantity2
+        };
+        const targetUrl = resolveSellerBuyUrl2(prod, platform, variantInfo);
+        window.open(targetUrl, '_blank', 'noopener,noreferrer');
+      };
+
       window.handleOpenPinnedProduct = function(e) {
         if (e) {
           try { e.preventDefault(); } catch(err) {}
           try { e.stopPropagation(); } catch(err) {}
         }
         const prod = window.__currentPinnedProduct;
-        const targetUrl = resolveSellerBuyUrl2(prod);
-        window.open(targetUrl, '_blank', 'noopener,noreferrer');
+        window.openProductPurchaseModal2(prod);
       };
 
       function safePlay() {
