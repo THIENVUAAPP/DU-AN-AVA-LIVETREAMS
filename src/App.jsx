@@ -31,6 +31,7 @@ import LiveStreamStandalonePlayer from "./components/genaidol/LiveStreamStandalo
 import WindowCapturePlayer from "./components/genaidol/WindowCapturePlayer";
 import TemplateLibraryModal from "./components/genaidol/TemplateLibraryModal";
 import LivestreamFlowSequencer from "./components/genaidol/LivestreamFlowSequencer";
+import PhoneCamStreamer from "./components/genaidol/PhoneCamStreamer";
 import { SvgChromaFilters } from "./components/genaidol/MultiAvatarStudioModal";
 import { bootstrapDefaultPresets } from "./utils/defaultPresetsBootstrap";
 import { Lock, Sparkles, ShieldCheck, Mail, LogIn, ArrowRight } from "lucide-react";
@@ -53,14 +54,15 @@ export default function App() {
   const overlayPathName = typeof window !== "undefined" ? window.location.pathname.toLowerCase() : "";
   const overlayTypeParam = overlaySearchParams?.get("overlay")?.toLowerCase();
 
+  const isPhoneCamStandalone = overlayPathName.includes("/phone-cam") || overlayPathName.includes("/phone_cam") || overlaySearchParams?.get("mode") === "phone_cam" || overlaySearchParams?.get("view") === "phone_cam";
   const isWindowCaptureStandalone = overlayPathName.includes("/window-capture") || overlayPathName.includes("/window_capture") || overlaySearchParams?.get("mode") === "window_capture" || overlaySearchParams?.get("view") === "window_capture";
   const isLiveStreamStandalone = (!isWindowCaptureStandalone) && (overlayPathName.includes("/live-stream") || overlayPathName.includes("/live-player") || overlayPathName.includes("/stream-player"));
   const isOverlayBattle = overlayTypeParam === "gamebattle" || overlayTypeParam === "battle" || overlayPathName.includes("/overlay-battle") || overlayPathName.includes("/overlay/battle") || overlayPathName.includes("/battle");
   const isOverlayBanDo = overlayTypeParam === "bando" || overlayTypeParam === "vietnam_map" || overlayTypeParam === "map" || overlayTypeParam === "vietnam" || overlayPathName.includes("/overlay-bando") || overlayPathName.includes("/overlay/bando") || overlayPathName.includes("/bando");
   const isOverlayStudio = overlayTypeParam === "studio" || overlayTypeParam === "broadcast" || overlayPathName.includes("/overlay-studio") || overlayPathName.includes("/studio");
   const isOverlayIdol = overlayTypeParam === "idol" || overlayTypeParam === "avatar" || overlayPathName.includes("/overlay-idol") || overlayPathName.includes("/idol");
-  const isMasterLiveOverlay = (!isLiveStreamStandalone && !isWindowCaptureStandalone) && (overlayTypeParam === "live" || overlayTypeParam === "stage" || overlayTypeParam === "tiktok" || overlayTypeParam === "obs" || overlayTypeParam === "cleanlive" || overlayTypeParam === "master" || overlayPathName.includes("/overlay-live") || overlayPathName.includes("/live"));
-  const isAnyOverlayWindow = isWindowCaptureStandalone || isLiveStreamStandalone || isOverlayBattle || isOverlayBanDo || isOverlayStudio || isOverlayIdol || isMasterLiveOverlay;
+  const isMasterLiveOverlay = (!isLiveStreamStandalone && !isWindowCaptureStandalone && !isPhoneCamStandalone) && (overlayTypeParam === "live" || overlayTypeParam === "stage" || overlayTypeParam === "tiktok" || overlayTypeParam === "obs" || overlayTypeParam === "cleanlive" || overlayTypeParam === "master" || overlayPathName.includes("/overlay-live") || overlayPathName.includes("/live"));
+  const isAnyOverlayWindow = isPhoneCamStandalone || isWindowCaptureStandalone || isLiveStreamStandalone || isOverlayBattle || isOverlayBanDo || isOverlayStudio || isOverlayIdol || isMasterLiveOverlay;
 
   const [activeTab, setActiveTab] = useState("overview");
   const [isLive, setIsLive] = useState(false);
@@ -291,6 +293,7 @@ export default function App() {
     await syncUserToSupabase(newUser);
   };
 
+  if (isPhoneCamStandalone) return <PhoneCamStreamer />;
   if (isWindowCaptureStandalone) return <WindowCapturePlayer />;
   if (isLiveStreamStandalone) return <CleanLiveOverlay />;
   if (isOverlayBattle) return <GameBattleOverlay />;

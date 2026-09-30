@@ -2,13 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.3.6';
+export const APP_VERSION = '5.3.7';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '⚡ Bản Cập Nhật v5.3.7 - Khung Camera 100% Không Viền, Bảng Cài Đặt Trực Quan & Kết Nối Camera Điện Thoại 4K Siêu Tốc',
+    description: '1. Khung Camera Borderless & Clean 100%: Xóa hoàn toàn thanh đen, thanh header và các ô badge đè lên khuôn mặt nhân vật. Khung camera giờ là video/canvas thuần khiết, trong suốt hoàn toàn khi xóa nền. 2. Bảng Điều Khiển Suite Tách Rời Trực Quan: Mọi chức năng đang hoạt động (AI Mode, Cọ Giữ, Cọ Cà Xóa, Nguồn Camera, Cắt 4 Cạnh, Góc Vát, Zoom, 8 Hướng) đều có đèn LED và viền phát sáng nổi bật, bấm vào đâu ăn ngay tại đó. 3. Kết Nối Camera Điện Thoại (iPhone/Android) Siêu Tốc: Quét mã QR trên điện thoại mở trực tiếp camera full-screen 4K 60FPS và tự động truyền thẳng vào phần mềm máy tính, chuyển đổi 1-click giữa Camera Máy Tính & Camera Điện Thoại.'
+  },
+  {
     title: '⚡ Bản Cập Nhật v5.3.6 - Tích Hợp AI MediaPipe Siêu Sạch, Cọ Xóa Cực Chính Xác, Canvas Trong Suốt 100%',
-    description: '1. Tích hợp MediaPipe SelfieSegmentation thực sự (Model Landscape): Xóa nền bằng AI neural network thật sự thay vì heuristic pixel cũ — xóa siêu sạch 100% mọi loại phông nền, chỉ giữ lại người/vật thể theo đúng ý muốn. 2. Cọ Xóa Chính Xác Tuyệt Đối (destination-out compositing): Bấm vào đâu xóa đến đó, xóa thành trong suốt alpha=0 hoàn toàn, không còn màu đen hay viền. 3. Canvas 100% Trong Suốt: Khi bật xóa nền, toàn bộ khung viền, nền đen, background camera bị xóa hoàn toàn — chỉ còn nhân vật nổi trên nền trong suốt checkerboard (giống Photoshop). 4. Badge AI: Hiển thị trạng thái ⏳ Đang nạp AI → ⚡ AI Siêu Sạch khi MediaPipe sẵn sàng.'
+    description: '1. Tích hợp MediaPipe SelfieSegmentation thực sự (Model Landscape). 2. Cọ Xóa Chính Xác Tuyệt Đối (destination-out compositing). 3. Canvas 100% Trong Suốt.'
   },
   {
     title: '⚡ Bản Cập Nhật v5.3.5 - Sửa Lỗi Bảng Điều Khiển Camera Suite Không Hiển Thị & Bổ Sung Cọ Vuông',
