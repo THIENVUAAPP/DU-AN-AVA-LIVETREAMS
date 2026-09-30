@@ -18,6 +18,8 @@ import {
   isImageMedia,
   getChromaStyle
 } from '../../utils/voiceSyncService';
+import { uploadMediaToServer } from '../../utils/mediaUploadService';
+import { registerFileInRAM } from '../../utils/mediaDeduplication';
 import UniversalMediaPicker from './UniversalMediaPicker';
 
 export const SvgChromaFilters = () => (
@@ -595,11 +597,24 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     const file = e.target.files?.[0];
     if (!file) return;
 
-    if (file.type.startsWith('image/')) {
+    const isImg = (file.type && file.type.startsWith('image/')) || 
+                  (file.name && /\.(png|jpg|jpeg|webp|gif|svg|bmp|heic|ico)$/i.test(file.name));
+
+    if (isImg) {
       const reader = new FileReader();
       reader.onload = (loadEvt) => {
         const dataUrl = loadEvt.target?.result;
         if (dataUrl) {
+          try {
+            registerFileInRAM(file, file.name);
+            registerFileInRAM(file, dataUrl);
+            if (typeof window !== 'undefined') {
+              window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+              window.__activeMediaBlobMap.set(file.name, file);
+              window.__activeMediaBlobMap.set(dataUrl, file);
+              window.__activeMediaBlobMap.set('latest', file);
+            }
+          } catch (err) {}
           handleAvatarChange(avatarId, field, dataUrl);
           toast.success(`🖼️ Đã nạp ảnh nhân vật thành công!`);
         }
@@ -607,10 +622,28 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
       reader.readAsDataURL(file);
     } else {
       const objectUrl = URL.createObjectURL(file);
+      try {
+        registerFileInRAM(file, file.name);
+        registerFileInRAM(file, objectUrl);
+        if (typeof window !== 'undefined') {
+          window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+          window.__activeMediaBlobMap.set(file.name, file);
+          window.__activeMediaBlobMap.set(objectUrl, file);
+          window.__activeMediaBlobMap.set('latest', file);
+          window.__activeMediaBlob = file;
+        }
+      } catch (err) {}
       handleAvatarChange(avatarId, field, objectUrl);
       toast.success(`🎬 Đã nạp video nhân vật thành công!`);
+
+      // Tự động tải lên server trong nền
+      uploadMediaToServer(file, file.name).then(serverUrl => {
+        if (serverUrl) {
+          handleAvatarChange(avatarId, field, serverUrl);
+        }
+      }).catch(() => {});
     }
-    e.target.value = '';
+    if (e.target) e.target.value = '';
   };
 
   const handleMultiFileUpload = (e) => {
@@ -620,11 +653,18 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
     files.forEach((file, index) => {
       if (index >= 4) return;
       const targetAvatarId = `avatar_${index + 1}`;
-      if (file.type.startsWith('image/')) {
+      const isImg = (file.type && file.type.startsWith('image/')) || 
+                    (file.name && /\.(png|jpg|jpeg|webp|gif|svg|bmp|heic|ico)$/i.test(file.name));
+
+      if (isImg) {
         const reader = new FileReader();
         reader.onload = (loadEvt) => {
           const dataUrl = loadEvt.target?.result;
           if (dataUrl) {
+            try {
+              registerFileInRAM(file, file.name);
+              registerFileInRAM(file, dataUrl);
+            } catch (err) {}
             handleAvatarChange(targetAvatarId, 'talkVideo', dataUrl);
             handleAvatarChange(targetAvatarId, 'idleVideo', dataUrl);
           }
@@ -632,13 +672,29 @@ export function MultiAvatarStudioPanel({ onApplyScriptTemplate, isEmbedded = fal
         reader.readAsDataURL(file);
       } else {
         const objectUrl = URL.createObjectURL(file);
+        try {
+          registerFileInRAM(file, file.name);
+          registerFileInRAM(file, objectUrl);
+          if (typeof window !== 'undefined') {
+            window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+            window.__activeMediaBlobMap.set(file.name, file);
+            window.__activeMediaBlobMap.set(objectUrl, file);
+          }
+        } catch (err) {}
         handleAvatarChange(targetAvatarId, 'talkVideo', objectUrl);
         handleAvatarChange(targetAvatarId, 'idleVideo', objectUrl);
+
+        uploadMediaToServer(file, file.name).then(serverUrl => {
+          if (serverUrl) {
+            handleAvatarChange(targetAvatarId, 'talkVideo', serverUrl);
+            handleAvatarChange(targetAvatarId, 'idleVideo', serverUrl);
+          }
+        }).catch(() => {});
       }
     });
 
     toast.success(`⚡ Đã nạp đồng loạt ${files.length} tệp cho các nhân vật!`);
-    e.target.value = '';
+    if (e.target) e.target.value = '';
   };
 
   const handleApplyPosePreset = (avatarId, poseType) => {

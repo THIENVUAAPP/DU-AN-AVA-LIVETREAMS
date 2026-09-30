@@ -115,38 +115,89 @@ export default function UniversalMediaPicker({
     }
   }, [videoUrl, currentPath]);
 
-  const handleFileChange = async (e) => {
-    const file = e.target.files?.[0];
+  const [isDragOver, setIsDragOver] = useState(false);
+
+  const handleDragOver = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(true);
+  };
+
+  const handleDragLeave = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+  };
+
+  const handleDrop = (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsDragOver(false);
+    const file = e.dataTransfer?.files?.[0];
+    if (file) {
+      processSelectedFile(file);
+    }
+  };
+
+  const processSelectedFile = async (file) => {
     if (!file) return;
 
-    // ⚡ 1. TẠO NGAY OBJECT URL PHỤC VỤ SÂN KHẤU TRONG 0MS (KHÔNG BAO GIỜ BỊ ĐỨNG HÌNH HOẶC CHỜ MẠNG)
-    const objectUrl = URL.createObjectURL(file);
-    setLocalPreviewUrl(objectUrl);
-    
-    // Đăng ký file vào RAM và global map
-    try {
-      registerFileInRAM(file, file.name);
-      if (typeof window !== 'undefined') {
-        window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
-        window.__activeMediaBlobMap.set(file.name, file);
-        window.__activeMediaBlobMap.set(objectUrl, file);
-        window.__activeMediaBlobMap.set('latest', file);
-      }
-    } catch (e) {}
+    const isImg = (file.type && file.type.startsWith('image/')) || 
+                  (file.name && /\.(png|jpg|jpeg|webp|gif|svg|bmp|heic|ico)$/i.test(file.name));
 
-    // Kích hoạt ngay lập tức cho caller để hiển thị ngay trên sân khấu
-    if (onSelectFile) {
-      onSelectFile(file, objectUrl);
+    if (isImg) {
+      const reader = new FileReader();
+      reader.onload = (loadEvt) => {
+        const dataUrl = loadEvt.target?.result;
+        if (dataUrl) {
+          setLocalPreviewUrl(dataUrl);
+          setThumbnailUrl(dataUrl);
+          try {
+            registerFileInRAM(file, file.name);
+            registerFileInRAM(file, dataUrl);
+            if (typeof window !== 'undefined') {
+              window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+              window.__activeMediaBlobMap.set(file.name, file);
+              window.__activeMediaBlobMap.set(dataUrl, file);
+              window.__activeMediaBlobMap.set('latest', file);
+            }
+          } catch (e) {}
+
+          if (onSelectFile) {
+            onSelectFile(file, dataUrl);
+          }
+          toast.success(`🖼️ Đã nạp ảnh thành công: ${file.name}`);
+        }
+      };
+      reader.readAsDataURL(file);
+    } else {
+      const objectUrl = URL.createObjectURL(file);
+      setLocalPreviewUrl(objectUrl);
+
+      try {
+        registerFileInRAM(file, file.name);
+        registerFileInRAM(file, objectUrl);
+        if (typeof window !== 'undefined') {
+          window.__activeMediaBlobMap = window.__activeMediaBlobMap || new Map();
+          window.__activeMediaBlobMap.set(file.name, file);
+          window.__activeMediaBlobMap.set(objectUrl, file);
+          window.__activeMediaBlobMap.set('latest', file);
+          window.__activeMediaBlob = file;
+        }
+      } catch (e) {}
+
+      if (onSelectFile) {
+        onSelectFile(file, objectUrl);
+      }
+
+      extractVideoThumbnail(file).then(thumb => {
+        if (thumb) setThumbnailUrl(thumb);
+      });
+
+      toast.success(`🎬 Đã nạp video thành công: ${file.name}`);
     }
 
-    // 🖼️ Trích xuất thumbnail tức thì từ file tải lên (0ms)
-    extractVideoThumbnail(file).then(thumb => {
-      if (thumb) setThumbnailUrl(thumb);
-    });
-
-    toast.success(`🎬 Đã nạp thành công: ${file.name}`);
-
-    // ⚡ 2. TỰ ĐỘNG ĐẨY FILE VÀO THƯ MỤC UPLOADS CỦA SERVER TRONG NỀN (CHO OBS & TIKTOK LIVE STUDIO)
+    // Tự động đồng bộ lên server uploads trong nền
     uploadMediaToServer(file, file.name).then(serverUrl => {
       if (serverUrl && onSelectFile) {
         onSelectFile(file, serverUrl);
@@ -160,8 +211,14 @@ export default function UniversalMediaPicker({
         }
       }).catch(() => {});
     });
+  };
 
-    e.target.value = '';
+  const handleFileChange = async (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      await processSelectedFile(file);
+    }
+    if (e.target) e.target.value = '';
   };
 
   const handleFolderPick = async () => {
@@ -246,7 +303,16 @@ export default function UniversalMediaPicker({
       )}
 
       {/* Khung tương tác chính */}
-      <div className="flex items-center gap-2.5 bg-gray-50/70 hover:bg-gray-50 border border-gray-200 rounded-xl p-2 transition-all shadow-2xs">
+      <div 
+        onDragOver={handleDragOver}
+        onDragLeave={handleDragLeave}
+        onDrop={handleDrop}
+        className={`flex items-center gap-2.5 border rounded-xl p-2 transition-all shadow-2xs ${
+          isDragOver 
+            ? 'bg-blue-50/90 border-blue-500 ring-2 ring-blue-300 scale-[1.01]' 
+            : 'bg-gray-50/70 hover:bg-gray-50 border-gray-200'
+        }`}
+      >
         
         {/* 🎬 1. Ô THUMBNAIL PREVIEW (HIỂN THỊ VIDEO ĐANG CHẠY LIÊN TỤC 100% - KHÔNG BAO GIỜ ĐEN) */}
         <div className="relative shrink-0 w-[58px] h-[58px] rounded-lg overflow-hidden bg-slate-900 border border-slate-300 shadow-inner flex items-center justify-center group">

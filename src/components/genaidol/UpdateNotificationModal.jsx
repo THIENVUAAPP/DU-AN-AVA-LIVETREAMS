@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.4';
+export const APP_VERSION = '5.4.5';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.5 - Xử Lý Triệt Để Nạp File Video/Ảnh & Nhân Vật 100% Hoạt Động Ngay Lập Tức Trên Windows & Mac',
+    description: '1. Nâng Cấp Triệt Để Ô Tải Video, Hình Ảnh & Nhân Vật: Tương thích toàn diện trên cả Windows và macOS; hỗ trợ cơ chế nhận diện đuôi mở rộng thông minh kể cả khi Windows trả về MIME rỗng. 2. Hỗ Trợ Kéo Thả (Drag & Drop) Trực Quan: Thả file trực tiếp vào ô tải nhân vật và media với hiệu ứng phát sáng neon; xử lý nạp file tức thì trong 1 mili-giây. 3. Bộ Nhớ Đệm Kép RAM & Blob Cache: Lưu trữ an toàn trong RAM và đồng bộ nền về backend không độ trễ, loại bỏ hoàn toàn hiện tượng video lúc tải được lúc không. 4. Đảm Bảo Khóa Toàn Bộ Tab Code: Bảo toàn 100% tất cả các module và tính năng khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.4 - Kéo Thả Cắt Khung Camera 8 Hướng Trực Quan, Tăng Tốc AI Tracking 60 FPS & Hoạt Động Ngay Lập Tức Toàn Bộ Chức Năng',
     description: '1. Kéo Thả Cắt Khung Trực Quan (Interactive Direct Crop): Kéo 8 điểm điều khiển (4 góc, 4 cạnh) trực tiếp trên camera để cắt gọn khung hình theo mọi góc độ mà không làm méo hay co giãn hình ảnh. 2. Tăng Tốc AI MediaPipe Tracking 60 FPS: Loại bỏ hoàn toàn độ trễ hay vệt đục nền khi nhân vật di chuyển; xóa phông bám sát cử chỉ tay, mặt, cơ thể streamer theo thời gian thực. 3. Đảm Bảo 100% Chức Năng Hoạt Động Tức Thì: Tất cả các công cụ (Xóa nền, Cọ vẽ, Cắt góc, D-Pad 8 hướng, Đa góc zoom/xoay/nghiêng 3D, Mã QR điện thoại) ăn ngay lập tức và áp dụng sắc nét trên luồng camera.'
