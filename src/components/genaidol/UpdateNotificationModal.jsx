@@ -2,13 +2,17 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.3.8';
+export const APP_VERSION = '5.3.9';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '⚡ Bản Cập Nhật v5.3.9 - Xóa Phông Nền Siêu Sạch Siêu Cao Cấp, Bảo Vệ Sản Phẩm Livestream, Cọ Vuông Đa Góc & Nút Khôi Phục Camera Gốc 1-Click',
+    description: '1. Xóa Phông Nền Siêu Sạch & Tách Bất Kỳ Thể Loại Nền Nào: Tích hợp công nghệ MediaPipe Selfie Segmentation cao cấp kết hợp thuật toán bảo vệ sản phẩm livestream (chai, lọ, hộp, túi mỹ phẩm, bàn ghế) chống đục thủng hay xóa lẹm. 2. Thanh Cọ Xóa Vuông Vức Đa Góc: Trang bị các kích thước chuẩn vuông vức (15px, 30px, 50px, 80px, 120px) giúp cắt xóa nền theo khối hộp vuông vức sắc lẹm hoặc cọ giữ lại sản phẩm. 3. Nút Khôi Phục Camera Gốc Ban Đầu (1-Click): Đưa toàn bộ cài đặt camera về trạng thái ban đầu chỉ với 1 cú chạm. 4. Cắt Xén Đa Hướng & Di Chuyển Siêu Mượt 60FPS: Tối ưu tải cực nhanh, lướt êm ái không độ trễ.'
+  },
+  {
     title: '⚡ Bản Cập Nhật v5.3.8 - Xóa Nền 100% Trong Suốt Thuần Khiết, Nút Auto Tùy Chỉnh AI, Hệ Thống Undo / Redo & Tăng Tốc 60FPS Siêu Mượt',
-    description: '1. 100% Nền Trong Suốt Thuần Khiết: Xóa bỏ hoàn toàn họa tiết ô vuông checkerboard — khi xóa nền, hình ảnh sẽ trong suốt hoàn toàn, hòa vào video livestream tự nhiên không tì vết. 2. Nút Auto Tùy Chỉnh Thông Minh (AI Auto Optimize): 1-Click tự động căn chỉnh góc máy, zoom tỉ lệ vàng và cân bằng ánh sáng đẹp da cho livestream. 3. Hệ Thống Lịch Sử Thao Tác (Undo / Redo / Confirm): Hỗ trợ nút Quay Lại (Undo), Tiến Tới (Redo) và Xác Nhận Áp Dụng (Confirm) cho mọi thao tác cắt gọt, di chuyển, xóa nền. 4. Tăng Tốc Độ Xử Lý Camera 60FPS: Tối ưu pipeline xử lý MediaPipe và truyền frame điện thoại siêu mượt không độ trễ, di chuyển 8 hướng D-Pad mượt mà với 3 cấp độ tốc độ (1x, 2x, Turbo).'
+    description: '1. 100% Nền Trong Suốt Thuần Khiết. 2. Nút Auto Tùy Chỉnh Thông Minh. 3. Hệ Thống Lịch Sử Thao Tác (Undo/Redo).'
   },
   {
     title: '⚡ Bản Cập Nhật v5.3.7 - Khung Camera 100% Không Viền, Bảng Cài Đặt Trực Quan & Kết Nối Camera Điện Thoại 4K Siêu Tốc',
