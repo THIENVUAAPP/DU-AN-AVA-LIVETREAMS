@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.3.3';
+export const APP_VERSION = '5.3.4';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.3.4 - Tách Rời Bảng Điều Khiển Camera Suite, Cọ Quét Giữ Vùng & Cà Xóa Nền AI, Kết Nối Camera Điện Thoại QR 4K',
+    description: '1. Tách riêng độc lập Khung Camera và Bảng Điều Khiển Suite: Người dùng có thể kéo thả camera và bảng cài đặt riêng biệt đến bất kỳ góc nào trên màn hình, không bị dính liền. 2. Tách phông nền trong suốt 100% siêu sạch: Tích hợp AI tách đa phông nền (bất kỳ phòng/nhà nào) cùng tùy chọn Giữ lại vật thể (Người streamer, Máy tính/Laptop, Bàn làm việc, Ghế ngồi, Sản phẩm cầm tay, Kệ tủ). 3. Công cụ Cọ Quét Giữ Vùng (Màu Xanh) & Cà Xóa Phông (Màu Đỏ): Vẽ trực tiếp lên màn hình camera để cà xóa hoặc giữ lại bất kỳ chi tiết nào. 4. Kết Nối Camera Điện Thoại Qua Mã QR: Quét mã QR bằng iPhone / Android để sử dụng camera điện thoại 4K 60FPS không dây siêu mượt.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.3.3 - Nâng Cấp Camera Studio Pro: Xóa Phông AI, Cắt Khung 4 Chiều, Xóa Góc & Ghép Vào Mọi Vị Trí Video AI',
     description: '1. Tích hợp công cụ Cắt Camera Đa Chiều & Xóa Góc (Crop 4 Sides & Corner Eraser): Cắt Trên, Dưới, Trái, Phải và vát 4 góc bất kỳ để bỏ góc thừa, tùy cơ ứng biến gắn khít vào màn hình máy tính, bàn ghế, góc phòng của video AI. 2. Tách nền AI siêu sạch & Chroma Key Pro (Phông xanh lá/dương) với tính năng khử viền tràn màu (Spill Suppression) và độ mượt viền (Feather). 3. Presets vị trí ghép nhanh 1-Click: Màn hình máy tính bàn AI, Màn hình phụ dọc 9:16, Người ngồi bàn làm việc, Avatar nổi tròn PiP, Streamer TikTok dọc toàn thân. 4. Chế độ Clean Mode (Không Viền): Ẩn toàn bộ viền app và thanh công cụ khi phát live để luồng camera hòa trộn 100% tự nhiên không lộ khung.'
