@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.14';
+export const APP_VERSION = '5.4.15';
 export const RELEASE_DATE = '30/09/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.15 - Khắc Phục Triệt Để Lỗi Khởi Động ReferenceError isLiveBroadcasting & Mặc Định Mở Tiếng Phiên Live 100%',
+    description: '1. Sửa Triệt Để Lỗi Khởi Động Màn Hình Cập Nhật (ReferenceError: isLiveBroadcasting is not defined): Sửa dứt điểm lỗi biến chưa khai báo khi khởi chạy ứng dụng sau khi giải nén, giúp phần mềm mở ngay lập tức trong 0ms siêu mượt mà không còn bất kỳ thông báo lỗi nào. 2. Nút Âm Thanh Phiên Live Chuẩn Xác & Mặc Định Mở Tiếng: Nút [🔊 Mở tiếng] / [🔊x Tắt tiếng] nằm sát góc phải luôn mặc định mở tiếng khi bắt đầu live, streamer chủ động bấm tắt/mở theo ý muốn. 3. Tự Động Đồng Bộ 2 Chiều shop.tiktok.com & 14 Sự Kiện Live AI: Giữ nguyên 100% các tính năng auto ghim, chào người mới, trả lời bình luận và toàn bộ chuỗi sự kiện. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.14 - Nút Tắt/Mở Tiếng Phiên Live Sát Góc Phải (Mặc Định Mở Tiếng), Tự Động Đồng Bộ 2 Chiều shop.tiktok.com & Kích Hoạt Triệt Để 14 Sự Kiện Live',
     description: '1. Nút Tắt/Mở Tiếng Phiên Live Mặc Định Mở Tiếng: Bổ sung nút [🔊 Mở tiếng] / [🔊x Tắt tiếng] nằm ở sát góc phải ngoài cùng thanh công cụ phần mềm. Khi Live bắt đầu, luôn mặc định MỞ tiếng không bị câm, đồng bộ chuẩn xác trạng thái âm thanh sang TikTok Live Studio, OBS và Shopee Live. 2. Tự Động Đồng Bộ 2 Chiều shop.tiktok.com: Kết nối link gian hàng TikTok Shop (shop.tiktok.com) lập tức tải và đồng bộ toàn bộ danh mục sản phẩm thật 100%, sẵn sàng auto ghim deal siêu tốc theo giọng đọc AI và comment. 3. Kích Hoạt Hoàn Hảo 14 Tác Vụ Sự Kiện & Bộ Não AI: Chào người mới tuần tự không trùng lặp, đọc và trả lời bình luận, cảm ơn quà tặng, follow, share mượt mà 24/7. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'

@@ -471,7 +471,7 @@ export default function DesktopAppUI() {
     }
   });
   const [flvUrl, setFlvUrl] = useState(null);
-  const [isLiveAudioMuted, setIsLiveAudioMuted] = useState(true);
+  const [isLiveAudioMuted, setIsLiveAudioMuted] = useState(false);
   const [selectedCharacter, setSelectedCharacter] = useState(() => {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('avalive_selected_char');
@@ -7762,7 +7762,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     </div>
 
           {/* Nút Âm thanh Live nằm ngoài khung video */}
-          {(isConnected || isMasterLiveRunning || isScriptLiveRunning || isLiveBroadcasting || flvUrl) && (
+          {(isConnected || isMasterLiveRunning || isScriptLiveRunning || isLiveStudioActive || flvUrl) && (
             <button
               onClick={() => {
                 const nextMuted = !isLiveAudioMuted;
