@@ -1942,19 +1942,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         audioPlayerRef.current.enqueueItem(text, action, false, { voiceId, voiceChannel, isTest });
       }
       
-      // Tự động phát video sự kiện (Chào hỏi, Trả lời bình luận, Tặng quà, Chốt đơn...) lên Sân Khấu Chính
-      if (baseVideoItem && (baseVideoItem.mediaUrl || baseVideoItem.url)) {
-        const vidUrl = baseVideoItem.mediaUrl || baseVideoItem.url;
-        setActiveVideoItem(baseVideoItem);
-        syncMasterLiveState({
-          stage: 'idol',
-          mediaUrl: vidUrl,
-          characterName: baseVideoItem.name || 'AI Idol Event Video',
-          isVideo: true,
-          videoPlaybackEvent: 'play',
-          isPlaying: true
-        }, socketRef.current);
-      }
+      // Giọng nói AI phát qua AIAudioPlayer trong khi video live của Streamer vẫn tiếp tục phát mượt mà 60 FPS
     }
   });
 
@@ -3855,27 +3843,25 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         url: videoUrl,
         type: 'video'
       };
-      setActiveVideoItem(eventItem);
-      setUserLockedMediaUrl(videoUrl);
-      try {
-        localStorage.setItem('avalive_user_locked_media', videoUrl);
-        localStorage.setItem('avalive_active_video_src', videoUrl);
-      } catch (err) {}
 
-      if (desktopVideoRef.current) {
-        if (desktopVideoRef.current.src !== videoUrl) {
-          desktopVideoRef.current.src = videoUrl;
+      // Chỉ thay đổi video chính nếu được người dùng cấu hình rõ ràng là video có sẵn (isPreRecorded)
+      if (isPreRecorded) {
+        setActiveVideoItem(eventItem);
+        if (desktopVideoRef.current) {
+          if (desktopVideoRef.current.src !== videoUrl) {
+            desktopVideoRef.current.src = videoUrl;
+          }
+          desktopVideoRef.current.currentTime = 0;
+          desktopVideoRef.current.muted = muteSourceVideo === true;
+          desktopVideoRef.current.dataset.userPaused = 'false';
+          desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
         }
-        desktopVideoRef.current.currentTime = 0;
-        desktopVideoRef.current.muted = muteSourceVideo === true;
-        desktopVideoRef.current.dataset.userPaused = 'false';
-        desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+        setIsVideoPlaying(true);
       }
-      setIsVideoPlaying(true);
 
       syncMasterLiveState({
         stage: 'idol',
-        mediaUrl: videoUrl,
+        mediaUrl: isPreRecorded ? videoUrl : (userLockedMediaUrl || videoUrl),
         eventVideoUrl: videoUrl,
         characterName: name || `${eventType || 'Live'} Video`,
         isVideo: true,

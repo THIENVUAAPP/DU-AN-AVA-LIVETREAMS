@@ -6164,6 +6164,15 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
     products = defaultTikTokShopCatalog;
   }
 
+  // Gán chính xác storeUrl của Seller vào từng sản phẩm nếu người dùng cung cấp link shop/profile thật
+  if (targetUrl && (targetUrl.includes('@') || targetUrl.includes('/view/product/') || targetUrl.includes('/shop/') || targetUrl.includes('seller') || targetUrl.includes('tiktok.com'))) {
+    products = products.map(p => ({
+      ...p,
+      sellerStoreUrl: p.sellerStoreUrl && !p.sellerStoreUrl.includes('search?q=') ? p.sellerStoreUrl : targetUrl,
+      storeUrl: targetUrl
+    }));
+  }
+
   // 4. Cập nhật trạng thái sản phẩm vào Live State và phát tán ngay cho toàn bộ hệ thống
   if (products.length > 0) {
     currentMasterLiveState.syncedProducts = products;

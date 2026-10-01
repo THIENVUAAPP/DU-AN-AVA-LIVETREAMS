@@ -623,15 +623,27 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
   const currentConfig = eventConfigs[selectedEventId] || {};
 
   // 🎵 TikTok Shop (shop.tiktok.com) Sync & Auto Pin State
-  const [tiktokShopUrl, setTiktokShopUrl] = useState('https://shop.tiktok.com');
+  const [tiktokShopUrl, setTiktokShopUrl] = useState(() => {
+    try {
+      return localStorage.getItem('avalive_tiktok_shop_url') || 'https://shop.tiktok.com';
+    } catch (e) {
+      return 'https://shop.tiktok.com';
+    }
+  });
   const [isSyncingTikTokShop, setIsSyncingTikTokShop] = useState(false);
   const [autoPinActive, setAutoPinActive] = useState(() => autoPinProductService.autoPinEnabled);
   const [autoPinIntervalSec, setAutoPinIntervalSec] = useState(() => autoPinProductService.pinInterval || 30);
 
-  const handleSyncTikTokShop = async () => {
+  const triggerAutoSyncShopUrl = async (targetUrl) => {
+    const urlToSync = (targetUrl || tiktokShopUrl || '').trim();
+    if (!urlToSync) return;
+    setTiktokShopUrl(urlToSync);
+    try {
+      localStorage.setItem('avalive_tiktok_shop_url', urlToSync);
+    } catch (e) {}
     setIsSyncingTikTokShop(true);
     try {
-      const newProducts = await autoPinProductService.syncFromTikTokShopUrl(tiktokShopUrl);
+      const newProducts = await autoPinProductService.syncFromTikTokShopUrl(urlToSync);
       if (newProducts && newProducts.length > 0) {
         setEventConfigs(prev => {
           const targetEvent = 'checkout';
@@ -661,13 +673,17 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
             }
           };
         });
-        toast.success(`✅ Đã đồng bộ thành công ${newProducts.length} sản phẩm từ TikTok Shop (${tiktokShopUrl})!`);
+        toast.success(`⚡ Đã tự động nhận diện & đồng bộ ${newProducts.length} sản phẩm từ TikTok Shop!`);
       }
     } catch (e) {
       toast.error('Lỗi kết nối TikTok Shop: ' + e.message);
     } finally {
       setIsSyncingTikTokShop(false);
     }
+  };
+
+  const handleSyncTikTokShop = async () => {
+    await triggerAutoSyncShopUrl(tiktokShopUrl);
   };
 
   const handleSave = () => {
@@ -2823,8 +2839,25 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                       <input 
                         type="text" 
                         value={tiktokShopUrl} 
-                        onChange={(e) => setTiktokShopUrl(e.target.value)} 
-                        placeholder="Nhập URL TikTok Shop (https://shop.tiktok.com/... hoặc Seller Center)..."
+                        onChange={(e) => {
+                          const v = e.target.value;
+                          setTiktokShopUrl(v);
+                          if (v && (v.includes('tiktok.com') || v.startsWith('http://') || v.startsWith('https://'))) {
+                            if (window.__syncTiktokShopTimer) clearTimeout(window.__syncTiktokShopTimer);
+                            window.__syncTiktokShopTimer = setTimeout(() => {
+                              triggerAutoSyncShopUrl(v);
+                            }, 500);
+                          }
+                        }}
+                        onPaste={(e) => {
+                          const pasted = e.clipboardData?.getData('text') || '';
+                          if (pasted && (pasted.includes('tiktok.com') || pasted.startsWith('http://') || pasted.startsWith('https://'))) {
+                            setTimeout(() => {
+                              triggerAutoSyncShopUrl(pasted.trim());
+                            }, 50);
+                          }
+                        }}
+                        placeholder="Nhập hoặc dán link TikTok Shop (https://shop.tiktok.com/... hoặc Seller Center)..."
                         className="flex-1 bg-black/50 border border-white/20 rounded-xl px-3 py-1.5 text-xs text-white placeholder-gray-400 focus:outline-pink-500 font-mono"
                       />
                       <button

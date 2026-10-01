@@ -726,9 +726,14 @@ class AutoPinProductService {
         localStorage.setItem('aidol_event_configs', JSON.stringify(conf));
       } catch (e) {}
 
-      // Tự động ghim ngay sản phẩm đầu tiên
+      // Tự động bật autoPinEnabled và kích hoạt vòng lặp xoay vòng ghim sản phẩm 24/7
+      this.autoPinEnabled = true;
+      localStorage.setItem('avalive_auto_pin_enabled', 'true');
+      this.startRotationLoop();
+
+      // Tự động ghim ngay sản phẩm đầu tiên lên màn hình và gửi sang TikTok Live Studio / OBS
       if (synced.length > 0) {
-        this.pinProduct(synced[0], 'Đồng Bộ TikTok Shop Thật 24/7');
+        this.pinProduct(synced[0], 'Tự động ghim khi dán link TikTok Shop');
       }
 
       window.dispatchEvent(new CustomEvent('avalive:tiktok_shop_synced', {

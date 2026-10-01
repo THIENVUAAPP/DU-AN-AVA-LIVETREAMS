@@ -2633,88 +2633,99 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           style={{ width: '100%', height: '100%' }}
         >
           {/* ⚡ 1. TOPMOST LAYER: VIDEO PHẢN HỒI NHANH KHẨN CẤP */}
-          {quickResponseVideo?.url ? (
-            <video
-              key={`quick_${quickResponseVideo.url}`}
-              src={quickResponseVideo.url}
-              autoPlay
-              playsInline
-              webkit-playsinline="true"
-              loop={Boolean(quickResponseVideo.loop)}
-              muted={isVideoAudioMuted || quickResponseVideo.muted}
-              preload="auto"
-              onEnded={() => {
-                if (!quickResponseVideo.loop) setQuickResponseVideo(null);
-              }}
-              onError={() => setQuickResponseVideo(null)}
-              className="w-full h-full object-cover bg-black"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: objectFitState || 'cover',
-                display: 'block',
-                transform: 'translate3d(0, 0, 0)',
-                WebkitTransform: 'translate3d(0, 0, 0)',
-                imageRendering: '-webkit-optimize-contrast'
-              }}
-            />
-          ) : activeEventVideo?.url ? (
-            /* ⚡ 2. TOPMOST LAYER: VIDEO SỰ KIỆN 14 TAB (QUÀ TẶNG, CHÀO MỪNG, CHECKOUT...) */
-            <video
-              key={`event_${activeEventVideo.url}`}
-              src={activeEventVideo.url}
-              autoPlay
-              playsInline
-              webkit-playsinline="true"
-              loop={false}
-              muted={isVideoAudioMuted}
-              preload="auto"
-              onLoadedData={(e) => {
-                try {
-                  e.currentTarget.play().catch(() => {
-                    e.currentTarget.muted = true;
-                    e.currentTarget.play().catch(() => {});
-                  });
-                } catch (err) {}
-              }}
-              onEnded={() => setActiveEventVideo(null)}
-              onError={() => setActiveEventVideo(null)}
-              className="w-full h-full object-cover bg-black"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: objectFitState || 'cover',
-                display: 'block',
-                transform: 'translate3d(0, 0, 0)',
-                WebkitTransform: 'translate3d(0, 0, 0)',
-                imageRendering: '-webkit-optimize-contrast'
-              }}
-            />
-          ) : lipSyncVideoUrl ? (
-            /* ⚡ 3. TOPMOST LAYER: VIDEO NHÉP MIỆNG LIPSYNC VOICE AI */
-            <video
-              key={`lipsync_${lipSyncVideoUrl}`}
-              src={lipSyncVideoUrl}
-              autoPlay
-              playsInline
-              webkit-playsinline="true"
-              loop
-              muted={isVideoAudioMuted}
-              preload="auto"
-              onError={() => setLipSyncVideoUrl(null)}
-              className="w-full h-full object-cover bg-black"
-              style={{
-                width: '100%',
-                height: '100%',
-                objectFit: objectFitState || 'cover',
-                display: 'block',
-                transform: 'translate3d(0, 0, 0)',
-                WebkitTransform: 'translate3d(0, 0, 0)',
-                imageRendering: '-webkit-optimize-contrast'
-              }}
-            />
-          ) : (
-            <>
+          {quickResponseVideo?.url && (
+            <div className="absolute inset-0 w-full h-full z-30 pointer-events-none overflow-hidden">
+              <video
+                key={`quick_${quickResponseVideo.url}`}
+                src={quickResponseVideo.url}
+                autoPlay
+                playsInline
+                webkit-playsinline="true"
+                loop={Boolean(quickResponseVideo.loop)}
+                muted={isVideoAudioMuted || quickResponseVideo.muted}
+                preload="auto"
+                onEnded={() => {
+                  if (!quickResponseVideo.loop) setQuickResponseVideo(null);
+                }}
+                onError={() => setQuickResponseVideo(null)}
+                className="w-full h-full object-cover bg-transparent"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: objectFitState || 'cover',
+                  display: 'block',
+                  transform: 'translate3d(0, 0, 0)',
+                  WebkitTransform: 'translate3d(0, 0, 0)',
+                  imageRendering: '-webkit-optimize-contrast'
+                }}
+              />
+            </div>
+          )}
+
+          {/* ⚡ 2. TOPMOST LAYER: VIDEO SỰ KIỆN 14 TAB (QUÀ TẶNG, CHÀO MỪNG, CHECKOUT...) */}
+          {activeEventVideo?.url && (
+            <div className="absolute inset-0 w-full h-full z-20 pointer-events-none overflow-hidden">
+              <video
+                key={`event_${activeEventVideo.url}`}
+                src={activeEventVideo.url}
+                autoPlay
+                playsInline
+                webkit-playsinline="true"
+                loop={false}
+                muted={isVideoAudioMuted}
+                preload="auto"
+                onLoadedData={(e) => {
+                  try {
+                    e.currentTarget.play().catch(() => {
+                      e.currentTarget.muted = true;
+                      e.currentTarget.play().catch(() => {});
+                    });
+                  } catch (err) {}
+                }}
+                onEnded={() => setActiveEventVideo(null)}
+                onError={() => setActiveEventVideo(null)}
+                className="w-full h-full object-cover bg-transparent"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: objectFitState || 'cover',
+                  display: 'block',
+                  transform: 'translate3d(0, 0, 0)',
+                  WebkitTransform: 'translate3d(0, 0, 0)',
+                  imageRendering: '-webkit-optimize-contrast'
+                }}
+              />
+            </div>
+          )}
+
+          {/* ⚡ 3. TOPMOST LAYER: VIDEO NHÉP MIỆNG LIPSYNC VOICE AI */}
+          {lipSyncVideoUrl && (
+            <div className="absolute inset-0 w-full h-full z-15 pointer-events-none overflow-hidden">
+              <video
+                key={`lipsync_${lipSyncVideoUrl}`}
+                src={lipSyncVideoUrl}
+                autoPlay
+                playsInline
+                webkit-playsinline="true"
+                loop
+                muted={isVideoAudioMuted}
+                preload="auto"
+                onError={() => setLipSyncVideoUrl(null)}
+                className="w-full h-full object-cover bg-transparent"
+                style={{
+                  width: '100%',
+                  height: '100%',
+                  objectFit: objectFitState || 'cover',
+                  display: 'block',
+                  transform: 'translate3d(0, 0, 0)',
+                  WebkitTransform: 'translate3d(0, 0, 0)',
+                  imageRendering: '-webkit-optimize-contrast'
+                }}
+              />
+            </div>
+          )}
+
+          {/* SÂN KHẤU CHÍNH CỦA STREAMER: LUÔN LUÔN MOUNT & PHÁT LIÊN TỤC 100%, KHÔNG BAO GIỜ BỊ UNMOUNT HOẶC ĐEN MÀN HÌNH */}
               {/* SÂN KHẤU 1: LIVE AI IDOL (HỖ TRỢ 1 AVATAR HOẶC MULTI-AVATAR STUDIO 2–4 NHÂN VẬT) */}
               {currentStage === 'idol' && (
                 <div className="w-full h-full absolute inset-0 flex items-center justify-center overflow-hidden bg-black">
@@ -2946,7 +2957,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   }
 
                   // 🅱️ SINGLE MEDIA / SINGLE AVATAR (1 KHUNG HÌNH DUY NHẤT: KHÔNG THỪA KHÔNG THIẾU)
-                  const singleUrl = activeMedia.url || masterState.mediaUrl || masterState.mainMediaUrl || (activeAvatars.length === 1 ? (activeAvatars[0].resolvedVidSrc || activeAvatars[0].talkVideo || activeAvatars[0].idleVideo || activeAvatars[0].mediaUrl) : null);
+                  const fallbackStorageMedia = typeof window !== 'undefined' ? (localStorage.getItem('avalive_user_locked_media') || localStorage.getItem('avalive_active_video_src')) : null;
+                  const singleUrl = activeMedia.url || masterState.mediaUrl || masterState.mainMediaUrl || (activeAvatars.length === 1 ? (activeAvatars[0].resolvedVidSrc || activeAvatars[0].talkVideo || activeAvatars[0].idleVideo || activeAvatars[0].mediaUrl) : null) || fallbackStorageMedia;
 
                   if (singleUrl) {
                     const isImg = isImageMedia(singleUrl) || (!activeMedia.isVideo && !isVideoMedia(singleUrl));
@@ -3363,8 +3375,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
             )}
           </div>
         )}
-            </>
-          )}
         {/* OVERLAY SẢN PHẨM ĐANG GHIM TỰ ĐỘNG BỞI AI (CHUYỂN THẲNG ĐẾN TRANG MUA HÀNG CỦA ĐƠN VỊ BÁN HÀNG) */}
         {Boolean(masterState?.livePinnedProduct || masterState?.pinnedProduct || pinnedProduct) && (() => {
           const prod = masterState?.livePinnedProduct || masterState?.pinnedProduct || pinnedProduct;

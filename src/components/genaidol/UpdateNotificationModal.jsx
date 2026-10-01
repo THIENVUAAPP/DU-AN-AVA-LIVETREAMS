@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.18';
+export const APP_VERSION = '5.4.19';
 export const RELEASE_DATE = '01/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.19 - Khắc Phục Triệt Để Màn Hình Livestream Bị Đen Khi Có Sự Kiện (Bình Luận, Chào Khách) & Tự Động Nhận Diện Đồng Bộ Ghim Sản Phẩm shop.tiktok.com 24/7',
+    description: '1. Sửa Dứt Điểm Lỗi Màn Hình & Stream Bị Đen Thui Khi Có Sự Kiện: Tách biệt hoàn toàn luồng video của streamer và luồng phản hồi Voice AI. Khi có khán giả bình luận, chào khách vào xem, thả tim hay tặng quà, video/camera của streamer tiếp tục phát liên tục 100% mượt mà 60 FPS, không bao giờ bị đen hình, gián đoạn hay mất nguồn phát. Sân khấu chính luôn chạy nền bền vững và video sự kiện được xử lý qua lớp overlay thông minh. 2. Tự Động Nhận Diện, Cập Nhật & Ghim Sản Phẩm TikTok Shop (shop.tiktok.com): Ngay khi streamer dán link shop.tiktok.com hoặc seller center, hệ thống lập tức tự động đồng bộ toàn bộ sản phẩm thật 100%, tự động kích hoạt tính năng Auto Pin, ghim ngay sản phẩm đầu tiên lên live và xoay vòng sản phẩm theo chu kỳ cài đặt mà không cần bất kỳ thao tác thủ công nào. 3. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.18 - Tùy Chỉnh Toàn Diện Voice AI (Âm Lượng 1% - 100%, Tốc Độ, Cao Độ), Đồng Bộ Giọng Mặc Định AvaLive Voice Cho Mọi Sự Kiện & Mở Khóa Tự Do Chọn Giọng Cho Live Idol Avatar',
     description: '1. Tùy Chỉnh Toàn Bộ Các Nút Voice Hoạt Động 100%: Mọi thanh trượt Âm lượng (Volume), Tốc độ (Speed), Độ trầm bổng (Pitch) của Giọng Idol, Giọng Quản Lý / Trợ Lý, Giọng Bình Luận và 5 Nhân Vật đều điều chỉnh mượt mà và có hiệu lực tức thì. Sửa triệt để lỗi âm lượng không giảm do ép ngưỡng tối thiểu cũ. 2. Âm Lượng Tinh Chỉnh Mượt Mà Từ 1% Đến 100%: Thay thế bước nhảy 10% bằng nấc 1% chính xác (step 0.01), cho phép streamer tinh chỉnh âm lượng chi tiết từ 1% đến 100% cực kỳ dễ dàng. 3. Đồng Bộ AvaLive Voice Là Giọng Mặc Định Cho Mọi Sự Kiện Live: Cài đặt giọng trong AvaLive Voice (Tab Bộ Não) tự động là giọng mặc định cho toàn bộ 14 sự kiện và trả lời bình luận; chỉ khi không cài đặt ở AvaLive Voice mới dùng giọng riêng của từng sự kiện. 4. ĐẶC BIỆT - Mở Khóa Tự Do Chọn Giọng Cho Live Idol Avatar: Nhân vật Live Idol Avatar hoàn toàn không bị ép về giọng mặc định, streamer tùy ý chọn bất kỳ giọng nào trong kho để phát kịch bản và live mà không bị bất kỳ giới hạn nào. 5. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'

@@ -816,20 +816,27 @@ function fillTemplate(template, vars = {}) {
           category: 'checkout'
         };
       } else if (Array.isArray(liveMedia) && liveMedia.length > 0) {
-        const targetCategory = currentEvConfig?.videoCategory || (evKey === 'welcome' ? 'join' : evKey);
-        const targetFolder = currentEvConfig?.videoFolder || '';
+        // Chỉ tìm video sự kiện nếu được người dùng cấu hình rõ ràng là phản ứng reaction đặc biệt (gift, checkout, hoặc chế độ prerecorded)
+        // Tuyệt đối KHÔNG thay thế video streamer đối với bình luận (comment) hoặc chào khách (welcome) để streamer phát liên tục không bị đen màn hình
+        const isInteractiveLiveEvent = evKey === 'comment' || evKey === 'welcome';
+        const allowEventVideo = currentEvConfig?.videoMode === 'prerecorded' || (!isInteractiveLiveEvent && (shouldAction === 'gift_reaction' || type === 'GIFT' || evKey === 'gift' || evKey === 'checkout'));
 
-        // Ưu tiên 1: Khớp folder người dùng chỉ định
-        if (targetFolder) {
-          matchedEventVideo = liveMedia.find(m => m.type === 'video' && (m.folder === targetFolder || m.name?.toLowerCase().includes(targetFolder.toLowerCase())));
-        }
-        // Ưu tiên 2: Khớp danh mục video (category)
-        if (!matchedEventVideo && targetCategory) {
-          matchedEventVideo = liveMedia.find(m => m.type === 'video' && (m.category === targetCategory || m.name?.toLowerCase().includes(targetCategory.toLowerCase())));
-        }
-        // Ưu tiên 3: Video reaction chung
-        if (!matchedEventVideo && (shouldAction === 'gift_reaction' || type === 'GIFT')) {
-          matchedEventVideo = liveMedia.find(m => m.type === 'video' && (m.category === 'reaction' || m.category === 'gift'));
+        if (allowEventVideo) {
+          const targetCategory = currentEvConfig?.videoCategory || (evKey === 'welcome' ? 'join' : evKey);
+          const targetFolder = currentEvConfig?.videoFolder || '';
+
+          // Ưu tiên 1: Khớp folder người dùng chỉ định
+          if (targetFolder) {
+            matchedEventVideo = liveMedia.find(m => m.type === 'video' && (m.folder === targetFolder || m.name?.toLowerCase().includes(targetFolder.toLowerCase())));
+          }
+          // Ưu tiên 2: Khớp danh mục video (category)
+          if (!matchedEventVideo && targetCategory) {
+            matchedEventVideo = liveMedia.find(m => m.type === 'video' && (m.category === targetCategory || m.name?.toLowerCase().includes(targetCategory.toLowerCase())));
+          }
+          // Ưu tiên 3: Video reaction chung
+          if (!matchedEventVideo && (shouldAction === 'gift_reaction' || type === 'GIFT')) {
+            matchedEventVideo = liveMedia.find(m => m.type === 'video' && (m.category === 'reaction' || m.category === 'gift'));
+          }
         }
       }
 
@@ -1001,15 +1008,13 @@ function fillTemplate(template, vars = {}) {
     } else if (previousVideoItem) {
       setActiveVideoItem(previousVideoItem);
       setPreviousVideoItem(null);
-    } else {
-      // Về mặc định video gốc mà người dùng đã chọn trên sân khấu
-      setActiveVideoItem(null);
     }
 
-    // ⚡ Đồng bộ phục hồi video nền sang Sân Khấu Chính, Window Capture OBS & Đường Link Online
+    // ⚡ Đồng bộ phục hồi video nền gốc sang Sân Khấu Chính, Window Capture OBS & Đường Link Online
+    const fallbackMediaUrl = previousVideoItem?.mediaUrl || (typeof window !== 'undefined' ? (localStorage.getItem('avalive_user_locked_media') || localStorage.getItem('avalive_active_video_src')) : null);
     syncMasterLiveState({
       stage: 'idol',
-      mediaUrl: null,
+      mediaUrl: fallbackMediaUrl,
       isVideo: true,
       videoPlaybackEvent: 'play',
       isPlaying: true,

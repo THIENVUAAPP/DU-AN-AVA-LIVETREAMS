@@ -530,7 +530,25 @@ export default function LiveCommerceStudio({ isLive }) {
           <input 
             type="text" 
             value={tiktokShopUrlInput}
-            onChange={(e) => setTiktokShopUrlInput(e.target.value)}
+            onChange={(e) => {
+              const v = e.target.value;
+              setTiktokShopUrlInput(v);
+              if (v && (v.includes('tiktok.com') || v.startsWith('http://') || v.startsWith('https://'))) {
+                if (window.__syncTiktokCommerceTimer) clearTimeout(window.__syncTiktokCommerceTimer);
+                window.__syncTiktokCommerceTimer = setTimeout(() => {
+                  handleSyncTikTokShop();
+                }, 500);
+              }
+            }}
+            onPaste={(e) => {
+              const pasted = e.clipboardData?.getData('text') || '';
+              if (pasted && (pasted.includes('tiktok.com') || pasted.startsWith('http://') || pasted.startsWith('https://'))) {
+                setTiktokShopUrlInput(pasted.trim());
+                setTimeout(() => {
+                  handleSyncTikTokShop();
+                }, 50);
+              }
+            }}
             className="flex-1 bg-[#0A0A0A] border border-indigo-500/40 rounded-2xl px-4 py-3 text-xs text-white placeholder-gray-500 focus:outline-none focus:border-indigo-400 font-mono"
             placeholder="Dán link shop.tiktok.com hoặc seller-vn.tiktok.com của bạn vào đây..."
           />
