@@ -7558,12 +7558,11 @@ export function updateActiveVoiceAudio(role, voiceObj) {
 
 /**
  * ⚡ BỘ PHÂN GIẢI GIỌNG NÓI ĐA TẦNG (VOICE PRIORITY RESOLVER)
- * - ƯU TIÊN SỐ 1 (BỘ NÃO AI CHÍNH - CAO NHẤT 100%): Giọng đọc đã cài đặt trong Tab BỘ NÃO AI (idolVoice, managerVoice, commentVoice, gameBlvVoice/gameVoice, avatar1Voice - avatar5Voice).
- * - ƯU TIÊN SỐ 2 (PHỤ / TÁC VỤ SỰ KIỆN): Chỉ khi trong BỘ NÃO AI chưa setup hoặc chưa chọn giọng đọc thì mới sử dụng giọng từ các tab sự kiện/14 tác vụ.
- * - ƯU TIÊN SỐ 3: Fallback về giọng mặc định của hệ thống.
- * - TUYỆT ĐỐI KHÔNG CHỒNG CHÉO: Luôn phát duy nhất đúng 1 giọng được chọn.
+ * - QUY TẮC 1 (LIVE IDOL AVATAR): Không bị ép mặc định voice, tùy ý tự do chọn bất kỳ giọng nào để phát kịch bản, sân khấu, sequencer mà không bị giới hạn.
+ * - QUY TẮC 2 (CÁC SỰ KIỆN PHIÊN LIVE & BÌNH LUẬN): Cài đặt trong Avalive Voice (Tab Bộ Não) là MẶC ĐỊNH cho toàn bộ 14 sự kiện và các tương tác live stream. Chỉ khi không cấu hình ở Avalive Voice mới dùng giọng ở bên tab sự kiện.
+ * - FALLBACK: Giọng mặc định của hệ thống.
  */
-export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId = null, avatarId = null) {
+export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId = null, avatarId = null, options = {}) {
   const dualConfig = getSavedVoiceConfig();
   const normalizedRole = (roleOrEvent || '').toLowerCase().trim();
   const normalizedAvatarId = (avatarId || '').toLowerCase().trim();
@@ -7584,10 +7583,80 @@ export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId 
     brainVoice = dualConfig.avatar1Voice || dualConfig.idolVoice;
   }
 
-  // 🎯 KIỂM TRA taskSpecificVoiceId:
-  // Nếu taskSpecificVoiceId được truyền vào và là một đối tượng voice hoặc ID cụ thể KHÁC 'brain_auto':
-  // Tuy nhiên, đối với vai Idol phát kịch bản Live: nếu trong Bộ Não AVA Live đã cài đặt giọng riêng (khác free_vi_female hoặc đã được lưu)
-  // và taskSpecificVoiceId lại là fallback 'free_vi_female', thì BẮT BUỘC ƯU TIÊN GIỌNG ĐỌC BỘ NÃO AVA LIVE!
+  const isLiveEvent = Boolean(
+    options?.isLiveEvent ||
+    normalizedRole === 'event' ||
+    normalizedRole === 'live_event' ||
+    ['welcome', 'like', 'share', 'follow', 'gift', 'order', 'cart', 'join', 'milestone', 'comment', 'checkout'].includes(normalizedRole)
+  );
+
+  // 🎯 QUY TẮC ĐẶC BIỆT 1: LIVE IDOL AVATAR (KHÔNG CÓ MẶC ĐỊNH VOICE, ĐƯỢC TỰ DO LỰA CHỌN BẤT KỲ GIỌNG NÀO)
+  // Khi không phải là live event (đang phát kịch bản idol, chọn trên sân khấu, sequencer, studio):
+  if (!isLiveEvent && taskSpecificVoiceId && taskSpecificVoiceId !== 'brain_auto') {
+    if (typeof taskSpecificVoiceId === 'object' && taskSpecificVoiceId.id) {
+      const match = findVoiceByIdAnywhere(taskSpecificVoiceId.id) || taskSpecificVoiceId;
+      return {
+        ...match,
+        ...taskSpecificVoiceId,
+        volume: taskSpecificVoiceId.volume !== undefined ? Number(taskSpecificVoiceId.volume) : (match.volume ?? 1.0),
+        rate: taskSpecificVoiceId.rate !== undefined ? Number(taskSpecificVoiceId.rate) : (match.rate ?? 1.0),
+        pitch: taskSpecificVoiceId.pitch !== undefined ? Number(taskSpecificVoiceId.pitch) : (match.pitch ?? 1.0)
+      };
+    }
+    if (typeof taskSpecificVoiceId === 'string' && taskSpecificVoiceId.trim()) {
+      const sId = taskSpecificVoiceId.trim();
+      const matched = findVoiceByIdAnywhere(sId);
+      if (matched) return matched;
+    }
+  }
+
+  // 🎯 QUY TẮC ĐẶC BIỆT 2: CÁC SỰ KIỆN PHIÊN LIVE (14 SỰ KIỆN, BÌNH LUẬN, CHÀO KHÁCH...)
+  // Cài đặt tại AvaLive Voice (Tab Bộ Não) là MẶC ĐỊNH cho toàn bộ các sự kiện phiên live!
+  // Chỉ khi người dùng KHÔNG cài đặt ở AvaLive Voice thì mới dùng giọng bên từng tab sự kiện.
+  if (isLiveEvent) {
+    if (brainVoice && brainVoice.id && brainVoice.enabled !== false) {
+      const fullVoice = findVoiceByIdAnywhere(brainVoice.id) || brainVoice;
+      return {
+        ...fullVoice,
+        ...brainVoice,
+        volume: brainVoice.volume !== undefined ? Number(brainVoice.volume) : (fullVoice.volume ?? 1.0),
+        rate: brainVoice.rate !== undefined ? Number(brainVoice.rate) : (fullVoice.rate ?? 1.0),
+        pitch: brainVoice.pitch !== undefined ? Number(brainVoice.pitch) : (fullVoice.pitch ?? 1.0)
+      };
+    }
+    // Fallback nếu AvaLive Voice chưa cài đặt: dùng cấu hình giọng riêng của tab sự kiện
+    if (taskSpecificVoiceId && taskSpecificVoiceId !== 'brain_auto') {
+      if (typeof taskSpecificVoiceId === 'object' && taskSpecificVoiceId.id) {
+        const match = findVoiceByIdAnywhere(taskSpecificVoiceId.id) || taskSpecificVoiceId;
+        return {
+          ...match,
+          ...taskSpecificVoiceId,
+          volume: taskSpecificVoiceId.volume !== undefined ? Number(taskSpecificVoiceId.volume) : (match.volume ?? 1.0),
+          rate: taskSpecificVoiceId.rate !== undefined ? Number(taskSpecificVoiceId.rate) : (match.rate ?? 1.0),
+          pitch: taskSpecificVoiceId.pitch !== undefined ? Number(taskSpecificVoiceId.pitch) : (match.pitch ?? 1.0)
+        };
+      }
+      if (typeof taskSpecificVoiceId === 'string' && taskSpecificVoiceId.trim()) {
+        const sId = taskSpecificVoiceId.trim();
+        const matched = findVoiceByIdAnywhere(sId);
+        if (matched) return matched;
+      }
+    }
+  }
+
+  // 🎯 ƯU TIÊN SỐ 1 CHUNG: CẤU HÌNH TRONG TAB BỘ NÃO AI & GIỌNG AVA LIVE
+  if (brainVoice && brainVoice.id && brainVoice.enabled !== false) {
+    const fullVoice = findVoiceByIdAnywhere(brainVoice.id) || brainVoice;
+    return {
+      ...fullVoice,
+      ...brainVoice,
+      volume: brainVoice.volume !== undefined ? Number(brainVoice.volume) : (fullVoice.volume ?? 1.0),
+      rate: brainVoice.rate !== undefined ? Number(brainVoice.rate) : (fullVoice.rate ?? 1.0),
+      pitch: brainVoice.pitch !== undefined ? Number(brainVoice.pitch) : (fullVoice.pitch ?? 1.0)
+    };
+  }
+
+  // 🎯 NẾU CÓ taskSpecificVoiceId CHO CÁC TRƯỜNG HỢP KHÁC
   if (taskSpecificVoiceId && taskSpecificVoiceId !== 'brain_auto') {
     if (typeof taskSpecificVoiceId === 'object' && taskSpecificVoiceId.id) {
       const match = findVoiceByIdAnywhere(taskSpecificVoiceId.id) || taskSpecificVoiceId;
@@ -7601,25 +7670,9 @@ export function resolveEffectiveVoice(roleOrEvent = 'idol', taskSpecificVoiceId 
     }
     if (typeof taskSpecificVoiceId === 'string' && taskSpecificVoiceId.trim()) {
       const sId = taskSpecificVoiceId.trim();
-      const brainIsConfigured = brainVoice && brainVoice.id && brainVoice.id !== 'free_vi_female';
-      // Nếu không bị rơi vào trường hợp fallback free_vi_female ghi đè lên cấu hình Bộ Não:
-      if (!brainIsConfigured || sId !== 'free_vi_female') {
-        const matched = findVoiceByIdAnywhere(sId);
-        if (matched) return matched;
-      }
+      const matched = findVoiceByIdAnywhere(sId);
+      if (matched) return matched;
     }
-  }
-
-  // 🎯 ƯU TIÊN SỐ 1 TUYỆT ĐỐI: CẤU HÌNH TRONG TAB BỘ NÃO AI & GIỌNG AVA LIVE
-  if (brainVoice && brainVoice.id && brainVoice.enabled !== false) {
-    const fullVoice = findVoiceByIdAnywhere(brainVoice.id) || brainVoice;
-    return {
-      ...fullVoice,
-      ...brainVoice,
-      volume: brainVoice.volume !== undefined ? Number(brainVoice.volume) : (fullVoice.volume ?? 1.0),
-      rate: brainVoice.rate !== undefined ? Number(brainVoice.rate) : (fullVoice.rate ?? 1.0),
-      pitch: brainVoice.pitch !== undefined ? Number(brainVoice.pitch) : (fullVoice.pitch ?? 1.0)
-    };
   }
 
   // 🎯 FALLBACK: GIỌNG IDOL MẶC ĐỊNH
@@ -7637,7 +7690,7 @@ let activeMasterGainNode = null;
 const audioBufferMemoryCache = new Map();
 
 /**
- * ⚡ ĐIỀU CHỈNH ÂM LƯỢNG & TỐC ĐỘ REAL-TIME KHI ĐANG PHÁT AUDIO
+ * ⚡ ĐIỀU CHỈNH ÂM LƯỢNG, TỐC ĐỘ & CAO ĐỘ REAL-TIME KHI ĐANG PHÁT AUDIO
  */
 export function setRealtimeAudioParams({ volume, rate, pitch } = {}) {
   if (volume !== undefined && !isNaN(Number(volume))) {
@@ -7656,10 +7709,25 @@ export function setRealtimeAudioParams({ volume, rate, pitch } = {}) {
 
   if (rate !== undefined && !isNaN(Number(rate))) {
     const rateNum = Math.max(0.5, Math.min(2.0, Number(rate)));
+    if (activeSourceNode && activeAudioContext) {
+      try {
+        activeSourceNode.playbackRate.setValueAtTime(rateNum, activeAudioContext.currentTime);
+      } catch (e) {}
+    }
     if (activePreviewAudio) {
       try {
         activePreviewAudio.preservesPitch = true;
         activePreviewAudio.playbackRate = rateNum;
+      } catch (e) {}
+    }
+  }
+
+  if (pitch !== undefined && !isNaN(Number(pitch))) {
+    const pitchVal = Number(pitch);
+    const detuneCents = Math.round((pitchVal - 1.0) * 1200);
+    if (activeSourceNode && activeSourceNode.detune && activeAudioContext) {
+      try {
+        activeSourceNode.detune.setValueAtTime(detuneCents, activeAudioContext.currentTime);
       } catch (e) {}
     }
   }
@@ -8222,11 +8290,11 @@ async function playAudioBufferWithDSP(audioBuffer, voice, requestedVolume, reque
   }
   source.playbackRate.value = 1.0;
 
-  // MASTER GAIN (Điều chỉnh âm lượng to lớn, rõ ràng đàng hoàng)
+  // MASTER GAIN (Điều chỉnh âm lượng to lớn, rõ ràng đàng hoàng theo thanh trượt 1% - 100%)
   const masterGain = audioCtx.createGain();
   activeMasterGainNode = masterGain;
   const baseVol = requestedVolume !== undefined ? Number(requestedVolume) : 1.0;
-  masterGain.gain.value = Math.max(0, Math.min(2.5, isMale ? Math.max(1.0, baseVol * 1.15) : baseVol));
+  masterGain.gain.value = Math.max(0, Math.min(2.5, isMale ? baseVol * 1.05 : baseVol));
 
   // 🎛️ BỘ XỬ LÝ ÂM SẮC & EQ MASTERING CHUYÊN BIỆT CHO TỪNG GIỌNG ĐỌC (VOICE ACOUSTIC DSP)
   let lastNode = source;
@@ -8911,13 +8979,14 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
 
   const requestedVolume = voice?.volume !== undefined ? Math.max(0, Math.min(2.0, Number(voice.volume))) : 1.0;
   const requestedRate = voice?.rate !== undefined ? Math.max(0.5, Math.min(2.0, Number(voice.rate))) : 1.0;
+  const requestedPitch = voice?.pitch !== undefined ? Math.max(0.5, Math.min(2.0, Number(voice.pitch))) : 1.0;
   
   const savedGlobalVol = typeof localStorage !== 'undefined' && localStorage.getItem('avalive_global_volume') 
     ? parseFloat(localStorage.getItem('avalive_global_volume')) 
     : (typeof localStorage !== 'undefined' && localStorage.getItem('avalive_video_volume') ? parseFloat(localStorage.getItem('avalive_video_volume')) : 1.0);
 
-  // Giọng nói AI luôn duy trì âm lượng chuẩn để truyền tải mượt mà 100% đến luồng Live (OBS, TikTok Live Studio, Shopee Live)
-  const effectiveVoiceVolume = Math.max(0.8, requestedVolume * (savedGlobalVol !== null && !isNaN(savedGlobalVol) ? savedGlobalVol : 1.0));
+  // Giọng nói AI điều chỉnh chuẩn xác 100% theo thanh trượt âm lượng (1% - 100%)
+  const effectiveVoiceVolume = Math.max(0, Math.min(2.0, requestedVolume * (savedGlobalVol !== null && !isNaN(savedGlobalVol) ? savedGlobalVol : 1.0)));
 
   const isVietnameseVoice = voice?.lang === 'vi-VN' || voice?.region === 'vi' || voice?.id?.startsWith('vn_') || voice?.id === 'free_vi_female' || voice?.id === 'el_adam';
   const rawLang = voice?.lang || (isVietnameseVoice ? 'vi-VN' : 'en-US');

@@ -2181,26 +2181,32 @@ IDOL MỈM CƯỜI + GESTURE
       const updated = { ...prev, [name]: finalValue };
 
       // Gọi real-time update cho giọng đọc đang phát/test
-      if (['salesVoiceVolume', 'mainVoiceVolume', 'assistantVoiceVolume', 'commentVoiceVolume', 'gameVoiceVolume'].includes(name)) {
+      if (name.includes('VoiceVolume') || name.endsWith('Volume') || name === 'mainVoiceVolume' || name === 'assistantVoiceVolume' || name === 'commentVoiceVolume') {
         setRealtimeAudioParams({ volume: Number(finalValue) });
-      } else if (['salesVoiceRate', 'mainVoiceRate', 'assistantVoiceRate', 'commentVoiceRate', 'gameVoiceRate'].includes(name)) {
+      } else if (name.includes('VoiceRate') || name.endsWith('Rate') || name === 'mainVoiceRate' || name === 'assistantVoiceRate' || name === 'commentVoiceRate') {
         setRealtimeAudioParams({ rate: Number(finalValue) });
-      } else if (['salesVoicePitch', 'mainVoicePitch', 'assistantVoicePitch', 'commentVoicePitch', 'gameVoicePitch'].includes(name)) {
+      } else if (name.includes('VoicePitch') || name.endsWith('Pitch') || name === 'mainVoicePitch' || name === 'assistantVoicePitch' || name === 'commentVoicePitch') {
         setRealtimeAudioParams({ pitch: Number(finalValue) });
       }
 
-      // ⚡ ĐỒNG BỘ NGAY LẬP TỨC VÀO HỆ THỐNG 3 CỘT GIỌNG BỘ NÃO
+      // ⚡ ĐỒNG BỘ NGAY LẬP TỨC VÀO HỆ THỐNG GIỌNG BỘ NÃO & 5 NHÂN VẬT
       try {
-        const idolMatch = ALL_SYSTEM_VOICES.find(v => v.id === updated.mainVoiceId);
-        const managerMatch = ALL_SYSTEM_VOICES.find(v => v.id === updated.assistantVoiceId);
-        const commentMatch = ALL_SYSTEM_VOICES.find(v => v.id === (updated.commentVoiceId || updated.mainVoiceId));
-        const gameMatch = ALL_SYSTEM_VOICES.find(v => v.id === updated.gameVoiceId);
+        const idolMatch = ALL_SYSTEM_VOICES.find(v => v.id === (updated.avatar1VoiceId || updated.mainVoiceId));
+        const managerMatch = ALL_SYSTEM_VOICES.find(v => v.id === (updated.avatar2VoiceId || updated.assistantVoiceId));
+        const commentMatch = ALL_SYSTEM_VOICES.find(v => v.id === (updated.avatar4VoiceId || updated.commentVoiceId || updated.mainVoiceId));
+        const gameMatch = ALL_SYSTEM_VOICES.find(v => v.id === (updated.avatar3VoiceId || updated.gameVoiceId));
+        const av5Match = ALL_SYSTEM_VOICES.find(v => v.id === updated.avatar5VoiceId);
         
         saveDualVoiceConfig({
           idolVoice: idolMatch ? { ...idolMatch, role: 'idol', enabled: updated.mainVoiceEnabled !== false, volume: updated.mainVoiceVolume !== undefined ? Number(updated.mainVoiceVolume) : 1.0, rate: updated.mainVoiceRate !== undefined ? Number(updated.mainVoiceRate) : 1.0, pitch: updated.mainVoicePitch !== undefined ? Number(updated.mainVoicePitch) : 1.0 } : undefined,
           managerVoice: managerMatch ? { ...managerMatch, role: 'manager', enabled: updated.assistantEnabled !== false, volume: updated.assistantVoiceVolume !== undefined ? Number(updated.assistantVoiceVolume) : 1.0, rate: updated.assistantVoiceRate !== undefined ? Number(updated.assistantVoiceRate) : 1.0, pitch: updated.assistantVoicePitch !== undefined ? Number(updated.assistantVoicePitch) : 1.0 } : undefined,
           commentVoice: commentMatch ? { ...commentMatch, role: 'comment', enabled: updated.commentVoiceEnabled !== false, volume: updated.commentVoiceVolume !== undefined ? Number(updated.commentVoiceVolume) : (updated.mainVoiceVolume !== undefined ? Number(updated.mainVoiceVolume) : 1.0), rate: updated.commentVoiceRate !== undefined ? Number(updated.commentVoiceRate) : (updated.mainVoiceRate !== undefined ? Number(updated.mainVoiceRate) : 1.0), pitch: updated.commentVoicePitch !== undefined ? Number(updated.commentVoicePitch) : (updated.mainVoicePitch !== undefined ? Number(updated.mainVoicePitch) : 1.0) } : undefined,
-          gameVoice: gameMatch ? { ...gameMatch, role: 'game', volume: updated.gameVoiceVolume !== undefined ? Number(updated.gameVoiceVolume) : 1.0, rate: updated.gameVoiceRate !== undefined ? Number(updated.gameVoiceRate) : 1.0, pitch: updated.gameVoicePitch !== undefined ? Number(updated.gameVoicePitch) : 1.0 } : undefined
+          gameVoice: gameMatch ? { ...gameMatch, role: 'game', volume: updated.gameVoiceVolume !== undefined ? Number(updated.gameVoiceVolume) : 1.0, rate: updated.gameVoiceRate !== undefined ? Number(updated.gameVoiceRate) : 1.0, pitch: updated.gameVoicePitch !== undefined ? Number(updated.gameVoicePitch) : 1.0 } : undefined,
+          avatar1Voice: idolMatch ? { ...idolMatch, role: 'avatar_1', enabled: updated.avatar1Enabled !== false, volume: updated.avatar1VoiceVolume !== undefined ? Number(updated.avatar1VoiceVolume) : (updated.mainVoiceVolume !== undefined ? Number(updated.mainVoiceVolume) : 1.0), rate: updated.avatar1VoiceRate !== undefined ? Number(updated.avatar1VoiceRate) : (updated.mainVoiceRate !== undefined ? Number(updated.mainVoiceRate) : 1.0), pitch: updated.avatar1VoicePitch !== undefined ? Number(updated.avatar1VoicePitch) : (updated.mainVoicePitch !== undefined ? Number(updated.mainVoicePitch) : 1.0) } : undefined,
+          avatar2Voice: managerMatch ? { ...managerMatch, role: 'avatar_2', enabled: updated.avatar2Enabled !== false, volume: updated.avatar2VoiceVolume !== undefined ? Number(updated.avatar2VoiceVolume) : (updated.assistantVoiceVolume !== undefined ? Number(updated.assistantVoiceVolume) : 1.0), rate: updated.avatar2VoiceRate !== undefined ? Number(updated.avatar2VoiceRate) : (updated.assistantVoiceRate !== undefined ? Number(updated.assistantVoiceRate) : 1.0), pitch: updated.avatar2VoicePitch !== undefined ? Number(updated.avatar2VoicePitch) : (updated.assistantVoicePitch !== undefined ? Number(updated.assistantVoicePitch) : 1.0) } : undefined,
+          avatar3Voice: gameMatch ? { ...gameMatch, role: 'avatar_3', enabled: updated.avatar3Enabled !== false, volume: updated.avatar3VoiceVolume !== undefined ? Number(updated.avatar3VoiceVolume) : 1.0, rate: updated.avatar3VoiceRate !== undefined ? Number(updated.avatar3VoiceRate) : 1.0, pitch: updated.avatar3VoicePitch !== undefined ? Number(updated.avatar3VoicePitch) : 1.0 } : undefined,
+          avatar4Voice: commentMatch ? { ...commentMatch, role: 'avatar_4', enabled: updated.avatar4Enabled !== false, volume: updated.avatar4VoiceVolume !== undefined ? Number(updated.avatar4VoiceVolume) : 1.0, rate: updated.avatar4VoiceRate !== undefined ? Number(updated.avatar4VoiceRate) : 1.0, pitch: updated.avatar4VoicePitch !== undefined ? Number(updated.avatar4VoicePitch) : 1.0 } : undefined,
+          avatar5Voice: av5Match ? { ...av5Match, role: 'avatar_5', enabled: updated.avatar5Enabled !== false, volume: updated.avatar5VoiceVolume !== undefined ? Number(updated.avatar5VoiceVolume) : 1.0, rate: updated.avatar5VoiceRate !== undefined ? Number(updated.avatar5VoiceRate) : 1.0, pitch: updated.avatar5VoicePitch !== undefined ? Number(updated.avatar5VoicePitch) : 1.0 } : undefined
         });
       } catch (e) {}
 
@@ -3315,9 +3321,9 @@ IDOL MỈM CƯỜI + GESTURE
                       </div>
                       <input
                         type="range"
-                        min="0.1"
-                        max="1.5"
-                        step="0.05"
+                        min="0.01"
+                        max="1"
+                        step="0.01"
                         value={hotTrendVoiceVolume}
                         onChange={(e) => {
                           const val = parseFloat(e.target.value);
@@ -3796,9 +3802,9 @@ IDOL MỈM CƯỜI + GESTURE
                       </div>
                       <input
                         type="range"
-                        min="0.1"
-                        max="1.5"
-                        step="0.05"
+                        min="0.01"
+                        max="1"
+                        step="0.01"
                         name="salesVoiceVolume"
                         value={settings.salesVoiceVolume !== undefined ? settings.salesVoiceVolume : 1.0}
                         onChange={handleChange}
@@ -4639,21 +4645,21 @@ IDOL MỈM CƯỜI + GESTURE
                             <span>Âm lượng (Volume)</span>
                             <span className="text-blue-600 font-bold">{Math.round((settings.mainVoiceVolume !== undefined ? settings.mainVoiceVolume : 1) * 100)}%</span>
                           </label>
-                          <input type="range" min="0" max="2" step="0.1" name="mainVoiceVolume" value={settings.mainVoiceVolume !== undefined ? settings.mainVoiceVolume : 1} onChange={handleChange} className="w-full accent-blue-600" />
+                          <input type="range" min="0.01" max="1" step="0.01" name="mainVoiceVolume" value={settings.mainVoiceVolume !== undefined ? settings.mainVoiceVolume : 1} onChange={handleChange} className="w-full accent-blue-600 cursor-pointer" />
                         </div>
                         <div className="flex flex-col gap-1">
                           <label className="text-xs font-semibold text-gray-700 flex justify-between">
                             <span>Tốc độ (Speed)</span>
-                            <span className="text-blue-600 font-bold">{settings.mainVoiceRate !== undefined ? settings.mainVoiceRate : 1}x</span>
+                            <span className="text-blue-600 font-bold">{Number(settings.mainVoiceRate !== undefined ? settings.mainVoiceRate : 1).toFixed(2)}x</span>
                           </label>
-                          <input type="range" min="0.5" max="2" step="0.1" name="mainVoiceRate" value={settings.mainVoiceRate !== undefined ? settings.mainVoiceRate : 1} onChange={handleChange} className="w-full accent-blue-600" />
+                          <input type="range" min="0.5" max="2" step="0.05" name="mainVoiceRate" value={settings.mainVoiceRate !== undefined ? settings.mainVoiceRate : 1} onChange={handleChange} className="w-full accent-blue-600 cursor-pointer" />
                         </div>
                         <div className="flex flex-col gap-1">
                           <label className="text-xs font-semibold text-gray-700 flex justify-between">
                             <span>Độ trầm bổng (Pitch)</span>
-                            <span className="text-blue-600 font-bold">{settings.mainVoicePitch !== undefined ? settings.mainVoicePitch : 1}</span>
+                            <span className="text-blue-600 font-bold">{Number(settings.mainVoicePitch !== undefined ? settings.mainVoicePitch : 1).toFixed(2)}</span>
                           </label>
-                          <input type="range" min="0.5" max="2" step="0.1" name="mainVoicePitch" value={settings.mainVoicePitch !== undefined ? settings.mainVoicePitch : 1} onChange={handleChange} className="w-full accent-blue-600" />
+                          <input type="range" min="0.5" max="2" step="0.05" name="mainVoicePitch" value={settings.mainVoicePitch !== undefined ? settings.mainVoicePitch : 1} onChange={handleChange} className="w-full accent-blue-600 cursor-pointer" />
                         </div>
                         {isAdmin && (
                           <div className="pt-2 border-t border-gray-100">
@@ -4726,21 +4732,21 @@ IDOL MỈM CƯỜI + GESTURE
                             <span>Âm lượng (Volume)</span>
                             <span className="text-red-600 font-bold">{Math.round((settings.assistantVoiceVolume !== undefined ? settings.assistantVoiceVolume : 1) * 100)}%</span>
                           </label>
-                          <input type="range" min="0" max="2" step="0.1" name="assistantVoiceVolume" value={settings.assistantVoiceVolume !== undefined ? settings.assistantVoiceVolume : 1} onChange={handleChange} className="w-full accent-red-600" />
+                          <input type="range" min="0.01" max="1" step="0.01" name="assistantVoiceVolume" value={settings.assistantVoiceVolume !== undefined ? settings.assistantVoiceVolume : 1} onChange={handleChange} className="w-full accent-red-600 cursor-pointer" />
                         </div>
                         <div className="flex flex-col gap-1">
                           <label className="text-xs font-semibold text-gray-700 flex justify-between">
                             <span>Tốc độ (Speed)</span>
-                            <span className="text-red-600 font-bold">{settings.assistantVoiceRate !== undefined ? settings.assistantVoiceRate : 1}x</span>
+                            <span className="text-red-600 font-bold">{Number(settings.assistantVoiceRate !== undefined ? settings.assistantVoiceRate : 1).toFixed(2)}x</span>
                           </label>
-                          <input type="range" min="0.5" max="2" step="0.1" name="assistantVoiceRate" value={settings.assistantVoiceRate !== undefined ? settings.assistantVoiceRate : 1} onChange={handleChange} className="w-full accent-red-600" />
+                          <input type="range" min="0.5" max="2" step="0.05" name="assistantVoiceRate" value={settings.assistantVoiceRate !== undefined ? settings.assistantVoiceRate : 1} onChange={handleChange} className="w-full accent-red-600 cursor-pointer" />
                         </div>
                         <div className="flex flex-col gap-1">
                           <label className="text-xs font-semibold text-gray-700 flex justify-between">
                             <span>Độ trầm bổng (Pitch)</span>
-                            <span className="text-red-600 font-bold">{settings.assistantVoicePitch !== undefined ? settings.assistantVoicePitch : 1}</span>
+                            <span className="text-red-600 font-bold">{Number(settings.assistantVoicePitch !== undefined ? settings.assistantVoicePitch : 1).toFixed(2)}</span>
                           </label>
-                          <input type="range" min="0.5" max="2" step="0.1" name="assistantVoicePitch" value={settings.assistantVoicePitch !== undefined ? settings.assistantVoicePitch : 1} onChange={handleChange} className="w-full accent-red-600" />
+                          <input type="range" min="0.5" max="2" step="0.05" name="assistantVoicePitch" value={settings.assistantVoicePitch !== undefined ? settings.assistantVoicePitch : 1} onChange={handleChange} className="w-full accent-red-600 cursor-pointer" />
                         </div>
 
                         <div className="pt-2 border-t border-gray-100">
@@ -4824,21 +4830,21 @@ IDOL MỈM CƯỜI + GESTURE
                             <span>Âm lượng (Volume)</span>
                             <span className="text-purple-600 font-bold">{Math.round((settings.commentVoiceVolume !== undefined ? settings.commentVoiceVolume : (settings.mainVoiceVolume || 1)) * 100)}%</span>
                           </label>
-                          <input type="range" min="0" max="2" step="0.1" name="commentVoiceVolume" value={settings.commentVoiceVolume !== undefined ? settings.commentVoiceVolume : (settings.mainVoiceVolume || 1)} onChange={handleChange} className="w-full accent-purple-600" />
+                          <input type="range" min="0.01" max="1" step="0.01" name="commentVoiceVolume" value={settings.commentVoiceVolume !== undefined ? settings.commentVoiceVolume : (settings.mainVoiceVolume || 1)} onChange={handleChange} className="w-full accent-purple-600 cursor-pointer" />
                         </div>
                         <div className="flex flex-col gap-1">
                           <label className="text-xs font-semibold text-gray-700 flex justify-between">
                             <span>Tốc độ (Speed)</span>
-                            <span className="text-purple-600 font-bold">{settings.commentVoiceRate !== undefined ? settings.commentVoiceRate : (settings.mainVoiceRate || 1)}x</span>
+                            <span className="text-purple-600 font-bold">{Number(settings.commentVoiceRate !== undefined ? settings.commentVoiceRate : (settings.mainVoiceRate || 1)).toFixed(2)}x</span>
                           </label>
-                          <input type="range" min="0.5" max="2" step="0.1" name="commentVoiceRate" value={settings.commentVoiceRate !== undefined ? settings.commentVoiceRate : (settings.mainVoiceRate || 1)} onChange={handleChange} className="w-full accent-purple-600" />
+                          <input type="range" min="0.5" max="2" step="0.05" name="commentVoiceRate" value={settings.commentVoiceRate !== undefined ? settings.commentVoiceRate : (settings.mainVoiceRate || 1)} onChange={handleChange} className="w-full accent-purple-600 cursor-pointer" />
                         </div>
                         <div className="flex flex-col gap-1">
                           <label className="text-xs font-semibold text-gray-700 flex justify-between">
                             <span>Độ trầm bổng (Pitch)</span>
-                            <span className="text-purple-600 font-bold">{settings.commentVoicePitch !== undefined ? settings.commentVoicePitch : (settings.mainVoicePitch || 1)}</span>
+                            <span className="text-purple-600 font-bold">{Number(settings.commentVoicePitch !== undefined ? settings.commentVoicePitch : (settings.mainVoicePitch || 1)).toFixed(2)}</span>
                           </label>
-                          <input type="range" min="0.5" max="2" step="0.1" name="commentVoicePitch" value={settings.commentVoicePitch !== undefined ? settings.commentVoicePitch : (settings.mainVoicePitch || 1)} onChange={handleChange} className="w-full accent-purple-600" />
+                          <input type="range" min="0.5" max="2" step="0.05" name="commentVoicePitch" value={settings.commentVoicePitch !== undefined ? settings.commentVoicePitch : (settings.mainVoicePitch || 1)} onChange={handleChange} className="w-full accent-purple-600 cursor-pointer" />
                         </div>
                         <div className="pt-2 border-t border-gray-100 text-xs text-purple-700 italic">
                           💬 Giọng chuyên trách tự động trả lời bình luận khán giả, giải đáp Q&A, tương tác bán hàng trên livestream.
@@ -4948,47 +4954,47 @@ IDOL MỈM CƯỜI + GESTURE
                                 </div>
                                 <input
                                   type="range"
-                                  min="0"
-                                  max="2"
-                                  step="0.1"
+                                  min="0.01"
+                                  max="1"
+                                  step="0.01"
                                   name={volKey}
                                   value={curVol}
                                   onChange={handleChange}
-                                  className="w-full accent-indigo-600 h-1.5"
+                                  className="w-full accent-indigo-600 h-1.5 cursor-pointer"
                                 />
                               </div>
 
                               <div>
                                 <div className="flex justify-between text-gray-600 font-semibold">
                                   <span>Tốc độ:</span>
-                                  <span className="font-black text-indigo-600">{curRate}x</span>
+                                  <span className="font-black text-indigo-600">{Number(curRate).toFixed(2)}x</span>
                                 </div>
                                 <input
                                   type="range"
                                   min="0.5"
                                   max="2"
-                                  step="0.1"
+                                  step="0.05"
                                   name={rateKey}
                                   value={curRate}
                                   onChange={handleChange}
-                                  className="w-full accent-indigo-600 h-1.5"
+                                  className="w-full accent-indigo-600 h-1.5 cursor-pointer"
                                 />
                               </div>
 
                               <div>
                                 <div className="flex justify-between text-gray-600 font-semibold">
                                   <span>Cao độ:</span>
-                                  <span className="font-black text-indigo-600">{curPitch}</span>
+                                  <span className="font-black text-indigo-600">{Number(curPitch).toFixed(2)}</span>
                                 </div>
                                 <input
                                   type="range"
                                   min="0.5"
                                   max="2"
-                                  step="0.1"
+                                  step="0.05"
                                   name={pitchKey}
                                   value={curPitch}
                                   onChange={handleChange}
-                                  className="w-full accent-indigo-600 h-1.5"
+                                  className="w-full accent-indigo-600 h-1.5 cursor-pointer"
                                 />
                               </div>
                             </div>

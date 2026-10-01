@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.17';
+export const APP_VERSION = '5.4.18';
 export const RELEASE_DATE = '01/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.18 - Tùy Chỉnh Toàn Diện Voice AI (Âm Lượng 1% - 100%, Tốc Độ, Cao Độ), Đồng Bộ Giọng Mặc Định AvaLive Voice Cho Mọi Sự Kiện & Mở Khóa Tự Do Chọn Giọng Cho Live Idol Avatar',
+    description: '1. Tùy Chỉnh Toàn Bộ Các Nút Voice Hoạt Động 100%: Mọi thanh trượt Âm lượng (Volume), Tốc độ (Speed), Độ trầm bổng (Pitch) của Giọng Idol, Giọng Quản Lý / Trợ Lý, Giọng Bình Luận và 5 Nhân Vật đều điều chỉnh mượt mà và có hiệu lực tức thì. Sửa triệt để lỗi âm lượng không giảm do ép ngưỡng tối thiểu cũ. 2. Âm Lượng Tinh Chỉnh Mượt Mà Từ 1% Đến 100%: Thay thế bước nhảy 10% bằng nấc 1% chính xác (step 0.01), cho phép streamer tinh chỉnh âm lượng chi tiết từ 1% đến 100% cực kỳ dễ dàng. 3. Đồng Bộ AvaLive Voice Là Giọng Mặc Định Cho Mọi Sự Kiện Live: Cài đặt giọng trong AvaLive Voice (Tab Bộ Não) tự động là giọng mặc định cho toàn bộ 14 sự kiện và trả lời bình luận; chỉ khi không cài đặt ở AvaLive Voice mới dùng giọng riêng của từng sự kiện. 4. ĐẶC BIỆT - Mở Khóa Tự Do Chọn Giọng Cho Live Idol Avatar: Nhân vật Live Idol Avatar hoàn toàn không bị ép về giọng mặc định, streamer tùy ý chọn bất kỳ giọng nào trong kho để phát kịch bản và live mà không bị bất kỳ giới hạn nào. 5. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.17 - Kích Hoạt Triệt Để Bộ Não AI & 14 Sự Kiện Live (Chào Người Mới, Đọc Bình Luận, Tặng Quà), Tự Động Ghim shop.tiktok.com & Tách Biệt Loa Máy / Loa Live',
     description: '1. Kích Hoạt 100% Bộ Não AI & Chuỗi 14 Tác Vụ Sự Kiện Live: Sửa dứt điểm nguyên nhân khiến AI không chào người mới và không đọc bình luận khi kết nối TikTok Live / Shopee Live. Mọi sự kiện gia nhập phòng (Viewer Join), bình luận (Comment), tặng quà (Gift), thả tim (Like), theo dõi (Follow), chia sẻ (Share) đều được ưu tiên đưa vào hàng đợi và phát giọng đọc AI mượt mà ngay cả khi không chạy kịch bản nền. 2. Tách Biệt Hai Chế Độ Loa Độc Lập 100%: Nút [🔊 Loa Máy: Mở / Tắt] chỉ điều khiển loa nghe tại phòng của streamer để chống ồn; trong khi [🔊 Loa Live: Mở / Tắt] ở góc phải luôn mặc định MỞ 100% khi live để khán giả trên TikTok Live Studio, OBS Browser Source và Shopee Live nghe rõ giọng idol AI. 3. Tự Động Ghim Sản Phẩm Pro (shop.tiktok.com): Tự động liên kết và duy trì danh mục sản phẩm từ TikTok Shop; nhận diện giọng đọc AI, từ khóa sản phẩm hoặc khán giả comment (mã 1, sp 2...) để auto ghim trực tiếp lên live trong 0ms. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
