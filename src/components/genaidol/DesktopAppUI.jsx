@@ -4085,6 +4085,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       if (isMasterLiveRunningRef.current) {
         bandoAudio.playBgmOnLive();
       }
+      
+      // ⚡ Kích hoạt auto-pin sản phẩm ngay lập tức khi kết nối TikTok thành công
+      try {
+        autoPinProductService.startRotationLoop();
+        // Ghim sản phẩm đầu tiên ngay lập tức (không chờ hết chu kỳ interval)
+        const allProds = autoPinProductService.getAllProducts();
+        if (allProds && allProds.length > 0) {
+          autoPinProductService.pinProduct(allProds[0], 'Tự động ghim khi kết nối TikTok Live');
+        }
+      } catch (e) {}
+      
+      // ⚡ Trigger VIEWER_JOIN ngay lập tức không delay
       handleLiveEventRef.current?.('VIEWER_JOIN', { name: targetChan });
     });
 
@@ -4130,7 +4142,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
       // 3. Kích hoạt Kịch Bản Trả Lời Bình Luận & Chốt Đơn của AI Idol (theo đúng cấu trúc đã cài đặt)
       const now = Date.now();
-      if (now - lastAiCommentTime.current > 2500) {
+      if (now - lastAiCommentTime.current > 1500) {
         lastAiCommentTime.current = now;
         handleLiveEventRef.current?.('COMMENT', { name: author, text });
       }
@@ -4211,11 +4223,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       // Tự động kích hoạt câu chào riêng biệt theo chuỗi tuần tự không trùng lặp
       const now = Date.now();
       const timeSinceLastGreet = now - lastAiGreetingTime.current;
-      if (timeSinceLastGreet > 3500) {
+      if (timeSinceLastGreet > 2000) {
         lastAiGreetingTime.current = now;
         handleLiveEventRef.current?.('VIEWER_JOIN', { name: author });
       } else {
-        const delay = 3500 - timeSinceLastGreet;
+        const delay = 2000 - timeSinceLastGreet;
         setTimeout(() => {
           lastAiGreetingTime.current = Date.now();
           handleLiveEventRef.current?.('VIEWER_JOIN', { name: author });
