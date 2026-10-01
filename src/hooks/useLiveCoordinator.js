@@ -965,14 +965,20 @@ function fillTemplate(template, vars = {}) {
         }
 
         if (shouldSpeakVoice && onVoiceReply) {
+          const effectiveVolume = currentEvConfig.voiceVolume !== undefined ? Number(currentEvConfig.voiceVolume) : (currentEvConfig.volume !== undefined ? Number(currentEvConfig.volume) : (effectiveVoice.volume ?? 1.0));
+          const finalVoiceObj = {
+            ...effectiveVoice,
+            volume: effectiveVolume
+          };
           onVoiceReply({
             text: replyText,
             action: shouldAction,
             baseVideoItem: matchedEventVideo || activeVideoItem,
             preRecordedCat: matchedEventVideo ? matchedEventVideo.category : (shouldAction === 'gift_reaction' ? 'reaction' : null),
             voiceId: effectiveVoice.id,
-            voiceObj: effectiveVoice,
+            voiceObj: finalVoiceObj,
             voiceChannel: targetVoiceRole,
+            volume: effectiveVolume,
             isTest: isTestMode
           });
         }
@@ -987,14 +993,20 @@ function fillTemplate(template, vars = {}) {
         else if (type === 'SHARE') fallbackMsg = `Em cảm ơn bạn ${userName} đã chia sẻ phiên live này đến bạn bè nha!`;
 
         if (fallbackMsg && shouldSpeakVoice && onVoiceReply) {
+          const effectiveVolume = currentEvConfig.voiceVolume !== undefined ? Number(currentEvConfig.voiceVolume) : (currentEvConfig.volume !== undefined ? Number(currentEvConfig.volume) : (effectiveVoice.volume ?? 1.0));
+          const finalVoiceObj = {
+            ...effectiveVoice,
+            volume: effectiveVolume
+          };
           onVoiceReply({
             text: fallbackMsg,
             action: shouldAction,
             baseVideoItem: matchedEventVideo || activeVideoItem,
             preRecordedCat: matchedEventVideo ? matchedEventVideo.category : (shouldAction === 'gift_reaction' ? 'reaction' : null),
             voiceId: effectiveVoice.id,
-            voiceObj: effectiveVoice,
+            voiceObj: finalVoiceObj,
             voiceChannel: targetVoiceRole,
+            volume: effectiveVolume,
             isTest: isTestMode
           });
         } else {

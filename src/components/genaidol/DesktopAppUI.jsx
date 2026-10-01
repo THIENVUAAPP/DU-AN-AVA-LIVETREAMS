@@ -1934,13 +1934,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   } = useLiveCoordinator({
     isConnected: true, // Luôn sẵn sàng xử lý sự kiện khi có tín hiệu từ TikTok / Giả lập / Live
     activeBrainPack: 'talk', // mặc định
-    onVoiceReply: ({ text, action, baseVideoItem, preRecordedCat, voiceId, voiceChannel, isTest }) => {
+    onVoiceReply: ({ text, action, baseVideoItem, preRecordedCat, voiceId, voiceObj, voiceChannel, volume, isTest }) => {
       unlockAllAudio();
       // Nếu đang tắt tiếng Voice Test trong Bảng Giả Lập thì không phát âm thanh test
       if (isTest && isSimVoiceMutedRef.current) return;
-      // Gọi AIAudioPlayer để phát giọng nói với đúng Voice đã cài đặt cho tab sự kiện
+      // Gọi AIAudioPlayer để phát giọng nói với đúng Voice và Volume đã cài đặt cho tab sự kiện
       if (audioPlayerRef.current) {
-        audioPlayerRef.current.enqueueItem(text, action, false, { voiceId, voiceChannel, isTest });
+        audioPlayerRef.current.enqueueItem(text, action, false, { voiceId, voiceObj, voiceChannel, volume, isTest });
       }
       
       // Giọng nói AI phát qua AIAudioPlayer trong khi video live của Streamer vẫn tiếp tục phát mượt mà 60 FPS
@@ -4715,6 +4715,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         localStorage.setItem('avalive_auto247', 'true');
         bandoEngine.stopAutoTestLoop();
         bandoEngine.startAuto247Loop();
+      } catch (e) {}
+
+      // 6.5. TỰ ĐỘNG KÍCH HOẠT AUTO GHIM SẢN PHẨM TIKTOK SHOP LÊN PHIÊN LIVE TRỰC TIẾP
+      try {
+        autoPinProductService.startRotationLoop();
+        const allProds = autoPinProductService.getAllProducts();
+        if (allProds && allProds.length > 0) {
+          autoPinProductService.pinProduct(allProds[0], 'Tự động ghim khi bắt đầu phiên Live');
+        }
       } catch (e) {}
 
       // 7. Đồng bộ gói toàn diện 100% sân khấu sang Window Capture OBS và TikTok Live Studio Link

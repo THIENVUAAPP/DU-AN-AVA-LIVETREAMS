@@ -915,7 +915,22 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         else voiceObj = { id: options.voiceId, lang: 'vi-VN', gender: 'Female' };
       }
 
-      const newItem = { id: `dyn_${Date.now()}`, type: 'dynamic', text, action, voiceChannel, voiceObj, isTest: !!options?.isTest };
+      const explicitVolume = options?.volume !== undefined ? options.volume : (voiceObj?.volume !== undefined ? voiceObj.volume : undefined);
+      const explicitRate = options?.rate !== undefined ? options.rate : (voiceObj?.rate !== undefined ? voiceObj.rate : undefined);
+      const explicitPitch = options?.pitch !== undefined ? options.pitch : (voiceObj?.pitch !== undefined ? voiceObj.pitch : undefined);
+
+      const newItem = { 
+        id: `dyn_${Date.now()}`, 
+        type: 'dynamic', 
+        text, 
+        action, 
+        voiceChannel, 
+        voiceObj: voiceObj ? { ...voiceObj, volume: explicitVolume ?? voiceObj.volume, rate: explicitRate ?? voiceObj.rate, pitch: explicitPitch ?? voiceObj.pitch } : voiceObj, 
+        volume: explicitVolume,
+        rate: explicitRate,
+        pitch: explicitPitch,
+        isTest: !!options?.isTest 
+      };
       
       // Cho vào hàng đợi ưu tiên: Đợi câu hiện tại đọc xong dứt điểm rồi phát ngay, không ngắt giữa chừng
       priorityQueueRef.current.push(newItem);

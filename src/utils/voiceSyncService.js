@@ -7521,9 +7521,15 @@ export function getSavedVoiceConfig() {
 export function saveVoiceConfig(config) {
   if (typeof window === 'undefined') return;
   try {
-    localStorage.setItem('ava_live_voice_config_v2', JSON.stringify(config));
-    window.dispatchEvent(new CustomEvent('ava_voice_config_updated', { detail: config }));
-    window.dispatchEvent(new CustomEvent('aidol_voice_sync_updated', { detail: config }));
+    let existing = {};
+    try {
+      const saved = localStorage.getItem('ava_live_voice_config_v2');
+      if (saved) existing = JSON.parse(saved);
+    } catch(e) {}
+    const merged = { ...existing, ...config };
+    localStorage.setItem('ava_live_voice_config_v2', JSON.stringify(merged));
+    window.dispatchEvent(new CustomEvent('ava_voice_config_updated', { detail: merged }));
+    window.dispatchEvent(new CustomEvent('aidol_voice_sync_updated', { detail: merged }));
   } catch (e) {
     console.warn('Lỗi lưu voice config:', e);
   }
@@ -9025,7 +9031,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
         if (thisSpeechId !== currentSpeechGenerationId) return true;
         const audioUrl = URL.createObjectURL(blob);
         const audio = new Audio(audioUrl);
-        audio.volume = effectiveVoiceVolume;
+        audio.volume = Math.max(0, Math.min(1.0, effectiveVoiceVolume));
         audio.playbackRate = requestedRate;
         audio.muted = effectiveVoiceVolume === 0;
         
@@ -9119,7 +9125,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
 
             if (audioDataUrl) {
               const audio = new Audio(audioDataUrl);
-              audio.volume = effectiveVoiceVolume;
+              audio.volume = Math.max(0, Math.min(1.0, effectiveVoiceVolume));
               audio.playbackRate = requestedRate;
               activePreviewAudio = audio;
 
@@ -9179,7 +9185,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     const directApiGetUrl = (currentOrigin ? `${currentOrigin}/api/tts` : '/api/tts') + `?text=${encodedText}&lang=${gLang}&voice=${encodeURIComponent(voice?.neuralVoice || 'vi-VN-HoaiMyNeural')}`;
     
     const audio = new Audio(directApiGetUrl);
-    audio.volume = effectiveVoiceVolume;
+    audio.volume = Math.max(0, Math.min(1.0, effectiveVoiceVolume));
     audio.playbackRate = requestedRate;
     activePreviewAudio = audio;
 
@@ -9228,7 +9234,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
             window.speechSynthesis.cancel();
             const utter = new SpeechSynthesisUtterance(textToSpeak);
             utter.lang = isVietnameseVoice ? 'vi-VN' : (rawLang || 'vi-VN');
-            utter.volume = effectiveVoiceVolume;
+            utter.volume = Math.max(0, Math.min(1.0, effectiveVoiceVolume));
             utter.rate = requestedRate;
             utter.onend = finish;
             utter.onerror = finish;
@@ -9246,7 +9252,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
             window.speechSynthesis.cancel();
             const utter = new SpeechSynthesisUtterance(textToSpeak);
             utter.lang = isVietnameseVoice ? 'vi-VN' : (rawLang || 'vi-VN');
-            utter.volume = effectiveVoiceVolume;
+            utter.volume = Math.max(0, Math.min(1.0, effectiveVoiceVolume));
             utter.rate = requestedRate;
             utter.onend = finish;
             utter.onerror = finish;

@@ -5054,8 +5054,26 @@ io.on('connection', (socket) => {
     let streamResult = { flv: null, hls: null, bestUrl: null };
     let videoConnected = false;
 
-    // 1. Kết nối Video (nếu có targetVideoUser)
-    if (targetVideoUser) {
+    // 1. Khởi tạo kết nối Chat ngay lập tức (Ưu tiên số 1 để lắng nghe sự kiện tức thì)
+    if (targetUser) {
+      try {
+        tiktokConnection = new TikTokConnector(targetUser, {
+          processInitialData: true,
+          enableExtendedGiftInfo: false,
+          sessionId,
+          requestHeaders: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
+        });
+      } catch (e) {
+        console.error('[TikTok Live] Lỗi khởi tạo kết nối Chat:', e);
+        io.emit('tiktok_error', `Lỗi khởi tạo: ${e.message || e}`);
+        isConnectingTikTok = false;
+        return;
+      }
+    }
+
+    // 2. Kết nối Video (nếu có targetVideoUser) song song ngầm
+    const videoPromise = (async () => {
+      if (!targetVideoUser) return null;
       try {
         tiktokVideoConnection = new TikTokConnector(targetVideoUser, {
           processInitialData: true,
@@ -5064,56 +5082,26 @@ io.on('connection', (socket) => {
           requestHeaders: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
         });
         const vidPromise = tiktokVideoConnection.connect();
-        const vidTimeout = new Promise((_, r) => setTimeout(() => r(new Error('Video Timeout')), 15000));
-        try {
-          const vidState = await Promise.race([vidPromise, vidTimeout]);
-          console.log(`[TikTok Live] ✅ Đã kết nối Video Room ID: ${vidState?.roomId || 'ACTIVE'} (${targetVideoUser})`);
-          streamResult = extractFlv(vidState);
-          console.log(`[TikTok Live] Universal Stream Result: FLV=${streamResult.flv ? 'YES' : 'NO'}, HLS=${streamResult.hls ? 'YES' : 'NO'}, Best=${streamResult.bestUrl ? 'YES' : 'NO'}`);
-          if (streamResult.bestUrl) globalFlvUrl = streamResult.bestUrl;
-          videoConnected = true;
-        } catch (err) {
-          console.error(`[TikTok Live] ❌ Lỗi kết nối Video ${targetVideoUser}:`, err.message);
-          io.emit('tiktok_error', `Không thể lấy Video từ ${targetVideoUser}: Kênh chưa live.`);
-        }
-      } catch(e) {}
-    }
-
-    const flvUrl = streamResult.flv || streamResult.bestUrl;
-    const hlsUrl = streamResult.hls;
-
-    // Nếu không có Chat ID, kết thúc ở đây và chỉ phát Video
-    if (!targetUser) {
-      if (videoConnected && (flvUrl || hlsUrl)) {
-        io.emit('tiktok_connected', { username: targetVideoUser, roomId: 'VIDEO_ONLY', flvUrl, hlsUrl });
-        io.emit('tiktok_status', { connected: true, username: targetVideoUser, roomId: 'VIDEO_ONLY', flvUrl, hlsUrl });
-      } else {
-        io.emit('tiktok_error', `Kênh Video ${targetVideoUser} chưa live hoặc ID không tồn tại!`);
-        io.emit('tiktok_status', { connected: false, username: targetVideoUser });
+        const vidTimeout = new Promise((_, r) => setTimeout(() => r(new Error('Video Timeout')), 8000));
+        const vidState = await Promise.race([vidPromise, vidTimeout]);
+        console.log(`[TikTok Live] ✅ Đã kết nối Video Room ID: ${vidState?.roomId || 'ACTIVE'} (${targetVideoUser})`);
+        streamResult = extractFlv(vidState);
+        if (streamResult.bestUrl) globalFlvUrl = streamResult.bestUrl;
+        videoConnected = true;
+        return streamResult;
+      } catch (err) {
+        console.warn(`[TikTok Live] ℹ️ Video stream info notice:`, err.message);
+        return null;
       }
-      return;
-    }
+    })();
 
-    // 2. Kết nối Chat
-    try {
-      tiktokConnection = new TikTokConnector(targetUser, {
-        processInitialData: true,
-        enableExtendedGiftInfo: false,
-        sessionId,
-        requestHeaders: { 'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36' }
-      });
-    } catch (e) {
-      console.error('[TikTok Live] Lỗi khởi tạo kết nối Chat:', e);
-      io.emit('tiktok_error', `Lỗi khởi tạo: ${e.message || e}`);
-      return;
-    }
-
+    // 3. Kết nối Chat phòng Live siêu tốc
     const connectPromise = tiktokConnection.connect();
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Connection timeout')), 15000)
+      setTimeout(() => reject(new Error('Connection timeout')), 10000)
     );
 
-    Promise.race([connectPromise, timeoutPromise]).then(state => {
+    Promise.race([connectPromise, timeoutPromise]).then(async state => {
       console.log(`[TikTok Live] ✅ Đã kết nối Chat Room ID: ${state?.roomId || 'ACTIVE'} (${targetUser})`);
       stopSimulationMode();
       
@@ -5129,8 +5117,8 @@ io.on('connection', (socket) => {
       }
       
       isConnectingTikTok = false;
-      const finalFlv = flvUrl || globalFlvUrl;
-      const finalHls = hlsUrl;
+      const finalFlv = streamResult.flv || streamResult.bestUrl || globalFlvUrl;
+      const finalHls = streamResult.hls;
       
       currentMasterLiveState = {
         ...currentMasterLiveState,
