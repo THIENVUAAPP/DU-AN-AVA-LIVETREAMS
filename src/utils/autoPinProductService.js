@@ -25,11 +25,11 @@ export function formatVietnamesePrice(num) {
 export function getProductVariants(prod) {
   if (!prod) {
     return {
-      colors: ['Đen Classic', 'Trắng Sport', 'Hồng Pastel', 'Xanh Navy'],
-      sizes: ['Size S (40-48kg)', 'Size M (49-56kg)', 'Size L (57-65kg)', 'Size XL (66-75kg)'],
-      types: ['Bản Tiêu Chuẩn', 'Combo Nâng Cấp'],
-      stock: '999',
-      unitPrice: 49999
+      colors: ['Màu Mặc Định'],
+      sizes: ['Freesize'],
+      types: ['Bản Tiêu Chuẩn'],
+      stock: '99',
+      unitPrice: 0
     };
   }
 
@@ -38,84 +38,17 @@ export function getProductVariants(prod) {
       colors: prod.variants.colors || ['Màu Mặc Định'],
       sizes: prod.variants.sizes || ['Freesize'],
       types: prod.variants.types || ['Bản Tiêu Chuẩn'],
-      stock: prod.stock || '500',
+      stock: prod.stock || '99',
       unitPrice: parsePriceToNumber(prod.price)
     };
   }
 
-  const idOrCode = String(prod.id || prod.code || prod.sku || '').toLowerCase();
-  const title = String(prod.name || prod.productName || prod.title || '').toLowerCase();
-
-  if (idOrCode === '1' || title.includes('bra') || title.includes('havata') || title.includes('áo bra') || title.includes('yếm')) {
-    return {
-      colors: ['Đen Classic', 'Hồng Pastel', 'Xanh Navy', 'Trắng Tinh Khôi', 'Xám Khói'],
-      sizes: ['Size S (40-48kg)', 'Size M (49-56kg)', 'Size L (57-65kg)', 'Size XL (66-75kg)'],
-      types: ['Áo Đơn Có Mút Cổ Yếm', 'Combo 2 Áo Siêu Tiết Kiệm (Tặng Túi Gym)'],
-      stock: '32.500',
-      unitPrice: 49999
-    };
-  }
-  if (idOrCode === '2' || title.includes('quấn cổ chân') || title.includes('combo') || title.includes('eirafit')) {
-    return {
-      colors: ['Đen Quyến Rũ', 'Hồng Barbie', 'Tím Lavender', 'Xanh Mint'],
-      sizes: ['Bộ Tiêu Chuẩn (1 Đôi)', 'Combo Full Set + Dây 35Lbs', 'Combo Pro Chuyên Nghiệp + Dây 50Lbs'],
-      types: ['Quấn Cổ Chân Đơn', 'Combo Quấn Chân + Dây Kháng Lực Mông Đùi'],
-      stock: '1.500',
-      unitPrice: 42000
-    };
-  }
-  if (idOrCode === '3' || title.includes('tạ tay') || title.includes('40kg') || title.includes('gympro')) {
-    return {
-      colors: ['Đen Phối Đỏ Sport', 'Đen Phối Vàng Gold', 'Xanh Quân Đội'],
-      sizes: ['Bộ 20KG Tháo Lắp', 'Bộ 30KG Tháo Lắp Đa Năng', 'Bộ 40KG Full Set Kèm Đòn Nối 40cm'],
-      types: ['Bản Nhựa PVC Bọc Thép', 'Bản Cao Su Chống Va Đập 2026'],
-      stock: '283',
-      unitPrice: 1299000
-    };
-  }
-  if (idOrCode === '4' || title.includes('mini band') || title.includes('kháng lực') || title.includes('powerband')) {
-    return {
-      colors: ['Hồng (Light - 15Lbs)', 'Xanh Lá (Medium - 25Lbs)', 'Tím (Heavy - 35Lbs)', 'Đen (X-Heavy - 45Lbs)', 'Set 5 Dây Full Mức'],
-      sizes: ['Bản Tiêu Chuẩn 500x50mm', 'Bản Dày Cao Cấp 600x50mm'],
-      types: ['Dây Lẻ Tùy Chọn Mức', 'Trọn Bộ 5 Dây + Túi Rút + Ebook Tập'],
-      stock: '999',
-      unitPrice: 79000
-    };
-  }
-  if (idOrCode === '5' || title.includes('bình nước') || title.includes('2l') || title.includes('hydrasport')) {
-    return {
-      colors: ['Tím - Xanh Gradient', 'Hồng - Xanh Pastel', 'Đen Nhám Sport', 'Xanh Dương - Vàng'],
-      sizes: ['Dung tích 1.5L', 'Dung tích 2.0L Siêu Lớn'],
-      types: ['Bình Kèm Ống Hút & Cọ Rửa', 'Bản Full + Bộ Sticker 3D & Dây Đeo'],
-      stock: '500',
-      unitPrice: 65000
-    };
-  }
-  if (idOrCode === '6' || title.includes('thảm yoga') || title.includes('thảm tập') || title.includes('zenyoga')) {
-    return {
-      colors: ['Hồng Cánh Sen - Tím', 'Xanh Biển - Xanh Lam', 'Xám Đậm - Đen', 'Xanh Rêu - Xanh Ngọc'],
-      sizes: ['Độ dày 6mm (183x61cm)', 'Độ dày 8mm Êm Ái (183x68cm)'],
-      types: ['Thảm Định Tuyến Chuẩn', 'Thảm Định Tuyến + Túi Đựng + Dây Buộc'],
-      stock: '340',
-      unitPrice: 159000
-    };
-  }
-  if (idOrCode === '7' || title.includes('con lăn') || title.includes('bụng') || title.includes('fitabcore')) {
-    return {
-      colors: ['Đỏ Ferrari Sport', 'Xanh Dương Dynamic', 'Cam Năng Động', 'Xám Titan'],
-      sizes: ['Bản 2 Bánh Tiêu Chuẩn', 'Bản 4 Bánh Tự Động Hồi Về Có Đệm Quỳ'],
-      types: ['Bản Cơ Bản', 'Bản Cao Cấp Kèm Giá Để Điện Thoại & Hẹn Giờ'],
-      stock: '210',
-      unitPrice: 189000
-    };
-  }
-
   return {
-    colors: ['Màu Mặc Định', 'Màu Phiên Bản Mới'],
-    sizes: ['Size Tiêu Chuẩn', 'Size Nâng Cấp'],
+    colors: ['Màu Mặc Định'],
+    sizes: ['Freesize'],
     types: ['Bản Tiêu Chuẩn'],
-    stock: prod.stock || '500',
-    unitPrice: parsePriceToNumber(prod.price) || 99000
+    stock: prod.stock || '99',
+    unitPrice: parsePriceToNumber(prod.price) || 0
   };
 }
 
@@ -168,22 +101,11 @@ export function resolveSellerProductBuyUrl(prod, platform = 'tiktok', selectedVa
   return `https://www.tiktok.com/search?q=${encodeURIComponent(fullSearchQuery || 'san pham tiktok shop')}`;
 }
 
-/**
- * Lấy tên đơn vị bán hàng (Shop / Nhà Bán)
- */
 export function getProductSellerName(prod) {
   if (prod?.sellerName) return prod.sellerName;
   if (prod?.shopName) return prod.shopName;
-  const idOrCode = String(prod?.id || prod?.code || prod?.sku || '').toLowerCase();
-  const title = String(prod?.name || prod?.productName || prod?.title || '').toLowerCase();
-  if (idOrCode === '1' || title.includes('bra') || title.includes('havata')) return 'HAVATA Official Store';
-  if (idOrCode === '2' || title.includes('quấn cổ chân') || title.includes('combo')) return 'EiraFit Gymwear & Accessories';
-  if (idOrCode === '3' || title.includes('tạ tay') || title.includes('40kg')) return 'GymPro Vietnam Official';
-  if (idOrCode === '4' || title.includes('mini band') || title.includes('kháng lực')) return 'PowerBand Sport Store';
-  if (idOrCode === '5' || title.includes('bình nước') || title.includes('2l')) return 'HydraSport Vietnam';
-  if (idOrCode === '6' || title.includes('thảm yoga') || title.includes('thảm tập')) return 'ZenYoga Master Shop';
-  if (idOrCode === '7' || title.includes('con lăn') || title.includes('bụng')) return 'FitAbCore Official Store';
-  return 'Đơn Vị Bán Hàng TikTok Shop';
+  if (prod?.storeName) return prod.storeName;
+  return 'TikTok Shop Official';
 }
 
 class AutoPinProductService {
@@ -500,51 +422,6 @@ class AutoPinProductService {
     // Lọc sạch sản phẩm demo/ảo
     products = products.filter(p => p && p.name && !p.name.includes('AVA LIVE') && !p.name.includes('Streamer Desktop') && !p.name.includes('TikTok Shop Streamer'));
 
-    // Nếu không có sản phẩm trong storage, tự động nạp danh mục sản phẩm TikTok Shop chuẩn 100%
-    if (products.length === 0) {
-      products = [
-        {
-          id: 1,
-          name: 'Áo bra có mút cổ yếm HAVATA cao cấp nâng ngực dáng thể thao tập gym yoga',
-          productName: 'Áo bra có mút cổ yếm HAVATA cao cấp nâng ngực dáng thể thao tập gym yoga',
-          price: '49.999 ₫',
-          oldPrice: '83.332 ₫',
-          image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=500&q=80',
-          badge: 'GIẢM 40% 🔥',
-          keywords: 'mã 1;mã 01;áo bra;bra;áo tập;havata;yếm;chốt 1;sp1;mua 1',
-          stock: '32Tr',
-          sellerName: 'HAVATA Official Store',
-          storeUrl: this.tiktokShopUrl || 'https://shop.tiktok.com/streamer/live/product/dashboard'
-        },
-        {
-          id: 2,
-          name: 'Bộ Quấn Cổ Chân Tập Mông Đùi EiraFit Kèm Dây Kháng Lực',
-          productName: 'Bộ Quấn Cổ Chân Tập Mông Đùi EiraFit Kèm Dây Kháng Lực',
-          price: '42.000 ₫',
-          oldPrice: '75.000 ₫',
-          image: 'https://images.unsplash.com/photo-1599058917212-d750089bc07e?auto=format&fit=crop&w=500&q=80',
-          badge: 'BÁN CHẠY #1 🔥',
-          keywords: 'mã 2;mã 02;quấn cổ chân;cổ chân;eirafit;dây kháng lực;chốt 2;sp2;mua 2',
-          stock: '1.500',
-          sellerName: 'EiraFit Sport',
-          storeUrl: this.tiktokShopUrl || 'https://shop.tiktok.com/streamer/live/product/dashboard'
-        },
-        {
-          id: 3,
-          name: 'Bộ Tạ Tay Tháo Lắp Đa Năng GymPro 40KG Kèm Đòn Nối 40cm',
-          productName: 'Bộ Tạ Tay Tháo Lắp Đa Năng GymPro 40KG Kèm Đòn Nối 40cm',
-          price: '1.299.000 ₫',
-          oldPrice: '1.890.000 ₫',
-          image: 'https://images.unsplash.com/photo-1583454110551-21f2fa2afe61?auto=format&fit=crop&w=500&q=80',
-          badge: 'GIẢM 30% 🔥',
-          keywords: 'mã 3;mã 03;tạ tay;tạ;tạ 40kg;gympro;đòn tạ;chốt 3;sp3;mua 3',
-          stock: '283',
-          sellerName: 'GymPro Vietnam',
-          storeUrl: this.tiktokShopUrl || 'https://shop.tiktok.com/streamer/live/product/dashboard'
-        }
-      ];
-    }
-
     return products;
   }
 
@@ -688,7 +565,6 @@ class AutoPinProductService {
     // Lọc sạch sản phẩm demo / rác
     synced = synced.filter(p => p && p.name && !p.name.includes('Streamer Desktop') && !p.name.includes('AVA LIVE') && !p.name.includes('TikTok Shop Streamer'));
 
-    // Fallback đảm bảo luôn có đủ sản phẩm TikTok Shop THẬT 100% đã đồng bộ
     if (synced.length === 0) {
       synced = this.getAllProducts();
     }
@@ -697,7 +573,13 @@ class AutoPinProductService {
 
     if (typeof window !== 'undefined') {
       localStorage.setItem('avalive_tiktok_shop_products', JSON.stringify(synced));
-      localStorage.setItem('avalive_current_pinned_product', JSON.stringify(synced[0]));
+      if (synced.length > 0) {
+        localStorage.setItem('avalive_current_pinned_product', JSON.stringify(synced[0]));
+        this.currentPinnedProduct = synced[0];
+      } else {
+        localStorage.removeItem('avalive_current_pinned_product');
+        this.currentPinnedProduct = null;
+      }
 
       // Tự động đồng bộ sang aidol_event_configs để Tab Chốt Đơn & Kịch bản Sequencer cũng nhận ngay
       try {

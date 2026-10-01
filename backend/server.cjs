@@ -4497,22 +4497,23 @@ function loadLiveStateFromFile() {
           !data.pinnedProduct.name || 
           data.pinnedProduct.name.includes('AVA LIVE') || 
           data.pinnedProduct.name.includes('Streamer Desktop') || 
-          data.pinnedProduct.name.includes('TikTok Shop Streamer')
+          data.pinnedProduct.name.includes('TikTok Shop Streamer') ||
+          data.pinnedProduct.name.includes('HAVATA') ||
+          data.pinnedProduct.name.includes('FitAbCore') ||
+          data.pinnedProduct.name.includes('Con Lăn')
         )) {
-          data.pinnedProduct = {
-            id: 1,
-            name: 'Áo bra có mút cổ yếm HAVATA cao cấp nâng ngực dáng thể thao tập gym yoga',
-            productName: 'Áo bra có mút cổ yếm HAVATA cao cấp nâng ngực dáng thể thao tập gym yoga',
-            price: '49.999 ₫',
-            oldPrice: '83.332 ₫',
-            image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=500&q=80',
-            badge: 'HOT DEAL TIKTOK 🔥',
-            stock: '32Tr',
-            keywords: 'mã 1;mã 01;áo bra;bra;áo tập;havata;yếm;chốt 1;sp1;mua 1',
-            storeUrl: 'https://shop.tiktok.com/streamer/live/product/dashboard',
-            pinnedAt: Date.now(),
-            triggerSource: 'interval_auto_rotation'
-          };
+          data.pinnedProduct = null;
+        }
+        if (data.livePinnedProduct && (
+          !data.livePinnedProduct.name || 
+          data.livePinnedProduct.name.includes('AVA LIVE') || 
+          data.livePinnedProduct.name.includes('Streamer Desktop') || 
+          data.livePinnedProduct.name.includes('TikTok Shop Streamer') ||
+          data.livePinnedProduct.name.includes('HAVATA') ||
+          data.livePinnedProduct.name.includes('FitAbCore') ||
+          data.livePinnedProduct.name.includes('Con Lăn')
+        )) {
+          data.livePinnedProduct = null;
         }
         return data;
       }
@@ -6042,127 +6043,7 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
   }
 
   // Lọc sạch sản phẩm rác nếu có
-  products = products.filter(p => p && p.name && !p.name.includes('Streamer Desktop') && !p.name.includes('AVA LIVE'));
-
-  // 3. Nếu link là Streamer Live Product Dashboard (shop.tiktok.com/streamer/live/product/dashboard) hoặc danh sách trống
-  // Tự động chuẩn hóa & đồng bộ toàn bộ danh mục sản phẩm TikTok Shop THẬT 100% đúng cấu trúc live stream!
-  if (products.length === 0 || targetUrl.includes('streamer/live/product/dashboard')) {
-    const defaultTikTokShopCatalog = [
-      {
-        id: 1,
-        name: 'Áo bra có mút cổ yếm HAVATA cao cấp nâng ngực dáng thể thao tập gym yoga',
-        productName: 'Áo bra có mút cổ yếm HAVATA cao cấp nâng ngực dáng thể thao tập gym yoga',
-        price: '49.999 ₫',
-        oldPrice: '83.332 ₫',
-        image: 'https://images.unsplash.com/photo-1518611012118-696072aa579a?auto=format&fit=crop&w=500&q=80',
-        badge: 'GIẢM 40% 🔥',
-        keywords: 'mã 1;mã 01;áo bra;bra;áo tập;havata;yếm;chốt 1;sp1;mua 1',
-        stock: '32Tr',
-        sellerName: 'HAVATA Official Store',
-        sellerStoreUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Áo bra có mút cổ yếm HAVATA cao cấp'),
-        buyUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Áo bra có mút cổ yếm HAVATA cao cấp'),
-        productUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Áo bra có mút cổ yếm HAVATA cao cấp'),
-        storeUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Áo bra có mút cổ yếm HAVATA cao cấp')
-      },
-      {
-        id: 2,
-        name: '[ COMBO] Quấn Cổ Chân + Dây Kháng Lực Tập Mông Đùi Săn Chắc Chuyên Nghiệp',
-        productName: '[ COMBO] Quấn Cổ Chân + Dây Kháng Lực Tập Mông Đùi Săn Chắc Chuyên Nghiệp',
-        price: '42.000 ₫',
-        oldPrice: '85.000 ₫',
-        image: 'https://images.unsplash.com/photo-1598289431512-b97b0917affc?auto=format&fit=crop&w=500&q=80',
-        badge: 'COMBO HOT 🔥',
-        keywords: 'mã 2;mã 02;combo;quấn cổ chân;dây kháng lực;tập mông;chốt 2;sp2;mua 2',
-        stock: '1,5K',
-        sellerName: 'EiraFit Gymwear & Accessories',
-        sellerStoreUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Quấn Cổ Chân Dây Kháng Lực EiraFit'),
-        buyUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Quấn Cổ Chân Dây Kháng Lực EiraFit'),
-        productUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Quấn Cổ Chân Dây Kháng Lực EiraFit'),
-        storeUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Quấn Cổ Chân Dây Kháng Lực EiraFit')
-      },
-      {
-        id: 3,
-        name: 'Bộ Tạ Tay Nhựa PVC 40KG Đa Năng Tháo Lắp Ghép Đòn Tạ Tập Gym Tại Nhà',
-        productName: 'Bộ Tạ Tay Nhựa PVC 40KG Đa Năng Tháo Lắp Ghép Đòn Tạ Tập Gym Tại Nhà',
-        price: '1.299.000 ₫',
-        oldPrice: '1.599.000 ₫',
-        image: 'https://images.unsplash.com/photo-1584735935682-2f2b69dff9d2?auto=format&fit=crop&w=500&q=80',
-        badge: 'CHÍNH HÃNG 🏆 FREESHIP',
-        keywords: 'mã 3;mã 03;bộ tạ;tạ tay;40kg;tạ gym;tập tại nhà;chốt 3;sp3;mua 3',
-        stock: '283',
-        sellerName: 'GymPro Vietnam Official',
-        sellerStoreUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Bộ Tạ Tay Nhựa PVC 40KG GymPro'),
-        buyUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Bộ Tạ Tay Nhựa PVC 40KG GymPro'),
-        productUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Bộ Tạ Tay Nhựa PVC 40KG GymPro'),
-        storeUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Bộ Tạ Tay Nhựa PVC 40KG GymPro')
-      },
-      {
-        id: 4,
-        name: 'Dây Cao Su Tập Kháng Lực Mini Band Siêu Bền Đẹp Co Giãn Tốt',
-        productName: 'Dây Cao Su Tập Kháng Lực Mini Band Siêu Bền Đẹp Co Giãn Tốt',
-        price: '79.000 ₫',
-        oldPrice: '120.000 ₫',
-        image: 'https://images.unsplash.com/photo-1598289431512-b97b0917affc?auto=format&fit=crop&w=500&q=80',
-        badge: 'LỰA CHỌN YÊU THÍCH ❤️',
-        keywords: 'mã 4;mã 04;dây cao su;mini band;kháng lực;dây tập;chốt 4;sp4;mua 4',
-        stock: '999',
-        sellerName: 'PowerBand Sport Store',
-        sellerStoreUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Dây Cao Su Tập Kháng Lực Mini Band'),
-        buyUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Dây Cao Su Tập Kháng Lực Mini Band'),
-        productUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Dây Cao Su Tập Kháng Lực Mini Band'),
-        storeUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Dây Cao Su Tập Kháng Lực Mini Band')
-      },
-      {
-        id: 5,
-        name: 'Bình Nước Thể Thao Tập Gym Chống Tràn Dung Tích 2L Có Ống Hút Tiện Lợi',
-        productName: 'Bình Nước Thể Thao Tập Gym Chống Tràn Dung Tích 2L Có Ống Hút Tiện Lợi',
-        price: '65.000 ₫',
-        oldPrice: '130.000 ₫',
-        image: 'https://images.unsplash.com/photo-1523362628745-0c100150b504?auto=format&fit=crop&w=500&q=80',
-        badge: 'TOP BÁN CHẠY 🌟',
-        keywords: 'mã 5;mã 05;bình nước;2 lít;bình thể thao;chốt 5;sp5;mua 5',
-        stock: '500',
-        sellerName: 'HydraSport Vietnam',
-        sellerStoreUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Bình Nước Thể Thao 2L Tập Gym'),
-        buyUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Bình Nước Thể Thao 2L Tập Gym'),
-        productUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Bình Nước Thể Thao 2L Tập Gym'),
-        storeUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Bình Nước Thể Thao 2L Tập Gym')
-      },
-      {
-        id: 6,
-        name: 'Thảm Tập Yoga Định Tuyến Chống Trơn Trượt Cao Cấp TPE 2 Lớp 6mm',
-        productName: 'Thảm Tập Yoga Định Tuyến Chống Trơn Trượt Cao Cấp TPE 2 Lớp 6mm',
-        price: '159.000 ₫',
-        oldPrice: '299.000 ₫',
-        image: 'https://images.unsplash.com/photo-1601925260368-ae2f83cf8b7f?auto=format&fit=crop&w=500&q=80',
-        badge: 'VOUCHER 30K 🎟️',
-        keywords: 'mã 6;mã 06;thảm yoga;thảm tập;định tuyến;yoga;chốt 6;sp6;mua 6',
-        stock: '340',
-        sellerName: 'ZenYoga Master Shop',
-        sellerStoreUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Thảm Tập Yoga Định Tuyến TPE 6mm'),
-        buyUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Thảm Tập Yoga Định Tuyến TPE 6mm'),
-        productUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Thảm Tập Yoga Định Tuyến TPE 6mm'),
-        storeUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Thảm Tập Yoga Định Tuyến TPE 6mm')
-      },
-      {
-        id: 7,
-        name: 'Con Lăn Tập Cơ Bụng 4 Bánh Tự Động Hồi Về Có Đệm Quỳ Êm Ái',
-        productName: 'Con Lăn Tập Cơ Bụng 4 Bánh Tự Động Hồi Về Có Đệm Quỳ Êm Ái',
-        price: '189.000 ₫',
-        oldPrice: '350.000 ₫',
-        image: 'https://images.unsplash.com/photo-1571019614242-c5c5dee9f50b?auto=format&fit=crop&w=500&q=80',
-        badge: 'GIẢM SỐC 46% 💥',
-        keywords: 'mã 7;mã 07;con lăn;con lăn bụng;tập cơ bụng;chốt 7;sp7;mua 7',
-        stock: '210',
-        sellerName: 'FitAbCore Official Store',
-        sellerStoreUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Con Lăn Tập Cơ Bụng 4 Bánh Tự Động Hồi Về'),
-        buyUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Con Lăn Tập Cơ Bụng 4 Bánh Tự Động Hồi Về'),
-        productUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Con Lăn Tập Cơ Bụng 4 Bánh Tự Động Hồi Về'),
-        storeUrl: 'https://www.tiktok.com/search?q=' + encodeURIComponent('Con Lăn Tập Cơ Bụng 4 Bánh Tự Động Hồi Về')
-      }
-    ];
-    products = defaultTikTokShopCatalog;
-  }
+  products = products.filter(p => p && p.name && !p.name.includes('Streamer Desktop') && !p.name.includes('AVA LIVE') && !p.name.includes('TikTok Shop Streamer'));
 
   // Gán chính xác storeUrl của Seller vào từng sản phẩm nếu người dùng cung cấp link shop/profile thật
   if (targetUrl && (targetUrl.includes('@') || targetUrl.includes('/view/product/') || targetUrl.includes('/shop/') || targetUrl.includes('seller') || targetUrl.includes('tiktok.com'))) {
@@ -6184,9 +6065,18 @@ app.post('/api/tiktok-shop/sync', async (req, res) => {
     io.emit('tiktok_shop_pin', products[0]);
     io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
     saveLiveStateToFile(false);
+  } else {
+    currentMasterLiveState.syncedProducts = [];
+    currentMasterLiveState.pinnedProduct = null;
+    currentMasterLiveState.updatedAt = Date.now();
+    io.emit('tiktok_shop_products_synced', { products: [], storeUrl: targetUrl });
+    io.emit('pin_product_live', null);
+    io.emit('tiktok_shop_pin', null);
+    io.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
+    saveLiveStateToFile(false);
   }
 
-  console.log(`[TikTok Shop Sync] ✅ Đã đồng bộ thành công ${products.length} sản phẩm từ ${targetUrl}`);
+  console.log(`[TikTok Shop Sync] ✅ Đã đồng bộ thành công ${products.length} sản phẩm thật từ ${targetUrl}`);
 
   return res.json({
     success: true,

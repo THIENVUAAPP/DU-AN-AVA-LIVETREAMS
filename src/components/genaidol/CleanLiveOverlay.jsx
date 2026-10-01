@@ -3393,7 +3393,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         {/* OVERLAY SẢN PHẨM ĐANG GHIM TỰ ĐỘNG BỞI AI (CHUYỂN THẲNG ĐẾN TRANG MUA HÀNG CỦA ĐƠN VỊ BÁN HÀNG) */}
         {Boolean(masterState?.livePinnedProduct || masterState?.pinnedProduct || pinnedProduct) && (() => {
           const prod = masterState?.livePinnedProduct || masterState?.pinnedProduct || pinnedProduct;
-          if (!prod) return null;
+          if (!prod || !prod.name || prod.name.includes('Streamer Desktop') || prod.name.includes('AVA LIVE') || prod.name.includes('TikTok Shop Streamer')) return null;
           const rawPrice = prod.price || prod.salePrice || prod.currentPrice;
           const displayPrice = typeof rawPrice === 'number' ? rawPrice.toLocaleString('vi-VN') + ' đ' : (rawPrice || '');
           const rawOldPrice = prod.oldPrice || prod.originalPrice || prod.marketPrice;

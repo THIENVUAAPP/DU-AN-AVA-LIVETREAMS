@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.20';
+export const APP_VERSION = '5.4.21';
 export const RELEASE_DATE = '01/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.21 - Xóa Bỏ Hoàn Toàn Sản Phẩm Demo/Bịa Đặt, Chỉ Ghim 100% Sản Phẩm Thật Từ shop.tiktok.com & Hiển Thị Độc Quyền Trên Phiên Live',
+    description: '1. Xóa Sạch Hoàn Toàn Sản Phẩm Mẫu/Demo Bịa Đặt: Loại bỏ triệt để các dữ liệu giả lập (FitAbCore, Con Lăn, Havata, EiraFit...). Hệ thống chỉ đồng bộ và sử dụng 100% sản phẩm thật được lấy trực tiếp từ đường link trang quản trị TikTok Shop (shop.tiktok.com / seller-vn.tiktok.com) của chính người dùng. 2. Hiển Thị Độc Quyền Trực Tiếp Trên Phiên Live (OBS / TikTok Live Studio / Stream Output): Loại bỏ thẻ ghim đè trên giao diện phần mềm quản trị, thẻ sản phẩm chỉ xuất hiện chuyên nghiệp trực tiếp trên luồng phát sóng của khán giả. 3. Tự Động Đồng Bộ & Ghim Chuẩn Xác Theo Cấu Hình: Khi phát live, hệ thống tự động nhận diện và ghim chính xác các sản phẩm thật theo chu kỳ hẹn giờ, từ khóa comment của khách hoặc giọng nói AI. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.20 - Chuẩn Hóa Voice AI Cho Từng Sự Kiện/Nhân Vật, Ngăn Màn Hình Đen Khi Chuyển Tab Cài Đặt, Ghim Sản Phẩm shop.tiktok.com & Tối Ưu Trả Lời Bình Luận',
     description: '1. Chuẩn Hóa Chuẩn Xác Voice AI Setup Cho Từng Sự Kiện / Nhân Vật: Giọng đọc phát ra luôn đúng 100% theo cấu hình giọng mà người dùng đã thiết lập trong Voice AI. Cài đặt voice cho bình luận thì đọc đúng voice bình luận; cài cho AI thì là AI; cài cho trợ lý thì là trợ lý; cài cho nhân vật nào (Avatar 1 đến Avatar 5 trong Bộ Não AvaLive) thì đọc đúng nhân vật đó, kèm âm lượng, tốc độ, cao độ riêng biệt. Tuyệt đối không đọc sai giọng và không lẫn lộn giữa các sự kiện. 2. Ngăn Chặn Tuyệt Đối Màn Hình Live Bị Đen Khi Chuyển Tab Hoặc Chỉnh Cài Đặt: Khắc phục triệt để hiện tượng luồng phát livestream và Window Capture OBS bị đen màn hình khi streamer bấm chuyển qua tab cài đặt hoặc mở cửa sổ chỉnh sửa. Video sân khấu chính luôn phát liên tục 100% không bị ngắt quãng. 3. Hiển Thị Thẻ Ghim Sản Phẩm TikTok Shop Trực Tiếp Trên Live & OBS: Khắc phục triệt để việc không hiển thị sản phẩm sau khi dán link shop.tiktok.com và bật auto ghim. Thẻ sản phẩm được render nổi bật ngay trên sân khấu chính và luồng OBS / TikTok Live Studio kèm đầy đủ thông tin: hình ảnh, tên shop, giá khuyến mãi, giá gốc và nút ghim nhấp nháy. 4. Tối Ưu Cơ Chế Phản Hồi Bình Luận (Từ Khóa + Bộ Não AI): Ưu tiên tuyệt đối trả lời theo từ khóa cài đặt (nếu có từ khóa khớp thì trả lời trực tiếp từ khóa, không chắp vá câu chăm sóc khách hàng). Nếu bật cả hai thì kết hợp từ khóa và Bộ não AI. Chỉ khi khán giả hỏi câu hỏi hoàn toàn không liên quan từ khóa mới sử dụng câu hỏi/câu trả lời chăm sóc khách hàng. 5. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
