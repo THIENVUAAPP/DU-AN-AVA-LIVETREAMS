@@ -286,14 +286,17 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
   useEffect(() => {
     const handlePinnedProductUpdate = (e) => {
-      if (e?.detail?.product) {
+      if (e?.detail?.product !== undefined) {
         setPinnedProduct(e.detail.product);
+        setMasterState(prev => ({ ...prev, livePinnedProduct: e.detail.product, pinnedProduct: e.detail.product }));
       }
     };
     const handleStorage = (e) => {
-      if (e.key === 'avalive_current_pinned_product' && e.newValue) {
+      if (e.key === 'avalive_current_pinned_product') {
         try {
-          setPinnedProduct(JSON.parse(e.newValue));
+          const prod = e.newValue ? JSON.parse(e.newValue) : null;
+          setPinnedProduct(prod);
+          setMasterState(prev => ({ ...prev, livePinnedProduct: prod, pinnedProduct: prod }));
         } catch (err) {}
       }
     };
@@ -303,8 +306,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       if (typeof BroadcastChannel !== 'undefined') {
         bc = new BroadcastChannel('avalive_product_pin_channel');
         bc.onmessage = (ev) => {
-          if (ev?.data?.product) {
+          if (ev?.data?.product !== undefined) {
             setPinnedProduct(ev.data.product);
+            setMasterState(prev => ({ ...prev, livePinnedProduct: ev.data.product, pinnedProduct: ev.data.product }));
           }
         };
       }
@@ -879,10 +883,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           }
         }
 
-        // 3. Đồng bộ trạng thái Tạm dừng / Phát dứt khoát
+        // 3. Đồng bộ trạng thái Tạm dừng / Phát dứt khoát (Chỉ pause khi streamer chủ động pause, tránh đen màn hình khi streamer mở cài đặt/chuyển tab)
         if (opVid.paused && !myVid.paused) {
-          myVid.pause();
-          setIsPlayingState(false);
+          if (checkIfUserPaused()) {
+            myVid.pause();
+            setIsPlayingState(false);
+          }
         } else if (!opVid.paused && myVid.paused && !checkIfUserPaused()) {
           myVid.play().catch(() => {});
           setIsPlayingState(true);
@@ -1433,6 +1439,15 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 localStorage.removeItem('avalive_sequencer_overlay');
               } catch (e) {}
               return;
+            } else if (event.data.type === 'PIN_PRODUCT_UPDATE') {
+              if (event.data.product !== undefined) {
+                setPinnedProduct(event.data.product);
+                setMasterState(prev => ({
+                  ...prev,
+                  livePinnedProduct: event.data.product,
+                  pinnedProduct: event.data.product
+                }));
+              }
             } else if (event.data.type === 'EMERGENCY_STOP_ALL') {
               if (typeof window !== 'undefined') {
                 window.dispatchEvent(new CustomEvent('avalive_emergency_stop_all'));

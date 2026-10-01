@@ -692,7 +692,7 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
       localStorage.setItem('aidol_event_configs', json);
       localStorage.setItem('aidol_event_configs_backup', json);
 
-      // 🎬 TỰ ĐỘNG CẬP NHẬT VIDEO CHỜ (IDLE VIDEO) RA SÂN KHẤU CHÍNH KHI LƯU CẤU HÌNH
+      // 🎬 BẢO VỆ TUYỆT ĐỐI VIDEO SÂN KHẤU CHÍNH: KHÔNG BAO GIỜ LÀM MẤT VIDEO KHI LƯU CẤU HÌNH
       const idleVid = eventConfigs.idle?.videoFile || eventConfigs.idle?.videoUrl || eventConfigs.idle?.supportVideoFile;
       if (idleVid) {
         try {
@@ -703,24 +703,12 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
           window.dispatchEvent(new CustomEvent('avalive:idle_video_updated', {
             detail: { videoUrl: idleVid, eventConfigs }
           }));
-          window.dispatchEvent(new CustomEvent('avalive_event_configs_updated', {
-            detail: { eventConfigs }
-          }));
         }
-      } else {
-        try {
-          localStorage.removeItem('avalive_user_locked_media');
-          localStorage.removeItem('aidol_idle_media_url');
-          localStorage.removeItem('avalive_active_video_src');
-        } catch (err) {}
-        if (typeof window !== 'undefined') {
-          window.dispatchEvent(new CustomEvent('avalive:idle_video_updated', {
-            detail: { videoUrl: null, eventConfigs }
-          }));
-          window.dispatchEvent(new CustomEvent('avalive_event_configs_updated', {
-            detail: { eventConfigs }
-          }));
-        }
+      }
+      if (typeof window !== 'undefined') {
+        window.dispatchEvent(new CustomEvent('avalive_event_configs_updated', {
+          detail: { eventConfigs }
+        }));
       }
 
       alert('✅ Đã bảo lưu toàn bộ cấu hình 14 tác vụ sự kiện & đồng bộ Sân Khấu Chính thành công vĩnh viễn!');
@@ -829,33 +817,8 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
       // Các sự kiện khác (Chào mừng, Like, Share, Follow, Bình luận, PK, Chốt đơn...)
       // lưu độc lập 100% trong eventConfigs[id], TUYỆT ĐỐI KHÔNG cướp quyền Sân Khấu Chính khi cấu hình!
     } else {
-      // 🗑️ NẾU BỊ XÓA (videoFile: null / ''): TRIỆT TIÊU TOÀN DIỆN KHỎI SÂN KHẤU CHÍNH & BỘ NHỚ
-      const isClearing = ('videoFile' in partial && !partial.videoFile && !partial.videoUrl) ||
-                         ('supportVideoFile' in partial && !partial.supportVideoFile && !partial.supportVideoUrl);
-      if (isClearing && typeof window !== 'undefined') {
-        if (id === 'idle') {
-          try {
-            localStorage.removeItem('avalive_user_locked_media');
-            localStorage.removeItem('aidol_idle_media_url');
-            localStorage.removeItem('avalive_active_video_src');
-          } catch (e) {}
-          window.dispatchEvent(new CustomEvent('avalive:idle_video_updated', {
-            detail: { videoUrl: null, eventConfigs: { ...eventConfigs, [id]: { ...eventConfigs[id], ...partial } } }
-          }));
-        }
-        window.dispatchEvent(new CustomEvent('avalive:clear_event_video', {
-          detail: { eventType: id }
-        }));
-        try {
-          const bc = new BroadcastChannel('avalive_master_live_stream');
-          bc.postMessage({
-            type: 'CLEAR_EVENT_VIDEO',
-            eventType: id,
-            timestamp: Date.now()
-          });
-          setTimeout(() => bc.close(), 100);
-        } catch (e) {}
-      }
+      // Khi chỉ cập nhật trạng thái khác của sự kiện, bảo toàn nguyên vẹn Sân Khấu Chính
+      // Không phát lệnh CLEAR_EVENT_VIDEO làm mất video live đang phát
     }
   };
 

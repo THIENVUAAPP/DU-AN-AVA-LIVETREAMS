@@ -481,9 +481,11 @@ function fillTemplate(template, vars = {}) {
 
         let bodyAnswer = '';
         let isHandled = false;
+        let isKeywordMatched = false;
         const lowerComment = commentText.toLowerCase();
 
-        // BƯỚC 2: PHẢN HỒI THEO KHO TRI THỨC DOANH NGHIỆP & SẢN PHẨM (AI KNOWLEDGE BASE)
+        // 🎯 BƯỚC 2: ƯU TIÊN KIỂM TRA TỪ KHÓA ĐÃ CÀI ĐẶT
+        // 2.1. Kiểm tra Kho Tri Thức Doanh Nghiệp & Sản Phẩm (Knowledge Base)
         const company = scriptConfig.companyName || checkoutConfig.companyName || 'Shop';
         const product = scriptConfig.productName || checkoutConfig.productName || 'Sản phẩm';
         const price = scriptConfig.productPrice || checkoutConfig.productPrice || 'ưu đãi cực sốc';
@@ -495,25 +497,30 @@ function fillTemplate(template, vars = {}) {
           if (lowerComment.includes('giá') || lowerComment.includes('bao nhiêu') || lowerComment.includes('tiền') || lowerComment.includes('chi phí') || lowerComment.includes('sale')) {
             bodyAnswer = `Sản phẩm ${product} của ${company} đang có giá ${price} kèm khuyến mãi: ${promo}. Bạn bấm ngay vào giỏ hàng góc trái màn hình để nhận ưu đãi nha!`;
             isHandled = true;
+            isKeywordMatched = true;
           } else if (lowerComment.includes('bảo hành') || lowerComment.includes('đổi trả') || lowerComment.includes('ship') || lowerComment.includes('giao hàng') || lowerComment.includes('vận chuyển')) {
             bodyAnswer = `Bạn yên tâm nha, bên em có chính sách: ${warranty} và hỗ trợ giao hàng tận nơi ạ!`;
             isHandled = true;
+            isKeywordMatched = true;
           } else if (lowerComment.includes('mua') || lowerComment.includes('đặt hàng') || lowerComment.includes('chốt') || lowerComment.includes('lấy') || lowerComment.includes('order')) {
             bodyAnswer = `Em cảm ơn bạn đã tin tưởng ${company}! Bạn bấm trực tiếp vào giỏ hàng góc trái màn hình để chốt đơn ${product} nhận ngay mã quà tặng nha!`;
             isHandled = true;
+            isKeywordMatched = true;
           } else if (lowerComment.includes('dùng') || lowerComment.includes('tính năng') || lowerComment.includes('chức năng') || lowerComment.includes('sao') || lowerComment.includes('như thế nào') || lowerComment.includes('chất liệu') || lowerComment.includes('công dụng')) {
             bodyAnswer = `${product} nổi bật với tính năng: ${features.split('\n')[0] || features}. Sử dụng rất thích và hiệu quả cao ạ!`;
             isHandled = true;
+            isKeywordMatched = true;
           }
         }
 
-        // C. Kiểm tra kịch bản Chốt Đơn (Checkout Products)
-        if (!isHandled && checkoutConfig.active !== false && Array.isArray(checkoutConfig.checkoutProducts)) {
+        // 2.2. Kiểm tra kịch bản Chốt Đơn Sản Phẩm (Checkout Products)
+        if (!isHandled && useKw && checkoutConfig.active !== false && Array.isArray(checkoutConfig.checkoutProducts)) {
           for (const prod of checkoutConfig.checkoutProducts) {
             if (prod.active !== false && prod.keywords) {
               const kws = prod.keywords.toLowerCase().split(/[;,]/).map(k => k.trim()).filter(Boolean);
               if (kws.some(k => commentText.toLowerCase().includes(k)) || (prod.productName && commentText.toLowerCase().includes(prod.productName.toLowerCase()))) {
                 isHandled = true;
+                isKeywordMatched = true;
                 currentMatchedCheckoutProduct = prod;
                 if (prod.sampleAnswers) {
                   bodyAnswer = fillTemplate(getRandomSample(prod.sampleAnswers), { user: userName, comment: commentText, product: prod.productName });
@@ -527,7 +534,7 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // D. Kiểm tra bộ quy tắc từ khóa (Keyword Rules)
+        // 2.3. Kiểm tra bộ quy tắc từ khóa (Keyword Rules của Tab Bình Luận)
         if (!isHandled && commentConfig.active !== false && useKw) {
           if (Array.isArray(commentConfig.keywordRules) && commentConfig.keywordRules.length > 0) {
             for (const rule of commentConfig.keywordRules) {
@@ -537,6 +544,7 @@ function fillTemplate(template, vars = {}) {
                 if (matched && rule.replyText) {
                   bodyAnswer = fillTemplate(rule.replyText, { user: userName, comment: commentText });
                   isHandled = true;
+                  isKeywordMatched = true;
                   break;
                 }
               }
@@ -544,17 +552,13 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // E. BỘ NÃO AI SÁNG TẠO / TRẢ LỜI MỌI CÂU HỎI THÔNG MINH KHI KHÔNG KHỚP TỪ KHÓA
+        // 🧠 BƯỚC 3: NẾU KHÔNG KHỚP TỪ KHÓA -> DÙNG BỘ NÃO AI GEMINI FLASH PHÂN TÍCH & TRẢ LỜI
         if (!isHandled) {
           if (lowerComment.includes('xinh') || lowerComment.includes('đẹp') || lowerComment.includes('dễ thương')) {
             bodyAnswer = `Em cảm ơn lời khen cực kỳ ngọt ngào của bạn ${userName} nha! Chúc bạn xem livestream thật vui và săn được nhiều deal hời cùng shop ạ!`;
             isHandled = true;
-          } else if (replyMode === 'keywords_only' && !useAi && commentConfig.sampleAnswers) {
-            const rawSample = getRandomSample(commentConfig.sampleAnswers);
-            bodyAnswer = fillTemplate(rawSample, { user: userName, comment: commentText });
-            isHandled = true;
           } else if (useAi && commentConfig.useAi !== false) {
-            // GỌI BỘ NÃO AI GEMINI FLASH PHÂN TÍCH & TRẢ LỜI CÂU HỎI THÔNG MINH
+            // GỌI BỘ NÃO AI GEMINI FLASH TRẢ LỜI THÔNG MINH
             try {
               const liveContext = `Livestream bán hàng và tương tác trực tuyến. Sản phẩm chính: ${product}. Giá: ${price}. Ưu đãi: ${promo}. Tính năng: ${features}. Cửa hàng: ${company}.`;
               const aiPrompt = commentConfig.aiPrompt 
@@ -564,7 +568,7 @@ function fillTemplate(template, vars = {}) {
               const aiRes = await askGeminiLiveAi({
                 question: commentText,
                 username: userName,
-                role: commentConfig.ttsVoiceRole || 'assistant',
+                role: commentConfig.ttsVoiceRole || commentConfig.speaker || 'assistant',
                 context: `${liveContext}. Chỉ đạo AI: ${aiPrompt}`
               });
 
@@ -577,10 +581,11 @@ function fillTemplate(template, vars = {}) {
             }
           }
 
-          // Fallback khéo léo thông minh nếu AI ngoại tuyến hoặc không trả lời
+          // 💬 BƯỚC 4: CÂU HỎI / PHẢN HỒI CHĂM SÓC KHÁCH HÀNG (CUSTOMER CARE)
+          // ⚠️ CHỈ DÙNG KHI BÌNH LUẬN KHÔNG LIÊN QUAN ĐẾN TỪ KHÓA VÀ NGOÀI PHẠM VI BỘ NÃO AI
           if (!isHandled) {
             if (commentConfig.useUnknownFallbackReply !== false) {
-              const fbTpl = commentConfig.unknownFallbackReply || 'Dạ bạn {user} ơi, câu hỏi này em xin phép ghi nhận lại để phản hồi chi tiết cho mình sau nha! Bạn có thể nhắn tin trực tiếp cho shop để nhận hỗ trợ nhanh nhất ạ!';
+              const fbTpl = commentConfig.unknownFallbackReply || 'Dạ bạn {user} ơi, câu hỏi này em là trợ lý live nên xin phép ghi nhận lại để shop chăm sóc và phản hồi chi tiết cho mình sau nha! Bạn có thể nhắn tin trực tiếp cho shop để nhận hỗ trợ nhanh nhất ạ!';
               bodyAnswer = fillTemplate(fbTpl, { user: userName, comment: commentText });
               isHandled = true;
             } else if (commentConfig.sampleAnswers) {
@@ -588,20 +593,22 @@ function fillTemplate(template, vars = {}) {
               bodyAnswer = fillTemplate(rawSample, { user: userName, comment: commentText });
               isHandled = true;
             } else {
-              bodyAnswer = `Dạ em cảm ơn câu hỏi của bạn ${userName} nha! Shop đã nhận được và hỗ trợ mình ngay ạ!`;
+              bodyAnswer = `Dạ em cảm ơn câu hỏi của bạn ${userName} nha! Shop đã ghi nhận câu hỏi và hỗ trợ mình ngay ạ!`;
               isHandled = true;
             }
           }
         }
 
-        // BƯỚC 4: HẬU TỐ CÂU HỎI GỢI MỞ CHĂM SÓC KHÁCH HÀNG & CẢM ƠN (INBOX SHOP)
+        // BƯỚC 5: HẬU TỐ CÂU HỎI GỢI MỞ CHĂM SÓC KHÁCH HÀNG & CẢM ƠN
+        // ⚠️ QUY TẮC QUAN TRỌNG: Chỉ ghép thêm câu chăm sóc khách hàng khi người dùng hỏi KHÔNG liên quan đến từ khóa!
+        // Khi đã khớp đúng từ khóa, trả lời trực tiếp nội dung từ khóa mà không ghép thêm câu chăm sóc khách hàng.
         let followUpPart = '';
-        if (commentConfig.appendFollowUpQuestion !== false) {
+        if (!isKeywordMatched && commentConfig.appendFollowUpQuestion !== false) {
           const tpl = commentConfig.followUpQuestionText || ' Dạ không biết bạn {user} có cần em hỗ trợ thêm điều gì nữa không ạ? Bạn có thể nhắn tin trực tiếp cho shop để nhận tư vấn chi tiết và nhiều ưu đãi nha!';
           followUpPart = fillTemplate(tpl, { user: userName, comment: commentText });
         }
 
-        // GHÉP TOÀN BỘ CÂU THOẠI 4 BƯỚC HOÀN HẢO
+        // GHÉP TOÀN BỘ CÂU THOẠI HOÀN CHỈNH
         replyText = `${repeatPrefix} ${bodyAnswer} ${followUpPart}`.replace(/\s+/g, ' ').trim();
       }
 
@@ -911,8 +918,8 @@ function fillTemplate(template, vars = {}) {
       // Nếu video là loại có sẵn Voice (Pre-recorded), không phát Voice AI đè lên
       const shouldSpeakVoice = !isPreRecorded && !isCommentVoiceDisabled && ((currentEvConfig.useVoice !== false) || isTestMode);
       const shouldSendChat = !isCommentTextDisabled;
-      const targetVoiceRole = isTestMode ? 'idol' : (currentEvConfig.ttsVoiceRole || (evKey === 'comment' ? 'comment' : evKey === 'checkout' ? 'manager' : 'idol'));
-      const effectiveVoice = resolveEffectiveVoice(targetVoiceRole, isTestMode ? null : currentEvConfig.voiceId, currentEvConfig.avatarId, { isLiveEvent: true, eventKey: evKey });
+      const targetVoiceRole = isTestMode ? 'idol' : (currentEvConfig.ttsVoiceRole || currentEvConfig.speaker || (evKey === 'comment' ? 'comment' : evKey === 'checkout' ? 'manager' : 'idol'));
+      const effectiveVoice = resolveEffectiveVoice(targetVoiceRole, isTestMode ? null : (currentEvConfig.voiceId || currentEvConfig.voiceObj?.id), currentEvConfig.avatarId, { isLiveEvent: true, eventKey: evKey });
 
       if (replyText && replyText.trim()) {
         if (shouldSendChat) {

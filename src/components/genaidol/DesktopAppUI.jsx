@@ -7,7 +7,7 @@ import {
   Brain, Radio, Coins, AlertTriangle, Eye, Clock, List, Zap, AlertCircle, FileText, CheckSquare, CheckCircle, Layers,
   Gift, ShoppingBag, ShoppingCart, Sparkles, RotateCcw, Send, Trash2, Heart, Share2, UserPlus, Users, Swords, Shield, Gamepad2, Flag, MapPin,
   Smartphone, MonitorPlay, Monitor, Globe, StopCircle, Power, Volume2, VolumeX, Volume1, Music, Tv,
-  User, LogOut, Mail, Lock, Check, Upload
+  User, LogOut, Mail, Lock, Check, Upload, ExternalLink
 } from 'lucide-react';
 import { supabase, syncUserToSupabase } from '../../lib/supabaseClient';
 import flvjs from 'flv.js';
@@ -700,8 +700,8 @@ export default function DesktopAppUI() {
           });
           setTimeout(() => bc.close(), 100);
         } catch (err) {}
-      } else {
-        // 🗑️ XÓA SẠCH SÂN KHẤU CHÍNH KHI VIDEO BỊ XÓA (KHÔNG ĐƯỢC PHÉP HỒI SINH)
+      } else if (e.detail?.explicitClear === true) {
+        // 🗑️ CHỈ XÓA KHI STREAMER BẤM NÚT XÓA MEDIA TRÊN SÂN KHẤU CHÍNH (KHÔNG XÓA KHI ĐANG CÀI ĐẶT)
         setUserLockedMediaUrl(null);
         setActiveVideoItem(null);
         try {
@@ -748,7 +748,8 @@ export default function DesktopAppUI() {
         (typeof currentSrc === 'string' && currentSrc.includes(oldUrl)) ||
         (typeof oldUrl === 'string' && currentSrc && oldUrl.includes(currentSrc))
       );
-      if (eventType === 'idle' || isMatchingCurrent) {
+      // 🛡️ CHỈ XÓA KHI TRÙNG ĐÚNG URL BỊ XÓA VÀ CÓ CHỈ ĐỊNH CỤ THỂ, KHÔNG TỰ Ý TẮT SÂN KHẤU CHÍNH
+      if (isMatchingCurrent && e.detail?.explicitClear === true) {
         setUserLockedMediaUrl(null);
         setActiveVideoItem(null);
         try {
@@ -1973,7 +1974,43 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }
     };
     window.addEventListener('avalive:pin_product_updated', handlePinnedProductUpdate);
-    return () => window.removeEventListener('avalive:pin_product_updated', handlePinnedProductUpdate);
+    window.addEventListener('avalive_product_pinned', handlePinnedProductUpdate);
+
+    let pinBc = null;
+    let masterBc = null;
+    try {
+      if (typeof BroadcastChannel !== 'undefined') {
+        pinBc = new BroadcastChannel('avalive_product_pin_channel');
+        pinBc.onmessage = (ev) => {
+          if (ev?.data?.product) {
+            setLivePinnedProduct(ev.data.product);
+          }
+        };
+        masterBc = new BroadcastChannel('avalive_master_live_stream');
+        masterBc.onmessage = (ev) => {
+          if (ev?.data?.type === 'PIN_PRODUCT_UPDATE' && ev?.data?.product) {
+            setLivePinnedProduct(ev.data.product);
+          }
+        };
+      }
+    } catch (e) {}
+
+    const handleStorage = (e) => {
+      if (e.key === 'avalive_current_pinned_product' && e.newValue) {
+        try {
+          setLivePinnedProduct(JSON.parse(e.newValue));
+        } catch (err) {}
+      }
+    };
+    window.addEventListener('storage', handleStorage);
+
+    return () => {
+      window.removeEventListener('avalive:pin_product_updated', handlePinnedProductUpdate);
+      window.removeEventListener('avalive_product_pinned', handlePinnedProductUpdate);
+      window.removeEventListener('storage', handleStorage);
+      if (pinBc) try { pinBc.close(); } catch (e) {}
+      if (masterBc) try { masterBc.close(); } catch (e) {}
+    };
   }, []);
 
   // Tự động nhận diện và ghim sản phẩm khi video clip của sản phẩm phát
@@ -6621,6 +6658,83 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       }}
                     >
                       {flowSequencerOverlay.overlayText}
+                    </div>
+                  </div>
+                );
+              })()}
+
+              {/* LỚP 4: OVERLAY SẢN PHẨM ĐANG GHIM TỰ ĐỘNG (TIKTOK SHOP / CHỐT ĐƠN) */}
+              {Boolean(livePinnedProduct) && (() => {
+                const prod = livePinnedProduct;
+                if (!prod) return null;
+                const rawPrice = prod.price || prod.salePrice || prod.currentPrice;
+                const displayPrice = typeof rawPrice === 'number' ? rawPrice.toLocaleString('vi-VN') + ' đ' : (rawPrice || '');
+                const rawOldPrice = prod.oldPrice || prod.originalPrice || prod.marketPrice;
+                const displayOldPrice = typeof rawOldPrice === 'number' ? rawOldPrice.toLocaleString('vi-VN') + ' đ' : (rawOldPrice || '');
+                const sellerName = prod.sellerName || 'TikTok Shop';
+                const imgSrc = prod.image || prod.imageUrl || prod.thumbnail || prod.img || '';
+
+                return (
+                  <div 
+                    onClick={() => {
+                      const targetUrl = prod.buyUrl || prod.productUrl || prod.storeUrl || 'https://shop.tiktok.com';
+                      window.open(targetUrl, '_blank', 'noopener,noreferrer');
+                    }}
+                    className="absolute bottom-4 left-4 z-40 pointer-events-auto max-w-[340px] transition-all transform animate-bounce-subtle cursor-pointer group select-none"
+                    title={`Sản phẩm đang ghim: ${prod.name || prod.productName} - Bấm để mở`}
+                  >
+                    <div className="bg-slate-950/95 backdrop-blur-md border-2 border-red-500/90 group-hover:border-red-400 rounded-2xl p-2.5 flex items-center gap-3 shadow-[0_10px_35px_rgba(239,68,68,0.6)] text-white relative overflow-hidden transition-all group-hover:scale-[1.02]">
+                      <div className="absolute top-0 right-0 w-20 h-20 bg-red-500/10 rounded-full blur-xl pointer-events-none"></div>
+                      
+                      <div className="relative w-14 h-14 rounded-xl overflow-hidden shrink-0 border border-white/30 bg-black shadow-inner">
+                        {imgSrc ? (
+                          <img src={imgSrc} alt={prod.name || prod.productName} className="w-full h-full object-cover group-hover:scale-110 transition-transform" />
+                        ) : (
+                          <div className="w-full h-full flex items-center justify-center text-lg bg-slate-900">📦</div>
+                        )}
+                        <span className="absolute top-0 left-0 bg-gradient-to-r from-red-600 to-pink-600 text-white text-[7.5px] font-black px-1 py-0.5 rounded-br uppercase tracking-wider shadow-sm flex items-center gap-0.5">
+                          <span className="w-1.5 h-1.5 rounded-full bg-white animate-ping"></span>
+                          📌 GHIM
+                        </span>
+                      </div>
+
+                      <div className="min-w-0 flex-1 text-left">
+                        <div className="flex items-center gap-1.5">
+                          <span className="text-[8.5px] font-black uppercase tracking-wider px-1.5 py-0.2 rounded bg-gradient-to-r from-pink-500 to-red-500 text-white truncate max-w-[130px]">
+                            🏪 {sellerName}
+                          </span>
+                          <span className="text-[8.5px] text-amber-300 font-extrabold truncate">
+                            🔥 {prod.badge || 'DEAL ĐỘC QUYỀN'}
+                          </span>
+                        </div>
+
+                        <h4 className="text-[11px] font-bold text-gray-100 line-clamp-1 mt-0.5 leading-tight group-hover:text-amber-300 transition-colors">
+                          {prod.name || prod.productName || 'Sản phẩm TikTok Shop'}
+                        </h4>
+
+                        <div className="flex items-baseline gap-1.5 mt-0.5">
+                          {displayPrice && (
+                            <span className="text-xs font-black text-red-400 drop-shadow-sm">
+                              {displayPrice}
+                            </span>
+                          )}
+                          {displayOldPrice && (
+                            <span className="text-[9px] text-gray-400 line-through">
+                              {displayOldPrice}
+                            </span>
+                          )}
+                        </div>
+                      </div>
+
+                      <div className="shrink-0 flex flex-col items-center justify-center">
+                        <button 
+                          type="button"
+                          className="px-2.5 py-1.5 bg-gradient-to-r from-red-600 via-rose-500 to-pink-600 hover:from-red-500 hover:to-pink-500 text-white text-[10px] font-black rounded-xl shadow-md transition-all active:scale-95 flex items-center gap-1 cursor-pointer"
+                        >
+                          <span>MUA</span>
+                          <ExternalLink size={10} />
+                        </button>
+                      </div>
                     </div>
                   </div>
                 );
