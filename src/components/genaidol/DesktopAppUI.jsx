@@ -7643,6 +7643,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                                 el.muted = true;
                                 el.defaultMuted = true;
                                 el.volume = 0;
+                                // Đảm bảo thumbnail KHÔNG BAO GIỜ tự chạy ẩn
+                                if (!el.paused) el.pause();
                               } catch(e) {}
                             }
                           }}
@@ -7650,6 +7652,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                             try {
                               e.currentTarget.muted = true;
                               e.currentTarget.volume = 0;
+                              // Tuyệt đối không cho thumbnail phát ngầm
+                              e.currentTarget.pause();
                             } catch(err) {}
                           }}
                           onVolumeChange={(e) => {

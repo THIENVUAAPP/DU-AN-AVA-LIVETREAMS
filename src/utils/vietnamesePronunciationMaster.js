@@ -335,8 +335,9 @@ export function cleanUserNameForSpeech(rawName) {
   if (!rawName || typeof rawName !== 'string') return 'bạn';
   let name = rawName.trim();
   
-  // Loại bỏ @, dấu chấm, gạch dưới ở đầu/cuối
+  // Loại bỏ @, dấu chấm, gạch dưới ở đầu/cuối và TẤT CẢ EMOJI / ICON
   name = name.replace(/^[@#\._\-]+/, '').replace(/[\._\-]+$/, '').trim();
+  name = name.replace(/[\u{1F600}-\u{1F64F}\u{1F300}-\u{1F5FF}\u{1F680}-\u{1F6FF}\u{1F700}-\u{1F77F}\u{1F780}-\u{1F7FF}\u{1F800}-\u{1F8FF}\u{1F900}-\u{1F9FF}\u{1FA00}-\u{1FA6F}\u{1FA70}-\u{1FAFF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{2300}-\u{23FF}\u{2B50}\u{2B06}\u{2194}\u{2195}\u{25AA}\u{25AB}\u{FE0F}]/gu, '').trim();
   
   // Nếu rỗng hoặc chỉ có 1 ký tự (vd: 'N', 'n', 'A', 'T', 'x') -> quy về 'bạn'
   if (!name || name.length <= 1) return 'bạn';
