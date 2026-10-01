@@ -453,6 +453,18 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
+        // 🛡️ A1.5. BỘ LỌC BÌNH LUẬN VÔ NGHĨA / LỜI CHÀO THÔNG THƯỜNG
+        // Không đọc lại các bình luận chào hỏi đơn giản, chỉ đọc bình luận có nội dung/câu hỏi thực sự
+        if (commentConfig.filterTrivialComments !== false && !isTestMode && commentText) {
+          const trimmed = commentText.trim().toLowerCase();
+          const trivialPatterns = /^(ch[aà]o|hi+|hello|helo|helu|hey|xin ch[aà]o|alo|[eê]|[oơ]i|a l[oô]|ch[aà]o em|ch[aà]o b[aạ]n|ch[aà]o shop|ch[aà]o m[oọ]i ng[uư][oờ]i|m[oọ]i ng[uư][oờ]i|c[aả] nh[aà]|ok|okie|oke|v[aâ]ng|d[aạ]|[uư]|[uừ]|[oờ]|ha+|hihi|hehe|huhu|kk+|lol|ơ+|ê+|ủa|\d{1,3}|\.+|!+|\?+|❤️*|😀*|😊*|😂*|💕*|👋*|🥰*|👏*|🔥*|💯*|dot|ch[aấ]m)\.?\s*$/i;
+          if (trivialPatterns.test(trimmed) && trimmed.length < 20) {
+            console.log('🛡️ [AvaLive AI] Bỏ qua bình luận chào hỏi/vô nghĩa:', commentText);
+            setIsProcessingEvent(false);
+            return;
+          }
+        }
+
         // ⏱️ A2. KIỂM TRA GIÃN CÁCH TRẢ LỜI BÌNH LUẬN
         const cooldownSec = Math.max(1, parseInt(commentConfig.waitBetweenEvents ?? commentConfig.commentReplyCooldown) || 2);
         const now = Date.now();
@@ -658,6 +670,23 @@ function fillTemplate(template, vars = {}) {
       // 3. XỬ LÝ CHÀO NGƯỜI MỚI (VIEWER_JOIN / WELCOME) - DUYỆT TUẦN TỰ VÒNG TRÒN KHÔNG TRÙNG LẶP
       else if (type === 'VIEWER_JOIN') {
         const welcomeConfig = configs.welcome || {};
+        const viewerKey = (rawUserName || '').toLowerCase().trim();
+        
+        // 🛡️ Mỗi người xem chỉ được chào ĐÚNG 1 LẦN duy nhất trong suốt phiên live
+        if (!isTestMode && viewerKey && greetedViewersRef.current.has(viewerKey)) {
+          console.log(`[AvaLive] Đã chào rồi, bỏ qua: ${viewerKey}`);
+          return;
+        }
+        if (viewerKey) {
+          greetedViewersRef.current.add(viewerKey);
+          // Giới hạn bộ nhớ tối đa 1000 viewer
+          if (greetedViewersRef.current.size > 1000) {
+            const first = greetedViewersRef.current.values().next().value;
+            greetedViewersRef.current.delete(first);
+          }
+        }
+        
+        // Chào luân phiên từng câu (Round-Robin tuần tự, không random)
         if (welcomeConfig.sampleAnswers) {
           replyText = fillTemplate(getSequentialSample(welcomeConfig.sampleAnswers, welcomeIndexRef, 'Dạ em chào bạn {user} mới vào xem live nha!'), { user: userName, count: 1 });
         }
