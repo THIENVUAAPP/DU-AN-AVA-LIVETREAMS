@@ -646,21 +646,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         if (onActionTriggered) onActionTriggered({ type: 'LIPSYNC_ENDED' });
         isBusyRef.current = false;
 
-        const isPausedNow = typeof localStorage !== 'undefined' && (
-          localStorage.getItem('aidol_is_script_live_running') === 'false' ||
-          localStorage.getItem('aidol_user_paused_script') === 'true' ||
-          (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
-        );
-        if (isPausedNow && !item.isTest) {
-          priorityQueueRef.current = [];
-          isBusyRef.current = false;
-          setIsPlaying(false);
-          isPlayingRef.current = false;
-          return;
-        }
-
-        // 1. Nếu có bình luận ưu tiên đang chờ (chỉ khi đang Live thật sự)
-        if (priorityQueueRef.current.length > 0 && (isLive || item.isTest)) {
+        // 1. Luôn ưu tiên phát toàn bộ sự kiện trong hàng đợi ưu tiên (Bình luận, Chào khách, Tặng quà)
+        if (priorityQueueRef.current.length > 0) {
           const nextPriority = priorityQueueRef.current.shift();
           safeSetTimeout(() => {
             playItem(nextPriority, false);
@@ -668,7 +655,22 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           return;
         }
 
-        if (!isPlayingRef.current || isPausedNow) return;
+        // 2. Chỉ kiểm tra tạm dừng đối với kịch bản bán hàng nền
+        if (isScriptItem) {
+          const isPausedNow = typeof localStorage !== 'undefined' && (
+            localStorage.getItem('aidol_is_script_live_running') === 'false' ||
+            localStorage.getItem('aidol_user_paused_script') === 'true' ||
+            (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
+          );
+          if (isPausedNow && !item.isTest) {
+            isBusyRef.current = false;
+            setIsPlaying(false);
+            isPlayingRef.current = false;
+            return;
+          }
+        }
+
+        if (!isPlayingRef.current) return;
 
         // 2. Chuyển sang câu kịch bản tiếp theo tuần tự từ đầu đến đuôi
         if (isScriptItem) {
@@ -781,7 +783,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             localStorage.getItem('aidol_user_paused_script') === 'true' ||
             (typeof window !== 'undefined' && (window.__aidolUserPausedScript === true || window.__isScriptLiveRunning === false))
           );
-          if (isCancelled && !item.isTest) {
+          if (isCancelled && isScriptItem && !item.isTest) {
             isBusyRef.current = false;
             setIsPlaying(false);
             isPlayingRef.current = false;

@@ -651,12 +651,11 @@ function fillTemplate(template, vars = {}) {
       // 3. XỬ LÝ CHÀO NGƯỜI MỚI (VIEWER_JOIN / WELCOME) - DUYỆT TUẦN TỰ VÒNG TRÒN KHÔNG TRÙNG LẶP
       else if (type === 'VIEWER_JOIN') {
         const welcomeConfig = configs.welcome || {};
-        if (welcomeConfig.active !== false) {
-          if (welcomeConfig.sampleAnswers) {
-            replyText = fillTemplate(getSequentialSample(welcomeConfig.sampleAnswers, welcomeIndexRef, 'Dạ em chào bạn {user} mới vào xem live nha!'), { user: userName, count: 1 });
-          } else {
-            replyText = `Dạ em chào bạn ${userName} mới vào xem live nha! Chúc bạn có những phút giây xem live thật vui vẻ ạ!`;
-          }
+        if (welcomeConfig.sampleAnswers) {
+          replyText = fillTemplate(getSequentialSample(welcomeConfig.sampleAnswers, welcomeIndexRef, 'Dạ em chào bạn {user} mới vào xem live nha!'), { user: userName, count: 1 });
+        }
+        if (!replyText || !replyText.trim()) {
+          replyText = `Dạ em chào bạn ${userName} mới vào xem live nha! Chúc bạn có những phút giây xem live thật vui và săn được nhiều deal hời cùng shop ạ!`;
         }
       }
 
@@ -935,8 +934,29 @@ function fillTemplate(template, vars = {}) {
           });
         }
       } else {
-        // Không có cấu hình kịch bản phản hồi -> Bỏ qua và kết thúc sự kiện
-        setIsProcessingEvent(false);
+        // Luôn đảm bảo có câu thoại phản hồi tự nhiên cho sự kiện
+        let fallbackMsg = '';
+        if (type === 'VIEWER_JOIN') fallbackMsg = `Dạ em chào bạn ${userName} mới vào xem live nha! Chúc bạn xem live thật vui vẻ ạ!`;
+        else if (type === 'COMMENT') fallbackMsg = `Dạ em cảm ơn câu hỏi của bạn ${userName} nha! Shop tư vấn mình ngay ạ!`;
+        else if (type === 'GIFT') fallbackMsg = `Em cảm ơn bạn ${userName} đã gửi tặng món quà vô cùng ngọt ngào cho em nha!`;
+        else if (type === 'LIKE') fallbackMsg = `Em cảm ơn bạn ${userName} và cả nhà đã nhiệt tình thả tim live cho em nhé!`;
+        else if (type === 'FOLLOW') fallbackMsg = `Dạ em cảm ơn bạn ${userName} đã bấm theo dõi kênh của em nha!`;
+        else if (type === 'SHARE') fallbackMsg = `Em cảm ơn bạn ${userName} đã chia sẻ phiên live này đến bạn bè nha!`;
+
+        if (fallbackMsg && shouldSpeakVoice && onVoiceReply) {
+          onVoiceReply({
+            text: fallbackMsg,
+            action: shouldAction,
+            baseVideoItem: matchedEventVideo || activeVideoItem,
+            preRecordedCat: matchedEventVideo ? matchedEventVideo.category : (shouldAction === 'gift_reaction' ? 'reaction' : null),
+            voiceId: effectiveVoice.id,
+            voiceObj: effectiveVoice,
+            voiceChannel: targetVoiceRole,
+            isTest: isTestMode
+          });
+        } else {
+          setIsProcessingEvent(false);
+        }
       }
     } catch (err) {
       console.warn('Lỗi xử lý sự kiện live kịch bản:', err);

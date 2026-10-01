@@ -4053,6 +4053,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         ...prev.slice(0, 48)
       ]);
       bandoAudio.unlock();
+      setIsLiveAudioMuted(false);
+      try {
+        const bc = new BroadcastChannel('avalive_master_live_stream');
+        bc.postMessage({ type: 'GLOBAL_AUDIO_CHANGE', isMuted: false, volume: 1.0, timestamp: Date.now() });
+        bc.close();
+      } catch (e) {}
       if (isMasterLiveRunningRef.current) {
         bandoAudio.playBgmOnLive();
       }
@@ -7807,7 +7813,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             )}
     </div>
 
-          {/* Nút Âm thanh Live nằm ngoài khung video */}
+          {/* 🔊 Nút Tắt / Mở Âm Thanh Phiên Live (TikTok Live Studio / OBS Browser Source / Shopee Live) */}
           {(isConnected || isMasterLiveRunning || isScriptLiveRunning || isLiveStudioActive || flvUrl) && (
             <button
               onClick={() => {
@@ -7824,18 +7830,21 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                   if (typeof BroadcastChannel !== 'undefined') {
                     const bc = new BroadcastChannel('avalive_master_live_stream');
                     bc.postMessage({ type: 'AUDIO_MUTE_UPDATE', isMuted: nextMuted });
+                    bc.postMessage({ type: 'GLOBAL_AUDIO_CHANGE', isMuted: nextMuted, volume: liveVolume || 1.0, timestamp: Date.now() });
+                    bc.close();
                   }
                 } catch (e) {}
+                showToast(nextMuted ? '🔇 Đã tắt âm thanh phiên Live' : '🔊 Đã mở âm thanh phiên Live', 'info');
               }}
-              className={`flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all shadow-md ${
+              className={`flex items-center gap-1.5 px-2.5 py-1 rounded-lg text-xs font-bold transition-all border shadow-sm active:scale-95 cursor-pointer ${
                 isLiveAudioMuted 
-                  ? 'bg-[#3a1c22] text-rose-300 border border-rose-500/50 hover:bg-rose-950/80 shadow-rose-950/50' 
-                  : 'bg-[#132a22] text-emerald-300 border border-emerald-500/50 hover:bg-emerald-950/80 shadow-emerald-950/50'
+                  ? 'bg-rose-950/80 hover:bg-rose-900 text-rose-300 border-rose-500/50' 
+                  : 'bg-emerald-950/80 hover:bg-emerald-900 text-emerald-300 border-emerald-500/50'
               }`}
-              title={isLiveAudioMuted ? "Bật tiếng phiên Live (TikTok Live Studio / OBS / Shopee)" : "Tắt tiếng phiên Live (TikTok Live Studio / OBS / Shopee)"}
+              title={isLiveAudioMuted ? "Loa phiên Live (TikTok Live Studio / OBS / Shopee): ĐÃ TẮT — Bấm để Mở lại âm thanh live" : "Loa phiên Live (TikTok Live Studio / OBS / Shopee): ĐANG MỞ — Bấm để Tắt âm thanh phát lên live"}
             >
-              {isLiveAudioMuted ? <VolumeX size={14} className="text-rose-400" /> : <Volume2 size={14} className="text-emerald-400 animate-pulse" />}
-              <span>{isLiveAudioMuted ? "Tắt tiếng" : "Mở tiếng"}</span>
+              {isLiveAudioMuted ? <VolumeX size={13} className="text-rose-400" /> : <Volume2 size={13} className="text-emerald-400 animate-pulse" />}
+              <span className="whitespace-nowrap font-bold">{isLiveAudioMuted ? "Loa Live: Tắt" : "Loa Live: Mở"}</span>
             </button>
           )}
     </div>

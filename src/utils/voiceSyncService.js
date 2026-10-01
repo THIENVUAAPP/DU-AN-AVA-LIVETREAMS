@@ -8902,14 +8902,11 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     localStorage.getItem('avalive_window_capture_paused') === 'true'
   );
 
-  if (isTestingMode) {
-    if (isScriptPaused && voice?.isScript === true) {
-      return false;
-    }
-  } else {
-    if (isScriptPaused || isGlobalPaused) {
-      return false;
-    }
+  if (isGlobalPaused && !isTestingMode) {
+    return false;
+  }
+  if (voice?.isScript === true && isScriptPaused && !isTestingMode) {
+    return false;
   }
 
   const requestedVolume = voice?.volume !== undefined ? Math.max(0, Math.min(2.0, Number(voice.volume))) : 1.0;
@@ -8918,14 +8915,9 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
   const savedGlobalVol = typeof localStorage !== 'undefined' && localStorage.getItem('avalive_global_volume') 
     ? parseFloat(localStorage.getItem('avalive_global_volume')) 
     : (typeof localStorage !== 'undefined' && localStorage.getItem('avalive_video_volume') ? parseFloat(localStorage.getItem('avalive_video_volume')) : 1.0);
-  const isLocalSpeakerMuted = typeof localStorage !== 'undefined' && (
-    localStorage.getItem('avalive_local_speaker_muted') === 'true' ||
-    localStorage.getItem('avalive_audio_muted') === 'true'
-  );
 
-  const effectiveVoiceVolume = (isTestingMode || voice?.isScript) 
-    ? Math.max(0.8, requestedVolume) 
-    : (isLocalSpeakerMuted ? 0 : Math.max(0.2, Math.min(2.0, requestedVolume * (savedGlobalVol !== null && !isNaN(savedGlobalVol) ? savedGlobalVol : 1.0))));
+  // Giọng nói AI luôn duy trì âm lượng chuẩn để truyền tải mượt mà 100% đến luồng Live (OBS, TikTok Live Studio, Shopee Live)
+  const effectiveVoiceVolume = Math.max(0.8, requestedVolume * (savedGlobalVol !== null && !isNaN(savedGlobalVol) ? savedGlobalVol : 1.0));
 
   const isVietnameseVoice = voice?.lang === 'vi-VN' || voice?.region === 'vi' || voice?.id?.startsWith('vn_') || voice?.id === 'free_vi_female' || voice?.id === 'el_adam';
   const rawLang = voice?.lang || (isVietnameseVoice ? 'vi-VN' : 'en-US');

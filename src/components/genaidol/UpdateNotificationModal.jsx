@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.16';
-export const RELEASE_DATE = '30/09/2026';
+export const APP_VERSION = '5.4.17';
+export const RELEASE_DATE = '01/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.17 - Kích Hoạt Triệt Để Bộ Não AI & 14 Sự Kiện Live (Chào Người Mới, Đọc Bình Luận, Tặng Quà), Tự Động Ghim shop.tiktok.com & Tách Biệt Loa Máy / Loa Live',
+    description: '1. Kích Hoạt 100% Bộ Não AI & Chuỗi 14 Tác Vụ Sự Kiện Live: Sửa dứt điểm nguyên nhân khiến AI không chào người mới và không đọc bình luận khi kết nối TikTok Live / Shopee Live. Mọi sự kiện gia nhập phòng (Viewer Join), bình luận (Comment), tặng quà (Gift), thả tim (Like), theo dõi (Follow), chia sẻ (Share) đều được ưu tiên đưa vào hàng đợi và phát giọng đọc AI mượt mà ngay cả khi không chạy kịch bản nền. 2. Tách Biệt Hai Chế Độ Loa Độc Lập 100%: Nút [🔊 Loa Máy: Mở / Tắt] chỉ điều khiển loa nghe tại phòng của streamer để chống ồn; trong khi [🔊 Loa Live: Mở / Tắt] ở góc phải luôn mặc định MỞ 100% khi live để khán giả trên TikTok Live Studio, OBS Browser Source và Shopee Live nghe rõ giọng idol AI. 3. Tự Động Ghim Sản Phẩm Pro (shop.tiktok.com): Tự động liên kết và duy trì danh mục sản phẩm từ TikTok Shop; nhận diện giọng đọc AI, từ khóa sản phẩm hoặc khán giả comment (mã 1, sp 2...) để auto ghim trực tiếp lên live trong 0ms. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.16 - Xử Lý Triệt Để Lỗi Báo Hết Token Khi Kết Nối TikTok Live / Shopee & Đồng Bộ Toàn Diện Dữ Liệu Supabase',
     description: '1. Sửa Dứt Điểm Lỗi Báo Hết Token Khi Kết Nối ID TikTok Live: Khắc phục triệt để hiện tượng tài khoản có hàng trăm ngàn token nhưng bị báo hết token và tự ngắt kết nối. Đồng bộ 2 chiều tức thì giữa TokenContext, Supabase Cloud và hồ sơ tài khoản người dùng; bảo vệ tài khoản Super Admin/Admin không bao giờ bị cản trở bởi token. 2. Chuẩn Hóa Cơ Chế Trừ Giờ Xem & Trừ Token Khi Phát Live: Khi phát video có sẵn (không dùng AI), người dùng chỉ trừ giờ live và hoàn toàn không bị trừ token giọng nói AI đắt đỏ. Khi dùng Voice AI trả lời bình luận, token trừ chính xác theo ký tự thực tế. 3. Đồng Bộ Supabase Siêu Mượt: Tự động lưu trữ an toàn đa tầng (Supabase Cloud + Local Cache) đảm bảo giờ xem, token và thông tin Gmail luôn được bảo toàn 100%. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
