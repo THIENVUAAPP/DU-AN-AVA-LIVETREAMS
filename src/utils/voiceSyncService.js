@@ -8961,16 +8961,16 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     return false;
   }
 
-  const requestedVolume = voice?.volume !== undefined ? Math.max(0, Math.min(2.0, Number(voice.volume))) : 1.0;
+  let rawRequestedVol = voice?.volume !== undefined ? Number(voice.volume) : 1.0;
+  // Chuẩn hóa: nếu giá trị > 1 thì coi là phần trăm (0-100) -> chuyển về 0.0-1.0
+  if (rawRequestedVol > 1 && rawRequestedVol <= 100) rawRequestedVol = rawRequestedVol / 100;
+  const requestedVolume = Math.max(0, Math.min(1.0, rawRequestedVol));
   const requestedRate = voice?.rate !== undefined ? Math.max(0.5, Math.min(2.0, Number(voice.rate))) : 1.0;
   const requestedPitch = voice?.pitch !== undefined ? Math.max(0.5, Math.min(2.0, Number(voice.pitch))) : 1.0;
-  
-  const savedGlobalVol = typeof localStorage !== 'undefined' && localStorage.getItem('avalive_global_volume') 
-    ? parseFloat(localStorage.getItem('avalive_global_volume')) 
-    : (typeof localStorage !== 'undefined' && localStorage.getItem('avalive_video_volume') ? parseFloat(localStorage.getItem('avalive_video_volume')) : 1.0);
 
-  // Giọng nói AI điều chỉnh chuẩn xác 100% theo thanh trượt âm lượng (1% - 100%)
-  const effectiveVoiceVolume = Math.max(0, Math.min(2.0, requestedVolume * (savedGlobalVol !== null && !isNaN(savedGlobalVol) ? savedGlobalVol : 1.0)));
+  // 🔊 ÂM LƯỢNG VOICE AI = ĐÚNG MỨC CÀI ĐẶT CỦA NGƯỜI DÙNG CHO TỪNG SỰ KIỆN
+  // Không nhân thêm thanh trượt video toàn cục (savedGlobalVol) vì âm lượng Voice AI là cài đặt riêng biệt
+  const effectiveVoiceVolume = requestedVolume;
 
   const isVietnameseVoice = voice?.lang === 'vi-VN' || voice?.region === 'vi' || voice?.id?.startsWith('vn_') || voice?.id === 'free_vi_female' || voice?.id === 'el_adam';
   const rawLang = voice?.lang || (isVietnameseVoice ? 'vi-VN' : 'en-US');

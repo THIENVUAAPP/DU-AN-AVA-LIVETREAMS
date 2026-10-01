@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.24';
+export const APP_VERSION = '5.4.25';
 export const RELEASE_DATE = '01/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.25 - Sửa Triệt Để Âm Lượng Voice AI Cho Từng Sự Kiện, Kích Hoạt Bộ Quy Tắc Từ Khóa Phản Hồi Cả Text & Voice Tức Thì',
+    description: '1. Sửa Triệt Để Âm Lượng Voice AI: Người dùng cài đặt âm lượng bao nhiêu % cho từng sự kiện/voice thì khi AI phát trên live sẽ phát ĐÚNG mức âm lượng đó, không bị nhân chồng hay reset về 100%. Chuẩn hóa tự động giá trị 0-100% → 0.0-1.0 xuyên suốt toàn bộ pipeline. 2. Kích Hoạt Bộ Quy Tắc Từ Khóa Đầy Đủ: Khắc phục lỗi bình luận chào hỏi ("chào", "hi", "chào shop") và mã sản phẩm ("1", "2") bị bộ lọc trivial chặn mất TRƯỚC KHI đến được bộ khớp từ khóa. Giờ đây AI phản hồi đúng câu trả lời đã chuẩn bị sẵn cho từng từ khóa, hiện cả Text lẫn Voice ngay lập tức. 3. Giữ Nguyên 100% Kết Nối TikTok ID & Auto Ghim Sản Phẩm TikTok Shop.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.24 - Nâng Cấp Gói Tải Về Windows & Mac Mới Nhất v5.4.24, Đồng Bộ Hóa 100% Endpoint Tải Trực Tiếp & Tối Ưu Thông Báo Cập Nhật',
     description: '1. Nâng Cấp Gói Tải Về Windows & macOS v5.4.24: Tự động đóng gói và phục vụ trực tiếp file ZIP cài đặt mới nhất v5.4.24 qua tất cả các cổng tải (/api/download-windows, /api/download-mac, nút Tải Về trên giao diện và modal). Khắc phục dứt điểm tình trạng tải nhầm phiên bản cũ. 2. Đồng Bộ Hóa Toàn Diện Hệ Thống Tải Về Siêu Tốc: Kết nối trực tiếp với CDN Edge Accelerator tải 50MB/s - 100MB/s không qua trung gian, không bị chặn link. 3. Tinh Gọn Bảng Thông Báo Cập Nhật: Hiển thị nổi bật phiên bản đang sử dụng và các nâng cấp mới nhất, tự động lược bỏ các thông báo cũ để streamer dễ dàng nắm bắt tính năng mới. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'

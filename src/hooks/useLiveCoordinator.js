@@ -453,9 +453,50 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
+        // 🎯 A1.3. KIỂM TRA NHANH: Bình luận có khớp bất kỳ quy tắc từ khóa nào không?
+        // Nếu khớp thì BỎ QUA bộ lọc trivial (A1.5) để đảm bảo phản hồi đúng keyword đã cài đặt
+        const lowerCommentPreCheck = commentText.toLowerCase();
+        let hasKeywordRuleMatch = false;
+        if (useKw && commentText) {
+          // Kiểm tra Knowledge Base keywords
+          const kbActive = (scriptConfig.commentReplySource || checkoutConfig.commentReplySource || 'knowledge_base');
+          if (kbActive === 'knowledge_base' || kbActive === 'both') {
+            if (lowerCommentPreCheck.includes('giá') || lowerCommentPreCheck.includes('bao nhiêu') || lowerCommentPreCheck.includes('tiền') || lowerCommentPreCheck.includes('chi phí') || lowerCommentPreCheck.includes('sale') ||
+                lowerCommentPreCheck.includes('bảo hành') || lowerCommentPreCheck.includes('đổi trả') || lowerCommentPreCheck.includes('ship') || lowerCommentPreCheck.includes('giao hàng') || lowerCommentPreCheck.includes('vận chuyển') ||
+                lowerCommentPreCheck.includes('mua') || lowerCommentPreCheck.includes('đặt hàng') || lowerCommentPreCheck.includes('chốt') || lowerCommentPreCheck.includes('lấy') || lowerCommentPreCheck.includes('order') ||
+                lowerCommentPreCheck.includes('dùng') || lowerCommentPreCheck.includes('tính năng') || lowerCommentPreCheck.includes('chức năng') || lowerCommentPreCheck.includes('như thế nào') || lowerCommentPreCheck.includes('chất liệu') || lowerCommentPreCheck.includes('công dụng')) {
+              hasKeywordRuleMatch = true;
+            }
+          }
+          // Kiểm tra Checkout Products keywords
+          if (!hasKeywordRuleMatch && checkoutConfig.active !== false && Array.isArray(checkoutConfig.checkoutProducts)) {
+            for (const prod of checkoutConfig.checkoutProducts) {
+              if (prod.active !== false && prod.keywords) {
+                const kws = prod.keywords.toLowerCase().split(/[;,]/).map(k => k.trim()).filter(Boolean);
+                if (kws.some(k => lowerCommentPreCheck.includes(k)) || (prod.productName && lowerCommentPreCheck.includes(prod.productName.toLowerCase()))) {
+                  hasKeywordRuleMatch = true;
+                  break;
+                }
+              }
+            }
+          }
+          // Kiểm tra Keyword Rules (bộ quy tắc từ khóa Tab Bình Luận)
+          if (!hasKeywordRuleMatch && Array.isArray(commentConfig.keywordRules) && commentConfig.keywordRules.length > 0) {
+            for (const rule of commentConfig.keywordRules) {
+              if (rule.enabled !== false && rule.keywords) {
+                const kwArr = Array.isArray(rule.keywords) ? rule.keywords : String(rule.keywords).split(/[,;]/);
+                if (kwArr.some(k => k.trim() && lowerCommentPreCheck.includes(k.trim().toLowerCase()))) {
+                  hasKeywordRuleMatch = true;
+                  break;
+                }
+              }
+            }
+          }
+        }
+
         // 🛡️ A1.5. BỘ LỌC BÌNH LUẬN VÔ NGHĨA / LỜI CHÀO THÔNG THƯỜNG
-        // Không đọc lại các bình luận chào hỏi đơn giản, chỉ đọc bình luận có nội dung/câu hỏi thực sự
-        if (commentConfig.filterTrivialComments !== false && !isTestMode && commentText) {
+        // CHỈ LỌC khi KHÔNG khớp bất kỳ keyword rule nào đã cài đặt
+        if (!hasKeywordRuleMatch && commentConfig.filterTrivialComments !== false && !isTestMode && commentText) {
           const trimmed = commentText.trim().toLowerCase();
           const trivialPatterns = /^(ch[aà]o|hi+|hello|helo|helu|hey|xin ch[aà]o|alo|[eê]|[oơ]i|a l[oô]|ch[aà]o em|ch[aà]o b[aạ]n|ch[aà]o shop|ch[aà]o m[oọ]i ng[uư][oờ]i|m[oọ]i ng[uư][oờ]i|c[aả] nh[aà]|ok|okie|oke|v[aâ]ng|d[aạ]|[uư]|[uừ]|[oờ]|ha+|hihi|hehe|huhu|kk+|lol|ơ+|ê+|ủa|\d{1,3}|\.+|!+|\?+|❤️*|😀*|😊*|😂*|💕*|👋*|🥰*|👏*|🔥*|💯*|dot|ch[aấ]m)\.?\s*$/i;
           if (trivialPatterns.test(trimmed) && trimmed.length < 20) {
@@ -965,7 +1006,9 @@ function fillTemplate(template, vars = {}) {
         }
 
         if (shouldSpeakVoice && onVoiceReply) {
-          const effectiveVolume = currentEvConfig.voiceVolume !== undefined ? Number(currentEvConfig.voiceVolume) : (currentEvConfig.volume !== undefined ? Number(currentEvConfig.volume) : (effectiveVoice.volume ?? 1.0));
+          let rawVol = currentEvConfig.voiceVolume !== undefined ? Number(currentEvConfig.voiceVolume) : (currentEvConfig.volume !== undefined ? Number(currentEvConfig.volume) : (effectiveVoice.volume ?? 1.0));
+          // Chuẩn hóa: nếu giá trị > 1 thì coi là phần trăm (0-100) -> chuyển về 0.0-1.0
+          const effectiveVolume = (rawVol > 1 && rawVol <= 100) ? rawVol / 100 : Math.max(0, Math.min(1.0, rawVol));
           const finalVoiceObj = {
             ...effectiveVoice,
             volume: effectiveVolume
@@ -993,7 +1036,8 @@ function fillTemplate(template, vars = {}) {
         else if (type === 'SHARE') fallbackMsg = `Em cảm ơn bạn ${userName} đã chia sẻ phiên live này đến bạn bè nha!`;
 
         if (fallbackMsg && shouldSpeakVoice && onVoiceReply) {
-          const effectiveVolume = currentEvConfig.voiceVolume !== undefined ? Number(currentEvConfig.voiceVolume) : (currentEvConfig.volume !== undefined ? Number(currentEvConfig.volume) : (effectiveVoice.volume ?? 1.0));
+          let rawVol2 = currentEvConfig.voiceVolume !== undefined ? Number(currentEvConfig.voiceVolume) : (currentEvConfig.volume !== undefined ? Number(currentEvConfig.volume) : (effectiveVoice.volume ?? 1.0));
+          const effectiveVolume = (rawVol2 > 1 && rawVol2 <= 100) ? rawVol2 / 100 : Math.max(0, Math.min(1.0, rawVol2));
           const finalVoiceObj = {
             ...effectiveVoice,
             volume: effectiveVolume
