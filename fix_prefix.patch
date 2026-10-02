@@ -1,0 +1,13 @@
+--- src/hooks/useLiveCoordinator.js
++++ src/hooks/useLiveCoordinator.js
+@@ -675,9 +675,5 @@
+ 
+         // GHÉP TOÀN BỘ CÂU THOẠI HOÀN CHỈNH
+-        if (isKeywordMatched) {
+-          replyText = bodyAnswer.trim();
+-        } else {
+-          replyText = `${repeatPrefix} ${bodyAnswer}`.replace(/\s+/g, ' ').trim();
+-        }
++        replyText = `${repeatPrefix} ${bodyAnswer}`.replace(/\s+/g, ' ').trim();
+ 
+         // 2.3 CÓ GHIM SẢN PHẨM HOẶC THAY ĐỔI VIDEO KHÔNG?

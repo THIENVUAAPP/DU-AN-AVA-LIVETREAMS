@@ -1,0 +1,15 @@
+--- src/components/genaidol/UpdateNotificationModal.jsx
++++ src/components/genaidol/UpdateNotificationModal.jsx
+@@ -4,6 +4,6 @@
+ 
+-export const APP_VERSION = '5.4.37';
+-export const RELEASE_DATE = '01/10/2026';
++export const APP_VERSION = '5.4.38';
++export const RELEASE_DATE = '02/10/2026';
+ 
+ export const UPDATE_NOTES = [
++  {
++    title: '⚡ Bản Cập Nhật v5.4.38 - Khắc Phục Triệt Để Lỗi Chồng Giọng, Tối Ưu Phản Hồi Từ Khóa & Fix Tràn Viền Window Capture OBS',
++    description: '1. Khắc Phục Lỗi Trùng Giọng (Double Voice): Tách biệt hoàn toàn AI hệ thống và AI Game Bản Đồ. Hệ thống sẽ không bao giờ phát 2 giọng nói đè lên nhau kể cả khi có nhiều bình luận cùng lúc. 2. Phản Hồi Từ Khóa Không Lan Man: Khi khớp đúng 100% từ khóa người dùng cài đặt, AI sẽ trả lời trực tiếp ngay lập tức bằng câu lệnh đã cấu hình, loại bỏ hoàn toàn câu chào lan man. 3. Sửa Lỗi Cắt Khung Hình Window Capture: Tối ưu bộ hiển thị CleanLiveOverlay tự động (Fill / Kéo dãn) để không bao giờ bị cắt mất hình ảnh khi kết nối OBS hoặc TikTok Live Studio. 4. Xóa Rung Giật Video (CEF Flickering): Khử bỏ các hiệu ứng phần cứng không tương thích với TikTok Live Studio, video phát mượt mà tuyệt đối ở 60 FPS.'
++  },
+   {

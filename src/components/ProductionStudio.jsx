@@ -2276,7 +2276,7 @@ export default function ProductionStudio({
 
           {/* MASTER STUDIO PRODUCTION STAGE (RESPONSIVE 16:9 & 9:16 DỌC TIKTOK) */}
           <div className={`w-full ${stageAspectRatio === '9:16' ? 'flex justify-center items-center py-2 bg-[#0b0b10] rounded-3xl border border-white/10 shadow-inner' : ''}`}>
-            <div className={`relative overflow-hidden bg-black shadow-2xl transform-gpu ${
+            <div className={`relative overflow-hidden bg-black shadow-2xl ${
               stageAspectRatio === '9:16' 
                 ? 'aspect-[9/16] w-full max-w-[360px] sm:max-w-[400px] rounded-3xl border-2 border-pink-500/50 shadow-[0_20px_50px_rgba(236,72,153,0.25)]' 
                 : 'aspect-video w-full rounded-3xl border border-white/15'
@@ -2392,7 +2392,7 @@ export default function ProductionStudio({
                 /* CHẾ ĐỘ 2: Camera Canvas Stage (Webcam / MultiCam) */
                 <canvas
                   ref={canvasRef}
-                  className="absolute inset-0 w-full h-full object-cover transform-gpu"
+                  className="absolute inset-0 w-full h-full object-cover"
                 />
               ) : tiktokLiveFlvUrl ? (
                 /* CHẾ ĐỘ 3: TikTok Live Stream Source độc lập */

@@ -1,0 +1,17 @@
+--- scripts/create_standalone_zip.cjs
++++ scripts/create_standalone_zip.cjs
+@@ -340,6 +340,14 @@
+     read -p "Nhấn Enter để thoát..."
+     exit 1
+ fi
+ 
++NODE_VER=$("$NODE_CMD" -v | cut -d 'v' -f 2 | cut -d '.' -f 1)
++if [ "$NODE_VER" -lt 18 ]; then
++    echo "❌ Phiên bản Node.js của bạn quá cũ (v$NODE_VER)!"
++    echo "👉 Phần mềm yêu cầu Node.js v18 trở lên (để hỗ trợ Fetch API)."
++    echo "👉 Vui lòng tải và cài đặt bản mới nhất tại https://nodejs.org/"
++    read -p "Nhấn Enter để thoát..."
++    exit 1
++fi
++
+ # 5. Khởi chạy Server

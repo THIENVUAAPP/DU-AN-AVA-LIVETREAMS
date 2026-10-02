@@ -1,0 +1,13 @@
+--- src/components/genaidol/WindowCapturePlayer.jsx
++++ src/components/genaidol/WindowCapturePlayer.jsx
+@@ -10,3 +10,7 @@
+ const WindowCapturePlayer = () => {
+-  return <CleanLiveOverlay />;
++  return (
++    <div className="w-screen h-screen bg-[#00ff00] flex items-center justify-center overflow-hidden">
++      <div className="relative shadow-2xl" style={{ aspectRatio: '9/16', height: '100%', maxHeight: '100vh' }}>
++        <CleanLiveOverlay forceAspectRatio={true} />
++      </div>
++    </div>
++  );
+ };

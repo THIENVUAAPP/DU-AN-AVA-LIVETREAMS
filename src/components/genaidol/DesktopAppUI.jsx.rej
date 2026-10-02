@@ -1,0 +1,5 @@
+@@ -4123,4 +4123,2 @@
+-      // ⚡ Trigger VIEWER_JOIN ngay lập tức không delay
+-      handleLiveEventRef.current?.('VIEWER_JOIN', { name: targetChan });
+     });
+ 

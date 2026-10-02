@@ -700,7 +700,7 @@ export default function AIAvatarStudio({ isLive, aiAvatarFeatureEnabled }) {
                       muted
                       preload="auto"
                       playsInline
-                      className="w-full h-full object-contain transform-gpu"
+                      className="w-full h-full object-contain"
                     />
 
                     {/* Camera Angle Badge Overlay */}

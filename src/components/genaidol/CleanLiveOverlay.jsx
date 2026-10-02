@@ -2819,7 +2819,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                                     speakerId={avatar.id}
                                     role={avatar.role}
                                     muted={isVideoAudioMuted}
-                                    className="w-full h-full object-cover select-none pointer-events-none transform-gpu"
+                                    className="w-full h-full object-cover select-none pointer-events-none"
                                     style={{ imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto' }}
                                     enableLipSync={true}
                                     showIndicator={false}
@@ -2960,7 +2960,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                                   speakerId={avatar.id}
                                   role={avatar.role}
                                   muted={isVideoAudioMuted}
-                                  className="w-full h-full select-none pointer-events-none transform-gpu bg-transparent"
+                                  className="w-full h-full select-none pointer-events-none bg-transparent"
                                   style={{
                                     width: '100%',
                                     height: '100%',
@@ -3359,7 +3359,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 autoPlay
                 playsInline
                 muted={isVideoAudioMuted}
-                className="w-full h-full select-none scale-x-[-1] bg-black transform-gpu block"
+                className="w-full h-full select-none scale-x-[-1] bg-black block"
                 style={{ 
                   width: '100%', 
                   height: '100%', 
@@ -3372,7 +3372,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               <img
                 ref={studioImageRef}
                 alt="Live Studio Realtime Camera Stream"
-                className="w-full h-full select-none bg-black transform-gpu"
+                className="w-full h-full select-none bg-black"
                 style={{ width: '100%', height: '100%', objectFit: objectFitState || 'cover' }}
               />
             ) : (

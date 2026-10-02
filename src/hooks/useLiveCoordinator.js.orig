@@ -674,7 +674,11 @@ function fillTemplate(template, vars = {}) {
         }
 
         // GHÉP TOÀN BỘ CÂU THOẠI HOÀN CHỈNH
-        replyText = `${repeatPrefix} ${bodyAnswer}`.replace(/\s+/g, ' ').trim();
+        if (isKeywordMatched) {
+          replyText = bodyAnswer.trim();
+        } else {
+          replyText = `${repeatPrefix} ${bodyAnswer}`.replace(/\s+/g, ' ').trim();
+        }
         chatText = bodyAnswer.trim() || replyText;
       }
 

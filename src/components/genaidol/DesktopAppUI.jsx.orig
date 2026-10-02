@@ -4121,6 +4121,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         }
       } catch (e) {}
       
+      // ⚡ Trigger VIEWER_JOIN ngay lập tức không delay
+      handleLiveEventRef.current?.('VIEWER_JOIN', { name: targetChan });
     });
 
     socket.on('tiktok_chat', (data) => {

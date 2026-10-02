@@ -512,7 +512,7 @@ function fillTemplate(template, vars = {}) {
         }
 
         // ⏱️ A2. KIỂM TRA GIÃN CÁCH TRẢ LỜI BÌNH LUẬN
-        const cooldownSec = Math.max(1, parseInt(commentConfig.waitBetweenEvents ?? commentConfig.commentReplyCooldown) || 2);
+        const cooldownSec = Math.max(5, parseInt(commentConfig.waitBetweenEvents ?? commentConfig.commentReplyCooldown) || 5);
         const now = Date.now();
         if (!isTestMode && (now - lastCommentReplyTimeRef.current < cooldownSec * 1000)) {
           console.log(`⏱️ [AvaLive AI] Đang trong khoảng giãn cách (${cooldownSec}s), bỏ qua dồn dập.`);
@@ -674,11 +674,7 @@ function fillTemplate(template, vars = {}) {
         }
 
         // GHÉP TOÀN BỘ CÂU THOẠI HOÀN CHỈNH
-        if (isKeywordMatched) {
-          replyText = bodyAnswer.trim();
-        } else {
-          replyText = `${repeatPrefix} ${bodyAnswer}`.replace(/\s+/g, ' ').trim();
-        }
+        replyText = `${repeatPrefix} ${bodyAnswer}`.replace(/\s+/g, ' ').trim();
         chatText = bodyAnswer.trim() || replyText;
       }
 

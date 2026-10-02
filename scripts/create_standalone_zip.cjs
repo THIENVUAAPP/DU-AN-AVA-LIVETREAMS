@@ -341,9 +341,12 @@ for p in \\
     "$HOME/.fnm/current/bin/node"
 do
     if [ -n "$p" ] && [ -x "$p" ]; then
-        NODE_CMD="$p"
-        export PATH="$(dirname "$p"):$PATH"
-        break
+        NODE_VER=$("$p" -v | tr -d 'v' | cut -d '.' -f 1)
+        if [ "$NODE_VER" -ge 18 ]; then
+            NODE_CMD="$p"
+            export PATH="$(dirname "$p"):$PATH"
+            break
+        fi
     fi
 done
 
@@ -380,7 +383,12 @@ elif command -v python3 &>/dev/null && [ -d "app" ]; then
     echo ""
     python3 -m http.server 3001 --directory app
 else
-    echo "⚠️ Không tìm thấy Node.js trên máy Mac của bạn."
+    echo "⚠️ KHÔNG TÌM THẤY NODE.JS (hoặc phiên bản hiện tại quá cũ, yêu cầu >= v18)!"
+    echo "👉 BẠN CẦN PHẢI CÀI ĐẶT NODE.JS v18+ ĐỂ CHẠY PHẦN MỀM NÀY."
+    echo "👉 Hãy tải bản mới nhất từ: https://nodejs.org/"
+    echo "👉 (Đang tự động mở trang tải Node.js cho bạn...)"
+    open "https://nodejs.org/" 2>/dev/null
+    sleep 5
     echo "👉 Đang mở phiên bản trực tuyến tại: https://avalivepro.vercel.app"
     open "https://avalivepro.vercel.app" 2>/dev/null || true
 fi
