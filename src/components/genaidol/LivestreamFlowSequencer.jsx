@@ -840,7 +840,7 @@ export default function LivestreamFlowSequencer() {
     }));
 
     // 3. Gửi sang Master Live State Hub (Supabase, Sockets, LocalStorage, BroadcastChannel, REST API)
-    syncMasterLiveState({
+    if (isMasterSynced) syncMasterLiveState({
       stage: 'idol',
       mediaUrl: mediaToPlay,
       mainMediaUrl: mediaToPlay,
@@ -930,7 +930,7 @@ export default function LivestreamFlowSequencer() {
       const ext = isImg ? 'jpg' : 'mp4';
       ensureServerMediaUrl(mediaToPlay, `sequencer_step_${step.id || Date.now()}.${ext}`).then(srvUrl => {
         if (srvUrl && srvUrl !== mediaToPlay) {
-          syncMasterLiveState({
+          if (isMasterSynced) syncMasterLiveState({
             stage: 'idol',
             mediaUrl: srvUrl,
             mainMediaUrl: srvUrl,
@@ -1139,7 +1139,7 @@ export default function LivestreamFlowSequencer() {
     stopVoiceAudio();
     setIsSpeakingPreview(false);
     setSpeakingStepId(null);
-    syncMasterLiveState({
+    if (isMasterSynced) syncMasterLiveState({
       isPlaying: false,
       videoPlaybackEvent: 'pause'
     });
@@ -1255,7 +1255,7 @@ export default function LivestreamFlowSequencer() {
       setIsSpeakingPreview(false);
       setSpeakingStepId(null);
 
-      syncMasterLiveState({
+      if (isMasterSynced) syncMasterLiveState({
         stage: 'idol',
         isPlaying: false,
         isMasterSynced: false,
@@ -1501,7 +1501,7 @@ export default function LivestreamFlowSequencer() {
       } catch (e) {}
 
       // Đồng bộ ngay lập tức trạng thái xóa lên Master Live State
-      syncMasterLiveState({
+      if (isMasterSynced) syncMasterLiveState({
         stage: 'idol',
         mediaUrl: '',
         clearMedia: true,

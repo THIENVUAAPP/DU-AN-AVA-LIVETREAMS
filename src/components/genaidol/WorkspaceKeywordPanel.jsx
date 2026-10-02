@@ -390,6 +390,20 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
       </div>
 
       {/* TÙY CHỈNH GIỌNG VOICE AI */}
+      <div className="p-3 bg-[#161922] rounded-xl border border-purple-500/30 flex flex-wrap items-center gap-4 mb-2">
+        <div className="w-full flex items-center gap-3">
+          <label className="text-[11px] font-bold text-gray-300 whitespace-nowrap min-w-[80px]">Giọng Đọc AI</label>
+          <select 
+            value={currentConfig.voiceId || 'free_vi_female'}
+            onChange={(e) => syncConfig({ voiceId: e.target.value })}
+            className="flex-1 bg-[#0b0e14] border border-gray-700 text-purple-300 text-xs rounded-lg p-2 focus:border-purple-500 focus:outline-none"
+          >
+            {ALL_SYSTEM_VOICES.map(v => (
+              <option key={v.id} value={v.id}>{v.name} - {v.provider} ({v.gender})</option>
+            ))}
+          </select>
+        </div>
+      </div>
       <div className="p-3 bg-[#161922] rounded-xl border border-purple-500/30 flex flex-wrap items-center gap-4">
         <div className="flex-1 min-w-[200px] flex items-center gap-3">
           <label className="text-[11px] font-bold text-gray-300 whitespace-nowrap min-w-[80px]">Âm lượng Voice</label>

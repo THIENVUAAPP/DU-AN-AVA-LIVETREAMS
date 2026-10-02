@@ -533,7 +533,7 @@ function fillTemplate(template, vars = {}) {
         // BƯỚC 1: TIỀN TỐ ĐỌC LẠI BÌNH LUẬN / CÂU HỎI CỦA KHÁCH
         let repeatPrefix = '';
         if (commentConfig.repeatCommentFirst !== false && commentText) {
-          const tpl = commentConfig.repeatCommentPrefix || 'Dạ bạn {user} vừa hỏi là: "{comment}". ';
+          const tpl = commentConfig.repeatCommentPrefix || 'Dạ chào bạn {user}, bạn vừa bình luận là: "{comment}". ';
           repeatPrefix = fillTemplate(tpl, { user: userName, comment: commentText });
         }
 
@@ -1018,6 +1018,15 @@ function fillTemplate(template, vars = {}) {
             }
           ].slice(-20));
           if (onChatReply) onChatReply(chatText || replyText);
+          // ⚡ Bắn trực tiếp text lên màn hình Sân Khấu Chính bằng Overlay Text
+          syncMasterLiveState({
+            stage: 'idol',
+            overlayText: chatText || replyText,
+            overlayTextTransform: { x: 5, y: 75, width: 90, height: 20 },
+            overlayTextStyle: 'neon_cyber',
+            overlayTextFontSize: 18,
+            overlayTextColor: '#38bdf8'
+          });
         }
 
         if (shouldSpeakVoice && onVoiceReply) {

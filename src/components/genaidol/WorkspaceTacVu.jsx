@@ -352,7 +352,7 @@ const getDefaultEventConfigs = () => {
 
       // Cấu hình quy trình 4 bước trả lời bình luận thông minh
       repeatCommentFirst: ev.id === 'comment' ? true : undefined,
-      repeatCommentPrefix: ev.id === 'comment' ? 'Dạ bạn {user} vừa hỏi là: "{comment}". ' : undefined,
+      repeatCommentPrefix: ev.id === 'comment' ? 'Dạ chào bạn {user}, bạn vừa bình luận là: "{comment}". ' : undefined,
       unknownFallbackReply: ev.id === 'comment' ? 'Dạ bạn {user} ơi, câu hỏi này em là trợ lý live nên xin phép ghi nhận lại để hỏi lại shop và phản hồi chi tiết cho mình sau nha! Bạn có thể nhắn tin (inbox) trực tiếp cho shop để nhận hỗ trợ nhanh nhất ạ!' : undefined,
       appendFollowUpQuestion: ev.id === 'comment' ? true : undefined,
       followUpQuestionText: ev.id === 'comment' ? ' Dạ không biết bạn {user} có cần em hỗ trợ thêm điều gì nữa không ạ? Bạn có thể nhắn tin trực tiếp cho shop để nhận tư vấn chi tiết và nhiều ưu đãi nha!' : undefined,
@@ -3197,9 +3197,9 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                                 <input 
                                   type="text" 
                                   name="repeatCommentPrefix" 
-                                  value={currentConfig.repeatCommentPrefix ?? 'Dạ bạn {user} vừa hỏi là: "{comment}". '} 
+                                  value={currentConfig.repeatCommentPrefix ?? 'Dạ chào bạn {user}, bạn vừa bình luận là: "{comment}". '} 
                                   onChange={(e) => updateEventConfig('comment', { repeatCommentPrefix: e.target.value })} 
-                                  placeholder='Dạ bạn {user} vừa hỏi là: "{comment}". '
+                                  placeholder='Dạ chào bạn {user}, bạn vừa bình luận là: "{comment}". '
                                   className="w-full border border-indigo-200 rounded-lg px-2.5 py-1.5 text-xs bg-indigo-50/30 focus:bg-white focus:outline-indigo-500 font-medium text-gray-800"
                                 />
                               </div>

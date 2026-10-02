@@ -185,11 +185,7 @@ export function syncMasterLiveState(partialState, socket = null) {
 export function sendVideoControl(control, socket = null) {
   if (typeof window === 'undefined' || !control) return;
 
-  // 🛑 FIX: KHI NGƯỜI DÙNG ĐÃ NGẮT KẾT NỐI SÂN KHẤU CHÍNH, CHẶN MỌI LỆNH ĐIỀU KHIỂN PLAY/PAUSE (TRỪ CLEAR)
-  const isMasterStageSynced = localStorage.getItem('avalive_master_sync_active') === 'true';
-  if (!isMasterStageSynced && !control.clearMedia && control.action !== 'stop') {
-    return;
-  }
+
 
   const payload = {
     ...control,

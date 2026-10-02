@@ -5317,6 +5317,11 @@ io.on('connection', (socket) => {
     io.emit('tiktok_status', { connected: false, username: currentUsername, simulationMode: false });
   });
 
+    socket.on('tiktok_chat', (data) => {
+    // Cho phép AI tự động nhắn text lên tất cả các màn hình Sân Khấu Phụ & Chính
+    io.emit('tiktok_chat', data);
+  });
+
   socket.on('disconnect', () => {
     console.log('Client disconnected:', socket.id);
   });

@@ -4247,14 +4247,15 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       
       // Tự động kích hoạt câu chào riêng biệt theo chuỗi tuần tự không trùng lặp
       const now = Date.now();
-      const timeSinceLastGreet = now - lastAiGreetingTime.current;
-      if (timeSinceLastGreet > 2000) {
-        lastAiGreetingTime.current = now;
+      let scheduleTime = lastAiGreetingTime.current + 2500;
+      if (scheduleTime < now) scheduleTime = now;
+      lastAiGreetingTime.current = scheduleTime;
+      
+      const delay = scheduleTime - now;
+      if (delay <= 0) {
         handleLiveEventRef.current?.('VIEWER_JOIN', { name: author });
       } else {
-        const delay = 2000 - timeSinceLastGreet;
         setTimeout(() => {
-          lastAiGreetingTime.current = Date.now();
           handleLiveEventRef.current?.('VIEWER_JOIN', { name: author });
         }, delay);
       }
