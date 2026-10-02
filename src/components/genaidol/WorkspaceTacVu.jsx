@@ -3295,7 +3295,7 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                             <div className="flex items-center justify-between">
                               <label className="text-xs font-black text-emerald-950 flex items-center gap-1.5 cursor-pointer" htmlFor="appendFollowUpQuestion-toggle">
                                 <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold">3</span>
-                                <span>CÂU HỎI GỢI MỞ CHĂM SÓC KHÁCH HÀNG & CẢM ƠN (INBOX SHOP)</span>
+                                <span>CÂU HỎI GỢI MỞ CHĂM SÓC KHÁCH HÀNG (DÙNG KHI AI KHÔNG BIẾT)</span>
                               </label>
                               <div className="flex items-center gap-2">
                                 <input 
@@ -3313,7 +3313,7 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                             {currentConfig.appendFollowUpQuestion !== false && (
                               <div className="space-y-1.5 pt-1">
                                 <div className="flex items-center justify-between text-[11px] text-gray-500">
-                                  <span>Tự động ghép vào cuối sau khi trả lời xong câu hỏi:</span>
+                                  <span>Khi AI không biết trả lời, tự động dùng câu hỏi gợi mở để tiếp tục tương tác:</span>
                                   <UniversalFileUploadButton 
                                     onLoaded={(text) => updateEventConfig('comment', { followUpQuestionText: text })} 
                                     label="Nạp File" 
