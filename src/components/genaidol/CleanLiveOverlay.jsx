@@ -1033,14 +1033,18 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
       // 🛑 CHỈ XÓA SÂN KHẤU KHI NGƯỜI DÙNG BẤM XÓA HOẶC CÓ TÍN HIỆU CLEAR_STAGE RÕ RÀNG
       if (data.clearMedia === true || data.type === 'CLEAR_STAGE' || data.clearStage === true) {
-        if (vid) {
-          try {
-            vid.pause();
-            vid.removeAttribute('src');
-            vid.src = '';
-            vid.load();
-          } catch (e) {}
-        }
+        // Xóa triệt để mọi tag audio/video để không còn dư âm
+        try {
+          if (typeof document !== 'undefined') {
+            document.querySelectorAll('video, audio').forEach(el => {
+              try { el.pause(); el.removeAttribute('src'); el.src = ''; el.load(); } catch (e) {}
+            });
+          }
+          if (vid) {
+            vid.pause(); vid.removeAttribute('src'); vid.src = ''; vid.load();
+          }
+        } catch (e) {}
+        
         setActiveMedia({ url: '', isVideo: false, name: '' });
         setMasterState(prev => ({
           ...prev,
@@ -1408,14 +1412,25 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         masterChannel.onmessage = (event) => {
           if (event.data) {
             if (event.data.type === 'CLEAR_STAGE' || event.data.clearMedia || (event.data.type === 'GLOBAL_MEDIA_CHANGE' && event.data.mediaUrl === null)) {
-              if (overlayVideoRef.current) {
-                try {
+              // 🛑 DỪNG NGAY TẤT CẢ MEDIA ĐỂ CHỐNG DƯ ÂM ÂM THANH
+              try {
+                if (typeof document !== 'undefined') {
+                  document.querySelectorAll('video, audio').forEach(el => {
+                    try {
+                      el.pause();
+                      el.removeAttribute('src');
+                      el.src = '';
+                      el.load();
+                    } catch (e) {}
+                  });
+                }
+                if (overlayVideoRef.current) {
                   overlayVideoRef.current.pause();
                   overlayVideoRef.current.removeAttribute('src');
                   overlayVideoRef.current.src = '';
                   overlayVideoRef.current.load();
-                } catch (e) {}
-              }
+                }
+              } catch (e) {}
               setActiveMedia({ url: '', isVideo: false, name: '' });
               setMasterState(prev => ({
                 ...prev,

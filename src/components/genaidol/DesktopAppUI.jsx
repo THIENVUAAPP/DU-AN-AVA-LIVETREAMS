@@ -1262,6 +1262,20 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       currentBlobUrlRef.current = null;
     }
 
+    // 🛑 DỪNG TẤT CẢ MEDIA ĐANG PHÁT NGẦM TRÊN GIAO DIỆN CHÍNH
+    if (typeof document !== 'undefined') {
+      try {
+        document.querySelectorAll('video, audio').forEach(el => {
+          try {
+            el.pause();
+            el.removeAttribute('src');
+            el.src = '';
+            el.load();
+          } catch(e) {}
+        });
+      } catch(e) {}
+    }
+
     if (desktopVideoRef.current) {
       try {
         desktopVideoRef.current.pause();
@@ -5418,7 +5432,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
       // ⚡ 2. Xử lý khi video bị xóa đang là video đang chọn / phát trên sân khấu hoặc đã xóa hết video
       if (selectedCharacter === id || remaining.length === 0) {
-        if (remaining.length === 0) {
+        if (true) { // TUYỆT ĐỐI XÓA SẠCH SÂN KHẤU KHI VIDEO ĐANG PHÁT BỊ XÓA
           // Xóa sạch 100% sân khấu - không để lại bất kỳ dư âm nào
           setSelectedCharacter('');
           setUserLockedMediaUrl(null);
