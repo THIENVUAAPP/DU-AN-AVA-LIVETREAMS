@@ -598,6 +598,11 @@ function fillTemplate(template, vars = {}) {
                   bodyAnswer = fillTemplate(rule.replyText, { user: userName, comment: commentText });
                   isHandled = true;
                   isKeywordMatched = true;
+                  // LƯU LẠI ROLE GIỌNG ĐỌC CỦA RULE NÀY ĐỂ GHI ĐÈ LÊN GLOBAL VOICE
+                  if (rule.role || rule.voiceId) {
+                    currentEvConfig._matchedRuleRole = rule.role;
+                    currentEvConfig._matchedRuleVoiceId = rule.voiceId;
+                  }
                   break;
                 }
               }
@@ -988,8 +993,9 @@ function fillTemplate(template, vars = {}) {
       // Nếu video là loại có sẵn Voice (Pre-recorded), không phát Voice AI đè lên
       const shouldSpeakVoice = !isPreRecorded && !isCommentVoiceDisabled && ((currentEvConfig.useVoice !== false) || isTestMode);
       const shouldSendChat = !isCommentTextDisabled;
-      const targetVoiceRole = isTestMode ? 'idol' : (currentEvConfig.ttsVoiceRole || currentEvConfig.speaker || (evKey === 'comment' ? 'comment' : evKey === 'checkout' ? 'manager' : 'idol'));
-      const effectiveVoice = resolveEffectiveVoice(targetVoiceRole, isTestMode ? null : (currentEvConfig.voiceId || currentEvConfig.voiceObj?.id), currentEvConfig.avatarId, { isLiveEvent: true, eventKey: evKey });
+      const targetVoiceRole = isTestMode ? 'idol' : (currentEvConfig._matchedRuleRole || currentEvConfig.ttsVoiceRole || currentEvConfig.speaker || (evKey === 'comment' ? 'comment' : evKey === 'checkout' ? 'manager' : 'idol'));
+      const voiceTargetId = currentEvConfig._matchedRuleVoiceId || currentEvConfig.voiceId || currentEvConfig.voiceObj?.id;
+      const effectiveVoice = resolveEffectiveVoice(targetVoiceRole, isTestMode ? null : voiceTargetId, currentEvConfig.avatarId, { isLiveEvent: true, eventKey: evKey });
 
       if (replyText && replyText.trim()) {
         if (shouldSendChat) {
@@ -1009,9 +1015,11 @@ function fillTemplate(template, vars = {}) {
           let rawVol = currentEvConfig.voiceVolume !== undefined ? Number(currentEvConfig.voiceVolume) : (currentEvConfig.volume !== undefined ? Number(currentEvConfig.volume) : (effectiveVoice.volume ?? 1.0));
           // Chuẩn hóa: nếu giá trị > 1 thì coi là phần trăm (0-100) -> chuyển về 0.0-1.0
           const effectiveVolume = (rawVol > 1 && rawVol <= 100) ? rawVol / 100 : Math.max(0, Math.min(1.0, rawVol));
+          const effectiveRate = currentEvConfig.voiceRate !== undefined ? Number(currentEvConfig.voiceRate) : (effectiveVoice.rate ?? 1.0);
           const finalVoiceObj = {
             ...effectiveVoice,
-            volume: effectiveVolume
+            volume: effectiveVolume,
+            rate: effectiveRate
           };
           onVoiceReply({
             text: replyText,
@@ -1038,9 +1046,11 @@ function fillTemplate(template, vars = {}) {
         if (fallbackMsg && shouldSpeakVoice && onVoiceReply) {
           let rawVol2 = currentEvConfig.voiceVolume !== undefined ? Number(currentEvConfig.voiceVolume) : (currentEvConfig.volume !== undefined ? Number(currentEvConfig.volume) : (effectiveVoice.volume ?? 1.0));
           const effectiveVolume = (rawVol2 > 1 && rawVol2 <= 100) ? rawVol2 / 100 : Math.max(0, Math.min(1.0, rawVol2));
+          const effectiveRate = currentEvConfig.voiceRate !== undefined ? Number(currentEvConfig.voiceRate) : (effectiveVoice.rate ?? 1.0);
           const finalVoiceObj = {
             ...effectiveVoice,
-            volume: effectiveVolume
+            volume: effectiveVolume,
+            rate: effectiveRate
           };
           onVoiceReply({
             text: fallbackMsg,

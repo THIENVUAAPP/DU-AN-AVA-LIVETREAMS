@@ -1262,6 +1262,9 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
         productName: `Sản phẩm mới ${nextId}`, 
         keywords: '', 
         priceInfo: '',
+        oldPrice: '',
+        buyUrl: '',
+        imageUrl: '',
         videoFolder: '', 
         videoUrl: '',
         supportVideoFolder: '', 
@@ -2784,6 +2787,9 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                                   productName: prod.productName,
                                   price: prod.priceInfo || 'Giá Sốc',
                                   priceInfo: prod.priceInfo,
+                                  oldPrice: prod.oldPrice || '',
+                                  buyUrl: prod.buyUrl || '',
+                                  imageUrl: prod.imageUrl || '',
                                   keywords: prod.keywords,
                                   videoFolder: prod.videoFolder,
                                   videoFileName: prod.videoFileName,
@@ -2799,8 +2805,29 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                             </button>
 
                             <button 
+                              onClick={() => handleMoveProduct(prod.id, 'up')}
+                              className="text-xs text-gray-500 hover:text-gray-800 border border-gray-200 hover:border-gray-400 px-2 py-0.5 rounded-md transition-colors font-semibold cursor-pointer bg-white"
+                              title="Di chuyển lên"
+                            >
+                              ⬆️
+                            </button>
+                            <button 
+                              onClick={() => handleMoveProduct(prod.id, 'down')}
+                              className="text-xs text-gray-500 hover:text-gray-800 border border-gray-200 hover:border-gray-400 px-2 py-0.5 rounded-md transition-colors font-semibold cursor-pointer bg-white"
+                              title="Di chuyển xuống"
+                            >
+                              ⬇️
+                            </button>
+                            <button 
+                              onClick={() => handleDuplicateProduct(prod)}
+                              className="text-xs text-blue-500 hover:text-white hover:bg-blue-500 border border-blue-300 px-2 py-0.5 rounded-md transition-colors font-semibold cursor-pointer bg-blue-50"
+                              title="Nhân bản ô sản phẩm này"
+                            >
+                              📄 Nhân bản
+                            </button>
+                            <button 
                               onClick={() => handleDeleteProduct(prod.id)}
-                              className="text-xs text-red-500 hover:text-white hover:bg-red-500 border border-red-300 px-2 py-0.5 rounded-md transition-colors font-semibold cursor-pointer"
+                              className="text-xs text-red-500 hover:text-white hover:bg-red-500 border border-red-300 px-2 py-0.5 rounded-md transition-colors font-semibold cursor-pointer bg-red-50"
                             >
                               Xóa
                             </button>
@@ -2846,15 +2873,54 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
 
                             <div>
                               <div className="flex items-center text-xs font-bold text-gray-700 mb-1">
-                                <span>💰 Giá niêm yết & Giá Flash Sale:</span>
+                                <span>💰 Giá bán / Flash Sale:</span>
                                 <HelpTooltip helpKey="productPrice" />
                               </div>
                               <input 
                                 type="text" 
                                 value={prod.priceInfo || ''} 
                                 onChange={(e) => handleProductChange(prod.id, 'priceInfo', e.target.value)} 
-                                placeholder="Ví dụ: Giá gốc 1.850.000đ - Giá live 890.000đ"
+                                placeholder="Ví dụ: 890.000đ"
                                 className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs bg-white focus:outline-blue-500 w-full" 
+                              />
+                            </div>
+                            
+                            <div>
+                              <div className="flex items-center text-xs font-bold text-gray-700 mb-1">
+                                <span>🏷️ Giá gốc (Gạch ngang):</span>
+                              </div>
+                              <input 
+                                type="text" 
+                                value={prod.oldPrice || ''} 
+                                onChange={(e) => handleProductChange(prod.id, 'oldPrice', e.target.value)} 
+                                placeholder="Ví dụ: 1.850.000đ"
+                                className="border border-gray-300 rounded-lg px-2.5 py-1.5 text-xs bg-white focus:outline-blue-500 w-full text-gray-500 line-through" 
+                              />
+                            </div>
+                            
+                            <div>
+                              <div className="flex items-center text-xs font-bold text-emerald-700 mb-1">
+                                <span>🔗 Link Mua Hàng (TikTok Shop/Shopee):</span>
+                              </div>
+                              <input 
+                                type="text" 
+                                value={prod.buyUrl || ''} 
+                                onChange={(e) => handleProductChange(prod.id, 'buyUrl', e.target.value)} 
+                                placeholder="Dán đường link mua hàng..."
+                                className="border border-emerald-300 rounded-lg px-2.5 py-1.5 text-xs bg-emerald-50 focus:bg-white focus:outline-emerald-500 w-full" 
+                              />
+                            </div>
+                            
+                            <div>
+                              <div className="flex items-center text-xs font-bold text-indigo-700 mb-1">
+                                <span>🖼️ Link Ảnh Sản Phẩm (Hiển thị góc Live):</span>
+                              </div>
+                              <input 
+                                type="text" 
+                                value={prod.imageUrl || ''} 
+                                onChange={(e) => handleProductChange(prod.id, 'imageUrl', e.target.value)} 
+                                placeholder="Dán link ảnh (.jpg, .png) hoặc tải lên..."
+                                className="border border-indigo-300 rounded-lg px-2.5 py-1.5 text-xs bg-indigo-50 focus:bg-white focus:outline-indigo-500 w-full" 
                               />
                             </div>
 
