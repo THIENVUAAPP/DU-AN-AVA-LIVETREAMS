@@ -1,0 +1,14 @@
+--- src/components/genaidol/CleanLiveOverlay.jsx
++++ src/components/genaidol/CleanLiveOverlay.jsx
+@@ -3088,7 +3088,3 @@
+                                 backgroundColor: 'transparent',
+-                                display: 'block',
+-                                transform: 'translate3d(0, 0, 0)',
+-                                WebkitTransform: 'translate3d(0, 0, 0)',
+-                                backfaceVisibility: 'hidden',
+-                                WebkitBackfaceVisibility: 'hidden',
+-                                perspective: 1000,
+-                                WebkitPerspective: 1000,
+-                                willChange: 'transform, opacity',
++                                display: 'block',
+                                 imageRendering: '-webkit-optimize-contrast'

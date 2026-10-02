@@ -393,7 +393,7 @@ class GameVoiceEngine {
 
   // Khớp Từ Khóa & Bộ Não AI Gemini Tự Động Trả Lời Câu Hỏi Ngoài Vùng Cài Đặt (Smart Real-time Q&A)
   async handleUserComment(commentText, userName = 'Khán Giả') {
-    if (this.isKeywordAutoReplyEnabled === false || !commentText) return false;
+    if (this.isKeywordAutoReplyEnabled === false || !commentText || !this.isGameActive) return false;
     
     const normalize = (str) => {
       const s = String(str || '').toLowerCase().trim();

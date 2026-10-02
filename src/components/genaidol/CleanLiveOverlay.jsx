@@ -498,7 +498,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       if (saved === 'contain' || saved === 'cover') return saved;
     } catch (e) {}
     const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-    return params?.get('fit') === 'cover' ? 'cover' : 'contain'; // Default to contain to avoid cropping (cắt đầu đít)
+    return params?.get('fit') || 'fill'; // Default to fill to stretch full screen to avoid cropping (cắt đầu đít)
   });
   const isInternalAudioChangeRef = useRef(false);
   const isInternalPlaybackChangeRef = useRef(false);
@@ -2618,14 +2618,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 {/* 8. TỈ LỆ KHUNG HÌNH FIT (MINI) */}
                 <button
                   onClick={() => {
-                    const nextFit = objectFitState === 'cover' ? 'contain' : 'cover';
+                    const nextFit = objectFitState === 'cover' ? 'fill' : objectFitState === 'fill' ? 'contain' : 'cover';
                     setObjectFitState(nextFit);
                     try { localStorage.setItem('avalive_overlay_fit', nextFit); } catch (e) {}
                   }}
                   className="px-1.5 py-0.5 rounded-full bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 text-[9px] font-medium h-5.5 cursor-pointer transition-all"
                   title="Chuyển đổi Tràn Viền / Vừa Khung"
                 >
-                  <span>📐 {objectFitState === 'cover' ? 'Tràn' : 'Vừa'}</span>
+                  <span>📐 {objectFitState === 'cover' ? 'Phủ Cắt Viền' : objectFitState === 'fill' ? 'Kéo Dãn Full' : 'Vừa Khung'}</span>
                 </button>
 
                 {/* 9. NÚT ẨN BẢNG ĐIỀU KHIỂN */}
@@ -2684,8 +2684,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   height: '100%',
                   objectFit: objectFitState || 'cover',
                   display: 'block',
-                  transform: 'translate3d(0, 0, 0)',
-                  WebkitTransform: 'translate3d(0, 0, 0)',
                   imageRendering: '-webkit-optimize-contrast'
                 }}
               />
@@ -2720,8 +2718,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   height: '100%',
                   objectFit: objectFitState || 'cover',
                   display: 'block',
-                  transform: 'translate3d(0, 0, 0)',
-                  WebkitTransform: 'translate3d(0, 0, 0)',
                   imageRendering: '-webkit-optimize-contrast'
                 }}
               />
@@ -2747,8 +2743,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   height: '100%',
                   objectFit: objectFitState || 'cover',
                   display: 'block',
-                  transform: 'translate3d(0, 0, 0)',
-                  WebkitTransform: 'translate3d(0, 0, 0)',
                   imageRendering: '-webkit-optimize-contrast'
                 }}
               />
@@ -3087,13 +3081,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                                 objectFit: singleTrans?.objectFit || objectFitState || 'cover',
                                 backgroundColor: 'transparent',
                                 display: 'block',
-                                transform: 'translate3d(0, 0, 0)',
-                                WebkitTransform: 'translate3d(0, 0, 0)',
-                                backfaceVisibility: 'hidden',
-                                WebkitBackfaceVisibility: 'hidden',
                                 imageRendering: '-webkit-optimize-contrast',
                                 WebkitFontSmoothing: 'antialiased',
-                                willChange: 'transform',
                                 ...singleChroma
                               }}
                               onLoadStart={(e) => {
@@ -3375,8 +3364,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                   width: '100%', 
                   height: '100%', 
                   objectFit: objectFitState || 'cover',
-                  transform: 'translate3d(0, 0, 0)',
-                  WebkitTransform: 'translate3d(0, 0, 0)',
                   imageRendering: '-webkit-optimize-contrast',
                   WebkitFontSmoothing: 'antialiased'
                 }}
