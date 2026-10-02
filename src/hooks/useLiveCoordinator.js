@@ -7,7 +7,7 @@ import { isSmartSpamOrToxicComment, cleanUserNameForSpeech, isMeaningfulCommerci
 import { syncMasterLiveState, sendVideoControl } from '../lib/masterLiveSync';
 import { ensureServerMediaUrl } from '../utils/mediaUploadService';
 
-export function useLiveCoordinator({ isConnected, onVoiceReply, activeBrainPack = 'talk' }) {
+export function useLiveCoordinator({ isConnected, onVoiceReply, onChatReply, activeBrainPack = 'talk' }) {
   const [liveMedia, setLiveMedia] = useState([]);
   const [activeVideoItem, setActiveVideoItem] = useState(null);
   const [previousVideoItem, setPreviousVideoItem] = useState(null);
@@ -429,6 +429,10 @@ function fillTemplate(template, vars = {}) {
       // 1. XỬ LÝ SỰ KIỆN BÌNH LUẬN (COMMENT) - BỘ NÃO AI GEMINI FLASH + QUY TRÌNH 4 BƯỚC
       if (type === 'COMMENT') {
         const commentText = (payload?.text || payload?.comment || '').trim();
+        // CHỐNG LẶP: Không xử lý comment do chính AI tự động gửi lên!
+        if (rawUserName === 'Trợ lý AvaLive' || rawUserName === 'AVA Live AI' || rawUserName === 'Hệ Thống' || payload?.isModerator === true) {
+          return;
+        }
         
         // 📌 TỰ ĐỘNG GHIM SẢN PHẨM KHI KHÁCH HÀNG COMMENT MÃ SỐ / TÊN SP / TỪ KHÓA
         if (commentText) {
@@ -538,6 +542,29 @@ function fillTemplate(template, vars = {}) {
         const lowerComment = commentText.toLowerCase();
 
         // 🎯 BƯỚC 2: ƯU TIÊN KIỂM TRA TỪ KHÓA ĐÃ CÀI ĐẶT
+        // 2.3. Kiểm tra bộ quy tắc từ khóa (Keyword Rules của Tab Bình Luận)
+        if (!isHandled && commentConfig.active !== false && useKw) {
+          if (Array.isArray(commentConfig.keywordRules) && commentConfig.keywordRules.length > 0) {
+            for (const rule of commentConfig.keywordRules) {
+              if (rule.enabled !== false && rule.keywords) {
+                const kwArr = Array.isArray(rule.keywords) ? rule.keywords : String(rule.keywords).split(/[,;]/);
+                const matched = kwArr.some(k => k.trim() && lowerComment.includes(k.trim().toLowerCase()));
+                if (matched && rule.replyText) {
+                  bodyAnswer = fillTemplate(rule.replyText, { user: userName, comment: commentText });
+                  isHandled = true;
+                  isKeywordMatched = true;
+                  // LƯU LẠI ROLE GIỌNG ĐỌC CỦA RULE NÀY ĐỂ GHI ĐÈ LÊN GLOBAL VOICE
+                  if (rule.role || rule.voiceId) {
+                    currentEvConfig._matchedRuleRole = rule.role;
+                    currentEvConfig._matchedRuleVoiceId = rule.voiceId;
+                  }
+                  break;
+                }
+              }
+            }
+          }
+        }
+
         // 2.1. Kiểm tra Kho Tri Thức Doanh Nghiệp & Sản Phẩm (Knowledge Base)
         const company = scriptConfig.companyName || checkoutConfig.companyName || 'Shop';
         const product = scriptConfig.productName || checkoutConfig.productName || 'Sản phẩm';
@@ -587,29 +614,7 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // 2.3. Kiểm tra bộ quy tắc từ khóa (Keyword Rules của Tab Bình Luận)
-        if (!isHandled && commentConfig.active !== false && useKw) {
-          if (Array.isArray(commentConfig.keywordRules) && commentConfig.keywordRules.length > 0) {
-            for (const rule of commentConfig.keywordRules) {
-              if (rule.enabled !== false && rule.keywords) {
-                const kwArr = Array.isArray(rule.keywords) ? rule.keywords : String(rule.keywords).split(/[,;]/);
-                const matched = kwArr.some(k => k.trim() && lowerComment.includes(k.trim().toLowerCase()));
-                if (matched && rule.replyText) {
-                  bodyAnswer = fillTemplate(rule.replyText, { user: userName, comment: commentText });
-                  isHandled = true;
-                  isKeywordMatched = true;
-                  // LƯU LẠI ROLE GIỌNG ĐỌC CỦA RULE NÀY ĐỂ GHI ĐÈ LÊN GLOBAL VOICE
-                  if (rule.role || rule.voiceId) {
-                    currentEvConfig._matchedRuleRole = rule.role;
-                    currentEvConfig._matchedRuleVoiceId = rule.voiceId;
-                  }
-                  break;
-                }
-              }
-            }
-          }
-        }
-
+        
         // 🧠 BƯỚC 3: NẾU KHÔNG KHỚP TỪ KHÓA -> DÙNG BỘ NÃO AI GEMINI FLASH PHÂN TÍCH & TRẢ LỜI
         if (!isHandled) {
           if (lowerComment.includes('xinh') || lowerComment.includes('đẹp') || lowerComment.includes('dễ thương')) {
@@ -1010,6 +1015,7 @@ function fillTemplate(template, vars = {}) {
               ai_reply: replyText 
             }
           ].slice(-20));
+          if (onChatReply) onChatReply(replyText);
         }
 
         if (shouldSpeakVoice && onVoiceReply) {

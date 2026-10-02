@@ -1948,6 +1948,17 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   } = useLiveCoordinator({
     isConnected: true, // Luôn sẵn sàng xử lý sự kiện khi có tín hiệu từ TikTok / Giả lập / Live
     activeBrainPack: 'talk', // mặc định
+    onChatReply: (text) => {
+      // Bắn trực tiếp text lên overlay livestream giả lập
+      if (socketRef.current) {
+        socketRef.current.emit('tiktok_chat', {
+          uniqueId: 'Trợ lý AvaLive',
+          comment: text,
+          isModerator: true,
+          profilePictureUrl: 'https://ui-avatars.com/api/?name=Ava&background=8b5cf6&color=fff'
+        });
+      }
+    },
     onVoiceReply: ({ text, action, baseVideoItem, preRecordedCat, voiceId, voiceObj, voiceChannel, volume, isTest }) => {
       unlockAllAudio();
       // Nếu đang tắt tiếng Voice Test trong Bảng Giả Lập thì không phát âm thanh test
