@@ -3110,199 +3110,64 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                             </div>
                           </div>
 
-                          {/* BƯỚC 2: CHẾ ĐỘ TRẢ LỜI & HÌNH THỨC PHẢN HỒI (2 NÚT CHỌN ĐỘC LẬP) */}
-                          <div className="bg-white/90 p-3.5 rounded-xl border-2 border-purple-200 shadow-xs space-y-3">
+                      {/* BƯỚC 2: TRẢ LỜI THEO TỪ KHÓA & BỘ NÃO AI */}
+                      {selectedEventId === 'comment' && (
+                        <div className="mt-4">
+                          <WorkspaceKeywordPanel 
+                            currentConfig={currentConfig}
+                            onUpdateConfig={(partial) => {
+                              updateEventConfig(selectedEventId, partial);
+                            }}
+                          />
+                        </div>
+                      )}
+
+                          {/* BƯỚC 3: THÊM CÂU HỎI GỢI MỞ CHĂM SÓC KHÁCH HÀNG & CẢM ƠN SAU KHI TRẢ LỜI */}
+                          <div className="bg-white/90 p-3 rounded-xl border border-emerald-100 shadow-xs space-y-2">
                             <div className="flex items-center justify-between">
-                              <div className="text-xs font-black text-purple-950 flex items-center gap-1.5">
-                                <span className="w-5 h-5 rounded-full bg-purple-600 text-white flex items-center justify-center text-[10px] font-bold">2</span>
-                                <span>CHẾ ĐỘ TRẢ LỜI BÌNH LUẬN & HÌNH THỨC PHẢN HỒI</span>
-                              </div>
-                              <span className="text-[10px] px-2.5 py-0.5 rounded-full font-bold bg-purple-100 text-purple-800 border border-purple-300">
-                                {((currentConfig.useKeywords !== false && currentConfig.commentReplyMode !== 'ai_only') && (currentConfig.useAiBrain !== false && currentConfig.commentReplyMode !== 'keywords_only'))
-                                  ? '🌟 Chế Độ Kết Hợp: Từ Khóa + Bộ Não AI'
-                                  : (currentConfig.useKeywords !== false && currentConfig.commentReplyMode !== 'ai_only')
-                                    ? '🎯 Đang Bật: Chỉ Theo Từ Khóa'
-                                    : (currentConfig.useAiBrain !== false && currentConfig.commentReplyMode !== 'keywords_only')
-                                      ? '🧠 Đang Bật: Chỉ Bộ Não AI'
-                                      : '⚠️ Chưa Chọn Chế Độ'}
-                              </span>
-                            </div>
-
-                            {/* 2 NÚT CHECKBOX LỰA CHỌN NGUỒN TRẢ LỜI */}
-                            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                              {/* 1. Nút chọn Trả lời theo Từ Khóa */}
-                              {(() => {
-                                const isKwActive = currentConfig.useKeywords !== false && currentConfig.commentReplyMode !== 'ai_only';
-                                const isAiActive = currentConfig.useAiBrain !== false && currentConfig.commentReplyMode !== 'keywords_only';
-                                return (
-                                  <>
-                                    <div 
-                                      onClick={() => {
-                                        const nextKw = !isKwActive;
-                                        if (!nextKw && !isAiActive) {
-                                          toast.error('Vui lòng chọn ít nhất 1 chế độ trả lời!');
-                                          return;
-                                        }
-                                        const nextMode = nextKw && isAiActive ? 'hybrid' : nextKw ? 'keywords_only' : 'ai_only';
-                                        updateEventConfig('comment', { 
-                                          useKeywords: nextKw, 
-                                          commentReplyMode: nextMode 
-                                        });
-                                      }}
-                                      className={`p-3 rounded-xl border-2 transition-all cursor-pointer select-none flex flex-col justify-between ${
-                                        isKwActive 
-                                          ? 'bg-amber-500/10 border-amber-500 text-amber-950 shadow-sm' 
-                                          : 'bg-white border-gray-200 text-gray-400 opacity-60 hover:opacity-90'
-                                      }`}
-                                    >
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                          <input 
-                                            type="checkbox"
-                                            checked={isKwActive}
-                                            onChange={() => {}} // onClick handled by parent div
-                                            className="w-4 h-4 text-amber-600 rounded cursor-pointer accent-amber-600"
-                                          />
-                                          <span className="text-xs font-black text-amber-900">
-                                            🎯 1. Trả Lời Theo Từ Khóa Huấn Luyện Sẵn
-                                          </span>
-                                        </div>
-                                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${isKwActive ? 'bg-amber-500 text-white' : 'bg-gray-200 text-gray-600'}`}>
-                                          {isKwActive ? 'ĐANG BẬT' : 'TẮT'}
-                                        </span>
-                                      </div>
-                                      <p className="text-[11px] text-gray-600 mt-1.5 leading-relaxed">
-                                        Khớp chính xác các từ khóa đã cài đặt (giá, ship, quà, bảo hành...) để trả lời tức thì câu trả lời chuẩn xác.
-                                      </p>
-                                    </div>
-
-                                    {/* 2. Nút chọn Trả lời bằng Bộ Não AI Tri Thức */}
-                                    <div 
-                                      onClick={() => {
-                                        const nextAi = !isAiActive;
-                                        if (!nextAi && !isKwActive) {
-                                          toast.error('Vui lòng chọn ít nhất 1 chế độ trả lời!');
-                                          return;
-                                        }
-                                        const nextMode = isKwActive && nextAi ? 'hybrid' : nextAi ? 'ai_only' : 'keywords_only';
-                                        updateEventConfig('comment', { 
-                                          useAiBrain: nextAi, 
-                                          commentReplyMode: nextMode 
-                                        });
-                                      }}
-                                      className={`p-3 rounded-xl border-2 transition-all cursor-pointer select-none flex flex-col justify-between ${
-                                        isAiActive 
-                                          ? 'bg-purple-600/10 border-purple-600 text-purple-950 shadow-sm' 
-                                          : 'bg-white border-gray-200 text-gray-400 opacity-60 hover:opacity-90'
-                                      }`}
-                                    >
-                                      <div className="flex items-center justify-between">
-                                        <div className="flex items-center gap-2">
-                                          <input 
-                                            type="checkbox"
-                                            checked={isAiActive}
-                                            onChange={() => {}} // onClick handled by parent div
-                                            className="w-4 h-4 text-purple-600 rounded cursor-pointer accent-purple-600"
-                                          />
-                                          <span className="text-xs font-black text-purple-900">
-                                            🧠 2. Trả Lời Bằng Bộ Não AI Tri Thức (Gemini)
-                                          </span>
-                                        </div>
-                                        <span className={`text-[10px] font-black px-2 py-0.5 rounded-full ${isAiActive ? 'bg-purple-600 text-white' : 'bg-gray-200 text-gray-600'}`}>
-                                          {isAiActive ? 'ĐANG BẬT' : 'TẮT'}
-                                        </span>
-                                      </div>
-                                      <p className="text-[11px] text-gray-600 mt-1.5 leading-relaxed">
-                                        AI tự động đọc câu hỏi của người xem, phân tích hồ sơ sản phẩm & kho tri thức doanh nghiệp để trả lời linh hoạt, thông minh.
-                                      </p>
-                                    </div>
-                                  </>
-                                );
-                              })()}
-                            </div>
-
-                            {/* 2 NÚT CHECKBOX LỰA CHỌN HÌNH THỨC PHÁT (TEXT VÀ VOICE) */}
-                            <div className="pt-2.5 border-t border-purple-100 flex flex-col sm:flex-row sm:items-center justify-between gap-2.5">
-                              <span className="text-[11.5px] font-bold text-gray-800 flex items-center gap-1.5">
-                                <Volume2 size={14} className="text-purple-600" /> Hình Thức Phản Hồi:
-                              </span>
-                              
-                              <div className="flex items-center gap-3">
-                                {(() => {
-                                  const isTextActive = currentConfig.sendChatText !== false && currentConfig.commentResponseFormat !== 'voice_only';
-                                  const isVoiceActive = currentConfig.speakVoice !== false && currentConfig.commentResponseFormat !== 'text_only';
-
-                                  return (
-                                    <>
-                                      <label 
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          const nextText = !isTextActive;
-                                          if (!nextText && !isVoiceActive) {
-                                            toast.error('Vui lòng bật ít nhất 1 hình thức phát (Text hoặc Voice)!');
-                                            return;
-                                          }
-                                          const nextFmt = nextText && isVoiceActive ? 'both' : nextText ? 'text_only' : 'voice_only';
-                                          updateEventConfig('comment', { 
-                                            sendChatText: nextText, 
-                                            commentResponseFormat: nextFmt 
-                                          });
-                                        }}
-                                        className={`px-3 py-1.5 rounded-xl border-2 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 select-none ${
-                                          isTextActive 
-                                            ? 'bg-blue-600 text-white border-blue-700 shadow-xs' 
-                                            : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
-                                        }`}
-                                      >
-                                        <input 
-                                          type="checkbox" 
-                                          checked={isTextActive} 
-                                          onChange={() => {}} 
-                                          className="w-3.5 h-3.5 accent-blue-600 rounded cursor-pointer"
-                                        />
-                                        <span>💬 Gửi Tin Nhắn Chat (Text)</span>
-                                      </label>
-
-                                      <label 
-                                        onClick={(e) => {
-                                          e.preventDefault();
-                                          const nextVoice = !isVoiceActive;
-                                          if (!nextVoice && !isTextActive) {
-                                            toast.error('Vui lòng bật ít nhất 1 hình thức phát (Text hoặc Voice)!');
-                                            return;
-                                          }
-                                          const nextFmt = isTextActive && nextVoice ? 'both' : nextVoice ? 'voice_only' : 'text_only';
-                                          updateEventConfig('comment', { 
-                                            speakVoice: nextVoice, 
-                                            commentResponseFormat: nextFmt 
-                                          });
-                                        }}
-                                        className={`px-3 py-1.5 rounded-xl border-2 text-xs font-bold transition-all cursor-pointer flex items-center gap-1.5 select-none ${
-                                          isVoiceActive 
-                                            ? 'bg-purple-700 text-white border-purple-800 shadow-xs' 
-                                            : 'bg-white text-gray-600 border-gray-300 hover:bg-gray-50'
-                                        }`}
-                                      >
-                                        <input 
-                                          type="checkbox" 
-                                          checked={isVoiceActive} 
-                                          onChange={() => {}} 
-                                          className="w-3.5 h-3.5 accent-purple-600 rounded cursor-pointer"
-                                        />
-                                        <span>🗣️ Phát Giọng Đọc Voice AI (TTS)</span>
-                                      </label>
-                                    </>
-                                  );
-                                })()}
+                              <label className="text-xs font-black text-emerald-950 flex items-center gap-1.5 cursor-pointer" htmlFor="appendFollowUpQuestion-toggle">
+                                <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold">3</span>
+                                <span>CÂU HỎI GỢI MỞ CHĂM SÓC KHÁCH HÀNG & CẢM ƠN (INBOX SHOP)</span>
+                              </label>
+                              <div className="flex items-center gap-2">
+                                <input 
+                                  type="checkbox" 
+                                  id="appendFollowUpQuestion-toggle" 
+                                  name="appendFollowUpQuestion" 
+                                  checked={currentConfig.appendFollowUpQuestion !== false} 
+                                  onChange={(e) => updateEventConfig('comment', { appendFollowUpQuestion: e.target.checked })} 
+                                  className="w-4 h-4 text-emerald-600 rounded cursor-pointer accent-emerald-600" 
+                                />
+                                <span className="text-[11px] font-bold text-emerald-700">{currentConfig.appendFollowUpQuestion !== false ? 'Đang Bật' : 'Tắt'}</span>
                               </div>
                             </div>
+
+                            {currentConfig.appendFollowUpQuestion !== false && (
+                              <div className="space-y-1.5 pt-1">
+                                <div className="flex items-center justify-between text-[11px] text-gray-500">
+                                  <span>Tự động ghép vào cuối sau khi trả lời xong câu hỏi:</span>
+                                  <UniversalFileUploadButton 
+                                    onLoaded={(text) => updateEventConfig('comment', { followUpQuestionText: text })} 
+                                    label="Nạp File" 
+                                  />
+                                </div>
+                                <input 
+                                  type="text" 
+                                  name="followUpQuestionText" 
+                                  value={currentConfig.followUpQuestionText ?? ' Dạ không biết bạn {user} có cần em hỗ trợ thêm điều gì nữa không ạ? Bạn có thể nhắn tin trực tiếp cho shop để nhận tư vấn chi tiết và nhiều ưu đãi nha!'} 
+                                  onChange={(e) => updateEventConfig('comment', { followUpQuestionText: e.target.value })} 
+                                  placeholder=' Dạ không biết bạn {user} có cần em hỗ trợ thêm điều gì nữa không ạ?...'
+                                  className="w-full border border-emerald-200 rounded-lg px-2.5 py-1.5 text-xs bg-emerald-50/30 focus:bg-white focus:outline-emerald-500 font-medium text-gray-800" 
+                                />
+                              </div>
+                            )}
                           </div>
 
-                          {/* BƯỚC 3: Ô CẤU HÌNH XỬ LÝ KHI AI KHÔNG BIẾT / KHÔNG HIỂU CÂU HỎI (FALLBACK KHÉO LÉO) */}
+                          {/* BƯỚC 4: Ô CẤU HÌNH XỬ LÝ KHI AI KHÔNG BIẾT / KHÔNG HIỂU CÂU HỎI (FALLBACK KHÉO LÉO) */}
                           <div className="bg-white/90 p-3 rounded-xl border border-amber-200 shadow-xs space-y-2">
                             <div className="flex items-center justify-between">
                               <label className="text-xs font-black text-amber-950 flex items-center gap-1.5 cursor-pointer" htmlFor="useUnknownFallbackReply-toggle">
-                                <span className="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center text-[10px] font-bold">3</span>
+                                <span className="w-5 h-5 rounded-full bg-amber-600 text-white flex items-center justify-center text-[10px] font-bold">4</span>
                                 <span>XỬ LÝ KHI AI KHÔNG BIẾT / KHÔNG HIỂU CÂU HỎI (KHÉO LÉO & CHUYÊN NGHIỆP)</span>
                               </label>
                               <div className="flex items-center gap-2">
@@ -3346,47 +3211,6 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                                     Khôi phục câu chuẩn khéo léo
                                   </button>
                                 </div>
-                              </div>
-                            )}
-                          </div>
-
-                          {/* BƯỚC 4: THÊM CÂU HỎI GỢI MỞ CHĂM SÓC KHÁCH HÀNG & CẢM ƠN SAU KHI TRẢ LỜI */}
-                          <div className="bg-white/90 p-3 rounded-xl border border-emerald-100 shadow-xs space-y-2">
-                            <div className="flex items-center justify-between">
-                              <label className="text-xs font-black text-emerald-950 flex items-center gap-1.5 cursor-pointer" htmlFor="appendFollowUpQuestion-toggle">
-                                <span className="w-5 h-5 rounded-full bg-emerald-600 text-white flex items-center justify-center text-[10px] font-bold">4</span>
-                                <span>CÂU HỎI GỢI MỞ CHĂM SÓC KHÁCH HÀNG & CẢM ƠN (INBOX SHOP)</span>
-                              </label>
-                              <div className="flex items-center gap-2">
-                                <input 
-                                  type="checkbox" 
-                                  id="appendFollowUpQuestion-toggle" 
-                                  name="appendFollowUpQuestion" 
-                                  checked={currentConfig.appendFollowUpQuestion !== false} 
-                                  onChange={(e) => updateEventConfig('comment', { appendFollowUpQuestion: e.target.checked })} 
-                                  className="w-4 h-4 text-emerald-600 rounded cursor-pointer accent-emerald-600" 
-                                />
-                                <span className="text-[11px] font-bold text-emerald-700">{currentConfig.appendFollowUpQuestion !== false ? 'Đang Bật' : 'Tắt'}</span>
-                              </div>
-                            </div>
-
-                            {currentConfig.appendFollowUpQuestion !== false && (
-                              <div className="space-y-1.5 pt-1">
-                                <div className="flex items-center justify-between text-[11px] text-gray-500">
-                                  <span>Tự động ghép vào cuối sau khi trả lời xong câu hỏi:</span>
-                                  <UniversalFileUploadButton 
-                                    onLoaded={(text) => updateEventConfig('comment', { followUpQuestionText: text })} 
-                                    label="Nạp File" 
-                                  />
-                                </div>
-                                <input 
-                                  type="text" 
-                                  name="followUpQuestionText" 
-                                  value={currentConfig.followUpQuestionText ?? ' Dạ không biết bạn {user} có cần em hỗ trợ thêm điều gì nữa không ạ? Bạn có thể nhắn tin trực tiếp cho shop để nhận tư vấn chi tiết và nhiều ưu đãi nha!'} 
-                                  onChange={(e) => updateEventConfig('comment', { followUpQuestionText: e.target.value })} 
-                                  placeholder=' Dạ không biết bạn {user} có cần em hỗ trợ thêm điều gì nữa không ạ?...'
-                                  className="w-full border border-emerald-200 rounded-lg px-2.5 py-1.5 text-xs bg-emerald-50/30 focus:bg-white focus:outline-emerald-500 font-medium text-gray-800" 
-                                />
                               </div>
                             )}
                           </div>
@@ -3561,18 +3385,6 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                         </>
                       )}
 
-                      {/* TÍCH HỢP WORKSPACE KEYWORD PANEL CHO TAB BÌNH LUẬN */}
-                      {selectedEventId === 'comment' && (
-                        <div className="mt-4 pt-4 border-t border-gray-200">
-                          <WorkspaceKeywordPanel 
-                            currentConfig={currentConfig}
-                            onUpdateConfig={(partial) => {
-                              updateEventConfig(selectedEventId, partial);
-                            }}
-                          />
-                        </div>
-                      )}
-
                       {selectedEventId === 'idle' && (
                         <div className="flex items-center">
                           <FieldLabel icon="⏱️" text="Tự nói sau (giây) im lặng" helpKey="speakAfterIdleSeconds" />
@@ -3580,7 +3392,7 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                         </div>
                       )}
 
-                      {currentConfig.aiPrompt !== undefined && selectedEventId !== 'idle' && selectedEventId !== 'apology' && selectedEventId !== 'welcome' && (
+                      {currentConfig.aiPrompt !== undefined && selectedEventId !== 'idle' && selectedEventId !== 'apology' && selectedEventId !== 'welcome' && selectedEventId !== 'comment' && (
                         <div className="flex flex-col sm:flex-row sm:items-start gap-2 mt-2">
                           <div className="flex items-center justify-between sm:justify-start sm:min-w-[170px]">
                             <FieldLabel icon="✍️" text="Kịch bản cho AI" helpKey="aiPrompt" />
@@ -3609,7 +3421,7 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                         </div>
                       )}
 
-                      {currentConfig.sampleAnswers !== undefined && selectedEventId !== 'idle' && (
+                      {currentConfig.sampleAnswers !== undefined && selectedEventId !== 'idle' && selectedEventId !== 'comment' && (
                         <div className="flex flex-col gap-2 mt-2">
                           <div className="flex flex-col sm:flex-row sm:items-start gap-2">
                             <div className="flex items-center justify-between sm:justify-start sm:min-w-[170px]">
@@ -3863,7 +3675,7 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                 </fieldset>
               </div>
 
-              {currentConfig.assistantPrompt !== undefined && (
+              {currentConfig.assistantPrompt !== undefined && selectedEventId !== 'comment' && (
                 <div className="border border-gray-300 rounded-md bg-white shadow-sm px-3 py-4 mb-4">
                   <fieldset className="border border-gray-300 rounded p-4 pt-4 mt-2 relative">
                     <legend className="absolute -top-3 left-3 bg-white px-1 text-sm font-semibold text-gray-700 flex items-center gap-2">
