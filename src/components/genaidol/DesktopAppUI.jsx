@@ -4235,28 +4235,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       if (!author || author === 'Khách mới' || author === 'Khán Giả') return;
       const key = author.toLowerCase().trim();
       
-      // Tuyệt đối chỉ chào mỗi người dùng ĐÚNG 1 LẦN duy nhất trong suốt buổi livestream
+      // Tuyệt đối chỉ chào mỗi người dùng thật ĐÚNG 1 LẦN duy nhất trong suốt buổi livestream
       if (greetedUsernamesRef.current.has(key)) return;
       greetedUsernamesRef.current.add(key);
-      if (greetedUsernamesRef.current.size > 500) {
+      if (greetedUsernamesRef.current.size > 1000) {
         const first = greetedUsernamesRef.current.values().next().value;
         greetedUsernamesRef.current.delete(first);
       }
       
-      // Tự động kích hoạt câu chào riêng biệt theo chuỗi tuần tự không trùng lặp
-      const now = Date.now();
-      let scheduleTime = lastAiGreetingTime.current + 2500;
-      if (scheduleTime < now) scheduleTime = now;
-      lastAiGreetingTime.current = scheduleTime;
-      
-      const delay = scheduleTime - now;
-      if (delay <= 0) {
-        handleLiveEventRef.current?.('VIEWER_JOIN', { name: author });
-      } else {
-        setTimeout(() => {
-          handleLiveEventRef.current?.('VIEWER_JOIN', { name: author });
-        }, delay);
-      }
+      // ⚡ Chào ngay lập tức khi viewer thực sự bước vào phòng live
+      handleLiveEventRef.current?.('VIEWER_JOIN', { name: author });
     });
 
     socket.on('tiktok_disconnected', () => {

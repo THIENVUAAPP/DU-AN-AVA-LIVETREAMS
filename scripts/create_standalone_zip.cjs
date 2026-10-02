@@ -300,6 +300,9 @@ const macCommandLauncher = `#!/bin/bash
 DIR="$( cd "$( dirname "\${BASH_SOURCE[0]}" )" && pwd )"
 cd "$DIR"
 
+# 0. Tự động xóa cờ cách ly macOS Quarantine để tránh bị Gatekeeper chặn
+xattr -dr com.apple.quarantine "$DIR" 2>/dev/null || true
+
 echo "================================================================="
 echo "  🍏 ĐANG KHỞI ĐỘNG HỆ THỐNG AVALIVE LIVESTREAM VIP PRO (macOS)"
 echo "================================================================="
@@ -328,6 +331,7 @@ chflags hidden "$DIR/system" 2>/dev/null || true
 
 cd "$DIR/system"
 chmod +x "$DIR/system/cloudflared" 2>/dev/null || true
+xattr -dr com.apple.quarantine "$DIR/system/cloudflared" 2>/dev/null || true
 
 # 4. Tìm Node.js trên tất cả các vị trí của macOS
 NODE_CMD=""
@@ -341,8 +345,8 @@ for p in \\
     "$HOME/.fnm/current/bin/node"
 do
     if [ -n "$p" ] && [ -x "$p" ]; then
-        NODE_VER=$("$p" -v | tr -d 'v' | cut -d '.' -f 1)
-        if [ "$NODE_VER" -ge 18 ]; then
+        NODE_VER=$("$p" -v 2>/dev/null | tr -d 'v' | cut -d '.' -f 1)
+        if [ -n "$NODE_VER" ] && [ "$NODE_VER" -ge 18 ]; then
             NODE_CMD="$p"
             export PATH="$(dirname "$p"):$PATH"
             break
@@ -353,7 +357,7 @@ done
 # 5. Theo dõi máy chủ sẵn sàng và tự động mở trình duyệt
 (
     APP_URL="http://127.0.0.1:3001/desktop"
-    for i in {1..40}; do
+    for i in {1..50}; do
         if curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:3001" 2>/dev/null | grep -qE "200|304|302|301"; then
             echo "✨ Máy chủ đã sẵn sàng! Đang mở giao diện điều khiển..."
             if [ -d "/Applications/Google Chrome.app" ]; then
@@ -365,9 +369,8 @@ done
             fi
             exit 0
         fi
-        sleep 0.5
+        sleep 0.4
     done
-    open "$APP_URL" 2>/dev/null || open "http://localhost:3001" 2>/dev/null || open "https://avalivepro.vercel.app" 2>/dev/null
 ) &
 
 # 6. Khởi động Server Node.js Core
@@ -377,19 +380,16 @@ if [ -n "$NODE_CMD" ] && [ -f "core.cjs" ]; then
     echo "💡 Mẹo: Bấm phím Control + C trong cửa sổ này để tắt máy chủ khi dùng xong."
     echo ""
     "$NODE_CMD" core.cjs
-elif command -v python3 &>/dev/null && [ -d "app" ]; then
-    echo "⚡ Đang chạy Web Server với Python3..."
-    echo "🌐 Giao diện ứng dụng đang mở tại: http://127.0.0.1:3001"
-    echo ""
-    python3 -m http.server 3001 --directory app
 else
-    echo "⚠️ KHÔNG TÌM THẤY NODE.JS (hoặc phiên bản hiện tại quá cũ, yêu cầu >= v18)!"
-    echo "👉 BẠN CẦN PHẢI CÀI ĐẶT NODE.JS v18+ ĐỂ CHẠY PHẦN MỀM NÀY."
-    echo "👉 Hãy tải bản mới nhất từ: https://nodejs.org/"
-    echo "👉 (Đang tự động mở trang tải Node.js cho bạn...)"
-    open "https://nodejs.org/" 2>/dev/null
-    sleep 5
-    echo "👉 Đang mở phiên bản trực tuyến tại: https://avalivepro.vercel.app"
+    echo "⚠️ ==========================================================="
+    echo "❌ LỖI: CHƯA CÀI ĐẶT NODE.JS HOẶC BẢN HIỆN TẠI DƯỚI v18!"
+    echo "👉 Ứng dụng AvaLive Studio yêu cầu Node.js v18 trở lên."
+    echo "👉 Đang tự động mở trang web https://nodejs.org/ để bạn tải bản LTS..."
+    echo "👉 Sau khi cài đặt Node.js xong, hãy nhấp đúp lại vào file này."
+    echo "==========================================================="
+    open "https://nodejs.org/" 2>/dev/null || true
+    echo ""
+    read -p "Nhấn Enter để mở bản trực tuyến trên Web (Vercel)..."
     open "https://avalivepro.vercel.app" 2>/dev/null || true
 fi
 `;

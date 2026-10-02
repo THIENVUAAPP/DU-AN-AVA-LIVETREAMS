@@ -128,7 +128,7 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, onChatReply, act
 
     const configs = getSavedEventConfigs();
     if (configs.idle?.active === false) return;
-    const idleSeconds = Number(configs.idle?.speakAfterIdleSeconds) || 30;
+    const idleSeconds = Math.max(300, Number(configs.idle?.speakAfterIdleSeconds) || 300);
     idleTimerRef.current = setTimeout(() => {
       const stillUserPaused = typeof localStorage !== 'undefined' && (
         localStorage.getItem('avalive_user_paused') === 'true' || 
@@ -196,7 +196,7 @@ function getSavedEventConfigs() {
       useAi: true,
       commentReplyMode: 'hybrid',
       repeatCommentFirst: true,
-      repeatCommentPrefix: 'Dạ bạn {user} vừa hỏi là: "{comment}". ',
+      repeatCommentPrefix: 'Dạ em cảm ơn bạn {user} đã bình luận là: "{comment}". ',
       unknownFallbackReply: 'Dạ bạn {user} ơi, câu hỏi này em xin phép ghi nhận lại để phản hồi chi tiết cho mình sau nha! Bạn có thể nhắn tin trực tiếp cho shop để nhận hỗ trợ nhanh nhất ạ!',
       appendFollowUpQuestion: true,
       followUpQuestionText: ' Dạ không biết bạn {user} có cần em hỗ trợ thêm điều gì nữa không ạ? Bạn có thể nhắn tin trực tiếp cho shop để nhận tư vấn chi tiết và nhiều ưu đãi nha!',
@@ -489,7 +489,7 @@ function fillTemplate(template, vars = {}) {
           if (!hasKeywordRuleMatch && Array.isArray(commentConfig.keywordRules) && commentConfig.keywordRules.length > 0) {
             for (const rule of commentConfig.keywordRules) {
               if (rule.enabled !== false && rule.keywords) {
-                const kwArr = Array.isArray(rule.keywords) ? rule.keywords : String(rule.keywords).split(/[,;]/);
+                const kwArr = Array.isArray(rule.keywords) ? rule.keywords : String(rule.keywords).split(/[;,]\s*|\n/);
                 if (kwArr.some(k => k.trim() && lowerCommentPreCheck.includes(k.trim().toLowerCase()))) {
                   hasKeywordRuleMatch = true;
                   break;
@@ -542,26 +542,45 @@ function fillTemplate(template, vars = {}) {
         let isKeywordMatched = false;
         const lowerComment = commentText.toLowerCase();
 
-        // 🎯 BƯỚC 2: ƯU TIÊN KIỂM TRA TỪ KHÓA ĐÃ CÀI ĐẶT
-        // 2.3. Kiểm tra bộ quy tắc từ khóa (Keyword Rules của Tab Bình Luận)
+        // 🎯 BƯỚC 2: ƯU TIÊN KIỂM TRA BỘ TỪ KHÓA ĐÃ CÀI ĐẶT (TẤT CẢ NGUỒN TỪ KHÓA)
         if (!isHandled && commentConfig.active !== false && useKw) {
-          if (Array.isArray(commentConfig.keywordRules) && commentConfig.keywordRules.length > 0) {
-            for (const rule of commentConfig.keywordRules) {
-              if (rule.enabled !== false && rule.keywords) {
-                const kwArr = Array.isArray(rule.keywords) ? rule.keywords : String(rule.keywords).split(/[,;]/);
-                const matched = kwArr.some(k => k.trim() && lowerComment.includes(k.trim().toLowerCase()));
-                if (matched && rule.replyText) {
-                  bodyAnswer = fillTemplate(rule.replyText, { user: userName, comment: commentText });
-                  isHandled = true;
-                  isKeywordMatched = true;
-                  // LƯU LẠI ROLE GIỌNG ĐỌC CỦA RULE NÀY ĐỂ GHI ĐÈ LÊN GLOBAL VOICE
-                  if (rule.role || rule.voiceId) {
-                    currentEvConfig._matchedRuleRole = rule.role;
-                    currentEvConfig._matchedRuleVoiceId = rule.voiceId;
-                  }
-                  break;
-                }
+          const allKeywordRules = [];
+          if (Array.isArray(commentConfig.keywordRules)) allKeywordRules.push(...commentConfig.keywordRules);
+          try {
+            const shared = JSON.parse(localStorage.getItem('AVALIVE_KEYWORD_RULES_SHARED') || '[]');
+            if (Array.isArray(shared)) allKeywordRules.push(...shared);
+          } catch (e) {}
+          try {
+            const gv = JSON.parse(localStorage.getItem('game_voice_settings') || '{}');
+            if (Array.isArray(gv.keywordRules)) allKeywordRules.push(...gv.keywordRules);
+          } catch (e) {}
+          try {
+            const qr = JSON.parse(localStorage.getItem('aidol_quick_rules') || '[]');
+            if (Array.isArray(qr)) allKeywordRules.push(...qr);
+          } catch (e) {}
+
+          const seenRules = new Set();
+          for (const rule of allKeywordRules) {
+            if (!rule || rule.enabled === false || !rule.keywords) continue;
+            const rKey = (rule.id || '') + '_' + String(rule.keywords);
+            if (seenRules.has(rKey)) continue;
+            seenRules.add(rKey);
+
+            const kwArr = Array.isArray(rule.keywords) ? rule.keywords : String(rule.keywords).split(/[;,]\s*|\n/);
+            const matched = kwArr.some(k => {
+              const cleanK = k.trim().toLowerCase();
+              return cleanK.length > 0 && lowerComment.includes(cleanK);
+            });
+            if (matched && (rule.replyText || rule.reply)) {
+              const replyTpl = rule.replyText || rule.reply;
+              bodyAnswer = fillTemplate(replyTpl, { user: userName, comment: commentText });
+              isHandled = true;
+              isKeywordMatched = true;
+              if (rule.role || rule.voiceId) {
+                currentEvConfig._matchedRuleRole = rule.role;
+                currentEvConfig._matchedRuleVoiceId = rule.voiceId;
               }
+              break;
             }
           }
         }
@@ -627,7 +646,7 @@ function fillTemplate(template, vars = {}) {
               const liveContext = `Livestream bán hàng và tương tác trực tuyến. Sản phẩm chính: ${product}. Giá: ${price}. Ưu đãi: ${promo}. Tính năng: ${features}. Cửa hàng: ${company}.`;
               const aiPrompt = commentConfig.aiPrompt 
                 ? fillTemplate(commentConfig.aiPrompt, { user: userName, comment: commentText, product })
-                : `Khán giả "${userName}" vừa hỏi trên livestream: "${commentText}". Hãy trả lời ngắn gọn, thông minh, lịch sự, thân thiện trong 1-2 câu ngắn (tối đa 25 từ). Tự xưng là "em" và gọi khán giả là "bạn ${userName}".`;
+                : `Khán giả "${userName}" vừa bình luận trên livestream: "${commentText}". Hãy trả lời cực kỳ chuyên nghiệp, ngắn gọn, súc tích, dễ hiểu và đúng trọng tâm câu hỏi trong 1-2 câu ngắn (tối đa 20-25 từ). Tự xưng là "em" và gọi khán giả là "bạn ${userName}". Tuyệt đối không trả lời lan man hay dài dòng.`;
 
               const aiRes = await askGeminiLiveAi({
                 question: commentText,

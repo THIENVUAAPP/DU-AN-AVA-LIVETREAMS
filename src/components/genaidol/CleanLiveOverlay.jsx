@@ -1476,19 +1476,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               const isMasterPlaying = !!event.data.isPlaying;
               const v = overlayVideoRef.current;
 
-              if (event.data.selectedCharacter && masterState.selectedCharacter !== event.data.selectedCharacter) {
-                setMasterState(prev => ({
-                  ...prev,
-                  selectedCharacter: event.data.selectedCharacter,
-                  mediaUrl: event.data.mediaUrl || prev.mediaUrl
-                }));
-              } else if (event.data.mediaUrl && !isSameMediaUrl(masterState.mediaUrl, event.data.mediaUrl)) {
-                setMasterState(prev => ({
-                  ...prev,
-                  mediaUrl: event.data.mediaUrl
-                }));
-              }
-
               if (v) {
                 // 🎯 1. Chỉ hard seek khi có cờ force chủ động từ Streamer (tua/restart)
                 if (event.data.force && typeof masterTime === 'number' && !isNaN(masterTime) && masterTime > 0) {
