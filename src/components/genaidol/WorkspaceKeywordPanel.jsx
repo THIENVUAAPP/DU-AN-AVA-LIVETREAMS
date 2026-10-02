@@ -402,6 +402,18 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
               <option key={v.id} value={v.id}>{v.name} - {v.provider} ({v.gender})</option>
             ))}
           </select>
+          <button
+            onClick={() => {
+              const voice = ALL_SYSTEM_VOICES.find(v => v.id === (currentConfig.voiceId || 'free_vi_female'));
+              if (voice) {
+                previewVoiceAudio(voice, "Xin chào, đây là giọng đọc thử của hệ thống AI.", () => {}, true);
+              }
+            }}
+            className="px-3 py-2 bg-purple-600/20 hover:bg-purple-600/40 text-purple-300 rounded-lg text-xs font-bold flex items-center gap-1 transition-all cursor-pointer border border-purple-500/30 shrink-0"
+            title="Nghe thử giọng đọc"
+          >
+            🔊 Nghe thử
+          </button>
         </div>
       </div>
       <div className="p-3 bg-[#161922] rounded-xl border border-purple-500/30 flex flex-wrap items-center gap-4">
@@ -476,7 +488,7 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
                 <option value="assistant">💼 Giọng Trợ Lý</option>
                 <option value="game">🎮 Giọng BLV Game</option>
                 {ALL_SYSTEM_VOICES.map(v => (
-                  <option key={v.id} value={v.id}>🔊 {v.name} ({v.gender === 'Female' ? 'Nữ' : 'Nam'})</option>
+                  <option key={v.id} value={v.id}>🔊 {v.name} - {v.provider} ({v.gender})</option>
                 ))}
               </select>
 

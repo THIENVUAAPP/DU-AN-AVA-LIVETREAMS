@@ -2645,19 +2645,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         </div>
       )}
 
-      {/* KHUNG PHÁT SÓNG SẠCH 100% PURE FULL-FRAME (CHUẨN 9:16 HOẶC 16:9 - SIÊU SẮC NÉT OBS / TIKTOK STUDIO, 100% NGUYÊN BẢN KHÔNG CO MÉO, KHÔNG VIỀN ĐEN) */}
       <main className="absolute inset-0 w-full h-full overflow-hidden flex items-center justify-center bg-black z-0">
         <div 
-          className="relative flex items-center justify-center overflow-hidden"
-          style={{ 
-            aspectRatio: ratio === '16:9' ? '16/9' : '9/16',
-            height: '100%',
-            maxHeight: '100%',
-            width: 'auto',
-            maxWidth: '100%',
-            margin: '0 auto',
-            position: 'relative'
-          }}
+          className="relative flex items-center justify-center overflow-hidden w-full h-full"
+          style={{ position: 'relative' }}
         >
           {/* ⚡ 1. TOPMOST LAYER: VIDEO PHẢN HỒI NHANH KHẨN CẤP */}
           {quickResponseVideo?.url && (

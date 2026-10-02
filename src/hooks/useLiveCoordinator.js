@@ -486,13 +486,19 @@ function fillTemplate(template, vars = {}) {
             }
           }
           // Kiểm tra Keyword Rules (bộ quy tắc từ khóa Tab Bình Luận)
-          if (!hasKeywordRuleMatch && Array.isArray(commentConfig.keywordRules) && commentConfig.keywordRules.length > 0) {
-            for (const rule of commentConfig.keywordRules) {
-              if (rule.enabled !== false && rule.keywords) {
-                const kwArr = Array.isArray(rule.keywords) ? rule.keywords : String(rule.keywords).split(/[;,]\s*|\n/);
-                if (kwArr.some(k => k.trim() && lowerCommentPreCheck.includes(k.trim().toLowerCase()))) {
-                  hasKeywordRuleMatch = true;
-                  break;
+          if (!hasKeywordRuleMatch) {
+            const rulesToCheck = [];
+            if (Array.isArray(commentConfig.keywordRules)) rulesToCheck.push(...commentConfig.keywordRules);
+            if (Array.isArray(scriptConfig.keywordRules)) rulesToCheck.push(...scriptConfig.keywordRules);
+            if (Array.isArray(checkoutConfig.keywordRules)) rulesToCheck.push(...checkoutConfig.keywordRules);
+            if (rulesToCheck.length > 0) {
+              for (const rule of rulesToCheck) {
+                if (rule.enabled !== false && rule.keywords) {
+                  const kwArr = Array.isArray(rule.keywords) ? rule.keywords : String(rule.keywords).split(/[;,]\s*|\n/);
+                  if (kwArr.some(k => k.trim() && lowerCommentPreCheck.includes(k.trim().toLowerCase()))) {
+                    hasKeywordRuleMatch = true;
+                    break;
+                  }
                 }
               }
             }
@@ -568,6 +574,8 @@ function fillTemplate(template, vars = {}) {
         if (!isHandled && commentConfig.active !== false) {
           const allKeywordRules = [];
           if (Array.isArray(commentConfig.keywordRules)) allKeywordRules.push(...commentConfig.keywordRules);
+          if (Array.isArray(scriptConfig.keywordRules)) allKeywordRules.push(...scriptConfig.keywordRules);
+          if (Array.isArray(checkoutConfig.keywordRules)) allKeywordRules.push(...checkoutConfig.keywordRules);
           try {
             const shared = JSON.parse(localStorage.getItem('AVALIVE_KEYWORD_RULES_SHARED') || '[]');
             if (Array.isArray(shared)) allKeywordRules.push(...shared);

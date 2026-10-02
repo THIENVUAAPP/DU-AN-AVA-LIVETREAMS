@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.41';
+export const APP_VERSION = '5.4.42';
 export const RELEASE_DATE = '02/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.42 - Fix Full Khung Hình OBS, Nút Play Nghe Thử Voice, & Tối Ưu Nạp File Từ Khóa Bình Luận',
+    description: '1. Sửa Lỗi Hiển Thị Full Khung Hình Trên TikTok Live Studio: Tháo bỏ lớp khóa tỷ lệ cứng 9:16, phần mềm sẽ tự động lấy đúng 100% tỷ lệ khung hình người dùng vẽ trên OBS/TikTok Studio. Video phát tự động "cover" phủ đầy không để lại viền đen, tuyệt đối không bị móp méo hay vỡ khung video. 2. Đồng Bộ Giọng AI & Nút Play Nghe Thử: Chỉnh sửa lại toàn bộ giao diện chọn giọng AI đồng nhất. Bổ sung nút bấm "Nghe thử" giọng đọc trực tiếp trên giao diện để người dùng nghe thử âm sắc trước khi lưu cài đặt. 3. Sửa Lỗi Không Nhận File Từ Khóa Bình Luận Tải Lên: Tối ưu quy trình nhận diện từ khóa ưu tiên 100%. Nếu khớp từ khóa (dù tải file ở tab bán hàng hay tab bình luận), hệ thống sẽ trả lời ngay lập tức bằng câu đã cài. Nếu không khớp bất kỳ từ khóa nào, hệ thống mới gửi cho bộ não Gemini xử lý. Đảm bảo luồng AI trơn tru và chính xác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.41 - Chuẩn Hóa Chào Người Mới Realtime, Đọc Tên & Nhắc Lại Comment, Ưu Tiên Từ Khóa Tuyệt Đối & Khóa Khung 9:16 Không Méo Hình',
     description: '1. Chào Đúng Khán Giả Thật Vào Phòng Live: Loại bỏ 100% người xem ảo hoặc tự bịa tên. Chỉ kích hoạt chào mừng khi có viewer thực sự tham gia (tiktok_member), đọc đúng tên khán giả, mỗi người chỉ chào 1 lần duy nhất, tách biệt hoàn toàn với đọc bình luận. 2. Đọc Tên User & Nhắc Lại Bình Luận Chuẩn Mực: Tự động ghép tiền tố trang trọng đọc tên khán giả và nhắc lại câu hỏi ("Dạ em cảm ơn bạn {user} đã hỏi/bình luận: {comment}"). Ưu tiên xử lý 100% danh sách từ khóa/câu hỏi người dùng đã cài đặt trước. Chỉ khi không khớp bất kỳ từ khóa nào mới dùng Gemini AI trả lời ngắn gọn súc tích trong đúng 1 câu (15-20 từ). 3. Khóa Cứng Khung Hình 9:16 Window Capture OBS & TikTok Live Studio: Căn giữa hoàn hảo, chuyển mặc định hiển thị sang cover chống bành trướng, méo mó hoặc vỡ khung video. Khử triệt để lỗi chớp nháy đen màn hình khi avatar bắt đầu/kết thúc nói chuyện.'
