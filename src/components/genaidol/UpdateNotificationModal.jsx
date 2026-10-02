@@ -2,10 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.37';
-export const RELEASE_DATE = '01/10/2026';
+export const APP_VERSION = '5.4.38';
+export const RELEASE_DATE = '02/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.38 - Khắc Phục Triệt Để Lỗi Chồng Giọng, Tối Ưu Phản Hồi Từ Khóa & Fix Tràn Viền Window Capture OBS',
+    description: '1. Khắc Phục Lỗi Trùng Giọng (Double Voice): Tách biệt hoàn toàn AI hệ thống và AI Game Bản Đồ. Hệ thống sẽ không bao giờ phát 2 giọng nói đè lên nhau kể cả khi có nhiều bình luận cùng lúc. 2. Phản Hồi Từ Khóa Không Lan Man: Khi khớp đúng 100% từ khóa người dùng cài đặt, AI sẽ trả lời trực tiếp ngay lập tức bằng câu lệnh đã cấu hình, loại bỏ hoàn toàn câu chào lan man. 3. Sửa Lỗi Cắt Khung Hình Window Capture: Tối ưu bộ hiển thị CleanLiveOverlay tự động (Fill / Kéo dãn) để không bao giờ bị cắt mất hình ảnh khi kết nối OBS hoặc TikTok Live Studio. 4. Xóa Rung Giật Video (CEF Flickering): Khử bỏ các hiệu ứng phần cứng không tương thích với TikTok Live Studio, video phát mượt mà tuyệt đối ở 60 FPS.'
+  },
+
   {
     title: '⚡ Bản Cập Nhật v5.4.35 - Khóa Chặn Triệt Để Lỗi Tự Động Bật Sân Khấu Chính Khi Đã Ngắt Kết Nối',
     description: '1. Khóa Chặn Hệ Thống Đồng Bộ Ở Cấp Độ Lõi: Sau khi người dùng nhấn Ngắt Kết Nối hoặc Tắt Tất Cả, Sân Khấu Chính sẽ bị khóa chặt 100%. Các luồng dữ liệu tự động từ Sân Khấu Phụ (Idol Studio) sẽ bị tường lửa chặn lại hoàn toàn, không thể tự động bắn tín hiệu đè lên Sân Khấu Chính. Màn hình Sân Khấu Chính sẽ duy trì trạng thái đóng băng đen hoàn toàn đúng như chỉ đạo của người dùng. 2. Loại Bỏ Triệt Để Lỗi Tự Phát Video: Bất kỳ lệnh điều khiển video nào cũng không thể vượt quyền khi Đồng Bộ đang ở trạng thái Tắt.'
