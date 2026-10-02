@@ -19,81 +19,42 @@ export default async function handler(req, res) {
       isMac = userAgent.includes('mac');
     }
 
-    // Đọc phiên bản mới nhất từ package.json hoặc fallback version hiện tại
-    let currentVersion = '5.4.32';
-    try {
-      const fs = await import('fs');
-      const path = await import('path');
-      const pkgPath = path.resolve(process.cwd(), 'package.json');
-      if (fs.existsSync(pkgPath)) {
-        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-        if (pkg.version) currentVersion = pkg.version;
-      }
-    } catch (e) {}
-
     const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
-    const targetFileName = `${osPrefix}_v${currentVersion}.zip`;
-
-    let downloadUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${currentVersion}/${targetFileName}`;
+    let targetFileName = `${osPrefix}.zip`;
+    let downloadUrl = '';
 
     try {
       const token = process.env.GITHUB_TOKEN || '';
       const headers = { 'User-Agent': 'AvaLive-Download-Agent/1.0', 'Accept': 'application/vnd.github.v3+json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      // 1. Ưu tiên cao nhất: Kiểm tra tag của đúng phiên bản hiện tại v${currentVersion}
-      const tagRes = await fetch(`https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/tags/v${currentVersion}`, { headers });
-      let foundAsset = false;
-      if (tagRes.ok) {
-        const rel = await tagRes.json();
-        const asset = (rel.assets || []).find(a => a.name && (a.name === targetFileName || (a.name.startsWith(osPrefix) && a.name.endsWith('.zip'))));
+      // LUÔN LẤY LATEST RELEASE TRỰC TIẾP TỪ GITHUB (TRÁNH LỖI VERCEL CACHE / CHƯA DEPLOY)
+      const latestRes = await fetch('https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/latest', { headers });
+      if (latestRes.ok) {
+        const release = await latestRes.json();
+        const asset = (release.assets || []).find(a => a.name && (a.name.startsWith(osPrefix) && a.name.endsWith('.zip')));
         if (asset && asset.browser_download_url) {
           downloadUrl = asset.browser_download_url;
-          foundAsset = true;
-        }
-      }
-
-      // 2. Nếu chưa có trên tag hiện tại, quét danh sách Releases mới nhất
-      if (!foundAsset) {
-        const relsRes = await fetch('https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases?per_page=15', { headers });
-        if (relsRes.ok) {
-          const releases = await relsRes.json();
-          if (Array.isArray(releases)) {
-            // Ưu tiên theo tên file phiên bản hiện tại
-            for (const rel of releases) {
-              const asset = (rel.assets || []).find(a => a.name && a.name === targetFileName);
-              if (asset && asset.browser_download_url) {
-                downloadUrl = asset.browser_download_url;
-                foundAsset = true;
-                break;
-              }
-            }
-            // Nếu vẫn chưa có, lấy asset zip mới nhất của OS này
-            if (!foundAsset) {
-              for (const rel of releases) {
-                const asset = (rel.assets || []).find(a => a.name && a.name.startsWith(osPrefix) && a.name.endsWith('.zip'));
-                if (asset && asset.browser_download_url) {
-                  downloadUrl = asset.browser_download_url;
-                  foundAsset = true;
-                  break;
-                }
-              }
-            }
-          }
+          targetFileName = asset.name;
         }
       }
     } catch (e) {
       console.warn('API releases fetch warning:', e.message);
     }
 
-    // 🚀 TĂNG TỐC ĐỘ TẢI SIÊU NHANH BẰNG CLOUDFLARE EDGE CDN MIRROR (CHỐNG NGHẼN MẠNG & CHỐNG LỖI TẢI VỀ 100%)
+    if (!downloadUrl) {
+      // Fallback
+      downloadUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/latest/download/${targetFileName}`;
+    }
+
+    // TĂNG TỐC DOWNLOAD
     let acceleratedUrl = `https://gh-proxy.com/${downloadUrl}`;
 
-    // Redirect trực tiếp tới asset stream với Header ép tải file
+    // Xóa bộ nhớ đệm trình duyệt & Vercel để khách luôn tải bản mới
     res.setHeader('Location', acceleratedUrl);
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="${targetFileName}"`);
-    res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=120');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     return res.status(302).end();
   } catch (err) {
     console.error('Download handler error:', err);
