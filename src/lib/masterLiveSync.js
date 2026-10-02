@@ -65,6 +65,12 @@ export function getMasterLiveState() {
 export function syncMasterLiveState(partialState, socket = null) {
   if (typeof window === 'undefined') return;
 
+  // 🛑 FIX: KHI NGƯỜI DÙNG ĐÃ NGẮT KẾT NỐI SÂN KHẤU CHÍNH, CHẶN ĐỨT MỌI TÍN HIỆU CẬP NHẬT TỰ ĐỘNG KHÁC!
+  const isMasterStageSynced = localStorage.getItem('avalive_master_sync_active') === 'true';
+  if (!isMasterStageSynced && partialState.type !== 'CLEAR_STAGE' && partialState.clearMedia !== true && partialState.stage !== 'offline') {
+    return;
+  }
+
   const current = getMasterLiveState() || {};
   let tunnelUrl = partialState.tunnelUrl || current.tunnelUrl;
   if (!tunnelUrl && typeof window !== 'undefined') {
@@ -178,6 +184,12 @@ export function syncMasterLiveState(partialState, socket = null) {
 
 export function sendVideoControl(control, socket = null) {
   if (typeof window === 'undefined' || !control) return;
+
+  // 🛑 FIX: KHI NGƯỜI DÙNG ĐÃ NGẮT KẾT NỐI SÂN KHẤU CHÍNH, CHẶN MỌI LỆNH ĐIỀU KHIỂN PLAY/PAUSE (TRỪ CLEAR)
+  const isMasterStageSynced = localStorage.getItem('avalive_master_sync_active') === 'true';
+  if (!isMasterStageSynced && !control.clearMedia && control.action !== 'stop') {
+    return;
+  }
 
   const payload = {
     ...control,
