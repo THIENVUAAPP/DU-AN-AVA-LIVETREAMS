@@ -65,6 +65,10 @@ export default function EventVoiceTester({
   pauseBetweenSentences = 0.0,
   onPauseChange = null,
   onVoiceChange = null,
+  defaultSpeed = 1.0,
+  onSpeedChange = null,
+  defaultVolume = 1.0,
+  onVolumeChange = null,
   onScriptOptimized = null,
   label = 'Nghe thử câu thoại',
   theme = 'light', // 'light' | 'dark'
@@ -97,8 +101,8 @@ export default function EventVoiceTester({
   const [isPlaying, setIsPlaying] = useState(false);
   const [currentSentenceIdx, setCurrentSentenceIdx] = useState(0);
   const [totalSentences, setTotalSentences] = useState(0);
-  const [volume, setVolume] = useState(1.0); // 0.0 to 1.0
-  const [speed, setSpeed] = useState(1.0); // 0.75 to 2.0
+  const [volume, setVolume] = useState(defaultVolume !== undefined ? Number(defaultVolume) : 1.0);
+  const [speed, setSpeed] = useState(defaultSpeed !== undefined ? Number(defaultSpeed) : 1.0);
   const [pauseDuration, setPauseDuration] = useState(getInitialPause); // 0.0 to 1.0s
   const [favoriteIds, setFavoriteIds] = useState(getFavoriteVoiceIds());
 

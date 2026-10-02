@@ -3454,7 +3454,11 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                           <EventVoiceTester 
                             text={currentConfig.sampleAnswers || 'Xin chào và cảm ơn bạn đã tương tác cùng phiên livestream nhé!'}
                             defaultVoiceId={currentConfig.voiceId || "free_vi_female"}
+                            defaultSpeed={currentConfig.voiceRate !== undefined ? currentConfig.voiceRate : 1.0}
+                            defaultVolume={currentConfig.voiceVolume !== undefined ? currentConfig.voiceVolume : 1.0}
                             onVoiceChange={(vid) => handleSimpleChange('voiceId', vid)}
+                            onSpeedChange={(val) => handleSimpleChange('voiceRate', val)}
+                            onVolumeChange={(val) => handleSimpleChange('voiceVolume', val)}
                             label={`Nghe thử & Lưu Giọng đọc (${selectedEventInfo?.label || 'Sự kiện'})`}
                             compact={false}
                           />
@@ -3709,7 +3713,11 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                       <EventVoiceTester 
                         text={currentConfig.assistantPrompt || 'Dạ vâng, cảm ơn mọi người đã theo dõi live nha!'}
                         defaultVoiceId={currentConfig.assistantVoiceId || "free_vi_female"}
+                        defaultSpeed={currentConfig.assistantVoiceRate !== undefined ? currentConfig.assistantVoiceRate : 1.0}
+                        defaultVolume={currentConfig.assistantVoiceVolume !== undefined ? currentConfig.assistantVoiceVolume : 1.0}
                         onVoiceChange={(vid) => handleSimpleChange('assistantVoiceId', vid)}
+                        onSpeedChange={(val) => handleSimpleChange('assistantVoiceRate', val)}
+                        onVolumeChange={(val) => handleSimpleChange('assistantVoiceVolume', val)}
                         label={`Nghe thử câu Trợ lý (${selectedEventInfo?.label || 'Sự kiện'})`}
                         compact={false}
                       />
