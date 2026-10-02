@@ -2993,6 +2993,174 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                     
                     <div className="flex flex-col gap-3">
                       
+
+                      {currentConfig.videoCategory !== undefined && (
+                        <div className="flex items-center">
+                          <FieldLabel icon="🎥" text="Danh mục video" helpKey="videoCategory" />
+                          <input type="text" name="videoCategory" value={currentConfig.videoCategory} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                        </div>
+                      )}
+
+                      {currentConfig.priority !== undefined && (
+                        <div className="flex items-center">
+                          <FieldLabel icon="⭐" text="Độ ưu tiên" helpKey="priority" />
+                          <input type="number" name="priority" value={currentConfig.priority} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                        </div>
+                      )}
+                      
+                      <div className="flex items-center">
+                        <FieldLabel icon="✅" text="Kích hoạt" helpKey="active" htmlFor={`active-${selectedEventId}`} />
+                        <input 
+                          type="checkbox" 
+                          id={`active-${selectedEventId}`} 
+                          name="active" 
+                          checked={currentConfig.active !== false} 
+                          onChange={(e) => updateEventConfig(selectedEventId, { active: e.target.checked })} 
+                          className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" 
+                        />
+                      </div>
+
+                      {selectedEventId !== 'talking' && selectedEventId !== 'idle' && (
+                        <div className="flex items-center">
+                          <FieldLabel icon="🗣️" text="Dùng giọng nói" helpKey="useVoice" htmlFor={`useVoice-${selectedEventId}`} />
+                          <input 
+                            type="checkbox" 
+                            id={`useVoice-${selectedEventId}`} 
+                            name="useVoice" 
+                            checked={currentConfig.useVoice !== false} 
+                            onChange={(e) => updateEventConfig(selectedEventId, { useVoice: e.target.checked })} 
+                            className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" 
+                          />
+                        </div>
+                      )}
+
+                      {selectedEventId !== 'talking' && selectedEventId !== 'idle' && (
+                        <div className="flex items-center">
+                          <FieldLabel icon="🔇" text="Tắt âm gốc video" helpKey="muteSourceVideo" htmlFor={`muteSourceVideo-${selectedEventId}`} />
+                          <input 
+                            type="checkbox" 
+                            id={`muteSourceVideo-${selectedEventId}`} 
+                            name="muteSourceVideo" 
+                            checked={currentConfig.muteSourceVideo !== false} 
+                            onChange={(e) => updateEventConfig(selectedEventId, { muteSourceVideo: e.target.checked })} 
+                            className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" 
+                          />
+                        </div>
+                      )}
+
+                      {selectedEventId !== 'idle' && selectedEventId !== 'apology' && (
+                        <div className="flex items-center">
+                          <FieldLabel icon="🧠" text="Dùng AI trả lời" helpKey="useAi" htmlFor={`useAi-${selectedEventId}`} />
+                          <input 
+                            type="checkbox" 
+                            id={`useAi-${selectedEventId}`} 
+                            name="useAi" 
+                            checked={currentConfig.useAi !== false} 
+                            onChange={(e) => updateEventConfig(selectedEventId, { useAi: e.target.checked })} 
+                            className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" 
+                          />
+                        </div>
+                      )}
+                      
+                      {selectedEventId === 'thanks_heart' && (
+                        <div className="flex items-center">
+                          <FieldLabel icon="❤️" text="Ngưỡng tim để cảm ơn" helpKey="likeThreshold" />
+                          <input type="number" name="likeThreshold" value={currentConfig.likeThreshold} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                        </div>
+                      )}
+
+                      {(selectedEventId === 'apology' || selectedEventId === 'welcome') && (
+                        <div className="flex items-center">
+                          <FieldLabel icon="⏱️" text="Số phút để chào" helpKey="greetMinutes" />
+                          <input type="number" name="greetMinutes" value={currentConfig.greetMinutes} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                        </div>
+                      )}
+
+                      {(selectedEventId === 'comment' || selectedEventId === 'follow') && (
+                        <div className="flex items-center">
+                          <FieldLabel icon="⏳" text={`Chờ giữa các ${selectedEventId === 'comment' ? 'comment' : 'follow'} (giây)`} helpKey="waitBetweenEvents" />
+                          <input type="number" name="waitBetweenEvents" value={currentConfig.waitBetweenEvents} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                        </div>
+                      )}
+
+                      {selectedEventId === 'comment' && (
+                        <>
+                          <div className="flex items-center mt-1">
+                            <FieldLabel icon="📊" text="Tỷ lệ trả lời (%)" helpKey="replyRate" />
+                            <input type="number" name="replyRate" value={currentConfig.replyRate} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                          </div>
+                          
+                          {/* Từ khóa cấm */}
+                          <div className="flex flex-col sm:flex-row sm:items-start gap-2 mt-1">
+                            <div className="flex items-center justify-between sm:justify-start sm:min-w-[170px]">
+                              <FieldLabel icon="🚫" text="Từ khóa cấm" helpKey="bannedWords" />
+                              <div className="sm:hidden">
+                                <UniversalFileUploadButton 
+                                  onLoaded={(text) => handleSimpleChange('bannedWords', text)} 
+                                  label="Nạp File" 
+                                />
+                              </div>
+                            </div>
+                            <div className="flex-1 flex flex-col gap-1">
+                              <div className="hidden sm:flex justify-end">
+                                <UniversalFileUploadButton 
+                                  onLoaded={(text) => handleSimpleChange('bannedWords', text)} 
+                                  label="Nạp File Từ Khóa Cấm (.docx, .pdf, .txt, .json, .xlsx)" 
+                                />
+                              </div>
+                              <textarea 
+                                name="bannedWords" 
+                                value={currentConfig.bannedWords} 
+                                onChange={handleChange} 
+                                placeholder="Nhập hoặc nạp danh sách từ khóa cấm (mỗi dòng 1 từ hoặc cách nhau bởi dấu phẩy)..."
+                                className="w-full h-[65px] border border-gray-300 rounded-lg p-2 text-xs resize-none bg-gray-50 focus:bg-white focus:outline-blue-500 font-medium" 
+                              />
+                            </div>
+                          </div>
+
+                          {/* Từ khóa ưu tiên */}
+                          <div className="flex flex-col sm:flex-row sm:items-start gap-2 mt-1">
+                            <div className="flex items-center justify-between sm:justify-start sm:min-w-[170px]">
+                              <FieldLabel icon="⭐" text="Từ khóa ưu tiên" helpKey="priorityWords" />
+                              <div className="sm:hidden">
+                                <UniversalFileUploadButton 
+                                  onLoaded={(text) => handleSimpleChange('priorityWords', text)} 
+                                  label="Nạp File" 
+                                />
+                              </div>
+                            </div>
+                            <div className="flex-1 flex flex-col gap-1">
+                              <div className="hidden sm:flex justify-end">
+                                <UniversalFileUploadButton 
+                                  onLoaded={(text) => handleSimpleChange('priorityWords', text)} 
+                                  label="Nạp File Từ Khóa Ưu Tiên (.docx, .pdf, .txt, .json, .xlsx)" 
+                                />
+                              </div>
+                              <textarea 
+                                name="priorityWords" 
+                                value={currentConfig.priorityWords} 
+                                onChange={handleChange} 
+                                placeholder="Nhập hoặc nạp danh sách từ khóa ưu tiên trả lời trước..."
+                                className="w-full h-[65px] border border-gray-300 rounded-lg p-2 text-xs resize-none bg-gray-50 focus:bg-white focus:outline-blue-500 font-medium" 
+                              />
+                            </div>
+                          </div>
+
+                          <div className="flex items-center mt-1">
+                            <FieldLabel icon="🛡️" text="Bật bộ lọc spam thông minh" helpKey="smartSpamFilter" htmlFor="smartSpamFilter-comment" />
+                            <input type="checkbox" id="smartSpamFilter-comment" name="smartSpamFilter" checked={currentConfig.smartSpamFilter} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" />
+                          </div>
+                          <div className="flex items-center">
+                            <FieldLabel icon="⏱️" text="Chờ giữa các comment spam (giây)" helpKey="waitBetweenSpam" />
+                            <input type="number" name="waitBetweenSpam" value={currentConfig.waitBetweenSpam} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                          </div>
+                          <div className="flex items-center">
+                            <FieldLabel icon="🔤" text="Tỷ lệ ký tự lặp lại tối đa (0.0-1.0)" helpKey="maxRepeatChars" />
+                            <input type="number" step="0.1" name="maxRepeatChars" value={currentConfig.maxRepeatChars} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
+                          </div>
+                        </>
+                      )}
+
                       {/* Cấu hình tương tác Bình luận Thông minh 4 bước Đỉnh Cao */}
                       {selectedEventId === 'comment' && (
                         <div className="p-3.5 rounded-xl bg-gradient-to-br from-purple-50 via-indigo-50/70 to-blue-50 border border-purple-200 mb-3 space-y-4 shadow-sm">
@@ -3216,173 +3384,6 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                           </div>
 
                         </div>
-                      )}
-
-                      {currentConfig.videoCategory !== undefined && (
-                        <div className="flex items-center">
-                          <FieldLabel icon="🎥" text="Danh mục video" helpKey="videoCategory" />
-                          <input type="text" name="videoCategory" value={currentConfig.videoCategory} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
-                        </div>
-                      )}
-
-                      {currentConfig.priority !== undefined && (
-                        <div className="flex items-center">
-                          <FieldLabel icon="⭐" text="Độ ưu tiên" helpKey="priority" />
-                          <input type="number" name="priority" value={currentConfig.priority} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
-                        </div>
-                      )}
-                      
-                      <div className="flex items-center">
-                        <FieldLabel icon="✅" text="Kích hoạt" helpKey="active" htmlFor={`active-${selectedEventId}`} />
-                        <input 
-                          type="checkbox" 
-                          id={`active-${selectedEventId}`} 
-                          name="active" 
-                          checked={currentConfig.active !== false} 
-                          onChange={(e) => updateEventConfig(selectedEventId, { active: e.target.checked })} 
-                          className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" 
-                        />
-                      </div>
-
-                      {selectedEventId !== 'talking' && selectedEventId !== 'idle' && (
-                        <div className="flex items-center">
-                          <FieldLabel icon="🗣️" text="Dùng giọng nói" helpKey="useVoice" htmlFor={`useVoice-${selectedEventId}`} />
-                          <input 
-                            type="checkbox" 
-                            id={`useVoice-${selectedEventId}`} 
-                            name="useVoice" 
-                            checked={currentConfig.useVoice !== false} 
-                            onChange={(e) => updateEventConfig(selectedEventId, { useVoice: e.target.checked })} 
-                            className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" 
-                          />
-                        </div>
-                      )}
-
-                      {selectedEventId !== 'talking' && selectedEventId !== 'idle' && (
-                        <div className="flex items-center">
-                          <FieldLabel icon="🔇" text="Tắt âm gốc video" helpKey="muteSourceVideo" htmlFor={`muteSourceVideo-${selectedEventId}`} />
-                          <input 
-                            type="checkbox" 
-                            id={`muteSourceVideo-${selectedEventId}`} 
-                            name="muteSourceVideo" 
-                            checked={currentConfig.muteSourceVideo !== false} 
-                            onChange={(e) => updateEventConfig(selectedEventId, { muteSourceVideo: e.target.checked })} 
-                            className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" 
-                          />
-                        </div>
-                      )}
-
-                      {selectedEventId !== 'idle' && selectedEventId !== 'apology' && (
-                        <div className="flex items-center">
-                          <FieldLabel icon="🧠" text="Dùng AI trả lời" helpKey="useAi" htmlFor={`useAi-${selectedEventId}`} />
-                          <input 
-                            type="checkbox" 
-                            id={`useAi-${selectedEventId}`} 
-                            name="useAi" 
-                            checked={currentConfig.useAi !== false} 
-                            onChange={(e) => updateEventConfig(selectedEventId, { useAi: e.target.checked })} 
-                            className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" 
-                          />
-                        </div>
-                      )}
-                      
-                      {selectedEventId === 'thanks_heart' && (
-                        <div className="flex items-center">
-                          <FieldLabel icon="❤️" text="Ngưỡng tim để cảm ơn" helpKey="likeThreshold" />
-                          <input type="number" name="likeThreshold" value={currentConfig.likeThreshold} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
-                        </div>
-                      )}
-
-                      {(selectedEventId === 'apology' || selectedEventId === 'welcome') && (
-                        <div className="flex items-center">
-                          <FieldLabel icon="⏱️" text="Số phút để chào" helpKey="greetMinutes" />
-                          <input type="number" name="greetMinutes" value={currentConfig.greetMinutes} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
-                        </div>
-                      )}
-
-                      {(selectedEventId === 'comment' || selectedEventId === 'follow') && (
-                        <div className="flex items-center">
-                          <FieldLabel icon="⏳" text={`Chờ giữa các ${selectedEventId === 'comment' ? 'comment' : 'follow'} (giây)`} helpKey="waitBetweenEvents" />
-                          <input type="number" name="waitBetweenEvents" value={currentConfig.waitBetweenEvents} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
-                        </div>
-                      )}
-
-                      {selectedEventId === 'comment' && (
-                        <>
-                          <div className="flex items-center mt-1">
-                            <FieldLabel icon="📊" text="Tỷ lệ trả lời (%)" helpKey="replyRate" />
-                            <input type="number" name="replyRate" value={currentConfig.replyRate} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
-                          </div>
-                          
-                          {/* Từ khóa cấm */}
-                          <div className="flex flex-col sm:flex-row sm:items-start gap-2 mt-1">
-                            <div className="flex items-center justify-between sm:justify-start sm:min-w-[170px]">
-                              <FieldLabel icon="🚫" text="Từ khóa cấm" helpKey="bannedWords" />
-                              <div className="sm:hidden">
-                                <UniversalFileUploadButton 
-                                  onLoaded={(text) => handleSimpleChange('bannedWords', text)} 
-                                  label="Nạp File" 
-                                />
-                              </div>
-                            </div>
-                            <div className="flex-1 flex flex-col gap-1">
-                              <div className="hidden sm:flex justify-end">
-                                <UniversalFileUploadButton 
-                                  onLoaded={(text) => handleSimpleChange('bannedWords', text)} 
-                                  label="Nạp File Từ Khóa Cấm (.docx, .pdf, .txt, .json, .xlsx)" 
-                                />
-                              </div>
-                              <textarea 
-                                name="bannedWords" 
-                                value={currentConfig.bannedWords} 
-                                onChange={handleChange} 
-                                placeholder="Nhập hoặc nạp danh sách từ khóa cấm (mỗi dòng 1 từ hoặc cách nhau bởi dấu phẩy)..."
-                                className="w-full h-[65px] border border-gray-300 rounded-lg p-2 text-xs resize-none bg-gray-50 focus:bg-white focus:outline-blue-500 font-medium" 
-                              />
-                            </div>
-                          </div>
-
-                          {/* Từ khóa ưu tiên */}
-                          <div className="flex flex-col sm:flex-row sm:items-start gap-2 mt-1">
-                            <div className="flex items-center justify-between sm:justify-start sm:min-w-[170px]">
-                              <FieldLabel icon="⭐" text="Từ khóa ưu tiên" helpKey="priorityWords" />
-                              <div className="sm:hidden">
-                                <UniversalFileUploadButton 
-                                  onLoaded={(text) => handleSimpleChange('priorityWords', text)} 
-                                  label="Nạp File" 
-                                />
-                              </div>
-                            </div>
-                            <div className="flex-1 flex flex-col gap-1">
-                              <div className="hidden sm:flex justify-end">
-                                <UniversalFileUploadButton 
-                                  onLoaded={(text) => handleSimpleChange('priorityWords', text)} 
-                                  label="Nạp File Từ Khóa Ưu Tiên (.docx, .pdf, .txt, .json, .xlsx)" 
-                                />
-                              </div>
-                              <textarea 
-                                name="priorityWords" 
-                                value={currentConfig.priorityWords} 
-                                onChange={handleChange} 
-                                placeholder="Nhập hoặc nạp danh sách từ khóa ưu tiên trả lời trước..."
-                                className="w-full h-[65px] border border-gray-300 rounded-lg p-2 text-xs resize-none bg-gray-50 focus:bg-white focus:outline-blue-500 font-medium" 
-                              />
-                            </div>
-                          </div>
-
-                          <div className="flex items-center mt-1">
-                            <FieldLabel icon="🛡️" text="Bật bộ lọc spam thông minh" helpKey="smartSpamFilter" htmlFor="smartSpamFilter-comment" />
-                            <input type="checkbox" id="smartSpamFilter-comment" name="smartSpamFilter" checked={currentConfig.smartSpamFilter} onChange={handleChange} className="w-4 h-4 text-blue-600 rounded cursor-pointer accent-blue-600" />
-                          </div>
-                          <div className="flex items-center">
-                            <FieldLabel icon="⏱️" text="Chờ giữa các comment spam (giây)" helpKey="waitBetweenSpam" />
-                            <input type="number" name="waitBetweenSpam" value={currentConfig.waitBetweenSpam} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
-                          </div>
-                          <div className="flex items-center">
-                            <FieldLabel icon="🔤" text="Tỷ lệ ký tự lặp lại tối đa (0.0-1.0)" helpKey="maxRepeatChars" />
-                            <input type="number" step="0.1" name="maxRepeatChars" value={currentConfig.maxRepeatChars} onChange={handleChange} className="flex-1 border border-gray-300 rounded px-2 py-1 text-[13px] bg-gray-50 focus:bg-white focus:outline-blue-500" />
-                          </div>
-                        </>
                       )}
 
                       {selectedEventId === 'idle' && (
