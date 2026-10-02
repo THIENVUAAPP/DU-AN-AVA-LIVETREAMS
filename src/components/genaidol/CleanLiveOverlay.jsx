@@ -498,7 +498,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       if (saved === 'contain' || saved === 'cover') return saved;
     } catch (e) {}
     const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-    return params?.get('fit') === 'contain' ? 'contain' : 'cover';
+    return params?.get('fit') === 'cover' ? 'cover' : 'contain'; // Default to contain to avoid cropping (cắt đầu đít)
   });
   const isInternalAudioChangeRef = useRef(false);
   const isInternalPlaybackChangeRef = useRef(false);
@@ -2666,7 +2666,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           {quickResponseVideo?.url && (
             <div className="absolute inset-0 w-full h-full z-30 pointer-events-none overflow-hidden">
               <video
-                key={`quick_${quickResponseVideo.url}`}
+                
                 src={quickResponseVideo.url}
                 autoPlay
                 playsInline
@@ -2696,7 +2696,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           {activeEventVideo?.url && (
             <div className="absolute inset-0 w-full h-full z-20 pointer-events-none overflow-hidden">
               <video
-                key={`event_${activeEventVideo.url}`}
+                
                 src={activeEventVideo.url}
                 autoPlay
                 playsInline
@@ -2732,7 +2732,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           {lipSyncVideoUrl && (
             <div className="absolute inset-0 w-full h-full z-15 pointer-events-none overflow-hidden">
               <video
-                key={`lipsync_${lipSyncVideoUrl}`}
+                
                 src={lipSyncVideoUrl}
                 autoPlay
                 playsInline
@@ -3071,7 +3071,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                           ) : (
                             <video
                               ref={overlayVideoRef}
-                              key={`single_main_vid_${singleUrl}`}
+                              
                               src={singleUrl}
                               autoPlay={true}
                               loop={true}

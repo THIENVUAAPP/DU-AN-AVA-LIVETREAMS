@@ -120,6 +120,20 @@ export default function EventVoiceTester({
   }, [volume]);
 
   useEffect(() => {
+    if (defaultVolume !== undefined && !isNaN(Number(defaultVolume))) {
+      setVolume(Number(defaultVolume));
+      volumeRef.current = Number(defaultVolume);
+    }
+  }, [defaultVolume]);
+
+  useEffect(() => {
+    if (defaultSpeed !== undefined && !isNaN(Number(defaultSpeed))) {
+      setSpeed(Number(defaultSpeed));
+      speedRef.current = Number(defaultSpeed);
+    }
+  }, [defaultSpeed]);
+
+  useEffect(() => {
     speedRef.current = speed;
   }, [speed]);
 
@@ -176,6 +190,7 @@ export default function EventVoiceTester({
     setVolume(val);
     volumeRef.current = val;
     setRealtimeAudioParams({ volume: val });
+    if (onVolumeChange) onVolumeChange(val);
   };
 
   // Cập nhật tốc độ đọc tức thì khi chọn dropdown (0ms phản hồi ăn ngay)
@@ -184,6 +199,7 @@ export default function EventVoiceTester({
     setSpeed(rate);
     speedRef.current = rate;
     setRealtimeAudioParams({ rate });
+    if (onSpeedChange) onSpeedChange(rate);
   };
 
   // Dọn dẹp khi unmount

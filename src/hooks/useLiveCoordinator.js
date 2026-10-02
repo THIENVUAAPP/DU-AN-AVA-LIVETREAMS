@@ -388,6 +388,7 @@ function fillTemplate(template, vars = {}) {
 
     const configs = getSavedEventConfigs();
     let replyText = '';
+    let chatText = '';
     let shouldAction = null;
     let currentMatchedSpecialGiftSlot = null;
     let currentMatchedCheckoutProduct = null;
@@ -674,6 +675,7 @@ function fillTemplate(template, vars = {}) {
 
         // GHÉP TOÀN BỘ CÂU THOẠI HOÀN CHỈNH
         replyText = `${repeatPrefix} ${bodyAnswer}`.replace(/\s+/g, ' ').trim();
+        chatText = bodyAnswer.trim() || replyText;
       }
 
       // 2. XỬ LÝ SỰ KIỆN QUÀ TẶNG (GIFT)
@@ -1012,10 +1014,10 @@ function fillTemplate(template, vars = {}) {
               type, 
               payload, 
               ai_intent: 'STRUCTURED_CONFIG', 
-              ai_reply: replyText 
+              ai_reply: chatText || replyText 
             }
           ].slice(-20));
-          if (onChatReply) onChatReply(replyText);
+          if (onChatReply) onChatReply(chatText || replyText);
         }
 
         if (shouldSpeakVoice && onVoiceReply) {
