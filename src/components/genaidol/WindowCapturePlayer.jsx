@@ -12,12 +12,13 @@ const WindowCapturePlayer = () => {
   return (
     <div className="w-screen h-screen bg-black flex items-center justify-center overflow-hidden">
       <div 
-        className="relative shadow-2xl" 
+        className="relative shadow-2xl overflow-hidden flex items-center justify-center" 
         style={{ 
           aspectRatio: '9/16', 
           height: '100%', 
           maxHeight: '100vh',
-          width: 'auto'
+          width: 'auto',
+          maxWidth: '100vw'
         }}
       >
         <CleanLiveOverlay />

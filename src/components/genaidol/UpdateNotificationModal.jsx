@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.40';
+export const APP_VERSION = '5.4.41';
 export const RELEASE_DATE = '02/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.41 - Chuẩn Hóa Chào Người Mới Realtime, Đọc Tên & Nhắc Lại Comment, Ưu Tiên Từ Khóa Tuyệt Đối & Khóa Khung 9:16 Không Méo Hình',
+    description: '1. Chào Đúng Khán Giả Thật Vào Phòng Live: Loại bỏ 100% người xem ảo hoặc tự bịa tên. Chỉ kích hoạt chào mừng khi có viewer thực sự tham gia (tiktok_member), đọc đúng tên khán giả, mỗi người chỉ chào 1 lần duy nhất, tách biệt hoàn toàn với đọc bình luận. 2. Đọc Tên User & Nhắc Lại Bình Luận Chuẩn Mực: Tự động ghép tiền tố trang trọng đọc tên khán giả và nhắc lại câu hỏi ("Dạ em cảm ơn bạn {user} đã hỏi/bình luận: {comment}"). Ưu tiên xử lý 100% danh sách từ khóa/câu hỏi người dùng đã cài đặt trước. Chỉ khi không khớp bất kỳ từ khóa nào mới dùng Gemini AI trả lời ngắn gọn súc tích trong đúng 1 câu (15-20 từ). 3. Khóa Cứng Khung Hình 9:16 Window Capture OBS & TikTok Live Studio: Căn giữa hoàn hảo, chuyển mặc định hiển thị sang cover chống bành trướng, méo mó hoặc vỡ khung video. Khử triệt để lỗi chớp nháy đen màn hình khi avatar bắt đầu/kết thúc nói chuyện.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.38 - Khắc Phục Triệt Để Lỗi Chồng Giọng, Tối Ưu Phản Hồi Từ Khóa & Fix Tràn Viền Window Capture OBS',
     description: '1. Khắc Phục Lỗi Trùng Giọng (Double Voice): Tách biệt hoàn toàn AI hệ thống và AI Game Bản Đồ. Hệ thống sẽ không bao giờ phát 2 giọng nói đè lên nhau kể cả khi có nhiều bình luận cùng lúc. 2. Phản Hồi Từ Khóa Không Lan Man: Khi khớp đúng 100% từ khóa người dùng cài đặt, AI sẽ trả lời trực tiếp ngay lập tức bằng câu lệnh đã cấu hình, loại bỏ hoàn toàn câu chào lan man. 3. Sửa Lỗi Cắt Khung Hình Window Capture: Tối ưu bộ hiển thị CleanLiveOverlay tự động (Fill / Kéo dãn) để không bao giờ bị cắt mất hình ảnh khi kết nối OBS hoặc TikTok Live Studio. 4. Xóa Rung Giật Video (CEF Flickering): Khử bỏ các hiệu ứng phần cứng không tương thích với TikTok Live Studio, video phát mượt mà tuyệt đối ở 60 FPS.'

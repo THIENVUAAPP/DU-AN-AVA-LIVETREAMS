@@ -498,7 +498,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       if (saved === 'contain' || saved === 'cover') return saved;
     } catch (e) {}
     const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
-    return params?.get('fit') || 'fill'; // Default to fill to stretch full screen to avoid cropping (cắt đầu đít)
+    const paramFit = params?.get('fit');
+    if (paramFit === 'contain' || paramFit === 'cover') return paramFit;
+    return 'cover'; // Luôn mặc định là cover để giữ đúng tỷ lệ 9:16 chuẩn TikTok Live, tuyệt đối không bành trướng hay méo mó video
   });
   const isInternalAudioChangeRef = useRef(false);
   const isInternalPlaybackChangeRef = useRef(false);
@@ -2481,7 +2483,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   const singleMainChroma = getChromaStyle(masterState?.mainMediaChromaKey || multiAvatarConfig?.chromaKey || multiAvatarConfig?.backgroundChromaKey);
 
   return (
-    <div className="fixed inset-0 w-screen h-screen overflow-hidden bg-black select-none font-sans relative">
+    <div className="w-full h-full inset-0 overflow-hidden bg-black select-none font-sans relative" style={{ width: '100%', height: '100%', ...customStyle }}>
       {/* 🎨 BỘ LỌC TÁCH NỀN TOÀN DIỆN CHO MỌI LỚP VIDEO VÀ ẢNH (GREEN, BLUE, BLACK, WHITE, ROOM) */}
       <SvgChromaFilters />
 
@@ -2605,14 +2607,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 {/* 8. TỈ LỆ KHUNG HÌNH FIT (MINI) */}
                 <button
                   onClick={() => {
-                    const nextFit = objectFitState === 'cover' ? 'fill' : objectFitState === 'fill' ? 'contain' : 'cover';
+                    const nextFit = objectFitState === 'cover' ? 'contain' : 'cover';
                     setObjectFitState(nextFit);
                     try { localStorage.setItem('avalive_overlay_fit', nextFit); } catch (e) {}
                   }}
                   className="px-1.5 py-0.5 rounded-full bg-white/5 hover:bg-white/10 text-gray-300 border border-white/10 text-[9px] font-medium h-5.5 cursor-pointer transition-all"
                   title="Chuyển đổi Tràn Viền / Vừa Khung"
                 >
-                  <span>📐 {objectFitState === 'cover' ? 'Phủ Cắt Viền' : objectFitState === 'fill' ? 'Kéo Dãn Full' : 'Vừa Khung'}</span>
+                  <span>📐 {objectFitState === 'cover' ? 'Phủ Chuẩn 9:16' : 'Vừa Khung'}</span>
                 </button>
 
                 {/* 9. NÚT ẨN BẢNG ĐIỀU KHIỂN */}
@@ -2646,8 +2648,16 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       {/* KHUNG PHÁT SÓNG SẠCH 100% PURE FULL-FRAME (CHUẨN 9:16 HOẶC 16:9 - SIÊU SẮC NÉT OBS / TIKTOK STUDIO, 100% NGUYÊN BẢN KHÔNG CO MÉO, KHÔNG VIỀN ĐEN) */}
       <main className="absolute inset-0 w-full h-full overflow-hidden flex items-center justify-center bg-black z-0">
         <div 
-          className="relative flex items-center justify-center overflow-hidden w-full h-full"
-          style={{ width: '100%', height: '100%' }}
+          className="relative flex items-center justify-center overflow-hidden"
+          style={{ 
+            aspectRatio: ratio === '16:9' ? '16/9' : '9/16',
+            height: '100%',
+            maxHeight: '100%',
+            width: 'auto',
+            maxWidth: '100%',
+            margin: '0 auto',
+            position: 'relative'
+          }}
         >
           {/* ⚡ 1. TOPMOST LAYER: VIDEO PHẢN HỒI NHANH KHẨN CẤP */}
           {quickResponseVideo?.url && (
@@ -2837,7 +2847,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                         {/* 1. Nền Sân Khấu (CHỈ render nếu có backgroundUrl độc lập được cấu hình) */}
                         {bgSrc ? (
                           <div
-                            className="absolute pointer-events-none transition-all duration-300"
+                            className="absolute pointer-events-none"
                             style={{
                               left: `${bgTrans.x ?? 0}%`,
                               top: `${bgTrans.y ?? 0}%`,
@@ -2868,7 +2878,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                           return (
                             <div
                               key={layer.id || lIdx}
-                              className="absolute overflow-hidden pointer-events-none transition-all duration-300"
+                              className="absolute overflow-hidden pointer-events-none"
                               style={{
                                 left: `${lTrans.x ?? 20}%`,
                                 top: `${lTrans.y ?? 20}%`,
@@ -2920,7 +2930,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                           return (
                             <div 
                               key={avatar.id || idx} 
-                              className={`absolute overflow-hidden transition-all duration-300 pointer-events-none ${
+                              className={`absolute overflow-hidden pointer-events-none ${
                                 isSpeakingNow ? 'ring-2 ring-amber-400 shadow-[0_0_25px_rgba(251,191,36,0.6)] z-30' : ''
                               }`}
                               style={{
@@ -2939,7 +2949,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                             >
                               <div className="w-full h-full overflow-hidden rounded-[inherit] bg-transparent" style={chromaStyle}>
                                 <AiRealtimeLipSyncAvatar
-                                  key={`${avatar.id}_${isSpeakingNow ? 'talk' : 'idle'}_${vidSrc}`}
+                                  key={avatar.id || idx}
                                   src={vidSrc}
                                   type={isImg ? 'image' : 'video'}
                                   alt={avatar.name}
@@ -2994,7 +3004,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                           return (
                             <div
                               key={layer.id || `single_extra_${lIdx}`}
-                              className="absolute overflow-hidden pointer-events-none transition-all duration-300"
+                              className="absolute overflow-hidden pointer-events-none"
                               style={{
                                 left: `${lTrans.x ?? 20}%`,
                                 top: `${lTrans.y ?? 20}%`,
@@ -3021,7 +3031,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
                         {/* ⚡ ĐÚNG 1 KHUNG HÌNH VIDEO / ẢNH DUY NHẤT TRÊN SÂN KHẤU */}
                         <div 
-                          className="absolute pointer-events-none transition-all duration-300"
+                          className="absolute pointer-events-none"
                           style={{
                             left: hasCustomTransform ? `${singleTrans.x ?? 0}%` : '0%',
                             top: hasCustomTransform ? `${singleTrans.y ?? 0}%` : '0%',

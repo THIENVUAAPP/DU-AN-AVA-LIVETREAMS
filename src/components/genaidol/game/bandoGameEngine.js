@@ -1426,10 +1426,12 @@ class BanDoGameEngine {
       return;
     }
 
-    // Kích hoạt Hệ Thống Voice AI & Từ Khóa Trả Lời Tự Động
-    try {
-      mapVoiceEngine.handleUserComment(commentText, user?.username || 'Bạn');
-    } catch (e) {}
+    // Kích hoạt Hệ Thống Voice AI & Từ Khóa Trả Lời Tự Động (CHỈ KHI TRONG TRẬN GAME BẢN ĐỒ)
+    if (this.state.status === 'playing') {
+      try {
+        mapVoiceEngine.handleUserComment(commentText, user?.username || 'Bạn');
+      } catch (e) {}
+    }
 
     // Chỉ cắm cờ tương tác khi người dùng chủ động gõ lệnh số 1 hoặc số 2
     if (clean === '1' || clean === 'cm 1' || clean === 'số 1' || clean === 'so 1') {

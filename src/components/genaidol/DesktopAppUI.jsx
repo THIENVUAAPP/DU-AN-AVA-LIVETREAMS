@@ -4127,14 +4127,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       if (!data) return;
       bandoAudio.unlock();
       const timeStr = new Date().toLocaleTimeString();
-      const author = data.username || data.nickname || 'Khán giả';
+      const author = data.nickname || data.uniqueId || data.username || 'Khán giả';
       const text = data.comment || '';
       setTiktokLogs(prev => [`[${timeStr}] 💬 ${author}: ${text}`, ...prev.slice(0, 49)]);
       
-      // 1. Chuyển tiếp tới Game Bản Đồ Chữ S & Game Chiến Đấu
-      try {
-        bandoEngine.handleUserComment(text, author);
-      } catch (e) {}
+      // 1. Chuyển tiếp tới Game Bản Đồ Chữ S & Game Chiến Đấu (CHỈ KHI ĐANG MỞ GAME BẢN ĐỒ)
+      if (isGameBanDoActive) {
+        try {
+          bandoEngine.handleUserComment(text, author);
+        } catch (e) {}
+      }
 
       // 2. 🎯 TỰ ĐỘNG BẮT TỪ KHÓA / MÃ SẢN PHẨM & GHIM SẢN PHẨM TIKTOK SHOP (shop.tiktok.com)
       try {
@@ -4231,8 +4233,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           if (parsedConf?.welcome?.active === false) return;
         } catch (e) {}
       }
-      const author = (data.username || data.nickname || '').trim();
-      if (!author || author === 'Khách mới' || author === 'Khán Giả') return;
+      const author = (data.nickname || data.uniqueId || data.username || '').trim();
+      if (!author || author === 'Khách mới' || author === 'Khán Giả' || author === 'Khán giả' || author === 'Viewer') return;
       const key = author.toLowerCase().trim();
       
       // Tuyệt đối chỉ chào mỗi người dùng thật ĐÚNG 1 LẦN duy nhất trong suốt buổi livestream
