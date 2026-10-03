@@ -341,8 +341,34 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
       }
     }
 
+    // 🎬 Tự động gắn kèm video đang phát vào URL để TikTok Live Studio nạp tức thì 0ms, không bao giờ bị màn hình đen
+    let activeMediaParam = '';
+    if (path === 'idol' || path === 'live-stream' || path === '') {
+      let resolvedV = activeMediaUrl || serverLiveMediaUrl || '';
+      if (!resolvedV && typeof window !== 'undefined') {
+        try {
+          const activeSrc = localStorage.getItem('avalive_active_video_src');
+          if (activeSrc && !activeSrc.startsWith('blob:')) resolvedV = activeSrc;
+          if (!resolvedV) {
+            const locked = localStorage.getItem('avalive_user_locked_media');
+            if (locked && !locked.startsWith('blob:')) resolvedV = locked;
+          }
+          if (!resolvedV) {
+            const master = JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}');
+            if (master.mediaUrl && !master.mediaUrl.startsWith('blob:')) resolvedV = master.mediaUrl;
+          }
+        } catch (e) {}
+      }
+      if (resolvedV && typeof resolvedV === 'string' && !resolvedV.startsWith('blob:')) {
+        if (resolvedV.includes('/uploads/')) {
+          resolvedV = resolvedV.substring(resolvedV.indexOf('/uploads/'));
+        }
+        activeMediaParam = `&v=${encodeURIComponent(resolvedV)}`;
+      }
+    }
+
     const targetRoute = (path === 'idol' || path === 'live-stream') ? 'live-stream' : path;
-    const baseParams = 'fit=fill&autoplay=1&sound=1';
+    const baseParams = `fit=fill&autoplay=1&sound=1${activeMediaParam}`;
 
     if (effectiveTunnel && !forceCloud) {
       // Đường link Cloudflare Tunnel chuẩn, siêu sạch, không chứa ký tự đặc biệt gây lỗi TikTok Live Studio

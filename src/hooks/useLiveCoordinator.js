@@ -792,26 +792,25 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // 🎯 ĐÓNG GÓI CÂU THOẠI PHẢN HỒI:
-        // - NẾU KHỚP TỪ KHÓA CẤU HÌNH: Đọc đúng câu trả lời đã cài đặt, KHÔNG thêm tiền tố đọc lại câu hỏi, KHÔNG ghép câu hỏi gợi mở
-        // - NẾU KHÔNG KHỚP TỪ KHÓA: Trả lời ngắn gọn súc tích
-        if (isKeywordMatched) {
-          replyText = bodyAnswer.trim();
-          chatText = bodyAnswer.trim();
+        // 🎯 BƯỚC 1: TIỀN TỐ CẢM ƠN USER VÀ ĐỌC LẠI CHUẨN XÁC CÂU BÌNH LUẬN CỦA KHÁCH HÀNG
+        const isQuestion = commentText.includes('?') || 
+          /^(ai|sao|gì|đâu|nào|bao nhiêu|thế nào|không|hả|chưa|khi nào|bao giờ|mấy|cho hỏi|em ơi|shop ơi|giá|bn|ib)/i.test(commentText) ||
+          /(không|ko|hả|chưa|nhỉ|nhé|ạ|sao)\?*$/i.test(commentText);
+        
+        let repeatPrefix = '';
+        if (commentConfig.repeatCommentPrefix && commentConfig.repeatCommentPrefix.trim()) {
+          repeatPrefix = fillTemplate(commentConfig.repeatCommentPrefix, { user: userName, comment: commentText }).trim();
         } else {
-          let repeatPrefix = '';
-          if (commentConfig.repeatCommentFirst === true && commentConfig.repeatCommentPrefix && commentConfig.repeatCommentPrefix.trim()) {
-            repeatPrefix = fillTemplate(commentConfig.repeatCommentPrefix, { user: userName, comment: commentText }).trim();
-          }
-          if (commentConfig.appendFollowUpQuestion === true && commentConfig.followUpQuestionText && commentConfig.followUpQuestionText.trim()) {
-            const followUp = fillTemplate(commentConfig.followUpQuestionText, { user: userName, comment: commentText }).trim();
-            if (followUp && !bodyAnswer.toLowerCase().includes(followUp.toLowerCase())) {
-              bodyAnswer = `${bodyAnswer} ${followUp}`.trim();
-            }
-          }
-          replyText = (repeatPrefix ? `${repeatPrefix} ${bodyAnswer}` : bodyAnswer).replace(/\s+/g, ' ').trim();
-          chatText = bodyAnswer.trim() || replyText;
+          repeatPrefix = isQuestion
+            ? `Dạ em cảm ơn ${userSalutation} đã hỏi là: "${commentText}". `
+            : `Dạ em cảm ơn ${userSalutation} đã bình luận là: "${commentText}". `;
         }
+
+        // 🎯 ĐÓNG GÓI CÂU THOẠI PHẢN HỒI THEO ĐÚNG 2 PHẦN CHUẨN:
+        // 1. Cảm ơn user & đọc lại chuẩn xác câu bình luận
+        // 2. Phản hồi chuẩn (Nếu khớp từ khóa: đọc đúng câu phản hồi đã làm sẵn; Nếu không khớp: AI Gemini trả lời thông minh 10-15 từ)
+        replyText = `${repeatPrefix} ${bodyAnswer}`.replace(/\s+/g, ' ').trim();
+        chatText = bodyAnswer.trim() || replyText;
       }
 
       // 2. XỬ LÝ SỰ KIỆN QUÀ TẶNG (GIFT)

@@ -71,14 +71,39 @@ export const isSameMediaUrl = (srcA, srcB) => {
   if (!srcA || !srcB) return false;
   if (srcA === srcB) return true;
   try {
-    const pA = String(srcA).split('?')[0].split('#')[0];
-    const pB = String(srcB).split('?')[0].split('#')[0];
+    const pA = String(srcA).split('?')[0].split('#')[0].trim();
+    const pB = String(srcB).split('?')[0].split('#')[0].trim();
     if (pA === pB) return true;
+
+    // Nếu cả 2 cùng là blob URL
+    if (pA.startsWith('blob:') && pB.startsWith('blob:')) return pA === pB;
+
+    // Nếu một bên là blob URL và một bên là đường dẫn server
+    if (pA.startsWith('blob:') || pB.startsWith('blob:')) {
+      const nonBlob = pA.startsWith('blob:') ? pB : pA;
+      if (typeof window !== 'undefined') {
+        const activeSrc = localStorage.getItem('avalive_active_video_src');
+        const locked = localStorage.getItem('avalive_user_locked_media');
+        if ((activeSrc && isSameMediaUrl(activeSrc, nonBlob)) || (locked && isSameMediaUrl(locked, nonBlob))) {
+          return true;
+        }
+      }
+      return true;
+    }
+
     const fA = pA.substring(pA.lastIndexOf('/') + 1);
     const fB = pB.substring(pB.lastIndexOf('/') + 1);
-    if (fA && fB && fA === fB && !fA.startsWith('blob:') && !fB.startsWith('blob:')) return true;
-    const uA = new URL(srcA, window.location.href);
-    const uB = new URL(srcB, window.location.href);
+    if (fA && fB && fA === fB) return true;
+
+    try {
+      const decA = decodeURIComponent(fA);
+      const decB = decodeURIComponent(fB);
+      if (decA === decB) return true;
+    } catch (e) {}
+
+    const origin = typeof window !== 'undefined' ? window.location.href : 'http://localhost';
+    const uA = new URL(srcA, origin);
+    const uB = new URL(srcB, origin);
     return uA.pathname === uB.pathname;
   } catch (e) {
     const pA = String(srcA).split('?')[0].split('#')[0];
@@ -1186,7 +1211,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         }
 
         // CHỈ NẠP LẠI KHI THỰC SỰ LÀ FILE VIDEO KHÁC (TRÁNH BUFFER RESET GÂY ĐỨNG HÌNH & CHẬP CHỜN TIẾNG)
-        if (vid && !isSameMediaUrl(vid.src, cleanUrl)) {
+        const isCurrentlyPlayingThis = 
+          isSameMediaUrl(vid?.currentSrc || vid?.src, cleanUrl) || 
+          isSameMediaUrl(lastLoadedMediaUrlRef.current, cleanUrl) ||
+          (vid?.src && vid.src.startsWith('blob:') && (vid.readyState >= 2 || !vid.paused));
+
+        if (vid && !isCurrentlyPlayingThis) {
+          lastLoadedMediaUrlRef.current = cleanUrl;
           vid.src = cleanUrl;
           vid.load();
         }
@@ -1787,7 +1818,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               const v = overlayVideoRef.current;
               if (v && cleanUrl) {
                 v.dataset.userPaused = 'false';
-                if (!isSameMediaUrl(v.src, cleanUrl)) {
+                const isCurrentlyPlaying = 
+                  isSameMediaUrl(v?.currentSrc || v?.src, cleanUrl) || 
+                  isSameMediaUrl(lastLoadedMediaUrlRef.current, cleanUrl) ||
+                  (v?.src && v.src.startsWith('blob:') && (v.readyState >= 2 || !v.paused));
+
+                if (!isCurrentlyPlaying) {
+                  lastLoadedMediaUrlRef.current = cleanUrl;
                   v.src = cleanUrl;
                   v.load();
                 }
@@ -2606,8 +2643,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         
         // CHỈ GỌI vid.load() KHI URL THỰC SỰ THAY ĐỔI
         // TUYỆT ĐỐI KHÔNG GỌI vid.load() KHI CHUYỂN TAB ĐỂ TRÁNH RESET 0:00 HOẶC MẤT VIDEO
-        const isNewUrl = !isSameMediaUrl(lastLoadedMediaUrlRef.current, activeMedia.url) && !isSameMediaUrl(vid.src, activeMedia.url);
-        if (isNewUrl) {
+        const isAlreadyPlaying = 
+          isSameMediaUrl(lastLoadedMediaUrlRef.current, activeMedia.url) ||
+          isSameMediaUrl(vid?.currentSrc || vid?.src, activeMedia.url) ||
+          (vid?.src && vid.src.startsWith('blob:') && (vid.readyState >= 2 || !vid.paused));
+
+        if (!isAlreadyPlaying) {
           lastLoadedMediaUrlRef.current = activeMedia.url;
           isUserPausedRef.current = false;
           if (vid.src !== activeMedia.url) {

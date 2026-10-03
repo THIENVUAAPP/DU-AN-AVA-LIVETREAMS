@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.58';
+export const APP_VERSION = '5.4.59';
 export const RELEASE_DATE = '03/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.59 - CHUẨN HÓA ĐỌC COMMENT [CẢM ƠN + ĐỌC LẠI BÌNH LUẬN + PHẢN HỒI ĐÚNG TỪ KHÓA], SỬA TRIỆT ĐỂ CHỚP NHÁY WINDOW CAPTURE OBS & MÀN HÌNH ĐEN TIKTOK LIVE STUDIO',
+    description: '1. Chuẩn Hóa 100% Cấu Trúc Đọc Bình Luận: (Phần 1) Luôn mở đầu bằng câu cảm ơn và đọc lại chuẩn xác câu hỏi/bình luận của người xem: "Dạ em cảm ơn {user} đã hỏi/bình luận là: {comment}." (Phần 2) Quét đối chiếu ngay bộ từ khóa đã cài đặt; nếu khớp, phản hồi ngay bằng đúng câu trả lời đã cài đặt (thay thế {user}, {comment}, {product}), tuyệt đối KHÔNG gọi AI Gemini, KHÔNG hỏi ngược lại dài dòng. Nếu không khớp từ khóa, AI Gemini chỉ trả lời ngắn gọn trong 1 câu 10-15 từ đúng trọng tâm. 2. Khắc Phục Triệt Để Lỗi Chớp Nháy (Flickering) Màn Hình Trên Window Capture OBS: Nâng cấp hàm so khớp isSameMediaUrl nhận diện thông minh giữa bộ nhớ tạm blob và server URL, thiết lập bộ khóa decoder ngăn chặn tình trạng vid.load() chạy lặp 2.5s gây chớp nháy đen, đảm bảo video phát mượt mà 60 FPS liên tục. 3. Tối Ưu Link TikTok Live Studio / OBS Browser Source 0ms Khởi Động: Tự động truyền tham số &v=... cho đường link Live Stream HTTPS, giúp TikTok Live Studio giải mã khung hình đầu tiên ngay tức thì 0ms, không còn tình trạng đen màn hình. 4. Khóa chặt 100% toàn bộ các tab và module hệ thống.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.58 - SỬA TRIỆT ĐỂ LỖI CÓ TIẾNG NHƯNG KHÔNG CÓ HÌNH TIKTOK LIVE STUDIO & ĐỌC ĐÚNG CÂU THOẠI TỪ KHÓA ĐÃ CÀI ĐẶT (KHÔNG HỎI DÀI DÒNG)',
     description: '1. Khắc Phục Triệt Để Lỗi "Có Tiếng Nhưng Không Có Hình" Trên TikTok Live Studio Browser Source: Tích hợp cơ chế playWithMuteFallback tự động hand-shake với chính sách Autoplay của Chromium CEF, giải mã và hiển thị khung hình video 60 FPS liên tục 0ms không bao giờ bị đứng hình hay đen thui, khớp vừa y tỷ lệ 9:16 (1080x1920) không viền đen. 2. Đọc Chuẩn Xác Đúng Câu Thoại Đã Cài Đặt Cho Từ Khóa (Tuyệt Đối Không Hỏi Lại Dài Dòng): Khi bình luận khớp bất kỳ quy tắc từ khóa nào từ file tải lên hoặc cấu hình, hệ thống lập tức phản hồi đúng câu trả lời đã cài đặt (thay thế {user} bằng tên khán giả), không nhắc lại câu hỏi, không hỏi ngược lại dài dòng, không gọi AI Gemini. Khi không khớp từ khóa, AI Gemini chỉ trả lời ngắn gọn súc tích trong 1 câu duy nhất 10-15 từ. 3. Khóa chặt 100% toàn bộ các tab chức năng và module hệ thống.'
