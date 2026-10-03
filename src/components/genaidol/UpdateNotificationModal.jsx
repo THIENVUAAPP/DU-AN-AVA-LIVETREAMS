@@ -2,10 +2,15 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.52';
+export const APP_VERSION = '5.4.54';
 export const RELEASE_DATE = '03/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.54 - ĐỒNG BỘ AI VOICE & KHẮC PHỤC MÀN HÌNH ĐEN',
+    description: '1. Sửa Lỗi Giọng Nói AI Trên TikTok Live Studio (Browser Source): Giọng đọc AI (Chào người mới, Đọc bình luận) giờ đây được đồng bộ và phát thanh siêu mượt trực tiếp trên đường link Vercel Cloud, giúp khán giả nghe rõ mồn một. 2. Sửa Lỗi Màn Hình Đen Khi Mới Dán Link: Các link dán vào TikTok Live Studio sẽ tải trạng thái và đồng bộ video ngay lập tức 0ms, không còn hiện tượng màn hình đen chờ đợi. 3. Báo Hiệu Kết Nối Bằng Giọng Nói AI: Mỗi khi bạn kết nối tài khoản TikTok mới, hệ thống AI sẽ đọc tên kênh của bạn lên để báo hiệu thành công. 4. Tuân thủ khóa chặt mọi tab chức năng không liên quan.'
+  },
+
   {
     title: '⚡ Bản Cập Nhật v5.4.52 - Sửa Lỗi Hiển Thị TikTok Live Studio / Vừa Khớp Khung Hình 100%',
     description: '1. Khắc phục lỗi Màn Hình Đen trên TikTok Live Studio / Vercel (Lỗi Mixed Content): Tự động chuyển đổi các link video cục bộ (localhost) sang link Cloudflare Tunnel bảo mật (HTTPS) để TikTok Live Studio và nền tảng Web có thể nạp video mượt mà 0ms. 2. Ép Buộc Khung Hình Vừa Khít 100% (Không dư, không thiếu): Tự động dàn trải video và container lấp đầy 100% diện tích màn hình trên TikTok Live Studio (object-fit: fill), giải quyết dứt điểm viền đen, cắt xén khung hình. 3. Tuân thủ khóa chặt 100% các tab chức năng không liên quan.'
