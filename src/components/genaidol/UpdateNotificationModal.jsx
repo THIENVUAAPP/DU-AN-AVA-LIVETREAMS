@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.49';
+export const APP_VERSION = '5.4.50';
 export const RELEASE_DATE = '03/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.50 - Đẩy Nhanh Tiêu Chuẩn Đồng Bộ Cục Bộ, Cập Nhật Băng Thông Phản Hồi',
+    description: '1. Khởi tạo lại cấu hình cập nhật hệ thống, ép hệ thống đồng bộ chuẩn máy chủ và đẩy mạnh tốc độ đường truyền khi load video/blob. 2. Làm sạch hoàn toàn trạng thái phiên bản cũ, ép máy khách khởi tạo lại luồng bắt sự kiện. 3. Tuân thủ khóa chặt 100% các tab chức năng không liên quan.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.49 - Sửa Dứt Điểm Màn Hình Đen TikTok Live Studio / OBS, Phục Hồi Chào Người Mới & Đọc Bình Luận, Ổn Định Kết Nối TikTok ID',
     description: '1. Sửa Dứt Điểm Màn Hình Đen Trên Link Online HTTPS TikTok Live Studio & Window Capture OBS: Tìm ra nguyên nhân gốc — khi tải video lên, tín hiệu đồng bộ video bị chặn nhầm nên server/Cloudflare không nhận được video từ Sân Khấu Chính. Nay video tải lên hoặc chọn trên Sân Khấu Chính được đồng bộ ngay lập tức ra mọi link live (blob cục bộ không còn ghi đè URL server hợp lệ). 2. Phục Hồi Chào Người Mới Vào Phòng & Đọc Bình Luận: Gỡ bỏ cơ chế hàng đợi gây kẹt toàn bộ sự kiện, tự xóa cờ tạm dừng cũ còn sót lại khi khởi động và khi bấm Kết Nối, nên AI luôn chào người mới, đọc bình luận, cảm ơn quà/tim/theo dõi/chia sẻ đúng cấu hình. 3. Ổn Định Kết Nối TikTok ID: Sửa lỗi backend khiến trạng thái kết nối không bao giờ báo về giao diện khi phòng chưa live (ReferenceError), thêm tự động kết nối lại khi rớt kết nối, nhận kênh nhập ở ô Video, tăng thời gian chờ kết nối, chống kết nối trùng. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
