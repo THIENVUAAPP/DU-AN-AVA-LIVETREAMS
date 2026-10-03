@@ -128,11 +128,12 @@ export function syncMasterLiveState(partialState, socket = null) {
   if (isBlobMedia && remoteUpdated.mediaUrl === undefined) delete remoteUpdated.mediaUrl;
 
   // TỰ ĐỘNG CHUYỂN ĐỔI LINK LOCALHOST THÀNH LINK CLOUDFLARE TUNNEL (ĐỂ VERCEL HTTPS CÓ THỂ ĐỌC ĐƯỢC - TRÁNH LỖI MIXED CONTENT)
-  if (remoteUpdated.mediaUrl && typeof remoteUpdated.mediaUrl === 'string' && updated.tunnelUrl) {
+  const activeTunnel = updated.tunnelUrl || (typeof localStorage !== 'undefined' ? (localStorage.getItem('avalive_tunnel_url') || (JSON.parse(localStorage.getItem('avalive_tunnel_data') || '{}')?.tunnelUrl)) : '') || '';
+  if (remoteUpdated.mediaUrl && typeof remoteUpdated.mediaUrl === 'string' && activeTunnel) {
     if (remoteUpdated.mediaUrl.includes('localhost') || remoteUpdated.mediaUrl.includes('127.0.0.1')) {
-      remoteUpdated.mediaUrl = remoteUpdated.mediaUrl.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, updated.tunnelUrl);
+      remoteUpdated.mediaUrl = remoteUpdated.mediaUrl.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, activeTunnel.replace(/\/$/, ''));
     } else if (remoteUpdated.mediaUrl.startsWith('/uploads/')) {
-      remoteUpdated.mediaUrl = `${updated.tunnelUrl.replace(/\/$/, '')}${remoteUpdated.mediaUrl}`;
+      remoteUpdated.mediaUrl = `${activeTunnel.replace(/\/$/, '')}${remoteUpdated.mediaUrl}`;
     }
   }
 

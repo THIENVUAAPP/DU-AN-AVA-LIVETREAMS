@@ -1130,7 +1130,21 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       // 🎬 ĐỒNG BỘ NẠP VIDEO & PHÁT LIỀN MẠCH 60 FPS
       if (data.mediaUrl && typeof data.mediaUrl === 'string') {
         let cleanUrl = data.mediaUrl;
-        if (cleanUrl.includes('/uploads/')) cleanUrl = cleanUrl.substring(cleanUrl.indexOf('/uploads/'));
+        const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+        const activeTunnel = data.tunnelUrl || (typeof localStorage !== 'undefined' ? localStorage.getItem('avalive_tunnel_url') : '') || '';
+        
+        if (cleanUrl.startsWith('https://') && !cleanUrl.includes('localhost') && !cleanUrl.includes('127.0.0.1') && !cleanUrl.includes('vercel.app')) {
+          // cleanUrl là đường link Cloudflare Tunnel HTTPS công khai hợp lệ 100%, giữ nguyên!
+        } else if (isVercel && activeTunnel) {
+          if (cleanUrl.includes('localhost') || cleanUrl.includes('127.0.0.1')) {
+            cleanUrl = cleanUrl.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, activeTunnel.replace(/\/$/, ''));
+          } else if (cleanUrl.includes('/uploads/')) {
+            cleanUrl = `${activeTunnel.replace(/\/$/, '')}${cleanUrl.substring(cleanUrl.indexOf('/uploads/'))}`;
+          }
+        } else if (cleanUrl.includes('/uploads/')) {
+          cleanUrl = cleanUrl.substring(cleanUrl.indexOf('/uploads/'));
+        }
+
         // CHỈ NẠP LẠI KHI THỰC SỰ LÀ FILE VIDEO KHÁC (TRÁNH BUFFER RESET GÂY ĐỨNG HÌNH & CHẬP CHỜN TIẾNG)
         if (vid && !isSameMediaUrl(vid.src, cleanUrl)) {
           vid.src = cleanUrl;
@@ -1228,11 +1242,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
           const isTunnelBase = data.tunnelUrl || prev.tunnelUrl || (typeof localStorage !== 'undefined' ? localStorage.getItem('avalive_tunnel_url') : '') || '';
           
-          if (isVercel && isTunnelBase) {
+          if (cleanMedia.startsWith('https://') && !cleanMedia.includes('localhost') && !cleanMedia.includes('127.0.0.1') && !cleanMedia.includes('vercel.app')) {
+            // Đường link Cloudflare Tunnel HTTPS công khai hợp lệ 100%, giữ nguyên!
+          } else if (isVercel && isTunnelBase) {
             if (cleanMedia.includes('localhost') || cleanMedia.includes('127.0.0.1')) {
               cleanMedia = cleanMedia.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, isTunnelBase.replace(/\/$/, ''));
-            } else if (cleanMedia.startsWith('/uploads/')) {
-              cleanMedia = `${isTunnelBase.replace(/\/$/, '')}${cleanMedia}`;
+            } else if (cleanMedia.includes('/uploads/')) {
+              cleanMedia = `${isTunnelBase.replace(/\/$/, '')}${cleanMedia.substring(cleanMedia.indexOf('/uploads/'))}`;
             }
           } else if (cleanMedia.includes('/uploads/')) {
             cleanMedia = cleanMedia.substring(cleanMedia.indexOf('/uploads/'));
@@ -2324,9 +2340,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         }
       }
 
+      const isCandidateAlreadyFullHttps = candidateUrl.startsWith('https://') && !candidateUrl.includes('localhost') && !candidateUrl.includes('127.0.0.1') && !candidateUrl.includes('vercel.app');
+
       if (candidateUrl.includes('/uploads/')) {
         const pathPart = candidateUrl.substring(candidateUrl.indexOf('/uploads/'));
-        if (currentOrigin.includes('vercel.app') && tunnelBase) {
+        if (isCandidateAlreadyFullHttps) {
+          // Đường link Cloudflare Tunnel HTTPS công khai hợp lệ 100%, giữ nguyên!
+        } else if (currentOrigin.includes('vercel.app') && tunnelBase) {
           candidateUrl = `${tunnelBase.replace(/\/$/, '')}${pathPart}`;
         } else {
           candidateUrl = currentOrigin ? `${currentOrigin}${pathPart}` : pathPart;

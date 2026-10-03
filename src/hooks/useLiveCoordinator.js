@@ -497,17 +497,35 @@ function fillTemplate(template, vars = {}) {
           const shared = JSON.parse(localStorage.getItem('AVALIVE_KEYWORD_RULES_SHARED') || '[]');
           if (Array.isArray(shared)) allKeywordRules.push(...shared);
         } catch (e) {}
-        if (Array.isArray(scriptConfig.keywordRules)) allKeywordRules.push(...scriptConfig.keywordRules);
-        if (Array.isArray(checkoutConfig.keywordRules)) allKeywordRules.push(...checkoutConfig.keywordRules);
         try {
           const qr = JSON.parse(localStorage.getItem('aidol_quick_rules') || '[]');
           if (Array.isArray(qr)) allKeywordRules.push(...qr);
         } catch (e) {}
+        try {
+          const customKws = JSON.parse(localStorage.getItem('aidol_custom_keywords') || '[]');
+          if (Array.isArray(customKws)) allKeywordRules.push(...customKws);
+        } catch (e) {}
+        try {
+          const kwAnswers = JSON.parse(localStorage.getItem('aidol_keyword_answers') || '[]');
+          if (Array.isArray(kwAnswers)) allKeywordRules.push(...kwAnswers);
+        } catch (e) {}
+        if (Array.isArray(scriptConfig.keywordRules)) allKeywordRules.push(...scriptConfig.keywordRules);
+        if (Array.isArray(checkoutConfig.keywordRules)) allKeywordRules.push(...checkoutConfig.keywordRules);
 
-        // Hàm chuẩn hóa tiếng Việt hỗ trợ so khớp cả có dấu, không dấu và loại bỏ dấu câu
+        // Helper trích xuất toàn bộ từ khóa từ mọi định dạng (mảng, chuỗi phân tách bởi dấu phẩy, chấm phẩy, sổ dọc, gạch chéo, xuống dòng)
+        const extractKeywords = (rawKeywords) => {
+          if (!rawKeywords) return [];
+          const list = Array.isArray(rawKeywords) ? rawKeywords : [rawKeywords];
+          return list
+            .flatMap(k => String(k || '').split(/[;,|/\n\r\t]+/))
+            .map(k => k.trim())
+            .filter(Boolean);
+        };
+
+        // Hàm chuẩn hóa tiếng Việt siêu nhạy hỗ trợ so khớp cả có dấu, không dấu, token biên từ
         const normStr = (str) => {
           const s = String(str || '').toLowerCase().trim();
-          const cleanPunct = s.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"'“”«»]/g, ' ').replace(/\s+/g, ' ').trim();
+          const cleanPunct = s.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"'“”«»<>?]/g, ' ').replace(/\s+/g, ' ').trim();
           const noAcc = cleanPunct
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '')
@@ -515,64 +533,54 @@ function fillTemplate(template, vars = {}) {
             .replace(/Đ/g, 'd')
             .replace(/\s+/g, ' ')
             .trim();
-          return { raw: s, clean: cleanPunct, noAcc };
+          const cleanTokens = cleanPunct ? cleanPunct.split(' ').filter(Boolean) : [];
+          const noAccTokens = noAcc ? noAcc.split(' ').filter(Boolean) : [];
+          return { raw: s, clean: cleanPunct, noAcc, cleanTokens, noAccTokens };
         };
         const commentNorm = normStr(commentText);
 
-        // Helper trích xuất toàn bộ từ khóa từ mọi định dạng (mảng, chuỗi phân tách bởi dấu phẩy, chấm phẩy, sổ dọc, gạch chéo, xuống dòng)
-        const extractKeywords = (rawKeywords) => {
-          if (!rawKeywords) return [];
-          const list = Array.isArray(rawKeywords) ? rawKeywords : [rawKeywords];
-          return list
-            .flatMap(k => String(k || '').split(/[;,|/\n\r]+/))
-            .map(k => k.trim())
-            .filter(Boolean);
-        };
-
+        // Thuật toán so khớp từ khóa 4 tầng chính xác tuyệt đối
         const isKeywordMatch = (cNorm, kNorm) => {
           if (!kNorm.clean) return false;
-          // 1. So khớp nguyên chuỗi thô (có dấu)
-          if (cNorm.raw.includes(kNorm.raw)) return true;
-          // 2. So khớp sau khi loại bỏ dấu câu (clean)
-          if (cNorm.clean.includes(kNorm.clean)) return true;
-          // 3. So khớp không dấu (noAcc) nếu từ khóa >= 2 ký tự
-          if (kNorm.noAcc.length >= 2 && cNorm.noAcc.includes(kNorm.noAcc)) return true;
+          // 1. So khớp chính xác 100% cả câu (có dấu hoặc không dấu)
+          if (cNorm.clean === kNorm.clean || cNorm.noAcc === kNorm.noAcc) return true;
+          // 2. Từ khóa nhiều từ (cụm từ, vd: "giá bao nhiêu", "áo sơ mi"): kiểm tra chuỗi con
+          if (kNorm.cleanTokens.length > 1) {
+            if (cNorm.clean.includes(kNorm.clean)) return true;
+            if (kNorm.noAcc.length >= 3 && cNorm.noAcc.includes(kNorm.noAcc)) return true;
+          }
+          // 3. Từ khóa đơn lẻ / viết tắt (vd: "giá", "ship", "size", "bn", "ib", "rep", "mua"):
+          // Kiểm tra ranh giới từ (token boundary) để không bị nhận diện nhầm chuỗi con
+          if (kNorm.cleanTokens.length === 1) {
+            const singleClean = kNorm.clean;
+            const singleNoAcc = kNorm.noAcc;
+            if (cNorm.cleanTokens.includes(singleClean)) return true;
+            if (singleNoAcc.length >= 2 && cNorm.noAccTokens.includes(singleNoAcc)) return true;
+            // Cho phép so khớp chuỗi con nếu từ khóa có dấu >= 3 ký tự (vd: "tiền", "chốt", "đẹp")
+            if (singleClean.length >= 3 && cNorm.clean.includes(singleClean)) return true;
+          }
           return false;
         };
 
-        // 🎯 A1.3. KIỂM TRA NHANH: Bình luận có khớp bất kỳ quy tắc từ khóa nào không?
-        // Nếu khớp thì TUYỆT ĐỐI BỎ QUA bộ lọc trivial (A1.5) và bộ lọc cooldown (A2) để luôn phản hồi từ khóa đã nạp
+        // 🎯 A1.3. KIỂM TRA TOÀN DIỆN: Bình luận có khớp bất kỳ quy tắc từ khóa cấu hình sẵn không?
         let hasKeywordRuleMatch = false;
         let matchedRulePre = null;
 
         if (commentText) {
-          // 1. Kiểm tra toàn bộ Keyword Rules từ file tải lên & cấu hình
+          // 1. Quét toàn bộ Keyword Rules từ file tải lên & cấu hình
           for (const rule of allKeywordRules) {
             if (!rule || rule.enabled === false) continue;
             const kws = extractKeywords(rule.keywords);
             if (kws.length === 0) continue;
             const matched = kws.some(k => isKeywordMatch(commentNorm, normStr(k)));
-            if (matched && (rule.replyText || rule.reply)) {
+            if (matched && (rule.replyText || rule.reply || rule.answer || rule.sampleAnswers)) {
               hasKeywordRuleMatch = true;
               matchedRulePre = rule;
               break;
             }
           }
 
-          // 2. Kiểm tra Knowledge Base keywords nếu chưa khớp rule
-          if (!hasKeywordRuleMatch) {
-            const kbActive = (scriptConfig.commentReplySource || checkoutConfig.commentReplySource || 'knowledge_base');
-            if (kbActive === 'knowledge_base' || kbActive === 'both') {
-              if (commentNorm.raw.includes('giá') || commentNorm.raw.includes('bao nhiêu') || commentNorm.raw.includes('tiền') || commentNorm.raw.includes('chi phí') || commentNorm.raw.includes('sale') ||
-                  commentNorm.raw.includes('bảo hành') || commentNorm.raw.includes('đổi trả') || commentNorm.raw.includes('ship') || commentNorm.raw.includes('giao hàng') || commentNorm.raw.includes('vận chuyển') ||
-                  commentNorm.raw.includes('mua') || commentNorm.raw.includes('đặt hàng') || commentNorm.raw.includes('chốt') || commentNorm.raw.includes('lấy') || commentNorm.raw.includes('order') ||
-                  commentNorm.raw.includes('dùng') || commentNorm.raw.includes('tính năng') || commentNorm.raw.includes('chức năng') || commentNorm.raw.includes('như thế nào') || commentNorm.raw.includes('chất liệu') || commentNorm.raw.includes('công dụng')) {
-                hasKeywordRuleMatch = true;
-              }
-            }
-          }
-
-          // 3. Kiểm tra Checkout Products keywords
+          // 2. Kiểm tra Checkout Products keywords nếu chưa khớp rule
           if (!hasKeywordRuleMatch && checkoutConfig.active !== false && Array.isArray(checkoutConfig.checkoutProducts)) {
             for (const prod of checkoutConfig.checkoutProducts) {
               if (prod.active !== false && prod.keywords) {
@@ -585,6 +593,19 @@ function fillTemplate(template, vars = {}) {
               }
             }
           }
+
+          // 3. Kiểm tra Knowledge Base keywords nếu chưa khớp rule
+          if (!hasKeywordRuleMatch) {
+            const kbActive = (scriptConfig.commentReplySource || checkoutConfig.commentReplySource || 'knowledge_base');
+            if (kbActive === 'knowledge_base' || kbActive === 'both') {
+              if (commentNorm.raw.includes('giá') || commentNorm.raw.includes('bao nhiêu') || commentNorm.raw.includes('tiền') || commentNorm.raw.includes('chi phí') || commentNorm.raw.includes('sale') ||
+                  commentNorm.raw.includes('bảo hành') || commentNorm.raw.includes('đổi trả') || commentNorm.raw.includes('ship') || commentNorm.raw.includes('giao hàng') || commentNorm.raw.includes('vận chuyển') ||
+                  commentNorm.raw.includes('mua') || commentNorm.raw.includes('đặt hàng') || commentNorm.raw.includes('chốt') || commentNorm.raw.includes('lấy') || commentNorm.raw.includes('order') ||
+                  commentNorm.raw.includes('dùng') || commentNorm.raw.includes('tính năng') || commentNorm.raw.includes('chức năng') || commentNorm.raw.includes('như thế nào') || commentNorm.raw.includes('chất liệu') || commentNorm.raw.includes('công dụng')) {
+                hasKeywordRuleMatch = true;
+              }
+            }
+          }
         }
 
         const userSalutation = (userName && userName.toLowerCase() !== 'bạn') ? `bạn ${userName}` : 'bạn';
@@ -592,20 +613,10 @@ function fillTemplate(template, vars = {}) {
         let isHandled = false;
         let isKeywordMatched = false;
 
-        // 🛡️ A1.5. XỬ LÝ LỜI CHÀO HỎI THÔNG THƯỜNG
-        if (!hasKeywordRuleMatch && commentText) {
-          const trimmed = commentText.trim().toLowerCase();
-          const trivialPatterns = /^(ch[aà]o|hi+|hello|helo|helu|hey|xin ch[aà]o|alo|[eê]|[oơ]i|a l[oô]|ch[aà]o em|ch[aà]o b[aạ]n|ch[aà]o shop|ch[aà]o m[oọ]i ng[uư][oờ]i|m[oọ]i ng[uư][oờ]i|c[aả] nh[aà]|hi shop|alo shop)\.?\s*$/i;
-          if (trivialPatterns.test(trimmed)) {
-            bodyAnswer = `Dạ em chào ${userSalutation} nha! Shop em rất vui được đón tiếp bạn, bạn quan tâm sản phẩm nào cứ nhắn em tư vấn nha!`;
-            isHandled = true;
-          }
-        }
-
-        // ⏱️ A2. KIỂM TRA GIÃN CÁCH TRẢ LỜI BÌNH LUẬN
+        // ⏱️ A2. KIỂM TRA GIÃN CÁCH TRẢ LỜI BÌNH LUẬN (CHỈ ÁP DỤNG CHO BÌNH LUẬN THƯỜNG / KHÔNG PHẢI TỪ KHÓA)
         const cooldownSec = Math.max(2, parseInt(commentConfig.waitBetweenEvents ?? commentConfig.commentReplyCooldown) || 3);
         const now = Date.now();
-        if (!isTestMode && !hasKeywordRuleMatch && !isHandled && (now - lastCommentReplyTimeRef.current < cooldownSec * 1000)) {
+        if (!isTestMode && !hasKeywordRuleMatch && (now - lastCommentReplyTimeRef.current < cooldownSec * 1000)) {
           console.log(`⏱️ [AvaLive AI] Đang trong khoảng giãn cách (${cooldownSec}s), bỏ qua dồn dập.`);
           processNextQueuedEvent();
           return;
@@ -622,7 +633,7 @@ function fillTemplate(template, vars = {}) {
         }
 
         // =========================================================================
-        // 🎯 QUY TRÌNH 4 BƯỚC PHẢN HỒI BÌNH LUẬN CHUẨN XÁC
+        // 🎯 QUY TRÌNH PHẢN HỒI BÌNH LUẬN: ƯU TIÊN 100% TỪ KHÓA CẤU HÌNH TRƯỚC AI
         // =========================================================================
         
         // BƯỚC 1: TIỀN TỐ ĐỌC LẠI BÌNH LUẬN TRƯỚC KHI TRẢ LỜI
@@ -646,13 +657,15 @@ function fillTemplate(template, vars = {}) {
         // 🎯 BƯỚC 2: ƯU TIÊN SỐ 1 (100% TUYỆT ĐỐI) - ĐỐI CHIẾU DANH SÁCH TỪ KHÓA FILE TẢI LÊN & CẤU HÌNH (KHÔNG DÙNG AI)
         if (!isHandled && commentConfig.active !== false) {
           if (matchedRulePre) {
-            const replyTpl = matchedRulePre.replyText || matchedRulePre.reply;
-            bodyAnswer = fillTemplate(replyTpl, { user: userName, comment: commentText });
-            isHandled = true;
-            isKeywordMatched = true;
-            if (matchedRulePre.role || matchedRulePre.voiceId) {
-              currentEvConfig._matchedRuleRole = matchedRulePre.role;
-              currentEvConfig._matchedRuleVoiceId = matchedRulePre.voiceId;
+            const replyTpl = matchedRulePre.replyText || matchedRulePre.reply || matchedRulePre.answer || (matchedRulePre.sampleAnswers ? getRandomSample(matchedRulePre.sampleAnswers) : '');
+            if (replyTpl) {
+              bodyAnswer = fillTemplate(replyTpl, { user: userName, comment: commentText, product: matchedRulePre.productName || '' });
+              isHandled = true;
+              isKeywordMatched = true;
+              if (matchedRulePre.role || matchedRulePre.voiceId) {
+                currentEvConfig._matchedRuleRole = matchedRulePre.role;
+                currentEvConfig._matchedRuleVoiceId = matchedRulePre.voiceId;
+              }
             }
           } else {
             const seenRules = new Set();
@@ -665,50 +678,24 @@ function fillTemplate(template, vars = {}) {
               const kws = extractKeywords(rule.keywords);
               if (kws.length === 0) continue;
               const matched = kws.some(k => isKeywordMatch(commentNorm, normStr(k)));
-              if (matched && (rule.replyText || rule.reply)) {
-                const replyTpl = rule.replyText || rule.reply;
-                bodyAnswer = fillTemplate(replyTpl, { user: userName, comment: commentText });
-                isHandled = true;
-                isKeywordMatched = true;
-                if (rule.role || rule.voiceId) {
-                  currentEvConfig._matchedRuleRole = rule.role;
-                  currentEvConfig._matchedRuleVoiceId = rule.voiceId;
+              if (matched && (rule.replyText || rule.reply || rule.answer || rule.sampleAnswers)) {
+                const replyTpl = rule.replyText || rule.reply || rule.answer || (rule.sampleAnswers ? getRandomSample(rule.sampleAnswers) : '');
+                if (replyTpl) {
+                  bodyAnswer = fillTemplate(replyTpl, { user: userName, comment: commentText, product: rule.productName || '' });
+                  isHandled = true;
+                  isKeywordMatched = true;
+                  if (rule.role || rule.voiceId) {
+                    currentEvConfig._matchedRuleRole = rule.role;
+                    currentEvConfig._matchedRuleVoiceId = rule.voiceId;
+                  }
+                  break;
                 }
-                break;
               }
             }
           }
         }
 
-        // 2.1. Kiểm tra Kho Tri Thức Doanh Nghiệp & Sản Phẩm (Knowledge Base)
-        const company = scriptConfig.companyName || checkoutConfig.companyName || 'Shop';
-        const product = scriptConfig.productName || checkoutConfig.productName || 'Sản phẩm';
-        const price = scriptConfig.productPrice || checkoutConfig.productPrice || 'ưu đãi cực sốc';
-        const promo = scriptConfig.promotions || checkoutConfig.promotions || 'freeship toàn quốc';
-        const features = scriptConfig.keyFeatures || checkoutConfig.keyFeatures || 'chất lượng cao, cam kết chính hãng';
-        const warranty = scriptConfig.warrantyPolicy || checkoutConfig.warrantyPolicy || 'bảo hành đổi trả uy tín';
-
-        if (!isHandled && (replySource === 'knowledge_base' || replySource === 'both')) {
-          if (lowerComment.includes('giá') || lowerComment.includes('bao nhiêu') || lowerComment.includes('tiền') || lowerComment.includes('chi phí') || lowerComment.includes('sale') || commentNorm.noAcc.includes('gia bao nhieu')) {
-            bodyAnswer = `Sản phẩm ${product} của ${company} đang có giá ${price} kèm khuyến mãi: ${promo}. Bạn bấm ngay vào giỏ hàng góc trái màn hình để nhận ưu đãi nha!`;
-            isHandled = true;
-            isKeywordMatched = true;
-          } else if (lowerComment.includes('bảo hành') || lowerComment.includes('đổi trả') || lowerComment.includes('ship') || lowerComment.includes('giao hàng') || lowerComment.includes('vận chuyển') || commentNorm.noAcc.includes('bao hanh') || commentNorm.noAcc.includes('giao hang')) {
-            bodyAnswer = `Bạn yên tâm nha, bên em có chính sách: ${warranty} và hỗ trợ giao hàng tận nơi ạ!`;
-            isHandled = true;
-            isKeywordMatched = true;
-          } else if (lowerComment.includes('mua') || lowerComment.includes('đặt hàng') || lowerComment.includes('chốt') || lowerComment.includes('lấy') || lowerComment.includes('order') || commentNorm.noAcc.includes('dat hang') || commentNorm.noAcc.includes('chot')) {
-            bodyAnswer = `Em cảm ơn bạn đã tin tưởng ${company}! Bạn bấm trực tiếp vào giỏ hàng góc trái màn hình để chốt đơn ${product} nhận ngay mã quà tặng nha!`;
-            isHandled = true;
-            isKeywordMatched = true;
-          } else if (lowerComment.includes('dùng') || lowerComment.includes('tính năng') || lowerComment.includes('chức năng') || lowerComment.includes('sao') || lowerComment.includes('như thế nào') || lowerComment.includes('chất liệu') || lowerComment.includes('công dụng')) {
-            bodyAnswer = `${product} nổi bật với tính năng: ${features.split('\n')[0] || features}. Sử dụng rất thích và hiệu quả cao ạ!`;
-            isHandled = true;
-            isKeywordMatched = true;
-          }
-        }
-
-        // 2.2. Kiểm tra kịch bản Chốt Đơn Sản Phẩm (Checkout Products)
+        // 2.1. Kiểm tra kịch bản Chốt Đơn Sản Phẩm (Checkout Products)
         if (!isHandled && checkoutConfig.active !== false && Array.isArray(checkoutConfig.checkoutProducts)) {
           for (const prod of checkoutConfig.checkoutProducts) {
             if (prod.active !== false && prod.keywords) {
@@ -732,7 +719,46 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
+        // 2.2. Kiểm tra Kho Tri Thức Doanh Nghiệp & Sản Phẩm (Knowledge Base)
+        const company = scriptConfig.companyName || checkoutConfig.companyName || 'Shop';
+        const product = scriptConfig.productName || checkoutConfig.productName || 'Sản phẩm';
+        const price = scriptConfig.productPrice || checkoutConfig.productPrice || 'ưu đãi cực sốc';
+        const promo = scriptConfig.promotions || checkoutConfig.promotions || 'freeship toàn quốc';
+        const features = scriptConfig.keyFeatures || checkoutConfig.keyFeatures || 'chất lượng cao, cam kết chính hãng';
+        const warranty = scriptConfig.warrantyPolicy || checkoutConfig.warrantyPolicy || 'bảo hành đổi trả uy tín';
+
+        if (!isHandled && (replySource === 'knowledge_base' || replySource === 'both')) {
+          if (lowerComment.includes('giá') || lowerComment.includes('bao nhiêu') || lowerComment.includes('tiền') || lowerComment.includes('chi phí') || lowerComment.includes('sale') || commentNorm.noAcc.includes('gia bao nhieu') || commentNorm.noAccTokens.includes('bn')) {
+            bodyAnswer = `Sản phẩm ${product} của ${company} đang có giá ${price} kèm khuyến mãi: ${promo}. Bạn bấm ngay vào giỏ hàng góc trái màn hình để nhận ưu đãi nha!`;
+            isHandled = true;
+            isKeywordMatched = true;
+          } else if (lowerComment.includes('bảo hành') || lowerComment.includes('đổi trả') || lowerComment.includes('ship') || lowerComment.includes('giao hàng') || lowerComment.includes('vận chuyển') || commentNorm.noAcc.includes('bao hanh') || commentNorm.noAcc.includes('giao hang')) {
+            bodyAnswer = `Bạn yên tâm nha, bên em có chính sách: ${warranty} và hỗ trợ giao hàng tận nơi ạ!`;
+            isHandled = true;
+            isKeywordMatched = true;
+          } else if (lowerComment.includes('mua') || lowerComment.includes('đặt hàng') || lowerComment.includes('chốt') || lowerComment.includes('lấy') || lowerComment.includes('order') || commentNorm.noAcc.includes('dat hang') || commentNorm.noAcc.includes('chot')) {
+            bodyAnswer = `Em cảm ơn bạn đã tin tưởng ${company}! Bạn bấm trực tiếp vào giỏ hàng góc trái màn hình để chốt đơn ${product} nhận ngay mã quà tặng nha!`;
+            isHandled = true;
+            isKeywordMatched = true;
+          } else if (lowerComment.includes('dùng') || lowerComment.includes('tính năng') || lowerComment.includes('chức năng') || lowerComment.includes('sao') || lowerComment.includes('như thế nào') || lowerComment.includes('chất liệu') || lowerComment.includes('công dụng')) {
+            bodyAnswer = `${product} nổi bật với tính năng: ${features.split('\n')[0] || features}. Sử dụng rất thích và hiệu quả cao ạ!`;
+            isHandled = true;
+            isKeywordMatched = true;
+          }
+        }
+
+        // 🛡️ BƯỚC 2.3: XỬ LÝ LỜI CHÀO HỎI THÔNG THƯỜNG (NẾU KHÔNG CÓ TỪ KHÓA NÀO TRONG FILE KHỚP)
+        if (!isHandled && commentText) {
+          const trimmed = commentText.trim().toLowerCase();
+          const trivialPatterns = /^(ch[aà]o|hi+|hello|helo|helu|hey|xin ch[aà]o|alo|[eê]|[oơ]i|a l[oô]|ch[aà]o em|ch[aà]o b[aạ]n|ch[aà]o shop|ch[aà]o m[oọ]i ng[uư][oờ]i|m[oọ]i ng[uư][oờ]i|c[aả] nh[aà]|hi shop|alo shop)\.?\s*$/i;
+          if (trivialPatterns.test(trimmed)) {
+            bodyAnswer = `Dạ em chào ${userSalutation} nha! Shop em rất vui được đón tiếp bạn, bạn quan tâm sản phẩm nào cứ nhắn em tư vấn nha!`;
+            isHandled = true;
+          }
+        }
+
         // 🧠 BƯỚC 3: DỰ PHÒNG BỘ NÃO AI GEMINI (CHỈ CHẠY KHI HOÀN TOÀN KHÔNG KHỚP TỪ KHÓA TRONG FILE/CẤU HÌNH)
+        // YÊU CẦU: Trả lời ngắn gọn súc tích đúng trọng tâm trong 1 câu từ 10 đến 15 từ, không nhắc lại bình luận
         if (!isHandled) {
           if (lowerComment.includes('xinh') || lowerComment.includes('đẹp') || lowerComment.includes('dễ thương')) {
             bodyAnswer = `Em cảm ơn lời khen cực kỳ ngọt ngào của ${userSalutation} nha! Rất vui được đồng hành cùng bạn trong buổi live hôm nay!`;
@@ -743,7 +769,7 @@ function fillTemplate(template, vars = {}) {
               const liveContext = `Livestream bán hàng và tương tác trực tuyến. Sản phẩm: ${product}. Cửa hàng: ${company}. Giá: ${price}. Ưu đãi: ${promo}.`;
               const aiPrompt = commentConfig.aiPrompt 
                 ? fillTemplate(commentConfig.aiPrompt, { user: userName, comment: commentText, product })
-                : `Khán giả "${userName}" vừa hỏi: "${commentText}". ĐÃ CÓ TIỀN TỐ ĐỌC TÊN VÀ NHẮC LẠI CÂU HỎI RỒI. Hãy trả lời cực kỳ ngắn gọn, súc tích, đúng trọng tâm trong DUY NHẤT 1 CÂU từ 10 đến 15 từ. Tự xưng là "em", trả lời thẳng vào câu hỏi, tuyệt đối không nhắc lại câu hỏi, không lan man dài dòng.`;
+                : `Bạn là trợ lý AI livestream bán hàng chuyên nghiệp. Khán giả "${userName}" vừa hỏi: "${commentText}". ĐÃ CÓ TIỀN TỐ ĐỌC TÊN VÀ NHẮC LẠI CÂU HỎI RỒI. Hãy trả lời cực kỳ ngắn gọn, súc tích, đúng trọng tâm trong DUY NHẤT 1 CÂU từ 10 đến 15 từ. Tự xưng là "em", trả lời thẳng vào câu hỏi, tuyệt đối không nhắc lại câu hỏi, không lan man dài dòng.`;
 
               const aiRes = await askGeminiLiveAi({
                 question: commentText,

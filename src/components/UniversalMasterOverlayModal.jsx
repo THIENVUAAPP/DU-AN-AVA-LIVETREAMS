@@ -342,20 +342,21 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     }
 
     const targetRoute = (path === 'idol' || path === 'live-stream') ? 'live-stream' : path;
+    const baseParams = 'fit=fill&autoplay=1&sound=1';
 
     if (effectiveTunnel && !forceCloud) {
       // Đường link Cloudflare Tunnel chuẩn, siêu sạch, không chứa ký tự đặc biệt gây lỗi TikTok Live Studio
-      return `${effectiveTunnel.replace(/\/$/, '')}/${targetRoute}`;
+      return `${effectiveTunnel.replace(/\/$/, '')}/${targetRoute}?${baseParams}`;
     }
 
     const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
     if (!forceCloud && currentOrigin && currentOrigin.startsWith('https://') && !currentOrigin.includes('localhost') && !currentOrigin.includes('127.0.0.1') && !currentOrigin.includes('vercel.app')) {
-      return `${currentOrigin}/${targetRoute}`;
+      return `${currentOrigin}/${targetRoute}?${baseParams}`;
     }
 
     // Fallback Online Cloud Vercel
-    const tunnelParam = effectiveTunnel ? `?tunnel=${encodeURIComponent(effectiveTunnel)}` : '';
-    return `https://avalivepro.vercel.app/${targetRoute}${tunnelParam}`;
+    const tunnelParam = effectiveTunnel ? `&tunnel=${encodeURIComponent(effectiveTunnel)}` : '';
+    return `https://avalivepro.vercel.app/${targetRoute}?${baseParams}${tunnelParam}`;
   };
 
   const projects = [

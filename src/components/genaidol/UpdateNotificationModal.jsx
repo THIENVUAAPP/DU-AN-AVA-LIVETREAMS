@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.56';
+export const APP_VERSION = '5.4.57';
 export const RELEASE_DATE = '03/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.57 - KHẮC PHỤC TRIỆT ĐỂ MÀN HÌNH ĐEN TIKTOK LIVE STUDIO, KHỚP VỪA Y KHUNG HÌNH 9:16 & ƯU TIÊN 100% TỪ KHÓA CẤU HÌNH TRƯỚC AI',
+    description: '1. Khắc Phục Triệt Để Màn Hình Đen Khi Dán Link Vào TikTok Live Studio / OBS Browser Source: Tự động bảo toàn tên miền Cloudflare Tunnel HTTPS công khai, loại bỏ triệt để lỗi 404 URL khi nạp video trên Vercel. Tự động thêm tham số chuẩn ?fit=fill&autoplay=1&sound=1 vào đường link để video vừa y vừa khớp 100% tỷ lệ khung hình 9:16 (1080x1920), phát mượt 60 FPS, âm thanh rõ nét. 2. Ưu Tiên 100% Từ Khóa Cấu Hình & File Nạp Trước AI: Quét và so khớp toàn bộ danh sách quy tắc từ khóa (có dấu, không dấu, token biên từ) từ file tải lên và Tab Bình Luận trước tiên. Nếu khớp từ khóa, lập tức phản hồi đúng câu thoại đã cài đặt (KHÔNG GỌI AI). Chỉ khi bình luận không thuộc bất kỳ từ khóa nào, bộ não AI Gemini mới được kích hoạt để trả lời ngắn gọn, súc tích đúng trọng tâm trong 1 câu từ 10 đến 15 từ mà không lặp lại câu hỏi. 3. Khóa chặt 100% toàn bộ các tab và module hệ thống.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.56 - KHẮC PHỤC TRIỆT ĐỂ MÀN HÌNH ĐEN TIKTOK LIVE STUDIO & KÍCH HOẠT CHUỖI 4 BƯỚC TRẢ LỜI BÌNH LUẬN AI',
     description: '1. Đồng Bộ Hoàn Hảo Sân Khấu Chính Sang TikTok Live Studio (Không Còn Màn Hình Đen): Loại bỏ toàn bộ điều kiện chặn đồng bộ, giải quyết dứt điểm lỗi Mixed Content và 404 URL khi dán link vào TikTok Live Studio / OBS Browser Source, chuẩn hóa khung hình dọc 9:16 (1080x1920) siêu nét 60 FPS. 2. Kích Hoạt 100% Chuỗi 4 Bước Trả Lời Bình Luận & Voice AI: Bước 1: Đọc tiền tố nhắc lại comment khách hàng ("Dạ em cảm ơn {user} đã bình luận là: {comment}"). Bước 2: Ưu tiên 100% đối chiếu quy tắc từ khóa / Kho Tri Thức / Sản phẩm chốt đơn đã cài đặt hoặc file tải lên. Bước 3: Nếu không khớp từ khóa, AI Gemini Flash trả lời ngắn gọn súc tích trong 1 câu 10-15 từ, ghép câu hỏi gợi mở chăm sóc khách hàng. Bước 4: Phát giọng nói Voice AI (TTS) lập tức mà không bị ngắt quãng hay drop sự kiện. 3. Nhận Diện Đúng Khán Giả Thật (tiktok_member): Luôn chào đón chính xác tên người xem tham gia phòng live. 4. Khóa chặt 100% tất cả các tab chức năng khác.'
