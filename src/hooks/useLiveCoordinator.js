@@ -587,6 +587,11 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
+        const userSalutation = (userName && userName.toLowerCase() !== 'bạn') ? `bạn ${userName}` : 'bạn';
+        let bodyAnswer = '';
+        let isHandled = false;
+        let isKeywordMatched = false;
+
         // 🛡️ A1.5. XỬ LÝ LỜI CHÀO HỎI THÔNG THƯỜNG
         if (!hasKeywordRuleMatch && commentText) {
           const trimmed = commentText.trim().toLowerCase();
@@ -602,7 +607,7 @@ function fillTemplate(template, vars = {}) {
         const now = Date.now();
         if (!isTestMode && !hasKeywordRuleMatch && !isHandled && (now - lastCommentReplyTimeRef.current < cooldownSec * 1000)) {
           console.log(`⏱️ [AvaLive AI] Đang trong khoảng giãn cách (${cooldownSec}s), bỏ qua dồn dập.`);
-          setIsProcessingEvent(false);
+          processNextQueuedEvent();
           return;
         }
         lastCommentReplyTimeRef.current = now;
@@ -611,7 +616,7 @@ function fillTemplate(template, vars = {}) {
         if (commentConfig.bannedWords && !isTestMode) {
           const bannedList = commentConfig.bannedWords.split(/[\n;,]/).map(w => w.trim().toLowerCase()).filter(Boolean);
           if (bannedList.some(b => commentText.toLowerCase().includes(b))) {
-            setIsProcessingEvent(false);
+            processNextQueuedEvent();
             return; // Bỏ qua comment chứa từ cấm
           }
         }
@@ -621,7 +626,6 @@ function fillTemplate(template, vars = {}) {
         // =========================================================================
         
         // BƯỚC 1: TIỀN TỐ ĐỌC LẠI BÌNH LUẬN TRƯỚC KHI TRẢ LỜI
-        const userSalutation = (userName && userName.toLowerCase() !== 'bạn') ? `bạn ${userName}` : 'bạn';
         const isQuestion = commentText.includes('?') || 
           /^(ai|sao|gì|đâu|nào|bao nhiêu|thế nào|không|hả|chưa|khi nào|bao giờ|mấy)/i.test(commentText) ||
           /(không|ko|hả|chưa|nhỉ|nhé|ạ|sao)\?*$/i.test(commentText);
@@ -637,9 +641,6 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        let bodyAnswer = '';
-        let isHandled = false;
-        let isKeywordMatched = false;
         const lowerComment = commentText.toLowerCase();
 
         // 🎯 BƯỚC 2: ƯU TIÊN SỐ 1 (100% TUYỆT ĐỐI) - ĐỐI CHIẾU DANH SÁCH TỪ KHÓA FILE TẢI LÊN & CẤU HÌNH (KHÔNG DÙNG AI)
@@ -752,15 +753,8 @@ function fillTemplate(template, vars = {}) {
               });
 
               if (aiRes && aiRes.text && aiRes.text.trim()) {
-                const cleanAiText = aiRes.text.trim();
-                // Bỏ qua hoàn toàn câu generic chúc bạn... nếu AI fallback offline
-                const isCannedWish = /chúc\s+.*(vui|năng lượng|hời|may mắn|tràn ngập)/i.test(cleanAiText) ||
-                                     cleanAiText.startsWith('Dạ em đã ghi nhận bình luận') ||
-                                     cleanAiText.startsWith('Dạ em chào bạn đang theo dõi live');
-                if (!isCannedWish) {
-                  bodyAnswer = cleanAiText;
-                  isHandled = true;
-                }
+                bodyAnswer = aiRes.text.trim();
+                isHandled = true;
               }
             } catch (aiErr) {
               console.warn('AI Brain call error:', aiErr);

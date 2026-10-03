@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.55';
+export const APP_VERSION = '5.4.56';
 export const RELEASE_DATE = '03/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.56 - KHẮC PHỤC TRIỆT ĐỂ MÀN HÌNH ĐEN TIKTOK LIVE STUDIO & KÍCH HOẠT CHUỖI 4 BƯỚC TRẢ LỜI BÌNH LUẬN AI',
+    description: '1. Đồng Bộ Hoàn Hảo Sân Khấu Chính Sang TikTok Live Studio (Không Còn Màn Hình Đen): Loại bỏ toàn bộ điều kiện chặn đồng bộ, giải quyết dứt điểm lỗi Mixed Content và 404 URL khi dán link vào TikTok Live Studio / OBS Browser Source, chuẩn hóa khung hình dọc 9:16 (1080x1920) siêu nét 60 FPS. 2. Kích Hoạt 100% Chuỗi 4 Bước Trả Lời Bình Luận & Voice AI: Bước 1: Đọc tiền tố nhắc lại comment khách hàng ("Dạ em cảm ơn {user} đã bình luận là: {comment}"). Bước 2: Ưu tiên 100% đối chiếu quy tắc từ khóa / Kho Tri Thức / Sản phẩm chốt đơn đã cài đặt hoặc file tải lên. Bước 3: Nếu không khớp từ khóa, AI Gemini Flash trả lời ngắn gọn súc tích trong 1 câu 10-15 từ, ghép câu hỏi gợi mở chăm sóc khách hàng. Bước 4: Phát giọng nói Voice AI (TTS) lập tức mà không bị ngắt quãng hay drop sự kiện. 3. Nhận Diện Đúng Khán Giả Thật (tiktok_member): Luôn chào đón chính xác tên người xem tham gia phòng live. 4. Khóa chặt 100% tất cả các tab chức năng khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.55 - SỬA TRIỆT ĐỂ MÀN HÌNH ĐEN TIKTOK LIVE STUDIO & KÍCH HOẠT ĐẦY ĐỦ SỰ KIỆN AI TIKTOK',
     description: '1. Sửa Dứt Điểm Màn Hình Đen Khi Dán Link TikTok Live Studio / Vercel: Tự động kết nối và nạp đồng bộ video sân khấu chính tức thì 0ms qua Supabase Realtime handshake, không còn chờ đợi hay đen màn hình. 2. Kích Hoạt 100% Sự Kiện AI Chào Người Mới & Trả Lời Bình Luận: Tối ưu bộ điều phối sự kiện TikTok Live, tự động chào mọi khán giả bước vào phòng và đọc trả lời bình luận theo quy trình 4 bước thông minh, loại bỏ hoàn toàn hiện tượng drop sự kiện. 3. Đồng Bộ Âm Thanh Giọng Đọc AI Xuyên Suốt: Giọng AI phát thanh to rõ, dõng dạc và truyền cảm trực tiếp qua luồng link Vercel Cloud cho khán giả nghe trọn vẹn. 4. Khóa Chặt 100% Các Tab Chức Năng Khác.'

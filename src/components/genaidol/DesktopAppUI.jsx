@@ -4243,8 +4243,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
     socket.on('tiktok_member', (data) => {
       if (!data) return;
-      const author = (data.nickname || data.uniqueId || data.username || '').trim();
-      if (!author || author === 'Khách mới' || author === 'Khán Giả' || author === 'Khán giả' || author === 'Viewer') return;
+      let author = (data.nickname || '').trim();
+      if (!author || author === 'Khách mới' || author === 'Khán Giả' || author === 'Khán giả' || author === 'Viewer' || author === 'TikTok User') {
+        author = (data.uniqueId || data.username || '').trim();
+      }
+      if (!author) return;
       
       const timeStr = new Date().toLocaleTimeString();
       setTiktokLogs(prev => [`[${timeStr}] 👤 ${author} đã tham gia phòng Live`, ...prev.slice(0, 49)]);

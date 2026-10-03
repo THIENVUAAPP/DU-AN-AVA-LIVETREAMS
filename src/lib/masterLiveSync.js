@@ -89,20 +89,9 @@ export function getMasterLiveState() {
 export function syncMasterLiveState(partialState, socket = null) {
   if (typeof window === 'undefined') return;
 
-  // 🛑 FIX: KHI NGƯỜI DÙNG ĐÃ NGẮT KẾT NỐI SÂN KHẤU CHÍNH, CHẶN MỌI TÍN HIỆU TỰ ĐỘNG KHÁC.
-  // NHƯNG video/nhân vật do CHÍNH NGƯỜI DÙNG tải lên / chọn trên Sân Khấu Chính luôn phải đồng bộ ngay lập tức ra OBS & TikTok Live Studio.
-  const isMasterStageSynced = localStorage.getItem('avalive_master_sync_active') === 'true';
-  let hasUserStageMedia = false;
-  try {
-    const lockedMedia = localStorage.getItem('avalive_user_locked_media');
-    hasUserStageMedia = !!(lockedMedia && lockedMedia !== 'null' && lockedMedia !== 'undefined' && lockedMedia.trim() !== '');
-  } catch (e) {}
-  const isExplicitUserMedia = partialState.userInitiated === true || (
-    typeof partialState.mediaUrl === 'string' && partialState.mediaUrl.trim() !== '' &&
-    partialState.clearMedia !== true &&
-    (partialState.isMasterSynced === true || partialState.force === true || !!partialState.videoPlaybackEvent)
-  );
-  if (!isMasterStageSynced && !hasUserStageMedia && !isExplicitUserMedia && partialState.type !== 'CLEAR_STAGE' && partialState.clearMedia !== true && partialState.stage !== 'offline') {
+  // 🛑 FIX: ĐẢM BẢO TẤT CẢ DỮ LIỆU SÂN KHẤU CHÍNH LUÔN ĐỒNG BỘ NGAY LẬP TỨC CHO OBS & TIKTOK LIVE STUDIO (KHÔNG BỊ CHẶN)
+  const isMasterExplicitlyOffline = partialState.stage === 'offline' || partialState.isDisconnected === true;
+  if (isMasterExplicitlyOffline && partialState.clearMedia !== true) {
     return;
   }
 
