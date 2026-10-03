@@ -1,3 +1,5 @@
+import fs from 'fs';
+import path from 'path';
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
@@ -20,7 +22,21 @@ export default async function handler(req, res) {
     }
 
     const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
-    let targetFileName = `${osPrefix}.zip`;
+    let pkgVersion = '5.4.52';
+    try {
+      const pkgPath = path.join(process.cwd(), 'package.json');
+      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
+      if (pkg.version) pkgVersion = pkg.version;
+    } catch(e) {
+      // Fallback khi chạy serverless có thể path khác
+      try {
+        const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
+        if (pkg.version) pkgVersion = pkg.version;
+      } catch(err) {}
+    }
+    
+    // Tự động phân giải tên file kèm phiên bản mới nhất từ package.json
+    let targetFileName = `${osPrefix}_v${pkgVersion}.zip`;
     let downloadUrl = '';
 
     try {
