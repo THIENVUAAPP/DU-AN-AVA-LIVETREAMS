@@ -9186,6 +9186,11 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('avalive:deduct_token', { detail: { amount: 1, reason: 'AI Voice TTS' } }));
     
     const audio = new Audio(directApiGetUrl);
+    try {
+      import('../lib/masterLiveSync.js').then(mod => {
+        if (mod && mod.broadcastAiVoice) mod.broadcastAiVoice(directApiGetUrl);
+      });
+    } catch(e) {}
     audio.volume = Math.max(0, Math.min(1.0, effectiveVoiceVolume));
     audio.playbackRate = requestedRate;
     activePreviewAudio = audio;

@@ -276,3 +276,21 @@ export function sendVideoControl(control, socket = null) {
     body: JSON.stringify(payload)
   }).catch(() => {});
 }
+
+export function broadcastAiVoice(audioUrl) {
+  if (typeof window === 'undefined' || !audioUrl) return;
+  const payload = { audioUrl, timestamp: Date.now() };
+
+  if (typeof BroadcastChannel !== 'undefined') {
+    try {
+      const bc = new BroadcastChannel(BROADCAST_CHANNEL_NAME);
+      bc.postMessage({ type: 'AI_VOICE_PLAY', ...payload });
+      setTimeout(() => bc.close(), 50);
+    } catch (e) {}
+  }
+  try {
+    if (supabaseBroadcastChannel) {
+      supabaseBroadcastChannel.send({ type: 'broadcast', event: 'AI_VOICE_PLAY', payload }).catch(()=>{});
+    }
+  } catch (e) {}
+}

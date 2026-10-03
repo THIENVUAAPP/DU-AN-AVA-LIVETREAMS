@@ -226,6 +226,25 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   const [activeSpeakerId, setActiveSpeakerId] = useState(null);
   const [isSpeakerActive, setIsSpeakerActive] = useState(false);
 
+  const playAiVoice = (audioUrl) => {
+    if (!audioUrl) return;
+    try {
+      const isTunnelBase = masterState?.tunnelUrl || localStorage.getItem('avalive_tunnel_url') || '';
+      let finalUrl = audioUrl;
+      const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
+      if (currentOrigin.includes('vercel.app') && isTunnelBase && finalUrl.includes('localhost')) {
+         finalUrl = finalUrl.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, isTunnelBase.replace(/\/$/, ''));
+      }
+      
+      const aud = new Audio(finalUrl);
+      aud.volume = videoVolume;
+      if (!isVideoAudioMuted) {
+        aud.play().catch(e => console.warn('CleanLive AI Voice play error:', e));
+      }
+    } catch(e) {}
+  };
+
+
   // ⚡ Video sự kiện và video lớp trên cùng (Topmost Priority Layers)
   const [activeEventVideo, setActiveEventVideo] = useState(null);
   const [lipSyncVideoUrl, setLipSyncVideoUrl] = useState(null);
@@ -1253,6 +1272,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         supabaseChannel.on('broadcast', { event: 'VIDEO_PLAYBACK_CONTROL' }, ({ payload }) => {
           if (payload) handleVideoPlaybackControl(payload);
         });
+        supabaseChannel.on('broadcast', { event: 'AI_VOICE_PLAY' }, ({ payload }) => {
+          if (payload && payload.audioUrl) playAiVoice(payload.audioUrl);
+        });
+
 
         supabaseChannel.subscribe();
       }
@@ -1735,6 +1758,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 }
                 setIsPlayingState(true);
               }
+            } else if (event.data.type === 'AI_VOICE_PLAY' && event.data.audioUrl) {
+              playAiVoice(event.data.audioUrl);
             } else if (event.data.type === 'LIP_SYNC_VIDEO' || event.data.lipSyncVideoUrl !== undefined) {
               setLipSyncVideoUrl(event.data.lipSyncVideoUrl || null);
             } else if (event.data.type === 'QUICK_RESPONSE_VIDEO' || event.data.quickResponseVideo !== undefined) {
@@ -1757,6 +1782,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         };
 
         masterChannel.postMessage({ type: 'REQUEST_MASTER_LIVE_STATE' });
+        try {
+          if (supabaseChannel) {
+            supabaseChannel.send({ type: 'broadcast', event: 'REQUEST_MASTER_LIVE_STATE' });
+          }
+        } catch(e) {}
 
         bandoChannel = new BroadcastChannel('avalive_bando_stage');
         bandoChannel.onmessage = (e) => {
