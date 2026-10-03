@@ -128,9 +128,15 @@ class AutoPinProductService {
       // Đọc trạng thái đã lưu
       try {
         const savedProd = localStorage.getItem('avalive_current_pinned_product');
-        if (savedProd) {
+        let isCheckoutActive = true;
+        try {
+          const evCfg = JSON.parse(localStorage.getItem('aidol_event_configs') || '{}');
+          if (evCfg?.checkout && evCfg.checkout.active === false) isCheckoutActive = false;
+        } catch (e) {}
+
+        if (savedProd && isCheckoutActive) {
           const parsed = JSON.parse(savedProd);
-          if (parsed && parsed.name && !parsed.name.includes('AVA LIVE') && !parsed.name.includes('Streamer Desktop')) {
+          if (parsed && parsed.active !== false && parsed.enabled !== false && parsed.name && !parsed.name.includes('AVA LIVE') && !parsed.name.includes('Streamer Desktop')) {
             this.currentPinnedProduct = parsed;
           } else {
             this.currentPinnedProduct = null;
@@ -241,10 +247,61 @@ class AutoPinProductService {
   }
 
   /**
+   * Hủy ghim sản phẩm và đồng bộ toàn hệ thống để ẩn hoàn toàn khỏi màn hình Live
+   */
+  unpinProduct() {
+    this.currentPinnedProduct = null;
+    if (typeof window !== 'undefined') {
+      localStorage.removeItem('avalive_current_pinned_product');
+      window.dispatchEvent(new CustomEvent('avalive:pin_product_updated', {
+        detail: { product: null, triggerSource: 'unpin' }
+      }));
+      window.dispatchEvent(new CustomEvent('avalive_product_pinned', {
+        detail: { product: null, triggerSource: 'unpin' }
+      }));
+      if (this.broadcastChannel) {
+        this.broadcastChannel.postMessage({
+          type: 'PIN_PRODUCT_UPDATE',
+          product: null,
+          triggerSource: 'unpin',
+          timestamp: Date.now()
+        });
+      }
+      try {
+        const masterBc = new BroadcastChannel('avalive_master_live_stream');
+        masterBc.postMessage({
+          type: 'PIN_PRODUCT_UPDATE',
+          product: null,
+          timestamp: Date.now()
+        });
+        masterBc.close();
+      } catch (e) {}
+    }
+  }
+
+  /**
    * Ghim một sản phẩm và đồng bộ toàn hệ thống (TikTok Shop, Live Studio, OBS Overlay)
    */
   pinProduct(product, triggerSource = 'ai_voice') {
     if (!product) return;
+
+    // BẮT BUỘC: Chỉ ghim khi sản phẩm có active !== false && enabled !== false
+    if (product.active === false || product.enabled === false) {
+      console.log('⛔ [AVA AutoPin] Sản phẩm chưa được kích hoạt (active: false), bỏ qua không ghim.');
+      return;
+    }
+
+    // BẮT BUỘC: Kiểm tra tab chốt đơn có đang bật không
+    try {
+      const savedEvCfg = localStorage.getItem('aidol_event_configs');
+      if (savedEvCfg) {
+        const evCfg = JSON.parse(savedEvCfg);
+        if (evCfg?.checkout && evCfg.checkout.active === false) {
+          console.log('⛔ [AVA AutoPin] Sự kiện Chốt Đơn đang tắt (active: false), bỏ qua không ghim.');
+          return;
+        }
+      }
+    } catch (e) {}
 
     const sellerName = getProductSellerName(product);
     const resolvedBuyUrl = resolveSellerProductBuyUrl(product);
@@ -395,8 +452,9 @@ class AutoPinProductService {
       const eventConfigsRaw = localStorage.getItem('aidol_event_configs') || localStorage.getItem('aidol_event_configs_backup');
       if (eventConfigsRaw) {
         const conf = JSON.parse(eventConfigsRaw);
-        if (conf?.checkout?.checkoutProducts && Array.isArray(conf.checkout.checkoutProducts)) {
-          conf.checkout.checkoutProducts.filter(p => p.active !== false && p.productName && !p.productName.includes('AVA LIVE') && !p.productName.includes('Streamer Desktop')).forEach(p => {
+        // NẾU TAB CHỐT ĐƠN TẮT (active === false), TUYỆT ĐỐI KHÔNG GHIM SẢN PHẨM NÀO
+        if (conf?.checkout?.active !== false && conf?.checkout?.checkoutProducts && Array.isArray(conf.checkout.checkoutProducts)) {
+          conf.checkout.checkoutProducts.filter(p => p.active !== false && p.enabled !== false && p.productName && !p.productName.includes('AVA LIVE') && !p.productName.includes('Streamer Desktop')).forEach(p => {
             if (!products.some(existing => existing.id === p.id || existing.name === p.productName)) {
               products.push({
                 id: p.id,

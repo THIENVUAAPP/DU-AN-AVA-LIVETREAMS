@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.43';
+export const APP_VERSION = '5.4.44';
 export const RELEASE_DATE = '03/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.44 - Gắn Nhãn [ƯU TIÊN] File Từ Khóa, Chuẩn Hóa Quy Trình 4 Bước Đọc Comment & Ràng Buộc Kích Hoạt Sản Phẩm Chốt Đơn',
+    description: '1. Gắn Nhãn [🔥 ƯU TIÊN SỐ 1 - LUÔN XỬ LÝ ĐẦU TIÊN TRƯỚC AI] Cho File Từ Khóa: Nổi bật huy hiệu Ưu Tiên tại nút Tải File, Modal nhập liệu, và từng thẻ quy tắc. Đồng bộ tự động 100% mọi kịch bản từ file vào bộ nhớ chia sẻ toàn hệ thống. 2. Chuẩn Hóa Tuyệt Đối Quy Trình 4 Bước Phản Hồi Bình Luận: Bước 1: Ghi nhận comment, cảm ơn và nhắc lại câu hỏi/bình luận của khách ("Dạ em cảm ơn {user} đã hỏi/bình luận: {comment}"). Bước 2 (Ưu Tiên 100%): Đối chiếu với danh sách từ khóa trong file tải lên & cấu hình. Nếu khớp, lập tức trả lời đúng câu thoại đã cài đặt (thay thế [user] bằng tên khách), KHÔNG dùng AI ở bước này. Bước 3: Nếu hoàn toàn không khớp từ khóa nào, mới chuyển cho bộ não AI Gemini trả lời đúng trọng tâm trong đúng 1 câu từ 10 đến 15 từ. Bước 4: Nếu AI lỗi, dùng câu chăm sóc khách hàng lịch sự. 3. Video Sự Kiện Bình Luận: Chỉ đổi video khi người dùng có tải/cấu hình video riêng trong Tab Bình luận; nếu không, giữ nguyên video streamer phát liên tục không bị gián đoạn. 4. Ràng Buộc Kích Hoạt Sản Phẩm Chốt Đơn: Thẻ sản phẩm CHỈ hiển thị trên màn hình Live và TikTok Live Studio khi người dùng tick chọn kích hoạt (active: true / enabled: true). Tự động gỡ ghim khỏi màn hình khi người dùng bỏ tick chọn. 5. Khóa chặt 100% các tab và module khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.43 - Khắc Phục Triệt Để Cửa Sổ Bắt Hình Window Capture OBS & Sửa Lỗi Đen Màn Hình/Bành Trướng TikTok Live Studio',
     description: '1. Sửa Lỗi Window Capture OBS Chỉ Hiển Thị "Một Khúc" & Bị Đen 1 Bên: Loại bỏ triệt để xung đột toạ độ nhân vật phụ. Khi phát video/idol trên Sân Khấu Chính, video sẽ tự động phủ kín 100% toàn bộ khung hình dọc 9:16 (w-full h-full object-cover), hiển thị trọn vẹn người và bối cảnh chuẩn điện thoại di động, tuyệt đối không bị co ép vào góc trái 48% hay để lại khoảng đen bên phải. 2. Khắc Phục Lỗi Màn Hình Đen & Bành Trướng Trên TikTok Live Studio: Khóa cứng tỷ lệ chuẩn 9:16 (1080×1920) độc quyền cho nguồn live, loại bỏ hiện tượng video bị kéo bành méo mó sang 2 bên hoặc bị cắt 2 đầu trên dưới. Bổ sung cơ chế tự động khôi phục video gần nhất khi kết nối, đảm bảo đường link Online HTTPS luôn phát video ngay lập tức trong 0ms, không bao giờ bị đen màn hình. 3. Giữ nguyên và bảo toàn 100% toàn bộ các tab code và tính năng hệ thống.'

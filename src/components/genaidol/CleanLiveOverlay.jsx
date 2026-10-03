@@ -235,7 +235,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   const [pinnedProduct, setPinnedProduct] = useState(() => {
     try {
       const saved = localStorage.getItem('avalive_current_pinned_product');
-      return saved ? JSON.parse(saved) : null;
+      if (!saved) return null;
+      const parsed = JSON.parse(saved);
+      if (!parsed || parsed.active === false || parsed.enabled === false) return null;
+      const evCfg = JSON.parse(localStorage.getItem('aidol_event_configs') || '{}');
+      if (evCfg?.checkout && evCfg.checkout.active === false) return null;
+      return parsed;
     } catch (e) {
       return null;
     }
@@ -243,8 +248,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
   useEffect(() => {
     const handlePinnedProductUpdate = (e) => {
-      if (e?.detail?.product) {
-        setPinnedProduct(e.detail.product);
+      if (e?.detail) {
+        if (!e.detail.product || e.detail.product.active === false || e.detail.product.enabled === false) {
+          setPinnedProduct(null);
+          setMasterState(prev => ({ ...prev, livePinnedProduct: null, pinnedProduct: null }));
+        } else {
+          setPinnedProduct(e.detail.product);
+          setMasterState(prev => ({ ...prev, livePinnedProduct: e.detail.product, pinnedProduct: e.detail.product }));
+        }
       }
     };
     const handleEventVideoTrigger = (e) => {
@@ -295,9 +306,17 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       if (e.key === 'avalive_current_pinned_product') {
         try {
           const prod = e.newValue ? JSON.parse(e.newValue) : null;
-          setPinnedProduct(prod);
-          setMasterState(prev => ({ ...prev, livePinnedProduct: prod, pinnedProduct: prod }));
-        } catch (err) {}
+          if (!prod || prod.active === false || prod.enabled === false) {
+            setPinnedProduct(null);
+            setMasterState(prev => ({ ...prev, livePinnedProduct: null, pinnedProduct: null }));
+          } else {
+            setPinnedProduct(prod);
+            setMasterState(prev => ({ ...prev, livePinnedProduct: prod, pinnedProduct: prod }));
+          }
+        } catch (err) {
+          setPinnedProduct(null);
+          setMasterState(prev => ({ ...prev, livePinnedProduct: null, pinnedProduct: null }));
+        }
       }
     };
 
@@ -307,8 +326,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         bc = new BroadcastChannel('avalive_product_pin_channel');
         bc.onmessage = (ev) => {
           if (ev?.data?.product !== undefined) {
-            setPinnedProduct(ev.data.product);
-            setMasterState(prev => ({ ...prev, livePinnedProduct: ev.data.product, pinnedProduct: ev.data.product }));
+            const p = ev.data.product;
+            if (!p || p.active === false || p.enabled === false) {
+              setPinnedProduct(null);
+              setMasterState(prev => ({ ...prev, livePinnedProduct: null, pinnedProduct: null }));
+            } else {
+              setPinnedProduct(p);
+              setMasterState(prev => ({ ...prev, livePinnedProduct: p, pinnedProduct: p }));
+            }
           }
         };
       }
@@ -3403,6 +3428,19 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         {Boolean(masterState?.livePinnedProduct || masterState?.pinnedProduct || pinnedProduct) && (() => {
           const prod = masterState?.livePinnedProduct || masterState?.pinnedProduct || pinnedProduct;
           if (!prod || !prod.name || prod.name.includes('Streamer Desktop') || prod.name.includes('AVA LIVE') || prod.name.includes('TikTok Shop Streamer')) return null;
+          
+          // BẮT BUỘC: Chỉ hiển thị sản phẩm khi người dùng tick chọn kích hoạt (active !== false && enabled !== false)
+          if (prod.active === false || prod.enabled === false) return null;
+
+          // BẮT BUỘC: Kiểm tra tab chốt đơn có đang bật không
+          try {
+            const savedEvCfg = localStorage.getItem('aidol_event_configs');
+            if (savedEvCfg) {
+              const evCfg = JSON.parse(savedEvCfg);
+              if (evCfg?.checkout && evCfg.checkout.active === false) return null;
+            }
+          } catch (e) {}
+
           const rawPrice = prod.price || prod.salePrice || prod.currentPrice;
           const displayPrice = typeof rawPrice === 'number' ? rawPrice.toLocaleString('vi-VN') + ' đ' : (rawPrice || '');
           const rawOldPrice = prod.oldPrice || prod.originalPrice || prod.marketPrice;

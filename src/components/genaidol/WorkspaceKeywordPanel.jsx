@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { 
   Plus, Trash2, Edit3, Check, MessageSquare, Zap,
   Upload, FileText, ArrowUp, ArrowDown, Copy, Download,
@@ -13,6 +13,15 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
   // States
   const prompts = currentConfig.prompts || [];
   const keywordRules = currentConfig.keywordRules || [];
+
+  useEffect(() => {
+    if (keywordRules && keywordRules.length > 0) {
+      try {
+        localStorage.setItem('AVALIVE_KEYWORD_RULES_SHARED', JSON.stringify(keywordRules));
+        localStorage.setItem('avalive_comment_keyword_rules', JSON.stringify(keywordRules));
+      } catch (e) {}
+    }
+  }, [keywordRules]);
 
   const [newPromptText, setNewPromptText] = useState('');
   const [newPromptRole, setNewPromptRole] = useState('idol');
@@ -42,6 +51,19 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
   const [copiedId, setCopiedId] = useState(null);
 
   const syncConfig = (partial) => {
+    if (partial.keywordRules) {
+      try {
+        localStorage.setItem('AVALIVE_KEYWORD_RULES_SHARED', JSON.stringify(partial.keywordRules));
+        localStorage.setItem('avalive_comment_keyword_rules', JSON.stringify(partial.keywordRules));
+        if (typeof window !== 'undefined') {
+          window.dispatchEvent(new CustomEvent('avalive:keyword_rules_updated', {
+            detail: { keywordRules: partial.keywordRules }
+          }));
+        }
+      } catch (e) {
+        console.error('Error syncing keyword rules to localStorage:', e);
+      }
+    }
     onUpdateConfig(partial);
   };
 
@@ -235,7 +257,7 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
             }`}
           >
             <Zap size={15} className={activeTab === 'keywords' ? 'text-black' : 'text-amber-400'} /> 
-            🎯 TỪ KHÓA & TRẢ LỜI TỰ ĐỘNG ({keywordRules.length})
+            🎯 TỪ KHÓA & TRẢ LỜI TỰ ĐỘNG [ƯU TIÊN CAO NHẤT] ({keywordRules.length})
           </button>
           <button
             onClick={() => setActiveTab('prompts')}
@@ -254,9 +276,9 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
           <div className="flex items-center gap-2">
             <button 
               onClick={() => setShowBulkRuleModal(true)} 
-              className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md transition-all active:scale-95 cursor-pointer"
+              className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md transition-all active:scale-95 cursor-pointer border border-amber-300"
             >
-              <Upload size={13} /> 📁 Tải File Từ Khóa
+              <Upload size={13} /> 📁 [ƯU TIÊN] Tải File Từ Khóa
             </button>
             {keywordRules.length > 0 && (
               <button 
@@ -296,7 +318,10 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
               onChange={() => {}}
               className="w-3.5 h-3.5 accent-amber-500 rounded cursor-pointer"
             />
-            <span>🎯 1. Trả Lời Theo Từ Khóa</span>
+            <span className="flex items-center gap-1.5">
+              <span>🎯 1. Trả Lời Theo Từ Khóa & File Tải Lên</span>
+              <span className="text-[9px] px-1.5 py-0.5 rounded font-black bg-amber-400 text-black">ƯU TIÊN SỐ 1</span>
+            </span>
             <span className={`text-[9px] px-1.5 py-0.2 rounded font-black ${
               (currentConfig.useKeywords !== false && currentConfig.commentReplyMode !== 'ai_only') ? 'bg-amber-500 text-black' : 'bg-white/10 text-gray-400'
             }`}>
@@ -450,7 +475,7 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
           {/* Form Thêm Bộ Từ Khóa Thủ Công */}
           <div className="p-4 rounded-2xl bg-[#161922] border border-amber-500/30 space-y-3 shadow-md">
             <h4 className="text-xs font-black text-amber-300 uppercase tracking-wider flex items-center gap-2">
-              <Plus size={15} className="text-amber-400" /> THÊM BỘ TỪ KHÓA & CÂU TRẢ LỜI THỦ CÔNG
+              <Plus size={15} className="text-amber-400" /> THÊM BỘ TỪ KHÓA & CÂU TRẢ LỜI THỦ CÔNG <span className="text-[10px] px-2 py-0.5 rounded-full font-black bg-amber-500/20 text-amber-300 border border-amber-500/30">🔥 ƯU TIÊN TRƯỚC AI</span>
             </h4>
             
             <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
@@ -496,18 +521,18 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
                 onClick={handleAddKeywordRule} 
                 className="px-4 py-2 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-black rounded-xl text-xs flex items-center justify-center gap-1.5 shadow-lg shadow-amber-500/20 sm:col-span-3 transition-all active:scale-95 cursor-pointer"
               >
-                <Plus size={15} /> Thêm Rule
+                <Plus size={15} /> Thêm Rule (Ưu Tiên)
               </button>
             </div>
           </div>
 
           {/* Modal Tải Lên / Dán Bộ Từ Khóa Đa Định Dạng */}
           {showBulkRuleModal && (
-            <div className="p-4 rounded-2xl bg-[#161922] border border-amber-500/40 shadow-2xl space-y-3 animate-in fade-in zoom-in-95 duration-150">
+            <div className="p-4 rounded-2xl bg-[#161922] border-2 border-amber-400/80 shadow-2xl space-y-3 animate-in fade-in zoom-in-95 duration-150">
               <div className="flex items-center justify-between">
                 <div className="flex items-center gap-2 text-xs font-black text-amber-300 uppercase">
-                  <FileText size={15} /> 
-                  Tải Lên File / Dán Danh Sách Từ Khóa & Phản Hồi Đa Định Dạng
+                  <FileText size={15} className="text-amber-400" /> 
+                  🔥 [ƯU TIÊN SỐ 1 - LUÔN XỬ LÝ TRƯỚC AI] TẢI LÊN FILE / DÁN DANH SÁCH TỪ KHÓA & PHẢN HỒI
                 </div>
                 <button onClick={() => setShowBulkRuleModal(false)} className="text-gray-400 hover:text-white text-xs cursor-pointer">
                   ✕ Đóng
@@ -516,7 +541,7 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
 
               {/* Formats badges */}
               <div className="flex items-center gap-1.5 flex-wrap text-[10px]">
-                <span className="text-gray-400 font-bold">Hỗ trợ:</span>
+                <span className="text-amber-400 font-black">ƯU TIÊN TUYỆT ĐỐI - Hỗ trợ:</span>
                 <span className="px-2 py-0.5 rounded bg-purple-500/20 text-purple-300 font-bold border border-purple-500/30">📄 .MD</span>
                 <span className="px-2 py-0.5 rounded bg-rose-500/20 text-rose-300 font-bold border border-rose-500/30">📑 .PDF</span>
                 <span className="px-2 py-0.5 rounded bg-blue-500/20 text-blue-300 font-bold border border-blue-500/30">📘 .DOCX / .DOC</span>
@@ -543,16 +568,16 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
                 />
                 <button 
                   onClick={() => ruleFileInputRef.current?.click()} 
-                  className="px-3.5 py-2 bg-amber-600/20 hover:bg-amber-600/40 border border-amber-500/40 text-amber-200 rounded-xl text-xs font-bold flex items-center gap-1.5 transition-all cursor-pointer"
+                  className="px-3.5 py-2 bg-gradient-to-r from-amber-600/30 to-yellow-600/30 hover:from-amber-600/50 hover:to-yellow-600/50 border border-amber-400 text-amber-200 rounded-xl text-xs font-black flex items-center gap-1.5 transition-all cursor-pointer shadow-md"
                 >
-                  <Upload size={13} /> 📁 Chọn File (.md, .pdf, .docx, .doc, .txt, .csv, .json)
+                  <Upload size={13} /> 📁 [ƯU TIÊN] Chọn File (.md, .pdf, .docx, .doc, .txt, .csv, .json)
                 </button>
 
                 <button 
                   onClick={() => handleBulkImportRules(bulkRuleText)} 
                   className="px-5 py-2 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg transition-all cursor-pointer"
                 >
-                  <Check size={14} /> Tự Động Chia Tách & Nạp Quy Tắc
+                  <Check size={14} /> Tự Động Chia Tách & Nạp [ƯU TIÊN]
                 </button>
               </div>
             </div>
@@ -708,6 +733,9 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
                         </h4>
 
                         {/* Badges */}
+                        <span className="text-[10px] px-2 py-0.5 rounded-full font-black bg-amber-500/20 text-amber-300 border border-amber-500/40 flex items-center gap-1 shadow-xs">
+                          🔥 ƯU TIÊN SỐ 1
+                        </span>
                         <span className={`text-[10px] px-2.5 py-0.5 rounded-full font-bold border ${roleBadgeClass}`}>
                           {roleLabel}
                         </span>

@@ -1994,8 +1994,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
   useEffect(() => {
     const handlePinnedProductUpdate = (e) => {
-      if (e?.detail?.product) {
-        setLivePinnedProduct(e.detail.product);
+      if (e?.detail) {
+        if (!e.detail.product || e.detail.product.active === false || e.detail.product.enabled === false) {
+          setLivePinnedProduct(null);
+        } else {
+          setLivePinnedProduct(e.detail.product);
+        }
       }
     };
     window.addEventListener('avalive:pin_product_updated', handlePinnedProductUpdate);
@@ -2007,24 +2011,43 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       if (typeof BroadcastChannel !== 'undefined') {
         pinBc = new BroadcastChannel('avalive_product_pin_channel');
         pinBc.onmessage = (ev) => {
-          if (ev?.data?.product) {
-            setLivePinnedProduct(ev.data.product);
+          if (ev?.data) {
+            if (!ev.data.product || ev.data.product.active === false || ev.data.product.enabled === false) {
+              setLivePinnedProduct(null);
+            } else {
+              setLivePinnedProduct(ev.data.product);
+            }
           }
         };
         masterBc = new BroadcastChannel('avalive_master_live_stream');
         masterBc.onmessage = (ev) => {
-          if (ev?.data?.type === 'PIN_PRODUCT_UPDATE' && ev?.data?.product) {
-            setLivePinnedProduct(ev.data.product);
+          if (ev?.data?.type === 'PIN_PRODUCT_UPDATE') {
+            if (!ev.data.product || ev.data.product.active === false || ev.data.product.enabled === false) {
+              setLivePinnedProduct(null);
+            } else {
+              setLivePinnedProduct(ev.data.product);
+            }
           }
         };
       }
     } catch (e) {}
 
     const handleStorage = (e) => {
-      if (e.key === 'avalive_current_pinned_product' && e.newValue) {
-        try {
-          setLivePinnedProduct(JSON.parse(e.newValue));
-        } catch (err) {}
+      if (e.key === 'avalive_current_pinned_product') {
+        if (!e.newValue) {
+          setLivePinnedProduct(null);
+        } else {
+          try {
+            const parsed = JSON.parse(e.newValue);
+            if (parsed && parsed.active !== false && parsed.enabled !== false) {
+              setLivePinnedProduct(parsed);
+            } else {
+              setLivePinnedProduct(null);
+            }
+          } catch (err) {
+            setLivePinnedProduct(null);
+          }
+        }
       }
     };
     window.addEventListener('storage', handleStorage);

@@ -769,6 +769,13 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
       return updated;
     });
 
+    // 🛒 ĐỒNG BỘ TRẠNG THÁI SỰ KIỆN CHỐT ĐƠN: NẾU TẮT THÌ UNPIN SẢN PHẨM KHỎI MÀN HÌNH LIVE
+    if (id === 'checkout' && 'active' in partial) {
+      if (partial.active === false) {
+        autoPinProductService.unpinProduct();
+      }
+    }
+
     // 🛡️ ĐỒNG BỘ TRẠNG THÁI KÍCH HOẠT KỊCH BẢN BÁN HÀNG IDOL
     if (id === 'script_broadcast' && 'active' in partial) {
       if (partial.active === false) {
@@ -1233,6 +1240,19 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
 
   // ==================== CHECKOUT PRODUCTS HANDLERS ====================
   const handleProductChange = (productId, name, value, isCheckbox = false) => {
+    // Nếu người dùng bỏ tick kích hoạt sản phẩm này (active: false), tự động gỡ ghim khỏi màn hình Live ngay lập tức
+    if (name === 'active' && !value) {
+      try {
+        const savedProd = localStorage.getItem('avalive_current_pinned_product');
+        if (savedProd) {
+          const parsed = JSON.parse(savedProd);
+          if (parsed && (parsed.id === productId || String(parsed.id) === String(productId))) {
+            autoPinProductService.unpinProduct();
+          }
+        }
+      } catch (e) {}
+    }
+
     setEventConfigs(prev => {
       const targetEvent = 'checkout';
       const newProducts = (prev[targetEvent]?.checkoutProducts || []).map(prod => {
@@ -1285,6 +1305,17 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
   };
 
   const handleDeleteProduct = (productId) => {
+    // Nếu xóa sản phẩm đang ghim, gỡ ghim ngay lập tức
+    try {
+      const savedProd = localStorage.getItem('avalive_current_pinned_product');
+      if (savedProd) {
+        const parsed = JSON.parse(savedProd);
+        if (parsed && (parsed.id === productId || String(parsed.id) === String(productId))) {
+          autoPinProductService.unpinProduct();
+        }
+      }
+    } catch (e) {}
+
     setEventConfigs(prev => {
       const targetEvent = 'checkout';
       const currentProducts = prev[targetEvent]?.checkoutProducts || [];
@@ -2781,6 +2812,9 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                             <button
                               type="button"
                               onClick={() => {
+                                if (prod.active === false) {
+                                  handleProductChange(prod.id, 'active', true, true);
+                                }
                                 autoPinProductService.pinProduct({
                                   id: prod.id,
                                   name: prod.productName || `Mã #${prod.id}`,
@@ -2794,9 +2828,11 @@ export default function WorkspaceTacVu({ defaultEventId = 'flow_sequencer' }) {
                                   videoFolder: prod.videoFolder,
                                   videoFileName: prod.videoFileName,
                                   videoFile: prod.videoFile,
+                                  active: true,
+                                  enabled: true,
                                   badge: 'HOT DEAL 🔥'
                                 }, 'manual_workspace');
-                                toast.success(`📌 Đã ghim sản phẩm "${prod.productName || `Mã #${prod.id}`}" lên màn hình Live!`);
+                                toast.success(`📌 Đã kích hoạt & ghim sản phẩm "${prod.productName || `Mã #${prod.id}`}" lên màn hình Live!`);
                               }}
                               className="text-xs bg-amber-50 hover:bg-amber-100 text-amber-800 border border-amber-300 px-2.5 py-0.5 rounded-md transition-colors font-bold cursor-pointer flex items-center gap-1 shadow-2xs"
                               title="Ghim sản phẩm này lên màn hình Livestream & TikTok Shop ngay lập tức"

@@ -458,47 +458,87 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
+        // 🎯 THU THẬP TẤT CẢ QUY TẮC TỪ KHÓA TỪ MỌI NGUỒN (FILE TẢI LÊN, CẤU HÌNH CÁC TAB, LOCALSTORAGE)
+        const allKeywordRules = [];
+        if (Array.isArray(commentConfig.keywordRules)) allKeywordRules.push(...commentConfig.keywordRules);
+        if (Array.isArray(scriptConfig.keywordRules)) allKeywordRules.push(...scriptConfig.keywordRules);
+        if (Array.isArray(checkoutConfig.keywordRules)) allKeywordRules.push(...checkoutConfig.keywordRules);
+        try {
+          const shared = JSON.parse(localStorage.getItem('AVALIVE_KEYWORD_RULES_SHARED') || '[]');
+          if (Array.isArray(shared)) allKeywordRules.push(...shared);
+        } catch (e) {}
+        try {
+          const comKws = JSON.parse(localStorage.getItem('avalive_comment_keyword_rules') || '[]');
+          if (Array.isArray(comKws)) allKeywordRules.push(...comKws);
+        } catch (e) {}
+        try {
+          const gv = JSON.parse(localStorage.getItem('game_voice_settings') || '{}');
+          if (Array.isArray(gv.keywordRules)) allKeywordRules.push(...gv.keywordRules);
+        } catch (e) {}
+        try {
+          const qr = JSON.parse(localStorage.getItem('aidol_quick_rules') || '[]');
+          if (Array.isArray(qr)) allKeywordRules.push(...qr);
+        } catch (e) {}
+
+        // Hàm chuẩn hóa tiếng Việt hỗ trợ so khớp cả có dấu và không dấu
+        const normStr = (str) => {
+          const s = String(str || '').toLowerCase().trim();
+          const noAcc = s
+            .normalize('NFD')
+            .replace(/[\u0300-\u036f]/g, '')
+            .replace(/đ/g, 'd')
+            .replace(/Đ/g, 'd')
+            .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"']/g, ' ')
+            .replace(/\s+/g, ' ')
+            .trim();
+          return { raw: s, noAcc };
+        };
+        const commentNorm = normStr(commentText);
+
         // 🎯 A1.3. KIỂM TRA NHANH: Bình luận có khớp bất kỳ quy tắc từ khóa nào không?
-        // Nếu khớp thì BỎ QUA bộ lọc trivial (A1.5) để đảm bảo phản hồi đúng keyword đã cài đặt
-        const lowerCommentPreCheck = commentText.toLowerCase();
+        // Nếu khớp thì TUYỆT ĐỐI BỎ QUA bộ lọc trivial (A1.5) để đảm bảo luôn phản hồi từ khóa đã nạp
         let hasKeywordRuleMatch = false;
+        let matchedRulePre = null;
+
         if (useKw && commentText) {
-          // Kiểm tra Knowledge Base keywords
-          const kbActive = (scriptConfig.commentReplySource || checkoutConfig.commentReplySource || 'knowledge_base');
-          if (kbActive === 'knowledge_base' || kbActive === 'both') {
-            if (lowerCommentPreCheck.includes('giá') || lowerCommentPreCheck.includes('bao nhiêu') || lowerCommentPreCheck.includes('tiền') || lowerCommentPreCheck.includes('chi phí') || lowerCommentPreCheck.includes('sale') ||
-                lowerCommentPreCheck.includes('bảo hành') || lowerCommentPreCheck.includes('đổi trả') || lowerCommentPreCheck.includes('ship') || lowerCommentPreCheck.includes('giao hàng') || lowerCommentPreCheck.includes('vận chuyển') ||
-                lowerCommentPreCheck.includes('mua') || lowerCommentPreCheck.includes('đặt hàng') || lowerCommentPreCheck.includes('chốt') || lowerCommentPreCheck.includes('lấy') || lowerCommentPreCheck.includes('order') ||
-                lowerCommentPreCheck.includes('dùng') || lowerCommentPreCheck.includes('tính năng') || lowerCommentPreCheck.includes('chức năng') || lowerCommentPreCheck.includes('như thế nào') || lowerCommentPreCheck.includes('chất liệu') || lowerCommentPreCheck.includes('công dụng')) {
+          // 1. Kiểm tra toàn bộ Keyword Rules từ file tải lên & cấu hình
+          for (const rule of allKeywordRules) {
+            if (!rule || rule.enabled === false || !rule.keywords) continue;
+            const kwArr = Array.isArray(rule.keywords) ? rule.keywords : String(rule.keywords).split(/[;,]\s*|\n/);
+            const matched = kwArr.some(k => {
+              const kNorm = normStr(k);
+              if (!kNorm.raw) return false;
+              return commentNorm.raw.includes(kNorm.raw) || (kNorm.noAcc.length >= 2 && commentNorm.noAcc.includes(kNorm.noAcc));
+            });
+            if (matched && (rule.replyText || rule.reply)) {
               hasKeywordRuleMatch = true;
+              matchedRulePre = rule;
+              break;
             }
           }
-          // Kiểm tra Checkout Products keywords
+
+          // 2. Kiểm tra Knowledge Base keywords nếu chưa khớp rule
+          if (!hasKeywordRuleMatch) {
+            const kbActive = (scriptConfig.commentReplySource || checkoutConfig.commentReplySource || 'knowledge_base');
+            if (kbActive === 'knowledge_base' || kbActive === 'both') {
+              if (commentNorm.raw.includes('giá') || commentNorm.raw.includes('bao nhiêu') || commentNorm.raw.includes('tiền') || commentNorm.raw.includes('chi phí') || commentNorm.raw.includes('sale') ||
+                  commentNorm.raw.includes('bảo hành') || commentNorm.raw.includes('đổi trả') || commentNorm.raw.includes('ship') || commentNorm.raw.includes('giao hàng') || commentNorm.raw.includes('vận chuyển') ||
+                  commentNorm.raw.includes('mua') || commentNorm.raw.includes('đặt hàng') || commentNorm.raw.includes('chốt') || commentNorm.raw.includes('lấy') || commentNorm.raw.includes('order') ||
+                  commentNorm.raw.includes('dùng') || commentNorm.raw.includes('tính năng') || commentNorm.raw.includes('chức năng') || commentNorm.raw.includes('như thế nào') || commentNorm.raw.includes('chất liệu') || commentNorm.raw.includes('công dụng')) {
+                hasKeywordRuleMatch = true;
+              }
+            }
+          }
+
+          // 3. Kiểm tra Checkout Products keywords
           if (!hasKeywordRuleMatch && checkoutConfig.active !== false && Array.isArray(checkoutConfig.checkoutProducts)) {
             for (const prod of checkoutConfig.checkoutProducts) {
               if (prod.active !== false && prod.keywords) {
                 const kws = prod.keywords.toLowerCase().split(/[;,]/).map(k => k.trim()).filter(Boolean);
-                if (kws.some(k => lowerCommentPreCheck.includes(k)) || (prod.productName && lowerCommentPreCheck.includes(prod.productName.toLowerCase()))) {
+                const pNorm = normStr(prod.productName);
+                if (kws.some(k => commentNorm.raw.includes(k)) || (pNorm.raw && (commentNorm.raw.includes(pNorm.raw) || (pNorm.noAcc.length >= 3 && commentNorm.noAcc.includes(pNorm.noAcc))))) {
                   hasKeywordRuleMatch = true;
                   break;
-                }
-              }
-            }
-          }
-          // Kiểm tra Keyword Rules (bộ quy tắc từ khóa Tab Bình Luận)
-          if (!hasKeywordRuleMatch) {
-            const rulesToCheck = [];
-            if (Array.isArray(commentConfig.keywordRules)) rulesToCheck.push(...commentConfig.keywordRules);
-            if (Array.isArray(scriptConfig.keywordRules)) rulesToCheck.push(...scriptConfig.keywordRules);
-            if (Array.isArray(checkoutConfig.keywordRules)) rulesToCheck.push(...checkoutConfig.keywordRules);
-            if (rulesToCheck.length > 0) {
-              for (const rule of rulesToCheck) {
-                if (rule.enabled !== false && rule.keywords) {
-                  const kwArr = Array.isArray(rule.keywords) ? rule.keywords : String(rule.keywords).split(/[;,]\s*|\n/);
-                  if (kwArr.some(k => k.trim() && lowerCommentPreCheck.includes(k.trim().toLowerCase()))) {
-                    hasKeywordRuleMatch = true;
-                    break;
-                  }
                 }
               }
             }
@@ -536,15 +576,19 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // BƯỚC 1: TIỀN TỐ BẮT BUỘC ĐỌC TÊN USER VÀ NHẮC LẠI CÂU HỎI/BÌNH LUẬN CỦA KHÁCH
+        // =========================================================================
+        // 🎯 QUY TRÌNH 4 BƯỚC PHẢN HỒI BÌNH LUẬN CHUẨN XÁC
+        // =========================================================================
+        
+        // BƯỚC 1: TIỀN TỐ BẮT BUỘC - CẢM ƠN USER VÀ NHẮC LẠI COMMENT CỦA KHÁCH
         const userSalutation = (userName && userName.toLowerCase() !== 'bạn') ? `bạn ${userName}` : 'bạn';
         const isQuestion = commentText.includes('?') || 
           /^(ai|sao|gì|đâu|nào|bao nhiêu|thế nào|không|hả|chưa|khi nào|bao giờ|mấy)/i.test(commentText) ||
           /(không|ko|hả|chưa|nhỉ|nhé|ạ|sao)\?*$/i.test(commentText);
         
         let repeatPrefix = isQuestion
-          ? `Dạ em cảm ơn ${userSalutation} đã hỏi: ${commentText}. `
-          : `Dạ em cảm ơn ${userSalutation} đã bình luận: ${commentText}. `;
+          ? `Dạ em cảm ơn ${userSalutation} đã hỏi: "${commentText}". `
+          : `Dạ em cảm ơn ${userSalutation} đã bình luận: "${commentText}". `;
 
         if (commentConfig.repeatCommentPrefix && commentConfig.repeatCommentPrefix.trim()) {
           repeatPrefix = fillTemplate(commentConfig.repeatCommentPrefix, { user: userName, comment: commentText });
@@ -555,63 +599,42 @@ function fillTemplate(template, vars = {}) {
         let isKeywordMatched = false;
         const lowerComment = commentText.toLowerCase();
 
-        // Hàm chuẩn hóa tiếng Việt hỗ trợ so khớp cả có dấu và không dấu
-        const normStr = (str) => {
-          const s = String(str || '').toLowerCase().trim();
-          const noAcc = s
-            .normalize('NFD')
-            .replace(/[\u0300-\u036f]/g, '')
-            .replace(/đ/g, 'd')
-            .replace(/Đ/g, 'd')
-            .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"']/g, ' ')
-            .replace(/\s+/g, ' ')
-            .trim();
-          return { raw: s, noAcc };
-        };
-        const commentNorm = normStr(commentText);
+        // 🎯 BƯỚC 2: ƯU TIÊN SỐ 1 (100% TUYỆT ĐỐI) - ĐỐI CHIẾU DANH SÁCH TỪ KHÓA FILE TẢI LÊN & CẤU HÌNH (KHÔNG DÙNG AI)
+        if (!isHandled && commentConfig.active !== false && useKw) {
+          if (matchedRulePre) {
+            const replyTpl = matchedRulePre.replyText || matchedRulePre.reply;
+            bodyAnswer = fillTemplate(replyTpl, { user: userName, comment: commentText });
+            isHandled = true;
+            isKeywordMatched = true;
+            if (matchedRulePre.role || matchedRulePre.voiceId) {
+              currentEvConfig._matchedRuleRole = matchedRulePre.role;
+              currentEvConfig._matchedRuleVoiceId = matchedRulePre.voiceId;
+            }
+          } else {
+            const seenRules = new Set();
+            for (const rule of allKeywordRules) {
+              if (!rule || rule.enabled === false || !rule.keywords) continue;
+              const rKey = (rule.id || '') + '_' + String(rule.keywords);
+              if (seenRules.has(rKey)) continue;
+              seenRules.add(rKey);
 
-        // 🎯 BƯỚC 2: ƯU TIÊN KIỂM TRA BỘ TỪ KHÓA ĐÃ CÀI ĐẶT (TẤT CẢ NGUỒN TỪ KHÓA - LUÔN CHẠY TRƯỚC AI)
-        if (!isHandled && commentConfig.active !== false) {
-          const allKeywordRules = [];
-          if (Array.isArray(commentConfig.keywordRules)) allKeywordRules.push(...commentConfig.keywordRules);
-          if (Array.isArray(scriptConfig.keywordRules)) allKeywordRules.push(...scriptConfig.keywordRules);
-          if (Array.isArray(checkoutConfig.keywordRules)) allKeywordRules.push(...checkoutConfig.keywordRules);
-          try {
-            const shared = JSON.parse(localStorage.getItem('AVALIVE_KEYWORD_RULES_SHARED') || '[]');
-            if (Array.isArray(shared)) allKeywordRules.push(...shared);
-          } catch (e) {}
-          try {
-            const gv = JSON.parse(localStorage.getItem('game_voice_settings') || '{}');
-            if (Array.isArray(gv.keywordRules)) allKeywordRules.push(...gv.keywordRules);
-          } catch (e) {}
-          try {
-            const qr = JSON.parse(localStorage.getItem('aidol_quick_rules') || '[]');
-            if (Array.isArray(qr)) allKeywordRules.push(...qr);
-          } catch (e) {}
-
-          const seenRules = new Set();
-          for (const rule of allKeywordRules) {
-            if (!rule || rule.enabled === false || !rule.keywords) continue;
-            const rKey = (rule.id || '') + '_' + String(rule.keywords);
-            if (seenRules.has(rKey)) continue;
-            seenRules.add(rKey);
-
-            const kwArr = Array.isArray(rule.keywords) ? rule.keywords : String(rule.keywords).split(/[;,]\s*|\n/);
-            const matched = kwArr.some(k => {
-              const kNorm = normStr(k);
-              if (!kNorm.raw) return false;
-              return commentNorm.raw.includes(kNorm.raw) || (kNorm.noAcc.length >= 2 && commentNorm.noAcc.includes(kNorm.noAcc));
-            });
-            if (matched && (rule.replyText || rule.reply)) {
-              const replyTpl = rule.replyText || rule.reply;
-              bodyAnswer = fillTemplate(replyTpl, { user: userName, comment: commentText });
-              isHandled = true;
-              isKeywordMatched = true;
-              if (rule.role || rule.voiceId) {
-                currentEvConfig._matchedRuleRole = rule.role;
-                currentEvConfig._matchedRuleVoiceId = rule.voiceId;
+              const kwArr = Array.isArray(rule.keywords) ? rule.keywords : String(rule.keywords).split(/[;,]\s*|\n/);
+              const matched = kwArr.some(k => {
+                const kNorm = normStr(k);
+                if (!kNorm.raw) return false;
+                return commentNorm.raw.includes(kNorm.raw) || (kNorm.noAcc.length >= 2 && commentNorm.noAcc.includes(kNorm.noAcc));
+              });
+              if (matched && (rule.replyText || rule.reply)) {
+                const replyTpl = rule.replyText || rule.reply;
+                bodyAnswer = fillTemplate(replyTpl, { user: userName, comment: commentText });
+                isHandled = true;
+                isKeywordMatched = true;
+                if (rule.role || rule.voiceId) {
+                  currentEvConfig._matchedRuleRole = rule.role;
+                  currentEvConfig._matchedRuleVoiceId = rule.voiceId;
+                }
+                break;
               }
-              break;
             }
           }
         }
@@ -671,24 +694,24 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // 🧠 BƯỚC 3: NẾU KHÔNG KHỚP TỪ KHÓA NGƯỜI DÙNG CÀI ĐẶT -> MỚI DÙNG BỘ NÃO AI GEMINI FLASH
+        // 🧠 BƯỚC 3: DỰ PHÒNG BỘ NÃO AI GEMINI (CHỈ CHẠY KHI HOÀN TOÀN KHÔNG KHỚP TỪ KHÓA TRONG FILE/CẤU HÌNH)
         if (!isHandled) {
           if (lowerComment.includes('xinh') || lowerComment.includes('đẹp') || lowerComment.includes('dễ thương')) {
             bodyAnswer = `Em cảm ơn lời khen cực kỳ ngọt ngào của ${userSalutation} nha! Chúc bạn xem livestream thật vui và săn được nhiều deal hời cùng shop ạ!`;
             isHandled = true;
           } else if (useAi && commentConfig.useAi !== false) {
-            // GỌI BỘ NÃO AI GEMINI FLASH TRẢ LỜI NGẮN GỌN SÚC TÍCH (TỐI ĐA 15-20 TỪ)
+            // GỌI BỘ NÃO AI GEMINI TRẢ LỜI ĐÚNG TRỌNG TÂM TRONG DUY NHẤT 1 CÂU (10-15 TỪ)
             try {
-              const liveContext = `Livestream bán hàng và tương tác trực tuyến. Sản phẩm chính: ${product}. Giá: ${price}. Ưu đãi: ${promo}. Tính năng: ${features}. Cửa hàng: ${company}.`;
+              const liveContext = `Livestream bán hàng và tương tác trực tuyến. Sản phẩm: ${product}. Cửa hàng: ${company}. Giá: ${price}. Ưu đãi: ${promo}.`;
               const aiPrompt = commentConfig.aiPrompt 
                 ? fillTemplate(commentConfig.aiPrompt, { user: userName, comment: commentText, product })
-                : `Khán giả "${userName}" vừa hỏi: "${commentText}". ĐÃ CÓ TIỀN TỐ ĐỌC TÊN VÀ NHẮC LẠI CÂU HỎI RỒI. Hãy trả lời cực kỳ ngắn gọn, súc tích, đúng trọng tâm trong DUY NHẤT 1 CÂU (tối đa 15-20 từ). Tự xưng là "em", trả lời thẳng vào câu hỏi, tuyệt đối không nhắc lại câu hỏi, không lan man dài dòng.`;
+                : `Khán giả "${userName}" vừa hỏi: "${commentText}". ĐÃ CÓ TIỀN TỐ ĐỌC TÊN VÀ NHẮC LẠI CÂU HỎI RỒI. Hãy trả lời cực kỳ ngắn gọn, súc tích, đúng trọng tâm trong DUY NHẤT 1 CÂU từ 10 đến 15 từ. Tự xưng là "em", trả lời thẳng vào câu hỏi, tuyệt đối không nhắc lại câu hỏi, không lan man dài dòng.`;
 
               const aiRes = await askGeminiLiveAi({
                 question: commentText,
                 username: userName,
                 role: commentConfig.ttsVoiceRole || commentConfig.speaker || 'assistant',
-                context: `${liveContext}. Chỉ đạo AI: ${aiPrompt}`
+                context: `${liveContext}. Hướng dẫn AI: ${aiPrompt}`
               });
 
               if (aiRes && aiRes.text && aiRes.text.trim()) {
@@ -699,12 +722,12 @@ function fillTemplate(template, vars = {}) {
               console.warn('AI Brain call error:', aiErr);
             }
           }
+        }
 
-          // Fallback ngắn gọn súc tích khi AI không phản hồi được
-          if (!isHandled) {
-            bodyAnswer = `Dạ bên em đã ghi nhận câu hỏi, shop sẽ tư vấn chi tiết cho ${userSalutation} ngay trong tin nhắn nhé!`;
-            isHandled = true;
-          }
+        // 🛡️ BƯỚC 4: DỰ PHÒNG AN TOÀN CHĂM SÓC KHÁCH HÀNG (KHI AI LỖI HOẶC KHÔNG PHẢN HỒI)
+        if (!isHandled) {
+          bodyAnswer = `Dạ em đã ghi nhận câu hỏi của ${userSalutation}, shop sẽ tư vấn chi tiết cho bạn ngay trong tin nhắn nhé!`;
+          isHandled = true;
         }
 
         // GHÉP TOÀN BỘ CÂU THOẠI HOÀN CHỈNH
@@ -949,9 +972,10 @@ function fillTemplate(template, vars = {}) {
         };
       } else if (Array.isArray(liveMedia) && liveMedia.length > 0) {
         // Chỉ tìm video sự kiện nếu được người dùng cấu hình rõ ràng là phản ứng reaction đặc biệt (gift, checkout, hoặc chế độ prerecorded)
-        // Tuyệt đối KHÔNG thay thế video streamer đối với bình luận (comment) hoặc chào khách (welcome) để streamer phát liên tục không bị đen màn hình
+        // BẢO VỆ STREAMER 24/7: Sự kiện comment CHỈ phát video khi người dùng cài đặt/tải video riêng trong Tab Bình luận (directVideoUrl)
+        const isCommentEvent = evKey === 'comment';
         const isInteractiveLiveEvent = evKey === 'comment' || evKey === 'welcome';
-        const allowEventVideo = currentEvConfig?.videoMode === 'prerecorded' || (!isInteractiveLiveEvent && (shouldAction === 'gift_reaction' || type === 'GIFT' || evKey === 'gift' || evKey === 'checkout'));
+        const allowEventVideo = !isCommentEvent && (currentEvConfig?.videoMode === 'prerecorded' || (!isInteractiveLiveEvent && (shouldAction === 'gift_reaction' || type === 'GIFT' || evKey === 'gift' || evKey === 'checkout')));
 
         if (allowEventVideo) {
           const targetCategory = currentEvConfig?.videoCategory || (evKey === 'welcome' ? 'join' : evKey);
