@@ -602,19 +602,9 @@ export default function DesktopAppUI() {
       setIsMasterStageSynced(isSynced);
       if (!isSynced) {
         setFlowSequencerOverlay(null);
-        setUserLockedMediaUrl(null);
-        setLipSyncVideoUrl(null);
-        setQuickResponseActiveVideo(null);
-        setLivePinnedProduct(null);
-        setIsStageExplicitlyCleared(true);
-        setIsVideoPlaying(false);
         try {
           localStorage.removeItem('avalive_master_sync_active');
           localStorage.removeItem('avalive_sequencer_overlay');
-          localStorage.removeItem('avalive_user_locked_media');
-          localStorage.removeItem('avalive_active_video_src');
-          localStorage.removeItem('aidol_is_script_live_running');
-          localStorage.setItem('aidol_user_paused_script', 'true');
         } catch (err) {}
         setMultiAvatarConfig(prev => ({
           ...prev,
@@ -624,29 +614,6 @@ export default function DesktopAppUI() {
           activeCount: 0,
           avatars: []
         }));
-        // ⚡ DỪNG & TẮT SẠCH SÂN KHẤU CHÍNH 0MS — TUYỆT ĐỐI KHÔNG TỰ Ý MỞ LẠI KHI ĐÃ BẤM TẮT
-        if (desktopVideoRef.current) {
-          try {
-            desktopVideoRef.current.pause();
-            desktopVideoRef.current.removeAttribute('src');
-            desktopVideoRef.current.src = '';
-            desktopVideoRef.current.srcObject = null;
-            desktopVideoRef.current.load();
-          } catch (e) {}
-        }
-        if (audioPlayerRef.current) {
-          try {
-            audioPlayerRef.current.stopScript();
-            audioPlayerRef.current.clearQueue();
-          } catch (e) {}
-        }
-        try {
-          stopVoiceAudio();
-          clearGlobalSpeechQueue();
-          if (typeof window !== 'undefined' && 'speechSynthesis' in window) {
-            window.speechSynthesis.cancel();
-          }
-        } catch (e) {}
       } else {
         setIsStageExplicitlyCleared(false);
       }
@@ -4096,7 +4063,17 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     socketRef.current = socket;
 
     socket.on('connect', () => {
-      // Đã kết nối Socket Backend
+      // Đã kết nối Socket Backend -> Truy vấn trạng thái TikTok Live
+      socket.emit('get_tiktok_status');
+      
+      // Tự động kết nối nếu người dùng đã lưu ID TikTok Live trước đó
+      try {
+        const savedId = localStorage.getItem('aidol_tiktok_id');
+        const savedVideoId = localStorage.getItem('aidol_video_tiktok_id') || '';
+        if (savedId && savedId.trim() && savedId !== 'avalive_studio' && !isConnected) {
+          socket.emit('connect_tiktok', { chatId: savedId.trim(), videoId: savedVideoId.trim() });
+        }
+      } catch (e) {}
     });
 
     socket.on('connect_error', () => {
@@ -4149,7 +4126,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       bandoAudio.unlock();
       const timeStr = new Date().toLocaleTimeString();
       const author = data.nickname || data.uniqueId || data.username || 'Khán giả';
-      const text = data.comment || '';
+      const text = data.comment || data.text || '';
       setTiktokLogs(prev => [`[${timeStr}] 💬 ${author}: ${text}`, ...prev.slice(0, 49)]);
       
       // 1. Chuyển tiếp tới Game Bản Đồ Chữ S & Game Chiến Đấu (CHỈ KHI ĐANG MỞ GAME BẢN ĐỒ)
@@ -4187,11 +4164,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       } catch (e) {}
 
       // 3. Kích hoạt Kịch Bản Trả Lời Bình Luận & Chốt Đơn của AI Idol (theo đúng cấu trúc đã cài đặt)
-      const now = Date.now();
-      if (now - lastAiCommentTime.current > 1500) {
-        lastAiCommentTime.current = now;
-        handleLiveEventRef.current?.('COMMENT', { name: author, text });
-      }
+      handleLiveEventRef.current?.('COMMENT', { name: author, text });
     });
 
     socket.on('tiktok_gift', (data) => {
@@ -4246,28 +4219,30 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
     socket.on('tiktok_member', (data) => {
       if (!data) return;
-      // Kiểm tra công tắc Tự Động Chào Khán Giả từ Cài Đặt Sự Kiện
-      const rawConf = localStorage.getItem('aidol_event_configs');
-      if (rawConf) {
-        try {
-          const parsedConf = JSON.parse(rawConf);
-          if (parsedConf?.welcome?.active === false) return;
-        } catch (e) {}
-      }
       const author = (data.nickname || data.uniqueId || data.username || '').trim();
       if (!author || author === 'Khách mới' || author === 'Khán Giả' || author === 'Khán giả' || author === 'Viewer') return;
-      const key = author.toLowerCase().trim();
       
-      // Tuyệt đối chỉ chào mỗi người dùng thật ĐÚNG 1 LẦN duy nhất trong suốt buổi livestream
-      if (greetedUsernamesRef.current.has(key)) return;
-      greetedUsernamesRef.current.add(key);
-      if (greetedUsernamesRef.current.size > 1000) {
-        const first = greetedUsernamesRef.current.values().next().value;
-        greetedUsernamesRef.current.delete(first);
-      }
+      const timeStr = new Date().toLocaleTimeString();
+      setTiktokLogs(prev => [`[${timeStr}] 👤 ${author} đã tham gia phòng Live`, ...prev.slice(0, 49)]);
       
       // ⚡ Chào ngay lập tức khi viewer thực sự bước vào phòng live
       handleLiveEventRef.current?.('VIEWER_JOIN', { name: author });
+    });
+
+    socket.on('tiktok_follow', (data) => {
+      if (!data) return;
+      const author = (data.nickname || data.username || data.uniqueId || 'Khán giả').trim();
+      const timeStr = new Date().toLocaleTimeString();
+      setTiktokLogs(prev => [`[${timeStr}] ➕ ${author} vừa theo dõi kênh`, ...prev.slice(0, 49)]);
+      handleLiveEventRef.current?.('FOLLOW', { name: author });
+    });
+
+    socket.on('tiktok_share', (data) => {
+      if (!data) return;
+      const author = (data.nickname || data.username || data.uniqueId || 'Khán giả').trim();
+      const timeStr = new Date().toLocaleTimeString();
+      setTiktokLogs(prev => [`[${timeStr}] 🚀 ${author} vừa chia sẻ phiên live`, ...prev.slice(0, 49)]);
+      handleLiveEventRef.current?.('SHARE', { name: author });
     });
 
     socket.on('tiktok_disconnected', () => {
@@ -4287,7 +4262,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
     socket.on('tiktok_status', (data) => {
       if (!data) return;
-      if (data.connected === false && !data.connecting) {
+      if (data.connected === true) {
+        setIsConnecting(false);
+        setIsConnected(true);
+        if (data.flvUrl) setFlvUrl(data.flvUrl);
+        if (data.username && !tiktokId) setTiktokId(data.username);
+      } else if (data.connected === false && !data.connecting) {
         setIsConnecting(false);
         setIsConnected(false);
         setFlvUrl(null);
@@ -4295,10 +4275,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           setToast({ type: 'error', message: `Lỗi kết nối: ${data.error || data.note}` });
           if (isMasterLiveRunning) setIsMasterLiveRunning(false);
         }
-      } else if (data.connected === true) {
-        setIsConnecting(false);
-        setIsConnected(true);
-        if (data.flvUrl) setFlvUrl(data.flvUrl);
       }
     });
 
@@ -4633,15 +4609,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         desktopVideoRef.current.dataset.userPaused = 'true';
         try { 
           desktopVideoRef.current.pause(); 
-          desktopVideoRef.current.removeAttribute('src');
-          desktopVideoRef.current.src = '';
-          desktopVideoRef.current.load();
         } catch (e) {}
       }
       setIsVideoPlaying(false);
-      setIsStageExplicitlyCleared(true);
-      setIsMasterStageSynced(false);
-      setUserLockedMediaUrl(null);
       setLipSyncVideoUrl(null);
       setQuickResponseActiveVideo(null);
       setLivePinnedProduct(null);
@@ -4657,13 +4627,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         try {
           localStorage.setItem('avalive_user_paused', 'true');
           localStorage.setItem('avalive_window_capture_paused', 'true');
-          localStorage.setItem('avalive_stage_disconnected', 'true');
-          localStorage.setItem('avalive_all_streams_stopped', 'true');
           localStorage.setItem('avalive_emergency_stop_trigger', Date.now().toString());
           localStorage.setItem('avalive_master_live_running', 'false');
-          localStorage.removeItem('avalive_master_sync_active');
-          localStorage.removeItem('avalive_user_locked_media');
-          localStorage.removeItem('avalive_active_video_src');
         } catch (e) {}
       }
 
@@ -4672,14 +4637,6 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           const bc = new BroadcastChannel('avalive_master_live_stream');
           bc.postMessage({ type: 'GLOBAL_PLAYBACK_CHANGE', isPlaying: false, userPaused: true, timestamp: Date.now() });
           bc.postMessage({ type: 'EMERGENCY_STOP_ALL', timestamp: Date.now() });
-          bc.postMessage({ 
-            type: 'CLEAR_STAGE', 
-            clearMedia: true, 
-            clearStage: true, 
-            isMasterSynced: false, 
-            isPlaying: false, 
-            timestamp: Date.now() 
-          });
           bc.close();
         } catch (e) {}
         try {
@@ -4694,12 +4651,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         } catch (e) {}
       }
 
+      const currentVidSrc = userLockedMediaUrl || (desktopVideoRef.current ? (desktopVideoRef.current.currentSrc || desktopVideoRef.current.src) : null);
       sendVideoControl({
         action: 'pause',
         isPlaying: false,
-        clearMedia: true,
-        clearStage: true,
-        mediaUrl: null,
+        clearMedia: false,
+        clearStage: false,
+        mediaUrl: currentVidSrc,
         timestamp: Date.now()
       }, socketRef.current);
 
@@ -4708,26 +4666,22 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         videoPlaybackEvent: 'pause',
         isPlaying: false,
         isVideoPlaying: false,
-        clearMedia: true,
-        clearStage: true,
-        isMasterSynced: false,
-        mediaUrl: null,
-        mainMediaUrl: null,
-        secondaryMediaUrl: null,
-        overlayImage: null,
-        overlayText: null
+        clearMedia: false,
+        clearStage: false,
+        mediaUrl: currentVidSrc,
+        selectedCharacter: selectedCharacter
       }, socketRef.current);
 
       // Toast thông báo
       setToast({
         type: 'info',
-        message: '🛑 ĐÃ TẮT TOÀN BỘ PHIÊN LIVE, GAME & ÂM THANH!'
+        message: '🛑 ĐÃ TẠM DỪNG PHIÊN LIVE, GAME & ÂM THANH!'
       });
       setTimeout(() => setToast(null), 3500);
 
       const timeStr = new Date().toLocaleTimeString();
       setSystemLogs(prev => [
-        `[${timeStr}] 🛑 ĐÃ TẮT TOÀN BỘ PHIÊN LIVE, GAME & ÂM THANH THEO LỆNH STREAMER`,
+        `[${timeStr}] 🛑 ĐÃ TẠM DỪNG PHIÊN LIVE, GAME & ÂM THANH THEO LỆNH STREAMER`,
         ...prev.slice(0, 48)
       ]);
     } else {
@@ -6086,17 +6040,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }
       
       // 🛡️ CHỈ LẤY NHÂN VẬT NẾU NGƯỜI DÙNG CHỦ ĐỘNG CHỌN HOẶC TẢI LÊN (KHÔNG TỰ Ý CHẠY NGẦM/KHÔNG LẤY TỰ ĐỘNG TỪ TAB SỰ KIỆN)
-      const isStageDisconnected = isStageExplicitlyCleared || (typeof localStorage !== 'undefined' && (
-        localStorage.getItem('avalive_stage_disconnected') === 'true' ||
-        localStorage.getItem('avalive_all_streams_stopped') === 'true'
-      ));
+      const isStageDisconnected = isStageExplicitlyCleared && !userLockedMediaUrl && !selectedCharacter;
 
-      let customMatch = (!isStageDisconnected && customCharacters && Array.isArray(customCharacters) && selectedCharacter) 
+      let customMatch = (customCharacters && Array.isArray(customCharacters) && selectedCharacter) 
         ? customCharacters.find(c => c.id === selectedCharacter)
         : null;
 
       // 🎬 KHI ĐANG ĐỒNG BỘ TỪ SEQUENCER (PHÁT LIVE): CHỈ KÍCH HOẠT NẾU NGƯỜI DÙNG BẬT ĐỒNG BỘ
-      const sequencerLockedMedia = (!isStageDisconnected && isMasterStageSynced && userLockedMediaUrl)
+      const sequencerLockedMedia = (isMasterStageSynced && userLockedMediaUrl)
         ? { 
             id: 'sequencer_video', 
             name: 'Kịch Bản Live Đang Phát', 

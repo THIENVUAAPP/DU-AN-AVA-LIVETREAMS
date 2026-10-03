@@ -5278,8 +5278,52 @@ io.on('connection', (socket) => {
 
     tiktokConnection.on('member', data => {
       io.emit('tiktok_member', {
-        userId: data.userId, uniqueId: data.uniqueId,
-        nickname: data.nickname, profilePictureUrl: data.profilePictureUrl
+        userId: data.userId || data.userDetails?.userId,
+        uniqueId: data.uniqueId || data.userDetails?.uniqueId,
+        nickname: data.nickname || data.userDetails?.nickname || data.uniqueId || 'Khán Giả',
+        profilePictureUrl: data.profilePictureUrl || data.userDetails?.profilePictureUrls?.[0] || ''
+      });
+    });
+
+    tiktokConnection.on('roomUser', data => {
+      try {
+        const u = data?.topViewers?.[0] || data?.viewer;
+        if (u) {
+          io.emit('tiktok_member', {
+            userId: u.userId || '',
+            uniqueId: u.uniqueId || '',
+            nickname: u.nickname || u.uniqueId || 'Khán Giả',
+            profilePictureUrl: u.profilePictureUrl || ''
+          });
+        }
+      } catch (e) {}
+    });
+
+    tiktokConnection.on('social', data => {
+      try {
+        const user = data.nickname || data.uniqueId || 'Khán Giả';
+        const dType = (data.displayType || data.label || '').toLowerCase();
+        if (dType.includes('follow') || dType.includes('theo dõi')) {
+          io.emit('tiktok_follow', { username: user, nickname: user, uniqueId: data.uniqueId });
+        } else if (dType.includes('share') || dType.includes('chia sẻ')) {
+          io.emit('tiktok_share', { username: user, nickname: user, uniqueId: data.uniqueId });
+        }
+      } catch (e) {}
+    });
+
+    tiktokConnection.on('follow', data => {
+      io.emit('tiktok_follow', {
+        username: data.nickname || data.uniqueId || 'Khán Giả',
+        nickname: data.nickname || data.uniqueId,
+        uniqueId: data.uniqueId
+      });
+    });
+
+    tiktokConnection.on('share', data => {
+      io.emit('tiktok_share', {
+        username: data.nickname || data.uniqueId || 'Khán Giả',
+        nickname: data.nickname || data.uniqueId,
+        uniqueId: data.uniqueId
       });
     });
 

@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.47';
+export const APP_VERSION = '5.4.48';
 export const RELEASE_DATE = '03/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.48 - Phục Hồi Chào Người Mới Tức Thì, Đọc Bình Luận Trơn Tru, Giữ Nguyên Video Khi Tạm Dừng & Tối Ưu Kết Nối TikTok Live ID',
+    description: '1. Phục Hồi Chào Người Mới Tức Thì (VIEWER_JOIN / WELCOME): Tự động phát câu thoại chào đón ngay lập tức trong 0ms khi có khán giả bước vào phòng livestream. Tối ưu bộ đếm thời gian giãn cách theo từng người xem (60s cooldown) để không bỏ sót người mới, luân phiên duyệt tuần tự không trùng lặp. 2. Kết Nối & Đọc Bình Luận TikTok Live Trơn Tru (0ms Bỏ Sót): Tự động khôi phục kết nối ID TikTok Live của người dùng ngay khi khởi động. Xây dựng Hàng Đợi Sự Kiện Thông Minh (Event Queue) giúp tất cả bình luận từ khán giả được tiếp nhận và xử lý đầy đủ theo đúng quy trình 4 bước (Đọc tên + nhắc lại comment -> Ưu tiên 100% file từ khóa -> Dự phòng AI Gemini 1 câu ngắn gọn -> Gợi mở chăm sóc khách hàng), tuyệt đối không bị drop do dồn dập. Bổ sung sự kiện theo dõi kênh và chia sẻ live. 3. Giữ Nguyên Video Khi Bấm Tạm Dừng (Pause/Play): Khi bấm Tạm Dừng hoặc Bật/Tắt phiên live, video trên Sân Khấu Chính và Window Capture OBS đứng yên tại khung hình hiện tại chứ không bị xóa biến mất hay đen màn hình (chỉ xóa sạch khi người dùng bấm Xóa). 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.47 - Khắc Phục Tải Video Lên Sân Khấu Chính Tức Thì 0ms, Đồng Bộ Window Capture OBS / TikTok Live Studio & Chuẩn Hóa Tab Sự Kiện Bình Luận',
     description: '1. Khắc Phục Lỗi Tải Video Lên Sân Khấu Chính: Khi tải video lên từ ô nhân vật hoặc Sân Khấu Chính, video lập tức hiển thị và phát ngay trong 0ms, không bị chớp nháy, không bị giữ màn hình chờ "Chờ đồng bộ". 2. Đồng Bộ Tức Thì Window Capture OBS & TikTok Live Studio (Không Còn Bị Đen Màn Hình): Sửa dứt điểm nguyên nhân chặn luồng giải mã video trên cửa sổ bắt hình và link live overlay. Toàn bộ hình ảnh, video và âm thanh từ Sân Khấu Chính được đồng bộ theo thời gian thực 0ms sang Window Capture OBS và đường link Online HTTPS TikTok Live Studio. 3. Chuẩn Hóa Chuỗi 4 Bước Đọc Bình Luận Theo Đúng Cấu Hình & File Nạp: Khắc phục triệt để lỗi lặp câu chúc, kích hoạt 100% các từ khóa và câu trả lời cài sẵn/file tải lên (hỗ trợ phân tách từ khóa bằng dấu phẩy, chấm phẩy, sổ dọc, gạch chéo; so khớp có dấu, không dấu). Không bị chặn bởi cooldown đối với bình luận khớp từ khóa. Đảm bảo đúng 4 bước: Đọc tiền tố nhắc lại -> Trả lời đúng câu thoại cài đặt -> Ghép câu hỏi gợi mở chăm sóc khách hàng -> Phản hồi dự phòng thông minh. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'

@@ -16,8 +16,10 @@ export function useLiveCoordinator({ isConnected, onVoiceReply, onChatReply, act
   const [lipSyncVideoUrl, setLipSyncVideoUrl] = useState(null);
   const [viewerHistory, setViewerHistory] = useState([]);
   const [isProcessingEvent, setIsProcessingEvent] = useState(false);
+  const isProcessingEventRef = useRef(false);
+  const eventQueueRef = useRef([]);
   const idleTimerRef = useRef(null);
-  const greetedViewersRef = useRef(new Set());
+  const greetedViewersRef = useRef(new Map()); // viewerKey -> timestamp (cooldown 60s)
   const welcomeIndexRef = useRef(0); // Chỉ mục tuần tự vòng tròn không trùng lặp cho Chào Người Mới
   const lastCommentReplyTimeRef = useRef(0); // Bộ đếm thời gian giãn cách trả lời bình luận (10s - 120s)
 
@@ -377,6 +379,20 @@ function fillTemplate(template, vars = {}) {
   return result;
 }
 
+  // Bộ điều phối hàng đợi sự kiện Live (Event Queue Processor)
+  const processNextQueuedEvent = useCallback(() => {
+    isProcessingEventRef.current = false;
+    setIsProcessingEvent(false);
+    if (eventQueueRef.current && eventQueueRef.current.length > 0) {
+      const nextEvt = eventQueueRef.current.shift();
+      if (nextEvt) {
+        setTimeout(() => {
+          handleLiveEvent(nextEvt.type, nextEvt.payload);
+        }, 120);
+      }
+    }
+  }, []);
+
   // Hàm kích hoạt xử lý sự kiện Live từ TikTok / Chat / Giả lập (Hỗ trợ AI Brain Bất Đồng Bộ)
   const handleLiveEvent = async (type, payload = {}) => {
     const isTestMode = payload?.isTest === true;
@@ -388,6 +404,16 @@ function fillTemplate(template, vars = {}) {
       }
       return;
     }
+
+    // 🛡️ HÀNG ĐỢI SỰ KIỆN THÔNG MINH (EVENT QUEUE): Đảm bảo không bị nuốt bình luận hay người mới vào phòng
+    if (isProcessingEventRef.current && !isTestMode) {
+      if (eventQueueRef.current.length < 20) {
+        eventQueueRef.current.push({ type, payload });
+      }
+      return;
+    }
+    isProcessingEventRef.current = true;
+    setIsProcessingEvent(true);
 
     // Luôn cho phép chạy sự kiện khi đã kết nối Live hoặc khi bấm Chạy Test / Giả lập sự kiện
     resetIdleTimer();
@@ -424,11 +450,13 @@ function fillTemplate(template, vars = {}) {
       localStorage.getItem('avalive_script_testing_active') === 'true'
     );
     if (isScriptTestingActive && !isTestMode) {
+      processNextQueuedEvent();
       return;
     }
 
     // Nếu sự kiện bị tắt trong cấu hình và không phải đang test thủ công, không xử lý
     if (currentEvConfig.active === false && !isTestMode) {
+      processNextQueuedEvent();
       return;
     }
 
@@ -830,25 +858,33 @@ function fillTemplate(template, vars = {}) {
       // 3. XỬ LÝ CHÀO NGƯỜI MỚI (VIEWER_JOIN / WELCOME) - DUYỆT TUẦN TỰ VÒNG TRÒN KHÔNG TRÙNG LẶP
       else if (type === 'VIEWER_JOIN') {
         const welcomeConfig = configs.welcome || {};
+        if (welcomeConfig.active === false && !isTestMode) {
+          processNextQueuedEvent();
+          return;
+        }
         // Tuyệt đối không chào nếu không có tên thật hoặc là tên ảo/placeholder (ngoại trừ khi test thủ công)
         if (!isTestMode) {
           const rawTrimmed = (rawUserName || '').trim();
           if (!rawTrimmed || rawTrimmed === 'Bạn' || rawTrimmed === 'Khách mới' || rawTrimmed === 'Khán Giả' || rawTrimmed === 'Khán giả' || rawTrimmed === 'Viewer') {
+            processNextQueuedEvent();
             return;
           }
         }
         const viewerKey = (rawUserName || '').toLowerCase().trim();
+        const now = Date.now();
+        const lastGreetTime = greetedViewersRef.current.get(viewerKey) || 0;
         
-        // 🛡️ Mỗi người xem chỉ được chào ĐÚNG 1 LẦN duy nhất trong suốt phiên live
-        if (!isTestMode && viewerKey && greetedViewersRef.current.has(viewerKey)) {
-          console.log(`[AvaLive] Đã chào rồi, bỏ qua: ${viewerKey}`);
+        // Cooldown 60s cho mỗi viewer để không chào liên tiếp dồn dập, nhưng chào lại nếu viewer vào lại sau 60s
+        if (!isTestMode && viewerKey && (now - lastGreetTime < 60000)) {
+          console.log(`[AvaLive] Đã chào gần đây (${Math.round((now - lastGreetTime)/1000)}s trước), bỏ qua: ${viewerKey}`);
+          processNextQueuedEvent();
           return;
         }
         if (viewerKey) {
-          greetedViewersRef.current.add(viewerKey);
+          greetedViewersRef.current.set(viewerKey, now);
           // Giới hạn bộ nhớ tối đa 1000 viewer
           if (greetedViewersRef.current.size > 1000) {
-            const first = greetedViewersRef.current.values().next().value;
+            const first = greetedViewersRef.current.keys().next().value;
             greetedViewersRef.current.delete(first);
           }
         }
@@ -861,6 +897,7 @@ function fillTemplate(template, vars = {}) {
           const greetName = (userName && userName.toLowerCase() !== 'bạn') ? `bạn ${userName}` : 'bạn';
           replyText = `Dạ em chào ${greetName} mới vào xem live nha! Chúc mình xem live thật vui và săn được nhiều deal hời cùng shop ạ!`;
         }
+        chatText = replyText;
       }
 
       // 4. XỬ LÝ THEO DÕI KÊNH (FOLLOW)
@@ -1168,6 +1205,14 @@ function fillTemplate(template, vars = {}) {
               isTest: isTestMode
             });
           }, 800);
+
+          // Tự động chuyển tiếp xử lý sự kiện tiếp theo trong hàng đợi khi phát xong
+          const estDuration = Math.max(2500, Math.min(10000, (replyText.length || 20) * 110 + 1000));
+          setTimeout(() => {
+            processNextQueuedEvent();
+          }, estDuration);
+        } else {
+          processNextQueuedEvent();
         }
       } else {
         // Luôn đảm bảo có câu thoại phản hồi tự nhiên cho sự kiện
@@ -1199,13 +1244,17 @@ function fillTemplate(template, vars = {}) {
             volume: effectiveVolume,
             isTest: isTestMode
           });
+          const estDuration2 = Math.max(2500, Math.min(8000, (fallbackMsg.length || 20) * 110 + 1000));
+          setTimeout(() => {
+            processNextQueuedEvent();
+          }, estDuration2);
         } else {
-          setIsProcessingEvent(false);
+          processNextQueuedEvent();
         }
       }
     } catch (err) {
       console.warn('Lỗi xử lý sự kiện live kịch bản:', err);
-      setIsProcessingEvent(false);
+      processNextQueuedEvent();
     }
   };
 
@@ -1230,7 +1279,7 @@ function fillTemplate(template, vars = {}) {
   };
 
   const handleVideoEnded = () => {
-    setIsProcessingEvent(false);
+    processNextQueuedEvent();
     if (lipSyncVideoUrl) {
       setLipSyncVideoUrl(null); // Trở về video nền
       if (typeof window !== 'undefined') {

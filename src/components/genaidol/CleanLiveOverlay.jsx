@@ -3111,7 +3111,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                               loop={true}
                               muted={isVideoAudioMuted}
                               playsInline
-                              webkit-playsinline
+                              webkit-playsinline="true"
                               controls={false}
                               preload="auto"
                               className="w-full h-full select-none block pointer-events-none"
