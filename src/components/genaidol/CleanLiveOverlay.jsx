@@ -1245,16 +1245,27 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     }, 800);
 
     // 2. HTTP REST API POLING (Lấy trạng thái khởi đầu)
-    const fetchLiveState = () => {
-      const endpoint = getBackendUrl() ? `${getBackendUrl()}/api/live-state` : '/api/live-state';
-      fetch(endpoint)
-        .then(res => res.json())
-        .then(data => {
-          if (data) {
-            applyMasterState(data);
+    const fetchLiveState = async () => {
+      const bUrl = getBackendUrl();
+      const endpoints = [
+        bUrl ? `${bUrl.replace(/\/$/, '')}/api/live-state` : null,
+        '/api/live-state',
+        'http://127.0.0.1:3001/api/live-state',
+        'http://localhost:3001/api/live-state'
+      ].filter(Boolean);
+
+      for (const endpoint of endpoints) {
+        try {
+          const res = await fetch(endpoint, { cache: 'no-store', signal: AbortSignal.timeout(3000) });
+          if (res.ok) {
+            const data = await res.json();
+            if (data && (data.mediaUrl || data.stage || data.tunnelUrl)) {
+              applyMasterState(data);
+              break;
+            }
           }
-        })
-        .catch(() => {});
+        } catch (e) {}
+      }
     };
     fetchLiveState();
 
@@ -2647,8 +2658,16 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
       <main className="absolute inset-0 w-full h-full overflow-hidden flex items-center justify-center bg-black z-0">
         <div 
-          className="relative flex items-center justify-center overflow-hidden w-full h-full"
-          style={{ position: 'relative' }}
+          className="relative flex items-center justify-center overflow-hidden"
+          style={{ 
+            aspectRatio: ratio === '16:9' ? '16/9' : '9/16',
+            height: '100%',
+            maxHeight: '100%',
+            width: 'auto',
+            maxWidth: '100%',
+            margin: '0 auto',
+            position: 'relative'
+          }}
         >
           {/* ⚡ 1. TOPMOST LAYER: VIDEO PHẢN HỒI NHANH KHẨN CẤP */}
           {quickResponseVideo?.url && (
@@ -2974,7 +2993,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
                   if (singleUrl) {
                     const isImg = isImageMedia(singleUrl) || (!activeMedia.isVideo && !isVideoMedia(singleUrl));
-                    const singleTrans = masterState.mainMediaTransform || (activeAvatars.length === 1 ? (masterState.avatarTransforms?.[activeAvatars[0].id] || activeAvatars[0].transform) : null);
+                    const singleTrans = masterState.mainMediaTransform || null;
                     const singleChroma = getChromaStyle(masterState.mainMediaChromaKey || (activeAvatars.length === 1 ? activeAvatars[0].chromaKey : null));
                     const hasCustomTransform = !!singleTrans && (singleTrans.x !== 0 || singleTrans.y !== 0 || (singleTrans.width && singleTrans.width !== 100) || (singleTrans.height && singleTrans.height !== 100));
 

@@ -917,6 +917,9 @@ function resolveMediaForStage(rawUrl, masterState) {
   if (!target && masterState && Array.isArray(masterState.syncedAvatars) && masterState.syncedAvatars.length > 0) {
     target = masterState.syncedAvatars[0].resolvedVidSrc || masterState.syncedAvatars[0].talkVideo || masterState.syncedAvatars[0].idleVideo || '';
   }
+  if (!target && masterState && masterState.clearMedia !== true && masterState.clearStage !== true) {
+    target = getLatestUploadVideo() || '';
+  }
   if (!target || typeof target !== 'string') return '';
   target = target.trim();
   if (target.includes('/uploads/')) {
@@ -4721,6 +4724,15 @@ io.on('connection', (socket) => {
   socket.on('UPDATE_MASTER_LIVE_STATE', handleMasterStateUpdate);
 
   socket.on('REQUEST_MASTER_LIVE_STATE', () => {
+    if (!currentMasterLiveState.mediaUrl && currentMasterLiveState.clearMedia !== true && currentMasterLiveState.clearStage !== true) {
+      const latestVid = getLatestUploadVideo();
+      if (latestVid) {
+        currentMasterLiveState.mediaUrl = latestVid;
+        currentMasterLiveState.mainMediaUrl = latestVid;
+        currentMasterLiveState.isVideo = true;
+        currentMasterLiveState.isPlaying = true;
+      }
+    }
     socket.emit('MASTER_LIVE_STATE_UPDATE', currentMasterLiveState);
   });
 
@@ -5534,7 +5546,18 @@ app.get(['/api/live-state', '/api/master-live-state'], (req, res) => {
     currentMasterLiveState.mediaUrl = null;
   }
 
-  // 🛡️ TUYỆT ĐỐI KHÔNG TỰ Ý GÁN VIDEO NỀN NẾU RỖNG HOẶC ĐÃ XÓA
+  // 🛡️ NẾU CHƯA CÓ MEDIAURL NHƯNG NGƯỜI DÙNG KHÔNG CHỦ ĐỘNG XÓA (clearMedia !== true):
+  // TỰ ĐỘNG KHÔI PHỤC VIDEO GẦN NHẤT ĐỂ TIKTOK LIVE STUDIO KHÔNG BAO GIỜ BỊ MÀN HÌNH ĐEN
+  if (!currentMasterLiveState.mediaUrl && currentMasterLiveState.clearMedia !== true && currentMasterLiveState.clearStage !== true) {
+    const latestVid = getLatestUploadVideo();
+    if (latestVid) {
+      currentMasterLiveState.mediaUrl = latestVid;
+      currentMasterLiveState.mainMediaUrl = latestVid;
+      currentMasterLiveState.isVideo = true;
+      currentMasterLiveState.isPlaying = true;
+    }
+  }
+
   if (currentMasterLiveState.mediaUrl) {
     currentMasterLiveState.isVideo = true;
     if (typeof currentMasterLiveState.videoVolume !== 'number' || currentMasterLiveState.videoVolume <= 0) {

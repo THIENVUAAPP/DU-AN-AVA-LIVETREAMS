@@ -174,6 +174,12 @@ export function syncMasterLiveState(partialState, socket = null) {
     body: JSON.stringify(updated)
   }).catch(() => {});
 
+  fetch('https://avalivepro.vercel.app/api/live-state', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify(updated)
+  }).catch(() => {});
+
   // 6. Dispatch CustomEvent nội bộ window
   try {
     window.dispatchEvent(new CustomEvent('avalive_master_state_changed', { detail: updated }));

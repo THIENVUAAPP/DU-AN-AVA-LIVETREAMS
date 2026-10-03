@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.42';
-export const RELEASE_DATE = '02/10/2026';
+export const APP_VERSION = '5.4.43';
+export const RELEASE_DATE = '03/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.43 - Khắc Phục Triệt Để Cửa Sổ Bắt Hình Window Capture OBS & Sửa Lỗi Đen Màn Hình/Bành Trướng TikTok Live Studio',
+    description: '1. Sửa Lỗi Window Capture OBS Chỉ Hiển Thị "Một Khúc" & Bị Đen 1 Bên: Loại bỏ triệt để xung đột toạ độ nhân vật phụ. Khi phát video/idol trên Sân Khấu Chính, video sẽ tự động phủ kín 100% toàn bộ khung hình dọc 9:16 (w-full h-full object-cover), hiển thị trọn vẹn người và bối cảnh chuẩn điện thoại di động, tuyệt đối không bị co ép vào góc trái 48% hay để lại khoảng đen bên phải. 2. Khắc Phục Lỗi Màn Hình Đen & Bành Trướng Trên TikTok Live Studio: Khóa cứng tỷ lệ chuẩn 9:16 (1080×1920) độc quyền cho nguồn live, loại bỏ hiện tượng video bị kéo bành méo mó sang 2 bên hoặc bị cắt 2 đầu trên dưới. Bổ sung cơ chế tự động khôi phục video gần nhất khi kết nối, đảm bảo đường link Online HTTPS luôn phát video ngay lập tức trong 0ms, không bao giờ bị đen màn hình. 3. Giữ nguyên và bảo toàn 100% toàn bộ các tab code và tính năng hệ thống.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.42 - Fix Full Khung Hình OBS, Nút Play Nghe Thử Voice, & Tối Ưu Nạp File Từ Khóa Bình Luận',
     description: '1. Sửa Lỗi Hiển Thị Full Khung Hình Trên TikTok Live Studio: Tháo bỏ lớp khóa tỷ lệ cứng 9:16, phần mềm sẽ tự động lấy đúng 100% tỷ lệ khung hình người dùng vẽ trên OBS/TikTok Studio. Video phát tự động "cover" phủ đầy không để lại viền đen, tuyệt đối không bị móp méo hay vỡ khung video. 2. Đồng Bộ Giọng AI & Nút Play Nghe Thử: Chỉnh sửa lại toàn bộ giao diện chọn giọng AI đồng nhất. Bổ sung nút bấm "Nghe thử" giọng đọc trực tiếp trên giao diện để người dùng nghe thử âm sắc trước khi lưu cài đặt. 3. Sửa Lỗi Không Nhận File Từ Khóa Bình Luận Tải Lên: Tối ưu quy trình nhận diện từ khóa ưu tiên 100%. Nếu khớp từ khóa (dù tải file ở tab bán hàng hay tab bình luận), hệ thống sẽ trả lời ngay lập tức bằng câu đã cài. Nếu không khớp bất kỳ từ khóa nào, hệ thống mới gửi cho bộ não Gemini xử lý. Đảm bảo luồng AI trơn tru và chính xác.'

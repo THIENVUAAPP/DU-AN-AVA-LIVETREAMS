@@ -354,7 +354,8 @@ export default function UniversalMasterOverlayModal({ isOpen, onClose, currentUs
     }
 
     // Fallback Online Cloud Vercel
-    return `https://avalivepro.vercel.app/${targetRoute}`;
+    const tunnelParam = effectiveTunnel ? `?tunnel=${encodeURIComponent(effectiveTunnel)}` : '';
+    return `https://avalivepro.vercel.app/${targetRoute}${tunnelParam}`;
   };
 
   const projects = [
