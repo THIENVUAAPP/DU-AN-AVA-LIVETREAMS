@@ -4121,6 +4121,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       bandoAudio.unlock();
       setIsLiveAudioMuted(false);
       try {
+        localStorage.removeItem('avalive_user_paused');
+        localStorage.removeItem('avalive_window_capture_paused');
+      } catch (e) {}
+      try {
         const bc = new BroadcastChannel('avalive_master_live_stream');
         bc.postMessage({ type: 'GLOBAL_AUDIO_CHANGE', isMuted: false, volume: 1.0, timestamp: Date.now() });
         bc.close();

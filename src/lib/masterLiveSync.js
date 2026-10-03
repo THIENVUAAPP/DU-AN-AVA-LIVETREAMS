@@ -25,6 +25,32 @@ try {
           const raw = localStorage.getItem(STORAGE_KEY);
           if (raw) {
             const currentState = JSON.parse(raw);
+            let tunnelUrl = currentState.tunnelUrl || localStorage.getItem('avalive_tunnel_url') || null;
+            let exportMedia = currentState.mediaUrl || currentState.mainMediaUrl;
+            if (exportMedia && typeof exportMedia === 'string' && tunnelUrl) {
+              if (exportMedia.includes('localhost') || exportMedia.includes('127.0.0.1')) {
+                exportMedia = exportMedia.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, tunnelUrl);
+              } else if (exportMedia.startsWith('/uploads/')) {
+                exportMedia = `${tunnelUrl.replace(/\/$/, '')}${exportMedia}`;
+              }
+            }
+            supabaseBroadcastChannel.send({
+              type: 'broadcast',
+              event: 'MASTER_LIVE_STATE_UPDATE',
+              payload: { ...currentState, mediaUrl: exportMedia, tunnelUrl, updatedAt: Date.now() }
+            }).catch(() => {});
+          }
+        } catch (e) {}
+      }
+    });
+
+    supabaseBroadcastChannel.subscribe((status) => {
+      if (status === 'SUBSCRIBED') {
+        // Send initial state immediately when connected
+        try {
+          const raw = localStorage.getItem(STORAGE_KEY);
+          if (raw) {
+            const currentState = JSON.parse(raw);
             supabaseBroadcastChannel.send({
               type: 'broadcast',
               event: 'MASTER_LIVE_STATE_UPDATE',
@@ -34,8 +60,6 @@ try {
         } catch (e) {}
       }
     });
-
-    supabaseBroadcastChannel.subscribe();
   }
 } catch (e) {
   console.warn('[MasterSync] Supabase broadcast init note:', e.message);
@@ -277,9 +301,26 @@ export function sendVideoControl(control, socket = null) {
   }).catch(() => {});
 }
 
-export function broadcastAiVoice(audioUrl) {
-  if (typeof window === 'undefined' || !audioUrl) return;
-  const payload = { audioUrl, timestamp: Date.now() };
+export function broadcastAiVoice(audioUrlOrPayload) {
+  if (typeof window === 'undefined' || !audioUrlOrPayload) return;
+  
+  let payload = typeof audioUrlOrPayload === 'string' ? { audioUrl: audioUrlOrPayload } : { ...audioUrlOrPayload };
+  payload.timestamp = payload.timestamp || Date.now();
+
+  let finalUrl = payload.audioUrl || '';
+  if (finalUrl && typeof finalUrl === 'string') {
+    let tunnelUrl = localStorage.getItem('avalive_tunnel_url') || '';
+    if (finalUrl.startsWith('/api/')) {
+      finalUrl = `https://avalivepro.vercel.app${finalUrl}`;
+    } else if (finalUrl.includes('localhost') || finalUrl.includes('127.0.0.1')) {
+      if (tunnelUrl) {
+        finalUrl = finalUrl.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, tunnelUrl);
+      } else {
+        finalUrl = finalUrl.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, 'https://avalivepro.vercel.app');
+      }
+    }
+    payload.audioUrl = finalUrl;
+  }
 
   if (typeof BroadcastChannel !== 'undefined') {
     try {

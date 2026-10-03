@@ -8997,6 +8997,26 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
 
   if (thisSpeechId !== currentSpeechGenerationId) return true;
 
+  // ⚡ ĐỒNG BỘ GIỌNG ĐỌC AI SANG BROWSER SOURCE (TIKTOK LIVE STUDIO / OBS / VERCEL)
+  try {
+    const encodedText = encodeURIComponent((textToSpeak || '').slice(0, 300));
+    const gLang = isVietnameseVoice ? 'vi' : (shortLang || 'vi');
+    const directVoiceParam = encodeURIComponent(voice?.neuralVoice || (isMale ? 'vi-VN-NamMinhNeural' : 'vi-VN-HoaiMyNeural'));
+    const directApiGetUrl = `https://avalivepro.vercel.app/api/tts?text=${encodedText}&lang=${gLang}&voice=${directVoiceParam}&gender=${isMale ? 'male' : 'female'}&rate=${encodeURIComponent(requestedRate || 1.0)}&pitch=${encodeURIComponent(requestedPitch || 1.0)}`;
+    
+    import('../lib/masterLiveSync.js').then(mod => {
+      if (mod && mod.broadcastAiVoice) {
+        mod.broadcastAiVoice({
+          audioUrl: directApiGetUrl,
+          text: textToSpeak,
+          voice: voice?.name || voice?.id || 'AI Voice',
+          volume: effectiveVoiceVolume,
+          timestamp: Date.now()
+        });
+      }
+    }).catch(() => {});
+  } catch(e) {}
+
   const apiKey = getElevenLabsApiKey();
   const voiceId = voice?.voiceId || '21m00Tcm4TlvDq8ikWAM';
 

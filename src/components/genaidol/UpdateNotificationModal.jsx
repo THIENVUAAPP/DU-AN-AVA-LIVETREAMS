@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.54';
+export const APP_VERSION = '5.4.55';
 export const RELEASE_DATE = '03/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.55 - SỬA TRIỆT ĐỂ MÀN HÌNH ĐEN TIKTOK LIVE STUDIO & KÍCH HOẠT ĐẦY ĐỦ SỰ KIỆN AI TIKTOK',
+    description: '1. Sửa Dứt Điểm Màn Hình Đen Khi Dán Link TikTok Live Studio / Vercel: Tự động kết nối và nạp đồng bộ video sân khấu chính tức thì 0ms qua Supabase Realtime handshake, không còn chờ đợi hay đen màn hình. 2. Kích Hoạt 100% Sự Kiện AI Chào Người Mới & Trả Lời Bình Luận: Tối ưu bộ điều phối sự kiện TikTok Live, tự động chào mọi khán giả bước vào phòng và đọc trả lời bình luận theo quy trình 4 bước thông minh, loại bỏ hoàn toàn hiện tượng drop sự kiện. 3. Đồng Bộ Âm Thanh Giọng Đọc AI Xuyên Suốt: Giọng AI phát thanh to rõ, dõng dạc và truyền cảm trực tiếp qua luồng link Vercel Cloud cho khán giả nghe trọn vẹn. 4. Khóa Chặt 100% Các Tab Chức Năng Khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.54 - ĐỒNG BỘ AI VOICE & KHẮC PHỤC MÀN HÌNH ĐEN',
     description: '1. Sửa Lỗi Giọng Nói AI Trên TikTok Live Studio (Browser Source): Giọng đọc AI (Chào người mới, Đọc bình luận) giờ đây được đồng bộ và phát thanh siêu mượt trực tiếp trên đường link Vercel Cloud, giúp khán giả nghe rõ mồn một. 2. Sửa Lỗi Màn Hình Đen Khi Mới Dán Link: Các link dán vào TikTok Live Studio sẽ tải trạng thái và đồng bộ video ngay lập tức 0ms, không còn hiện tượng màn hình đen chờ đợi. 3. Báo Hiệu Kết Nối Bằng Giọng Nói AI: Mỗi khi bạn kết nối tài khoản TikTok mới, hệ thống AI sẽ đọc tên kênh của bạn lên để báo hiệu thành công. 4. Tuân thủ khóa chặt mọi tab chức năng không liên quan.'

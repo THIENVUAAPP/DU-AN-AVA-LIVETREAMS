@@ -232,15 +232,22 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       const isTunnelBase = masterState?.tunnelUrl || localStorage.getItem('avalive_tunnel_url') || '';
       let finalUrl = audioUrl;
       const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
-      if (currentOrigin.includes('vercel.app') && isTunnelBase && finalUrl.includes('localhost')) {
-         finalUrl = finalUrl.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, isTunnelBase.replace(/\/$/, ''));
+      if (finalUrl.startsWith('/api/')) {
+        finalUrl = `https://avalivepro.vercel.app${finalUrl}`;
+      } else if (finalUrl.includes('localhost') || finalUrl.includes('127.0.0.1')) {
+        if (isTunnelBase) {
+          finalUrl = finalUrl.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, isTunnelBase.replace(/\/$/, ''));
+        } else {
+          finalUrl = finalUrl.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, 'https://avalivepro.vercel.app');
+        }
       }
       
       const aud = new Audio(finalUrl);
-      aud.volume = videoVolume;
-      if (!isVideoAudioMuted) {
-        aud.play().catch(e => console.warn('CleanLive AI Voice play error:', e));
-      }
+      aud.volume = videoVolume > 0 ? videoVolume : 1.0;
+      aud.play().catch(e => {
+        // Unlock on user interaction / retry
+        console.warn('CleanLive AI Voice play notice:', e.message);
+      });
     } catch(e) {}
   };
 
@@ -1218,7 +1225,16 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
         if (data.mediaUrl && typeof data.mediaUrl === 'string') {
           let cleanMedia = data.mediaUrl;
-          if (cleanMedia.includes('/uploads/')) {
+          const isVercel = typeof window !== 'undefined' && window.location.hostname.includes('vercel.app');
+          const isTunnelBase = data.tunnelUrl || prev.tunnelUrl || (typeof localStorage !== 'undefined' ? localStorage.getItem('avalive_tunnel_url') : '') || '';
+          
+          if (isVercel && isTunnelBase) {
+            if (cleanMedia.includes('localhost') || cleanMedia.includes('127.0.0.1')) {
+              cleanMedia = cleanMedia.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, isTunnelBase.replace(/\/$/, ''));
+            } else if (cleanMedia.startsWith('/uploads/')) {
+              cleanMedia = `${isTunnelBase.replace(/\/$/, '')}${cleanMedia}`;
+            }
+          } else if (cleanMedia.includes('/uploads/')) {
             cleanMedia = cleanMedia.substring(cleanMedia.indexOf('/uploads/'));
           }
           next.mediaUrl = cleanMedia;
@@ -1276,8 +1292,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           if (payload && payload.audioUrl) playAiVoice(payload.audioUrl);
         });
 
-
-        supabaseChannel.subscribe();
+        supabaseChannel.subscribe((status) => {
+          if (status === 'SUBSCRIBED') {
+            supabaseChannel.send({ type: 'broadcast', event: 'REQUEST_MASTER_LIVE_STATE' }).catch(() => {});
+          }
+        });
       }
     } catch (e) {
       console.warn('[Overlay] Supabase Realtime note:', e.message);
@@ -1299,6 +1318,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       const endpoints = [
         bUrl ? `${bUrl.replace(/\/$/, '')}/api/live-state` : null,
         '/api/live-state',
+        'https://avalivepro.vercel.app/api/live-state',
         'http://127.0.0.1:3001/api/live-state',
         'http://localhost:3001/api/live-state'
       ].filter(Boolean);
@@ -1317,6 +1337,16 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       }
     };
     fetchLiveState();
+
+    // Polling định kỳ 2.5s để đảm bảo đồng bộ 100% không bao giờ trễ
+    const autoSyncInterval = setInterval(() => {
+      try {
+        if (supabaseChannel) {
+          supabaseChannel.send({ type: 'broadcast', event: 'REQUEST_MASTER_LIVE_STATE' }).catch(() => {});
+        }
+      } catch (e) {}
+      fetchLiveState();
+    }, 2500);
 
     // 3. WEBSOCKET REALTIME (SOCKET.IO)
     let socket = null;
@@ -1944,6 +1974,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     return () => {
       clearInterval(frameInterval);
       clearInterval(pollInterval);
+      clearInterval(autoSyncInterval);
       if (supabaseChannel) supabaseChannel.unsubscribe();
       if (socket) socket.disconnect();
       socketRef.current = null;

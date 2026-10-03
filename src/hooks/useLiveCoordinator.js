@@ -587,23 +587,20 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // 🛡️ A1.5. BỘ LỌC BÌNH LUẬN VÔ NGHĨA / LỜI CHÀO THÔNG THƯỜNG
-        // CHỈ LỌC khi KHÔNG khớp bất kỳ keyword rule nào đã cài đặt
-        if (!hasKeywordRuleMatch && commentConfig.filterTrivialComments !== false && !isTestMode && commentText) {
+        // 🛡️ A1.5. XỬ LÝ LỜI CHÀO HỎI THÔNG THƯỜNG
+        if (!hasKeywordRuleMatch && commentText) {
           const trimmed = commentText.trim().toLowerCase();
-          const trivialPatterns = /^(ch[aà]o|hi+|hello|helo|helu|hey|xin ch[aà]o|alo|[eê]|[oơ]i|a l[oô]|ch[aà]o em|ch[aà]o b[aạ]n|ch[aà]o shop|ch[aà]o m[oọ]i ng[uư][oờ]i|m[oọ]i ng[uư][oờ]i|c[aả] nh[aà]|ok|okie|oke|v[aâ]ng|d[aạ]|[uư]|[uừ]|[oờ]|ha+|hihi|hehe|huhu|kk+|lol|ơ+|ê+|ủa|\d{1,3}|\.+|!+|\?+|❤️*|😀*|😊*|😂*|💕*|👋*|🥰*|👏*|🔥*|💯*|dot|ch[aấ]m)\.?\s*$/i;
-          if (trivialPatterns.test(trimmed) && trimmed.length < 20) {
-            console.log('🛡️ [AvaLive AI] Bỏ qua bình luận chào hỏi/vô nghĩa:', commentText);
-            setIsProcessingEvent(false);
-            return;
+          const trivialPatterns = /^(ch[aà]o|hi+|hello|helo|helu|hey|xin ch[aà]o|alo|[eê]|[oơ]i|a l[oô]|ch[aà]o em|ch[aà]o b[aạ]n|ch[aà]o shop|ch[aà]o m[oọ]i ng[uư][oờ]i|m[oọ]i ng[uư][oờ]i|c[aả] nh[aà]|hi shop|alo shop)\.?\s*$/i;
+          if (trivialPatterns.test(trimmed)) {
+            bodyAnswer = `Dạ em chào ${userSalutation} nha! Shop em rất vui được đón tiếp bạn, bạn quan tâm sản phẩm nào cứ nhắn em tư vấn nha!`;
+            isHandled = true;
           }
         }
 
         // ⏱️ A2. KIỂM TRA GIÃN CÁCH TRẢ LỜI BÌNH LUẬN
-        // Khi khớp từ khóa đã cấu hình hoặc đang Test -> KHÔNG chặn bởi cooldown để đảm bảo phản hồi 100%
-        const cooldownSec = Math.max(3, parseInt(commentConfig.waitBetweenEvents ?? commentConfig.commentReplyCooldown) || 5);
+        const cooldownSec = Math.max(2, parseInt(commentConfig.waitBetweenEvents ?? commentConfig.commentReplyCooldown) || 3);
         const now = Date.now();
-        if (!isTestMode && !hasKeywordRuleMatch && (now - lastCommentReplyTimeRef.current < cooldownSec * 1000)) {
+        if (!isTestMode && !hasKeywordRuleMatch && !isHandled && (now - lastCommentReplyTimeRef.current < cooldownSec * 1000)) {
           console.log(`⏱️ [AvaLive AI] Đang trong khoảng giãn cách (${cooldownSec}s), bỏ qua dồn dập.`);
           setIsProcessingEvent(false);
           return;
@@ -856,39 +853,31 @@ function fillTemplate(template, vars = {}) {
           processNextQueuedEvent();
           return;
         }
-        // Tuyệt đối không chào nếu không có tên thật hoặc là tên ảo/placeholder (ngoại trừ khi test thủ công)
-        if (!isTestMode) {
-          const rawTrimmed = (rawUserName || '').trim();
-          if (!rawTrimmed || rawTrimmed === 'Bạn' || rawTrimmed === 'Khách mới' || rawTrimmed === 'Khán Giả' || rawTrimmed === 'Khán giả' || rawTrimmed === 'Viewer') {
-            processNextQueuedEvent();
-            return;
-          }
-        }
+
+        const effectiveUser = (rawUserName && rawUserName !== 'Khán Giả' && rawUserName !== 'Viewer') ? userName : 'bạn';
         const viewerKey = (rawUserName || '').toLowerCase().trim();
         const now = Date.now();
         const lastGreetTime = greetedViewersRef.current.get(viewerKey) || 0;
         
-        // Cooldown 60s cho mỗi viewer để không chào liên tiếp dồn dập, nhưng chào lại nếu viewer vào lại sau 60s
-        if (!isTestMode && viewerKey && (now - lastGreetTime < 60000)) {
-          console.log(`[AvaLive] Đã chào gần đây (${Math.round((now - lastGreetTime)/1000)}s trước), bỏ qua: ${viewerKey}`);
+        // Cooldown 30s cho mỗi viewer để không chào liên tiếp dồn dập
+        if (!isTestMode && viewerKey && (now - lastGreetTime < 30000)) {
           processNextQueuedEvent();
           return;
         }
         if (viewerKey) {
           greetedViewersRef.current.set(viewerKey, now);
-          // Giới hạn bộ nhớ tối đa 1000 viewer
           if (greetedViewersRef.current.size > 1000) {
             const first = greetedViewersRef.current.keys().next().value;
             greetedViewersRef.current.delete(first);
           }
         }
         
-        // Chào luân phiên từng câu (Round-Robin tuần tự, không random)
+        // Chào luân phiên từng câu (Round-Robin tuần tự)
         if (welcomeConfig.sampleAnswers) {
-          replyText = fillTemplate(getSequentialSample(welcomeConfig.sampleAnswers, welcomeIndexRef, 'Dạ em chào bạn {user} mới vào xem live nha!'), { user: userName, count: 1 });
+          replyText = fillTemplate(getSequentialSample(welcomeConfig.sampleAnswers, welcomeIndexRef, 'Dạ em chào bạn {user} mới vào xem live nha!'), { user: effectiveUser, count: 1 });
         }
         if (!replyText || !replyText.trim()) {
-          const greetName = (userName && userName.toLowerCase() !== 'bạn') ? `bạn ${userName}` : 'bạn';
+          const greetName = (effectiveUser && effectiveUser.toLowerCase() !== 'bạn') ? `bạn ${effectiveUser}` : 'bạn';
           replyText = `Dạ em chào ${greetName} mới vào xem live nha! Chúc mình xem live thật vui và săn được nhiều deal hời cùng shop ạ!`;
         }
         chatText = replyText;
