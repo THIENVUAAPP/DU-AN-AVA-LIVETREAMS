@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.46';
+export const APP_VERSION = '5.4.47';
 export const RELEASE_DATE = '03/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.47 - Khắc Phục Tải Video Lên Sân Khấu Chính Tức Thì 0ms, Đồng Bộ Window Capture OBS / TikTok Live Studio & Chuẩn Hóa Tab Sự Kiện Bình Luận',
+    description: '1. Khắc Phục Lỗi Tải Video Lên Sân Khấu Chính: Khi tải video lên từ ô nhân vật hoặc Sân Khấu Chính, video lập tức hiển thị và phát ngay trong 0ms, không bị chớp nháy, không bị giữ màn hình chờ "Chờ đồng bộ". 2. Đồng Bộ Tức Thì Window Capture OBS & TikTok Live Studio (Không Còn Bị Đen Màn Hình): Sửa dứt điểm nguyên nhân chặn luồng giải mã video trên cửa sổ bắt hình và link live overlay. Toàn bộ hình ảnh, video và âm thanh từ Sân Khấu Chính được đồng bộ theo thời gian thực 0ms sang Window Capture OBS và đường link Online HTTPS TikTok Live Studio. 3. Chuẩn Hóa Chuỗi 4 Bước Đọc Bình Luận Theo Đúng Cấu Hình & File Nạp: Khắc phục triệt để lỗi lặp câu chúc, kích hoạt 100% các từ khóa và câu trả lời cài sẵn/file tải lên (hỗ trợ phân tách từ khóa bằng dấu phẩy, chấm phẩy, sổ dọc, gạch chéo; so khớp có dấu, không dấu). Không bị chặn bởi cooldown đối với bình luận khớp từ khóa. Đảm bảo đúng 4 bước: Đọc tiền tố nhắc lại -> Trả lời đúng câu thoại cài đặt -> Ghép câu hỏi gợi mở chăm sóc khách hàng -> Phản hồi dự phòng thông minh. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.46 - Khắc Phục Lỗi Màn Hình Khởi Động Film Undefined, Xóa Triệt Để Video Chạy Nền & Khóa Chặt Màn Hình Chờ Tải Lên Mặc Định',
     description: '1. Sửa Dứt Điểm Lỗi Màn Hình Khởi Động (ReferenceError: Film is not defined): Bổ sung đầy đủ thư viện biểu tượng Film, mở app 1-click mượt mà 0ms không bao giờ bị báo lỗi crash hay lỗi nâng cấp dữ liệu. 2. Xóa Hoàn Toàn Video Chạy Nền Tự Động: Khi giải nén file ZIP hoặc mở phần mềm lên, hệ thống tuyệt đối KHÔNG tự ý kích hoạt bất kỳ video ngầm, nhân vật cũ hay video chạy nền nào. 3. Chuẩn Hóa Màn Hình Mặc Định Sân Khấu Chính: Màn hình mặc định luôn là màn hình chờ tải video lên / chờ đồng bộ video (SẴN SÀNG PHÁT LUỒNG 9:16). Sân Khấu Chính chỉ hiển thị và phát video khi người dùng chủ động bấm Tải Video Lên hoặc chủ động click chọn. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'

@@ -8,7 +8,7 @@ function generateContextualFallbackReply({ question = '', username = 'bạn', ro
   const user = username || 'bạn';
 
   if (q.includes('chào') || q.includes('hi') || q.includes('hello')) {
-    return `Dạ em chào bạn ${user} nha! Chúc bạn có một buổi xem live thật vui vẻ và ngập tràn năng lượng nhé!`;
+    return `Dạ em chào bạn ${user} nha! Em rất vui được đồng hành cùng bạn trong buổi live hôm nay!`;
   }
   if (q.includes('game') || q.includes('chơi') || q.includes('cách')) {
     if (gameType === 'battle') {

@@ -339,9 +339,11 @@ export function parseUniversalRulePairs(rawInput, options = {}) {
       const validRules = [];
       list.forEach((item, idx) => {
         if (!item) return;
-        const kws = Array.isArray(item.keywords) 
-          ? item.keywords 
-          : (item.keywords || item.keyword || item.kws || item.key || '').split(',').map(s => s.trim().replace(/^["“'‘]|["”'’]$/g, '')).filter(Boolean);
+        const rawKws = Array.isArray(item.keywords) ? item.keywords : [item.keywords || item.keyword || item.kws || item.key || ''];
+        const kws = rawKws
+          .flatMap(k => String(k || '').split(/[;,|/\n\r]+/))
+          .map(s => s.trim().replace(/^["“'‘]|["”'’]$/g, ''))
+          .filter(Boolean);
         const reply = item.replyText || item.reply || item.response || item.answer || item.text || '';
         if (kws.length > 0 || reply) {
           validRules.push({

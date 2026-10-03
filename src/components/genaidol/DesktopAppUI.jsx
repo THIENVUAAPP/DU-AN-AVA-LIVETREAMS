@@ -2760,6 +2760,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   }, []);
 
   const handleSelectCharacter = useCallback((charId) => {
+    setIsStageExplicitlyCleared(false);
+    try {
+      localStorage.removeItem('avalive_stage_disconnected');
+      localStorage.removeItem('avalive_all_streams_stopped');
+      localStorage.removeItem('avalive_user_paused');
+      localStorage.removeItem('avalive_window_capture_paused');
+    } catch (e) {}
+
     setIsMasterStageSynced(false);
     setFlowSequencerOverlay(null);
     setMultiAvatarConfig(prev => ({ ...prev, _syncedFromSequencer: false, fromSequencer: false, enabled: false }));
@@ -2869,6 +2877,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       videoPlaybackEvent: 'play',
       isPlaying: true,
       clearMedia: false,
+      clearStage: false,
+      isMasterSynced: true,
       aspectRatio: globalAspectRatio || '9:16'
     }, socketRef.current);
 
@@ -2892,6 +2902,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             videoPlaybackEvent: 'play',
             isPlaying: true,
             clearMedia: false,
+            clearStage: false,
+            isMasterSynced: true,
             aspectRatio: globalAspectRatio || '9:16'
           }, socketRef.current);
           sendVideoControl({
@@ -4988,8 +5000,23 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         });
 
         if (autoSelect) {
+          setIsStageExplicitlyCleared(false);
+          try {
+            localStorage.removeItem('avalive_stage_disconnected');
+            localStorage.removeItem('avalive_all_streams_stopped');
+            localStorage.removeItem('avalive_user_paused');
+            localStorage.removeItem('avalive_window_capture_paused');
+            localStorage.removeItem('avalive_master_sync_active');
+            localStorage.removeItem('avalive_sequencer_overlay');
+            localStorage.setItem('avalive_selected_char', targetId);
+            localStorage.setItem('avalive_user_locked_media', targetMediaUrl || localUrl);
+            localStorage.setItem('avalive_active_video_src', localUrl);
+          } catch (e) {}
+
+          setIsMasterStageSynced(false);
+          setFlowSequencerOverlay(null);
+          setUserLockedMediaUrl(targetMediaUrl || localUrl);
           setSelectedCharacter(targetId);
-          try { localStorage.setItem('avalive_selected_char', targetId); } catch (e) {}
           setIsVideoPlaying(true);
           lastPlaybackTimeRef.current = 0;
           currentFileBlobRef.current = file;
@@ -5015,11 +5042,28 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               isPlaying: true,
               currentTime: 0,
               force: true,
+              clearMedia: false,
+              clearStage: false,
               source: 'desktop',
               timestamp: Date.now()
             });
             setTimeout(() => bc.close(), 100);
           } catch (err) {}
+
+          syncMasterLiveState({
+            stage: 'idol',
+            mediaUrl: targetMediaUrl || localUrl,
+            selectedCharacter: targetId,
+            characterName: charName,
+            isVideo: true,
+            isPlaying: true,
+            clearMedia: false,
+            clearStage: false,
+            isMasterSynced: true,
+            videoPlaybackEvent: 'play',
+            videoCurrentTime: 0,
+            updatedAt: Date.now()
+          }, socketRef.current);
         }
 
         // Đảm bảo LUÔN CÓ SERVER URL ĐỂ PHỤC VỤ OBS & TIKTOK LIVE STUDIO
@@ -5122,15 +5166,22 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       });
 
       if (autoSelect) {
-        setActiveMedia(file, 'current_active', { name: charName, mediaUrl: localUrl, id: newCharId }).catch(() => {});
+        setIsStageExplicitlyCleared(false);
         try {
-          localStorage.setItem('avalive_selected_char', newCharId);
+          localStorage.removeItem('avalive_stage_disconnected');
+          localStorage.removeItem('avalive_all_streams_stopped');
+          localStorage.removeItem('avalive_user_paused');
+          localStorage.removeItem('avalive_window_capture_paused');
           localStorage.removeItem('avalive_master_sync_active');
           localStorage.removeItem('avalive_sequencer_overlay');
+          localStorage.setItem('avalive_selected_char', newCharId);
+          localStorage.setItem('avalive_user_locked_media', localUrl);
+          localStorage.setItem('avalive_active_video_src', localUrl);
         } catch (e) {}
 
         setIsMasterStageSynced(false);
         setFlowSequencerOverlay(null);
+        setUserLockedMediaUrl(localUrl);
         setSelectedCharacter(newCharId);
         setIsVideoPlaying(true);
         lastPlaybackTimeRef.current = 0;
@@ -5160,11 +5211,27 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
             currentTime: 0,
             force: true,
             clearMedia: false,
+            clearStage: false,
             source: 'desktop',
             timestamp: Date.now()
           });
           setTimeout(() => bc.close(), 100);
         } catch (err) {}
+
+        syncMasterLiveState({
+          stage: 'idol',
+          mediaUrl: localUrl,
+          selectedCharacter: newCharId,
+          characterName: charName,
+          isVideo: true,
+          isPlaying: true,
+          clearMedia: false,
+          clearStage: false,
+          isMasterSynced: true,
+          videoPlaybackEvent: 'play',
+          videoCurrentTime: 0,
+          updatedAt: Date.now()
+        }, socketRef.current);
 
         showToast(`⚡ Đã phát ngay video "${charName}" trên sân khấu chính!`, 'success');
       }
@@ -5214,6 +5281,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               currentTime: 0,
               force: true,
               clearMedia: false,
+              clearStage: false,
               source: 'desktop',
               timestamp: Date.now()
             });
@@ -5230,6 +5298,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                 isVideo: true,
                 isPlaying: true,
                 clearMedia: false,
+                clearStage: false,
+                isMasterSynced: true,
+                videoPlaybackEvent: 'play',
                 videoCurrentTime: 0,
                 updatedAt: Date.now()
               }, socketRef.current);
@@ -6039,7 +6110,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       let selected = isStageDisconnected ? null : (customMatch || 
         (selectedCharacter && CHARACTERS[selectedCharacter]?.url ? { id: selectedCharacter, ...CHARACTERS[selectedCharacter] } : null) || 
         sequencerLockedMedia ||
-        (userLockedMediaUrl && isMasterStageSynced ? { id: 'locked_video', name: 'Video Đang Phát', url: userLockedMediaUrl, mediaUrl: userLockedMediaUrl, type: 'video' } : null));
+        (userLockedMediaUrl ? { id: 'locked_video', name: 'Video Đang Phát', url: userLockedMediaUrl, mediaUrl: userLockedMediaUrl, type: (userLockedMediaUrl.match(/\.(png|jpg|jpeg|gif|webp|svg)([\?#].*)?$/i) || userLockedMediaUrl.startsWith('data:image/')) ? 'image' : 'video' } : null));
 
       if (!selected) {
         return (

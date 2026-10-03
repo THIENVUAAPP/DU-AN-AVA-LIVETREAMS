@@ -167,7 +167,7 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
   // Rules Handlers
   const handleAddKeywordRule = () => {
     if (!newRuleKeywords.trim() || !newRuleReply.trim()) return;
-    const kwList = newRuleKeywords.split(',').map(s => s.trim()).filter(Boolean);
+    const kwList = newRuleKeywords.split(/[;,|/\n\r]+/).map(s => s.trim()).filter(Boolean);
     const isSpecialVoice = ALL_SYSTEM_VOICES.some(v => v.id === newRuleRole);
     const item = {
       id: 'k_' + Date.now(),
@@ -197,7 +197,7 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
       ...r,
       name: editingRuleData.name,
       keywords: typeof editingRuleData.keywords === 'string' 
-        ? editingRuleData.keywords.split(',').map(s => s.trim()).filter(Boolean) 
+        ? editingRuleData.keywords.split(/[;,|/\n\r]+/).map(s => s.trim()).filter(Boolean) 
         : editingRuleData.keywords,
       replyText: editingRuleData.replyText,
       role: isSpecialVoice ? 'assistant' : (editingRuleData.role || r.role || 'assistant'),

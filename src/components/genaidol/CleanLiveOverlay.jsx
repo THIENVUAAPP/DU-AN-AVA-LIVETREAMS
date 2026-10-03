@@ -1655,6 +1655,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
               }
               if (cleanUrl) {
                 try {
+                  localStorage.removeItem('avalive_stage_disconnected');
+                  localStorage.removeItem('avalive_all_streams_stopped');
                   localStorage.removeItem('avalive_user_paused');
                   localStorage.removeItem('avalive_window_capture_paused');
                   localStorage.setItem('avalive_user_locked_media', cleanUrl);
@@ -2114,7 +2116,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     localStorage.getItem('avalive_all_streams_stopped') === 'true' || 
     localStorage.getItem('avalive_stage_disconnected') === 'true'
   );
-  const isStageCleared = masterState?.clearMedia === true || masterState?.isMasterSynced === false || isDisconnectedByStorage;
+  // Sân khấu chỉ coi là cleared khi streamer chủ động bấm Tắt/Ngắt sân khấu VÀ không có mediaUrl nào đang được chọn phát
+  const isStageCleared = ((masterState?.clearMedia === true && masterState?.clearStage === true) || isDisconnectedByStorage) && !masterState?.mediaUrl;
 
   // Helper giải mã URL media chính xác (tôn trọng 100% video/nhân vật người dùng chọn)
   const resolveActiveMedia = () => {
@@ -2128,15 +2131,17 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     );
 
     // 0. ƯU TIÊN SỐ 1 CHO CỬA SỔ WINDOW CAPTURE OBS:
-    // Trực tiếp lấy video đang phát trong phần mềm chính (window.opener) nhưng TUYỆT ĐỐI KHÔNG lấy blob URL qua cross-window vì gây lỗi giải mã và vòng lặp chớp nháy!
+    // Trực tiếp lấy video đang phát trong phần mềm chính (window.opener)
     if (!isStageCleared && typeof window !== 'undefined' && window.opener && !window.opener.closed) {
       try {
         const openerVid = window.opener.document.querySelector('video.main-video-player, video[data-main-player="true"], video');
         if (openerVid) {
           const s = openerVid.currentSrc || openerVid.src;
-          if (s && typeof s === 'string' && s.trim() !== '' && !s.startsWith('blob:')) {
-            candidateUrl = s;
-            isVideo = true;
+          if (s && typeof s === 'string' && s.trim() !== '') {
+            if (!s.startsWith('blob:') || isLocalOrigin) {
+              candidateUrl = s;
+              isVideo = true;
+            }
           }
         }
       } catch (e) {}

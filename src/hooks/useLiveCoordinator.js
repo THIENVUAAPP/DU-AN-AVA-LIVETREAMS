@@ -497,23 +497,39 @@ function fillTemplate(template, vars = {}) {
         };
         const commentNorm = normStr(commentText);
 
+        // Helper trích xuất toàn bộ từ khóa từ mọi định dạng (mảng, chuỗi phân tách bởi dấu phẩy, chấm phẩy, sổ dọc, gạch chéo, xuống dòng)
+        const extractKeywords = (rawKeywords) => {
+          if (!rawKeywords) return [];
+          const list = Array.isArray(rawKeywords) ? rawKeywords : [rawKeywords];
+          return list
+            .flatMap(k => String(k || '').split(/[;,|/\n\r]+/))
+            .map(k => k.trim())
+            .filter(Boolean);
+        };
+
+        const isKeywordMatch = (cNorm, kNorm) => {
+          if (!kNorm.clean) return false;
+          // 1. So khớp nguyên chuỗi thô (có dấu)
+          if (cNorm.raw.includes(kNorm.raw)) return true;
+          // 2. So khớp sau khi loại bỏ dấu câu (clean)
+          if (cNorm.clean.includes(kNorm.clean)) return true;
+          // 3. So khớp không dấu (noAcc) nếu từ khóa >= 2 ký tự
+          if (kNorm.noAcc.length >= 2 && cNorm.noAcc.includes(kNorm.noAcc)) return true;
+          return false;
+        };
+
         // 🎯 A1.3. KIỂM TRA NHANH: Bình luận có khớp bất kỳ quy tắc từ khóa nào không?
-        // Nếu khớp thì TUYỆT ĐỐI BỎ QUA bộ lọc trivial (A1.5) để đảm bảo luôn phản hồi từ khóa đã nạp
+        // Nếu khớp thì TUYỆT ĐỐI BỎ QUA bộ lọc trivial (A1.5) và bộ lọc cooldown (A2) để luôn phản hồi từ khóa đã nạp
         let hasKeywordRuleMatch = false;
         let matchedRulePre = null;
 
-        if (useKw && commentText) {
+        if (commentText) {
           // 1. Kiểm tra toàn bộ Keyword Rules từ file tải lên & cấu hình
           for (const rule of allKeywordRules) {
-            if (!rule || rule.enabled === false || !rule.keywords) continue;
-            const kwArr = Array.isArray(rule.keywords) ? rule.keywords : String(rule.keywords).split(/[;,]\s*|\n/);
-            const matched = kwArr.some(k => {
-              const kNorm = normStr(k);
-              if (!kNorm.clean) return false;
-              return commentNorm.raw.includes(kNorm.raw) || 
-                     commentNorm.clean.includes(kNorm.clean) || 
-                     (kNorm.noAcc.length >= 2 && commentNorm.noAcc.includes(kNorm.noAcc));
-            });
+            if (!rule || rule.enabled === false) continue;
+            const kws = extractKeywords(rule.keywords);
+            if (kws.length === 0) continue;
+            const matched = kws.some(k => isKeywordMatch(commentNorm, normStr(k)));
             if (matched && (rule.replyText || rule.reply)) {
               hasKeywordRuleMatch = true;
               matchedRulePre = rule;
@@ -538,9 +554,9 @@ function fillTemplate(template, vars = {}) {
           if (!hasKeywordRuleMatch && checkoutConfig.active !== false && Array.isArray(checkoutConfig.checkoutProducts)) {
             for (const prod of checkoutConfig.checkoutProducts) {
               if (prod.active !== false && prod.keywords) {
-                const kws = prod.keywords.toLowerCase().split(/[;,]/).map(k => k.trim()).filter(Boolean);
+                const kws = extractKeywords(prod.keywords);
                 const pNorm = normStr(prod.productName);
-                if (kws.some(k => commentNorm.raw.includes(k)) || (pNorm.raw && (commentNorm.raw.includes(pNorm.raw) || (pNorm.noAcc.length >= 3 && commentNorm.noAcc.includes(pNorm.noAcc))))) {
+                if (kws.some(k => isKeywordMatch(commentNorm, normStr(k))) || (pNorm.raw && isKeywordMatch(commentNorm, pNorm))) {
                   hasKeywordRuleMatch = true;
                   break;
                 }
@@ -562,9 +578,10 @@ function fillTemplate(template, vars = {}) {
         }
 
         // ⏱️ A2. KIỂM TRA GIÃN CÁCH TRẢ LỜI BÌNH LUẬN
-        const cooldownSec = Math.max(5, parseInt(commentConfig.waitBetweenEvents ?? commentConfig.commentReplyCooldown) || 5);
+        // Khi khớp từ khóa đã cấu hình hoặc đang Test -> KHÔNG chặn bởi cooldown để đảm bảo phản hồi 100%
+        const cooldownSec = Math.max(3, parseInt(commentConfig.waitBetweenEvents ?? commentConfig.commentReplyCooldown) || 5);
         const now = Date.now();
-        if (!isTestMode && (now - lastCommentReplyTimeRef.current < cooldownSec * 1000)) {
+        if (!isTestMode && !hasKeywordRuleMatch && (now - lastCommentReplyTimeRef.current < cooldownSec * 1000)) {
           console.log(`⏱️ [AvaLive AI] Đang trong khoảng giãn cách (${cooldownSec}s), bỏ qua dồn dập.`);
           setIsProcessingEvent(false);
           return;
@@ -607,7 +624,7 @@ function fillTemplate(template, vars = {}) {
         const lowerComment = commentText.toLowerCase();
 
         // 🎯 BƯỚC 2: ƯU TIÊN SỐ 1 (100% TUYỆT ĐỐI) - ĐỐI CHIẾU DANH SÁCH TỪ KHÓA FILE TẢI LÊN & CẤU HÌNH (KHÔNG DÙNG AI)
-        if (!isHandled && commentConfig.active !== false && useKw) {
+        if (!isHandled && commentConfig.active !== false) {
           if (matchedRulePre) {
             const replyTpl = matchedRulePre.replyText || matchedRulePre.reply;
             bodyAnswer = fillTemplate(replyTpl, { user: userName, comment: commentText });
@@ -620,19 +637,14 @@ function fillTemplate(template, vars = {}) {
           } else {
             const seenRules = new Set();
             for (const rule of allKeywordRules) {
-              if (!rule || rule.enabled === false || !rule.keywords) continue;
+              if (!rule || rule.enabled === false) continue;
               const rKey = (rule.id || '') + '_' + String(rule.keywords);
               if (seenRules.has(rKey)) continue;
               seenRules.add(rKey);
 
-              const kwArr = Array.isArray(rule.keywords) ? rule.keywords : String(rule.keywords).split(/[;,]\s*|\n/);
-              const matched = kwArr.some(k => {
-                const kNorm = normStr(k);
-                if (!kNorm.clean) return false;
-                return commentNorm.raw.includes(kNorm.raw) || 
-                       commentNorm.clean.includes(kNorm.clean) || 
-                       (kNorm.noAcc.length >= 2 && commentNorm.noAcc.includes(kNorm.noAcc));
-              });
+              const kws = extractKeywords(rule.keywords);
+              if (kws.length === 0) continue;
+              const matched = kws.some(k => isKeywordMatch(commentNorm, normStr(k)));
               if (matched && (rule.replyText || rule.reply)) {
                 const replyTpl = rule.replyText || rule.reply;
                 bodyAnswer = fillTemplate(replyTpl, { user: userName, comment: commentText });
@@ -680,14 +692,9 @@ function fillTemplate(template, vars = {}) {
         if (!isHandled && checkoutConfig.active !== false && Array.isArray(checkoutConfig.checkoutProducts)) {
           for (const prod of checkoutConfig.checkoutProducts) {
             if (prod.active !== false && prod.keywords) {
-              const kws = prod.keywords.toLowerCase().split(/[;,]/).map(k => k.trim()).filter(Boolean);
+              const kws = extractKeywords(prod.keywords);
               const pNorm = normStr(prod.productName);
-              const matched = kws.some(k => {
-                const kNorm = normStr(k);
-                return commentNorm.raw.includes(kNorm.raw) || 
-                       commentNorm.clean.includes(kNorm.clean) || 
-                       (kNorm.noAcc.length >= 2 && commentNorm.noAcc.includes(kNorm.noAcc));
-              }) || (pNorm.raw && (commentNorm.raw.includes(pNorm.raw) || commentNorm.clean.includes(pNorm.clean) || (pNorm.noAcc.length >= 3 && commentNorm.noAcc.includes(pNorm.noAcc))));
+              const matched = kws.some(k => isKeywordMatch(commentNorm, normStr(k))) || (pNorm.raw && isKeywordMatch(commentNorm, pNorm));
 
               if (matched) {
                 isHandled = true;
@@ -727,8 +734,11 @@ function fillTemplate(template, vars = {}) {
 
               if (aiRes && aiRes.text && aiRes.text.trim()) {
                 const cleanAiText = aiRes.text.trim();
-                // Bỏ qua câu generic chúc bạn... nếu AI fallback
-                if (!cleanAiText.startsWith('Dạ em đã ghi nhận bình luận của bạn') || !cleanAiText.includes('ngập tràn niềm vui')) {
+                // Bỏ qua hoàn toàn câu generic chúc bạn... nếu AI fallback offline
+                const isCannedWish = /chúc\s+.*(vui|năng lượng|hời|may mắn|tràn ngập)/i.test(cleanAiText) ||
+                                     cleanAiText.startsWith('Dạ em đã ghi nhận bình luận') ||
+                                     cleanAiText.startsWith('Dạ em chào bạn đang theo dõi live');
+                if (!isCannedWish) {
                   bodyAnswer = cleanAiText;
                   isHandled = true;
                 }
@@ -756,7 +766,7 @@ function fillTemplate(template, vars = {}) {
             bodyAnswer = fillTemplate(getRandomSample(commentConfig.sampleAnswers), { user: userName, comment: commentText });
             isHandled = true;
           } else {
-            bodyAnswer = `Dạ bạn ${userSalutation} ơi, câu hỏi này em là trợ lý live nên xin phép ghi nhận lại để shop tư vấn chi tiết cho mình trong tin nhắn nhé!`;
+            bodyAnswer = `Dạ bạn ${userSalutation} ơi, câu hỏi này em xin phép ghi nhận lại để shop tư vấn chi tiết cho mình trong tin nhắn nhé!`;
             isHandled = true;
           }
         }
