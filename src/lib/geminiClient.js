@@ -53,6 +53,7 @@ export async function fetchAiReply({ kind = 'question', username, characterName,
     if (res.ok) {
       const { text, audioBase64 } = await res.json();
       if (text && text.trim()) {
+        if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('avalive:deduct_token', { detail: { amount: 5, reason: 'AI LLM (Gemini) Response' } }));
         return { text: text.trim(), audioUrl: audioBase64 ? pcmBase64ToWavUrl(audioBase64) : null };
       }
     }
@@ -82,7 +83,10 @@ Yêu cầu: Trả lời tự nhiên, thân thiện, ngắn gọn (1-2 câu ngắ
       if (directRes.ok) {
         const directData = await directRes.json();
         const txt = directData?.candidates?.[0]?.content?.parts?.[0]?.text?.trim()?.replace(/^["“]|["”]$/g, '');
-        if (txt) return { text: txt, audioUrl: null };
+        if (txt) {
+          if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('avalive:deduct_token', { detail: { amount: 5, reason: 'AI LLM (Gemini) Direct Response' } }));
+          return { text: txt, audioUrl: null };
+        }
       }
     } catch (e) {
       console.warn('Direct Gemini Flash call error:', e);

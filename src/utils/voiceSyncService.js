@@ -9183,6 +9183,7 @@ async function executeSingleSpeech(voice, sampleText = null, onEnd = null, isTes
     const encodedText = encodeURIComponent(textToSpeak.slice(0, 200));
     const gLang = isVietnameseVoice ? 'vi' : (shortLang || 'vi');
     const directApiGetUrl = (currentOrigin ? `${currentOrigin}/api/tts` : '/api/tts') + `?text=${encodedText}&lang=${gLang}&voice=${encodeURIComponent(voice?.neuralVoice || 'vi-VN-HoaiMyNeural')}`;
+    if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('avalive:deduct_token', { detail: { amount: 1, reason: 'AI Voice TTS' } }));
     
     const audio = new Audio(directApiGetUrl);
     audio.volume = Math.max(0, Math.min(1.0, effectiveVoiceVolume));

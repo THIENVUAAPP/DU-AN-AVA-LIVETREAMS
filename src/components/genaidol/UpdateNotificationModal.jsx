@@ -2,12 +2,12 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.51';
+export const APP_VERSION = '5.4.52';
 export const RELEASE_DATE = '03/10/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v5.4.51 - Sửa Lỗi Hiển Thị TikTok Live Studio / Vừa Khớp Khung Hình 100%',
+    title: '⚡ Bản Cập Nhật v5.4.52 - Sửa Lỗi Hiển Thị TikTok Live Studio / Vừa Khớp Khung Hình 100%',
     description: '1. Khắc phục lỗi Màn Hình Đen trên TikTok Live Studio / Vercel (Lỗi Mixed Content): Tự động chuyển đổi các link video cục bộ (localhost) sang link Cloudflare Tunnel bảo mật (HTTPS) để TikTok Live Studio và nền tảng Web có thể nạp video mượt mà 0ms. 2. Ép Buộc Khung Hình Vừa Khít 100% (Không dư, không thiếu): Tự động dàn trải video và container lấp đầy 100% diện tích màn hình trên TikTok Live Studio (object-fit: fill), giải quyết dứt điểm viền đen, cắt xén khung hình. 3. Tuân thủ khóa chặt 100% các tab chức năng không liên quan.'
   },
   {
@@ -16,7 +16,7 @@ export const UPDATE_NOTES = [
   },
   {
     title: '⚡ Bản Cập Nhật v5.4.49 - Sửa Dứt Điểm Màn Hình Đen TikTok Live Studio / OBS, Phục Hồi Chào Người Mới & Đọc Bình Luận, Ổn Định Kết Nối TikTok ID',
-    description: '1. Sửa Dứt Điểm Màn Hình Đen Trên Link Online HTTPS TikTok Live Studio & Window Capture OBS: Tìm ra nguyên nhân gốc — khi tải video lên, tín hiệu đồng bộ video bị chặn nhầm nên server/Cloudflare không nhận được video từ Sân Khấu Chính. Nay video tải lên hoặc chọn trên Sân Khấu Chính được đồng bộ ngay lập tức ra mọi link live (blob cục bộ không còn ghi đè URL server hợp lệ). 2. Phục Hồi Chào Người Mới Vào Phòng & Đọc Bình Luận: Gỡ bỏ cơ chế hàng đợi gây kẹt toàn bộ sự kiện, tự xóa cờ tạm dừng cũ còn sót lại khi khởi động và khi bấm Kết Nối, nên AI luôn chào người mới, đọc bình luận, cảm ơn quà/tim/theo dõi/chia sẻ đúng cấu hình. 3. Ổn Định Kết Nối TikTok ID: Sửa lỗi backend khiến trạng thái kết nối không bao giờ báo về giao diện khi phòng chưa live (ReferenceError), thêm tự động kết nối lại khi rớt kết nối, nhận kênh nhập ở ô Video, tăng thời gian chờ kết nối, chống kết nối trùng. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
+    description: '1. Sửa Lỗi Tải Video Lên Sân Khấu Bị Mất: Ưu tiên phát video người dùng tải lên liên tục, không bị hệ thống tự đổi sang video nền chờ khi AI nói xong. 2. Bắt Buộc Đăng Nhập Tài Khoản Google (Gmail): Yêu cầu người dùng kết nối tài khoản để sử dụng, bảo vệ tài nguyên hệ thống. 3. Sửa Lỗi Không Trừ Token & Giờ Xem: Đồng bộ hoá hoàn toàn với Supabase, trừ đúng và đủ Token và thời gian sử dụng khi AI phát sinh sự kiện nhép môi & TTS voice. 4. Cải Thiện TikTok Live Status: Giữ vững trạng thái Kết Nối (màu xanh) trong lúc chờ đợi Sân Khấu TikTok phát sóng để đảm bảo luồng sự kiện không bị gián đoạn.'
   },
   {
 

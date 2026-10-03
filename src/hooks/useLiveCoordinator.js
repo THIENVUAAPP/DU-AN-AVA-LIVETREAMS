@@ -1256,6 +1256,7 @@ function fillTemplate(template, vars = {}) {
   const handleActionVideoReady = (videoUrl, isLipSync) => {
     if (isLipSync) {
       setLipSyncVideoUrl(videoUrl);
+      if (typeof window !== 'undefined') window.dispatchEvent(new CustomEvent('avalive:deduct_token', { detail: { amount: 10, reason: 'AI Video LipSync Generation' } }));
       if (typeof window !== 'undefined') {
         window.dispatchEvent(new CustomEvent('avalive:lipsync_video_trigger', {
           detail: { videoUrl }

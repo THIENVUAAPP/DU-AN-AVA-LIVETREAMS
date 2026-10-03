@@ -150,6 +150,14 @@ export default function DesktopAppUI() {
   const [isLoggingIn, setIsLoggingIn] = useState(false);
   const [isGmailLoginModalOpen, setIsGmailLoginModalOpen] = useState(false);
 
+  // BẮT BUỘC ĐĂNG NHẬP GMAIL: Khóa ứng dụng nếu chưa kết nối
+  useEffect(() => {
+    if (currentUser?.email === 'khachhang@avalive.com') {
+      setIsGmailLoginModalOpen(true);
+    }
+  }, [currentUser]);
+
+
   // Lắng nghe Supabase OAuth
   useEffect(() => {
     if (!supabase) return;
@@ -6489,7 +6497,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               }}
               onEnded={(e) => {
                 // 🎬 NẾU VỪA KẾT THÚC VIDEO SỰ KIỆN -> TỰ ĐỘNG TRỞ VỀ VIDEO CHỜ IDLE
-                const idleVid = typeof localStorage !== 'undefined' ? (localStorage.getItem('aidol_idle_media_url') || localStorage.getItem('avalive_user_locked_media')) : null;
+                const idleVid = typeof localStorage !== 'undefined' ? (localStorage.getItem('avalive_user_locked_media') || localStorage.getItem('aidol_idle_media_url')) : null;
                 if (idleVid && (e.currentTarget.dataset.isEventVideo === 'true' || (e.currentTarget.src && !e.currentTarget.src.includes(idleVid)))) {
                   e.currentTarget.dataset.isEventVideo = 'false';
                   e.currentTarget.src = idleVid;
