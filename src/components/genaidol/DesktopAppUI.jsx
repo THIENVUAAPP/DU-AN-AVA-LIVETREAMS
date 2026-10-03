@@ -4093,6 +4093,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     });
 
     socket.on('tiktok_connected', (data) => {
+      if (data && (data.uniqueId || data.username)) {
+        setTimeout(() => {
+          handleLiveEventRef.current?.('AI_TALK', {
+            text: `Hệ thống AI đã kết nối thành công tới kênh TikTok của ${data.uniqueId || data.username}`,
+            priority: 10
+          });
+        }, 1500);
+      }
       setIsConnecting(false);
       setIsConnected(true);
       setConnectionError('');
