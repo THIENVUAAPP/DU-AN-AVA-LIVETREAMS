@@ -312,8 +312,10 @@ export async function parsePdfArrayBuffer(arrayBuffer) {
  * - Tagged: Từ khóa: ... \n Phản hồi: ...
  * - Markdown tables, CSV, JSON
  */
-export function parseUniversalRulePairs(rawInput) {
+export function parseUniversalRulePairs(rawInput, options = {}) {
   if (!rawInput) return [];
+  const defaultRole = options.defaultRole || 'assistant';
+  const defaultVoiceId = options.defaultVoiceId || undefined;
   
   let rawText = '';
   if (Array.isArray(rawInput)) {
@@ -347,7 +349,8 @@ export function parseUniversalRulePairs(rawInput) {
             name: item.name || (kws[0] ? `Quy tắc "${kws[0]}"` : `Quy tắc ${idx + 1}`),
             keywords: kws.length > 0 ? kws : ['chào'],
             replyText: reply || 'Dạ em chào bạn nha!',
-            role: item.role || 'assistant',
+            role: item.role || defaultRole,
+            voiceId: item.voiceId || defaultVoiceId,
             cooldownSec: item.cooldownSec || 4,
             enabled: item.enabled !== false
           });
@@ -375,7 +378,8 @@ export function parseUniversalRulePairs(rawInput) {
         name: rName,
         keywords: currentKeywords.length > 0 ? currentKeywords : (firstKw ? [firstKw] : ['chào']),
         replyText: currentReply || `Dạ em chào anh chị [user] ạ!`,
-        role: 'assistant',
+        role: defaultRole,
+        voiceId: defaultVoiceId,
         cooldownSec: 4,
         enabled: true
       });

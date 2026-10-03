@@ -352,7 +352,7 @@ function getSequentialSample(sampleAnswers, indexRef, fallback = '') {
 function fillTemplate(template, vars = {}) {
   let result = template || '';
   Object.keys(vars).forEach(key => {
-    const val = vars[key];
+    const val = vars[key] ?? '';
     if (key === 'user') {
       const cleanUser = cleanUserNameForSpeech(val);
       if (cleanUser === 'bạn' || cleanUser === 'Bạn') {
@@ -360,12 +360,18 @@ function fillTemplate(template, vars = {}) {
         result = result.replace(/\banh\s+\{user\}/gi, 'anh');
         result = result.replace(/\bchị\s+\{user\}/gi, 'chị');
         result = result.replace(/\{user\}/gi, 'bạn');
+        result = result.replace(/\bbạn\s+\[user\]/gi, 'bạn');
+        result = result.replace(/\banh\s+\[user\]/gi, 'anh');
+        result = result.replace(/\bchị\s+\[user\]/gi, 'chị');
+        result = result.replace(/\[user\]/gi, 'bạn');
       } else {
         result = result.replace(/\{user\}/gi, cleanUser);
+        result = result.replace(/\[user\]/gi, cleanUser);
       }
     } else {
-      const regex = new RegExp(`\\{${key}\\}`, 'gi');
-      result = result.replace(regex, val);
+      const regex1 = new RegExp(`\\{${key}\\}`, 'gi');
+      const regex2 = new RegExp(`\\[${key}\\]`, 'gi');
+      result = result.replace(regex1, val).replace(regex2, val);
     }
   });
   return result;
@@ -458,40 +464,36 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // 🎯 THU THẬP TẤT CẢ QUY TẮC TỪ KHÓA TỪ MỌI NGUỒN (FILE TẢI LÊN, CẤU HÌNH CÁC TAB, LOCALSTORAGE)
+        // 🎯 THU THẬP TẤT CẢ QUY TẮC TỪ KHÓA TỪ MỌI NGUỒN (ƯU TIÊN CAO NHẤT: TAB BÌNH LUẬN)
         const allKeywordRules = [];
         if (Array.isArray(commentConfig.keywordRules)) allKeywordRules.push(...commentConfig.keywordRules);
-        if (Array.isArray(scriptConfig.keywordRules)) allKeywordRules.push(...scriptConfig.keywordRules);
-        if (Array.isArray(checkoutConfig.keywordRules)) allKeywordRules.push(...checkoutConfig.keywordRules);
-        try {
-          const shared = JSON.parse(localStorage.getItem('AVALIVE_KEYWORD_RULES_SHARED') || '[]');
-          if (Array.isArray(shared)) allKeywordRules.push(...shared);
-        } catch (e) {}
         try {
           const comKws = JSON.parse(localStorage.getItem('avalive_comment_keyword_rules') || '[]');
           if (Array.isArray(comKws)) allKeywordRules.push(...comKws);
         } catch (e) {}
         try {
-          const gv = JSON.parse(localStorage.getItem('game_voice_settings') || '{}');
-          if (Array.isArray(gv.keywordRules)) allKeywordRules.push(...gv.keywordRules);
+          const shared = JSON.parse(localStorage.getItem('AVALIVE_KEYWORD_RULES_SHARED') || '[]');
+          if (Array.isArray(shared)) allKeywordRules.push(...shared);
         } catch (e) {}
+        if (Array.isArray(scriptConfig.keywordRules)) allKeywordRules.push(...scriptConfig.keywordRules);
+        if (Array.isArray(checkoutConfig.keywordRules)) allKeywordRules.push(...checkoutConfig.keywordRules);
         try {
           const qr = JSON.parse(localStorage.getItem('aidol_quick_rules') || '[]');
           if (Array.isArray(qr)) allKeywordRules.push(...qr);
         } catch (e) {}
 
-        // Hàm chuẩn hóa tiếng Việt hỗ trợ so khớp cả có dấu và không dấu
+        // Hàm chuẩn hóa tiếng Việt hỗ trợ so khớp cả có dấu, không dấu và loại bỏ dấu câu
         const normStr = (str) => {
           const s = String(str || '').toLowerCase().trim();
-          const noAcc = s
+          const cleanPunct = s.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"'“”«»]/g, ' ').replace(/\s+/g, ' ').trim();
+          const noAcc = cleanPunct
             .normalize('NFD')
             .replace(/[\u0300-\u036f]/g, '')
             .replace(/đ/g, 'd')
             .replace(/Đ/g, 'd')
-            .replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"']/g, ' ')
             .replace(/\s+/g, ' ')
             .trim();
-          return { raw: s, noAcc };
+          return { raw: s, clean: cleanPunct, noAcc };
         };
         const commentNorm = normStr(commentText);
 
@@ -507,8 +509,10 @@ function fillTemplate(template, vars = {}) {
             const kwArr = Array.isArray(rule.keywords) ? rule.keywords : String(rule.keywords).split(/[;,]\s*|\n/);
             const matched = kwArr.some(k => {
               const kNorm = normStr(k);
-              if (!kNorm.raw) return false;
-              return commentNorm.raw.includes(kNorm.raw) || (kNorm.noAcc.length >= 2 && commentNorm.noAcc.includes(kNorm.noAcc));
+              if (!kNorm.clean) return false;
+              return commentNorm.raw.includes(kNorm.raw) || 
+                     commentNorm.clean.includes(kNorm.clean) || 
+                     (kNorm.noAcc.length >= 2 && commentNorm.noAcc.includes(kNorm.noAcc));
             });
             if (matched && (rule.replyText || rule.reply)) {
               hasKeywordRuleMatch = true;
@@ -580,18 +584,21 @@ function fillTemplate(template, vars = {}) {
         // 🎯 QUY TRÌNH 4 BƯỚC PHẢN HỒI BÌNH LUẬN CHUẨN XÁC
         // =========================================================================
         
-        // BƯỚC 1: TIỀN TỐ BẮT BUỘC - CẢM ƠN USER VÀ NHẮC LẠI COMMENT CỦA KHÁCH
+        // BƯỚC 1: TIỀN TỐ ĐỌC LẠI BÌNH LUẬN TRƯỚC KHI TRẢ LỜI
         const userSalutation = (userName && userName.toLowerCase() !== 'bạn') ? `bạn ${userName}` : 'bạn';
         const isQuestion = commentText.includes('?') || 
           /^(ai|sao|gì|đâu|nào|bao nhiêu|thế nào|không|hả|chưa|khi nào|bao giờ|mấy)/i.test(commentText) ||
           /(không|ko|hả|chưa|nhỉ|nhé|ạ|sao)\?*$/i.test(commentText);
         
-        let repeatPrefix = isQuestion
-          ? `Dạ em cảm ơn ${userSalutation} đã hỏi: "${commentText}". `
-          : `Dạ em cảm ơn ${userSalutation} đã bình luận: "${commentText}". `;
-
-        if (commentConfig.repeatCommentPrefix && commentConfig.repeatCommentPrefix.trim()) {
-          repeatPrefix = fillTemplate(commentConfig.repeatCommentPrefix, { user: userName, comment: commentText });
+        let repeatPrefix = '';
+        if (commentConfig.repeatCommentFirst !== false) {
+          if (commentConfig.repeatCommentPrefix && commentConfig.repeatCommentPrefix.trim()) {
+            repeatPrefix = fillTemplate(commentConfig.repeatCommentPrefix, { user: userName, comment: commentText });
+          } else {
+            repeatPrefix = isQuestion
+              ? `Dạ em cảm ơn ${userSalutation} đã hỏi: "${commentText}". `
+              : `Dạ em cảm ơn ${userSalutation} đã bình luận: "${commentText}". `;
+          }
         }
 
         let bodyAnswer = '';
@@ -621,8 +628,10 @@ function fillTemplate(template, vars = {}) {
               const kwArr = Array.isArray(rule.keywords) ? rule.keywords : String(rule.keywords).split(/[;,]\s*|\n/);
               const matched = kwArr.some(k => {
                 const kNorm = normStr(k);
-                if (!kNorm.raw) return false;
-                return commentNorm.raw.includes(kNorm.raw) || (kNorm.noAcc.length >= 2 && commentNorm.noAcc.includes(kNorm.noAcc));
+                if (!kNorm.clean) return false;
+                return commentNorm.raw.includes(kNorm.raw) || 
+                       commentNorm.clean.includes(kNorm.clean) || 
+                       (kNorm.noAcc.length >= 2 && commentNorm.noAcc.includes(kNorm.noAcc));
               });
               if (matched && (rule.replyText || rule.reply)) {
                 const replyTpl = rule.replyText || rule.reply;
@@ -675,8 +684,10 @@ function fillTemplate(template, vars = {}) {
               const pNorm = normStr(prod.productName);
               const matched = kws.some(k => {
                 const kNorm = normStr(k);
-                return commentNorm.raw.includes(kNorm.raw) || (kNorm.noAcc.length >= 2 && commentNorm.noAcc.includes(kNorm.noAcc));
-              }) || (pNorm.raw && (commentNorm.raw.includes(pNorm.raw) || (pNorm.noAcc.length >= 3 && commentNorm.noAcc.includes(pNorm.noAcc))));
+                return commentNorm.raw.includes(kNorm.raw) || 
+                       commentNorm.clean.includes(kNorm.clean) || 
+                       (kNorm.noAcc.length >= 2 && commentNorm.noAcc.includes(kNorm.noAcc));
+              }) || (pNorm.raw && (commentNorm.raw.includes(pNorm.raw) || commentNorm.clean.includes(pNorm.clean) || (pNorm.noAcc.length >= 3 && commentNorm.noAcc.includes(pNorm.noAcc))));
 
               if (matched) {
                 isHandled = true;
@@ -697,7 +708,7 @@ function fillTemplate(template, vars = {}) {
         // 🧠 BƯỚC 3: DỰ PHÒNG BỘ NÃO AI GEMINI (CHỈ CHẠY KHI HOÀN TOÀN KHÔNG KHỚP TỪ KHÓA TRONG FILE/CẤU HÌNH)
         if (!isHandled) {
           if (lowerComment.includes('xinh') || lowerComment.includes('đẹp') || lowerComment.includes('dễ thương')) {
-            bodyAnswer = `Em cảm ơn lời khen cực kỳ ngọt ngào của ${userSalutation} nha! Chúc bạn xem livestream thật vui và săn được nhiều deal hời cùng shop ạ!`;
+            bodyAnswer = `Em cảm ơn lời khen cực kỳ ngọt ngào của ${userSalutation} nha! Rất vui được đồng hành cùng bạn trong buổi live hôm nay!`;
             isHandled = true;
           } else if (useAi && commentConfig.useAi !== false) {
             // GỌI BỘ NÃO AI GEMINI TRẢ LỜI ĐÚNG TRỌNG TÂM TRONG DUY NHẤT 1 CÂU (10-15 TỪ)
@@ -715,8 +726,12 @@ function fillTemplate(template, vars = {}) {
               });
 
               if (aiRes && aiRes.text && aiRes.text.trim()) {
-                bodyAnswer = aiRes.text.trim();
-                isHandled = true;
+                const cleanAiText = aiRes.text.trim();
+                // Bỏ qua câu generic chúc bạn... nếu AI fallback
+                if (!cleanAiText.startsWith('Dạ em đã ghi nhận bình luận của bạn') || !cleanAiText.includes('ngập tràn niềm vui')) {
+                  bodyAnswer = cleanAiText;
+                  isHandled = true;
+                }
               }
             } catch (aiErr) {
               console.warn('AI Brain call error:', aiErr);
@@ -725,9 +740,33 @@ function fillTemplate(template, vars = {}) {
         }
 
         // 🛡️ BƯỚC 4: DỰ PHÒNG AN TOÀN CHĂM SÓC KHÁCH HÀNG (KHI AI LỖI HOẶC KHÔNG PHẢN HỒI)
-        if (!isHandled) {
-          bodyAnswer = `Dạ em đã ghi nhận câu hỏi của ${userSalutation}, shop sẽ tư vấn chi tiết cho bạn ngay trong tin nhắn nhé!`;
-          isHandled = true;
+        if (!isHandled || !bodyAnswer) {
+          if (commentConfig.useUnknownFallbackReply !== false && commentConfig.unknownFallbackReply && commentConfig.unknownFallbackReply.trim()) {
+            bodyAnswer = fillTemplate(commentConfig.unknownFallbackReply, { user: userName, comment: commentText });
+            isHandled = true;
+          } else if (Array.isArray(commentConfig.prompts) && commentConfig.prompts.length > 0) {
+            const activePrompts = commentConfig.prompts.filter(p => p && p.enabled !== false && p.text);
+            if (activePrompts.length > 0) {
+              const pItem = activePrompts[Math.floor(Math.random() * activePrompts.length)];
+              bodyAnswer = fillTemplate(pItem.text, { user: userName, comment: commentText });
+              if (pItem.role) currentEvConfig._matchedRuleRole = pItem.role;
+              isHandled = true;
+            }
+          } else if (commentConfig.sampleAnswers && commentConfig.sampleAnswers.trim()) {
+            bodyAnswer = fillTemplate(getRandomSample(commentConfig.sampleAnswers), { user: userName, comment: commentText });
+            isHandled = true;
+          } else {
+            bodyAnswer = `Dạ bạn ${userSalutation} ơi, câu hỏi này em là trợ lý live nên xin phép ghi nhận lại để shop tư vấn chi tiết cho mình trong tin nhắn nhé!`;
+            isHandled = true;
+          }
+        }
+
+        // BƯỚC 3: GHÉP CÂU HỎI GỢI MỞ CHĂM SÓC KHÁCH HÀNG NẾU ĐƯỢC BẬT
+        if (commentConfig.appendFollowUpQuestion !== false && commentConfig.followUpQuestionText && commentConfig.followUpQuestionText.trim()) {
+          const followUp = fillTemplate(commentConfig.followUpQuestionText, { user: userName, comment: commentText }).trim();
+          if (followUp && !bodyAnswer.toLowerCase().includes(followUp.toLowerCase())) {
+            bodyAnswer = `${bodyAnswer} ${followUp}`.trim();
+          }
         }
 
         // GHÉP TOÀN BỘ CÂU THOẠI HOÀN CHỈNH
@@ -1067,9 +1106,9 @@ function fillTemplate(template, vars = {}) {
       // Nếu video là loại có sẵn Voice (Pre-recorded), không phát Voice AI đè lên
       const shouldSpeakVoice = !isPreRecorded && !isCommentVoiceDisabled && ((currentEvConfig.useVoice !== false) || isTestMode);
       const shouldSendChat = !isCommentTextDisabled;
-      const targetVoiceRole = isTestMode ? 'idol' : (currentEvConfig._matchedRuleRole || currentEvConfig.ttsVoiceRole || currentEvConfig.speaker || (evKey === 'comment' ? 'comment' : evKey === 'checkout' ? 'manager' : 'idol'));
+      const targetVoiceRole = currentEvConfig._matchedRuleRole || currentEvConfig.ttsVoiceRole || currentEvConfig.speaker || (evKey === 'comment' ? 'comment' : evKey === 'checkout' ? 'manager' : 'idol');
       const voiceTargetId = currentEvConfig._matchedRuleVoiceId || currentEvConfig.voiceId || currentEvConfig.voiceObj?.id;
-      const effectiveVoice = resolveEffectiveVoice(targetVoiceRole, isTestMode ? null : voiceTargetId, currentEvConfig.avatarId, { isLiveEvent: true, eventKey: evKey });
+      const effectiveVoice = resolveEffectiveVoice(targetVoiceRole, voiceTargetId, currentEvConfig.avatarId, { isLiveEvent: true, eventKey: evKey });
 
       if (replyText && replyText.trim()) {
         if (shouldSendChat) {

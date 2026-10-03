@@ -894,7 +894,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         if (!opSrc || !myVid) return;
 
         // 1. Chỉ đổi nguồn video khi URL thực sự thay đổi sang file khác (0ms switch)
-        if (opSrc !== lastKnownSrc && !isSameMediaUrl(myVid.src, opSrc) && myVid.src !== opSrc) {
+        // TUYỆT ĐỐI KHÔNG gán blob: URL từ window.opener vào myVid vì blob URL cross-window không thể giải mã, gây vòng lặp onError và chớp nháy liên tục!
+        if (opSrc && !opSrc.startsWith('blob:') && opSrc !== lastKnownSrc && !isSameMediaUrl(myVid.src, opSrc) && myVid.src !== opSrc) {
           lastKnownSrc = opSrc;
           myVid.src = opSrc;
           myVid.load();
@@ -2108,8 +2109,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     }
   }, []);
 
-  // 🛑 NẾU ĐÃ NGẮT ĐỒNG BỘ HOẶC CÓ TÍN HIỆU CLEAR MEDIA -> KHÔNG LẤY BẤT KỲ FALLBACK NÀO
-  const isStageCleared = masterState?.clearMedia === true || masterState?.isMasterSynced === false;
+  // 🛑 NẾU ĐÃ NGẮT ĐỒNG BỘ HOẶC CÓ TÍN HIỆU CLEAR MEDIA HOẶC ĐÃ DISCONNECTED -> KHÔNG LẤY BẤT KỲ FALLBACK NÀO
+  const isDisconnectedByStorage = typeof window !== 'undefined' && (
+    localStorage.getItem('avalive_all_streams_stopped') === 'true' || 
+    localStorage.getItem('avalive_stage_disconnected') === 'true'
+  );
+  const isStageCleared = masterState?.clearMedia === true || masterState?.isMasterSynced === false || isDisconnectedByStorage;
 
   // Helper giải mã URL media chính xác (tôn trọng 100% video/nhân vật người dùng chọn)
   const resolveActiveMedia = () => {
@@ -2122,14 +2127,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       isWindowCapture
     );
 
-    // 0. ƯU TIÊN SỐ 1 TUYỆT ĐỐI CHO CỬA SỔ WINDOW CAPTURE OBS:
-    // Trực tiếp lấy video đang phát trong phần mềm chính (window.opener)
-    if (typeof window !== 'undefined' && window.opener && !window.opener.closed) {
+    // 0. ƯU TIÊN SỐ 1 CHO CỬA SỔ WINDOW CAPTURE OBS:
+    // Trực tiếp lấy video đang phát trong phần mềm chính (window.opener) nhưng TUYỆT ĐỐI KHÔNG lấy blob URL qua cross-window vì gây lỗi giải mã và vòng lặp chớp nháy!
+    if (!isStageCleared && typeof window !== 'undefined' && window.opener && !window.opener.closed) {
       try {
         const openerVid = window.opener.document.querySelector('video.main-video-player, video[data-main-player="true"], video');
         if (openerVid) {
           const s = openerVid.currentSrc || openerVid.src;
-          if (s && typeof s === 'string' && s.trim() !== '') {
+          if (s && typeof s === 'string' && s.trim() !== '' && !s.startsWith('blob:')) {
             candidateUrl = s;
             isVideo = true;
           }
@@ -2138,7 +2143,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     }
 
     // 0.5. Ưu tiên tham số URL ?v=... truyền khi mở Cửa sổ Window Capture hoặc Link Live
-    if (!candidateUrl && typeof window !== 'undefined') {
+    if (!isStageCleared && !candidateUrl && typeof window !== 'undefined') {
       try {
         const urlParams = new URLSearchParams(window.location.search);
         const directV = urlParams.get('v');
@@ -2479,7 +2484,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         
         // CHỈ GỌI vid.load() KHI URL THỰC SỰ THAY ĐỔI
         // TUYỆT ĐỐI KHÔNG GỌI vid.load() KHI CHUYỂN TAB ĐỂ TRÁNH RESET 0:00 HOẶC MẤT VIDEO
-        const isNewUrl = !isSameMediaUrl(lastLoadedMediaUrlRef.current, activeMedia.url);
+        const isNewUrl = !isSameMediaUrl(lastLoadedMediaUrlRef.current, activeMedia.url) && !isSameMediaUrl(vid.src, activeMedia.url);
         if (isNewUrl) {
           lastLoadedMediaUrlRef.current = activeMedia.url;
           isUserPausedRef.current = false;
@@ -2686,9 +2691,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           className="relative flex items-center justify-center overflow-hidden"
           style={{ 
             aspectRatio: ratio === '16:9' ? '16/9' : '9/16',
-            height: '100%',
+            height: ratio === '16:9' ? 'min(100%, calc(100vw * 9 / 16))' : '100%',
             maxHeight: '100%',
-            width: 'auto',
+            width: ratio === '16:9' ? '100%' : 'min(100%, calc(100vh * 9 / 16))',
             maxWidth: '100%',
             margin: '0 auto',
             position: 'relative'
@@ -3077,8 +3082,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                               ? `rotate(${singleTrans.rotation || 0}deg) scale(${(singleTrans.flipH ? -1 : 1) * (singleTrans.scale ? singleTrans.scale / 100 : 1)}, ${(singleTrans.flipV ? -1 : 1) * (singleTrans.scale ? singleTrans.scale / 100 : 1)})`
                               : 'none',
                             borderRadius: `${singleTrans?.borderRadius || 0}px`,
-                            overflow: 'hidden',
-                            ...singleChroma
+                            overflow: 'hidden'
                           }}
                         >
                           {isImg ? (
@@ -3097,7 +3101,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                           ) : (
                             <video
                               ref={overlayVideoRef}
-                              
                               src={singleUrl}
                               autoPlay={true}
                               loop={true}
@@ -3113,7 +3116,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                                 objectFit: singleTrans?.objectFit || objectFitState || 'cover',
                                 backgroundColor: 'transparent',
                                 display: 'block',
-                                imageRendering: '-webkit-optimize-contrast',
+                                imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto',
                                 WebkitFontSmoothing: 'antialiased',
                                 ...singleChroma
                               }}
@@ -3163,6 +3166,10 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                               }}
                               onError={(e) => {
                                 const v = e.currentTarget;
+                                if (!v) return;
+                                const now = Date.now();
+                                if (v.__lastErrTime && (now - v.__lastErrTime < 3000)) return;
+                                v.__lastErrTime = now;
                                 console.warn('[CleanLiveOverlay] Video playback retry:', v?.error);
                                 fetch('/api/live-state')
                                   .then(r => r.json())

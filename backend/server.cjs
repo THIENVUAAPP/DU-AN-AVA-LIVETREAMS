@@ -5546,16 +5546,13 @@ app.get(['/api/live-state', '/api/master-live-state'], (req, res) => {
     currentMasterLiveState.mediaUrl = null;
   }
 
-  // 🛡️ NẾU CHƯA CÓ MEDIAURL NHƯNG NGƯỜI DÙNG KHÔNG CHỦ ĐỘNG XÓA (clearMedia !== true):
-  // TỰ ĐỘNG KHÔI PHỤC VIDEO GẦN NHẤT ĐỂ TIKTOK LIVE STUDIO KHÔNG BAO GIỜ BỊ MÀN HÌNH ĐEN
-  if (!currentMasterLiveState.mediaUrl && currentMasterLiveState.clearMedia !== true && currentMasterLiveState.clearStage !== true) {
-    const latestVid = getLatestUploadVideo();
-    if (latestVid) {
-      currentMasterLiveState.mediaUrl = latestVid;
-      currentMasterLiveState.mainMediaUrl = latestVid;
-      currentMasterLiveState.isVideo = true;
-      currentMasterLiveState.isPlaying = true;
-    }
+  // 🛡️ TÔN TRỌNG TUYỆT ĐỐI Ý ĐỊNH CỦA STREAMER:
+  // CHỈ phát media khi người dùng chủ động tải lên hoặc đồng bộ. Tuyệt đối KHÔNG tự ý khôi phục video cũ khi người dùng đã ngắt/xóa!
+  if (currentMasterLiveState.clearMedia === true || currentMasterLiveState.clearStage === true || !currentMasterLiveState.mediaUrl) {
+    currentMasterLiveState.mediaUrl = null;
+    currentMasterLiveState.mainMediaUrl = null;
+    currentMasterLiveState.isVideo = false;
+    currentMasterLiveState.isPlaying = false;
   }
 
   if (currentMasterLiveState.mediaUrl) {

@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.44';
+export const APP_VERSION = '5.4.45';
 export const RELEASE_DATE = '03/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.45 - Sửa Triệt Để Lỗi Lặp Câu Chúc, Chuẩn Hóa 4 Bước Phản Hồi Bình Luận & Tùy Chỉnh Giọng Đọc Khi Nạp Từ Khóa Hàng Loạt',
+    description: '1. Khắc Phục Triệt Để Lỗi Lặp Đi Lặp Lại Đúng 1 Câu Chúc Suốt Phiên Live: Xóa bỏ hoàn toàn câu chúc mặc định vô tận, kích hoạt 100% các từ khóa và câu trả lời cài sẵn trong Tab Bình Luận. Nâng cấp bộ so khớp từ khóa siêu nhạy (hỗ trợ có dấu, không dấu, loại bỏ ký tự đặc biệt, đồng bộ biến {user}, [user], {comment}, [comment]). 2. Chuẩn Hóa Chuỗi 4 Bước Phản Hồi Bình Luận: Bước 1: Đọc lại câu hỏi/bình luận theo cài đặt tiền tố. Bước 2 (Ưu Tiên 100%): Đối chiếu danh sách từ khóa cấu hình sẵn, trả lời tức thì bằng đúng câu thoại và đúng Giọng AI chỉ định của từng rule. Bước 3: Tự động ghép câu hỏi gợi mở inbox/chăm sóc khách hàng vào sau câu trả lời. Bước 4: Xử lý khéo léo khi không khớp từ khóa bằng kịch bản câu thoại mẫu hoặc phản hồi dự phòng thông minh theo ngữ cảnh live. 3. Tùy Chỉnh Giọng Đọc Khi Thêm Từ Khóa Hàng Loạt: Cho phép chọn nhân vật / giọng đọc AI (Idol, Trợ Lý, BLV, hoặc giọng hệ thống) ngay trong modal nhập từ khóa hàng loạt và khi tải file (TXT, DOCX, PDF, CSV, JSON). Tích hợp nút nghe thử âm sắc và nút 1-click "Áp dụng giọng cho tất cả quy tắc". 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.44 - Gắn Nhãn [ƯU TIÊN] File Từ Khóa, Chuẩn Hóa Quy Trình 4 Bước Đọc Comment & Ràng Buộc Kích Hoạt Sản Phẩm Chốt Đơn',
     description: '1. Gắn Nhãn [🔥 ƯU TIÊN SỐ 1 - LUÔN XỬ LÝ ĐẦU TIÊN TRƯỚC AI] Cho File Từ Khóa: Nổi bật huy hiệu Ưu Tiên tại nút Tải File, Modal nhập liệu, và từng thẻ quy tắc. Đồng bộ tự động 100% mọi kịch bản từ file vào bộ nhớ chia sẻ toàn hệ thống. 2. Chuẩn Hóa Tuyệt Đối Quy Trình 4 Bước Phản Hồi Bình Luận: Bước 1: Ghi nhận comment, cảm ơn và nhắc lại câu hỏi/bình luận của khách ("Dạ em cảm ơn {user} đã hỏi/bình luận: {comment}"). Bước 2 (Ưu Tiên 100%): Đối chiếu với danh sách từ khóa trong file tải lên & cấu hình. Nếu khớp, lập tức trả lời đúng câu thoại đã cài đặt (thay thế [user] bằng tên khách), KHÔNG dùng AI ở bước này. Bước 3: Nếu hoàn toàn không khớp từ khóa nào, mới chuyển cho bộ não AI Gemini trả lời đúng trọng tâm trong đúng 1 câu từ 10 đến 15 từ. Bước 4: Nếu AI lỗi, dùng câu chăm sóc khách hàng lịch sự. 3. Video Sự Kiện Bình Luận: Chỉ đổi video khi người dùng có tải/cấu hình video riêng trong Tab Bình luận; nếu không, giữ nguyên video streamer phát liên tục không bị gián đoạn. 4. Ràng Buộc Kích Hoạt Sản Phẩm Chốt Đơn: Thẻ sản phẩm CHỈ hiển thị trên màn hình Live và TikTok Live Studio khi người dùng tick chọn kích hoạt (active: true / enabled: true). Tự động gỡ ghim khỏi màn hình khi người dùng bỏ tick chọn. 5. Khóa chặt 100% các tab và module khác.'

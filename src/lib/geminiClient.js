@@ -29,12 +29,12 @@ function generateContextualFallbackReply({ question = '', username = 'bạn', ro
     return `Dạ em cảm ơn lời khen cực kỳ dễ thương của bạn ${user}! Yêu bạn rất nhiều!`;
   }
 
-  // Câu trả lời giao tiếp thông minh tổng quát
+  // Câu trả lời giao tiếp thông minh tổng quát cho livestream
   const smartGenericReplies = [
-    `Câu hỏi của bạn ${user} rất thú vị! Cảm ơn bạn đã luôn đồng hành và ủng hộ phiên live hôm nay!`,
-    `Dạ em chào bạn ${user} nha! Bạn có những ý tưởng thật tuyệt vời, cùng tiếp tục theo dõi livestream nhé!`,
-    `Dạ em đã ghi nhận bình luận của bạn ${user}! Chúc bạn ${user} một ngày ngập tràn niềm vui và may mắn nha!`,
-    `Em cảm ơn bạn ${user} đã tương tác nhiệt tình! Hãy thả tim và chia sẻ live để cùng tạo nên kỷ lục mới nhé!`
+    `Dạ em chào bạn ${user}, em đã nhận được câu hỏi "${question}" của bạn rồi ạ! Bạn chờ em tư vấn chi tiết ngay nhé!`,
+    `Dạ câu hỏi của bạn ${user} rất đúng trọng tâm ạ! Em xin phép giải đáp ngay cho bạn và mọi người cùng nghe nha!`,
+    `Em cảm ơn bạn ${user} đã đặt câu hỏi rất hay ạ! Bạn quan tâm thêm chi tiết nào cứ nhắn em giải đáp liền nhé!`,
+    `Dạ em nghe rõ ý bạn ${user} rồi ạ! Bạn theo dõi livestream hoặc bấm vào giỏ hàng để nhận ưu đãi tốt nhất ngay nhé!`
   ];
   return smartGenericReplies[Math.floor(Math.random() * smartGenericReplies.length)];
 }

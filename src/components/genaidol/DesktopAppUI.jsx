@@ -4333,22 +4333,30 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       name: 'AI Idol' 
     };
     
+    // 🛑 KIỂM TRA TRẠNG THÁI NGẮT KẾT NỐI TOÀN BỘ SÂN KHẤU CHÍNH
+    const isStageDisconnected = isStageExplicitlyCleared || (typeof localStorage !== 'undefined' && (
+      localStorage.getItem('avalive_stage_disconnected') === 'true' ||
+      localStorage.getItem('avalive_all_streams_stopped') === 'true'
+    ));
+
     // Ưu tiên video nhân vật đang chọn -> video khóa người dùng -> các nguồn phản hồi
     const serverCharMedia = (char.mediaUrl && !char.mediaUrl.startsWith('blob:')) ? char.mediaUrl : ((char.url && !char.url.startsWith('blob:')) ? char.url : null);
     const lockedServerMedia = (userLockedMediaUrl && !userLockedMediaUrl.startsWith('blob:')) ? userLockedMediaUrl : null;
-    let currentMedia = quickResponseActiveVideo?.url || lipSyncVideoUrl || (isProcessingEvent && activeVideoItem?.mediaUrl ? activeVideoItem.mediaUrl : null) || serverCharMedia || lockedServerMedia || char.mediaUrl || userLockedMediaUrl || char.url || '';
-    let isVid = !!userLockedMediaUrl || char.type === 'video' || (typeof currentMedia === 'string' && (currentMedia.endsWith('.mp4') || currentMedia.includes('/uploads/') || currentMedia.startsWith('http') || currentMedia.startsWith('blob:')));
+    let currentMedia = isStageDisconnected ? null : (quickResponseActiveVideo?.url || lipSyncVideoUrl || (isProcessingEvent && activeVideoItem?.mediaUrl ? activeVideoItem.mediaUrl : null) || serverCharMedia || lockedServerMedia || char.mediaUrl || userLockedMediaUrl || char.url || '');
+    let isVid = !isStageDisconnected && (!!userLockedMediaUrl || char.type === 'video' || (typeof currentMedia === 'string' && (currentMedia.endsWith('.mp4') || currentMedia.includes('/uploads/') || currentMedia.startsWith('http') || currentMedia.startsWith('blob:'))));
     let streamFlvUrl = null;
 
-    if (quickResponseActiveVideo?.url) {
-      currentMedia = quickResponseActiveVideo.url;
-      isVid = true;
-    } else if (lipSyncVideoUrl) {
-      currentMedia = lipSyncVideoUrl;
-      isVid = true;
-    } else if (isProcessingEvent && activeVideoItem && activeVideoItem.mediaUrl) {
-      currentMedia = activeVideoItem.mediaUrl;
-      isVid = activeVideoItem.type === 'video' || (typeof currentMedia === 'string' && currentMedia.endsWith('.mp4'));
+    if (!isStageDisconnected) {
+      if (quickResponseActiveVideo?.url) {
+        currentMedia = quickResponseActiveVideo.url;
+        isVid = true;
+      } else if (lipSyncVideoUrl) {
+        currentMedia = lipSyncVideoUrl;
+        isVid = true;
+      } else if (isProcessingEvent && activeVideoItem && activeVideoItem.mediaUrl) {
+        currentMedia = activeVideoItem.mediaUrl;
+        isVid = activeVideoItem.type === 'video' || (typeof currentMedia === 'string' && currentMedia.endsWith('.mp4'));
+      }
     }
 
     if (typeof currentMedia === 'string' && currentMedia.includes('/uploads/')) {
@@ -4361,26 +4369,29 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       ? multiAvatarConfig.avatars
       : [];
     const activeCount = typeof multiAvatarConfig?.activeCount === 'number' ? multiAvatarConfig.activeCount : (safeAvatarsList.length || 1);
-    const resolvedAvatars = (flowSequencerOverlay && flowSequencerOverlay.syncedAvatars) 
-      || (safeAvatarsList.length > 0 ? safeAvatarsList.slice(0, activeCount) : undefined);
+    const resolvedAvatars = isStageDisconnected ? [] : ((flowSequencerOverlay && flowSequencerOverlay.syncedAvatars) 
+      || (safeAvatarsList.length > 0 ? safeAvatarsList.slice(0, activeCount) : undefined));
 
     const masterPayload = {
       type: 'MASTER_LIVE_STATE_UPDATE',
       stage, // 'idol' | 'battle' | 'bando' | 'dancefloor' | 'broadcast'
       aspectRatio: globalAspectRatio || '9:16', // '9:16' | '16:9'
-      selectedCharacter: char.id || selectedCharacter,
-      characterName: quickResponseActiveVideo?.name || char.name || 'AI Idol',
-      mediaUrl: (flowSequencerOverlay && flowSequencerOverlay.mainMediaUrl) || currentMedia,
-      mainMediaUrl: (flowSequencerOverlay && flowSequencerOverlay.mainMediaUrl) || currentMedia,
+      selectedCharacter: isStageDisconnected ? '' : (char.id || selectedCharacter),
+      characterName: isStageDisconnected ? '' : (quickResponseActiveVideo?.name || char.name || 'AI Idol'),
+      mediaUrl: isStageDisconnected ? null : ((flowSequencerOverlay && flowSequencerOverlay.mainMediaUrl) || currentMedia),
+      mainMediaUrl: isStageDisconnected ? null : ((flowSequencerOverlay && flowSequencerOverlay.mainMediaUrl) || currentMedia),
+      clearMedia: isStageDisconnected,
+      clearStage: isStageDisconnected,
+      isMasterSynced: isStageDisconnected ? false : (isMasterStageSynced ?? true),
       mainMediaTransform: (flowSequencerOverlay && flowSequencerOverlay.mainMediaTransform) || multiAvatarConfig?.backgroundTransform || undefined,
       mainMediaChromaKey: (flowSequencerOverlay && flowSequencerOverlay.mainMediaChromaKey) || multiAvatarConfig?.backgroundChromaKey || undefined,
-      secondaryMediaUrl: (flowSequencerOverlay && flowSequencerOverlay.secondaryMediaUrl) || undefined,
+      secondaryMediaUrl: isStageDisconnected ? null : ((flowSequencerOverlay && flowSequencerOverlay.secondaryMediaUrl) || undefined),
       secondaryMediaTransform: (flowSequencerOverlay && flowSequencerOverlay.secondaryMediaTransform) || undefined,
       secondaryMediaChromaKey: (flowSequencerOverlay && flowSequencerOverlay.secondaryMediaChromaKey) || undefined,
-      overlayImage: (flowSequencerOverlay && flowSequencerOverlay.overlayImage) || undefined,
+      overlayImage: isStageDisconnected ? null : ((flowSequencerOverlay && flowSequencerOverlay.overlayImage) || undefined),
       overlayImageTransform: (flowSequencerOverlay && flowSequencerOverlay.overlayImageTransform) || undefined,
       overlayImageChromaKey: (flowSequencerOverlay && flowSequencerOverlay.overlayImageChromaKey) || undefined,
-      overlayText: (flowSequencerOverlay && flowSequencerOverlay.overlayText) || undefined,
+      overlayText: isStageDisconnected ? null : ((flowSequencerOverlay && flowSequencerOverlay.overlayText) || undefined),
       overlayTextTransform: (flowSequencerOverlay && flowSequencerOverlay.overlayTextTransform) || undefined,
       overlayTextStyle: (flowSequencerOverlay && flowSequencerOverlay.overlayTextStyle) || undefined,
       overlayTextColor: (flowSequencerOverlay && flowSequencerOverlay.overlayTextColor) || undefined,
@@ -4394,9 +4405,9 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       multiAvatarExtraLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers)) || multiAvatarConfig?.extraImageLayers || undefined,
       extraImageLayers: (flowSequencerOverlay && (flowSequencerOverlay.extraLayers || flowSequencerOverlay.multiAvatarExtraLayers)) || multiAvatarConfig?.extraImageLayers || undefined,
       flvUrl: streamFlvUrl,
-      isVideo: !!isVid,
+      isVideo: isStageDisconnected ? false : !!isVid,
       isConnected: !!(isConnected || showSimulator),
-      isPlaying: isVideoPlaying,
+      isPlaying: isStageDisconnected ? false : isVideoPlaying,
       isDarkMode,
       currentLang,
       updatedAt: Date.now()
@@ -4622,9 +4633,20 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
       if (desktopVideoRef.current) {
         desktopVideoRef.current.dataset.userPaused = 'true';
-        try { desktopVideoRef.current.pause(); } catch (e) {}
+        try { 
+          desktopVideoRef.current.pause(); 
+          desktopVideoRef.current.removeAttribute('src');
+          desktopVideoRef.current.src = '';
+          desktopVideoRef.current.load();
+        } catch (e) {}
       }
       setIsVideoPlaying(false);
+      setIsStageExplicitlyCleared(true);
+      setIsMasterStageSynced(false);
+      setUserLockedMediaUrl(null);
+      setLipSyncVideoUrl(null);
+      setQuickResponseActiveVideo(null);
+      setLivePinnedProduct(null);
 
       // 9. Phát tín hiệu dừng toàn cục (BroadcastChannel, CustomEvent, LocalStorage) cho OBS/TikTok Live Studio Overlay
       if (typeof window !== 'undefined') {
@@ -4637,8 +4659,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         try {
           localStorage.setItem('avalive_user_paused', 'true');
           localStorage.setItem('avalive_window_capture_paused', 'true');
+          localStorage.setItem('avalive_stage_disconnected', 'true');
+          localStorage.setItem('avalive_all_streams_stopped', 'true');
           localStorage.setItem('avalive_emergency_stop_trigger', Date.now().toString());
           localStorage.setItem('avalive_master_live_running', 'false');
+          localStorage.removeItem('avalive_master_sync_active');
+          localStorage.removeItem('avalive_user_locked_media');
+          localStorage.removeItem('avalive_active_video_src');
         } catch (e) {}
       }
 
@@ -4647,6 +4674,14 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           const bc = new BroadcastChannel('avalive_master_live_stream');
           bc.postMessage({ type: 'GLOBAL_PLAYBACK_CHANGE', isPlaying: false, userPaused: true, timestamp: Date.now() });
           bc.postMessage({ type: 'EMERGENCY_STOP_ALL', timestamp: Date.now() });
+          bc.postMessage({ 
+            type: 'CLEAR_STAGE', 
+            clearMedia: true, 
+            clearStage: true, 
+            isMasterSynced: false, 
+            isPlaying: false, 
+            timestamp: Date.now() 
+          });
           bc.close();
         } catch (e) {}
         try {
@@ -4664,13 +4699,25 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       sendVideoControl({
         action: 'pause',
         isPlaying: false,
+        clearMedia: true,
+        clearStage: true,
+        mediaUrl: null,
         timestamp: Date.now()
       }, socketRef.current);
 
       syncMasterLiveState({
+        stage: 'idol',
         videoPlaybackEvent: 'pause',
         isPlaying: false,
-        isVideoPlaying: false
+        isVideoPlaying: false,
+        clearMedia: true,
+        clearStage: true,
+        isMasterSynced: false,
+        mediaUrl: null,
+        mainMediaUrl: null,
+        secondaryMediaUrl: null,
+        overlayImage: null,
+        overlayText: null
       }, socketRef.current);
 
       // Toast thông báo
@@ -4689,7 +4736,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       // --- BẬT TẤT CẢ: KHÔI PHỤC TOÀN BỘ CÁC TÍNH NĂNG ĐÃ CÀI ĐẶT ---
       setIsMasterLiveRunning(true);
       setIsVideoPlaying(true);
+      setIsStageExplicitlyCleared(false);
       try {
+        localStorage.removeItem('avalive_stage_disconnected');
+        localStorage.removeItem('avalive_all_streams_stopped');
         localStorage.removeItem('avalive_user_paused');
         localStorage.removeItem('avalive_window_capture_paused');
         localStorage.removeItem('aidol_user_paused_script');
@@ -5978,12 +6028,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         );
       }
       
-      let customMatch = (customCharacters && Array.isArray(customCharacters)) 
-        ? (customCharacters.find(c => c.id === selectedCharacter) || (customCharacters.length > 0 ? customCharacters[0] : null)) 
+      // 🛡️ CHỈ LẤY NHÂN VẬT NẾU NGƯỜI DÙNG CHỦ ĐỘNG CHỌN HOẶC TẢI LÊN (KHÔNG TỰ Ý CHẠY NGẦM/KHÔNG LẤY TỰ ĐỘNG TỪ TAB SỰ KIỆN)
+      const isStageDisconnected = isStageExplicitlyCleared || (typeof localStorage !== 'undefined' && (
+        localStorage.getItem('avalive_stage_disconnected') === 'true' ||
+        localStorage.getItem('avalive_all_streams_stopped') === 'true'
+      ));
+
+      let customMatch = (!isStageDisconnected && customCharacters && Array.isArray(customCharacters) && selectedCharacter) 
+        ? customCharacters.find(c => c.id === selectedCharacter)
         : null;
 
-      // 🎬 KHI ĐANG ĐỒNG BỘ TỪ SEQUENCER (PHÁT LIVE): CHỈ KÍCH HOẠT NẾU NGƯỜI DÙNG KHÔNG CHỌN NHÂN VẬT RIÊNG
-      const sequencerLockedMedia = (!customMatch && isMasterStageSynced && userLockedMediaUrl)
+      // 🎬 KHI ĐANG ĐỒNG BỘ TỪ SEQUENCER (PHÁT LIVE): CHỈ KÍCH HOẠT NẾU NGƯỜI DÙNG BẬT ĐỒNG BỘ
+      const sequencerLockedMedia = (!isStageDisconnected && isMasterStageSynced && userLockedMediaUrl)
         ? { 
             id: 'sequencer_video', 
             name: 'Kịch Bản Live Đang Phát', 
@@ -5993,22 +6049,46 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           }
         : null;
 
-      // 🎬 VIDEO CHỜ TỪ CÀI ĐẶT SỰ KIỆN LIVE: CHỈ DÙNG KHI KHÔNG CÓ NHÂN VẬT TÙY CHỌN
-      const savedIdleVideoUrl = typeof localStorage !== 'undefined' ? (localStorage.getItem('aidol_idle_media_url') || localStorage.getItem('avalive_user_locked_media')) : null;
-      const eventIdleMedia = (!customMatch && !sequencerLockedMedia && savedIdleVideoUrl) ? {
-        id: 'event_idle_video',
-        name: 'Video Chờ Cài Đặt Sự Kiện',
-        url: savedIdleVideoUrl,
-        mediaUrl: savedIdleVideoUrl,
-        type: 'video'
-      } : null;
-
-      // 🛡️ ƯU TIÊN TUYỆT ĐỐI NHÂN VẬT/VIDEO NGƯỜI DÙNG CHỦ ĐỘNG TẢI LÊN HOẶC ĐANG CHỌN (KHÔNG CHẠY ẨN/CHẠY NỀN)
-      let selected = customMatch || 
+      // 🛡️ TUYỆT ĐỐI KHÔNG TỰ ĐỘNG LẤY TỪ TAB SỰ KIỆN (quà tặng, chào mừng, checkout...) ĐƯA RA SÂN KHẤU CHÍNH KHI CHƯA ĐỒNG BỘ
+      let selected = isStageDisconnected ? null : (customMatch || 
         (selectedCharacter && CHARACTERS[selectedCharacter]?.url ? { id: selectedCharacter, ...CHARACTERS[selectedCharacter] } : null) || 
         sequencerLockedMedia ||
-        (userLockedMediaUrl && isMasterStageSynced ? { id: 'locked_video', name: 'Video Đang Phát', url: userLockedMediaUrl, mediaUrl: userLockedMediaUrl, type: 'video' } : null) ||
-        eventIdleMedia;
+        (userLockedMediaUrl && isMasterStageSynced ? { id: 'locked_video', name: 'Video Đang Phát', url: userLockedMediaUrl, mediaUrl: userLockedMediaUrl, type: 'video' } : null));
+
+      if (!selected) {
+        return (
+          <div className="flex flex-col items-center justify-center text-center p-6 select-none w-full h-full bg-gradient-to-br from-[#07080d] via-[#0d1017] to-[#040508]">
+            <div className="w-16 h-16 rounded-3xl bg-gradient-to-tr from-pink-600 via-rose-600 to-red-600 flex items-center justify-center mb-4 shadow-xl shadow-rose-500/20">
+              <Film size={28} className="text-white" />
+            </div>
+            <h3 className="text-lg font-black text-white tracking-wide uppercase">SẴN SÀNG PHÁT LUỒNG (9:16)</h3>
+            <p className="text-xs text-gray-400 mt-1.5 max-w-xs leading-relaxed">
+              Vui lòng tải lên hoặc chọn video trên phần mềm để bắt đầu phát trực tiếp
+            </p>
+            <div className="mt-4 flex items-center gap-2">
+              <label className="px-4 py-2 rounded-xl bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-500 hover:to-indigo-500 text-white text-xs font-bold cursor-pointer transition-all shadow-md flex items-center gap-1.5">
+                <Upload size={14} />
+                <span>Tải Video Lên Sân Khấu</span>
+                <input 
+                  type="file" 
+                  accept="video/*,image/*" 
+                  className="hidden" 
+                  onChange={(e) => {
+                    if (e.target.files && e.target.files[0]) {
+                      setIsStageExplicitlyCleared(false);
+                      try {
+                        localStorage.removeItem('avalive_stage_disconnected');
+                        localStorage.removeItem('avalive_all_streams_stopped');
+                      } catch(err) {}
+                      handleFileUpload(e);
+                    }
+                  }} 
+                />
+              </label>
+            </div>
+          </div>
+        );
+      }
 
       if (selected) {
         let resolvedUrl = selected.url || selected.mediaUrl;
@@ -7500,6 +7580,8 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
                       setFlowSequencerOverlay(null);
                       setMultiAvatarConfig(prev => ({ ...prev, _syncedFromSequencer: false, fromSequencer: false, enabled: false }));
                       try {
+                        localStorage.removeItem('avalive_stage_disconnected');
+                        localStorage.removeItem('avalive_all_streams_stopped');
                         localStorage.removeItem('avalive_master_sync_active');
                         localStorage.removeItem('avalive_sequencer_overlay');
                         localStorage.setItem('avalive_user_paused', 'false');

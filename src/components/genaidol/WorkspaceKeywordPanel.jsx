@@ -45,6 +45,8 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
 
   const [showBulkRuleModal, setShowBulkRuleModal] = useState(false);
   const [bulkRuleText, setBulkRuleText] = useState('');
+  const [bulkRuleRole, setBulkRuleRole] = useState('assistant');
+  const [bulkRuleVoiceId, setBulkRuleVoiceId] = useState(currentConfig.voiceId || 'free_vi_female');
   const ruleFileInputRef = useRef(null);
 
   const [previewingRuleId, setPreviewingRuleId] = useState(null);
@@ -166,12 +168,14 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
   const handleAddKeywordRule = () => {
     if (!newRuleKeywords.trim() || !newRuleReply.trim()) return;
     const kwList = newRuleKeywords.split(',').map(s => s.trim()).filter(Boolean);
+    const isSpecialVoice = ALL_SYSTEM_VOICES.some(v => v.id === newRuleRole);
     const item = {
       id: 'k_' + Date.now(),
       name: newRuleName.trim() || kwList[0] || `Bộ từ khóa ${keywordRules.length + 1}`,
       keywords: kwList,
       replyText: newRuleReply.trim(),
-      role: newRuleRole,
+      role: isSpecialVoice ? 'assistant' : newRuleRole,
+      voiceId: isSpecialVoice ? newRuleRole : (currentConfig.voiceId || 'free_vi_female'),
       cooldownSec: Number(newRuleCooldown) || 5,
       enabled: true
     };
@@ -188,14 +192,16 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
 
   const handleSaveEditRule = (id) => {
     if (!editingRuleData) return;
-    const updated = keywordRules.map(r => r.id === id ? {
+    const isSpecialVoice = ALL_SYSTEM_VOICES.some(v => v.id === editingRuleData.role);
+    const updated = keywordRules.map(r => (r.id === id || r === id) ? {
       ...r,
       name: editingRuleData.name,
       keywords: typeof editingRuleData.keywords === 'string' 
         ? editingRuleData.keywords.split(',').map(s => s.trim()).filter(Boolean) 
         : editingRuleData.keywords,
       replyText: editingRuleData.replyText,
-      role: editingRuleData.role,
+      role: isSpecialVoice ? 'assistant' : (editingRuleData.role || r.role || 'assistant'),
+      voiceId: isSpecialVoice ? editingRuleData.role : (editingRuleData.voiceId || r.voiceId || currentConfig.voiceId || 'free_vi_female'),
       cooldownSec: Number(editingRuleData.cooldownSec) || 5
     } : r);
     syncConfig({ keywordRules: updated });
@@ -217,17 +223,29 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
     syncConfig({ keywordRules: keywordRules.filter((_, i) => i !== idx) });
   };
 
-  const handleBulkImportRules = (rawInput) => {
+  const handleBulkImportRules = (rawInput, role = bulkRuleRole, voiceId = bulkRuleVoiceId) => {
     if (!rawInput) return;
-    const newRules = parseUniversalRulePairs(rawInput);
+    const isSpecialVoice = ALL_SYSTEM_VOICES.some(v => v.id === role);
+    const effectiveRole = isSpecialVoice ? 'assistant' : role;
+    const effectiveVoiceId = isSpecialVoice ? role : (voiceId || currentConfig.voiceId || 'free_vi_female');
+
+    const newRules = parseUniversalRulePairs(rawInput, {
+      defaultRole: effectiveRole,
+      defaultVoiceId: effectiveVoiceId
+    });
     if (!newRules || newRules.length === 0) {
       alert('Không tìm thấy quy tắc hợp lệ trong văn bản hoặc file. Hãy nhập theo định dạng: "từ khóa 1, từ khóa 2: câu trả lời"');
       return;
     }
-    syncConfig({ keywordRules: [...newRules, ...keywordRules] });
+    const mapped = newRules.map(r => ({
+      ...r,
+      role: effectiveRole,
+      voiceId: effectiveVoiceId
+    }));
+    syncConfig({ keywordRules: [...mapped, ...keywordRules] });
     setShowBulkRuleModal(false);
     setBulkRuleText('');
-    alert(`Đã nạp thành công ${newRules.length} quy tắc từ khóa!`);
+    alert(`Đã nạp thành công ${mapped.length} quy tắc từ khóa với giọng đọc: ${effectiveVoiceId || effectiveRole}!`);
   };
 
   const handleFileUploadRules = async (e) => {
@@ -235,12 +253,29 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
     if (!file) return;
     try {
       const raw = await readUniversalFile(file);
-      if (raw) handleBulkImportRules(raw);
+      if (raw) handleBulkImportRules(raw, bulkRuleRole, bulkRuleVoiceId);
       else alert(`Không tìm thấy nội dung văn bản trong file ${file.name}`);
     } catch (err) {
       alert(`Lỗi đọc file: ${err.message}`);
     }
     e.target.value = '';
+  };
+
+  const handleApplyVoiceToAllRules = (targetRole, targetVoiceId) => {
+    if (!keywordRules || keywordRules.length === 0) {
+      alert('Chưa có quy tắc nào trong danh sách để đồng bộ giọng!');
+      return;
+    }
+    const isSpecialVoice = ALL_SYSTEM_VOICES.some(v => v.id === targetRole);
+    const effRole = isSpecialVoice ? 'assistant' : targetRole;
+    const effVoiceId = isSpecialVoice ? targetRole : (targetVoiceId || currentConfig.voiceId || 'free_vi_female');
+    const updated = keywordRules.map(r => ({
+      ...r,
+      role: effRole,
+      voiceId: effVoiceId
+    }));
+    syncConfig({ keywordRules: updated });
+    alert(`Đã đồng bộ giọng đọc (${effVoiceId || effRole}) thành công cho toàn bộ ${updated.length} quy tắc từ khóa!`);
   };
 
   return (
@@ -550,6 +585,59 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
                 <span className="px-2 py-0.5 rounded bg-cyan-500/20 text-cyan-300 font-bold border border-cyan-500/30">🏷️ .JSON</span>
               </div>
 
+              {/* Tùy chỉnh Giọng đọc cho Đợt Từ khóa Hàng Loạt */}
+              <div className="p-3 bg-black/60 rounded-xl border border-amber-400/40 space-y-2">
+                <div className="flex items-center justify-between flex-wrap gap-2">
+                  <div className="text-xs font-bold text-amber-300 flex items-center gap-1.5">
+                    <Volume2 size={14} className="text-amber-400" />
+                    <span>🎙️ TÙY CHỈNH GIỌNG ĐỌC CHO ĐỢT TỪ KHÓA NÀY:</span>
+                  </div>
+                  <div className="flex items-center gap-2">
+                    <button
+                      type="button"
+                      onClick={() => {
+                        const targetVoice = ALL_SYSTEM_VOICES.find(v => v.id === bulkRuleRole || v.id === bulkRuleVoiceId) || ALL_SYSTEM_VOICES[0];
+                        previewVoiceAudio(targetVoice, "Xin chào, đây là giọng đọc thử cho bộ từ khóa của bạn.", () => {}, true);
+                      }}
+                      className="px-2.5 py-1 rounded-lg bg-purple-600/30 hover:bg-purple-600 text-purple-200 text-xs font-bold flex items-center gap-1 cursor-pointer border border-purple-500/40 transition-all"
+                    >
+                      <Volume2 size={12} /> Nghe thử giọng
+                    </button>
+                    {keywordRules.length > 0 && (
+                      <button
+                        type="button"
+                        onClick={() => handleApplyVoiceToAllRules(bulkRuleRole, bulkRuleVoiceId)}
+                        className="px-2.5 py-1 rounded-lg bg-amber-500/20 hover:bg-amber-500 text-amber-300 hover:text-black text-xs font-bold flex items-center gap-1 cursor-pointer border border-amber-500/40 transition-all"
+                        title="Áp dụng giọng này cho toàn bộ các quy tắc hiện có trong danh sách"
+                      >
+                        ⚡ Đồng bộ cho TẤT CẢ ({keywordRules.length}) quy tắc hiện có
+                      </button>
+                    )}
+                  </div>
+                </div>
+                <div className="flex items-center gap-2 flex-wrap sm:flex-nowrap">
+                  <select
+                    value={bulkRuleRole}
+                    onChange={(e) => {
+                      const val = e.target.value;
+                      setBulkRuleRole(val);
+                      const isSysVoice = ALL_SYSTEM_VOICES.some(v => v.id === val);
+                      if (isSysVoice) setBulkRuleVoiceId(val);
+                    }}
+                    className="w-full px-3 py-2 bg-[#0b0e14] border border-amber-500/50 rounded-xl text-xs text-amber-200 font-bold focus:outline-none cursor-pointer"
+                  >
+                    <option value="assistant">💼 Giọng Trợ Lý AI (Mặc định)</option>
+                    <option value="idol">🎤 Giọng Idol Chính</option>
+                    <option value="game">🎮 Giọng BLV Game</option>
+                    <optgroup label="Danh Sách Giọng AI Hệ Thống (Bắc / Trung / Nam / ElevenLabs)">
+                      {ALL_SYSTEM_VOICES.map(v => (
+                        <option key={v.id} value={v.id}>🔊 {v.name} - {v.provider} ({v.gender})</option>
+                      ))}
+                    </optgroup>
+                  </select>
+                </div>
+              </div>
+
               <textarea 
                 rows={6} 
                 value={bulkRuleText} 
@@ -574,7 +662,7 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
                 </button>
 
                 <button 
-                  onClick={() => handleBulkImportRules(bulkRuleText)} 
+                  onClick={() => handleBulkImportRules(bulkRuleText, bulkRuleRole, bulkRuleVoiceId)} 
                   className="px-5 py-2 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black font-black rounded-xl text-xs flex items-center gap-1.5 shadow-lg transition-all cursor-pointer"
                 >
                   <Check size={14} /> Tự Động Chia Tách & Nạp [ƯU TIÊN]
@@ -595,12 +683,17 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
               keywordRules.map((rule, idx) => {
                 const isEditing = editingRuleId === (rule.id || idx);
                 const isPreviewing = previewingRuleId === (rule.id || idx);
-                const roleLabel = rule.role === 'idol' ? '🎤 Giọng Idol Chính' : rule.role === 'game' ? '🎮 Giọng BLV Game' : '💼 Giọng Trợ Lý';
-                const roleBadgeClass = rule.role === 'idol' 
-                  ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' 
-                  : rule.role === 'game' 
-                    ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' 
-                    : 'bg-pink-500/20 text-pink-300 border-pink-500/30';
+                const targetVoiceObj = ALL_SYSTEM_VOICES.find(v => v.id === rule.voiceId || v.id === rule.role);
+                const roleLabel = targetVoiceObj 
+                  ? `🔊 ${targetVoiceObj.name} (${targetVoiceObj.gender})` 
+                  : (rule.role === 'idol' ? '🎤 Giọng Idol Chính' : rule.role === 'game' ? '🎮 Giọng BLV Game' : '💼 Giọng Trợ Lý');
+                const roleBadgeClass = targetVoiceObj
+                  ? 'bg-amber-500/20 text-amber-300 border-amber-500/30'
+                  : rule.role === 'idol' 
+                    ? 'bg-purple-500/20 text-purple-300 border-purple-500/30' 
+                    : rule.role === 'game' 
+                      ? 'bg-blue-500/20 text-blue-300 border-blue-500/30' 
+                      : 'bg-pink-500/20 text-pink-300 border-pink-500/30';
 
                 // Trình chỉnh sửa In-place khi bấm nút "Sửa"
                 if (isEditing && editingRuleData) {
