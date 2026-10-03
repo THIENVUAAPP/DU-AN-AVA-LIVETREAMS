@@ -525,7 +525,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
     const params = typeof window !== 'undefined' ? new URLSearchParams(window.location.search) : null;
     const paramFit = params?.get('fit');
     if (paramFit === 'contain' || paramFit === 'cover') return paramFit;
-    return 'cover'; // Luôn mặc định là cover để giữ đúng tỷ lệ 9:16 chuẩn TikTok Live, tuyệt đối không bành trướng hay méo mó video
+    return 'fill'; // Luôn mặc định là fill để khớp vừa y khung hình, không dư không thiếu để giữ đúng tỷ lệ 9:16 chuẩn TikTok Live, tuyệt đối không bành trướng hay méo mó video
   });
   const isInternalAudioChangeRef = useRef(false);
   const isInternalPlaybackChangeRef = useRef(false);
@@ -2695,13 +2695,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         <div 
           className="relative flex items-center justify-center overflow-hidden"
           style={{ 
-            aspectRatio: ratio === '16:9' ? '16/9' : '9/16',
-            height: ratio === '16:9' ? 'min(100%, calc(100vw * 9 / 16))' : '100%',
-            maxHeight: '100%',
-            width: ratio === '16:9' ? '100%' : 'min(100%, calc(100vh * 9 / 16))',
-            maxWidth: '100%',
-            margin: '0 auto',
-            position: 'relative'
+            width: '100%', height: '100%', position: 'relative'
           }}
         >
           {/* ⚡ 1. TOPMOST LAYER: VIDEO PHẢN HỒI NHANH KHẨN CẤP */}
@@ -2724,7 +2718,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 style={{
                   width: '100%',
                   height: '100%',
-                  objectFit: objectFitState || 'cover',
+                  objectFit: objectFitState || 'fill',
                   display: 'block',
                   imageRendering: '-webkit-optimize-contrast'
                 }}
@@ -2758,7 +2752,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 style={{
                   width: '100%',
                   height: '100%',
-                  objectFit: objectFitState || 'cover',
+                  objectFit: objectFitState || 'fill',
                   display: 'block',
                   imageRendering: '-webkit-optimize-contrast'
                 }}
@@ -2783,7 +2777,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 style={{
                   width: '100%',
                   height: '100%',
-                  objectFit: objectFitState || 'cover',
+                  objectFit: objectFitState || 'fill',
                   display: 'block',
                   imageRendering: '-webkit-optimize-contrast'
                 }}
@@ -3098,7 +3092,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                               style={{ 
                                 width: '100%', 
                                 height: '100%', 
-                                objectFit: singleTrans?.objectFit || objectFitState || 'cover', 
+                                objectFit: singleTrans?.objectFit || objectFitState || 'fill', 
                                 imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto', 
                                 ...singleChroma 
                               }}
@@ -3118,7 +3112,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                               style={{
                                 width: '100%',
                                 height: '100%',
-                                objectFit: singleTrans?.objectFit || objectFitState || 'cover',
+                                objectFit: singleTrans?.objectFit || objectFitState || 'fill',
                                 backgroundColor: 'transparent',
                                 display: 'block',
                                 imageRendering: isUltraSharp ? '-webkit-optimize-contrast' : 'auto',
@@ -3407,7 +3401,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 style={{ 
                   width: '100%', 
                   height: '100%', 
-                  objectFit: objectFitState || 'cover',
+                  objectFit: objectFitState || 'fill',
                   imageRendering: '-webkit-optimize-contrast',
                   WebkitFontSmoothing: 'antialiased'
                 }}
@@ -3417,7 +3411,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                 ref={studioImageRef}
                 alt="Live Studio Realtime Camera Stream"
                 className="w-full h-full select-none bg-black"
-                style={{ width: '100%', height: '100%', objectFit: objectFitState || 'cover' }}
+                style={{ width: '100%', height: '100%', objectFit: objectFitState || 'fill' }}
               />
             ) : (
               <div className="absolute inset-0 flex flex-col items-center justify-center bg-gradient-to-br from-[#0F1016] via-[#151824] to-[#0A0A0F] text-center p-6 select-none">

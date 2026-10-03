@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.50';
+export const APP_VERSION = '5.4.51';
 export const RELEASE_DATE = '03/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.51 - Sửa Lỗi Hiển Thị TikTok Live Studio / Vừa Khớp Khung Hình 100%',
+    description: '1. Khắc phục lỗi Màn Hình Đen trên TikTok Live Studio / Vercel (Lỗi Mixed Content): Tự động chuyển đổi các link video cục bộ (localhost) sang link Cloudflare Tunnel bảo mật (HTTPS) để TikTok Live Studio và nền tảng Web có thể nạp video mượt mà 0ms. 2. Ép Buộc Khung Hình Vừa Khít 100% (Không dư, không thiếu): Tự động dàn trải video và container lấp đầy 100% diện tích màn hình trên TikTok Live Studio (object-fit: fill), giải quyết dứt điểm viền đen, cắt xén khung hình. 3. Tuân thủ khóa chặt 100% các tab chức năng không liên quan.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.50 - Đẩy Nhanh Tiêu Chuẩn Đồng Bộ Cục Bộ, Cập Nhật Băng Thông Phản Hồi',
     description: '1. Khởi tạo lại cấu hình cập nhật hệ thống, ép hệ thống đồng bộ chuẩn máy chủ và đẩy mạnh tốc độ đường truyền khi load video/blob. 2. Làm sạch hoàn toàn trạng thái phiên bản cũ, ép máy khách khởi tạo lại luồng bắt sự kiện. 3. Tuân thủ khóa chặt 100% các tab chức năng không liên quan.'

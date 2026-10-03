@@ -114,6 +114,15 @@ export function syncMasterLiveState(partialState, socket = null) {
     : updated;
   if (isBlobMedia && remoteUpdated.mediaUrl === undefined) delete remoteUpdated.mediaUrl;
 
+  // TỰ ĐỘNG CHUYỂN ĐỔI LINK LOCALHOST THÀNH LINK CLOUDFLARE TUNNEL (ĐỂ VERCEL HTTPS CÓ THỂ ĐỌC ĐƯỢC - TRÁNH LỖI MIXED CONTENT)
+  if (remoteUpdated.mediaUrl && typeof remoteUpdated.mediaUrl === 'string' && updated.tunnelUrl) {
+    if (remoteUpdated.mediaUrl.includes('localhost') || remoteUpdated.mediaUrl.includes('127.0.0.1')) {
+      remoteUpdated.mediaUrl = remoteUpdated.mediaUrl.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, updated.tunnelUrl);
+    } else if (remoteUpdated.mediaUrl.startsWith('/uploads/')) {
+      remoteUpdated.mediaUrl = `${updated.tunnelUrl.replace(/\/$/, '')}${remoteUpdated.mediaUrl}`;
+    }
+  }
+
 
   // 1. Lưu LocalStorage (Kích hoạt storage event giữa các tab/cửa sổ)
   try {
