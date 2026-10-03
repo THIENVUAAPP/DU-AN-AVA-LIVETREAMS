@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.45';
+export const APP_VERSION = '5.4.46';
 export const RELEASE_DATE = '03/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.46 - Khắc Phục Lỗi Màn Hình Khởi Động Film Undefined, Xóa Triệt Để Video Chạy Nền & Khóa Chặt Màn Hình Chờ Tải Lên Mặc Định',
+    description: '1. Sửa Dứt Điểm Lỗi Màn Hình Khởi Động (ReferenceError: Film is not defined): Bổ sung đầy đủ thư viện biểu tượng Film, mở app 1-click mượt mà 0ms không bao giờ bị báo lỗi crash hay lỗi nâng cấp dữ liệu. 2. Xóa Hoàn Toàn Video Chạy Nền Tự Động: Khi giải nén file ZIP hoặc mở phần mềm lên, hệ thống tuyệt đối KHÔNG tự ý kích hoạt bất kỳ video ngầm, nhân vật cũ hay video chạy nền nào. 3. Chuẩn Hóa Màn Hình Mặc Định Sân Khấu Chính: Màn hình mặc định luôn là màn hình chờ tải video lên / chờ đồng bộ video (SẴN SÀNG PHÁT LUỒNG 9:16). Sân Khấu Chính chỉ hiển thị và phát video khi người dùng chủ động bấm Tải Video Lên hoặc chủ động click chọn. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.45 - Sửa Triệt Để Lỗi Lặp Câu Chúc, Chuẩn Hóa 4 Bước Phản Hồi Bình Luận & Tùy Chỉnh Giọng Đọc Khi Nạp Từ Khóa Hàng Loạt',
     description: '1. Khắc Phục Triệt Để Lỗi Lặp Đi Lặp Lại Đúng 1 Câu Chúc Suốt Phiên Live: Xóa bỏ hoàn toàn câu chúc mặc định vô tận, kích hoạt 100% các từ khóa và câu trả lời cài sẵn trong Tab Bình Luận. Nâng cấp bộ so khớp từ khóa siêu nhạy (hỗ trợ có dấu, không dấu, loại bỏ ký tự đặc biệt, đồng bộ biến {user}, [user], {comment}, [comment]). 2. Chuẩn Hóa Chuỗi 4 Bước Phản Hồi Bình Luận: Bước 1: Đọc lại câu hỏi/bình luận theo cài đặt tiền tố. Bước 2 (Ưu Tiên 100%): Đối chiếu danh sách từ khóa cấu hình sẵn, trả lời tức thì bằng đúng câu thoại và đúng Giọng AI chỉ định của từng rule. Bước 3: Tự động ghép câu hỏi gợi mở inbox/chăm sóc khách hàng vào sau câu trả lời. Bước 4: Xử lý khéo léo khi không khớp từ khóa bằng kịch bản câu thoại mẫu hoặc phản hồi dự phòng thông minh theo ngữ cảnh live. 3. Tùy Chỉnh Giọng Đọc Khi Thêm Từ Khóa Hàng Loạt: Cho phép chọn nhân vật / giọng đọc AI (Idol, Trợ Lý, BLV, hoặc giọng hệ thống) ngay trong modal nhập từ khóa hàng loạt và khi tải file (TXT, DOCX, PDF, CSV, JSON). Tích hợp nút nghe thử âm sắc và nút 1-click "Áp dụng giọng cho tất cả quy tắc". 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'

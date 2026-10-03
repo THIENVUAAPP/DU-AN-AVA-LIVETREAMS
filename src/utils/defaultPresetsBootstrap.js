@@ -103,6 +103,10 @@ export function bootstrapDefaultPresets() {
     localStorage.removeItem('avalive_sequencer_overlay');
     localStorage.setItem('aidol_is_script_live_running', 'false');
     localStorage.setItem('avalive_master_live_running', 'false');
+    localStorage.removeItem('avalive_user_locked_media');
+    localStorage.removeItem('avalive_selected_char');
+    localStorage.removeItem('aidol_idle_media_url');
+    localStorage.removeItem('avalive_active_video_src');
 
     // 1. Nạp Bộ Não AI mặc định nếu chưa có
     if (!localStorage.getItem('aidol_custom_brains')) {

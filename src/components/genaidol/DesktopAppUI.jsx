@@ -7,7 +7,7 @@ import {
   Brain, Radio, Coins, AlertTriangle, Eye, Clock, List, Zap, AlertCircle, FileText, CheckSquare, CheckCircle, Layers,
   Gift, ShoppingBag, ShoppingCart, Sparkles, RotateCcw, Send, Trash2, Heart, Share2, UserPlus, Users, Swords, Shield, Gamepad2, Flag, MapPin,
   Smartphone, MonitorPlay, Monitor, Globe, StopCircle, Power, Volume2, VolumeX, Volume1, Music, Tv,
-  User, LogOut, Mail, Lock, Check, Upload, ExternalLink
+  User, LogOut, Mail, Lock, Check, Upload, ExternalLink, Film
 } from 'lucide-react';
 import { supabase, syncUserToSupabase } from '../../lib/supabaseClient';
 import flvjs from 'flv.js';
@@ -495,10 +495,6 @@ export default function DesktopAppUI() {
     if (typeof window !== 'undefined') {
       const saved = localStorage.getItem('avalive_selected_char');
       if (saved) return saved;
-      try {
-        const custom = JSON.parse(localStorage.getItem('avalive_custom_characters') || '[]');
-        if (custom && custom.length > 0 && custom[0].id) return custom[0].id;
-      } catch (e) {}
     }
     return '';
   });
@@ -1782,23 +1778,13 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       });
       setCustomCharacters(loadedChars);
 
-      if (loadedChars.length > 0) {
-        setIsStageExplicitlyCleared(false);
-        const targetId = (selectedCharacter && loadedChars.some(item => item.id === selectedCharacter))
-          ? selectedCharacter
-          : loadedChars[0].id;
-        if (!selectedCharacter || selectedCharacter !== targetId) {
-          setSelectedCharacter(targetId);
-          try { localStorage.setItem('avalive_selected_char', targetId); } catch(e) {}
-        }
-        const activeChar = loadedChars.find(item => item.id === targetId) || loadedChars[0];
-        if (activeChar && activeChar.url) {
-          setUserLockedMediaUrl(activeChar.url);
+      // 🛡️ SÂN KHẤU CHÍNH TUYỆT ĐỐI KHÔNG TỰ ĐỘNG PHÁT VIDEO CHẠY NỀN KHI CHƯA ĐƯỢC CHỦ ĐỘNG TẢI LÊN HOẶC CHỌN
+      // CHỈ phục hồi trạng thái nếu người dùng ĐÃ có nhân vật được chọn và media đã khóa trước đó
+      if (loadedChars.length > 0 && selectedCharacter) {
+        const activeChar = loadedChars.find(item => item.id === selectedCharacter);
+        if (activeChar && activeChar.url && userLockedMediaUrl && !isStageExplicitlyCleared) {
           if (desktopVideoRef.current && desktopVideoRef.current.src !== activeChar.url) {
             desktopVideoRef.current.src = activeChar.url;
-            desktopVideoRef.current.currentTime = 0;
-            desktopVideoRef.current.dataset.userPaused = 'false';
-            desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
           }
         }
       }
