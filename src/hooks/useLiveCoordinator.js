@@ -197,12 +197,12 @@ function getSavedEventConfigs() {
       videoCategory: 'comment',
       useAi: true,
       commentReplyMode: 'hybrid',
-      repeatCommentFirst: true,
-      repeatCommentPrefix: 'Dạ em cảm ơn bạn {user} đã bình luận là: "{comment}". ',
-      unknownFallbackReply: 'Dạ bạn {user} ơi, câu hỏi này em xin phép ghi nhận lại để phản hồi chi tiết cho mình sau nha! Bạn có thể nhắn tin trực tiếp cho shop để nhận hỗ trợ nhanh nhất ạ!',
-      appendFollowUpQuestion: true,
-      followUpQuestionText: ' Dạ không biết bạn {user} có cần em hỗ trợ thêm điều gì nữa không ạ? Bạn có thể nhắn tin trực tiếp cho shop để nhận tư vấn chi tiết và nhiều ưu đãi nha!',
-      aiPrompt: '### NHIỆM VỤ: Trả lời bình luận của người dùng tên {user} ngắn gọn, thông minh, lịch sự và thu hút.',
+      repeatCommentFirst: false,
+      repeatCommentPrefix: '',
+      unknownFallbackReply: 'Dạ em xin phép ghi nhận câu hỏi của bạn {user} để shop tư vấn chi tiết cho mình nha!',
+      appendFollowUpQuestion: false,
+      followUpQuestionText: '',
+      aiPrompt: 'Bạn là trợ lý AI livestream bán hàng chuyên nghiệp. Khán giả "{user}" vừa hỏi/bình luận: "{comment}". Hãy trả lời cực kỳ ngắn gọn, súc tích, đúng trọng tâm trong DUY NHẤT 1 CÂU từ 10 đến 15 từ. Tự xưng là "em", trả lời thẳng vào câu hỏi, tuyệt đối không nhắc lại câu hỏi, không hỏi ngược lại dài dòng, không lan man.',
       sampleAnswers: 'Cảm ơn bạn {user} đã bình luận nhé!\nMình đã nhận được bình luận của {user} rồi ạ.',
       assistantPrompt: 'A, có bạn {user} vừa mới bình luận là: {comment}'
     },
@@ -635,26 +635,9 @@ function fillTemplate(template, vars = {}) {
         // =========================================================================
         // 🎯 QUY TRÌNH PHẢN HỒI BÌNH LUẬN: ƯU TIÊN 100% TỪ KHÓA CẤU HÌNH TRƯỚC AI
         // =========================================================================
-        
-        // BƯỚC 1: TIỀN TỐ ĐỌC LẠI BÌNH LUẬN TRƯỚC KHI TRẢ LỜI
-        const isQuestion = commentText.includes('?') || 
-          /^(ai|sao|gì|đâu|nào|bao nhiêu|thế nào|không|hả|chưa|khi nào|bao giờ|mấy)/i.test(commentText) ||
-          /(không|ko|hả|chưa|nhỉ|nhé|ạ|sao)\?*$/i.test(commentText);
-        
-        let repeatPrefix = '';
-        if (commentConfig.repeatCommentFirst !== false) {
-          if (commentConfig.repeatCommentPrefix && commentConfig.repeatCommentPrefix.trim()) {
-            repeatPrefix = fillTemplate(commentConfig.repeatCommentPrefix, { user: userName, comment: commentText });
-          } else {
-            repeatPrefix = isQuestion
-              ? `Dạ em cảm ơn ${userSalutation} đã hỏi: "${commentText}". `
-              : `Dạ em cảm ơn ${userSalutation} đã bình luận: "${commentText}". `;
-          }
-        }
-
         const lowerComment = commentText.toLowerCase();
 
-        // 🎯 BƯỚC 2: ƯU TIÊN SỐ 1 (100% TUYỆT ĐỐI) - ĐỐI CHIẾU DANH SÁCH TỪ KHÓA FILE TẢI LÊN & CẤU HÌNH (KHÔNG DÙNG AI)
+        // 🎯 BƯỚC 1: ƯU TIÊN SỐ 1 (100% TUYỆT ĐỐI) - ĐỐI CHIẾU DANH SÁCH TỪ KHÓA FILE TẢI LÊN & CẤU HÌNH (KHÔNG DÙNG AI)
         if (!isHandled && commentConfig.active !== false) {
           if (matchedRulePre) {
             const replyTpl = matchedRulePre.replyText || matchedRulePre.reply || matchedRulePre.answer || (matchedRulePre.sampleAnswers ? getRandomSample(matchedRulePre.sampleAnswers) : '');
@@ -695,7 +678,7 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // 2.1. Kiểm tra kịch bản Chốt Đơn Sản Phẩm (Checkout Products)
+        // 1.1. Kiểm tra kịch bản Chốt Đơn Sản Phẩm (Checkout Products)
         if (!isHandled && checkoutConfig.active !== false && Array.isArray(checkoutConfig.checkoutProducts)) {
           for (const prod of checkoutConfig.checkoutProducts) {
             if (prod.active !== false && prod.keywords) {
@@ -719,7 +702,7 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // 2.2. Kiểm tra Kho Tri Thức Doanh Nghiệp & Sản Phẩm (Knowledge Base)
+        // 1.2. Kiểm tra Kho Tri Thức Doanh Nghiệp & Sản Phẩm (Knowledge Base)
         const company = scriptConfig.companyName || checkoutConfig.companyName || 'Shop';
         const product = scriptConfig.productName || checkoutConfig.productName || 'Sản phẩm';
         const price = scriptConfig.productPrice || checkoutConfig.productPrice || 'ưu đãi cực sốc';
@@ -747,7 +730,7 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // 🛡️ BƯỚC 2.3: XỬ LÝ LỜI CHÀO HỎI THÔNG THƯỜNG (NẾU KHÔNG CÓ TỪ KHÓA NÀO TRONG FILE KHỚP)
+        // 🛡️ BƯỚC 1.3: XỬ LÝ LỜI CHÀO HỎI THÔNG THƯỜNG (NẾU KHÔNG CÓ TỪ KHÓA NÀO TRONG FILE KHỚP)
         if (!isHandled && commentText) {
           const trimmed = commentText.trim().toLowerCase();
           const trivialPatterns = /^(ch[aà]o|hi+|hello|helo|helu|hey|xin ch[aà]o|alo|[eê]|[oơ]i|a l[oô]|ch[aà]o em|ch[aà]o b[aạ]n|ch[aà]o shop|ch[aà]o m[oọ]i ng[uư][oờ]i|m[oọ]i ng[uư][oờ]i|c[aả] nh[aà]|hi shop|alo shop)\.?\s*$/i;
@@ -757,19 +740,18 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // 🧠 BƯỚC 3: DỰ PHÒNG BỘ NÃO AI GEMINI (CHỈ CHẠY KHI HOÀN TOÀN KHÔNG KHỚP TỪ KHÓA TRONG FILE/CẤU HÌNH)
-        // YÊU CẦU: Trả lời ngắn gọn súc tích đúng trọng tâm trong 1 câu từ 10 đến 15 từ, không nhắc lại bình luận
+        // 🧠 BƯỚC 2: DỰ PHÒNG BỘ NÃO AI GEMINI (CHỈ CHẠY KHI HOÀN TOÀN KHÔNG KHỚP TỪ KHÓA TRONG FILE/CẤU HÌNH)
+        // YÊU CẦU: Trả lời cực kỳ ngắn gọn, súc tích, đúng trọng tâm trong DUY NHẤT 1 CÂU từ 10 đến 15 từ
         if (!isHandled) {
           if (lowerComment.includes('xinh') || lowerComment.includes('đẹp') || lowerComment.includes('dễ thương')) {
             bodyAnswer = `Em cảm ơn lời khen cực kỳ ngọt ngào của ${userSalutation} nha! Rất vui được đồng hành cùng bạn trong buổi live hôm nay!`;
             isHandled = true;
           } else if (useAi && commentConfig.useAi !== false) {
-            // GỌI BỘ NÃO AI GEMINI TRẢ LỜI ĐÚNG TRỌNG TÂM TRONG DUY NHẤT 1 CÂU (10-15 TỪ)
             try {
               const liveContext = `Livestream bán hàng và tương tác trực tuyến. Sản phẩm: ${product}. Cửa hàng: ${company}. Giá: ${price}. Ưu đãi: ${promo}.`;
-              const aiPrompt = commentConfig.aiPrompt 
+              const aiPrompt = commentConfig.aiPrompt && commentConfig.aiPrompt.trim()
                 ? fillTemplate(commentConfig.aiPrompt, { user: userName, comment: commentText, product })
-                : `Bạn là trợ lý AI livestream bán hàng chuyên nghiệp. Khán giả "${userName}" vừa hỏi: "${commentText}". ĐÃ CÓ TIỀN TỐ ĐỌC TÊN VÀ NHẮC LẠI CÂU HỎI RỒI. Hãy trả lời cực kỳ ngắn gọn, súc tích, đúng trọng tâm trong DUY NHẤT 1 CÂU từ 10 đến 15 từ. Tự xưng là "em", trả lời thẳng vào câu hỏi, tuyệt đối không nhắc lại câu hỏi, không lan man dài dòng.`;
+                : `Bạn là trợ lý AI livestream bán hàng chuyên nghiệp. Khán giả "${userName}" vừa hỏi/bình luận: "${commentText}". Hãy trả lời cực kỳ ngắn gọn, súc tích, đúng trọng tâm trong DUY NHẤT 1 CÂU từ 10 đến 15 từ. Tự xưng là "em", trả lời thẳng vào câu hỏi, tuyệt đối không nhắc lại câu hỏi, không hỏi ngược lại dài dòng, không lan man.`;
 
               const aiRes = await askGeminiLiveAi({
                 question: commentText,
@@ -788,7 +770,7 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // 🛡️ BƯỚC 4: DỰ PHÒNG AN TOÀN CHĂM SÓC KHÁCH HÀNG (KHI AI LỖI HOẶC KHÔNG PHẢN HỒI)
+        // 🛡️ BƯỚC 3: DỰ PHÒNG AN TOÀN CHĂM SÓC KHÁCH HÀNG (KHI AI LỖI HOẶC KHÔNG PHẢN HỒI)
         if (!isHandled || !bodyAnswer) {
           if (commentConfig.useUnknownFallbackReply !== false && commentConfig.unknownFallbackReply && commentConfig.unknownFallbackReply.trim()) {
             bodyAnswer = fillTemplate(commentConfig.unknownFallbackReply, { user: userName, comment: commentText });
@@ -805,22 +787,31 @@ function fillTemplate(template, vars = {}) {
             bodyAnswer = fillTemplate(getRandomSample(commentConfig.sampleAnswers), { user: userName, comment: commentText });
             isHandled = true;
           } else {
-            bodyAnswer = `Dạ bạn ${userSalutation} ơi, câu hỏi này em xin phép ghi nhận lại để shop tư vấn chi tiết cho mình trong tin nhắn nhé!`;
+            bodyAnswer = `Dạ em xin phép ghi nhận câu hỏi của ${userSalutation} để shop tư vấn chi tiết cho mình nha!`;
             isHandled = true;
           }
         }
 
-        // BƯỚC 3: GHÉP CÂU HỎI GỢI MỞ CHĂM SÓC KHÁCH HÀNG NẾU ĐƯỢC BẬT
-        if (commentConfig.appendFollowUpQuestion !== false && commentConfig.followUpQuestionText && commentConfig.followUpQuestionText.trim()) {
-          const followUp = fillTemplate(commentConfig.followUpQuestionText, { user: userName, comment: commentText }).trim();
-          if (followUp && !bodyAnswer.toLowerCase().includes(followUp.toLowerCase())) {
-            bodyAnswer = `${bodyAnswer} ${followUp}`.trim();
+        // 🎯 ĐÓNG GÓI CÂU THOẠI PHẢN HỒI:
+        // - NẾU KHỚP TỪ KHÓA CẤU HÌNH: Đọc đúng câu trả lời đã cài đặt, KHÔNG thêm tiền tố đọc lại câu hỏi, KHÔNG ghép câu hỏi gợi mở
+        // - NẾU KHÔNG KHỚP TỪ KHÓA: Trả lời ngắn gọn súc tích
+        if (isKeywordMatched) {
+          replyText = bodyAnswer.trim();
+          chatText = bodyAnswer.trim();
+        } else {
+          let repeatPrefix = '';
+          if (commentConfig.repeatCommentFirst === true && commentConfig.repeatCommentPrefix && commentConfig.repeatCommentPrefix.trim()) {
+            repeatPrefix = fillTemplate(commentConfig.repeatCommentPrefix, { user: userName, comment: commentText }).trim();
           }
+          if (commentConfig.appendFollowUpQuestion === true && commentConfig.followUpQuestionText && commentConfig.followUpQuestionText.trim()) {
+            const followUp = fillTemplate(commentConfig.followUpQuestionText, { user: userName, comment: commentText }).trim();
+            if (followUp && !bodyAnswer.toLowerCase().includes(followUp.toLowerCase())) {
+              bodyAnswer = `${bodyAnswer} ${followUp}`.trim();
+            }
+          }
+          replyText = (repeatPrefix ? `${repeatPrefix} ${bodyAnswer}` : bodyAnswer).replace(/\s+/g, ' ').trim();
+          chatText = bodyAnswer.trim() || replyText;
         }
-
-        // GHÉP TOÀN BỘ CÂU THOẠI HOÀN CHỈNH
-        replyText = `${repeatPrefix} ${bodyAnswer}`.replace(/\s+/g, ' ').trim();
-        chatText = bodyAnswer.trim() || replyText;
       }
 
       // 2. XỬ LÝ SỰ KIỆN QUÀ TẶNG (GIFT)

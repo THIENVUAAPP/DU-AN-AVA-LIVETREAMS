@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.57';
+export const APP_VERSION = '5.4.58';
 export const RELEASE_DATE = '03/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.58 - SỬA TRIỆT ĐỂ LỖI CÓ TIẾNG NHƯNG KHÔNG CÓ HÌNH TIKTOK LIVE STUDIO & ĐỌC ĐÚNG CÂU THOẠI TỪ KHÓA ĐÃ CÀI ĐẶT (KHÔNG HỎI DÀI DÒNG)',
+    description: '1. Khắc Phục Triệt Để Lỗi "Có Tiếng Nhưng Không Có Hình" Trên TikTok Live Studio Browser Source: Tích hợp cơ chế playWithMuteFallback tự động hand-shake với chính sách Autoplay của Chromium CEF, giải mã và hiển thị khung hình video 60 FPS liên tục 0ms không bao giờ bị đứng hình hay đen thui, khớp vừa y tỷ lệ 9:16 (1080x1920) không viền đen. 2. Đọc Chuẩn Xác Đúng Câu Thoại Đã Cài Đặt Cho Từ Khóa (Tuyệt Đối Không Hỏi Lại Dài Dòng): Khi bình luận khớp bất kỳ quy tắc từ khóa nào từ file tải lên hoặc cấu hình, hệ thống lập tức phản hồi đúng câu trả lời đã cài đặt (thay thế {user} bằng tên khán giả), không nhắc lại câu hỏi, không hỏi ngược lại dài dòng, không gọi AI Gemini. Khi không khớp từ khóa, AI Gemini chỉ trả lời ngắn gọn súc tích trong 1 câu duy nhất 10-15 từ. 3. Khóa chặt 100% toàn bộ các tab chức năng và module hệ thống.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.57 - KHẮC PHỤC TRIỆT ĐỂ MÀN HÌNH ĐEN TIKTOK LIVE STUDIO, KHỚP VỪA Y KHUNG HÌNH 9:16 & ƯU TIÊN 100% TỪ KHÓA CẤU HÌNH TRƯỚC AI',
     description: '1. Khắc Phục Triệt Để Màn Hình Đen Khi Dán Link Vào TikTok Live Studio / OBS Browser Source: Tự động bảo toàn tên miền Cloudflare Tunnel HTTPS công khai, loại bỏ triệt để lỗi 404 URL khi nạp video trên Vercel. Tự động thêm tham số chuẩn ?fit=fill&autoplay=1&sound=1 vào đường link để video vừa y vừa khớp 100% tỷ lệ khung hình 9:16 (1080x1920), phát mượt 60 FPS, âm thanh rõ nét. 2. Ưu Tiên 100% Từ Khóa Cấu Hình & File Nạp Trước AI: Quét và so khớp toàn bộ danh sách quy tắc từ khóa (có dấu, không dấu, token biên từ) từ file tải lên và Tab Bình Luận trước tiên. Nếu khớp từ khóa, lập tức phản hồi đúng câu thoại đã cài đặt (KHÔNG GỌI AI). Chỉ khi bình luận không thuộc bất kỳ từ khóa nào, bộ não AI Gemini mới được kích hoạt để trả lời ngắn gọn, súc tích đúng trọng tâm trong 1 câu từ 10 đến 15 từ mà không lặp lại câu hỏi. 3. Khóa chặt 100% toàn bộ các tab và module hệ thống.'

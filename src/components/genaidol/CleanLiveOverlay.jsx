@@ -556,6 +556,46 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
   const isInternalAudioChangeRef = useRef(false);
   const isInternalPlaybackChangeRef = useRef(false);
 
+  // 🛡️ CHƠI VIDEO AN TOÀN TUYỆT ĐỐI (KHÔNG BAO GIỜ BỊ MÀN HÌNH ĐEN TRÊN TIKTOK LIVE STUDIO / OBS BROWSER SOURCE)
+  const playWithMuteFallback = useCallback((videoEl, forceMuted = undefined, forceVolume = undefined) => {
+    if (!videoEl) return;
+    if (checkIfUserPaused()) {
+      videoEl.dataset.userPaused = 'true';
+      return;
+    }
+    videoEl.dataset.userPaused = 'false';
+
+    const targetMuted = forceMuted !== undefined ? forceMuted : isVideoAudioMuted;
+    const targetVolume = forceVolume !== undefined ? forceVolume : videoVolume;
+
+    videoEl.muted = targetMuted;
+    if (!targetMuted) {
+      try { videoEl.volume = targetVolume > 0 ? targetVolume : 1.0; } catch (e) {}
+    }
+
+    const promise = videoEl.play();
+    if (promise !== undefined) {
+      promise
+        .then(() => {
+          setIsPlayingState(true);
+          hasAutoplayStartedRef.current = true;
+        })
+        .catch((err) => {
+          // Khi trình duyệt CEF / TikTok Live Studio chặn autoplay có tiếng (NotAllowedError),
+          // NGAY LẬP TỨC chuyển sang muted để giải mã khung hình 60 FPS tức thì 0ms, không bao giờ bị màn hình đen!
+          if (!targetMuted) {
+            try { videoEl.muted = true; } catch (e) {}
+            videoEl.play()
+              .then(() => {
+                setIsPlayingState(true);
+                hasAutoplayStartedRef.current = true;
+              })
+              .catch(() => {});
+          }
+        });
+    }
+  }, [isVideoAudioMuted, videoVolume]);
+
   // 1. TẠM DỪNG / TIẾP TỤC PHÁT (Play / Pause) — Tác động tức thì mọi video và đồng bộ 2 chiều sang Phần Mềm Chính
   const togglePlayPause = () => {
     lastUserActionTimeRef.current = Date.now();
@@ -1161,15 +1201,11 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       } else if (data.isPlaying === true || data.videoPlaybackEvent === 'play' || data.mediaUrl) {
         if (vid) {
           vid.dataset.userPaused = 'false';
-          vid.muted = isVideoAudioMuted;
-          if (!isVideoAudioMuted) vid.volume = videoVolume;
           // Chỉ tua khi người dùng chủ động kéo tua
           if (data.force && data.videoPlaybackEvent === 'seeked' && typeof data.videoCurrentTime === 'number') {
             try { vid.currentTime = data.videoCurrentTime; } catch (e) {}
           }
-          if (vid.paused) {
-            vid.play().catch(() => {});
-          }
+          playWithMuteFallback(vid);
         }
         setIsPlayingState(true);
       }
@@ -2412,7 +2448,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
       // 1. Phục hồi khi video bị paused ngoài ý muốn (Autoplay Policy hoặc buffer restart)
       if (vid.paused && !vid.seeking) {
-        vid.play().then(() => setIsPlayingState(true)).catch(() => {});
+        playWithMuteFallback(vid);
         return;
       }
 
@@ -2581,16 +2617,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         }
 
         if (vid.paused) {
-          const playPromise = vid.play();
-          if (playPromise !== undefined) {
-            playPromise.then(() => {
-              setIsPlayingState(true);
-              hasAutoplayStartedRef.current = true;
-            }).catch(() => {
-              vid.muted = true;
-              vid.play().then(() => setIsPlayingState(true)).catch(() => {});
-            });
-          }
+          playWithMuteFallback(vid);
         }
       } else {
         vid.dataset.userPaused = 'true';
@@ -3201,12 +3228,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                                 ...singleChroma
                               }}
                               onLoadStart={(e) => {
-                                const v = e.currentTarget;
-                                if (!checkIfUserPaused()) {
-                                  v.dataset.userPaused = 'false';
-                                  v.muted = isVideoAudioMuted;
-                                  v.play().catch(() => {});
-                                }
+                                playWithMuteFallback(e.currentTarget);
                               }}
                               onLoadedMetadata={(e) => {
                                 const v = e.currentTarget;
@@ -3215,23 +3237,12 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                                 } else if (initialTimeParamRef.current > 0) {
                                   try { v.currentTime = initialTimeParamRef.current; } catch (err) {}
                                 }
-                                if (!checkIfUserPaused()) {
-                                  v.dataset.userPaused = 'false';
-                                  v.muted = isVideoAudioMuted;
-                                  try { v.volume = videoVolume; } catch (err) {}
-                                  v.play().catch(() => {});
-                                }
+                                playWithMuteFallback(v);
                               }}
                               onCanPlay={(e) => {
                                 const v = e.currentTarget;
-                                if (!checkIfUserPaused() && v.paused) {
-                                  v.dataset.userPaused = 'false';
-                                  v.muted = isVideoAudioMuted;
-                                  try { v.volume = videoVolume; } catch (err) {}
-                                  v.play().catch(() => {
-                                    v.muted = true;
-                                    v.play().catch(() => {});
-                                  });
+                                if (v.paused) {
+                                  playWithMuteFallback(v);
                                 }
                               }}
                               onTimeUpdate={(e) => {
@@ -3241,7 +3252,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                               onEnded={(e) => {
                                 if (!checkIfUserPaused()) {
                                   e.currentTarget.currentTime = 0;
-                                  e.currentTarget.play().catch(() => {});
+                                  playWithMuteFallback(e.currentTarget);
                                 }
                               }}
                               onError={(e) => {
@@ -3257,7 +3268,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                                     if (d && d.mediaUrl && !d.mediaUrl.startsWith('blob:') && v && !isSameMediaUrl(v.src, d.mediaUrl)) {
                                       v.src = d.mediaUrl;
                                       v.load();
-                                      v.play().catch(() => {});
+                                      playWithMuteFallback(v);
                                     }
                                   }).catch(() => {});
                               }}
