@@ -2,11 +2,16 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.48';
+export const APP_VERSION = '5.4.49';
 export const RELEASE_DATE = '03/10/2026';
 
 export const UPDATE_NOTES = [
   {
+    title: '⚡ Bản Cập Nhật v5.4.49 - Sửa Dứt Điểm Màn Hình Đen TikTok Live Studio / OBS, Phục Hồi Chào Người Mới & Đọc Bình Luận, Ổn Định Kết Nối TikTok ID',
+    description: '1. Sửa Dứt Điểm Màn Hình Đen Trên Link Online HTTPS TikTok Live Studio & Window Capture OBS: Tìm ra nguyên nhân gốc — khi tải video lên, tín hiệu đồng bộ video bị chặn nhầm nên server/Cloudflare không nhận được video từ Sân Khấu Chính. Nay video tải lên hoặc chọn trên Sân Khấu Chính được đồng bộ ngay lập tức ra mọi link live (blob cục bộ không còn ghi đè URL server hợp lệ). 2. Phục Hồi Chào Người Mới Vào Phòng & Đọc Bình Luận: Gỡ bỏ cơ chế hàng đợi gây kẹt toàn bộ sự kiện, tự xóa cờ tạm dừng cũ còn sót lại khi khởi động và khi bấm Kết Nối, nên AI luôn chào người mới, đọc bình luận, cảm ơn quà/tim/theo dõi/chia sẻ đúng cấu hình. 3. Ổn Định Kết Nối TikTok ID: Sửa lỗi backend khiến trạng thái kết nối không bao giờ báo về giao diện khi phòng chưa live (ReferenceError), thêm tự động kết nối lại khi rớt kết nối, nhận kênh nhập ở ô Video, tăng thời gian chờ kết nối, chống kết nối trùng. 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
+  },
+  {
+
     title: '⚡ Bản Cập Nhật v5.4.48 - Phục Hồi Chào Người Mới Tức Thì, Đọc Bình Luận Trơn Tru, Giữ Nguyên Video Khi Tạm Dừng & Tối Ưu Kết Nối TikTok Live ID',
     description: '1. Phục Hồi Chào Người Mới Tức Thì (VIEWER_JOIN / WELCOME): Tự động phát câu thoại chào đón ngay lập tức trong 0ms khi có khán giả bước vào phòng livestream. Tối ưu bộ đếm thời gian giãn cách theo từng người xem (60s cooldown) để không bỏ sót người mới, luân phiên duyệt tuần tự không trùng lặp. 2. Kết Nối & Đọc Bình Luận TikTok Live Trơn Tru (0ms Bỏ Sót): Tự động khôi phục kết nối ID TikTok Live của người dùng ngay khi khởi động. Xây dựng Hàng Đợi Sự Kiện Thông Minh (Event Queue) giúp tất cả bình luận từ khán giả được tiếp nhận và xử lý đầy đủ theo đúng quy trình 4 bước (Đọc tên + nhắc lại comment -> Ưu tiên 100% file từ khóa -> Dự phòng AI Gemini 1 câu ngắn gọn -> Gợi mở chăm sóc khách hàng), tuyệt đối không bị drop do dồn dập. Bổ sung sự kiện theo dõi kênh và chia sẻ live. 3. Giữ Nguyên Video Khi Bấm Tạm Dừng (Pause/Play): Khi bấm Tạm Dừng hoặc Bật/Tắt phiên live, video trên Sân Khấu Chính và Window Capture OBS đứng yên tại khung hình hiện tại chứ không bị xóa biến mất hay đen màn hình (chỉ xóa sạch khi người dùng bấm Xóa). 4. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Khác.'
   },

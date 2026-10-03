@@ -65,9 +65,20 @@ export function getMasterLiveState() {
 export function syncMasterLiveState(partialState, socket = null) {
   if (typeof window === 'undefined') return;
 
-  // 🛑 FIX: KHI NGƯỜI DÙNG ĐÃ NGẮT KẾT NỐI SÂN KHẤU CHÍNH, CHẶN ĐỨT MỌI TÍN HIỆU CẬP NHẬT TỰ ĐỘNG KHÁC!
+  // 🛑 FIX: KHI NGƯỜI DÙNG ĐÃ NGẮT KẾT NỐI SÂN KHẤU CHÍNH, CHẶN MỌI TÍN HIỆU TỰ ĐỘNG KHÁC.
+  // NHƯNG video/nhân vật do CHÍNH NGƯỜI DÙNG tải lên / chọn trên Sân Khấu Chính luôn phải đồng bộ ngay lập tức ra OBS & TikTok Live Studio.
   const isMasterStageSynced = localStorage.getItem('avalive_master_sync_active') === 'true';
-  if (!isMasterStageSynced && partialState.type !== 'CLEAR_STAGE' && partialState.clearMedia !== true && partialState.stage !== 'offline') {
+  let hasUserStageMedia = false;
+  try {
+    const lockedMedia = localStorage.getItem('avalive_user_locked_media');
+    hasUserStageMedia = !!(lockedMedia && lockedMedia !== 'null' && lockedMedia !== 'undefined' && lockedMedia.trim() !== '');
+  } catch (e) {}
+  const isExplicitUserMedia = partialState.userInitiated === true || (
+    typeof partialState.mediaUrl === 'string' && partialState.mediaUrl.trim() !== '' &&
+    partialState.clearMedia !== true &&
+    (partialState.isMasterSynced === true || partialState.force === true || !!partialState.videoPlaybackEvent)
+  );
+  if (!isMasterStageSynced && !hasUserStageMedia && !isExplicitUserMedia && partialState.type !== 'CLEAR_STAGE' && partialState.clearMedia !== true && partialState.stage !== 'offline') {
     return;
   }
 
@@ -95,6 +106,15 @@ export function syncMasterLiveState(partialState, socket = null) {
     updatedAt: Date.now()
   };
 
+  // Bản gửi cho các kênh từ xa (Supabase / Socket / REST / Cloud): blob: chỉ có tác dụng trên máy cục bộ,
+  // nên KHÔNG đẩy blob: ra ngoài để tránh ghi đè URL server hợp lệ bằng URL không phát được (màn hình đen).
+  const isBlobMedia = typeof updated.mediaUrl === 'string' && updated.mediaUrl.startsWith('blob:');
+  const remoteUpdated = isBlobMedia
+    ? { ...updated, mediaUrl: (typeof current.mediaUrl === 'string' && !current.mediaUrl.startsWith('blob:')) ? current.mediaUrl : undefined }
+    : updated;
+  if (isBlobMedia && remoteUpdated.mediaUrl === undefined) delete remoteUpdated.mediaUrl;
+
+
   // 1. Lưu LocalStorage (Kích hoạt storage event giữa các tab/cửa sổ)
   try {
     localStorage.setItem(STORAGE_KEY, JSON.stringify(updated));
@@ -107,7 +127,7 @@ export function syncMasterLiveState(partialState, socket = null) {
       supabaseBroadcastChannel.send({
         type: 'broadcast',
         event: 'MASTER_LIVE_STATE_UPDATE',
-        payload: updated
+        payload: remoteUpdated
       });
     }
   } catch (e) {}
@@ -136,7 +156,7 @@ export function syncMasterLiveState(partialState, socket = null) {
   // 4. Gửi Socket.io nếu có kết nối
   if (socket && socket.connected) {
     try {
-      socket.emit('MASTER_LIVE_STATE_UPDATE', updated);
+      socket.emit('MASTER_LIVE_STATE_UPDATE', remoteUpdated);
       // Chỉ bắn sự kiện điều khiển video khi người dùng thực sự bấm Play/Pause/Seek
       if (partialState.videoPlaybackEvent || (partialState.force && typeof partialState.videoCurrentTime === 'number')) {
         socket.emit('VIDEO_PLAYBACK_CONTROL', {
@@ -144,7 +164,7 @@ export function syncMasterLiveState(partialState, socket = null) {
           isPlaying: partialState.isPlaying !== undefined ? partialState.isPlaying : updated.isPlaying,
           currentTime: partialState.videoCurrentTime,
           force: !!partialState.force,
-          mediaUrl: updated.mediaUrl,
+          mediaUrl: remoteUpdated.mediaUrl,
           timestamp: Date.now()
         });
       }
@@ -171,13 +191,13 @@ export function syncMasterLiveState(partialState, socket = null) {
   fetch(apiEndpoint, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(updated)
+    body: JSON.stringify(remoteUpdated)
   }).catch(() => {});
 
   fetch('https://avalivepro.vercel.app/api/live-state', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify(updated)
+    body: JSON.stringify(remoteUpdated)
   }).catch(() => {});
 
   // 6. Dispatch CustomEvent nội bộ window

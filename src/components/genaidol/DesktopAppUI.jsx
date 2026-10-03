@@ -97,6 +97,10 @@ export default function DesktopAppUI() {
       // 🛡️ BẢO ĐẢM KHỞI ĐỘNG SẠCH SẼ 100%: Xóa cờ đồng bộ cũ từ các phiên trước, không tự động chạy
       localStorage.removeItem('avalive_master_sync_active');
       localStorage.removeItem('avalive_sequencer_overlay');
+      // Xóa cờ "tạm dừng" còn sót từ phiên trước để AI luôn chào người mới / đọc bình luận ngay khi kết nối Live
+      localStorage.removeItem('avalive_user_paused');
+      localStorage.removeItem('avalive_window_capture_paused');
+      localStorage.removeItem('aidol_user_paused_script');
       localStorage.setItem('aidol_is_script_live_running', 'false');
       localStorage.setItem('avalive_master_live_running', 'false');
       if (typeof window !== 'undefined') window.__isScriptLiveRunning = false;
@@ -4475,6 +4479,11 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
     }
 
     setIsConnecting(true);
+    // 🔓 Khi bắt đầu phiên Live: xóa các cờ "tạm dừng" cũ còn sót lại để AI không bị chặn chào/đọc bình luận
+    try {
+      ['avalive_user_paused', 'aidol_user_paused_script', 'avalive_window_capture_paused'].forEach(k => localStorage.removeItem(k));
+      localStorage.setItem('avalive_master_live_running', 'true');
+    } catch (e) {}
     try {
       localStorage.setItem('aidol_tiktok_id', cleanId);
       localStorage.setItem('aidol_video_tiktok_id', cleanVideoId);
@@ -4492,7 +4501,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         }
         return false;
       });
-    }, 20000);
+    }, 30000);
 
     const onFinish = () => clearTimeout(safetyTimer);
     if (socketRef.current && socketRef.current.connected) {

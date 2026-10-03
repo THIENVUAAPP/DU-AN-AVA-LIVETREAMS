@@ -405,14 +405,8 @@ function fillTemplate(template, vars = {}) {
       return;
     }
 
-    // 🛡️ HÀNG ĐỢI SỰ KIỆN THÔNG MINH (EVENT QUEUE): Đảm bảo không bị nuốt bình luận hay người mới vào phòng
-    if (isProcessingEventRef.current && !isTestMode) {
-      if (eventQueueRef.current.length < 20) {
-        eventQueueRef.current.push({ type, payload });
-      }
-      return;
-    }
-    isProcessingEventRef.current = true;
+    // Mọi sự kiện đều được xử lý ngay lập tức (hàng đợi giọng nói do AIAudioPlayer đảm nhiệm), không chặn/nuốt sự kiện
+    isProcessingEventRef.current = false;
     setIsProcessingEvent(true);
 
     // Luôn cho phép chạy sự kiện khi đã kết nối Live hoặc khi bấm Chạy Test / Giả lập sự kiện

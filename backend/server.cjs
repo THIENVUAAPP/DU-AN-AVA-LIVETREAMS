@@ -4913,6 +4913,10 @@ io.on('connection', (socket) => {
       return;
     }
     isConnectingTikTok = true;
+    let targetUser = '';
+    let targetVideoUser = '';
+    let flvUrl = null;
+    let hlsUrl = null;
 
     const cleanTikTokUsername = (str) => {
       if (!str || typeof str !== 'string') return '';
@@ -4939,6 +4943,12 @@ io.on('connection', (socket) => {
 
       // Nếu người dùng nhập trùng 1 kênh cho cả 2 ô, thì gom về 1 kết nối duy nhất để tránh bị kick
       if (targetUser && targetUser === targetVideoUser) {
+        targetVideoUser = '';
+      }
+
+      // Nếu chỉ nhập ID ở ô Video: dùng luôn kênh đó để nhận sự kiện (chào người mới, bình luận, quà...)
+      if (!targetUser && targetVideoUser) {
+        targetUser = targetVideoUser;
         targetVideoUser = '';
       }
 
@@ -5110,7 +5120,7 @@ io.on('connection', (socket) => {
     // 3. Kết nối Chat phòng Live siêu tốc
     const connectPromise = tiktokConnection.connect();
     const timeoutPromise = new Promise((_, reject) => 
-      setTimeout(() => reject(new Error('Connection timeout')), 10000)
+      setTimeout(() => reject(new Error('Connection timeout')), 25000)
     );
 
     Promise.race([connectPromise, timeoutPromise]).then(async state => {
@@ -5189,19 +5199,31 @@ io.on('connection', (socket) => {
       
       // Thử kết nối lại Chat ngầm mỗi 10 giây khi người dùng bắt đầu Live
       if (autoReconnectTimer) clearInterval(autoReconnectTimer);
+      const reconnectConn = tiktokConnection;
+      let reconnectBusy = false;
       autoReconnectTimer = setInterval(() => {
-        if (!tiktokConnection || currentUsername !== targetUser) {
+        if (!tiktokConnection || tiktokConnection !== reconnectConn || currentUsername !== targetUser) {
           clearInterval(autoReconnectTimer);
           autoReconnectTimer = null;
           return;
         }
-        tiktokConnection.connect().then(chatState => {
-          console.log(`[TikTok Live] ✅ Kênh Chat @${targetUser} đã online!`);
+        if (reconnectConn.isConnected) {
+          // Đã kết nối thành công (kết nối ban đầu hoàn tất muộn) -> báo trạng thái thật và dừng thử lại
           clearInterval(autoReconnectTimer);
           autoReconnectTimer = null;
+          io.emit('tiktok_status', { connected: true, username: targetUser, roomId: 'LIVE_ACTIVE', flvUrl: finalFlv });
+          io.emit('tiktok_connected', { username: targetUser, roomId: 'LIVE_ACTIVE', flvUrl: finalFlv });
+          return;
+        }
+        if (reconnectBusy) return;
+        reconnectBusy = true;
+        reconnectConn.connect().then(chatState => {
+          reconnectBusy = false;
+          console.log(`[TikTok Live] ✅ Kênh Chat @${targetUser} đã online!`);
+          if (autoReconnectTimer) { clearInterval(autoReconnectTimer); autoReconnectTimer = null; }
           io.emit('tiktok_status', { connected: true, username: targetUser, roomId: chatState?.roomId, flvUrl: finalFlv });
           io.emit('tiktok_connected', { username: targetUser, roomId: chatState?.roomId, flvUrl: finalFlv });
-        }).catch(e => {});
+        }).catch(e => { reconnectBusy = false; });
       }, 10000);
     });
 
@@ -5342,10 +5364,26 @@ io.on('connection', (socket) => {
       }
     });
 
-    tiktokConnection.on('disconnected', () => {
+    const chatConnRef = tiktokConnection;
+    chatConnRef.on('disconnected', () => {
       console.log(`[TikTok Live] ⚠️ Mất kết nối với ${targetUser}`);
-      tiktokConnection = null;
-      io.emit('tiktok_status', { connected: false, username: targetUser });
+      // Bỏ qua nếu đây là kết nối cũ đã bị thay thế hoặc người dùng chủ động ngắt
+      if (tiktokConnection !== chatConnRef || currentUsername !== targetUser) return;
+      io.emit('tiktok_status', { connected: false, username: targetUser, connecting: true });
+      // Tự động kết nối lại sau 5 giây để không bị mất sự kiện chào/bình luận
+      let attempts = 0;
+      const retry = () => {
+        if (tiktokConnection !== chatConnRef || currentUsername !== targetUser || chatConnRef.isConnected) return;
+        attempts++;
+        chatConnRef.connect().then(st => {
+          console.log(`[TikTok Live] ✅ Đã kết nối lại Chat @${targetUser}`);
+          io.emit('tiktok_status', { connected: true, username: targetUser, roomId: st?.roomId });
+          io.emit('tiktok_connected', { username: targetUser, roomId: st?.roomId });
+        }).catch(() => {
+          if (attempts < 60) setTimeout(retry, 5000);
+        });
+      };
+      setTimeout(retry, 5000);
     });
 
     tiktokConnection.on('error', (err) => {
