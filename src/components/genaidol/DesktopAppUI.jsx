@@ -6149,7 +6149,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
       if (selected) {
         let resolvedUrl = selected.url || selected.mediaUrl;
-        if ((!resolvedUrl || resolvedUrl.startsWith('blob:')) && selected.fileData) {
+        if (selected.fileData || (currentFileBlobRef.current && currentBlobUrlRef.current)) {
+          if (currentBlobUrlRef.current) {
+            resolvedUrl = currentBlobUrlRef.current;
+          } else if (selected.fileData) {
+            try {
+              resolvedUrl = URL.createObjectURL(selected.fileData);
+              currentBlobUrlRef.current = resolvedUrl;
+            } catch (e) {}
+          }
+        } else if ((!resolvedUrl || resolvedUrl.startsWith('blob:')) && selected.fileData) {
           try {
             resolvedUrl = URL.createObjectURL(selected.fileData);
             selected.url = resolvedUrl;
@@ -6179,7 +6188,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           selected = {
             ...selected,
             url: resolvedUrl,
-            mediaUrl: resolvedUrl,
+            mediaUrl: selected.mediaUrl || resolvedUrl,
             type: isExplicitVideo ? 'video' : (selected.type || 'image')
           };
         }

@@ -6745,7 +6745,7 @@ if (distPath) {
     app.use(['/assets', '/idol/assets', '/bando/assets', '/battle/assets', '/live/assets'], express.static(assetsDir, { maxAge: '1d' }));
   }
 
-  app.get(['/idol', '/bando', '/battle', '/live', '/overlay-idol', '/overlay-bando', '/overlay-battle'], (req, res) => {
+  app.get(['/idol', '/bando', '/battle', '/live', '/live-stream', '/live-player', '/stream-player', '/window-capture', '/overlay', '/overlay-idol', '/overlay-bando', '/overlay-battle', '/overlay-live'], (req, res) => {
     res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
     res.setHeader('Access-Control-Allow-Origin', '*');
     res.sendFile(path.join(distPath, 'index.html'));
