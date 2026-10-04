@@ -740,18 +740,18 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // 🧠 BƯỚC 2: DỰ PHÒNG BỘ NÃO AI GEMINI (CHỈ CHẠY KHI HOÀN TOÀN KHÔNG KHỚP TỪ KHÓA TRONG FILE/CẤU HÌNH)
-        // YÊU CẦU: Trả lời cực kỳ ngắn gọn, súc tích, đúng trọng tâm trong DUY NHẤT 1 CÂU từ 10 đến 15 từ
+        // 🧠 BƯỚC 3: DỰ PHÒNG BỘ NÃO AI GEMINI (CHỈ CHẠY KHI HOÀN TOÀN KHÔNG KHỚP TỪ KHÓA TRONG FILE/CẤU HÌNH)
+        // YÊU CẦU: Trả lời trực tiếp nội dung trọng tâm đúng câu hỏi đúng vấn đề trong DUY NHẤT 1 CÂU từ 10 đến 15 từ
         if (!isHandled) {
           if (lowerComment.includes('xinh') || lowerComment.includes('đẹp') || lowerComment.includes('dễ thương')) {
-            bodyAnswer = `Em cảm ơn lời khen cực kỳ ngọt ngào của ${userSalutation} nha! Rất vui được đồng hành cùng bạn trong buổi live hôm nay!`;
+            bodyAnswer = `Dạ em cảm ơn lời khen của ${userSalutation} nha, chúc bạn xem live thật vui vẻ ạ!`;
             isHandled = true;
           } else if (useAi && commentConfig.useAi !== false) {
             try {
               const liveContext = `Livestream bán hàng và tương tác trực tuyến. Sản phẩm: ${product}. Cửa hàng: ${company}. Giá: ${price}. Ưu đãi: ${promo}.`;
               const aiPrompt = commentConfig.aiPrompt && commentConfig.aiPrompt.trim()
                 ? fillTemplate(commentConfig.aiPrompt, { user: userName, comment: commentText, product })
-                : `Bạn là trợ lý AI livestream bán hàng chuyên nghiệp. Khán giả "${userName}" vừa hỏi/bình luận: "${commentText}". Hãy trả lời cực kỳ ngắn gọn, súc tích, đúng trọng tâm trong DUY NHẤT 1 CÂU từ 10 đến 15 từ. Tự xưng là "em", trả lời thẳng vào câu hỏi, tuyệt đối không nhắc lại câu hỏi, không hỏi ngược lại dài dòng, không lan man.`;
+                : `Bạn là trợ lý AI livestream bán hàng chuyên nghiệp. Khán giả "${userName}" vừa hỏi/bình luận: "${commentText}". Hãy trả lời trực tiếp nội dung trọng tâm đúng câu hỏi đúng vấn đề trong DUY NHẤT 1 CÂU từ 10 đến 15 từ. Tự xưng là "em", tuyệt đối không nhắc lại câu chào, không hỏi ngược lại người xem, không lan man sai chủ đề.`;
 
               const aiRes = await askGeminiLiveAi({
                 question: commentText,
@@ -770,7 +770,7 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // 🛡️ BƯỚC 3: DỰ PHÒNG AN TOÀN CHĂM SÓC KHÁCH HÀNG (KHI AI LỖI HOẶC KHÔNG PHẢN HỒI)
+        // 🛡️ DỰ PHÒNG AN TOÀN CHĂM SÓC KHÁCH HÀNG (KHI AI LỖI HOẶC KHÔNG PHẢN HỒI)
         if (!isHandled || !bodyAnswer) {
           if (commentConfig.useUnknownFallbackReply !== false && commentConfig.unknownFallbackReply && commentConfig.unknownFallbackReply.trim()) {
             bodyAnswer = fillTemplate(commentConfig.unknownFallbackReply, { user: userName, comment: commentText });
@@ -787,7 +787,7 @@ function fillTemplate(template, vars = {}) {
             bodyAnswer = fillTemplate(getRandomSample(commentConfig.sampleAnswers), { user: userName, comment: commentText });
             isHandled = true;
           } else {
-            bodyAnswer = `Dạ em xin phép ghi nhận câu hỏi của ${userSalutation} để shop tư vấn chi tiết cho mình nha!`;
+            bodyAnswer = `Dạ sản phẩm đang có sẵn trong giỏ hàng góc trái màn hình, bạn bấm vào xem chi tiết nha!`;
             isHandled = true;
           }
         }
