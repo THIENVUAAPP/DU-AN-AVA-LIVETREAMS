@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.64';
+export const APP_VERSION = '5.4.65';
 export const RELEASE_DATE = '04/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.65 - CHUẨN HÓA QUY TRÌNH 3 BƯỚC AI ĐỌC & PHẢN HỒI BÌNH LUẬN THEO TỪ KHÓA, ĐỒNG BỘ 100% SÂN KHẤU CHÍNH VÀO TIKTOK LIVE STUDIO (KHÔNG MÀN HÌNH ĐEN)',
+    description: '1. Chuẩn Hóa 100% Quy Trình 3 Bước AI Đọc & Phản Hồi Bình Luận: Bước 1: Cảm ơn đích danh người dùng và đọc lại chính xác câu bình luận/câu hỏi ("Dạ em cảm ơn {user} đã hỏi/bình luận là: \'{comment}\'."). Bước 2 (Ưu Tiên 100% File Từ Khóa Đã Tải Lên & Kịch Bản Sẵn): Rà soát bộ từ khóa và phản hồi cài sẵn của người dùng trước tiên. Nếu khớp từ khóa: lập tức phản hồi đúng câu trả lời đã thiết lập (thay thế {user}, {comment}, {product}), tuyệt đối KHÔNG gọi AI ngoài và KHÔNG hỏi lại lòng vòng. Bước 3: Nếu không khớp từ khóa: Gọi AI Gemini trả lời trực tiếp nội dung trọng tâm trong DUY NHẤT 1 câu ngắn gọn (10–15 từ), không lặp lại câu chào, không hỏi ngược lại người xem. 2. Đồng Bộ Toàn Bộ Dữ Liệu Sân Khấu Chính Sang TikTok Live Studio (Loại Bỏ Hoàn Toàn Lỗi Chỉ Có Tiếng Không Có Hình): Tích hợp hàm giải mã resolveMediaForOverlay chuyển đổi đường dẫn media cục bộ sang tên miền HTTPS Cloudflare Tunnel công khai, giúp TikTok Live Studio và OBS Browser Source hiển thị trọn vẹn mọi khung hình video, ảnh, nhân vật avatar, PiP, banner siêu mượt 60 FPS, không còn màn hình đen. Tuyệt đối không chứa video chạy nền cũ từ bộ nhớ đệm. 3. Khóa chặt 100% Window Capture OBS và toàn bộ các tab chức năng khác.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.64 - KHÔI PHỤC NGUYÊN VẸN 100% TRẠNG THÁI COMMIT d22d876 (v5.4.60)',
     description: '1. Khôi phục hoàn toàn 100% toàn bộ mã nguồn, cấu hình, giao diện và chức năng từ commit d22d876 (v5.4.60). 2. Bảo toàn tuyệt đối mọi tính năng: hiển thị đầy đủ video và âm thanh trên TikTok Live Studio (không còn lỗi màn hình đen), tải video lên sân khấu chính & ô nhân vật tức thì 0ms không chớp nháy, đọc comment chuẩn xác theo tệp từ khóa và AI. 3. Khóa chặt 100% toàn bộ các tab và module hệ thống.'
