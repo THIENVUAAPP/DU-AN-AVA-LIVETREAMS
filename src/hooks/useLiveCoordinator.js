@@ -806,11 +806,18 @@ function fillTemplate(template, vars = {}) {
             : `Dạ em cảm ơn ${userSalutation} đã bình luận là: "${commentText}". `;
         }
 
+        // Loại bỏ tiền tố cảm ơn lặp lại trong bodyAnswer nếu repeatPrefix đã thực hiện
+        let cleanBodyAnswer = (bodyAnswer || '').trim();
+        if (repeatPrefix && cleanBodyAnswer) {
+          cleanBodyAnswer = cleanBodyAnswer.replace(/^(dạ\s+)?(em\s+)?cảm\s+ơn\s+([^\.,!\n]+)[\.,!\s]+/i, '').trim();
+          if (!cleanBodyAnswer) cleanBodyAnswer = bodyAnswer.trim();
+        }
+
         // 🎯 ĐÓNG GÓI CÂU THOẠI PHẢN HỒI THEO ĐÚNG 2 PHẦN CHUẨN:
         // 1. Cảm ơn user & đọc lại chuẩn xác câu bình luận
         // 2. Phản hồi chuẩn (Nếu khớp từ khóa: đọc đúng câu phản hồi đã làm sẵn; Nếu không khớp: AI Gemini trả lời thông minh 10-15 từ)
-        replyText = `${repeatPrefix} ${bodyAnswer}`.replace(/\s+/g, ' ').trim();
-        chatText = bodyAnswer.trim() || replyText;
+        replyText = `${repeatPrefix} ${cleanBodyAnswer}`.replace(/\s+/g, ' ').trim();
+        chatText = cleanBodyAnswer || replyText;
       }
 
       // 2. XỬ LÝ SỰ KIỆN QUÀ TẶNG (GIFT)

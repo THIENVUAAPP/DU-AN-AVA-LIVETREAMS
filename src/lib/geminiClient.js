@@ -8,33 +8,33 @@ function generateContextualFallbackReply({ question = '', username = 'bạn', ro
   const user = username || 'bạn';
 
   if (q.includes('chào') || q.includes('hi') || q.includes('hello')) {
-    return `Dạ em chào bạn ${user} nha! Em rất vui được đồng hành cùng bạn trong buổi live hôm nay!`;
+    return `Shop em rất vui được đón tiếp bạn trong buổi live hôm nay nha!`;
   }
   if (q.includes('game') || q.includes('chơi') || q.includes('cách')) {
     if (gameType === 'battle') {
-      return `Dạ chào bạn ${user}! Đây là trận đại chiến PK kịch tính. Bạn hãy chọn phe và tiếp sức cho chiến binh nhé!`;
+      return `Trận đại chiến PK đang rất kịch tính, bạn hãy chọn phe tiếp sức nhé!`;
     }
-    return `Dạ chào bạn ${user}! Trận đại chiến Cắm Cờ Việt Nam đang rất sôi động, bạn hãy chọn ô và cắm cờ cùng mọi người nhé!`;
+    return `Trận đại chiến Cắm Cờ đang rất sôi động, bạn hãy chọn ô cắm cờ cùng mọi người nhé!`;
   }
   if (q.includes('ai') || q.includes('tên') || q.includes('bot')) {
-    return `Dạ em là Trợ Lý AI của phiên live hôm nay, rất vui được đồng hành và hỗ trợ bạn ${user} ạ!`;
+    return `Em là Trợ Lý AI của phiên live hôm nay, rất vui được hỗ trợ bạn ạ!`;
   }
   if (q.includes('quà') || q.includes('gift') || q.includes('xu') || q.includes('tặng')) {
-    return `Em cảm ơn bạn ${user} rất nhiều! Từng phần quà của bạn là nguồn động lực cực lớn cho cả phòng live!`;
+    return `Từng phần quà của bạn là nguồn động lực cực lớn cho cả phòng live ạ!`;
   }
   if (q.includes('thắng') || q.includes('thua') || q.includes('ai dẫn') || q.includes('top')) {
-    return `Trận đấu đang ở giai đoạn quyết liệt nhất! Bạn ${user} hãy tiếp tục cổ vũ hết mình nhé!`;
+    return `Trận đấu đang ở giai đoạn quyết liệt nhất, bạn cùng cổ vũ hết mình nhé!`;
   }
   if (q.includes('đẹp') || q.includes('xinh') || q.includes('hay') || q.includes('giỏi')) {
-    return `Dạ em cảm ơn lời khen cực kỳ dễ thương của bạn ${user}! Yêu bạn rất nhiều!`;
+    return `Em cảm ơn lời khen cực kỳ dễ thương của bạn nha!`;
   }
 
-  // Câu trả lời giao tiếp thông minh tổng quát cho livestream
+  // Câu trả lời giao tiếp thông minh tổng quát ngắn gọn 10-15 từ
   const smartGenericReplies = [
-    `Dạ em chào bạn ${user}, em đã nhận được câu hỏi "${question}" của bạn rồi ạ! Bạn chờ em tư vấn chi tiết ngay nhé!`,
-    `Dạ câu hỏi của bạn ${user} rất đúng trọng tâm ạ! Em xin phép giải đáp ngay cho bạn và mọi người cùng nghe nha!`,
-    `Em cảm ơn bạn ${user} đã đặt câu hỏi rất hay ạ! Bạn quan tâm thêm chi tiết nào cứ nhắn em giải đáp liền nhé!`,
-    `Dạ em nghe rõ ý bạn ${user} rồi ạ! Bạn theo dõi livestream hoặc bấm vào giỏ hàng để nhận ưu đãi tốt nhất ngay nhé!`
+    `Dạ sản phẩm đang có sẵn và rất nhiều ưu đãi trong giỏ hàng, mình bấm đặt ngay nha!`,
+    `Dạ đúng rồi bạn nha, sản phẩm chính hãng chất lượng cao đang được ưu đãi tốt nhất hôm nay ạ!`,
+    `Dạ shop em hỗ trợ giao hàng tận nơi và tư vấn chi tiết cho mình ngay nhé!`,
+    `Dạ bạn yên tâm nha, shop cam kết chất lượng chính hãng và bảo hành đầy đủ ạ!`
   ];
   return smartGenericReplies[Math.floor(Math.random() * smartGenericReplies.length)];
 }
@@ -64,10 +64,14 @@ export async function fetchAiReply({ kind = 'question', username, characterName,
   // 2. Thử gọi trực tiếp Google Generative Language API (Gemini 2.0 Flash — Thông minh nhất, Tiết kiệm chi phí)
   if (apiKey && apiKey.trim()) {
     try {
-      const promptText = `Bạn là Trợ lý Livestream / Bình luận viên AI thông minh, hài hước, năng lượng cao cho sự kiện livestream Việt Nam.
-Khán giả tên là "${username || 'bạn'}" vừa bình luận: "${question || giftName || 'Xin chào'}".
-Bối cảnh: ${context || 'Livestream tương tác minigame'}.
-Yêu cầu: Trả lời tự nhiên, thân thiện, ngắn gọn (1-2 câu ngắn, tối đa 25 từ). QUY TẮC XƯNG HÔ BẮT BUỘC: Bạn luôn tự xưng là "em" và gọi khán giả là "bạn" hoặc "chào bạn ${username || 'bạn'}". Đây là quy tắc tuyệt đối, chỉ dùng đại từ "em" và "bạn" trong mọi trường hợp. Tuyệt đối không nói tục. Chỉ trả về đúng 1 câu thoại tiếng Việt không dấu ngoặc kép.`;
+      const promptText = `Bạn là Trợ lý Livestream bán hàng chuyên nghiệp.
+Khán giả "${username || 'bạn'}" vừa hỏi/bình luận: "${question || giftName || 'Xin chào'}".
+Bối cảnh: ${context || 'Livestream bán hàng trực tuyến'}.
+YÊU CẦU BẮT BUỘC:
+1. Trả lời thẳng vào câu hỏi, cực kỳ ngắn gọn, súc tích trong DUY NHẤT 1 CÂU từ 10 đến 15 từ.
+2. Tự xưng là "em", gọi khách là "bạn" hoặc xưng hô lịch sự.
+3. Tuyệt đối KHÔNG lặp lại câu hỏi của khách, KHÔNG hỏi ngược lại dài dòng, KHÔNG lan man.
+4. Chỉ trả về đúng 1 câu thoại tiếng Việt không dấu ngoặc kép.`;
 
       const directRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent?key=${apiKey.trim()}`, {
         method: 'POST',
@@ -77,7 +81,7 @@ Yêu cầu: Trả lời tự nhiên, thân thiện, ngắn gọn (1-2 câu ngắ
             role: 'user',
             parts: [{ text: promptText }]
           }],
-          generationConfig: { temperature: 0.8, maxOutputTokens: 100 }
+          generationConfig: { temperature: 0.7, maxOutputTokens: 80 }
         })
       });
       if (directRes.ok) {

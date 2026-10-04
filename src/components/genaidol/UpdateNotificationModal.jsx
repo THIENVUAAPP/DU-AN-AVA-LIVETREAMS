@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.59';
-export const RELEASE_DATE = '03/10/2026';
+export const APP_VERSION = '5.4.60';
+export const RELEASE_DATE = '04/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.60 - HIỂN THỊ ĐẦY ĐỦ VIDEO + TIẾNG TIKTOK LIVE STUDIO, TẢI VIDEO LÊN SÂN KHẤU TỨC THÌ 0MS KHÔNG CHỚP NHÁY & ĐỌC COMMENT CHUẨN XÁC THEO FILE TỪ KHÓA',
+    description: '1. Hiển Thị Đầy Đủ Video và Âm Thanh Trên TikTok Live Studio (Không Còn Lỗi Chỉ Có Tiếng Không Có Hình): Khắc phục triệt để tình trạng video bị màn hình đen khi dán link vào TikTok Live Studio Browser Source. Video và âm thanh từ sân khấu chính được giải mã đồng bộ tức thì 0ms, hiển thị trọn vẹn mọi khung hình, nhân vật, hiệu ứng với tỷ lệ chuẩn 9:16 (1080x1920) siêu nét 60 FPS. 2. Tải Video Lên Sân Khấu Chính & Ô Nhân Vật Tức Thì 0ms (Không Bị Chớp Nháy): Cố định thẻ video DOM và tối ưu quy trình nạp bộ nhớ đệm, giúp kéo thả hoặc chọn video từ ô nhân vật / giữa màn hình sân khấu chính hiển thị ngay lập tức trong 0ms, loại bỏ hoàn toàn hiện tượng chớp nháy đen lặp lại. 3. Đọc Bình Luận Chuẩn Xác Theo Quy Trình: (Bước 1) Đọc tên người bình luận và đọc lại chuẩn xác câu hỏi/bình luận: "Dạ em cảm ơn {user} đã hỏi/bình luận là: \"{comment}\"." (Bước 2) Quét 100% các file từ khóa và quy tắc đã cài đặt; nếu khớp, phản hồi ngay bằng đúng câu trả lời từ file (thay thế {user}, {comment}, {product}), tuyệt đối KHÔNG gọi AI, KHÔNG hỏi dài dòng. (Bước 3) Nếu không khớp file từ khóa, AI Gemini chỉ trả lời ngắn gọn trong 1 câu 10-15 từ đúng trọng tâm. 4. Khóa chặt 100% toàn bộ các tab và module hệ thống.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.59 - CHUẨN HÓA ĐỌC COMMENT [CẢM ƠN + ĐỌC LẠI BÌNH LUẬN + PHẢN HỒI ĐÚNG TỪ KHÓA], SỬA TRIỆT ĐỂ CHỚP NHÁY WINDOW CAPTURE OBS & MÀN HÌNH ĐEN TIKTOK LIVE STUDIO',
     description: '1. Chuẩn Hóa 100% Cấu Trúc Đọc Bình Luận: (Phần 1) Luôn mở đầu bằng câu cảm ơn và đọc lại chuẩn xác câu hỏi/bình luận của người xem: "Dạ em cảm ơn {user} đã hỏi/bình luận là: {comment}." (Phần 2) Quét đối chiếu ngay bộ từ khóa đã cài đặt; nếu khớp, phản hồi ngay bằng đúng câu trả lời đã cài đặt (thay thế {user}, {comment}, {product}), tuyệt đối KHÔNG gọi AI Gemini, KHÔNG hỏi ngược lại dài dòng. Nếu không khớp từ khóa, AI Gemini chỉ trả lời ngắn gọn trong 1 câu 10-15 từ đúng trọng tâm. 2. Khắc Phục Triệt Để Lỗi Chớp Nháy (Flickering) Màn Hình Trên Window Capture OBS: Nâng cấp hàm so khớp isSameMediaUrl nhận diện thông minh giữa bộ nhớ tạm blob và server URL, thiết lập bộ khóa decoder ngăn chặn tình trạng vid.load() chạy lặp 2.5s gây chớp nháy đen, đảm bảo video phát mượt mà 60 FPS liên tục. 3. Tối Ưu Link TikTok Live Studio / OBS Browser Source 0ms Khởi Động: Tự động truyền tham số &v=... cho đường link Live Stream HTTPS, giúp TikTok Live Studio giải mã khung hình đầu tiên ngay tức thì 0ms, không còn tình trạng đen màn hình. 4. Khóa chặt 100% toàn bộ các tab và module hệ thống.'

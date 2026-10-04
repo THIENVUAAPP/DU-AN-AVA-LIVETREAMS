@@ -639,10 +639,10 @@ export default defineConfig({
                   return;
                 }
                 const prompt = body.kind === 'gift' 
-                  ? `Bạn là MC livestream TikTok. Khán giả "${body.username || 'bạn'}" vừa tặng "${body.giftName || 'món quà'}". Viết 1 câu cảm ơn tự nhiên, hài hước, không quá 25 từ, không nói tục, chỉ trả về đúng 1 câu thoại tiếng Việt.`
+                  ? `Bạn là MC livestream TikTok. Khán giả "${body.username || 'bạn'}" vừa tặng "${body.giftName || 'món quà'}". Viết 1 câu cảm ơn tự nhiên, hài hước, không quá 15 từ, không nói tục, chỉ trả về đúng 1 câu thoại tiếng Việt.`
                   : body.kind === 'welcome'
-                    ? `Bạn là MC livestream TikTok. Khán giả "${body.username || 'bạn'}" vừa vào xem. Viết 1 câu chào mừng tự nhiên, duyên dáng, không quá 25 từ, không nói tục, chỉ trả về đúng 1 câu thoại tiếng Việt.`
-                    : `Bạn là ${body.role === 'game' ? 'Bình luận viên game' : 'Trợ lý livestream bán hàng'} thông minh, thân thiện. Khán giả "${body.username || 'bạn'}" vừa hỏi/bình luận: "${body.question || body.comment || ''}". Trả lời thông minh, đúng câu hỏi, ngắn gọn (1-2 câu, dưới 25 từ), lịch sự, tuyệt đối không nói tục. Chỉ trả về đúng 1 câu thoại tiếng Việt.`;
+                    ? `Bạn là MC livestream TikTok. Khán giả "${body.username || 'bạn'}" vừa vào xem. Viết 1 câu chào mừng tự nhiên, duyên dáng, không quá 15 từ, không nói tục, chỉ trả về đúng 1 câu thoại tiếng Việt.`
+                    : `Bạn là trợ lý livestream bán hàng chuyên nghiệp. Khán giả "${body.username || 'bạn'}" vừa hỏi/bình luận: "${body.question || body.comment || ''}". Trả lời thẳng vào câu hỏi, cực kỳ ngắn gọn trong DUY NHẤT 1 CÂU từ 10 đến 15 từ. Tự xưng là "em", gọi khách là "bạn". Tuyệt đối không nhắc lại câu hỏi, không hỏi ngược lại dài dòng, không lan man. Chỉ trả về đúng 1 câu thoại tiếng Việt.`;
 
                 const gRes = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`, {
                   method: 'POST',

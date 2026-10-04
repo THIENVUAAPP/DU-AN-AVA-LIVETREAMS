@@ -3306,10 +3306,17 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                                 fetch('/api/live-state')
                                   .then(r => r.json())
                                   .then(d => {
-                                    if (d && d.mediaUrl && !d.mediaUrl.startsWith('blob:') && v && !isSameMediaUrl(v.src, d.mediaUrl)) {
-                                      v.src = d.mediaUrl;
-                                      v.load();
-                                      playWithMuteFallback(v);
+                                    if (d && d.mediaUrl && !d.mediaUrl.startsWith('blob:') && v) {
+                                      let targetUrl = d.mediaUrl;
+                                      const activeTunnel = d.tunnelUrl || (typeof localStorage !== 'undefined' ? localStorage.getItem('avalive_tunnel_url') : '') || '';
+                                      if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app') && activeTunnel && targetUrl.includes('/uploads/')) {
+                                        targetUrl = `${activeTunnel.replace(/\/$/, '')}${targetUrl.substring(targetUrl.indexOf('/uploads/'))}`;
+                                      }
+                                      if (!isSameMediaUrl(v.src, targetUrl)) {
+                                        v.src = targetUrl;
+                                        v.load();
+                                        playWithMuteFallback(v);
+                                      }
                                     }
                                   }).catch(() => {});
                               }}

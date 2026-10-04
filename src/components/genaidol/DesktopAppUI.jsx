@@ -5303,10 +5303,18 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
         }
       };
 
+      let isApplied = false;
+      const safeApply = (srvUrl) => {
+        if (!isApplied && srvUrl) {
+          isApplied = true;
+          applyServerVideo(srvUrl);
+        }
+      };
+
       uploadMediaToServer(file, file.name).then(srv => {
-        if (srv) applyServerVideo(srv);
+        if (srv) safeApply(srv);
       }).catch(() => {
-        fastStreamUpload(file, { onInit: ({ fileUrl }) => applyServerVideo(fileUrl) }).catch(() => {});
+        fastStreamUpload(file, { onInit: ({ fileUrl }) => safeApply(fileUrl) }).catch(() => {});
       });
 
       return tempChar;
@@ -6242,10 +6250,10 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
           <div className="relative w-full h-full group/videoContainer select-none overflow-hidden bg-black flex items-center justify-center">
             {/* THẺ VIDEO PREVIEW TRÊN PHẦN MỀM (TƯƠNG THÍCH HOÀN HẢO VỚI OBS WINDOW CAPTURE - KHÔNG BAO GIỜ ĐEN MÀN HÌNH) */}
             <video 
-              key={`main_desktop_vid_${selected.id || selected.url || 'default'}`}
-                  ref={desktopVideoRef}
-                  data-main-player="true"
-                  src={selected.url} 
+              key="main_desktop_stage_video_player"
+              ref={desktopVideoRef}
+              data-main-player="true"
+              src={selected.url} 
                   className="w-full h-full object-cover bg-black cursor-pointer main-video-player"
                   style={{ 
                     transform: 'translateZ(0)',
