@@ -608,14 +608,13 @@ function fillTemplate(template, vars = {}) {
             }
           }
 
-          // 3. Kiểm tra Knowledge Base keywords nếu chưa khớp rule
+          // 3. Kiểm tra Knowledge Base keywords nếu chưa khớp rule (chỉ khi cấu hình có hỏi mua hàng cụ thể)
           if (!hasKeywordRuleMatch) {
-            const kbActive = (scriptConfig.commentReplySource || checkoutConfig.commentReplySource || 'knowledge_base');
+            const kbActive = (scriptConfig.commentReplySource || checkoutConfig.commentReplySource);
             if (kbActive === 'knowledge_base' || kbActive === 'both') {
-              if (commentNorm.raw.includes('giá') || commentNorm.raw.includes('bao nhiêu') || commentNorm.raw.includes('tiền') || commentNorm.raw.includes('chi phí') || commentNorm.raw.includes('sale') ||
-                  commentNorm.raw.includes('bảo hành') || commentNorm.raw.includes('đổi trả') || commentNorm.raw.includes('ship') || commentNorm.raw.includes('giao hàng') || commentNorm.raw.includes('vận chuyển') ||
-                  commentNorm.raw.includes('mua') || commentNorm.raw.includes('đặt hàng') || commentNorm.raw.includes('chốt') || commentNorm.raw.includes('lấy') || commentNorm.raw.includes('order') ||
-                  commentNorm.raw.includes('dùng') || commentNorm.raw.includes('tính năng') || commentNorm.raw.includes('chức năng') || commentNorm.raw.includes('như thế nào') || commentNorm.raw.includes('chất liệu') || commentNorm.raw.includes('công dụng')) {
+              if (commentNorm.raw.includes('giá bao nhiêu') || commentNorm.raw.includes('bao nhiêu tiền') || commentNorm.raw.includes('giá thế nào') ||
+                  commentNorm.raw.includes('bảo hành') || commentNorm.raw.includes('đổi trả') ||
+                  commentNorm.raw.includes('đặt hàng') || commentNorm.raw.includes('chốt đơn')) {
                 hasKeywordRuleMatch = true;
               }
             }
@@ -801,7 +800,7 @@ function fillTemplate(template, vars = {}) {
             bodyAnswer = fillTemplate(getRandomSample(commentConfig.sampleAnswers), { user: userSalutation, comment: commentText });
             isHandled = true;
           } else {
-            bodyAnswer = `Dạ em xin phép ghi nhận câu hỏi của ${userSalutation} để shop tư vấn chi tiết cho mình nha!`;
+            bodyAnswer = `Dạ em xin phép ghi nhận câu hỏi của ${userSalutation} nha! Cảm ơn bạn rất nhiều ạ!`;
             isHandled = true;
           }
         }

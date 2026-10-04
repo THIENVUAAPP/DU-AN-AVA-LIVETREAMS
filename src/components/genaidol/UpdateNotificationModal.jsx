@@ -2,13 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.69';
+export const APP_VERSION = '5.4.70';
 export const RELEASE_DATE = '04/10/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v5.4.69 - CHUẨN HÓA AI ĐỌC & PHẢN HỒI BÌNH LUẬN [ĐỌC LẠI NGUYÊN VĂN + ƯU TIÊN 100% TỪ KHÓA FILE NẠP + AI 1 CÂU 10-15 TỪ] & ĐỒNG BỘ VIDEO TIKTOK LIVE STUDIO SIÊU MƯỢT',
-    description: '1. Chuẩn Hóa 100% Quy Trình AI Đọc & Phản Hồi Bình Luận: (Bước 1) Đọc to, rõ ràng và chuẩn xác tên người xem cùng nội dung nguyên văn câu hỏi/bình luận: "Dạ em cảm ơn {user} đã hỏi/bình luận là: \"{comment}\"." (Bước 2) Quét 100% tệp từ khóa và kịch bản người dùng đã cài đặt sẵn / nạp từ file; nếu khớp từ khóa, lập tức phản hồi chính xác câu đã thiết lập (tự động thay {user}, {comment}, {product}), tuyệt đối KHÔNG gọi AI ngoài, KHÔNG hỏi lại lòng vòng, KHÔNG tự động ép sản phẩm vào câu nói. (Bước 3) Nếu không khớp bất kỳ từ khóa nào: gọi AI Gemini trả lời trực tiếp đúng trọng tâm trong DUY NHẤT 1 CÂU ngắn gọn (10-15 từ), không lặp lại câu chào, không hỏi ngược lại dài dòng. 2. Đồng Bộ Sân Khấu Chính & Video Sang TikTok Live Studio 60 FPS: Loại bỏ hoàn toàn lỗi màn hình đen trên TikTok Live Studio browser source khi phát qua đường link Cloudflare Tunnel HTTPS, giải mã khung hình tức thì 0ms, không đứng hình. 3. Khóa chặt 100% toàn bộ các tab và module hệ thống.'
+    title: '⚡ Bản Cập Nhật v5.4.70 - ĐỒNG BỘ SÂN KHẤU CHÍNH TIKTOK LIVE STUDIO (XỬ LÝ TRIỆT ĐỂ MÀN HÌNH ĐEN) & CHUẨN HÓA AI ĐỌC - PHẢN HỒI BÌNH LUẬN (KHÔNG BÁN HÀNG TỰ ĐỘNG)',
+    description: '1. Đồng Bộ Sân Khấu Chính & Video Sang TikTok Live Studio (Xử Lý Triệt Để Màn Hình Đen): Khắc phục triệt để lỗi màn hình đen trên Browser Source của TikTok Live Studio khi dán link Cloudflare Tunnel HTTPS. Tự động khởi tạo trạng thái isPlaying=true và videoPlaybackEvent=play ngay trên backend server, giải mã khung hình tức thì 0ms, không đứng hình. 2. Chuẩn Hóa 100% Quy Trình AI Đọc & Phản Hồi Bình Luận Đúng Trọng Tâm: (Bước 1) Đọc to, rõ ràng và chuẩn xác tên người xem cùng nội dung nguyên văn câu hỏi/bình luận: "Dạ em cảm ơn {user} đã hỏi/bình luận là: \"{comment}\"." (Bước 2) Quét 100% tệp từ khóa và kịch bản người dùng đã cài đặt sẵn / nạp từ file; nếu khớp từ khóa, lập tức phản hồi chính xác câu đã thiết lập (tự động thay {user}, {comment}, {product}), tuyệt đối KHÔNG gọi AI ngoài, KHÔNG hỏi lại lòng vòng, KHÔNG tự động ép sản phẩm/bán hàng vào câu nói nếu người dùng không yêu cầu. (Bước 3) Nếu không khớp bất kỳ từ khóa nào: chào hỏi/khen ngợi tự nhiên thân thiện (không bán hàng), hoặc gọi AI Gemini trả lời trực tiếp đúng trọng tâm câu hỏi trong DUY NHẤT 1 CÂU ngắn gọn (10-15 từ). 3. Khóa chặt 100% toàn bộ các tab và module hệ thống.'
   },
   {
     title: '⚡ Bản Cập Nhật v5.4.68 - NHẮC LẠI CHUẨN XÁC CÂU BÌNH LUẬN + PHẢN HỒI ĐÚNG FILE TỪ KHÓA, TẢI VIDEO SÂN KHẤU & Ô NHÂN VẬT TỨC THÌ 0MS, LOẠI BỎ CHỮ TRÊN VIDEO WINDOW CAPTURE OBS',

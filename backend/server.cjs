@@ -5639,6 +5639,12 @@ app.get(['/api/live-state', '/api/master-live-state'], (req, res) => {
 
   if (currentMasterLiveState.mediaUrl) {
     currentMasterLiveState.isVideo = true;
+    if (currentMasterLiveState.clearMedia !== true && currentMasterLiveState.clearStage !== true) {
+      if (currentMasterLiveState.isPlaying === undefined || currentMasterLiveState.isPlaying === null || currentMasterLiveState.videoPlaybackEvent === 'pause') {
+        currentMasterLiveState.isPlaying = true;
+        currentMasterLiveState.videoPlaybackEvent = 'play';
+      }
+    }
     if (typeof currentMasterLiveState.videoVolume !== 'number' || currentMasterLiveState.videoVolume <= 0) {
       currentMasterLiveState.videoVolume = 1.0;
     }
