@@ -651,12 +651,14 @@ function fillTemplate(template, vars = {}) {
         // =========================================================================
         const lowerComment = commentText.toLowerCase();
 
-        // 🎯 BƯỚC 1: ƯU TIÊN SỐ 1 (100% TUYỆT ĐỐI) - ĐỐI CHIẾU DANH SÁCH TỪ KHÓA FILE TẢI LÊN & CẤU HÌNH (KHÔNG DÙNG AI)
+        // 🎯 BƯỚC 2 (ƯU TIÊN TUYỆT ĐỐI): ĐỐI CHIẾU BỘ TỪ KHÓA & KỊCH BẢN NGƯỜI DÙNG CÀI ĐẶT / FILE TẢI LÊN
+        // Nếu khớp từ khóa: Trả lời chính xác câu phản hồi đã thiết lập ngay lập tức (thay {user}, {comment}, {product}).
+        // Tuyệt đối KHÔNG gọi AI ngoài và KHÔNG hỏi lại lòng vòng.
         if (!isHandled && commentConfig.active !== false) {
           if (matchedRulePre) {
             const replyTpl = matchedRulePre.replyText || matchedRulePre.reply || matchedRulePre.answer || (matchedRulePre.sampleAnswers ? getRandomSample(matchedRulePre.sampleAnswers) : '');
             if (replyTpl) {
-              bodyAnswer = fillTemplate(replyTpl, { user: userName, comment: commentText, product: matchedRulePre.productName || '' });
+              bodyAnswer = fillTemplate(replyTpl, { user: userSalutation, comment: commentText, product: matchedRulePre.productName || '' });
               isHandled = true;
               isKeywordMatched = true;
               if (matchedRulePre.role || matchedRulePre.voiceId) {
@@ -678,7 +680,7 @@ function fillTemplate(template, vars = {}) {
               if (matched && (rule.replyText || rule.reply || rule.answer || rule.sampleAnswers)) {
                 const replyTpl = rule.replyText || rule.reply || rule.answer || (rule.sampleAnswers ? getRandomSample(rule.sampleAnswers) : '');
                 if (replyTpl) {
-                  bodyAnswer = fillTemplate(replyTpl, { user: userName, comment: commentText, product: rule.productName || '' });
+                  bodyAnswer = fillTemplate(replyTpl, { user: userSalutation, comment: commentText, product: rule.productName || '' });
                   isHandled = true;
                   isKeywordMatched = true;
                   if (rule.role || rule.voiceId) {
@@ -692,7 +694,7 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // 1.1. Kiểm tra kịch bản Chốt Đơn Sản Phẩm (Checkout Products)
+        // 2.1. Kiểm tra kịch bản Chốt Đơn Sản Phẩm (Checkout Products) nếu bình luận khớp đúng từ khóa của sản phẩm
         if (!isHandled && checkoutConfig.active !== false && Array.isArray(checkoutConfig.checkoutProducts)) {
           for (const prod of checkoutConfig.checkoutProducts) {
             if (prod.active !== false && prod.keywords) {
@@ -705,7 +707,7 @@ function fillTemplate(template, vars = {}) {
                 isKeywordMatched = true;
                 currentMatchedCheckoutProduct = prod;
                 if (prod.sampleAnswers) {
-                  bodyAnswer = fillTemplate(getRandomSample(prod.sampleAnswers), { user: userName, comment: commentText, product: prod.productName });
+                  bodyAnswer = fillTemplate(getRandomSample(prod.sampleAnswers), { user: userSalutation, comment: commentText, product: prod.productName });
                 } else {
                   bodyAnswer = `Sản phẩm ${prod.productName || 'này'} đang có ưu đãi cực sốc trong giỏ hàng góc trái màn hình, bạn bấm vào đặt hàng ngay nhé!`;
                 }
@@ -716,89 +718,87 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // 1.2. Kiểm tra Kho Tri Thức Doanh Nghiệp & Sản Phẩm (Knowledge Base)
+        // 2.2. Kiểm tra Kho Tri Thức Doanh Nghiệp (Chỉ kích hoạt khi hỏi đúng câu hỏi mua hàng/giá/bảo hành cụ thể)
         const company = scriptConfig.companyName || checkoutConfig.companyName || 'Shop';
         const product = scriptConfig.productName || checkoutConfig.productName || 'Sản phẩm';
         const price = scriptConfig.productPrice || checkoutConfig.productPrice || 'ưu đãi cực sốc';
         const promo = scriptConfig.promotions || checkoutConfig.promotions || 'freeship toàn quốc';
-        const features = scriptConfig.keyFeatures || checkoutConfig.keyFeatures || 'chất lượng cao, cam kết chính hãng';
         const warranty = scriptConfig.warrantyPolicy || checkoutConfig.warrantyPolicy || 'bảo hành đổi trả uy tín';
 
         if (!isHandled && (replySource === 'knowledge_base' || replySource === 'both')) {
-          if (lowerComment.includes('giá') || lowerComment.includes('bao nhiêu') || lowerComment.includes('tiền') || lowerComment.includes('chi phí') || lowerComment.includes('sale') || commentNorm.noAcc.includes('gia bao nhieu') || commentNorm.noAccTokens.includes('bn')) {
-            bodyAnswer = `Sản phẩm ${product} của ${company} đang có giá ${price} kèm khuyến mãi: ${promo}. Bạn bấm ngay vào giỏ hàng góc trái màn hình để nhận ưu đãi nha!`;
+          if (commentNorm.raw.includes('giá bao nhiêu') || commentNorm.raw.includes('bao nhiêu tiền') || commentNorm.raw.includes('giá thế nào') || commentNorm.noAcc.includes('gia bao nhieu') || commentNorm.noAccTokens.includes('bn')) {
+            bodyAnswer = `Dạ ${product} đang có giá ${price} kèm khuyến mãi: ${promo}. Bạn bấm ngay vào giỏ hàng góc trái màn hình để nhận ưu đãi nha!`;
             isHandled = true;
             isKeywordMatched = true;
-          } else if (lowerComment.includes('bảo hành') || lowerComment.includes('đổi trả') || lowerComment.includes('ship') || lowerComment.includes('giao hàng') || lowerComment.includes('vận chuyển') || commentNorm.noAcc.includes('bao hanh') || commentNorm.noAcc.includes('giao hang')) {
-            bodyAnswer = `Bạn yên tâm nha, bên em có chính sách: ${warranty} và hỗ trợ giao hàng tận nơi ạ!`;
+          } else if (commentNorm.raw.includes('bảo hành') || commentNorm.raw.includes('đổi trả') || commentNorm.noAcc.includes('bao hanh') || commentNorm.noAcc.includes('doi tra')) {
+            bodyAnswer = `Dạ bạn yên tâm nha, bên em có chính sách: ${warranty} và hỗ trợ đổi trả uy tín ạ!`;
             isHandled = true;
             isKeywordMatched = true;
-          } else if (lowerComment.includes('mua') || lowerComment.includes('đặt hàng') || lowerComment.includes('chốt') || lowerComment.includes('lấy') || lowerComment.includes('order') || commentNorm.noAcc.includes('dat hang') || commentNorm.noAcc.includes('chot')) {
-            bodyAnswer = `Em cảm ơn bạn đã tin tưởng ${company}! Bạn bấm trực tiếp vào giỏ hàng góc trái màn hình để chốt đơn ${product} nhận ngay mã quà tặng nha!`;
-            isHandled = true;
-            isKeywordMatched = true;
-          } else if (lowerComment.includes('dùng') || lowerComment.includes('tính năng') || lowerComment.includes('chức năng') || lowerComment.includes('sao') || lowerComment.includes('như thế nào') || lowerComment.includes('chất liệu') || lowerComment.includes('công dụng')) {
-            bodyAnswer = `${product} nổi bật với tính năng: ${features.split('\n')[0] || features}. Sử dụng rất thích và hiệu quả cao ạ!`;
+          } else if (commentNorm.raw.includes('đặt hàng') || commentNorm.raw.includes('chốt đơn') || commentNorm.noAcc.includes('dat hang') || commentNorm.noAcc.includes('chot don')) {
+            bodyAnswer = `Dạ em cảm ơn bạn! Bạn bấm trực tiếp vào giỏ hàng góc trái màn hình để chốt đơn ${product} nhận ngay quà tặng nha!`;
             isHandled = true;
             isKeywordMatched = true;
           }
         }
 
-        // 🛡️ BƯỚC 1.3: XỬ LÝ LỜI CHÀO HỎI THÔNG THƯỜNG (NẾU KHÔNG CÓ TỪ KHÓA NÀO TRONG FILE KHỚP)
+        // 🎯 BƯỚC 3: NẾU KHÔNG KHỚP TỪ KHÓA ĐÃ CÀI ĐẶT
+        // 3.1. Nếu là chào hỏi thông thường: Giao lưu thân thiện tự nhiên, không ép bán hàng
         if (!isHandled && commentText) {
           const trimmed = commentText.trim().toLowerCase();
           const trivialPatterns = /^(ch[aà]o|hi+|hello|helo|helu|hey|xin ch[aà]o|alo|[eê]|[oơ]i|a l[oô]|ch[aà]o em|ch[aà]o b[aạ]n|ch[aà]o shop|ch[aà]o m[oọ]i ng[uư][oờ]i|m[oọ]i ng[uư][oờ]i|c[aả] nh[aà]|hi shop|alo shop)\.?\s*$/i;
           if (trivialPatterns.test(trimmed)) {
-            bodyAnswer = `Dạ em chào ${userSalutation} nha! Shop em rất vui được đón tiếp bạn, bạn quan tâm sản phẩm nào cứ nhắn em tư vấn nha!`;
+            bodyAnswer = `Dạ em chào ${userSalutation} nha! Chúc bạn xem live thật vui vẻ và có một ngày tuyệt vời ạ!`;
             isHandled = true;
           }
         }
 
-        // 🧠 BƯỚC 2: DỰ PHÒNG BỘ NÃO AI GEMINI (CHỈ CHẠY KHI HOÀN TOÀN KHÔNG KHỚP TỪ KHÓA TRONG FILE/CẤU HÌNH)
-        // YÊU CẦU: Trả lời cực kỳ ngắn gọn, súc tích, đúng trọng tâm trong DUY NHẤT 1 CÂU từ 10 đến 15 từ
+        // 3.2. Nếu là lời khen ngợi: Phản hồi cảm ơn ngọt ngào, tự nhiên
         if (!isHandled) {
-          if (lowerComment.includes('xinh') || lowerComment.includes('đẹp') || lowerComment.includes('dễ thương')) {
-            bodyAnswer = `Em cảm ơn lời khen cực kỳ ngọt ngào của ${userSalutation} nha! Rất vui được đồng hành cùng bạn trong buổi live hôm nay!`;
+          if (lowerComment.includes('xinh') || lowerComment.includes('đẹp') || lowerComment.includes('dễ thương') || lowerComment.includes('cute')) {
+            bodyAnswer = `Em cảm ơn lời khen cực kỳ ngọt ngào của ${userSalutation} nha! Chúc bạn xem live thật vui vẻ ạ!`;
             isHandled = true;
-          } else if (useAi && commentConfig.useAi !== false) {
-            try {
-              const liveContext = `Livestream bán hàng và tương tác trực tuyến. Sản phẩm: ${product}. Cửa hàng: ${company}. Giá: ${price}. Ưu đãi: ${promo}.`;
-              const aiPrompt = commentConfig.aiPrompt && commentConfig.aiPrompt.trim()
-                ? fillTemplate(commentConfig.aiPrompt, { user: userName, comment: commentText, product })
-                : `Bạn là trợ lý AI livestream bán hàng chuyên nghiệp. Khán giả "${userName}" vừa hỏi/bình luận: "${commentText}". Hãy trả lời cực kỳ ngắn gọn, súc tích, đúng trọng tâm trong DUY NHẤT 1 CÂU từ 10 đến 15 từ. Tự xưng là "em", trả lời thẳng vào câu hỏi, tuyệt đối không nhắc lại câu hỏi, không hỏi ngược lại dài dòng, không lan man.`;
-
-              const aiRes = await askGeminiLiveAi({
-                question: commentText,
-                username: userName,
-                role: commentConfig.ttsVoiceRole || commentConfig.speaker || 'assistant',
-                context: `${liveContext}. Hướng dẫn AI: ${aiPrompt}`
-              });
-
-              if (aiRes && aiRes.text && aiRes.text.trim()) {
-                bodyAnswer = aiRes.text.trim();
-                isHandled = true;
-              }
-            } catch (aiErr) {
-              console.warn('AI Brain call error:', aiErr);
-            }
           }
         }
 
-        // 🛡️ BƯỚC 3: DỰ PHÒNG AN TOÀN CHĂM SÓC KHÁCH HÀNG (KHI AI LỖI HOẶC KHÔNG PHẢN HỒI)
+        // 3.3. Gọi AI Gemini trả lời trực tiếp nội dung trọng tâm trong DUY NHẤT 1 CÂU ngắn gọn (10–15 từ), không nhắc lại chào hỏi, không hỏi ngược lại
+        if (!isHandled && useAi && commentConfig.useAi !== false) {
+          try {
+            const liveContext = `Livestream tương tác trực tiếp. Người đang xem live bình luận. Trả lời đúng nội dung câu hỏi một cách thông minh, tự nhiên, thân thiện.`;
+            const aiPrompt = commentConfig.aiPrompt && commentConfig.aiPrompt.trim()
+              ? fillTemplate(commentConfig.aiPrompt, { user: userName, comment: commentText, product })
+              : `Bạn là trợ lý AI livestream chuyên nghiệp. Khán giả "${userName}" vừa hỏi/bình luận: "${commentText}". Hãy trả lời cực kỳ ngắn gọn, súc tích, đúng trọng tâm trong DUY NHẤT 1 CÂU từ 10 đến 15 từ. Tự xưng là "em", trả lời thẳng vào vấn đề của người hỏi, tuyệt đối không nhắc lại câu chào, không hỏi ngược lại dài dòng, không lan man, chỉ nói về sản phẩm nếu người dùng hỏi về sản phẩm.`;
+
+            const aiRes = await askGeminiLiveAi({
+              question: commentText,
+              username: userName,
+              role: commentConfig.ttsVoiceRole || commentConfig.speaker || 'assistant',
+              context: `${liveContext}. Hướng dẫn AI: ${aiPrompt}`
+            });
+
+            if (aiRes && aiRes.text && aiRes.text.trim()) {
+              bodyAnswer = aiRes.text.trim();
+              isHandled = true;
+            }
+          } catch (aiErr) {
+            console.warn('AI Brain call error:', aiErr);
+          }
+        }
+
+        // 3.4. DỰ PHÒNG AN TOÀN (KHI AI GEMINI LỖI HOẶC KHÔNG PHẢN HỒI)
         if (!isHandled || !bodyAnswer) {
           if (commentConfig.useUnknownFallbackReply !== false && commentConfig.unknownFallbackReply && commentConfig.unknownFallbackReply.trim()) {
-            bodyAnswer = fillTemplate(commentConfig.unknownFallbackReply, { user: userName, comment: commentText });
+            bodyAnswer = fillTemplate(commentConfig.unknownFallbackReply, { user: userSalutation, comment: commentText });
             isHandled = true;
           } else if (Array.isArray(commentConfig.prompts) && commentConfig.prompts.length > 0) {
             const activePrompts = commentConfig.prompts.filter(p => p && p.enabled !== false && p.text);
             if (activePrompts.length > 0) {
               const pItem = activePrompts[Math.floor(Math.random() * activePrompts.length)];
-              bodyAnswer = fillTemplate(pItem.text, { user: userName, comment: commentText });
+              bodyAnswer = fillTemplate(pItem.text, { user: userSalutation, comment: commentText });
               if (pItem.role) currentEvConfig._matchedRuleRole = pItem.role;
               isHandled = true;
             }
           } else if (commentConfig.sampleAnswers && commentConfig.sampleAnswers.trim()) {
-            bodyAnswer = fillTemplate(getRandomSample(commentConfig.sampleAnswers), { user: userName, comment: commentText });
+            bodyAnswer = fillTemplate(getRandomSample(commentConfig.sampleAnswers), { user: userSalutation, comment: commentText });
             isHandled = true;
           } else {
             bodyAnswer = `Dạ em xin phép ghi nhận câu hỏi của ${userSalutation} để shop tư vấn chi tiết cho mình nha!`;
@@ -806,24 +806,25 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // 🎯 BƯỚC 1: TIỀN TỐ CẢM ƠN USER VÀ ĐỌC LẠI CHUẨN XÁC CÂU BÌNH LUẬN CỦA KHÁCH HÀNG
+        // =========================================================================
+        // 🎯 BƯỚC 1: CẢM ƠN ĐÍCH DANH NGƯỜI DÙNG VÀ ĐỌC LẠI CHÍNH XÁC CÂU BÌNH LUẬN
+        // =========================================================================
         const isQuestion = commentText.includes('?') || 
           /^(ai|sao|gì|đâu|nào|bao nhiêu|thế nào|không|hả|chưa|khi nào|bao giờ|mấy|cho hỏi|em ơi|shop ơi|giá|bn|ib)/i.test(commentText) ||
           /(không|ko|hả|chưa|nhỉ|nhé|ạ|sao)\?*$/i.test(commentText);
         
+        const actionVerb = isQuestion ? 'đã hỏi' : 'đã bình luận';
         let repeatPrefix = '';
         if (commentConfig.repeatCommentPrefix && commentConfig.repeatCommentPrefix.trim()) {
-          repeatPrefix = fillTemplate(commentConfig.repeatCommentPrefix, { user: userName, comment: commentText, commentText }).trim();
+          repeatPrefix = fillTemplate(commentConfig.repeatCommentPrefix, { user: userSalutation, comment: commentText, commentText }).trim();
           if (commentText && !commentConfig.repeatCommentPrefix.includes('{comment}') && !commentConfig.repeatCommentPrefix.includes('[comment]')) {
-            repeatPrefix = `${repeatPrefix} đã bình luận là: ${commentText}.`;
+            repeatPrefix = `${repeatPrefix} ${actionVerb} là: "${commentText}".`;
           }
         } else {
           if (commentText) {
-            repeatPrefix = isQuestion
-              ? `Dạ em cảm ơn ${userSalutation} đã hỏi là: ${commentText}. `
-              : `Dạ em cảm ơn ${userSalutation} đã bình luận là: ${commentText}. `;
+            repeatPrefix = `Dạ em cảm ơn ${userSalutation} ${actionVerb} là: "${commentText}".`;
           } else {
-            repeatPrefix = `Dạ em cảm ơn ${userSalutation} đã bình luận nha. `;
+            repeatPrefix = `Dạ em cảm ơn ${userSalutation} đã bình luận nha.`;
           }
         }
 
@@ -834,9 +835,8 @@ function fillTemplate(template, vars = {}) {
           if (!cleanBodyAnswer) cleanBodyAnswer = bodyAnswer.trim();
         }
 
-        // 🎯 ĐÓNG GÓI CÂU THOẠI PHẢN HỒI THEO ĐÚNG 2 PHẦN CHUẨN:
-        // 1. Cảm ơn user & đọc lại chuẩn xác câu bình luận
-        // 2. Phản hồi chuẩn (Nếu khớp từ khóa: đọc đúng câu phản hồi đã làm sẵn; Nếu không khớp: AI Gemini trả lời thông minh 10-15 từ)
+        // 🎯 ĐÓNG GÓI CÂU THOẠI PHẢN HỒI HOÀN CHỈNH:
+        // [Bước 1: Cảm ơn + Đọc lại chuẩn xác câu hỏi/bình luận] + [Bước 2/3: Phản hồi đúng kịch bản từ khóa / AI 1 câu]
         replyText = `${repeatPrefix} ${cleanBodyAnswer}`.replace(/\s+/g, ' ').trim();
         chatText = cleanBodyAnswer || replyText;
       }

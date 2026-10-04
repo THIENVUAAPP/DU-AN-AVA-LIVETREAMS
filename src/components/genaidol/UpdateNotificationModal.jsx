@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.68';
+export const APP_VERSION = '5.4.69';
 export const RELEASE_DATE = '04/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.69 - CHUẨN HÓA AI ĐỌC & PHẢN HỒI BÌNH LUẬN [ĐỌC LẠI NGUYÊN VĂN + ƯU TIÊN 100% TỪ KHÓA FILE NẠP + AI 1 CÂU 10-15 TỪ] & ĐỒNG BỘ VIDEO TIKTOK LIVE STUDIO SIÊU MƯỢT',
+    description: '1. Chuẩn Hóa 100% Quy Trình AI Đọc & Phản Hồi Bình Luận: (Bước 1) Đọc to, rõ ràng và chuẩn xác tên người xem cùng nội dung nguyên văn câu hỏi/bình luận: "Dạ em cảm ơn {user} đã hỏi/bình luận là: \"{comment}\"." (Bước 2) Quét 100% tệp từ khóa và kịch bản người dùng đã cài đặt sẵn / nạp từ file; nếu khớp từ khóa, lập tức phản hồi chính xác câu đã thiết lập (tự động thay {user}, {comment}, {product}), tuyệt đối KHÔNG gọi AI ngoài, KHÔNG hỏi lại lòng vòng, KHÔNG tự động ép sản phẩm vào câu nói. (Bước 3) Nếu không khớp bất kỳ từ khóa nào: gọi AI Gemini trả lời trực tiếp đúng trọng tâm trong DUY NHẤT 1 CÂU ngắn gọn (10-15 từ), không lặp lại câu chào, không hỏi ngược lại dài dòng. 2. Đồng Bộ Sân Khấu Chính & Video Sang TikTok Live Studio 60 FPS: Loại bỏ hoàn toàn lỗi màn hình đen trên TikTok Live Studio browser source khi phát qua đường link Cloudflare Tunnel HTTPS, giải mã khung hình tức thì 0ms, không đứng hình. 3. Khóa chặt 100% toàn bộ các tab và module hệ thống.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.68 - NHẮC LẠI CHUẨN XÁC CÂU BÌNH LUẬN + PHẢN HỒI ĐÚNG FILE TỪ KHÓA, TẢI VIDEO SÂN KHẤU & Ô NHÂN VẬT TỨC THÌ 0MS, LOẠI BỎ CHỮ TRÊN VIDEO WINDOW CAPTURE OBS',
     description: '1. Nhắc Lại Chuẩn Xác 100% Câu Bình Luận Khán Giả: (Bước 1) Đọc to, rõ ràng và chuẩn xác tên người xem cùng nội dung nguyên văn câu hỏi/bình luận: "Dạ em cảm ơn {user} đã hỏi/bình luận là: {comment}." Tuyệt đối không bị nuốt câu comment. (Bước 2) Quét 100% tệp từ khóa và kịch bản đã cài đặt; nếu khớp, phản hồi ngay bằng đúng câu trả lời từ file (thay thế {user}, {comment}, {product}), tuyệt đối KHÔNG gọi AI ngoài, KHÔNG hỏi lại lòng vòng. (Bước 3) Nếu không khớp từ khóa, AI Gemini trả lời trực tiếp đúng trọng tâm trong 1 câu ngắn gọn 10-15 từ. 2. Tải Video Sân Khấu Chính & Ô Nhân Vật Tức Thì 0ms (Kéo Thả & Bấm Tải Lên): Reset input file và cờ điều hướng, đảm bảo bấm nút tải lên hoặc kéo thả video vào giữa sân khấu / các ô nhân vật là hiển thị và phát ngay lập tức 0ms không bao giờ bị lỗi. 3. Loại Bỏ Chữ Subtitle Trên Video Window Capture OBS: Đồng bộ hình ảnh và video sạch 100% từ sân khấu chính lên Window Capture OBS và TikTok Live Studio, không chèn chữ phụ đề che video. 4. Khóa chặt 100% toàn bộ các tab và module hệ thống.'

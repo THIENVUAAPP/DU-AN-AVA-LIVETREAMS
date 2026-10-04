@@ -116,9 +116,26 @@ export const resolveMediaForOverlay = (url, tunnelUrl) => {
   if (!url || typeof url !== 'string') return url;
   const trimmed = url.trim();
   if (!trimmed) return trimmed;
-  if (trimmed.startsWith('blob:') || trimmed.startsWith('data:')) return trimmed;
 
   const activeTunnel = tunnelUrl || (typeof window !== 'undefined' ? (localStorage.getItem('avalive_tunnel_url') || localStorage.getItem('avalive_last_tunnel_url')) : null);
+
+  // Nếu là blob: hoặc data:
+  if (trimmed.startsWith('blob:') || trimmed.startsWith('data:')) {
+    // Nếu trong môi trường TikTok Live Studio / HTTPS độc lập không có opener, blob từ máy host không tải được -> fallback sang server URL nếu có
+    if (typeof window !== 'undefined' && window.location.protocol === 'https:' && !window.opener && !trimmed.startsWith('data:')) {
+      try {
+        const savedLocked = localStorage.getItem('avalive_user_locked_media');
+        if (savedLocked && typeof savedLocked === 'string' && savedLocked.includes('/uploads/')) {
+          const cleanPath = savedLocked.substring(savedLocked.indexOf('/uploads/'));
+          if (activeTunnel && typeof activeTunnel === 'string' && activeTunnel.startsWith('http')) {
+            return `${activeTunnel.replace(/\/+$/, '')}${cleanPath}`;
+          }
+          return `${window.location.origin.replace(/\/+$/, '')}${cleanPath}`;
+        }
+      } catch (e) {}
+    }
+    return trimmed;
+  }
 
   // Nếu là relative path (/uploads/... hoặc uploads/...)
   if (trimmed.startsWith('/uploads/') || trimmed.startsWith('uploads/') || trimmed.startsWith('/api/')) {
