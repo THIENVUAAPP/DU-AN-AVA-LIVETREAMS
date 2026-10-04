@@ -419,7 +419,7 @@ function fillTemplate(template, vars = {}) {
     let currentMatchedSpecialGiftSlot = null;
     let currentMatchedCheckoutProduct = null;
     let isSpecialGift = false;
-    const rawUserName = (payload?.name || payload?.username || 'Bạn').trim();
+    const rawUserName = (payload?.name || payload?.nickname || payload?.username || payload?.user || payload?.author || 'Khán giả').trim();
     const userName = cleanUserNameForSpeech(rawUserName);
     const userDisplay = (userName === 'bạn' || userName === 'Bạn') ? 'bạn' : (userName.startsWith('bạn ') || userName.startsWith('anh ') || userName.startsWith('chị ') ? userName : `bạn ${userName}`);
 
@@ -457,7 +457,7 @@ function fillTemplate(template, vars = {}) {
     try {
       // 1. XỬ LÝ SỰ KIỆN BÌNH LUẬN (COMMENT) - BỘ NÃO AI GEMINI FLASH + QUY TRÌNH 4 BƯỚC
       if (type === 'COMMENT') {
-        const commentText = (payload?.text || payload?.comment || '').trim();
+        const commentText = (payload?.comment || payload?.text || payload?.message || payload?.content || payload?.commentText || '').trim();
         // CHỐNG LẶP: Không xử lý comment do chính AI tự động gửi lên!
         if (rawUserName === 'Trợ lý AvaLive' || rawUserName === 'AVA Live AI' || rawUserName === 'Hệ Thống' || payload?.isModerator === true) {
           return;
@@ -486,7 +486,7 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // 🎯 THU THẬP TẤT CẢ QUY TẮC TỪ KHÓA TỪ MỌI NGUỒN (ƯU TIÊN CAO NHẤT: TAB BÌNH LUẬN)
+        // 🎯 THU THẬP TẤT CẢ QUY TẮC TỪ KHÓA TỪ MỌI NGUỒN (ƯU TIÊN CAO NHẤT: FILE TẢI LÊN & TAB BÌNH LUẬN)
         const allKeywordRules = [];
         if (Array.isArray(commentConfig.keywordRules)) allKeywordRules.push(...commentConfig.keywordRules);
         try {
@@ -508,6 +508,20 @@ function fillTemplate(template, vars = {}) {
         try {
           const kwAnswers = JSON.parse(localStorage.getItem('aidol_keyword_answers') || '[]');
           if (Array.isArray(kwAnswers)) allKeywordRules.push(...kwAnswers);
+        } catch (e) {}
+        try {
+          const uploadedKws = JSON.parse(localStorage.getItem('aidol_uploaded_keywords') || '[]');
+          if (Array.isArray(uploadedKws)) allKeywordRules.push(...uploadedKws);
+        } catch (e) {}
+        try {
+          const fileKws = JSON.parse(localStorage.getItem('avalive_uploaded_file_keywords') || '[]');
+          if (Array.isArray(fileKws)) allKeywordRules.push(...fileKws);
+        } catch (e) {}
+        try {
+          const eventRules = JSON.parse(localStorage.getItem('aidol_event_configs') || '{}');
+          if (eventRules && eventRules.comment && Array.isArray(eventRules.comment.keywordRules)) {
+            allKeywordRules.push(...eventRules.comment.keywordRules);
+          }
         } catch (e) {}
         if (Array.isArray(scriptConfig.keywordRules)) allKeywordRules.push(...scriptConfig.keywordRules);
         if (Array.isArray(checkoutConfig.keywordRules)) allKeywordRules.push(...checkoutConfig.keywordRules);
@@ -799,11 +813,18 @@ function fillTemplate(template, vars = {}) {
         
         let repeatPrefix = '';
         if (commentConfig.repeatCommentPrefix && commentConfig.repeatCommentPrefix.trim()) {
-          repeatPrefix = fillTemplate(commentConfig.repeatCommentPrefix, { user: userName, comment: commentText }).trim();
+          repeatPrefix = fillTemplate(commentConfig.repeatCommentPrefix, { user: userName, comment: commentText, commentText }).trim();
+          if (commentText && !commentConfig.repeatCommentPrefix.includes('{comment}') && !commentConfig.repeatCommentPrefix.includes('[comment]')) {
+            repeatPrefix = `${repeatPrefix} đã bình luận là: ${commentText}.`;
+          }
         } else {
-          repeatPrefix = isQuestion
-            ? `Dạ em cảm ơn ${userSalutation} đã hỏi là: "${commentText}". `
-            : `Dạ em cảm ơn ${userSalutation} đã bình luận là: "${commentText}". `;
+          if (commentText) {
+            repeatPrefix = isQuestion
+              ? `Dạ em cảm ơn ${userSalutation} đã hỏi là: ${commentText}. `
+              : `Dạ em cảm ơn ${userSalutation} đã bình luận là: ${commentText}. `;
+          } else {
+            repeatPrefix = `Dạ em cảm ơn ${userSalutation} đã bình luận nha. `;
+          }
         }
 
         // Loại bỏ tiền tố cảm ơn lặp lại trong bodyAnswer nếu repeatPrefix đã thực hiện
@@ -1170,15 +1191,6 @@ function fillTemplate(template, vars = {}) {
             }
           ].slice(-20));
           if (onChatReply) onChatReply(chatText || replyText);
-          // ⚡ Bắn trực tiếp text lên màn hình Sân Khấu Chính bằng Overlay Text
-          syncMasterLiveState({
-            stage: 'idol',
-            overlayText: chatText || replyText,
-            overlayTextTransform: { x: 5, y: 75, width: 90, height: 20 },
-            overlayTextStyle: 'neon_cyber',
-            overlayTextFontSize: 18,
-            overlayTextColor: '#38bdf8'
-          });
         }
 
         if (shouldSpeakVoice && onVoiceReply) {

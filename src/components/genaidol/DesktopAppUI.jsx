@@ -5442,10 +5442,19 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   const handleFileUpload = async (e) => {
     const files = e.target.files;
     if (files && files.length > 0) {
+      setIsStageExplicitlyCleared(false);
+      try {
+        localStorage.removeItem('avalive_stage_disconnected');
+        localStorage.removeItem('avalive_all_streams_stopped');
+        localStorage.removeItem('avalive_stage_cleared');
+      } catch(err) {}
       await processBatchFiles(files);
     }
     if (fileInputRef.current) {
       fileInputRef.current.value = '';
+    }
+    if (e.target) {
+      try { e.target.value = ''; } catch(err) {}
     }
   };
 
@@ -6235,7 +6244,12 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
               Vui lòng tải lên hoặc chọn video / nhân vật ở thanh bên dưới để bắt đầu phát trực tiếp
             </p>
             <button
-              onClick={() => fileInputRef.current?.click()}
+              onClick={() => {
+                if (fileInputRef.current) {
+                  fileInputRef.current.value = '';
+                  fileInputRef.current.click();
+                }
+              }}
               className="mt-4 px-4 py-2 rounded-xl bg-gradient-to-r from-cyan-600 to-blue-600 hover:from-cyan-500 hover:to-blue-500 text-white font-bold text-xs shadow-lg shadow-cyan-500/30 flex items-center gap-2 cursor-pointer transition-all active:scale-95"
             >
               <Upload size={14} />
