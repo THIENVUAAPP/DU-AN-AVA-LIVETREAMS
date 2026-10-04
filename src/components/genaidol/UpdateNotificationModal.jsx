@@ -2,17 +2,13 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.63';
+export const APP_VERSION = '5.4.64';
 export const RELEASE_DATE = '04/10/2026';
 
 export const UPDATE_NOTES = [
   {
-    title: '⚡ Bản Cập Nhật v5.4.63 - CHUẨN HÓA QUY TRÌNH AI ĐỌC & PHẢN HỒI COMMENT THEO TỪ KHÓA & ĐỒNG BỘ 100% SÂN KHẤU CHÍNH SANG TIKTOK LIVE STUDIO (KHÔNG ĐEN MÀN HÌNH)',
-    description: '1. Chuẩn Hóa 100% Quy Trình 3 Bước AI Đọc & Phản Hồi Bình Luận Đúng Trọng Tâm: Bước 1: Cảm ơn đích danh người dùng và đọc lại chính xác câu bình luận ("Dạ em cảm ơn {user} đã hỏi/bình luận là: \'{comment}\'."). Bước 2: Rà soát toàn bộ bộ từ khóa & kịch bản người dùng đã cài đặt cấu hình sẵn/file tải lên. Nếu khớp từ khóa: trả lời chính xác câu phản hồi đã thiết lập ngay lập tức (thay thế {user}, {comment}, {product}), tuyệt đối KHÔNG gọi AI ngoài và KHÔNG hỏi lại lòng vòng. Bước 3: Nếu không khớp từ khóa: Gọi AI Gemini trả lời trực tiếp nội dung trọng tâm trong DUY NHẤT 1 câu ngắn gọn (10–15 từ), không lặp lại câu chào, không hỏi ngược lại người xem. 2. Đồng Bộ Toàn Bộ Dữ Liệu Sân Khấu Chính Sang TikTok Live Studio (Loại Bỏ Hoàn Toàn Lỗi Chỉ Có Tiếng Không Có Hình): Mọi video, hình ảnh, nhân vật avatar, PiP, banner từ sân khấu chính được giải mã trực tiếp qua HTTPS Cloudflare Tunnel siêu nét 60 FPS, không còn tình trạng đen màn hình. Loại bỏ hoàn toàn video cũ chạy nền không mong muốn. 3. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Và Module Khác.'
-  },
-  {
-    title: '⚡ Bản Cập Nhật v5.4.62 - KHÔI PHỤC HOÀN TOÀN TRẠNG THÁI GỐC v5.4.60 (COMMIT d22d876)',
-    description: '1. Khôi phục nguyên vẹn 100% toàn bộ mã nguồn, cấu hình, giao diện, quy trình đọc bình luận và luồng phát livestream từ commit d22d876 (v5.4.60) theo đúng yêu cầu người dùng. 2. Bảo toàn tuyệt đối mọi tính năng: hiển thị đầy đủ video và âm thanh TikTok Live Studio, loại bỏ hoàn toàn chớp nháy sân khấu chính khi tải video, đọc comment chuẩn theo từ khóa. 3. Khóa chặt 100% toàn bộ các tab và module hệ thống.'
+    title: '⚡ Bản Cập Nhật v5.4.64 - KHÔI PHỤC NGUYÊN VẸN 100% TRẠNG THÁI COMMIT d22d876 (v5.4.60)',
+    description: '1. Khôi phục hoàn toàn 100% toàn bộ mã nguồn, cấu hình, giao diện và chức năng từ commit d22d876 (v5.4.60). 2. Bảo toàn tuyệt đối mọi tính năng: hiển thị đầy đủ video và âm thanh trên TikTok Live Studio (không còn lỗi màn hình đen), tải video lên sân khấu chính & ô nhân vật tức thì 0ms không chớp nháy, đọc comment chuẩn xác theo tệp từ khóa và AI. 3. Khóa chặt 100% toàn bộ các tab và module hệ thống.'
   },
   {
     title: '⚡ Bản Cập Nhật v5.4.60 - HIỂN THỊ ĐẦY ĐỦ VIDEO + TIẾNG TIKTOK LIVE STUDIO, TẢI VIDEO LÊN SÂN KHẤU TỨC THÌ 0MS KHÔNG CHỚP NHÁY & ĐỌC COMMENT CHUẨN XÁC THEO FILE TỪ KHÓA',
