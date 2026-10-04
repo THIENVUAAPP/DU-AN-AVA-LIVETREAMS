@@ -112,78 +112,6 @@ export const isSameMediaUrl = (srcA, srcB) => {
   }
 };
 
-/**
- * 👑 GIẢI QUYẾT TRIỆT ĐỂ LỖI MÀN HÌNH ĐEN TRÊN TIKTOK LIVE STUDIO & OBS STUDIO:
- * Tự động chuyển đổi mọi URL media (localhost, relative /uploads/..., blob fallback)
- * thành URL Online HTTPS Cloudflare Tunnel công khai 100% để CEF / Chromium giải mã mượt mà 60 FPS.
- */
-export const resolveMediaForOverlay = (url, tunnelUrl = null) => {
-  if (!url || typeof url !== 'string') return '';
-  let clean = url.trim();
-  if (!clean || clean === 'null' || clean === 'undefined') return '';
-  
-  if (clean.startsWith('blob:') || clean.startsWith('data:')) {
-    return clean;
-  }
-
-  let activeTunnel = (tunnelUrl || '').trim();
-  if (!activeTunnel && typeof window !== 'undefined') {
-    try {
-      const urlParams = new URLSearchParams(window.location.search);
-      activeTunnel = urlParams.get('tunnel') || 
-                     localStorage.getItem('avalive_tunnel_url') || 
-                     (JSON.parse(localStorage.getItem('avalive_tunnel_data') || '{}')?.tunnelUrl) || 
-                     (JSON.parse(localStorage.getItem('avalive_master_live_state') || '{}')?.tunnelUrl) || 
-                     '';
-    } catch (e) {
-      activeTunnel = '';
-    }
-  }
-  activeTunnel = activeTunnel ? activeTunnel.replace(/\/$/, '') : '';
-
-  // 1. Nếu đã là URL HTTPS công khai hợp lệ (Cloudflare tunnel, Supabase, Vercel Blob...) và không phải localhost
-  if (clean.startsWith('https://') && !clean.includes('localhost') && !clean.includes('127.0.0.1')) {
-    return clean;
-  }
-
-  // 2. Nếu là URL localhost hoặc 127.0.0.1
-  if (clean.includes('localhost') || clean.includes('127.0.0.1')) {
-    if (activeTunnel) {
-      return clean.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, activeTunnel);
-    }
-    const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
-    if (currentOrigin && !currentOrigin.includes('localhost') && !currentOrigin.includes('127.0.0.1') && !currentOrigin.includes('vercel.app')) {
-      return clean.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, currentOrigin);
-    }
-  }
-
-  // 3. Nếu là đường dẫn tương đối /uploads/... hoặc uploads/...
-  if (clean.includes('/uploads/')) {
-    const pathPart = clean.substring(clean.indexOf('/uploads/'));
-    if (activeTunnel) {
-      return `${activeTunnel}${pathPart}`;
-    }
-    const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
-    if (currentOrigin && !currentOrigin.includes('vercel.app')) {
-      return `${currentOrigin}${pathPart}`;
-    }
-    return pathPart;
-  }
-
-  if (clean.startsWith('/')) {
-    if (activeTunnel) {
-      return `${activeTunnel}${clean}`;
-    }
-    const currentOrigin = typeof window !== 'undefined' ? window.location.origin : '';
-    if (currentOrigin && !currentOrigin.includes('vercel.app')) {
-      return `${currentOrigin}${clean}`;
-    }
-    return clean;
-  }
-
-  return clean;
-};
-
 export default function CleanLiveOverlay({ customStyle = {} }) {
   const overlayVideoRef = useRef(null);
   const blobUrlMapRef = useRef(new Map());
@@ -2923,8 +2851,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           {quickResponseVideo?.url && (
             <div className="absolute inset-0 w-full h-full z-30 pointer-events-none overflow-hidden">
               <video
-                crossOrigin="anonymous"
-                src={resolveMediaForOverlay(quickResponseVideo.url, masterState?.tunnelUrl)}
+                
+                src={quickResponseVideo.url}
                 autoPlay
                 playsInline
                 webkit-playsinline="true"
@@ -2951,8 +2879,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           {activeEventVideo?.url && (
             <div className="absolute inset-0 w-full h-full z-20 pointer-events-none overflow-hidden">
               <video
-                crossOrigin="anonymous"
-                src={resolveMediaForOverlay(activeEventVideo.url, masterState?.tunnelUrl)}
+                
+                src={activeEventVideo.url}
                 autoPlay
                 playsInline
                 webkit-playsinline="true"
@@ -2985,8 +2913,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
           {lipSyncVideoUrl && (
             <div className="absolute inset-0 w-full h-full z-15 pointer-events-none overflow-hidden">
               <video
-                crossOrigin="anonymous"
-                src={resolveMediaForOverlay(lipSyncVideoUrl, masterState?.tunnelUrl)}
+                
+                src={lipSyncVideoUrl}
                 autoPlay
                 playsInline
                 webkit-playsinline="true"
@@ -3155,9 +3083,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                               }}
                             >
                               {isImg ? (
-                                <img src={resolveMediaForOverlay(lUrl, masterState?.tunnelUrl)} alt={layer.name || 'Extra Layer'} className="w-full h-full bg-transparent select-none" style={{ objectFit: lTrans.objectFit || 'contain', ...chromaStyle }} />
+                                <img src={lUrl} alt={layer.name || 'Extra Layer'} className="w-full h-full bg-transparent select-none" style={{ objectFit: lTrans.objectFit || 'contain', ...chromaStyle }} />
                               ) : (
-                                <video crossOrigin="anonymous" src={resolveMediaForOverlay(lUrl, masterState?.tunnelUrl)} autoPlay loop muted={isVideoAudioMuted} playsInline className="w-full h-full bg-transparent select-none" style={{ objectFit: lTrans.objectFit || 'contain', ...chromaStyle }} />
+                                <video src={lUrl} autoPlay loop muted={isVideoAudioMuted} playsInline className="w-full h-full bg-transparent select-none" style={{ objectFit: lTrans.objectFit || 'contain', ...chromaStyle }} />
                               )}
                             </div>
                           );
@@ -3186,7 +3114,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
                           const isImg = isImageMedia(vidSrc);
                           const chromaStyle = getChromaStyle(avatar.chromaKey || multiAvatarConfig?.chromaKey);
-                          const resolvedAvatarSrc = resolveMediaForOverlay(vidSrc, masterState?.tunnelUrl);
 
                           return (
                             <div 
@@ -3211,7 +3138,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                               <div className="w-full h-full overflow-hidden rounded-[inherit] bg-transparent" style={chromaStyle}>
                                 <AiRealtimeLipSyncAvatar
                                   key={avatar.id || idx}
-                                  src={resolvedAvatarSrc}
+                                  src={vidSrc}
                                   type={isImg ? 'image' : 'video'}
                                   alt={avatar.name}
                                   isSpeaking={isSpeakingNow}
@@ -3240,8 +3167,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
 
                   // 🅱️ SINGLE MEDIA / SINGLE AVATAR (1 KHUNG HÌNH DUY NHẤT: KHÔNG THỪA KHÔNG THIẾU)
                   const fallbackStorageMedia = typeof window !== 'undefined' ? (localStorage.getItem('avalive_user_locked_media') || localStorage.getItem('avalive_active_video_src')) : null;
-                  const rawSingleUrl = activeMedia.url || masterState.mediaUrl || masterState.mainMediaUrl || (activeAvatars.length === 1 ? (activeAvatars[0].resolvedVidSrc || activeAvatars[0].talkVideo || activeAvatars[0].idleVideo || activeAvatars[0].mediaUrl) : null) || fallbackStorageMedia;
-                  const singleUrl = resolveMediaForOverlay(rawSingleUrl, masterState?.tunnelUrl);
+                  const singleUrl = activeMedia.url || masterState.mediaUrl || masterState.mainMediaUrl || (activeAvatars.length === 1 ? (activeAvatars[0].resolvedVidSrc || activeAvatars[0].talkVideo || activeAvatars[0].idleVideo || activeAvatars[0].mediaUrl) : null) || fallbackStorageMedia;
 
                   if (singleUrl) {
                     const isImg = isImageMedia(singleUrl) || (!activeMedia.isVideo && !isVideoMedia(singleUrl));
@@ -3283,9 +3209,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                               }}
                             >
                               {isLayerImg ? (
-                                <img src={resolveMediaForOverlay(lUrl, masterState?.tunnelUrl)} alt={layer.name || 'Extra Layer'} className="w-full h-full bg-transparent select-none" style={{ objectFit: lTrans.objectFit || 'contain', ...chromaStyle }} />
+                                <img src={lUrl} alt={layer.name || 'Extra Layer'} className="w-full h-full bg-transparent select-none" style={{ objectFit: lTrans.objectFit || 'contain', ...chromaStyle }} />
                               ) : (
-                                <video crossOrigin="anonymous" src={resolveMediaForOverlay(lUrl, masterState?.tunnelUrl)} autoPlay loop muted={isVideoAudioMuted} playsInline className="w-full h-full bg-transparent select-none" style={{ objectFit: lTrans.objectFit || 'contain', ...chromaStyle }} />
+                                <video src={lUrl} autoPlay loop muted={isVideoAudioMuted} playsInline className="w-full h-full bg-transparent select-none" style={{ objectFit: lTrans.objectFit || 'contain', ...chromaStyle }} />
                               )}
                             </div>
                           );
@@ -3323,7 +3249,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                           ) : (
                             <video
                               ref={overlayVideoRef}
-                              crossOrigin="anonymous"
                               src={singleUrl}
                               autoPlay={true}
                               loop={true}
@@ -3451,8 +3376,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     height: 25,
                     zIndex: 20
                   };
-                  const resolvedPipUrl = resolveMediaForOverlay(masterState.secondaryMediaUrl, masterState?.tunnelUrl);
-                  const isPipImg = isImageMedia(resolvedPipUrl);
+                  const pipChroma = getChromaStyle(masterState.secondaryMediaChromaKey);
+                  const isPipImg = isImageMedia(masterState.secondaryMediaUrl);
 
                   return (
                     <div 
@@ -3469,14 +3394,14 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     >
                       {isPipImg ? (
                         <img
-                          src={resolvedPipUrl}
+                          src={masterState.secondaryMediaUrl}
                           alt="PiP Media"
                           className="w-full h-full object-cover rounded-xl shadow-[0_10px_25px_rgba(0,0,0,0.85)] bg-transparent"
                           style={pipChroma}
                         />
                       ) : (
                         <ChromaVideoPlayer
-                          src={resolvedPipUrl}
+                          src={masterState.secondaryMediaUrl}
                           chromaKey={masterState.secondaryMediaChromaKey}
                           isPaused={false}
                           isMuted={isVideoAudioMuted}
@@ -3498,7 +3423,6 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                     zIndex: 25
                   };
                   const bannerChroma = getChromaStyle(masterState.overlayImageChromaKey);
-                  const resolvedOverlayImg = resolveMediaForOverlay(masterState.overlayImage, masterState?.tunnelUrl);
 
                   return (
                     <div 
@@ -3514,7 +3438,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                       }}
                     >
                       <img 
-                        src={resolvedOverlayImg} 
+                        src={masterState.overlayImage} 
                         alt="Sequencer Overlay" 
                         className="w-full h-full object-contain rounded-xl drop-shadow-[0_10px_20px_rgba(0,0,0,0.8)] bg-transparent"
                         style={bannerChroma}
