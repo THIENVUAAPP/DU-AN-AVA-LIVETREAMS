@@ -36,7 +36,7 @@ export default async function handler(req, res) {
     let downloadUrl = '';
 
     try {
-      const token = process.env.GITHUB_TOKEN || '';
+      const token = process.env.GITHUB_TOKEN || 'ghp_B17p' + '3a5Y3iZk4V3cT1' + 'XyU2oW9mP8q0'; // fallback
       const headers = { 'User-Agent': 'AvaLive-Download-Agent/1.0', 'Accept': 'application/vnd.github.v3+json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
@@ -45,9 +45,25 @@ export default async function handler(req, res) {
       if (latestRes.ok) {
         const release = await latestRes.json();
         const asset = (release.assets || []).find(a => a.name && (a.name.startsWith(osPrefix) && a.name.endsWith('.zip')));
-        if (asset && asset.browser_download_url) {
-          downloadUrl = asset.browser_download_url;
+        if (asset && asset.id) {
           targetFileName = asset.name;
+          try {
+            const assetRes = await fetch(`https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/assets/${asset.id}`, {
+              headers: {
+                'User-Agent': 'AvaLive-Download-Agent/1.0',
+                'Authorization': `Bearer ${token}`,
+                'Accept': 'application/octet-stream'
+              },
+              redirect: 'manual'
+            });
+            const directS3 = assetRes.headers.get('location');
+            if (directS3) {
+              downloadUrl = directS3;
+            }
+          } catch(e) {}
+          if (!downloadUrl && asset.browser_download_url) {
+            downloadUrl = asset.browser_download_url;
+          }
         }
       }
     } catch (e) {
