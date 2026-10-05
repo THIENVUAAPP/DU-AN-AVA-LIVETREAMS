@@ -243,7 +243,12 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
       role: effectiveRole,
       voiceId: effectiveVoiceId
     }));
-    syncConfig({ keywordRules: [...mapped, ...keywordRules] });
+    const nextRules = [...mapped, ...keywordRules];
+    syncConfig({ keywordRules: nextRules });
+    try {
+      localStorage.setItem('avalive_uploaded_file_keywords', JSON.stringify(nextRules));
+      localStorage.setItem('aidol_uploaded_keywords', JSON.stringify(nextRules));
+    } catch (e) {}
     setShowBulkRuleModal(false);
     setBulkRuleText('');
     alert(`Đã nạp thành công ${mapped.length} quy tắc từ khóa với giọng đọc: ${effectiveVoiceId || effectiveRole}!`);

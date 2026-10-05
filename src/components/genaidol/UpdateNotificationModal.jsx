@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.76';
+export const APP_VERSION = '5.4.77';
 export const RELEASE_DATE = '05/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.77 - COMMENT THỰC TẾ LÀ ĐẦU VÀO DUY NHẤT & KHÓA CỨNG PIPELINE ƯU TIÊN FILE TỪ KHÓA',
+    description: '1. Comment Thực Tế Là Dữ Liệu Đầu Vào Duy Nhất: Đọc chính xác 100% tên USER và nội dung comment nguyên bản từ luồng TikTok Live. 2. File Đã Tải Lên Là Nguồn Dữ Liệu Ưu Tiên Cao Nhất: Truy xuất và đối chiếu toàn bộ từ khóa từ file tải lên (.txt, .docx, .pdf, .csv, .md), tab Từ khóa, kịch bản trước khi tự trả lời. 3. So Khớp Toàn Bộ Comment: Kiểm tra chính xác, có dấu/không dấu, hoa/thường, cụm từ, teencode và biến thể hợp lý. 4. Khớp Từ Khóa → Dừng Ngay AI: Lấy đúng câu phản hồi đã cấu hình trong file tương ứng (Chào tên USER → Nhắc/xác nhận comment → Phản hồi theo file). 5. Nếu Không Khớp File Mới Gọi AI: AI Gemini trả lời trực tiếp trong 1 câu ngắn (10-15 từ), tuyệt đối không chèn bán hàng nếu comment không hỏi. 6. Nếu AI Không Hiểu → Bộ Phản Hồi Dự Phòng. 7. Khóa chặt 100% toàn bộ các tab và module hệ thống.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.76 - ƯU TIÊN 100% BỘ TỪ KHÓA & FILE MẪU CẤU HÌNH TRƯỚC KHI GỌI AI PHẢN HỒI COMMENT',
     description: '1. Ưu Tiên Tuyệt Đối 100% Bộ Từ Khóa Cài Đặt Sẵn & File Mẫu: Hệ thống quét toàn bộ từ khóa tùy chỉnh, quy tắc nhanh, kịch bản và các file mẫu người dùng tải lên (.txt, .docx, .pdf, .csv, .md), chuẩn hóa ngữ nghĩa và từ viết tắt/teencode. Nếu comment khớp từ khóa, lập tức phản hồi đúng câu trả lời đã thiết lập (thay {user}, {comment}, {product}), tuyệt đối KHÔNG gọi AI, KHÔNG hỏi lại lòng vòng. 2. BƯỚC 1 (Nhận Diện & Mở Đầu Chuẩn Xác): Đọc chính xác tên USER và nhắc lại/xác nhận chuẩn xác nội dung câu hỏi/bình luận của người xem. 3. BƯỚC 3 (AI Tự Phân Tích Thông Minh Trong 1 Câu Ngắn Gọn): Chỉ khi không có từ khóa nào khớp trong Bước 2, AI Gemini mới phân tích ngữ cảnh để trả lời ngắn gọn trong 1 câu (10-15 từ), TUYỆT ĐỐI KHÔNG chèn bán hàng nếu người xem không hỏi về sản phẩm. 4. BƯỚC 4 (Phản Hồi Dự Phòng Chuẩn Xác): Tự động dùng câu phản hồi dự phòng cấu hình sẵn nếu AI gặp lỗi. 5. Khóa chặt 100% toàn bộ các tab và module hệ thống.'

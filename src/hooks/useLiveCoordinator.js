@@ -7,6 +7,7 @@ import { isSmartSpamOrToxicComment, cleanUserNameForSpeech, isMeaningfulCommerci
 import { syncMasterLiveState, sendVideoControl } from '../lib/masterLiveSync';
 import { ensureServerMediaUrl } from '../utils/mediaUploadService';
 import { DEFAULT_140_KEYWORD_RULES } from '../utils/defaultSampleKeywordRules';
+import { parseUniversalRulePairs } from '../utils/universalDocumentParser';
 
 export function useLiveCoordinator({ isConnected, onVoiceReply, onChatReply, activeBrainPack = 'talk' }) {
   const [liveMedia, setLiveMedia] = useState([]);
@@ -487,7 +488,7 @@ function fillTemplate(template, vars = {}) {
           }
         }
 
-        // 🎯 THU THẬP TẤT CẢ QUY TẮC TỪ KHÓA TỪ MỌI NGUỒN (ƯU TIÊN CAO NHẤT: FILE TẢI LÊN & TAB BÌNH LUẬN)
+        // 🎯 THU THẬP TẤT CẢ QUY TẮC TỪ KHÓA TỪ MỌI NGUỒN (ƯU TIÊN SỐ 1: FILE TẢI LÊN & TAB BÌNH LUẬN)
         const allKeywordRules = [];
         
         // 1. Tệp từ khóa tải lên từ file mẫu (.txt, .docx, .pdf, .csv, .md)
@@ -498,6 +499,15 @@ function fillTemplate(template, vars = {}) {
         try {
           const uploadedKws = JSON.parse(localStorage.getItem('aidol_uploaded_keywords') || '[]');
           if (Array.isArray(uploadedKws)) allKeywordRules.push(...uploadedKws);
+        } catch (e) {}
+        try {
+          const rawKnowledge = localStorage.getItem('aidol_company_knowledge_text') || scriptConfig.companyKnowledgeText || checkoutConfig.companyKnowledgeText;
+          if (rawKnowledge && typeof rawKnowledge === 'string' && rawKnowledge.length > 10) {
+            const parsedKnowledgePairs = parseUniversalRulePairs(rawKnowledge);
+            if (Array.isArray(parsedKnowledgePairs) && parsedKnowledgePairs.length > 0) {
+              allKeywordRules.push(...parsedKnowledgePairs);
+            }
+          }
         } catch (e) {}
 
         // 2. Quy tắc người dùng cài đặt trong Tab Bình luận & Kịch bản
@@ -699,23 +709,24 @@ function fillTemplate(template, vars = {}) {
 
         // -------------------------------------------------------------------------
         // 👑 BƯỚC 1 — NHẬN DIỆN VÀ MỞ ĐẦU PHẢN HỒI:
-        // Hệ thống đọc chính xác comment và nhận diện tên USER.
+        // Hệ thống đọc chính xác comment và nhận diện tên USER thực tế từ luồng TikTok Live.
         // Phản hồi LUÔN BẮT ĐẦU bằng việc chào tên USER, sau đó nhắc lại hoặc xác nhận
-        // nội dung comment mà USER vừa gửi. Không được bỏ qua tên USER hoặc nội dung comment chuẩn xác.
+        // nội dung comment nguyên bản của USER: CHÀO TÊN USER → NHẮC/XÁC NHẬN COMMENT.
         // -------------------------------------------------------------------------
         const isQuestion = commentText.includes('?') || 
           /^(ai|sao|gì|đâu|nào|bao nhiêu|thế nào|không|hả|chưa|khi nào|bao giờ|mấy|cho hỏi|em ơi|shop ơi|giá|bn|ib|có|được)/i.test(commentText) ||
           /(không|ko|hả|chưa|nhỉ|nhé|ạ|sao)\?*$/i.test(commentText);
         
-        const actionVerb = isQuestion ? 'đã hỏi là' : 'vừa bình luận là';
+        const actionVerb = isQuestion ? 'đang hỏi là' : 'vừa bình luận là';
         let step1Intro = '';
         if (commentConfig.repeatCommentPrefix && commentConfig.repeatCommentPrefix.trim()) {
           step1Intro = fillTemplate(commentConfig.repeatCommentPrefix, { user: userSalutation, comment: commentText, commentText }).trim();
           if (commentText && !commentConfig.repeatCommentPrefix.includes('{comment}') && !commentConfig.repeatCommentPrefix.includes('[comment]')) {
-            step1Intro = `${step1Intro} ${actionVerb}: "${commentText}".`;
+            step1Intro = `${step1Intro} Em thấy mình ${actionVerb}: "${commentText}".`;
           }
         } else {
-          step1Intro = `Dạ em chào ${userSalutation}, em đã nhận được ${isQuestion ? 'câu hỏi' : 'bình luận'} của mình là: "${commentText}".`;
+          // Cấu trúc chuẩn: "Chào [Tên USER] nha! Em thấy mình đang hỏi "[COMMENT CỦA USER]"."
+          step1Intro = `Chào ${userSalutation} nha! Em thấy mình ${actionVerb} "${commentText}".`;
         }
 
         // -------------------------------------------------------------------------
