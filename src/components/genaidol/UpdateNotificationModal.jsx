@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.74';
+export const APP_VERSION = '5.4.75';
 export const RELEASE_DATE = '05/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.75 - XÂY DỰNG HỆ THỐNG AI PHẢN HỒI COMMENT TIKTOK LIVE THEO ĐÚNG 4 TẦNG ƯU TIÊN',
+    description: '1. BƯỚC 1 (Nhận Diện & Mở Đầu): Hệ thống đọc chính xác comment và nhận diện tên USER, luôn bắt đầu bằng việc chào tên USER và nhắc lại/xác nhận chuẩn xác nội dung comment đã gửi. 2. BƯỚC 2 (Kiểm Tra Từ Khóa Đã Cài Đặt & File Tải Lên): Đối chiếu toàn bộ từ khóa từ file mẫu tải lên và cấu hình, hỗ trợ ngữ nghĩa/không dấu/có dấu/biến thể. Khớp từ khóa là ưu tiên tuyệt đối dùng câu phản hồi cấu hình sẵn, không tự tạo câu mới. 3. BƯỚC 3 (AI Tự Phân Tích & Trả Lời): Nếu không khớp từ khóa, AI Gemini phân tích ngữ cảnh trả lời ngắn gọn, thông minh, bám sát trực tiếp trong 1 câu 10-15 từ, TUYỆT ĐỐI KHÔNG nói về sản phẩm nếu comment không hỏi về sản phẩm/bán hàng. 4. BƯỚC 4 (Phản Hồi Dự Phòng): Nếu AI không hiểu/lỗi, chuyển sang bộ câu phản hồi dự phòng cấu hình sẵn, không đoán bừa. 5. Khóa chặt 100% tất cả các tab và module hệ thống.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.74 - KHỞI ĐỘNG PHẦN MỀM HIỂN THỊ TỨC THÌ 0MS KHI GIẢI NÉN (WINDOWS & MAC)',
     description: '1. Khắc Phục Triệt Để Lỗi Bấm Khởi Động Không Hiển Thị Phần Mềm: Tối ưu toàn diện 3 bộ Launcher khởi chạy độc lập (1_KHOI_DONG_AVALIVE.exe, 1_CLICK_CHAY_NGAY.bat, 1_Khoi_Dong_AvaLive.vbs và 1_Khoi_Dong_AvaLive_Mac.command), tự động giải phóng cổng chiếm dụng, chạy Backend Node Portable ngầm ổn định và kích hoạt giao diện trình duyệt / App Mode ngay tức thì 0ms mà không bị đóng tiến trình. 2. Đồng Bộ Tự Động Toàn Bộ File Cài Đặt Tải Về Mới Nhất v5.4.74: Phục vụ trực tiếp từ GitHub Releases và đĩa nội bộ với Zero Cache. 3. Bảo Toàn 100% Toàn Bộ Các Tab và Module Hệ Thống.'

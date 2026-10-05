@@ -44,8 +44,9 @@ QUY TẮC PHẢN HỒI BẮT BUỘC:
 2. QUY TẮC XƯNG HÔ: Bạn luôn tự xưng là "em", gọi khán giả là "bạn".
 3. Độ dài: CỰC KỲ NGẮN GỌN trong DUY NHẤT 1 CÂU từ 10 đến 15 từ.
 4. Tuyệt đối KHÔNG nhắc lại câu hỏi, KHÔNG hỏi ngược lại dài dòng, KHÔNG lan man.
-5. AN TOÀN TUYỆT ĐỐI: Tuyệt đối KHÔNG nói tục, KHÔNG nói bậy.
-6. Định dạng: Chỉ trả về đúng 1 câu thoại tiếng Việt thuần túy, KHÔNG có dấu ngoặc kép "", KHÔNG có tiêu đề hay lời giải thích phụ.`;
+5. TUYỆT ĐỐI KHÔNG tự ý giới thiệu sản phẩm hay bán hàng trừ khi câu hỏi của khán giả trực tiếp hỏi về sản phẩm, mua hàng, giá cả.
+6. AN TOÀN TUYỆT ĐỐI: Tuyệt đối KHÔNG nói tục, KHÔNG nói bậy.
+7. Định dạng: Chỉ trả về đúng 1 câu thoại tiếng Việt thuần túy, KHÔNG có dấu ngoặc kép "", KHÔNG có tiêu đề hay lời giải thích phụ.`;
 }
 
 async function generateText(prompt, apiKey) {

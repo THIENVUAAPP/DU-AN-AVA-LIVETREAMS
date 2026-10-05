@@ -29,12 +29,12 @@ function generateContextualFallbackReply({ question = '', username = 'bạn', ro
     return `Em cảm ơn lời khen cực kỳ dễ thương của bạn nha!`;
   }
 
-  // Câu trả lời giao tiếp thông minh tổng quát ngắn gọn 10-15 từ
+  // Câu trả lời giao tiếp thông minh tổng quát ngắn gọn 10-15 từ (Tuyệt đối không ép bán hàng)
   const smartGenericReplies = [
-    `Dạ sản phẩm đang có sẵn và rất nhiều ưu đãi trong giỏ hàng, mình bấm đặt ngay nha!`,
-    `Dạ đúng rồi bạn nha, sản phẩm chính hãng chất lượng cao đang được ưu đãi tốt nhất hôm nay ạ!`,
-    `Dạ shop em hỗ trợ giao hàng tận nơi và tư vấn chi tiết cho mình ngay nhé!`,
-    `Dạ bạn yên tâm nha, shop cam kết chất lượng chính hãng và bảo hành đầy đủ ạ!`
+    `Dạ em cảm ơn ${user} đã tương tác và gửi bình luận trong phiên live của em nha!`,
+    `Dạ em rất vui được đồng hành cùng ${user} hôm nay, chúc bạn xem live thật vui vẻ ạ!`,
+    `Dạ em đã ghi nhận ý kiến của ${user} rồi ạ, cảm ơn bạn rất nhiều!`,
+    `Dạ vâng đúng rồi bạn nha, cảm ơn ${user} đã chia sẻ cùng phòng live ạ!`
   ];
   return smartGenericReplies[Math.floor(Math.random() * smartGenericReplies.length)];
 }
