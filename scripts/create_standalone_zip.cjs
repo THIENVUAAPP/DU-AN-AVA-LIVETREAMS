@@ -112,7 +112,7 @@ HỖ TRỢ KỸ THUẬT 24/7: support@avalive.com | Website: https://avalivepro.
 =================================================================
 `;
 
-// Tạo Batch Launcher 1-Click duy nhất cho Windows (Bao gồm fallback nếu EXE bị chặn)
+// Tạo Batch Launcher 1-Click duy nhất cho Windows
 const winBatLauncher = `@echo off
 chcp 65001 >nul
 title AvaLive VIP PRO - Livestream Studio AI
@@ -134,11 +134,11 @@ set "NODE_BIN=%~dp0system\\node_portable\\node.exe"
 if not exist "%NODE_BIN%" set "NODE_BIN=node"
 
 cd /d "%~dp0system"
-start "" /B "%NODE_BIN%" core.cjs > server_log.txt 2>&1
+start "AvaLive_Server_Core" /min "%NODE_BIN%" core.cjs
 cd /d "%~dp0"
 
 :: 3. Cho server san sang tren cong 3001 (Polling kiem tra san sang)
-set "URL=http://localhost:3001/desktop"
+set "URL=http://localhost:3001"
 set /a attempts=0
 
 :WAIT_LOOP
@@ -146,48 +146,50 @@ set /a attempts+=1
 timeout /t 1 /nobreak >nul 2>nul
 netstat -aon 2>nul | findstr ":3001" | findstr "LISTENING" >nul 2>nul
 if %ERRORLEVEL% equ 0 goto OPEN_APP
-if %attempts% geq 20 goto OPEN_APP
+if %attempts% geq 15 goto OPEN_APP
 goto WAIT_LOOP
 
 :OPEN_APP
 echo ✅ May chu da san sang! Dang mo giao dien ung dung...
 
-if exist "%ProgramFiles(x86)%\\Microsoft\\Edge\\Application\\msedge.exe" (
-    start "" "%ProgramFiles(x86)%\\Microsoft\\Edge\\Application\\msedge.exe" --app=%URL%
-    exit /b
-)
 if exist "%ProgramFiles%\\Microsoft\\Edge\\Application\\msedge.exe" (
-    start "" "%ProgramFiles%\\Microsoft\\Edge\\Application\\msedge.exe" --app=%URL%
-    exit /b
+    start "" "%ProgramFiles%\\Microsoft\\Edge\\Application\\msedge.exe" --app=%URL% --start-maximized
+    goto DONE
+)
+if exist "%ProgramFiles(x86)%\\Microsoft\\Edge\\Application\\msedge.exe" (
+    start "" "%ProgramFiles(x86)%\\Microsoft\\Edge\\Application\\msedge.exe" --app=%URL% --start-maximized
+    goto DONE
 )
 if exist "%ProgramFiles%\\Google\\Chrome\\Application\\chrome.exe" (
-    start "" "%ProgramFiles%\\Google\\Chrome\\Application\\chrome.exe" --app=%URL%
-    exit /b
-)
-if exist "%ProgramFiles(x86)%\\Google\\Chrome\\Application\\chrome.exe" (
-    start "" "%ProgramFiles(x86)%\\Google\\Chrome\\Application\\chrome.exe" --app=%URL%
-    exit /b
+    start "" "%ProgramFiles%\\Google\\Chrome\\Application\\chrome.exe" --app=%URL% --start-maximized
+    goto DONE
 )
 if exist "%LOCALAPPDATA%\\Google\\Chrome\\Application\\chrome.exe" (
-    start "" "%LOCALAPPDATA%\\Google\\Chrome\\Application\\chrome.exe" --app=%URL%
-    exit /b
+    start "" "%LOCALAPPDATA%\\Google\\Chrome\\Application\\chrome.exe" --app=%URL% --start-maximized
+    goto DONE
 )
 if exist "%LOCALAPPDATA%\\CocCoc\\Browser\\Application\\browser.exe" (
-    start "" "%LOCALAPPDATA%\\CocCoc\\Browser\\Application\\browser.exe" --app=%URL%
-    exit /b
-)
-if exist "%ProgramFiles%\\CocCoc\\Browser\\Application\\browser.exe" (
-    start "" "%ProgramFiles%\\CocCoc\\Browser\\Application\\browser.exe" --app=%URL%
-    exit /b
-)
-if exist "%ProgramFiles(x86)%\\CocCoc\\Browser\\Application\\browser.exe" (
-    start "" "%ProgramFiles(x86)%\\CocCoc\\Browser\\Application\\browser.exe" --app=%URL%
-    exit /b
+    start "" "%LOCALAPPDATA%\\CocCoc\\Browser\\Application\\browser.exe" --app=%URL% --start-maximized
+    goto DONE
 )
 
+:: Fallback trình duyệt mặc định trên máy
 start "" "%URL%"
+
+:DONE
+echo.
+echo =========================================================
+echo 🎉 AVALIVE STUDIO DA KHOI DONG THANH CONG!
+echo 🌐 Giao dien dang chay tai: %URL%
+echo =========================================================
+timeout /t 2 >nul 2>nul
 exit /b
 `.split('\n').join('\r\n');
+
+// VBS Launcher để chạy ẩn không chớp màn hình đen CMD
+const winVbsLauncher = `Set WshShell = CreateObject("WScript.Shell")
+WshShell.Run "cmd.exe /c 1_CLICK_CHAY_NGAY.bat", 0, False
+`;
 
 // 3. ĐÓNG GÓI BẢN WINDOWS
 console.log('\n[3/4] Đang đóng gói bản Windows an toàn & bảo mật...');
@@ -258,6 +260,9 @@ fs.copyFileSync(cachedExe, path.join(winStaging, '1_KHOI_DONG_AVALIVE.exe'));
 // File BAT 1-Click dự phòng cực nhanh & tin cậy
 fs.writeFileSync(path.join(winStaging, '1_CLICK_CHAY_NGAY.bat'), winBatLauncher);
 
+// File VBS 1-Click khởi chạy siêu êm
+fs.writeFileSync(path.join(winStaging, '1_Khoi_Dong_AvaLive.vbs'), winVbsLauncher);
+
 // File Hướng dẫn sử dụng
 fs.writeFileSync(path.join(winStaging, 'HUONG_DAN_SU_DUNG.txt'), huongDanContent);
 
@@ -314,7 +319,7 @@ echo ""
 [ -f "$HOME/.bash_profile" ] && source "$HOME/.bash_profile" 2>/dev/null || true
 [ -f "$HOME/.bashrc" ] && source "$HOME/.bashrc" 2>/dev/null || true
 
-export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/local/sbin:$HOME/.nvm/versions/node/$(ls -t "$HOME/.nvm/versions/node" 2>/dev/null | head -n 1)/bin:$HOME/.volta/bin:$HOME/.fnm/current/bin:$HOME/.cargo/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
+export PATH="/opt/homebrew/bin:/opt/homebrew/sbin:/usr/local/bin:/usr/local/sbin:$HOME/.nvm/versions/node/$(ls -t "$HOME/.nvm/versions/node" 2>/dev/null | head -n 1)/bin:$HOME/.volta/bin:$HOME/.fnm/current/bin:$HOME/.asdf/shims:$HOME/.cargo/bin:/usr/bin:/bin:/usr/sbin:/sbin:$PATH"
 
 # 2. Tự động đóng tiến trình cũ đang chiếm cổng 3001 nếu có
 if command -v lsof &>/dev/null; then
@@ -354,12 +359,12 @@ do
     fi
 done
 
-# 5. Theo dõi máy chủ sẵn sàng và tự động mở trình duyệt
+# 5. Theo dõi máy chủ sẵn sàng và tự động mở trình duyệt tức thì 0ms
 (
-    APP_URL="http://127.0.0.1:3001/desktop"
-    for i in {1..50}; do
+    APP_URL="http://127.0.0.1:3001"
+    for i in {1..30}; do
         if curl -s -o /dev/null -w "%{http_code}" "http://127.0.0.1:3001" 2>/dev/null | grep -qE "200|304|302|301"; then
-            echo "✨ Máy chủ đã sẵn sàng! Đang mở giao diện điều khiển..."
+            echo "✨ Máy chủ đã sẵn sàng! Đang mở giao diện AvaLive..."
             if [ -d "/Applications/Google Chrome.app" ]; then
                 open -na "Google Chrome" --args --app="$APP_URL" 2>/dev/null || open "$APP_URL"
             elif [ -d "/Applications/Microsoft Edge.app" ]; then
@@ -369,8 +374,9 @@ done
             fi
             exit 0
         fi
-        sleep 0.4
+        sleep 0.3
     done
+    open "$APP_URL" 2>/dev/null || true
 ) &
 
 # 6. Khởi động Server Node.js Core
@@ -383,13 +389,8 @@ if [ -n "$NODE_CMD" ] && [ -f "core.cjs" ]; then
 else
     echo "⚠️ ==========================================================="
     echo "❌ LỖI: CHƯA CÀI ĐẶT NODE.JS HOẶC BẢN HIỆN TẠI DƯỚI v18!"
-    echo "👉 Ứng dụng AvaLive Studio yêu cầu Node.js v18 trở lên."
-    echo "👉 Đang tự động mở trang web https://nodejs.org/ để bạn tải bản LTS..."
-    echo "👉 Sau khi cài đặt Node.js xong, hãy nhấp đúp lại vào file này."
+    echo "👉 Đang tự động mở bản trực tuyến AvaLive VIP PRO trên trình duyệt..."
     echo "==========================================================="
-    open "https://nodejs.org/" 2>/dev/null || true
-    echo ""
-    read -p "Nhấn Enter để mở bản trực tuyến trên Web (Vercel)..."
     open "https://avalivepro.vercel.app" 2>/dev/null || true
 fi
 `;

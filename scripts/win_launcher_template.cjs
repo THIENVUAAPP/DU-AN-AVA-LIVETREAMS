@@ -38,22 +38,22 @@ try {
 
 // 3. Khởi chạy Backend Core ngầm siêu tốc
 const nodeBin = fs.existsSync(nodeExe) ? nodeExe : 'node';
-const logFile = path.join(systemDir, 'server_log.txt');
-let logFd;
 try {
-  logFd = fs.openSync(logFile, 'a');
-} catch (e) {}
+  const child = spawn(nodeBin, ['core.cjs'], {
+    cwd: systemDir,
+    detached: true,
+    stdio: 'ignore',
+    windowsHide: true
+  });
+  child.unref();
+} catch (e) {
+  try {
+    execSync(`start "" /min "${nodeBin}" core.cjs`, { cwd: systemDir, shell: 'cmd.exe' });
+  } catch (e2) {}
+}
 
-const child = spawn(nodeBin, ['core.cjs'], {
-  cwd: systemDir,
-  detached: true,
-  stdio: logFd ? ['ignore', logFd, logFd] : 'ignore',
-  windowsHide: true
-});
-child.unref();
-
-// 4. Kiểm tra cổng 3001 phản hồi HTTP trước khi mở giao diện (Tránh tuyệt đối lỗi ERR_CONNECTION_REFUSED)
-const targetUrl = 'http://localhost:3001/desktop';
+// 4. Mở giao diện ngay lập tức 0ms
+const targetUrl = 'http://localhost:3001';
 
 function openBrowser() {
   const edge = 'C:\\Program Files (x86)\\Microsoft\\Edge\\Application\\msedge.exe';
@@ -65,30 +65,35 @@ function openBrowser() {
   const coccoc64 = 'C:\\Program Files\\CocCoc\\Browser\\Application\\browser.exe';
   const coccoc86 = 'C:\\Program Files (x86)\\CocCoc\\Browser\\Application\\browser.exe';
 
-  if (fs.existsSync(edge)) {
-    spawn(edge, [`--app=${targetUrl}`], { detached: true, stdio: 'ignore' }).unref();
-  } else if (fs.existsSync(edge64)) {
-    spawn(edge64, [`--app=${targetUrl}`], { detached: true, stdio: 'ignore' }).unref();
+  let launchedApp = false;
+  if (fs.existsSync(edge64)) {
+    try { spawn(edge64, [`--app=${targetUrl}`, '--start-maximized'], { detached: true, stdio: 'ignore' }).unref(); launchedApp = true; } catch (e) {}
+  } else if (fs.existsSync(edge)) {
+    try { spawn(edge, [`--app=${targetUrl}`, '--start-maximized'], { detached: true, stdio: 'ignore' }).unref(); launchedApp = true; } catch (e) {}
   } else if (fs.existsSync(chrome)) {
-    spawn(chrome, [`--app=${targetUrl}`], { detached: true, stdio: 'ignore' }).unref();
+    try { spawn(chrome, [`--app=${targetUrl}`, '--start-maximized'], { detached: true, stdio: 'ignore' }).unref(); launchedApp = true; } catch (e) {}
   } else if (fs.existsSync(chrome86)) {
-    spawn(chrome86, [`--app=${targetUrl}`], { detached: true, stdio: 'ignore' }).unref();
+    try { spawn(chrome86, [`--app=${targetUrl}`, '--start-maximized'], { detached: true, stdio: 'ignore' }).unref(); launchedApp = true; } catch (e) {}
   } else if (fs.existsSync(chromeLocal)) {
-    spawn(chromeLocal, [`--app=${targetUrl}`], { detached: true, stdio: 'ignore' }).unref();
+    try { spawn(chromeLocal, [`--app=${targetUrl}`, '--start-maximized'], { detached: true, stdio: 'ignore' }).unref(); launchedApp = true; } catch (e) {}
   } else if (fs.existsSync(coccocLocal)) {
-    spawn(coccocLocal, [`--app=${targetUrl}`], { detached: true, stdio: 'ignore' }).unref();
-  } else if (fs.existsSync(coccoc64)) {
-    spawn(coccoc64, [`--app=${targetUrl}`], { detached: true, stdio: 'ignore' }).unref();
-  } else if (fs.existsSync(coccoc86)) {
-    spawn(coccoc86, [`--app=${targetUrl}`], { detached: true, stdio: 'ignore' }).unref();
-  } else {
+    try { spawn(coccocLocal, [`--app=${targetUrl}`, '--start-maximized'], { detached: true, stdio: 'ignore' }).unref(); launchedApp = true; } catch (e) {}
+  }
+
+  if (!launchedApp) {
     try {
       execSync(`start "" "${targetUrl}"`, { shell: 'cmd.exe' });
-    } catch (e) {}
+    } catch (e) {
+      try { execSync(`explorer "${targetUrl}"`); } catch (e2) {}
+    }
   }
-  process.exit(0);
+
+  setTimeout(() => {
+    process.exit(0);
+  }, 800);
 }
 
+// Kiểm tra polling server sẵn sàng trong tối đa 3 giây
 let retries = 0;
 const checkInterval = setInterval(() => {
   retries++;
@@ -97,10 +102,10 @@ const checkInterval = setInterval(() => {
     openBrowser();
   });
   req.on('error', () => {
-    if (retries >= 30) {
+    if (retries >= 15) {
       clearInterval(checkInterval);
       openBrowser();
     }
   });
-  req.setTimeout(400, () => req.destroy());
+  req.setTimeout(300, () => req.destroy());
 }, 200);
