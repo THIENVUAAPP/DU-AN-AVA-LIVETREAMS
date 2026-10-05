@@ -6,6 +6,7 @@ import {
 } from 'lucide-react';
 import { readUniversalFile, parseUniversalRulePairs } from '../../utils/universalDocumentParser';
 import { ALL_SYSTEM_VOICES, previewVoiceAudio, stopVoiceAudio } from '../../utils/voiceSyncService';
+import { DEFAULT_140_KEYWORD_RULES } from '../../utils/defaultSampleKeywordRules';
 
 export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig }) {
   const [activeTab, setActiveTab] = useState('keywords'); // 'keywords' | 'prompts'
@@ -278,6 +279,19 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
     alert(`Đã đồng bộ giọng đọc (${effVoiceId || effRole}) thành công cho toàn bộ ${updated.length} quy tắc từ khóa!`);
   };
 
+  const handleLoadDefault140Rules = () => {
+    if (keywordRules.length > 0) {
+      if (!window.confirm(`Anh có muốn nạp bộ 140 câu từ khóa & phản hồi mẫu chuẩn không? (Các quy tắc mới sẽ được thêm vào danh sách)`)) {
+        return;
+      }
+    }
+    const currentKws = new Set(keywordRules.map(r => (r.keywords || []).join(',').toLowerCase()));
+    const freshRules = DEFAULT_140_KEYWORD_RULES.filter(r => !currentKws.has((r.keywords || []).join(',').toLowerCase()));
+    const combined = [...freshRules, ...keywordRules];
+    syncConfig({ keywordRules: combined });
+    alert(`✨ Đã nạp thành công 140 câu từ khóa & phản hồi mẫu chuẩn cho Livestream!`);
+  };
+
   return (
     <div className="mt-4 p-4 rounded-2xl border border-gray-800 bg-[#0f1117] text-gray-100 space-y-4 shadow-xl">
       {/* TAB SELECTOR HEADER */}
@@ -309,6 +323,12 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
 
         {activeTab === 'keywords' && (
           <div className="flex items-center gap-2">
+            <button 
+              onClick={handleLoadDefault140Rules}
+              className="px-3 py-1.5 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-black rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md transition-all active:scale-95 cursor-pointer border border-emerald-300"
+            >
+              <Sparkles size={13} /> ✨ Nạp 140 Câu Mẫu Chuẩn
+            </button>
             <button 
               onClick={() => setShowBulkRuleModal(true)} 
               className="px-3 py-1.5 bg-gradient-to-r from-amber-500 to-yellow-400 hover:from-amber-400 hover:to-yellow-300 text-black rounded-xl text-xs font-black flex items-center gap-1.5 shadow-md transition-all active:scale-95 cursor-pointer border border-amber-300"
@@ -677,7 +697,13 @@ export default function WorkspaceKeywordPanel({ currentConfig, onUpdateConfig })
               <div className="p-8 text-center bg-[#161922] border border-dashed border-gray-700 rounded-2xl">
                 <Zap size={32} className="mx-auto text-amber-400/50 mb-2" />
                 <p className="text-sm font-bold text-gray-300">Chưa có bộ từ khóa nào</p>
-                <p className="text-xs text-gray-500 mt-1">Hãy thêm bộ từ khóa thủ công hoặc bấm "Tải File Từ Khóa" để nạp hàng loạt kịch bản có sẵn.</p>
+                <p className="text-xs text-gray-500 mt-1">Hãy thêm bộ từ khóa thủ công, bấm "Tải File Từ Khóa" hoặc nạp nhanh bộ 140 câu mẫu chuẩn bên dưới:</p>
+                <button
+                  onClick={handleLoadDefault140Rules}
+                  className="mt-3 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-400 hover:from-emerald-400 hover:to-teal-300 text-black font-black text-xs rounded-xl shadow-lg flex items-center gap-2 mx-auto cursor-pointer transition-all active:scale-95"
+                >
+                  <Sparkles size={14} /> ✨ Nạp Ngay 140 Câu Mẫu Chuẩn Cho Livestream
+                </button>
               </div>
             ) : (
               keywordRules.map((rule, idx) => {

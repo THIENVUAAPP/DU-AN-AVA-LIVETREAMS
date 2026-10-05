@@ -202,12 +202,12 @@ fs.mkdirSync(winSystemDir, { recursive: true });
 fs.copyFileSync(bundledCorePath, path.join(winSystemDir, 'core.cjs'));
 
 // Copy compiled frontend dist into system/app and system/dist
-execSync(`cp -R "${path.join(rootDir, 'dist')}" "${path.join(winSystemDir, 'app')}"`);
-execSync(`cp -R "${path.join(rootDir, 'dist')}" "${path.join(winSystemDir, 'dist')}"`);
+fs.cpSync(path.join(rootDir, 'dist'), path.join(winSystemDir, 'app'), { recursive: true });
+fs.cpSync(path.join(rootDir, 'dist'), path.join(winSystemDir, 'dist'), { recursive: true });
 
 // Copy certs if exist
 if (fs.existsSync(path.join(rootDir, 'certs'))) {
-  execSync(`cp -R "${path.join(rootDir, 'certs')}" "${path.join(winSystemDir, 'certs')}"`);
+  fs.cpSync(path.join(rootDir, 'certs'), path.join(winSystemDir, 'certs'), { recursive: true });
 }
 
 // Create empty uploads directory
@@ -407,12 +407,12 @@ fs.mkdirSync(macSystemDir, { recursive: true });
 fs.copyFileSync(bundledCorePath, path.join(macSystemDir, 'core.cjs'));
 
 // Copy compiled frontend dist into system/app and system/dist
-execSync(`cp -R "${path.join(rootDir, 'dist')}" "${path.join(macSystemDir, 'app')}"`);
-execSync(`cp -R "${path.join(rootDir, 'dist')}" "${path.join(macSystemDir, 'dist')}"`);
+fs.cpSync(path.join(rootDir, 'dist'), path.join(macSystemDir, 'app'), { recursive: true });
+fs.cpSync(path.join(rootDir, 'dist'), path.join(macSystemDir, 'dist'), { recursive: true });
 
 // Copy certs if exist
 if (fs.existsSync(path.join(rootDir, 'certs'))) {
-  execSync(`cp -R "${path.join(rootDir, 'certs')}" "${path.join(macSystemDir, 'certs')}"`);
+  fs.cpSync(path.join(rootDir, 'certs'), path.join(macSystemDir, 'certs'), { recursive: true });
 }
 
 // Create empty uploads directory

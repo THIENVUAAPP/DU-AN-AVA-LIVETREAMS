@@ -6,6 +6,7 @@ import { resolveEffectiveVoice } from '../utils/voiceSyncService';
 import { isSmartSpamOrToxicComment, cleanUserNameForSpeech, isMeaningfulCommercialOrEngagingComment } from '../utils/vietnamesePronunciationMaster';
 import { syncMasterLiveState, sendVideoControl } from '../lib/masterLiveSync';
 import { ensureServerMediaUrl } from '../utils/mediaUploadService';
+import { DEFAULT_140_KEYWORD_RULES } from '../utils/defaultSampleKeywordRules';
 
 export function useLiveCoordinator({ isConnected, onVoiceReply, onChatReply, activeBrainPack = 'talk' }) {
   const [liveMedia, setLiveMedia] = useState([]);
@@ -525,6 +526,9 @@ function fillTemplate(template, vars = {}) {
         } catch (e) {}
         if (Array.isArray(scriptConfig.keywordRules)) allKeywordRules.push(...scriptConfig.keywordRules);
         if (Array.isArray(checkoutConfig.keywordRules)) allKeywordRules.push(...checkoutConfig.keywordRules);
+
+        // Nạp thêm bộ 140 câu quy tắc mẫu chuẩn vào hệ thống để luôn sẵn sàng phản hồi
+        allKeywordRules.push(...DEFAULT_140_KEYWORD_RULES);
 
         // Helper trích xuất toàn bộ từ khóa từ mọi định dạng (mảng, chuỗi phân tách bởi dấu phẩy, chấm phẩy, sổ dọc, gạch chéo, xuống dòng)
         const extractKeywords = (rawKeywords) => {

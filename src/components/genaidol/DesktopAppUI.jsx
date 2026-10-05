@@ -1353,9 +1353,27 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
   const desktopCanvasRef = useRef(null);
   const lastTimeBroadcastRef = useRef(0);
   const isInternalAudioChangeRef = useRef(false);
-  const isInternalPlaybackChangeRef = useRef(false);
   const currentFileBlobRef = useRef(null);
   const currentBlobUrlRef = useRef(null);
+  const blobUrlCacheRef = useRef(new Map());
+
+  const getStableBlobUrl = useCallback((key, blobOrFile) => {
+    if (!key && !blobOrFile) return null;
+    const cacheKey = key || (blobOrFile && (blobOrFile.name + '_' + blobOrFile.size + '_' + blobOrFile.lastModified));
+    if (cacheKey && blobUrlCacheRef.current.has(cacheKey)) {
+      const existingUrl = blobUrlCacheRef.current.get(cacheKey);
+      if (existingUrl) return existingUrl;
+    }
+    if (blobOrFile instanceof Blob || blobOrFile instanceof File) {
+      try {
+        const url = URL.createObjectURL(blobOrFile);
+        if (cacheKey) blobUrlCacheRef.current.set(cacheKey, url);
+        if (key && cacheKey !== key) blobUrlCacheRef.current.set(key, url);
+        return url;
+      } catch (e) {}
+    }
+    return null;
+  }, []);
 
   useEffect(() => {
     let animId;
@@ -2771,7 +2789,7 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
     const memBlob = (typeof window !== 'undefined' && window.__activeMediaBlobMap && window.__activeMediaBlobMap.get(charId)) || charItem.fileData || charItem.fileBlob || (typeof window !== 'undefined' && window.__activeMediaBlob) || null;
     let fileBlob = memBlob;
-    let blobUrl = fileBlob ? URL.createObjectURL(fileBlob) : ((charItem.url && charItem.url.startsWith('blob:')) ? charItem.url : null);
+    let blobUrl = fileBlob ? getStableBlobUrl(charId, fileBlob) : ((charItem.url && charItem.url.startsWith('blob:')) ? charItem.url : null);
 
     if (fileBlob) {
       currentFileBlobRef.current = fileBlob;
@@ -2802,10 +2820,16 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
 
     const playSrc = blobUrl || cleanUrl;
     if (playSrc && desktopVideoRef.current) {
-      desktopVideoRef.current.src = playSrc;
-      desktopVideoRef.current.currentTime = 0;
-      desktopVideoRef.current.dataset.userPaused = 'false';
-      desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+      const curSrc = desktopVideoRef.current.currentSrc || desktopVideoRef.current.src || '';
+      const isAlreadyPlaying = isSameMediaUrl(curSrc, playSrc);
+      if (!isAlreadyPlaying) {
+        desktopVideoRef.current.src = playSrc;
+        desktopVideoRef.current.currentTime = 0;
+        desktopVideoRef.current.dataset.userPaused = 'false';
+        desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+      } else if (desktopVideoRef.current.paused) {
+        desktopVideoRef.current.play().then(() => setIsVideoPlaying(true)).catch(() => {});
+      }
     }
     setIsVideoPlaying(true);
 
@@ -6148,31 +6172,21 @@ Bên em cam kết 100% hàng chính hãng, bảo hành 1 đổi 1 trong 30 ngày
       }
 
       if (selected) {
-        let resolvedUrl = selected.url || selected.mediaUrl;
-        if (selected.fileData || (currentFileBlobRef.current && currentBlobUrlRef.current)) {
-          if (currentBlobUrlRef.current) {
-            resolvedUrl = currentBlobUrlRef.current;
-          } else if (selected.fileData) {
-            try {
-              resolvedUrl = URL.createObjectURL(selected.fileData);
-              currentBlobUrlRef.current = resolvedUrl;
-            } catch (e) {}
-          }
-        } else if ((!resolvedUrl || resolvedUrl.startsWith('blob:')) && selected.fileData) {
-          try {
-            resolvedUrl = URL.createObjectURL(selected.fileData);
-            selected.url = resolvedUrl;
-          } catch (e) {}
-        }
-        if (!resolvedUrl && typeof window !== 'undefined' && window.__activeMediaBlobMap) {
-          const blob = window.__activeMediaBlobMap.get(selected.id) || (selected.mediaUrl && window.__activeMediaBlobMap.get(selected.mediaUrl)) || window.__activeMediaBlobMap.get('latest');
-          if (blob instanceof Blob || blob instanceof File) {
-            try {
-              resolvedUrl = URL.createObjectURL(blob);
-              selected.url = resolvedUrl;
-            } catch (e) {}
+        let resolvedUrl = selected.url;
+        const potentialBlob = selected.fileData || selected.fileBlob || (currentFileBlobRef.current) || (typeof window !== 'undefined' && window.__activeMediaBlobMap && (window.__activeMediaBlobMap.get(selected.id) || (selected.mediaUrl && window.__activeMediaBlobMap.get(selected.mediaUrl)) || window.__activeMediaBlobMap.get('latest')));
+        
+        if (potentialBlob instanceof Blob || potentialBlob instanceof File) {
+          const cached = getStableBlobUrl(selected.id, potentialBlob);
+          if (cached) {
+            resolvedUrl = cached;
+            currentBlobUrlRef.current = cached;
           }
         }
+        
+        if (!resolvedUrl) {
+          resolvedUrl = selected.mediaUrl || currentBlobUrlRef.current || '';
+        }
+
         if (resolvedUrl) {
           const isExplicitVideo = selected.type === 'video' || 
             (selected.fileData && selected.fileData.type && selected.fileData.type.startsWith('video/')) ||
