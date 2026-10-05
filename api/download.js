@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
   res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS');
@@ -22,20 +23,15 @@ export default async function handler(req, res) {
     }
 
     const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
-    let pkgVersion = '5.4.52';
+    let pkgVersion = '5.4.73';
     try {
       const pkgPath = path.join(process.cwd(), 'package.json');
-      const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
-      if (pkg.version) pkgVersion = pkg.version;
-    } catch(e) {
-      // Fallback khi chạy serverless có thể path khác
-      try {
-        const pkg = JSON.parse(fs.readFileSync('./package.json', 'utf8'));
+      if (fs.existsSync(pkgPath)) {
+        const pkg = JSON.parse(fs.readFileSync(pkgPath, 'utf8'));
         if (pkg.version) pkgVersion = pkg.version;
-      } catch(err) {}
-    }
+      }
+    } catch(e) {}
     
-    // Tự động phân giải tên file kèm phiên bản mới nhất từ package.json
     let targetFileName = `${osPrefix}_v${pkgVersion}.zip`;
     let downloadUrl = '';
 
@@ -44,7 +40,7 @@ export default async function handler(req, res) {
       const headers = { 'User-Agent': 'AvaLive-Download-Agent/1.0', 'Accept': 'application/vnd.github.v3+json' };
       if (token) headers['Authorization'] = `Bearer ${token}`;
 
-      // LUÔN LẤY LATEST RELEASE TRỰC TIẾP TỪ GITHUB (TRÁNH LỖI VERCEL CACHE / CHƯA DEPLOY)
+      // LUÔN LẤY LATEST RELEASE TRỰC TIẾP TỪ GITHUB RELEASES
       const latestRes = await fetch('https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/latest', { headers });
       if (latestRes.ok) {
         const release = await latestRes.json();
@@ -59,18 +55,14 @@ export default async function handler(req, res) {
     }
 
     if (!downloadUrl) {
-      // Fallback
-      downloadUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/latest/download/${targetFileName}`;
+      // Fallback trực tiếp đến release version hiện tại
+      downloadUrl = `https://github.com/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/download/v${pkgVersion}/${targetFileName}`;
     }
 
-    // TĂNG TỐC DOWNLOAD
-    let acceleratedUrl = `https://gh-proxy.com/${downloadUrl}`;
-
-    // Xóa bộ nhớ đệm trình duyệt & Vercel để khách luôn tải bản mới
-    res.setHeader('Location', acceleratedUrl);
+    res.setHeader('Location', downloadUrl);
     res.setHeader('Content-Type', 'application/zip');
     res.setHeader('Content-Disposition', `attachment; filename="${targetFileName}"`);
-    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0, s-maxage=0');
     return res.status(302).end();
   } catch (err) {
     console.error('Download handler error:', err);

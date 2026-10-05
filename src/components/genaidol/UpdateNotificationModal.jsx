@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.72';
+export const APP_VERSION = '5.4.73';
 export const RELEASE_DATE = '05/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.73 - ĐỒNG BỘ 100% GÓI CÀI ĐẶT MỚI NHẤT CHO WINDOWS & MAC (TRỰC TIẾP TỪ GITHUB RELEASES)',
+    description: '1. Đồng Bộ Hóa 100% Toàn Bộ File Cài Đặt Tải Về Cho Windows & Mac: Cập nhật tự động mọi cổng tải (/api/download-windows, /api/download-mac, /api/download-software, nút Tải Về trên giao diện và modal) để luôn phục vụ gói ZIP mới nhất v5.4.73 trực tiếp từ GitHub Releases và đĩa nội bộ, khắc phục triệt để tình trạng tải nhầm file cũ hoặc link cache. 2. Tích Hợp Đầy Đủ Bộ 140 Câu Từ Khóa & Phản Hồi Mẫu Chuẩn Cho Livestream Bán Hàng & CSKH. 3. Sửa Dứt Điểm Lỗi Chớp Nháy / Chớp Nhả Khi Tải Video Sân Khấu & Ô Nhân Vật: Caching bộ nhớ đệm an toàn, phát tức thì 0ms mượt mà 60 FPS không bao giờ bị giật lag. 4. Khóa chặt 100% toàn bộ các tab và module hệ thống.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.72 - TÍCH HỢP BỘ 140 CÂU TỪ KHÓA MẪU CHUẨN + SỬA DỨT ĐIỂM CHỚP NHÁY TẢI VIDEO SÂN KHẤU & Ô NHÂN VẬT + ĐỒNG BỘ 100% TIKTOK LIVE STUDIO',
     description: '1. Tích Hợp Bộ 140 Câu Từ Khóa & Phản Hồi Mẫu Chuẩn Cho Livestream Bán Hàng & Chăm Sóc Khách Hàng: Đã tích hợp sẵn 140 bộ quy tắc từ khóa chuẩn xác cao vào hệ thống và Tab Từ khóa, kèm nút 1 chạm "✨ Nạp 140 Câu Mẫu Chuẩn". Hỗ trợ tải lên thêm các file từ khóa định dạng bất kỳ (TỪ KHÓA: ... / PHẢN HỒI: ..., .md, .pdf, .docx, .txt, .csv, .json). (Bước 1) Đọc to, rõ ràng và chuẩn xác tên người xem kèm nội dung nguyên văn câu hỏi/bình luận có ý nghĩa: "Dạ em cảm ơn {user} đã hỏi/bình luận là: \"{comment}\"." Các câu chào đơn giản (hi, xin chào...) không cần đọc lại. (Bước 2) Quét 100% các từ khóa đã cài đặt và trong file nạp; nếu khớp từ khóa, lập tức phản hồi đúng câu trả lời đã thiết lập (thay {user}, {comment}, {product}), tuyệt đối KHÔNG gọi AI ngoài, KHÔNG hỏi lại lòng vòng, KHÔNG tự ý chèn bán hàng nếu người dùng không yêu cầu. (Bước 3) Nếu không khớp từ khóa nào, AI Gemini thông minh phân tích đúng câu hỏi để trả lời trực tiếp trong DUY NHẤT 1 CÂU ngắn gọn (10-15 từ), chỉ nói về bán hàng/sản phẩm nếu câu hỏi liên quan đến sản phẩm. 2. Khắc Phục Triệt Để Lỗi Chớp Nháy / Chớp Nhả Khi Tải Video Lên Sân Khấu Chính & Ô Nhân Vật: Caching bộ nhớ blobUrlCacheRef theo ID nhân vật và file signature, không bao giờ reset thẻ video src hay reload buffer khi đang phát cùng media, phát tức thì 0ms mượt mà 60 FPS không một vệt chớp đen. 3. Tối Ưu Đồng Bộ Video TikTok Live Studio & OBS Browser Source: Đảm bảo link Cloudflare HTTPS phát video, âm thanh và hiệu ứng ngay lập tức 0ms, không bao giờ bị màn hình đen. 4. Khóa chặt 100% toàn bộ các tab và module hệ thống.'

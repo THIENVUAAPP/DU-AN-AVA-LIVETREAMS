@@ -4205,36 +4205,56 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// Helper lấy phiên bản ứng dụng động từ package.json
+function getAppVersion() {
+  const candidatePaths = [
+    path.join(__dirname, 'package.json'),
+    path.join(__dirname, '..', 'package.json'),
+    path.join(process.cwd(), 'package.json'),
+    path.join(process.cwd(), '..', 'package.json')
+  ];
+  for (const p of candidatePaths) {
+    try {
+      if (fs.existsSync(p)) {
+        const pkg = JSON.parse(fs.readFileSync(p, 'utf8'));
+        if (pkg.version) return pkg.version;
+      }
+    } catch (e) {}
+  }
+  return '5.4.73';
+}
+
 app.get('/api/version', (req, res) => {
+  const ver = getAppVersion();
   res.json({
-    version: '2.3.4-PRO',
-    latestVersion: '2.3.4-PRO',
+    version: ver,
+    latestVersion: ver,
     isLatest: true,
     updateAvailable: false,
     buildTime: new Date().toISOString(),
-    releaseNotes: 'Phiên bản Đồng Bộ Đám Mây Real-Time: Hồ Sơ Người Dùng, Tiếp Thị Liên Kết 30%, Phân Quyền Đội Ngũ, Quản Lý Doanh Số & Token AI Trực Tuyến.'
+    releaseNotes: `AvaLive Studio v${ver} - Hệ sinh thái Livestream AI Pro.`
   });
 });
 
 app.get('/api/check-update', (req, res) => {
+  const ver = getAppVersion();
   res.json({
     hasUpdate: false,
-    currentVersion: '2.3.4-PRO',
-    latestVersion: '2.3.4-PRO',
+    currentVersion: ver,
+    latestVersion: ver,
     downloadUrl: '/api/download-software',
-    message: 'Bạn đang sử dụng phiên bản phần mềm mới nhất đã đồng bộ hóa tài khoản.'
+    message: `Bạn đang sử dụng phiên bản AvaLive Studio v${ver} mới nhất.`
   });
 });
-
 
 // Helper tìm link tải asset GitHub an toàn 100% không bao giờ bị 404 hay mở trang GitHub
 let _cachedReleaseUrls = {};
 let _lastReleaseFetchTime = 0;
 async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
   const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
-  const targetVer = fallbackVer || '5.1.4';
+  const targetVer = fallbackVer || getAppVersion();
   const cacheKey = `${osPrefix}_v${targetVer}`;
-  if (_cachedReleaseUrls[cacheKey] && (Date.now() - _lastReleaseFetchTime < 60000)) {
+  if (_cachedReleaseUrls[cacheKey] && (Date.now() - _lastReleaseFetchTime < 30000)) {
     return _cachedReleaseUrls[cacheKey];
   }
 
@@ -4259,17 +4279,12 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
 
     // 2. Thử lấy danh sách Releases mới nhất từ GitHub khớp chính xác version hoặc lấy asset zip mới nhất
     if (!finalUrl.includes(`v${targetVer}`)) {
-      const relsRes = await fetch('https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases?per_page=15', { headers });
+      const relsRes = await fetch('https://api.github.com/repos/THIENVUAAPP/DU-AN-AVA-LIVETREAMS/releases/latest', { headers });
       if (relsRes.ok) {
-        const releases = await relsRes.json();
-        if (Array.isArray(releases)) {
-          for (const rel of releases) {
-            const asset = (rel.assets || []).find(a => a.name && a.name.startsWith(osPrefix) && a.name.endsWith('.zip'));
-            if (asset && asset.browser_download_url) {
-              finalUrl = asset.browser_download_url;
-              break;
-            }
-          }
+        const release = await relsRes.json();
+        const asset = (release.assets || []).find(a => a.name && (a.name.startsWith(osPrefix) && a.name.endsWith('.zip')));
+        if (asset && asset.browser_download_url) {
+          finalUrl = asset.browser_download_url;
         }
       }
     }
@@ -4277,89 +4292,84 @@ async function resolveLatestGitHubDownloadUrl(isMac, fallbackVer) {
     console.warn('[Download] Error resolving GitHub asset URL:', e.message);
   }
 
-  // 🚀 SỬ DỤNG CLOUDFLARE EDGE CDN ACCELERATOR (TỐC ĐỘ SIÊU NHANH 20MB/s - 50MB/s+, KHÔNG NGHẼN MẠNG)
-  const acceleratedUrl = `https://gh-proxy.com/${finalUrl}`;
-  _cachedReleaseUrls[cacheKey] = acceleratedUrl;
+  _cachedReleaseUrls[cacheKey] = finalUrl;
   _lastReleaseFetchTime = Date.now();
-  return acceleratedUrl;
+  return finalUrl;
 }
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE WINDOWS — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/windows', '/api/download-windows', '/download/windows', '/AvaLive_VIP_PRO_Windows.zip', /^\/AvaLive_VIP_PRO_Windows_v.*\.zip$/], async (req, res) => {
-  let ver = '5.1.4';
-  try {
-    const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
-    if (pkg.version) ver = pkg.version;
-  } catch (e) {}
-
+  const ver = getAppVersion();
   const rootDir = path.join(__dirname, '..');
-  const releaseDir = path.join(rootDir, 'release_zips');
-  const primaryFile = path.join(releaseDir, `AvaLive_VIP_PRO_Windows_v${ver}.zip`);
-  const legacyFile = path.join(releaseDir, 'AvaLive_VIP_PRO_Windows.zip');
+  const releaseDirs = [
+    path.join(rootDir, 'release_zips'),
+    path.join(__dirname, 'release_zips'),
+    path.join(process.cwd(), 'release_zips')
+  ];
 
-  if (fs.existsSync(primaryFile)) {
-    return res.download(primaryFile, `AvaLive_VIP_PRO_Windows_v${ver}.zip`);
-  } else if (fs.existsSync(legacyFile)) {
-    return res.download(legacyFile, `AvaLive_VIP_PRO_Windows_v${ver}.zip`);
-  }
-
-  // Quét file zip Windows mới nhất nếu có trong release_zips
-  if (fs.existsSync(releaseDir)) {
-    const files = fs.readdirSync(releaseDir).filter(f => f.startsWith('AvaLive_VIP_PRO_Windows') && f.endsWith('.zip'));
-    if (files.length > 0) {
-      files.sort((a, b) => {
-        const statA = fs.statSync(path.join(releaseDir, a)).mtimeMs;
-        const statB = fs.statSync(path.join(releaseDir, b)).mtimeMs;
-        return statB - statA;
-      });
-      return res.download(path.join(releaseDir, files[0]), `AvaLive_VIP_PRO_Windows_v${ver}.zip`);
+  for (const rDir of releaseDirs) {
+    if (fs.existsSync(rDir)) {
+      const primaryFile = path.join(rDir, `AvaLive_VIP_PRO_Windows_v${ver}.zip`);
+      if (fs.existsSync(primaryFile) && fs.statSync(primaryFile).size > 1024 * 1024) {
+        return res.download(primaryFile, `AvaLive_VIP_PRO_Windows_v${ver}.zip`);
+      }
+      const files = fs.readdirSync(rDir).filter(f => f.startsWith('AvaLive_VIP_PRO_Windows') && f.endsWith('.zip'));
+      if (files.length > 0) {
+        files.sort((a, b) => {
+          const statA = fs.statSync(path.join(rDir, a)).mtimeMs;
+          const statB = fs.statSync(path.join(rDir, b)).mtimeMs;
+          return statB - statA;
+        });
+        const latestLocal = path.join(rDir, files[0]);
+        if (fs.statSync(latestLocal).size > 1024 * 1024) {
+          return res.download(latestLocal, files[0]);
+        }
+      }
     }
   }
 
   const verifiedUrl = await resolveLatestGitHubDownloadUrl(false, ver);
   res.setHeader('Content-Type', 'application/zip');
   res.setHeader('Content-Disposition', `attachment; filename="AvaLive_VIP_PRO_Windows_v${ver}.zip"`);
-  res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=120');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0, s-maxage=0');
   return res.redirect(verifiedUrl);
 });
 
 // 📦 ROUTE TẢI PHẦN MỀM STANDALONE MAC — TẢI TRỰC TIẾP VỀ MÁY 100%, KHÔNG MỞ GITHUB
 app.get(['/api/download/mac', '/api/download-mac', '/download/mac', '/AvaLive_VIP_PRO_Mac.zip', /^\/AvaLive_VIP_PRO_Mac_v.*\.zip$/], async (req, res) => {
-  let ver = '5.1.4';
-
-  try {
-    const pkg = JSON.parse(fs.readFileSync(path.join(__dirname, '..', 'package.json'), 'utf8'));
-    if (pkg.version) ver = pkg.version;
-  } catch (e) {}
-
+  const ver = getAppVersion();
   const rootDir = path.join(__dirname, '..');
-  const releaseDir = path.join(rootDir, 'release_zips');
-  const primaryFile = path.join(releaseDir, `AvaLive_VIP_PRO_Mac_v${ver}.zip`);
-  const legacyFile = path.join(releaseDir, 'AvaLive_VIP_PRO_Mac.zip');
+  const releaseDirs = [
+    path.join(rootDir, 'release_zips'),
+    path.join(__dirname, 'release_zips'),
+    path.join(process.cwd(), 'release_zips')
+  ];
 
-  if (fs.existsSync(primaryFile)) {
-    return res.download(primaryFile, `AvaLive_VIP_PRO_Mac_v${ver}.zip`);
-  } else if (fs.existsSync(legacyFile)) {
-    return res.download(legacyFile, `AvaLive_VIP_PRO_Mac_v${ver}.zip`);
-  }
-
-  // Quét file zip Mac mới nhất nếu có trong release_zips
-  if (fs.existsSync(releaseDir)) {
-    const files = fs.readdirSync(releaseDir).filter(f => f.startsWith('AvaLive_VIP_PRO_Mac') && f.endsWith('.zip'));
-    if (files.length > 0) {
-      files.sort((a, b) => {
-        const statA = fs.statSync(path.join(releaseDir, a)).mtimeMs;
-        const statB = fs.statSync(path.join(releaseDir, b)).mtimeMs;
-        return statB - statA;
-      });
-      return res.download(path.join(releaseDir, files[0]), `AvaLive_VIP_PRO_Mac_v${ver}.zip`);
+  for (const rDir of releaseDirs) {
+    if (fs.existsSync(rDir)) {
+      const primaryFile = path.join(rDir, `AvaLive_VIP_PRO_Mac_v${ver}.zip`);
+      if (fs.existsSync(primaryFile) && fs.statSync(primaryFile).size > 1024 * 1024) {
+        return res.download(primaryFile, `AvaLive_VIP_PRO_Mac_v${ver}.zip`);
+      }
+      const files = fs.readdirSync(rDir).filter(f => f.startsWith('AvaLive_VIP_PRO_Mac') && f.endsWith('.zip'));
+      if (files.length > 0) {
+        files.sort((a, b) => {
+          const statA = fs.statSync(path.join(rDir, a)).mtimeMs;
+          const statB = fs.statSync(path.join(rDir, b)).mtimeMs;
+          return statB - statA;
+        });
+        const latestLocal = path.join(rDir, files[0]);
+        if (fs.statSync(latestLocal).size > 1024 * 1024) {
+          return res.download(latestLocal, files[0]);
+        }
+      }
     }
   }
 
   const verifiedUrl = await resolveLatestGitHubDownloadUrl(true, ver);
   res.setHeader('Content-Type', 'application/zip');
   res.setHeader('Content-Disposition', `attachment; filename="AvaLive_VIP_PRO_Mac_v${ver}.zip"`);
-  res.setHeader('Cache-Control', 'public, max-age=120, s-maxage=120');
+  res.setHeader('Cache-Control', 'no-cache, no-store, must-revalidate, max-age=0, s-maxage=0');
   return res.redirect(verifiedUrl);
 });
 
