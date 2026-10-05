@@ -489,6 +489,18 @@ function fillTemplate(template, vars = {}) {
 
         // 🎯 THU THẬP TẤT CẢ QUY TẮC TỪ KHÓA TỪ MỌI NGUỒN (ƯU TIÊN CAO NHẤT: FILE TẢI LÊN & TAB BÌNH LUẬN)
         const allKeywordRules = [];
+        
+        // 1. Tệp từ khóa tải lên từ file mẫu (.txt, .docx, .pdf, .csv, .md)
+        try {
+          const fileKws = JSON.parse(localStorage.getItem('avalive_uploaded_file_keywords') || '[]');
+          if (Array.isArray(fileKws)) allKeywordRules.push(...fileKws);
+        } catch (e) {}
+        try {
+          const uploadedKws = JSON.parse(localStorage.getItem('aidol_uploaded_keywords') || '[]');
+          if (Array.isArray(uploadedKws)) allKeywordRules.push(...uploadedKws);
+        } catch (e) {}
+
+        // 2. Quy tắc người dùng cài đặt trong Tab Bình luận & Kịch bản
         if (Array.isArray(commentConfig.keywordRules)) allKeywordRules.push(...commentConfig.keywordRules);
         try {
           const comKws = JSON.parse(localStorage.getItem('avalive_comment_keyword_rules') || '[]');
@@ -511,14 +523,6 @@ function fillTemplate(template, vars = {}) {
           if (Array.isArray(kwAnswers)) allKeywordRules.push(...kwAnswers);
         } catch (e) {}
         try {
-          const uploadedKws = JSON.parse(localStorage.getItem('aidol_uploaded_keywords') || '[]');
-          if (Array.isArray(uploadedKws)) allKeywordRules.push(...uploadedKws);
-        } catch (e) {}
-        try {
-          const fileKws = JSON.parse(localStorage.getItem('avalive_uploaded_file_keywords') || '[]');
-          if (Array.isArray(fileKws)) allKeywordRules.push(...fileKws);
-        } catch (e) {}
-        try {
           const eventRules = JSON.parse(localStorage.getItem('aidol_event_configs') || '{}');
           if (eventRules && eventRules.comment && Array.isArray(eventRules.comment.keywordRules)) {
             allKeywordRules.push(...eventRules.comment.keywordRules);
@@ -527,22 +531,53 @@ function fillTemplate(template, vars = {}) {
         if (Array.isArray(scriptConfig.keywordRules)) allKeywordRules.push(...scriptConfig.keywordRules);
         if (Array.isArray(checkoutConfig.keywordRules)) allKeywordRules.push(...checkoutConfig.keywordRules);
 
-        // Nạp thêm bộ 140 câu quy tắc mẫu chuẩn vào hệ thống để luôn sẵn sàng phản hồi
+        // 3. Nạp bộ 140 câu quy tắc mẫu chuẩn vào hệ thống
         allKeywordRules.push(...DEFAULT_140_KEYWORD_RULES);
 
-        // Helper trích xuất toàn bộ từ khóa từ mọi định dạng (mảng, chuỗi phân tách bởi dấu phẩy, chấm phẩy, sổ dọc, gạch chéo, xuống dòng)
-        const extractKeywords = (rawKeywords) => {
-          if (!rawKeywords) return [];
-          const list = Array.isArray(rawKeywords) ? rawKeywords : [rawKeywords];
-          return list
-            .flatMap(k => String(k || '').split(/[;,|/\n\r\t]+/))
-            .map(k => k.trim())
-            .filter(Boolean);
+        // Helper trích xuất toàn bộ từ khóa từ mọi định dạng thuộc tính
+        const getRuleKeywords = (rule) => {
+          if (!rule) return [];
+          const raw = rule.keywords ?? rule.keyword ?? rule.words ?? rule.keys ?? rule.key ?? rule.pattern ?? rule.from ?? rule.q ?? rule.text;
+          if (!raw) return [];
+          if (Array.isArray(raw)) {
+            return raw.flatMap(k => String(k || '').split(/[;,|/\n\r\t]+/)).map(k => k.trim()).filter(Boolean);
+          }
+          return String(raw).split(/[;,|/\n\r\t]+/).map(k => k.trim()).filter(Boolean);
         };
 
-        // Hàm chuẩn hóa tiếng Việt siêu nhạy hỗ trợ so khớp cả có dấu, không dấu, token biên từ
+        // Helper trích xuất câu phản hồi từ mọi định dạng thuộc tính
+        const getRuleReply = (rule) => {
+          if (!rule) return '';
+          const raw = rule.replyText ?? rule.reply ?? rule.answer ?? rule.response ?? rule.to ?? rule.a ?? rule.sampleAnswers ?? rule.output;
+          if (!raw) return '';
+          if (Array.isArray(raw)) {
+            return raw.length > 0 ? getRandomSample(raw) : '';
+          }
+          if (typeof raw === 'string') {
+            if (raw.includes('\n')) {
+              const lines = raw.split('\n').map(l => l.trim()).filter(Boolean);
+              return lines.length > 0 ? getRandomSample(lines) : raw.trim();
+            }
+            return raw.trim();
+          }
+          return String(raw).trim();
+        };
+
+        // Hàm chuẩn hóa tiếng Việt siêu nhạy hỗ trợ so khớp cả có dấu, không dấu, viết tắt
         const normStr = (str) => {
-          const s = String(str || '').toLowerCase().trim();
+          let s = String(str || '').toLowerCase().trim();
+          // Mở rộng từ viết tắt thường gặp trên TikTok Live
+          s = s.replace(/\bib\b|\binb\b/g, 'inbox')
+               .replace(/\brep\b/g, 'trả lời')
+               .replace(/\bbn\b|\bbnh\b|\bbnhieu\b|\bbao nhiu\b/g, 'bao nhiêu')
+               .replace(/\bko\b|\bk\b|\bkhum\b|\bhong\b|\bhem\b/g, 'không')
+               .replace(/\bdc\b|\bđc\b/g, 'được')
+               .replace(/\bsp\b/g, 'sản phẩm')
+               .replace(/\bsz\b/g, 'size')
+               .replace(/\bfs\b/g, 'freeship')
+               .replace(/\bstk\b/g, 'số tài khoản')
+               .replace(/\bsdt\b/g, 'số điện thoại');
+
           const cleanPunct = s.replace(/[.,\/#!$%\^&\*;:{}=\-_`~()?"'“”«»<>?]/g, ' ').replace(/\s+/g, ' ').trim();
           const noAcc = cleanPunct
             .normalize('NFD')
@@ -562,20 +597,23 @@ function fillTemplate(template, vars = {}) {
           if (!kNorm.clean) return false;
           // 1. So khớp chính xác 100% cả câu (có dấu hoặc không dấu)
           if (cNorm.clean === kNorm.clean || cNorm.noAcc === kNorm.noAcc) return true;
-          // 2. Từ khóa nhiều từ (cụm từ, vd: "giá bao nhiêu", "áo sơ mi"): kiểm tra chuỗi con
+          // 2. Từ khóa nhiều từ (cụm từ, vd: "giá bao nhiêu", "bảo hành", "áo sơ mi"): kiểm tra chuỗi con
           if (kNorm.cleanTokens.length > 1) {
             if (cNorm.clean.includes(kNorm.clean)) return true;
             if (kNorm.noAcc.length >= 3 && cNorm.noAcc.includes(kNorm.noAcc)) return true;
+            // Kiểm tra từng token trong cụm từ khóa có xuất hiện trong comment không
+            const allTokensPresent = kNorm.noAccTokens.every(tok => cNorm.noAccTokens.includes(tok));
+            if (allTokensPresent && kNorm.noAccTokens.length >= 2) return true;
           }
-          // 3. Từ khóa đơn lẻ / viết tắt (vd: "giá", "ship", "size", "bn", "ib", "rep", "mua"):
-          // Kiểm tra ranh giới từ (token boundary) để không bị nhận diện nhầm chuỗi con
+          // 3. Từ khóa đơn lẻ (vd: "giá", "ship", "size", "tiền", "mua", "đặt", "chốt", "shop"):
           if (kNorm.cleanTokens.length === 1) {
             const singleClean = kNorm.clean;
             const singleNoAcc = kNorm.noAcc;
             if (cNorm.cleanTokens.includes(singleClean)) return true;
             if (singleNoAcc.length >= 2 && cNorm.noAccTokens.includes(singleNoAcc)) return true;
-            // Cho phép so khớp chuỗi con nếu từ khóa có dấu >= 3 ký tự (vd: "tiền", "chốt", "đẹp")
+            // Chuỗi con nếu từ khóa có dấu >= 3 ký tự (vd: "tiền", "chốt", "đẹp")
             if (singleClean.length >= 3 && cNorm.clean.includes(singleClean)) return true;
+            if (singleNoAcc.length >= 3 && cNorm.noAcc.includes(singleNoAcc)) return true;
           }
           return false;
         };
@@ -588,12 +626,15 @@ function fillTemplate(template, vars = {}) {
           // 1. Quét toàn bộ Keyword Rules từ file tải lên & cấu hình
           for (const rule of allKeywordRules) {
             if (!rule || rule.enabled === false) continue;
-            const kws = extractKeywords(rule.keywords);
+            const kws = getRuleKeywords(rule);
             if (kws.length === 0) continue;
+            const reply = getRuleReply(rule);
+            if (!reply) continue;
+
             const matched = kws.some(k => isKeywordMatch(commentNorm, normStr(k)));
-            if (matched && (rule.replyText || rule.reply || rule.answer || rule.sampleAnswers)) {
+            if (matched) {
               hasKeywordRuleMatch = true;
-              matchedRulePre = rule;
+              matchedRulePre = { ...rule, replyText: reply };
               break;
             }
           }
@@ -602,7 +643,7 @@ function fillTemplate(template, vars = {}) {
           if (!hasKeywordRuleMatch && checkoutConfig.active !== false && Array.isArray(checkoutConfig.checkoutProducts)) {
             for (const prod of checkoutConfig.checkoutProducts) {
               if (prod.active !== false && prod.keywords) {
-                const kws = extractKeywords(prod.keywords);
+                const kws = getRuleKeywords(prod);
                 const pNorm = normStr(prod.productName);
                 if (kws.some(k => isKeywordMatch(commentNorm, normStr(k))) || (pNorm.raw && isKeywordMatch(commentNorm, pNorm))) {
                   hasKeywordRuleMatch = true;
@@ -690,7 +731,7 @@ function fillTemplate(template, vars = {}) {
 
         if (commentConfig.active !== false) {
           if (matchedRulePre) {
-            const replyTpl = matchedRulePre.replyText || matchedRulePre.reply || matchedRulePre.answer || (matchedRulePre.sampleAnswers ? getRandomSample(matchedRulePre.sampleAnswers) : '');
+            const replyTpl = matchedRulePre.replyText;
             if (replyTpl) {
               step2Reply = fillTemplate(replyTpl, { user: userSalutation, comment: commentText, product: matchedRulePre.productName || '' });
               isHandled = true;
@@ -705,26 +746,26 @@ function fillTemplate(template, vars = {}) {
             const seenRules = new Set();
             for (const rule of allKeywordRules) {
               if (!rule || rule.enabled === false) continue;
-              const rKey = (rule.id || '') + '_' + String(rule.keywords);
+              const rKey = (rule.id || '') + '_' + String(rule.keywords || rule.keyword || '');
               if (seenRules.has(rKey)) continue;
               seenRules.add(rKey);
 
-              const kws = extractKeywords(rule.keywords);
+              const kws = getRuleKeywords(rule);
               if (kws.length === 0) continue;
+              const reply = getRuleReply(rule);
+              if (!reply) continue;
+
               const matched = kws.some(k => isKeywordMatch(commentNorm, normStr(k)));
-              if (matched && (rule.replyText || rule.reply || rule.answer || rule.sampleAnswers)) {
-                const replyTpl = rule.replyText || rule.reply || rule.answer || (rule.sampleAnswers ? getRandomSample(rule.sampleAnswers) : '');
-                if (replyTpl) {
-                  step2Reply = fillTemplate(replyTpl, { user: userSalutation, comment: commentText, product: rule.productName || '' });
-                  isHandled = true;
-                  isKeywordMatched = true;
-                  stepMatched = 2;
-                  if (rule.role || rule.voiceId) {
-                    currentEvConfig._matchedRuleRole = rule.role;
-                    currentEvConfig._matchedRuleVoiceId = rule.voiceId;
-                  }
-                  break;
+              if (matched) {
+                step2Reply = fillTemplate(reply, { user: userSalutation, comment: commentText, product: rule.productName || '' });
+                isHandled = true;
+                isKeywordMatched = true;
+                stepMatched = 2;
+                if (rule.role || rule.voiceId) {
+                  currentEvConfig._matchedRuleRole = rule.role;
+                  currentEvConfig._matchedRuleVoiceId = rule.voiceId;
                 }
+                break;
               }
             }
           }
@@ -733,7 +774,7 @@ function fillTemplate(template, vars = {}) {
           if (!isHandled && checkoutConfig.active !== false && Array.isArray(checkoutConfig.checkoutProducts)) {
             for (const prod of checkoutConfig.checkoutProducts) {
               if (prod.active !== false && prod.keywords) {
-                const kws = extractKeywords(prod.keywords);
+                const kws = getRuleKeywords(prod);
                 const pNorm = normStr(prod.productName);
                 const matched = kws.some(k => isKeywordMatch(commentNorm, normStr(k))) || (pNorm.raw && isKeywordMatch(commentNorm, pNorm));
 
@@ -742,8 +783,9 @@ function fillTemplate(template, vars = {}) {
                   isKeywordMatched = true;
                   stepMatched = 2;
                   currentMatchedCheckoutProduct = prod;
-                  if (prod.sampleAnswers) {
-                    step2Reply = fillTemplate(getRandomSample(prod.sampleAnswers), { user: userSalutation, comment: commentText, product: prod.productName });
+                  const prodReply = getRuleReply(prod);
+                  if (prodReply) {
+                    step2Reply = fillTemplate(prodReply, { user: userSalutation, comment: commentText, product: prod.productName });
                   } else {
                     step2Reply = `Sản phẩm ${prod.productName || 'này'} đang có ưu đãi trong giỏ hàng góc trái màn hình, bạn bấm vào đặt hàng ngay nhé!`;
                   }
