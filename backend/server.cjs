@@ -6752,7 +6752,7 @@ app.post('/api/generate-script', async (req, res) => {
 if (distPath) {
   const assetsDir = path.join(distPath, 'assets');
   if (fs.existsSync(assetsDir)) {
-    app.use(['/assets', '/idol/assets', '/bando/assets', '/battle/assets', '/live/assets'], express.static(assetsDir, { maxAge: '1d' }));
+    app.use(['/assets', '/idol/assets', '/bando/assets', '/battle/assets', '/live/assets', '/live-stream/assets'], express.static(assetsDir, { maxAge: '1d' }));
   }
 
   app.get(['/idol', '/bando', '/battle', '/live', '/live-stream', '/live-player', '/stream-player', '/window-capture', '/overlay', '/overlay-idol', '/overlay-bando', '/overlay-battle', '/overlay-live'], (req, res) => {

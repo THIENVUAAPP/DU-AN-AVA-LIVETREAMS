@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.77';
-export const RELEASE_DATE = '05/10/2026';
+export const APP_VERSION = '5.4.78';
+export const RELEASE_DATE = '06/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.78 - KHẮC PHỤC TRIỆT ĐỂ LỖI MÀN HÌNH ĐEN TRÊN TIKTOK LIVE STUDIO & ĐỒNG BỘ VIDEO SÂN KHẤU 60 FPS',
+    description: '1. Khắc Phục Triệt Để Màn Hình Đen Trên Link TikTok Live Studio: Tối ưu bộ phân giải đường truyền Cloudflare Tunnel HTTPS và Vercel Cloud, tự động nhận diện tham số &tunnel= và &v= từ URL query string trong môi trường sandbox CEF độc lập, nạp và phát video trực tiếp 60 FPS ngay lập tức 0ms. 2. Đồng Bộ Tức Thì Khi Đổi Video Sân Khấu Chính: Sửa triệt để tình trạng video bị ghim URL tĩnh cũ, nhận diện chính xác luồng cập nhật video thời gian thực từ phần mềm chính sang TikTok Live Studio mà không bị đứt đoạn hay đen hình. 3. Cơ Chế Autoplay CEF Thông Minh: Khởi chạy mượt mà ngay cả khi môi trường trình duyệt TikTok Live Studio chặn tự phát âm thanh, bảo đảm khung hình hiển thị 100% không bao giờ bị đứng hình hay màn hình đen. 4. Khóa chặt 100% toàn bộ các tab và module hệ thống.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.77 - COMMENT THỰC TẾ LÀ ĐẦU VÀO DUY NHẤT & KHÓA CỨNG PIPELINE ƯU TIÊN FILE TỪ KHÓA',
     description: '1. Comment Thực Tế Là Dữ Liệu Đầu Vào Duy Nhất: Đọc chính xác 100% tên USER và nội dung comment nguyên bản từ luồng TikTok Live. 2. File Đã Tải Lên Là Nguồn Dữ Liệu Ưu Tiên Cao Nhất: Truy xuất và đối chiếu toàn bộ từ khóa từ file tải lên (.txt, .docx, .pdf, .csv, .md), tab Từ khóa, kịch bản trước khi tự trả lời. 3. So Khớp Toàn Bộ Comment: Kiểm tra chính xác, có dấu/không dấu, hoa/thường, cụm từ, teencode và biến thể hợp lý. 4. Khớp Từ Khóa → Dừng Ngay AI: Lấy đúng câu phản hồi đã cấu hình trong file tương ứng (Chào tên USER → Nhắc/xác nhận comment → Phản hồi theo file). 5. Nếu Không Khớp File Mới Gọi AI: AI Gemini trả lời trực tiếp trong 1 câu ngắn (10-15 từ), tuyệt đối không chèn bán hàng nếu comment không hỏi. 6. Nếu AI Không Hiểu → Bộ Phản Hồi Dự Phòng. 7. Khóa chặt 100% toàn bộ các tab và module hệ thống.'

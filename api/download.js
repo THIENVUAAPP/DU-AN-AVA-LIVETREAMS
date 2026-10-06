@@ -23,7 +23,7 @@ export default async function handler(req, res) {
     }
 
     const osPrefix = isMac ? 'AvaLive_VIP_PRO_Mac' : 'AvaLive_VIP_PRO_Windows';
-    let pkgVersion = '5.4.77';
+    let pkgVersion = '5.4.78';
     try {
       const pkgPath = path.join(process.cwd(), 'package.json');
       if (fs.existsSync(pkgPath)) {

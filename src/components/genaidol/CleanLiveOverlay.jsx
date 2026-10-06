@@ -26,9 +26,11 @@ import { resolveSellerProductBuyUrl, getProductSellerName } from '../../utils/au
 const getBackendUrl = () => {
   if (typeof window === 'undefined') return 'http://localhost:3001';
   const urlParams = new URLSearchParams(window.location.search);
-  // Nếu có tham số ?backend= thì dùng luôn (override thủ công)
-  const backendParam = urlParams.get('backend');
-  if (backendParam) return backendParam;
+  // Nếu có tham số ?tunnel=, ?backend= hoặc ?server= thì dùng luôn (override thủ công)
+  const tunnelParam = urlParams.get('tunnel') || urlParams.get('backend') || urlParams.get('server');
+  if (tunnelParam && typeof tunnelParam === 'string' && tunnelParam.startsWith('http')) {
+    return tunnelParam.replace(/\/+$/, '');
+  }
   
   const hostname = window.location.hostname;
   const port = window.location.port;
@@ -58,7 +60,13 @@ const getBackendUrl = () => {
   }
   
   if (isCloudDomain) {
-    // Cloud deployment: API và WS cũng ở cùng origin
+    let savedTunnel = null;
+    try {
+      savedTunnel = localStorage.getItem('avalive_tunnel_url') || localStorage.getItem('avalive_last_tunnel_url');
+    } catch (e) {}
+    if (savedTunnel && typeof savedTunnel === 'string' && savedTunnel.startsWith('http')) {
+      return savedTunnel.replace(/\/+$/, '');
+    }
     return `${proto}//${hostname}`;
   }
   
@@ -114,10 +122,18 @@ export const isSameMediaUrl = (srcA, srcB) => {
 
 export const resolveMediaForOverlay = (url, tunnelUrl) => {
   if (!url || typeof url !== 'string') return url;
-  const trimmed = url.trim();
+  let trimmed = url.trim();
   if (!trimmed) return trimmed;
 
-  const activeTunnel = tunnelUrl || (typeof window !== 'undefined' ? (localStorage.getItem('avalive_tunnel_url') || localStorage.getItem('avalive_last_tunnel_url')) : null);
+  let urlTunnel = null;
+  if (typeof window !== 'undefined') {
+    try {
+      const urlParams = new URLSearchParams(window.location.search);
+      urlTunnel = urlParams.get('tunnel') || urlParams.get('backend') || urlParams.get('server');
+    } catch (e) {}
+  }
+
+  const activeTunnel = tunnelUrl || urlTunnel || (typeof window !== 'undefined' ? (localStorage.getItem('avalive_tunnel_url') || localStorage.getItem('avalive_last_tunnel_url')) : null);
 
   // Nếu là blob: hoặc data:
   if (trimmed.startsWith('blob:') || trimmed.startsWith('data:')) {
@@ -1387,7 +1403,7 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
         }
 
         const directVideoUrl = urlParams ? urlParams.get('v') : null;
-        if (directVideoUrl && !data.force) {
+        if (!data.mediaUrl && directVideoUrl) {
           next.mediaUrl = directVideoUrl;
         }
         
@@ -3347,15 +3363,13 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                                 if (v.__lastErrTime && (now - v.__lastErrTime < 3000)) return;
                                 v.__lastErrTime = now;
                                 console.warn('[CleanLiveOverlay] Video playback retry:', v?.error);
-                                fetch('/api/live-state')
+                                const bUrl = getBackendUrl();
+                                const stateEndpoint = bUrl ? `${bUrl}/api/live-state` : '/api/live-state';
+                                fetch(stateEndpoint)
                                   .then(r => r.json())
                                   .then(d => {
                                     if (d && d.mediaUrl && !d.mediaUrl.startsWith('blob:') && v) {
-                                      let targetUrl = d.mediaUrl;
-                                      const activeTunnel = d.tunnelUrl || (typeof localStorage !== 'undefined' ? localStorage.getItem('avalive_tunnel_url') : '') || '';
-                                      if (typeof window !== 'undefined' && window.location.hostname.includes('vercel.app') && activeTunnel && targetUrl.includes('/uploads/')) {
-                                        targetUrl = `${activeTunnel.replace(/\/$/, '')}${targetUrl.substring(targetUrl.indexOf('/uploads/'))}`;
-                                      }
+                                      let targetUrl = resolveMediaForOverlay(d.mediaUrl, d.tunnelUrl);
                                       if (!isSameMediaUrl(v.src, targetUrl)) {
                                         v.src = targetUrl;
                                         v.load();
