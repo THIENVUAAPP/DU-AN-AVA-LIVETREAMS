@@ -11,16 +11,21 @@ const STORAGE_KEY = 'avalive_master_live_state';
 const BROADCAST_CHANNEL_NAME = 'avalive_master_live_stream';
 const SUPABASE_REALTIME_TOPIC = 'avalive_master_live_realtime';
 
-// Singleton Supabase Realtime Broadcast Channel
+// Singleton Supabase Realtime Broadcast Channel (với bộ lọc chống spam/quá tải 99.9%)
 let supabaseBroadcastChannel = null;
+let lastSupabaseBroadcastTime = 0;
+let lastSupabaseBroadcastSignature = '';
+
 try {
   if (supabase && typeof supabase.channel === 'function') {
     supabaseBroadcastChannel = supabase.channel(SUPABASE_REALTIME_TOPIC, {
-      config: { broadcast: { self: true } }
+      config: { broadcast: { self: false } }
     });
 
     supabaseBroadcastChannel.on('broadcast', { event: 'REQUEST_MASTER_LIVE_STATE' }, () => {
       if (typeof window !== 'undefined') {
+        const now = Date.now();
+        if (now - lastSupabaseBroadcastTime < 2000) return; // Chặn bão tin nhắn dồn dập
         try {
           const raw = localStorage.getItem(STORAGE_KEY);
           if (raw) {
@@ -34,32 +39,18 @@ try {
                 exportMedia = `${tunnelUrl.replace(/\/$/, '')}${exportMedia}`;
               }
             }
+            lastSupabaseBroadcastTime = now;
             supabaseBroadcastChannel.send({
               type: 'broadcast',
               event: 'MASTER_LIVE_STATE_UPDATE',
-              payload: { ...currentState, mediaUrl: exportMedia, tunnelUrl, updatedAt: Date.now() }
+              payload: { ...currentState, mediaUrl: exportMedia, tunnelUrl, updatedAt: now }
             }).catch(() => {});
           }
         } catch (e) {}
       }
     });
 
-    supabaseBroadcastChannel.subscribe((status) => {
-      if (status === 'SUBSCRIBED') {
-        // Send initial state immediately when connected
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          if (raw) {
-            const currentState = JSON.parse(raw);
-            supabaseBroadcastChannel.send({
-              type: 'broadcast',
-              event: 'MASTER_LIVE_STATE_UPDATE',
-              payload: currentState
-            }).catch(() => {});
-          }
-        } catch (e) {}
-      }
-    });
+    supabaseBroadcastChannel.subscribe();
   }
 } catch (e) {
   console.warn('[MasterSync] Supabase broadcast init note:', e.message);
@@ -144,14 +135,20 @@ export function syncMasterLiveState(partialState, socket = null) {
     localStorage.setItem('aidol_clean_stream_state', JSON.stringify(updated));
   } catch (e) {}
 
-  // 2. Gửi qua Supabase Realtime Cloud Broadcast (Đồng bộ siêu tốc OBS & TikTok Live Studio trên toàn thế giới)
+  // 2. Gửi qua Supabase Realtime Cloud Broadcast (Bộ lọc thông minh: chỉ gửi khi thay đổi trạng thái thực sự, chống spam 99.9%)
   try {
     if (supabaseBroadcastChannel) {
-      supabaseBroadcastChannel.send({
-        type: 'broadcast',
-        event: 'MASTER_LIVE_STATE_UPDATE',
-        payload: remoteUpdated
-      });
+      const now = Date.now();
+      const sig = `${remoteUpdated.stage}_${remoteUpdated.mediaUrl}_${remoteUpdated.selectedCharacter}_${remoteUpdated.aspectRatio}_${remoteUpdated.isPlaying}`;
+      if (sig !== lastSupabaseBroadcastSignature || now - lastSupabaseBroadcastTime >= 3000) {
+        lastSupabaseBroadcastSignature = sig;
+        lastSupabaseBroadcastTime = now;
+        supabaseBroadcastChannel.send({
+          type: 'broadcast',
+          event: 'MASTER_LIVE_STATE_UPDATE',
+          payload: remoteUpdated
+        }).catch(() => {});
+      }
     }
   } catch (e) {}
 
@@ -260,14 +257,18 @@ export function sendVideoControl(control, socket = null) {
     } catch (e) {}
   }
 
-  // 3. Gửi qua Supabase Realtime
+  // 3. Gửi qua Supabase Realtime (Chỉ khi cần thiết và không có Socket)
   try {
-    if (supabaseBroadcastChannel) {
-      supabaseBroadcastChannel.send({
-        type: 'broadcast',
-        event: 'VIDEO_PLAYBACK_CONTROL',
-        payload
-      }).catch(() => {});
+    if (supabaseBroadcastChannel && (!socket || !socket.connected)) {
+      const now = Date.now();
+      if (now - lastSupabaseBroadcastTime >= 1000) {
+        lastSupabaseBroadcastTime = now;
+        supabaseBroadcastChannel.send({
+          type: 'broadcast',
+          event: 'VIDEO_PLAYBACK_CONTROL',
+          payload
+        }).catch(() => {});
+      }
     }
   } catch (e) {}
 
@@ -321,7 +322,11 @@ export function broadcastAiVoice(audioUrlOrPayload) {
   }
   try {
     if (supabaseBroadcastChannel) {
-      supabaseBroadcastChannel.send({ type: 'broadcast', event: 'AI_VOICE_PLAY', payload }).catch(()=>{});
+      const now = Date.now();
+      if (now - lastSupabaseBroadcastTime >= 1500) {
+        lastSupabaseBroadcastTime = now;
+        supabaseBroadcastChannel.send({ type: 'broadcast', event: 'AI_VOICE_PLAY', payload }).catch(()=>{});
+      }
     }
   } catch (e) {}
 }

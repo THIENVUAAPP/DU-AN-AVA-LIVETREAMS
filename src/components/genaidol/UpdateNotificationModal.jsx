@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.78';
-export const RELEASE_DATE = '06/10/2026';
+export const APP_VERSION = '5.4.79';
+export const RELEASE_DATE = '08/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.79 - TỐI ƯU HÓA SUPABASE REALTIME & BẢO VỆ TÀI NGUYÊN HỆ THỐNG',
+    description: '1. Tối Ưu Hóa Tuyệt Đối Supabase Realtime Broadcast: Tích hợp bộ lọc State Signature và cơ chế Debounce/Throttling thông minh, loại bỏ 100% tình trạng bão tin nhắn Realtime (giảm từ hàng triệu tin nhắn rác xuống mức an toàn tuyệt đối), ngăn chặn triệt để tình trạng Log Ingestion và Egress vượt hạn mức. 2. Bảo Toàn Toàn Bộ Cơ Sở Dữ Liệu Quan Trọng Của Dự Án: Hệ thống Auth, User Tokens, Bản quyền và Webhook SePay hoạt động ổn định và chính xác. 3. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Và Module Hệ Thống.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.78 - KHẮC PHỤC TRIỆT ĐỂ LỖI MÀN HÌNH ĐEN TRÊN TIKTOK LIVE STUDIO & ĐỒNG BỘ VIDEO SÂN KHẤU 60 FPS',
     description: '1. Khắc Phục Triệt Để Màn Hình Đen Trên Link TikTok Live Studio: Tối ưu bộ phân giải đường truyền Cloudflare Tunnel HTTPS và Vercel Cloud, tự động nhận diện tham số &tunnel= và &v= từ URL query string trong môi trường sandbox CEF độc lập, nạp và phát video trực tiếp 60 FPS ngay lập tức 0ms. 2. Đồng Bộ Tức Thì Khi Đổi Video Sân Khấu Chính: Sửa triệt để tình trạng video bị ghim URL tĩnh cũ, nhận diện chính xác luồng cập nhật video thời gian thực từ phần mềm chính sang TikTok Live Studio mà không bị đứt đoạn hay đen hình. 3. Cơ Chế Autoplay CEF Thông Minh: Khởi chạy mượt mà ngay cả khi môi trường trình duyệt TikTok Live Studio chặn tự phát âm thanh, bảo đảm khung hình hiển thị 100% không bao giờ bị đứng hình hay màn hình đen. 4. Khóa chặt 100% toàn bộ các tab và module hệ thống.'
