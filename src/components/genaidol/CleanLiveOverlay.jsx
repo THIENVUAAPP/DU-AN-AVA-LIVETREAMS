@@ -3333,8 +3333,9 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
                               onError={(e) => {
                                 const v = e.currentTarget;
                                 if (!v) return;
+                                try { v.removeAttribute('crossorigin'); } catch (err) {}
                                 const now = Date.now();
-                                if (v.__lastErrTime && (now - v.__lastErrTime < 3000)) return;
+                                if (v.__lastErrTime && (now - v.__lastErrTime < 2500)) return;
                                 v.__lastErrTime = now;
                                 console.warn('[CleanLiveOverlay] Video playback retry:', v?.error);
                                 const bUrl = getBackendUrl();

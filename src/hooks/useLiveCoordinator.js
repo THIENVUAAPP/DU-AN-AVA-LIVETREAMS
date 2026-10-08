@@ -201,11 +201,11 @@ function getSavedEventConfigs() {
       commentReplyMode: 'hybrid',
       repeatCommentFirst: false,
       repeatCommentPrefix: '',
-      unknownFallbackReply: 'Dạ em xin phép ghi nhận câu hỏi của bạn {user} để shop tư vấn chi tiết cho mình nha!',
+      unknownFallbackReply: 'Dạ em giải đáp ngay cho mình nha, bạn theo dõi live để nhận thông tin chi tiết nhé!',
       appendFollowUpQuestion: false,
       followUpQuestionText: '',
       aiPrompt: 'Bạn là trợ lý AI livestream bán hàng chuyên nghiệp. Khán giả "{user}" vừa hỏi/bình luận: "{comment}". Hãy trả lời cực kỳ ngắn gọn, súc tích, đúng trọng tâm trong DUY NHẤT 1 CÂU từ 10 đến 15 từ. Tự xưng là "em", trả lời thẳng vào câu hỏi, tuyệt đối không nhắc lại câu hỏi, không hỏi ngược lại dài dòng, không lan man.',
-      sampleAnswers: 'Cảm ơn bạn {user} đã bình luận nhé!\nMình đã nhận được bình luận của {user} rồi ạ.',
+      sampleAnswers: 'Dạ em hỗ trợ thông tin này ngay cho mình nha!\nBên em giải đáp chi tiết thông tin này cho bạn nha.',
       assistantPrompt: 'A, có bạn {user} vừa mới bình luận là: {comment}'
     },
     gift: {
@@ -849,17 +849,17 @@ function fillTemplate(template, vars = {}) {
         // -------------------------------------------------------------------------
         if (!isHandled && useAi && commentConfig.useAi !== false) {
           if (isTrivialGreeting) {
-            bodyAnswer = `Dạ em chào ${userSalutation} nha! Chúc bạn xem live thật vui vẻ và có một ngày tuyệt vời ạ!`;
+            bodyAnswer = `Dạ chúc bạn xem live thật vui vẻ và có một ngày tuyệt vời ạ!`;
             isHandled = true;
             stepMatched = 3;
           } else if (lowerComment.includes('xinh') || lowerComment.includes('đẹp') || lowerComment.includes('dễ thương') || lowerComment.includes('cute')) {
-            bodyAnswer = `Em cảm ơn lời khen cực kỳ ngọt ngào của ${userSalutation} nha! Chúc bạn xem live thật vui vẻ ạ!`;
+            bodyAnswer = `Em cảm ơn lời khen cực kỳ ngọt ngào của bạn nha! Chúc bạn xem live thật vui vẻ ạ!`;
             isHandled = true;
             stepMatched = 3;
           } else {
             try {
-              const liveContext = `Livestream tương tác trực tiếp. Người đang xem live bình luận. Trả lời đúng nội dung câu hỏi một cách thông minh, tự nhiên, thân thiện.`;
-              const aiPrompt = `Bạn là trợ lý AI livestream thông minh. Khán giả "${userName}" vừa hỏi/bình luận: "${commentText}". Hãy phân tích kỹ nội dung câu hỏi/bình luận và trả lời trực tiếp, chính xác đúng nội dung đó trong DUY NHẤT 1 CÂU ngắn gọn từ 10 đến 15 từ. Tự xưng là "em", nói chuyện tự nhiên, thân thiện. Tuyệt đối không nhắc lại câu chào, không hỏi ngược lại, và TUYỆT ĐỐI KHÔNG tự ý giới thiệu sản phẩm hay bán hàng trừ khi câu hỏi của khán giả trực tiếp hỏi về sản phẩm/mua hàng/giá cả.`;
+              const liveContext = `Livestream tương tác trực tiếp. Khán giả đang xem live bình luận. Trả lời đúng nội dung câu hỏi một cách thông minh, tự nhiên, thân thiện.`;
+              const aiPrompt = `Bạn là trợ lý AI livestream thông minh. Khán giả "${userName}" vừa hỏi/bình luận: "${commentText}". Hãy phân tích kỹ nội dung câu hỏi/bình luận và trả lời trực tiếp, chính xác đúng nội dung đó trong DUY NHẤT 1 CÂU ngắn gọn từ 10 đến 15 từ. Tự xưng là "em", nói chuyện tự nhiên, thân thiện. Tuyệt đối KHÔNG chào hỏi lại (vì phần mềm đã chào ở đầu), KHÔNG cảm ơn sáo rỗng, KHÔNG hỏi ngược lại, và TUYỆT ĐỐI KHÔNG tự ý giới thiệu sản phẩm hay bán hàng trừ khi câu hỏi của khán giả trực tiếp hỏi về sản phẩm/mua hàng/giá cả.`;
 
               const aiRes = await askGeminiLiveAi({
                 question: commentText,
@@ -902,9 +902,9 @@ function fillTemplate(template, vars = {}) {
             isHandled = true;
           } else {
             const smartFallbacks = [
-              `Dạ em cảm ơn ${userSalutation} đã tương tác và gửi bình luận, mình có thể chia sẻ cụ thể hơn để em hỗ trợ chu đáo nhất nhé!`,
-              `Dạ em đã ghi nhận ý kiến của ${userSalutation} rồi ạ, cảm ơn bạn rất nhiều vì đã theo dõi và ủng hộ phiên live!`,
-              `Dạ em rất vui được đồng hành cùng ${userSalutation} trong phiên live hôm nay, chúc bạn xem live thật vui vẻ ạ!`
+              `Dạ em đã ghi nhận thắc mắc của ${userSalutation}, shop sẽ tư vấn chi tiết ngay trên live cho mình nha!`,
+              `Dạ để em giải đáp rõ hơn thông tin này cho ${userSalutation} ngay nha!`,
+              `Dạ thông tin này shop sẽ chia sẻ chi tiết ngay trên live để ${userSalutation} nắm rõ nha!`
             ];
             bodyAnswer = smartFallbacks[Math.floor(Math.random() * smartFallbacks.length)];
             isHandled = true;

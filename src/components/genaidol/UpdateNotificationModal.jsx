@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.80';
+export const APP_VERSION = '5.4.81';
 export const RELEASE_DATE = '08/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.81 - ĐỒNG BỘ 100% LUỒNG TIKTOK LIVE STUDIO KHÔNG ĐEN MÀN HÌNH & KHÓA CỨNG 4 TẦNG PHẢN HỒI BÌNH LUẬN THEO FILE TỪ KHÓA',
+    description: '1. Khắc Phục Triệt Để 100% Lỗi Màn Hình Đen Trên TikTok Live Studio & OBS: Nâng cấp luồng phát Online HTTPS 60 FPS, tự động giải mã khung hình video và âm thanh không bị chặn CORS, đồng bộ tức thì 0ms với sân khấu chính của phần mềm. Tích hợp nút 1 chạm "Mở Cửa Sổ Live 9:16 (Window Capture)" chuẩn GPU Ultra HD 1080x1920 không bao giờ đen màn hình. 2. Chuẩn Hóa Khóa Cứng 4 Tầng Ưu Tiên Phản Hồi Bình Luận AI: (Bước 1) Đọc to, rõ ràng và chuẩn xác tên USER kèm nhắc lại nguyên bản nội dung comment của người xem. (Bước 2) Quét 100% các tệp từ khóa và file mẫu tải lên (.txt, .docx, .pdf, .csv, .md); nếu khớp từ khóa -> ƯU TIÊN TUYỆT ĐỐI dùng câu phản hồi đã cấu hình trong file, tuyệt đối KHÔNG gọi AI, KHÔNG nói lời cảm ơn chung chung sáo rỗng. (Bước 3) Chỉ khi không khớp bất kỳ từ khóa nào trong file -> AI Gemini mới phân tích trả lời ngắn gọn trong DUY NHẤT 1 CÂU từ 10-15 từ, không chèn bán hàng nếu comment không hỏi. (Bước 4) Phản hồi dự phòng chuẩn xác khi AI gặp lỗi. 3. Khóa chặt 100% toàn bộ các tab và module hệ thống.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.80 - TRIỆT TIÊU 100% LƯU LƯỢNG RÁC SUPABASE & GIỮ GÓI MIỄN PHÍ VĨNH VIỄN 0Đ',
     description: '1. Đưa 100% Lưu Lượng Realtime Về 0: Ngắt bỏ hoàn toàn kênh broadcast Realtime dư thừa trên Supabase, chuyển toàn bộ luồng truyền video, điều khiển phát và âm thanh 60 FPS sang Socket.io + Cloudflare Tunnel + BroadcastChannel nội bộ (miễn phí 100%, không giới hạn). 2. Bảo Vệ Tuyệt Đối Giới Hạn Free Tier: Supabase chỉ giữ vai trò xác thực Auth và tài khoản người dùng, giữ mọi thông số Log Ingestion, Egress và Realtime Messages ở mức 0 an toàn vĩnh viễn, không bao giờ phải mua gói trả phí. 3. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Và Module Hệ Thống.'
