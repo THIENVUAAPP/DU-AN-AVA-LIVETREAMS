@@ -1418,34 +1418,8 @@ export default function CleanLiveOverlay({ customStyle = {} }) {
       });
     };
 
-    // 1. SUPABASE REALTIME CLOUD BROADCAST
-    let supabaseChannel = null;
-    try {
-      if (supabase && typeof supabase.channel === 'function') {
-        supabaseChannel = supabase.channel('avalive_master_live_realtime', {
-          config: { broadcast: { self: false } }
-        });
-
-        supabaseChannel.on('broadcast', { event: 'MASTER_LIVE_STATE_UPDATE' }, ({ payload }) => {
-          if (payload) applyMasterState(payload);
-        });
-
-        supabaseChannel.on('broadcast', { event: 'VIDEO_PLAYBACK_CONTROL' }, ({ payload }) => {
-          if (payload) handleVideoPlaybackControl(payload);
-        });
-        supabaseChannel.on('broadcast', { event: 'AI_VOICE_PLAY' }, ({ payload }) => {
-          if (payload && payload.audioUrl) playAiVoice(payload.audioUrl);
-        });
-
-        supabaseChannel.subscribe((status) => {
-          if (status === 'SUBSCRIBED') {
-            supabaseChannel.send({ type: 'broadcast', event: 'REQUEST_MASTER_LIVE_STATE' }).catch(() => {});
-          }
-        });
-      }
-    } catch (e) {
-      console.warn('[Overlay] Supabase Realtime note:', e.message);
-    }
+    // 1. SUPABASE REALTIME CLOUD BROADCAST (Đã tắt để bảo vệ tài nguyên Supabase 100% về 0, toàn bộ đồng bộ chạy qua Socket.io & LocalChannel)
+    const supabaseChannel = null;
 
     // Xoá Fast Preload Media sau khi React đã mount và chuẩn bị phát video thật (tránh màn hình đen 0.5s)
     setTimeout(() => {

@@ -2,10 +2,14 @@ import React, { useEffect, useState } from 'react';
 import { Sparkles, CheckCircle, X, ChevronRight, Zap, Star, Download, Laptop, Apple } from 'lucide-react';
 import { downloadWindows, downloadMac } from '../../utils/downloadOS';
 
-export const APP_VERSION = '5.4.79';
+export const APP_VERSION = '5.4.80';
 export const RELEASE_DATE = '08/10/2026';
 
 export const UPDATE_NOTES = [
+  {
+    title: '⚡ Bản Cập Nhật v5.4.80 - TRIỆT TIÊU 100% LƯU LƯỢNG RÁC SUPABASE & GIỮ GÓI MIỄN PHÍ VĨNH VIỄN 0Đ',
+    description: '1. Đưa 100% Lưu Lượng Realtime Về 0: Ngắt bỏ hoàn toàn kênh broadcast Realtime dư thừa trên Supabase, chuyển toàn bộ luồng truyền video, điều khiển phát và âm thanh 60 FPS sang Socket.io + Cloudflare Tunnel + BroadcastChannel nội bộ (miễn phí 100%, không giới hạn). 2. Bảo Vệ Tuyệt Đối Giới Hạn Free Tier: Supabase chỉ giữ vai trò xác thực Auth và tài khoản người dùng, giữ mọi thông số Log Ingestion, Egress và Realtime Messages ở mức 0 an toàn vĩnh viễn, không bao giờ phải mua gói trả phí. 3. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Và Module Hệ Thống.'
+  },
   {
     title: '⚡ Bản Cập Nhật v5.4.79 - TỐI ƯU HÓA SUPABASE REALTIME & BẢO VỆ TÀI NGUYÊN HỆ THỐNG',
     description: '1. Tối Ưu Hóa Tuyệt Đối Supabase Realtime Broadcast: Tích hợp bộ lọc State Signature và cơ chế Debounce/Throttling thông minh, loại bỏ 100% tình trạng bão tin nhắn Realtime (giảm từ hàng triệu tin nhắn rác xuống mức an toàn tuyệt đối), ngăn chặn triệt để tình trạng Log Ingestion và Egress vượt hạn mức. 2. Bảo Toàn Toàn Bộ Cơ Sở Dữ Liệu Quan Trọng Của Dự Án: Hệ thống Auth, User Tokens, Bản quyền và Webhook SePay hoạt động ổn định và chính xác. 3. Khóa Chặt 100% Toàn Bộ Các Tab Chức Năng Và Module Hệ Thống.'

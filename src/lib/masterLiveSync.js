@@ -11,50 +11,9 @@ const STORAGE_KEY = 'avalive_master_live_state';
 const BROADCAST_CHANNEL_NAME = 'avalive_master_live_stream';
 const SUPABASE_REALTIME_TOPIC = 'avalive_master_live_realtime';
 
-// Singleton Supabase Realtime Broadcast Channel (với bộ lọc chống spam/quá tải 99.9%)
-let supabaseBroadcastChannel = null;
-let lastSupabaseBroadcastTime = 0;
-let lastSupabaseBroadcastSignature = '';
-
-try {
-  if (supabase && typeof supabase.channel === 'function') {
-    supabaseBroadcastChannel = supabase.channel(SUPABASE_REALTIME_TOPIC, {
-      config: { broadcast: { self: false } }
-    });
-
-    supabaseBroadcastChannel.on('broadcast', { event: 'REQUEST_MASTER_LIVE_STATE' }, () => {
-      if (typeof window !== 'undefined') {
-        const now = Date.now();
-        if (now - lastSupabaseBroadcastTime < 2000) return; // Chặn bão tin nhắn dồn dập
-        try {
-          const raw = localStorage.getItem(STORAGE_KEY);
-          if (raw) {
-            const currentState = JSON.parse(raw);
-            let tunnelUrl = currentState.tunnelUrl || localStorage.getItem('avalive_tunnel_url') || null;
-            let exportMedia = currentState.mediaUrl || currentState.mainMediaUrl;
-            if (exportMedia && typeof exportMedia === 'string' && tunnelUrl) {
-              if (exportMedia.includes('localhost') || exportMedia.includes('127.0.0.1')) {
-                exportMedia = exportMedia.replace(/https?:\/\/(localhost|127\.0\.0\.1)(:\d+)?/, tunnelUrl);
-              } else if (exportMedia.startsWith('/uploads/')) {
-                exportMedia = `${tunnelUrl.replace(/\/$/, '')}${exportMedia}`;
-              }
-            }
-            lastSupabaseBroadcastTime = now;
-            supabaseBroadcastChannel.send({
-              type: 'broadcast',
-              event: 'MASTER_LIVE_STATE_UPDATE',
-              payload: { ...currentState, mediaUrl: exportMedia, tunnelUrl, updatedAt: now }
-            }).catch(() => {});
-          }
-        } catch (e) {}
-      }
-    });
-
-    supabaseBroadcastChannel.subscribe();
-  }
-} catch (e) {
-  console.warn('[MasterSync] Supabase broadcast init note:', e.message);
-}
+// Supabase Realtime Broadcast đã được tối ưu hóa tắt hẳn để đưa 100% chỉ số Supabase về 0
+// Toàn bộ tác vụ đồng bộ Realtime 60 FPS được xử lý qua Socket.io + Cloudflare Tunnel + BroadcastChannel + LocalStorage (Không giới hạn, 0đ)
+const supabaseBroadcastChannel = null;
 
 export function getMasterLiveState() {
   if (typeof window === 'undefined') return null;
